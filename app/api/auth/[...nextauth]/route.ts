@@ -10,6 +10,10 @@ export const handler = NextAuth({
   ],
   session: { strategy: "jwt" },
   secret: process.env.NEXTAUTH_SECRET,
+  pages: {
+    signIn: "/api/auth/signin",
+    error: "/api/auth/error",
+  },
 });
 
 export { handler as GET, handler as POST };
