@@ -1,3 +1,6 @@
+# NOTE: This Compose file uses the public GHCR image (ghcr.io/jigle/proman:latest).
+# Use this file if you want SCALE to pull the image from GHCR (requires public image or credentials).
+# For local image installs (no registry), use `docker-compose-local.yml` instead.
 services:
   proman:
     image: ghcr.io/jigle/proman:latest
