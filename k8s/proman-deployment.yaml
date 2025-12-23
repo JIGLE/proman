@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
         - name: proman
-          # Example deployment using GHCR image; change to your registry/image:tag as needed
-          image: ghcr.io/jigle/proman:latest
+          # Example deployment using Docker Hub image; change to your registry/image:tag as needed
+          image: docker.io/jig019/proman:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: NODE_ENV

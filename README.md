@@ -333,13 +333,13 @@ If you want me to upload the artifacts somewhere or render the final YAML for yo
 
 ## Registry-based install (no local image tar)
 
-If you prefer to avoid building and loading image tars on SCALE nodes, use the published image on GitHub Container Registry. I added a workflow that will build and publish `ghcr.io/JIGLE/proman:latest` on pushes to `main`.
+If you prefer to avoid building and loading image tars on SCALE nodes, use the published image on Docker Hub. Push `docker.io/jig019/proman:latest` (or use your preferred registry) and set the image repo in values when installing.
 
-Install the chart and use the registry image (default values already point to GHCR):
+Install the chart and use the registry image (default values already point to Docker Hub):
 
 ```bash
-helm install proman dist/proman-0.2.0.tgz \
-	--set image.repository=ghcr.io/jigle/proman \
+helm install proman dist/proman-0.2.1.tgz \
+	--set image.repository=docker.io/jig019/proman \
 	--set image.tag=latest \
 	--set image.pullPolicy=IfNotPresent \
 	--set persistence.enabled=true --set persistence.storage=5Gi
@@ -352,14 +352,15 @@ Notes:
 
 ## ✅ Quick TrueNAS SCALE Install (Registry-based)
 
-If you published the image to GitHub Container Registry (`ghcr.io/jigle/proman:latest`) you can install directly on TrueNAS SCALE without loading image tars on each node.
+If you published the image to Docker Hub (`docker.io/jig019/proman:latest`) (or GHCR) you can install directly on TrueNAS SCALE without loading image tars on each node.
 
-1. Ensure Actions have published `ghcr.io/jigle/proman:latest` (the CI workflow does this on pushes to `main`).
+1. Ensure Actions have published `docker.io/jig019/proman:latest` (or push the same tag to your chosen registry).
 2. From a machine with `helm` configured for your SCALE cluster run:
 
 ```bash
 helm upgrade --install proman helm/proman --namespace proman --create-namespace \
-	--set image.repository=ghcr.io/jigle/proman \
+	--set image.repository=docker.io/jig019/proman \
+
 	--set image.tag=latest \
 	--set persistence.enabled=true \
 	--set persistence.storage=5Gi
@@ -368,7 +369,7 @@ helm upgrade --install proman helm/proman --namespace proman --create-namespace 
 3. Or use the TrueNAS SCALE Apps UI: add this repository as a Catalog (Apps → Manage Catalogs → Add Catalog) and install `proman` from the catalog; in the install form choose or create a dataset for persistence.
 
 Notes:
-- If your cluster restricts access to GHCR you may need to configure image pull secrets or use an internal registry.
+- If your cluster restricts access to registries you may need to configure image pull secrets or use an internal registry.
 - The chart defaults already point at GHCR so SCALE's catalog installations will pick up the published image automatically.
 
 

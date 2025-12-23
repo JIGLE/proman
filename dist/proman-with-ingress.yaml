@@ -46,7 +46,7 @@ spec:
     spec:
       containers:
         - name: proman
-          image: "ghcr.io/jigle/proman:latest"
+          image: "docker.io/jig019/proman:latest"
           imagePullPolicy: IfNotPresent
           env:
             - name: NODE_ENV
