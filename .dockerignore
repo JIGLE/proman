@@ -1,0 +1,14 @@
+.next
+node_modules
+.git
+.github
+.DS_Store
+dist
+build
+coverage
+/.vscode
+npm-debug.log
+env.local
+.env.local
+.env
+.env.*.local

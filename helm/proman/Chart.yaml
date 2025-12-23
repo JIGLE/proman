@@ -1,0 +1,14 @@
+apiVersion: v2
+name: proman
+description: Proman Next.js application
+type: application
+version: 0.1.0
+appVersion: "latest"
+icon: https://raw.githubusercontent.com/JIGLE/Proman/main/public/icon.png
+keywords:
+  - truenas
+  - proman
+  - nextjs
+maintainers:
+  - name: JIGLE
+    email: support@example.com
