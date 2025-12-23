@@ -26,15 +26,21 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Set lowercase owner/repo
+        id: names
+        run: |
+          echo "owner=$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+          echo "repo=$(echo '${{ github.event.repository.name }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
       - name: Build and push to GHCR
         uses: docker/build-push-action@v4
         with:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ toLower(github.repository_owner) }}/${{ toLower(github.event.repository.name) }}:latest
-            ghcr.io/${{ toLower(github.repository_owner) }}/${{ toLower(github.event.repository.name) }}:${{ github.sha }}
-          cache-from: type=registry,ref=ghcr.io/${{ toLower(github.repository_owner) }}/${{ toLower(github.event.repository.name) }}:cache
+            ghcr.io/${{ steps.names.outputs.owner }}/${{ steps.names.outputs.repo }}:latest
+            ghcr.io/${{ steps.names.outputs.owner }}/${{ steps.names.outputs.repo }}:${{ github.sha }}
+          cache-from: type=registry,ref=ghcr.io/${{ steps.names.outputs.owner }}/${{ steps.names.outputs.repo }}:cache
           cache-to: type=inline
 
       - name: Image metadata
