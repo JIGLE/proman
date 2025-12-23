@@ -364,7 +364,7 @@ helm install proman dist/proman-0.2.1.tgz \
 
 ### Registry visibility & Actions permissions
 - The workflow publishes to `ghcr.io/JIGLE/proman:latest` using `GITHUB_TOKEN`. Ensure **Actions** permissions allow `packages: write` (Repository Settings → Actions → General → Workflow permissions).
-- For TrueNAS to pull without authentication, make the package public: GitHub → `Settings` → `Packages` → `proman` → **Package settings** → **Change visibility** → **Public**.
+- For TrueNAS to pull without authentication, make the package public: GitHub → `Settings` → `Packages` → `proman` → **Package settings** → **Change visibility** → **Public**. (Done — package is public.)
 - Alternatively, keep the package private and configure TrueNAS with registry credentials (PAT with `read:packages`).
 
 ### Alternative: Local Tar
