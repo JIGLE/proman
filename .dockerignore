@@ -12,3 +12,9 @@ env.local
 .env.local
 .env
 .env.*.local
+helm
+k8s
+scripts
+proman_local_image.tar
+*.tar
+*.log
