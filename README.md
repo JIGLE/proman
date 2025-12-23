@@ -362,6 +362,11 @@ helm install proman dist/proman-0.2.1.tgz \
    - **Storage**: Host Path `/mnt/pool/data` → Mount Path `/data`
 4. Launch the app. Access at `http://your-truenas-ip:node-port`.
 
+### Registry visibility & Actions permissions
+- The workflow publishes to `ghcr.io/JIGLE/proman:latest` using `GITHUB_TOKEN`. Ensure **Actions** permissions allow `packages: write` (Repository Settings → Actions → General → Workflow permissions).
+- For TrueNAS to pull without authentication, make the package public: GitHub → `Settings` → `Packages` → `proman` → **Package settings** → **Change visibility** → **Public**.
+- Alternatively, keep the package private and configure TrueNAS with registry credentials (PAT with `read:packages`).
+
 ### Alternative: Local Tar
 If registry access fails, use the build script:
 ```bash
