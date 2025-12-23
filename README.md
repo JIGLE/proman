@@ -263,10 +263,12 @@ ctr -n=k8s.io images import /tmp/proman_local_image.tar
 
 - Copy the chart (`dist/proman-*.tgz`) to a node or upload it to your internal chart repo and then from a system with `kubectl`/`helm` configured for the SCALE cluster run:
 
+  **TrueNAS SCALE quick install:** If you prefer the SCALE UI, go to Apps → Discover → Custom App → Install via YAML and paste `dist/proman-with-ingress.yaml` (edit image tag / PVC size / ingress host before install).
+
 ```bash
 helm install proman helm/proman -f helm/proman/values.yaml
 # OR (if you uploaded the chart file)
-helm install proman dist/proman-0.1.0.tgz
+helm install proman dist/proman-0.2.0.tgz
 ```
 
 - If you prefer raw YAML, update `k8s/proman-deployment.yaml` to use the image tag you loaded (e.g., `proman:local`) and install it via the Apps UI YAML option or with `kubectl apply -f k8s/proman-deployment.yaml`.
@@ -292,8 +294,8 @@ Notes:
 
 ## 🎁 Produced artifacts (in this repository)
 
-- Image tar: `proman_local_image.tar` — built with `make save-image` (or `./scripts/build-and-save.sh`).
-- Packaged Helm chart: `dist/proman-0.1.0.tgz` — created with `make package-helm` (or `./scripts/package-helm.sh`).
+- Image tar: `proman_local_image.tar` — built with `make save-image` (or `./scripts/build-and-save.sh`). (Optional; may be available in `releases/`)
+- Packaged Helm chart: `dist/proman-*.tgz` (current v0.2.1) — created with `make package-helm` (or `./scripts/package-helm.sh`).
 
 Use these to install on TrueNAS SCALE without a registry:
 
@@ -310,7 +312,7 @@ docker load -i /root/proman_local_image.tar
 2. Install the packaged chart on the SCALE cluster (from a machine with `helm` configured for the cluster):
 
 ```bash
-helm install proman dist/proman-0.1.0.tgz \
+helm install proman dist/proman-0.2.0.tgz \
 	--set image.repository=proman \
 	--set image.tag=local \
 	--set image.pullPolicy=IfNotPresent \
@@ -336,7 +338,7 @@ If you prefer to avoid building and loading image tars on SCALE nodes, use the p
 Install the chart and use the registry image (default values already point to GHCR):
 
 ```bash
-helm install proman dist/proman-0.1.0.tgz \
+helm install proman dist/proman-0.2.0.tgz \
 	--set image.repository=ghcr.io/jigle/proman \
 	--set image.tag=latest \
 	--set image.pullPolicy=IfNotPresent \

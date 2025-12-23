@@ -31,7 +31,12 @@
       "type": "object",
       "properties": {
         "enabled": { "type": "boolean", "title": "Enable ingress" },
-        "host": { "type": "string", "title": "Ingress host" }
+        "host": { "type": "string", "title": "Ingress host" },
+        "className": { "type": "string", "title": "Ingress class name" },
+        "path": { "type": "string", "title": "Path", "default": "/" },
+        "pathType": { "type": "string", "title": "Path type", "enum": ["Prefix", "Exact"], "default": "Prefix" },
+        "annotations": { "type": "object", "title": "Ingress annotations" },
+        "tls": { "type": "array", "title": "TLS config", "items": { "type": "object" } }
       }
     }
   }
