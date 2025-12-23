@@ -335,6 +335,8 @@ If you want me to upload the artifacts somewhere or render the final YAML for yo
 
 If you prefer to avoid building and loading image tars on SCALE nodes, use the published image on Docker Hub. Push `docker.io/jig019/proman:latest` (or use your preferred registry) and set the image repo in values when installing.
 
+> CI: This repository contains a workflow (`.github/workflows/dockerhub-publish.yml`) that can publish `docker.io/jig019/proman:latest` automatically on pushes to `main`. To enable it, add repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (Docker Hub Access Token).
+
 Install the chart and use the registry image (default values already point to Docker Hub):
 
 ```bash
