@@ -3,7 +3,7 @@ entries:
   proman:
   - apiVersion: v2
     appVersion: latest
-    created: "2025-12-23T18:34:41.324238087Z"
+    created: "2025-12-23T18:35:52.441490566Z"
     description: Proman Next.js application
     digest: 8c830e3440d28c3b86a15bdbd471424a8d4159f43d865f4bfa0dc0c50a42a0bf
     icon: https://raw.githubusercontent.com/JIGLE/Proman/main/public/icon.png
@@ -21,7 +21,7 @@ entries:
     version: 0.2.1
   - apiVersion: v2
     appVersion: latest
-    created: "2025-12-23T18:34:41.323916306Z"
+    created: "2025-12-23T18:35:52.440921616Z"
     description: Proman Next.js application
     digest: 0d1f1b1cf9c420e41c18439a25ccb18719918f9fe6e25f079b034166dee87293
     icon: https://raw.githubusercontent.com/JIGLE/Proman/main/public/icon.png
@@ -37,22 +37,4 @@ entries:
     urls:
     - https://JIGLE.github.io/Proman/charts/proman-0.2.0.tgz
     version: 0.2.0
-  - apiVersion: v2
-    appVersion: latest
-    created: "2025-12-23T18:34:41.323612487Z"
-    description: Proman Next.js application
-    digest: 5348d08af94a27364e340f9aaa82aa6725e6e65c14446584d46fa8827942b8ab
-    icon: https://raw.githubusercontent.com/JIGLE/Proman/main/public/icon.png
-    keywords:
-    - truenas
-    - proman
-    - nextjs
-    maintainers:
-    - email: support@example.com
-      name: JIGLE
-    name: proman
-    type: application
-    urls:
-    - https://JIGLE.github.io/Proman/charts/proman-0.1.0.tgz
-    version: 0.1.0
-generated: "2025-12-23T18:34:41.323230851Z"
+generated: "2025-12-23T18:35:52.44012573Z"
