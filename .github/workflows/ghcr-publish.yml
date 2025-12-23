@@ -34,9 +34,9 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/JIGLE/proman:latest
-            ghcr.io/JIGLE/proman:${{ github.sha }}
-          cache-from: type=registry,ref=ghcr.io/JIGLE/proman:cache
+            ghcr.io/jigle/proman:latest
+            ghcr.io/jigle/proman:${{ github.sha }}
+          cache-from: type=registry,ref=ghcr.io/jigle/proman:cache
           cache-to: type=inline
 
       - name: Output image

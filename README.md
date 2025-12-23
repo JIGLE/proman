@@ -337,7 +337,7 @@ Install the chart and use the registry image (default values already point to GH
 
 ```bash
 helm install proman dist/proman-0.1.0.tgz \
-	--set image.repository=ghcr.io/JIGLE/proman \
+	--set image.repository=ghcr.io/jigle/proman \
 	--set image.tag=latest \
 	--set image.pullPolicy=IfNotPresent \
 	--set persistence.enabled=true --set persistence.storage=5Gi
