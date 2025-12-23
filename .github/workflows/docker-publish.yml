@@ -36,4 +36,5 @@ jobs:
           cache-to: type=inline
 
       - name: Image metadata
-        run: echo "Image pushed: ${{ secrets.REGISTRY }}/${{ github.repository }}:latest"
+        run: |
+          echo "Image pushed: ${{ secrets.REGISTRY }}/${{ github.repository }}:latest"
