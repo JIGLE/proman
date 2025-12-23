@@ -44,9 +44,6 @@ spec:
       labels:
         app: proman
     spec:
-      # If using a private registry, set your secret name here
-      imagePullSecrets:
-        - name: my-registry-secret
       containers:
         - name: proman
           image: "ghcr.io/jigle/proman:latest"
@@ -76,7 +73,7 @@ spec:
       volumes:
         - name: data
           persistentVolumeClaim:
-            claimName: proman-proman-data
+            claimName:proman-proman-data
 ---
 # Source: proman/templates/ingress.yaml
 apiVersion: networking.k8s.io/v1

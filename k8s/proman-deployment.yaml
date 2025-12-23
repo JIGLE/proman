@@ -16,8 +16,8 @@ spec:
     spec:
       containers:
         - name: proman
-          # Replace with your registry/image:tag
-          image: your-registry/proman:latest
+          # Example deployment using GHCR image; change to your registry/image:tag as needed
+          image: ghcr.io/jigle/proman:latest
           imagePullPolicy: IfNotPresent
           env:
             - name: NODE_ENV
