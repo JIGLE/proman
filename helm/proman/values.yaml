@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   # Default to a public registry image so SCALE installs do NOT require a local tar
-  repository: ghcr.io/JIGLE/proman
+  repository: ghcr.io/jigle/proman
   tag: latest
   pullPolicy: IfNotPresent
 
