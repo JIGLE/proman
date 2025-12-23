@@ -348,3 +348,25 @@ Notes:
 - Once the image is published to GHCR you can add this repo as a SCALE Catalog and install — no local tar required; simply select the dataset in the install form.
 
 
+## ✅ Quick TrueNAS SCALE Install (Registry-based)
+
+If you published the image to GitHub Container Registry (`ghcr.io/jigle/proman:latest`) you can install directly on TrueNAS SCALE without loading image tars on each node.
+
+1. Ensure Actions have published `ghcr.io/jigle/proman:latest` (the CI workflow does this on pushes to `main`).
+2. From a machine with `helm` configured for your SCALE cluster run:
+
+```bash
+helm upgrade --install proman helm/proman --namespace proman --create-namespace \
+	--set image.repository=ghcr.io/jigle/proman \
+	--set image.tag=latest \
+	--set persistence.enabled=true \
+	--set persistence.storage=5Gi
+```
+
+3. Or use the TrueNAS SCALE Apps UI: add this repository as a Catalog (Apps → Manage Catalogs → Add Catalog) and install `proman` from the catalog; in the install form choose or create a dataset for persistence.
+
+Notes:
+- If your cluster restricts access to GHCR you may need to configure image pull secrets or use an internal registry.
+- The chart defaults already point at GHCR so SCALE's catalog installations will pick up the published image automatically.
+
+
