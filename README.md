@@ -13,10 +13,26 @@ docker run -d -p 3000:3000 --env NODE_ENV=production --name proman ghcr.io/jigle
 
 2) Open: http://localhost:3000
 
+## Google OAuth Setup
+
+To enable Google login:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing
+3. Enable Google+ API
+4. Create OAuth 2.0 credentials (Web application)
+5. Set authorized redirect URIs: `https://your-domain.com/api/auth/callback/google`
+6. Copy Client ID and Client Secret
+7. Set environment variables:
+   - `GOOGLE_CLIENT_ID=your_client_id`
+   - `GOOGLE_CLIENT_SECRET=your_client_secret`
+   - `NEXTAUTH_SECRET=your_random_secret` (generate with `openssl rand -base64 32`)
+   - `NEXTAUTH_URL=https://your-domain.com` (your app's URL)
+
 ## TrueNAS SCALE (recommended)
 - Apps → Discover Apps → Custom App
 - Image: `ghcr.io/jigle/proman:latest` (public)
-- Envs: `NODE_ENV=production`, `PORT=3000`
+- Envs: `NODE_ENV=production`, `PORT=3000`, `GOOGLE_CLIENT_ID=your_id`, `GOOGLE_CLIENT_SECRET=your_secret`, `NEXTAUTH_SECRET=your_secret`, `NEXTAUTH_URL=https://your-domain.com`
 - Ports: Container 3000 → Node port (e.g., 3000)
 - Storage: Host path → `/data`
 - Health: `GET /api/health` → `{ status: 'ok' }`
