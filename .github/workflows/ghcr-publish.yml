@@ -40,4 +40,5 @@ jobs:
           cache-to: type=inline
 
       - name: Output image
-        run: echo "Image pushed: ghcr.io/JIGLE/proman:latest"
+        run: |
+          echo "Image pushed: ghcr.io/JIGLE/proman:latest"
