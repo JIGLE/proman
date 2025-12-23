@@ -24,7 +24,7 @@ export default function Home() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-white mb-4">Welcome to Proman</h1>
           <p className="text-zinc-400 mb-8">Please sign in to access your property management dashboard.</p>
-          <Button onClick={() => signIn("google")} className="bg-blue-600 hover:bg-blue-700">
+          <Button onClick={() => signIn("google", { callbackUrl: "/" })} className="bg-blue-600 hover:bg-blue-700">
             Sign in with Google
           </Button>
         </div>
