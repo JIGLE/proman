@@ -1,0 +1,37 @@
+replicaCount: 1
+
+image:
+  # Default to a public registry image so SCALE installs do NOT require a local tar
+  repository: ghcr.io/JIGLE/proman
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 3000
+
+ingress:
+  enabled: false
+  host: proman.local
+
+resources: {}
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+persistence:
+  enabled: true
+  storage: 1Gi
+  accessMode: ReadWriteOnce
+  mountPath: /data
+  # Use an existing PVC name to bind to an existing dataset, otherwise leave empty
+  existingClaim: ""
+  # Optional: specify a storageClass available in SCALE (leave empty to use default)
+  storageClassName: ""
+
+resources:
+  requests: {}
+  limits: {}

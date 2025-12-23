@@ -1,0 +1,38 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Proman values schema",
+  "type": "object",
+  "properties": {
+    "image": {
+      "type": "object",
+      "properties": {
+        "repository": { "type": "string", "title": "Image repository" },
+        "tag": { "type": "string", "title": "Image tag" },
+        "pullPolicy": { "type": "string", "title": "Image pull policy", "enum": ["IfNotPresent","Always","Never"] }
+      }
+    },
+    "persistence": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "title": "Enable persistence" },
+        "existingClaim": { "type": "string", "title": "Existing PVC name (use to select dataset)" },
+        "storage": { "type": "string", "title": "Storage size", "default": "1Gi" },
+        "storageClassName": { "type": "string", "title": "Storage class name (leave empty for default)" }
+      }
+    },
+    "service": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "title": "Service type", "enum": ["ClusterIP","NodePort","LoadBalancer"] },
+        "port": { "type": "integer", "title": "Service port" }
+      }
+    },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean", "title": "Enable ingress" },
+        "host": { "type": "string", "title": "Ingress host" }
+      }
+    }
+  }
+}
