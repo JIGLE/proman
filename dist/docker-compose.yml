@@ -1,0 +1,14 @@
+services:
+  proman:
+    image: ghcr.io/jigle/proman:latest
+    container_name: proman
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - proman-data:/data
+volumes:
+  proman-data:
+    driver: local
