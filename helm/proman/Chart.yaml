@@ -1,0 +1,7 @@
+apiVersion: v2
+name: proman
+description: A minimal Helm chart to install the Proman Next.js app on Kubernetes / TrueNAS SCALE
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+icon: "https://raw.githubusercontent.com/JIGLE/proman/main/public/icon-128.svg"

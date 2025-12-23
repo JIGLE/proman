@@ -1,0 +1,9 @@
+Thank you for installing Proman! 🎉
+
+To access Proman locally inside your cluster run the following (replace RELEASE_NAME):
+
+  kubectl port-forward svc/{{ include "proman.fullname" . }} 3000:{{ .Values.service.port }}
+
+Then open: http://localhost:3000
+
+If you're using TrueNAS SCALE, add this repo as a Catalog and install the chart from the Catalog — the app icon should appear in the UI.
