@@ -23,8 +23,29 @@ model User {
   tenants    Tenant[]
   receipts   Receipt[]
   correspondence Correspondence[]
+  emailLogs EmailLog[]
 
   @@map("users")
+}
+
+model EmailLog {
+  id         String   @id @default(cuid())
+  userId     String
+  to         String
+  from       String
+  subject    String
+  templateId String?
+  status     EmailStatus
+  messageId  String?
+  error      String?
+  sentAt     DateTime @default(now())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("email_logs")
 }
 
 model Property {
@@ -184,4 +205,11 @@ enum UserRole {
   USER
   ADMIN
   MANAGER
+}
+
+enum EmailStatus {
+  sent
+  delivered
+  bounced
+  failed
 }
