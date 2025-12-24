@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
 import {
   Property,
   Tenant,
@@ -72,33 +73,37 @@ const AppContext = createContext<{
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
   // Property actions
-  addProperty: (property: Omit<Property, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
-  updateProperty: (id: string, property: Partial<Property>) => Promise<void>;
+  addProperty: (property: Omit<Property, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => Promise<void>;
+  updateProperty: (id: string, property: Partial<Omit<Property, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>) => Promise<void>;
   deleteProperty: (id: string) => Promise<void>;
   // Tenant actions
-  addTenant: (tenant: Omit<Tenant, 'id' | 'createdAt' | 'updatedAt' | 'propertyName'>) => Promise<void>;
-  updateTenant: (id: string, tenant: Partial<Tenant>) => Promise<void>;
+  addTenant: (tenant: Omit<Tenant, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName'>) => Promise<void>;
+  updateTenant: (id: string, tenant: Partial<Omit<Tenant, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName'>>) => Promise<void>;
   deleteTenant: (id: string) => Promise<void>;
   // Receipt actions
-  addReceipt: (receipt: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>) => Promise<void>;
-  updateReceipt: (id: string, receipt: Partial<Receipt>) => Promise<void>;
+  addReceipt: (receipt: Omit<Receipt, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>) => Promise<void>;
+  updateReceipt: (id: string, receipt: Partial<Omit<Receipt, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>>) => Promise<void>;
   deleteReceipt: (id: string) => Promise<void>;
   // Template actions
   addTemplate: (template: Omit<CorrespondenceTemplate, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   updateTemplate: (id: string, template: Partial<CorrespondenceTemplate>) => Promise<void>;
   deleteTemplate: (id: string) => Promise<void>;
   // Correspondence actions
-  addCorrespondence: (correspondence: Omit<Correspondence, 'id' | 'createdAt' | 'updatedAt' | 'tenantName'>) => Promise<void>;
-  updateCorrespondence: (id: string, correspondence: Partial<Correspondence>) => Promise<void>;
+  addCorrespondence: (correspondence: Omit<Correspondence, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName'>) => Promise<void>;
+  updateCorrespondence: (id: string, correspondence: Partial<Omit<Correspondence, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName'>>) => Promise<void>;
   deleteCorrespondence: (id: string) => Promise<void>;
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = React.useReducer(appReducer, initialState);
+  const { data: session } = useSession();
   const { error: showError } = useToast();
+  const userId = session?.user?.id;
 
   // Load initial data
   useEffect(() => {
+    if (!userId) return;
+
     const loadData = async () => {
       try {
         dispatch({ type: 'SET_LOADING', payload: true });
@@ -109,11 +114,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         // Load all data in parallel
         const [properties, tenants, receipts, templates, correspondence] = await Promise.all([
-          propertyService.getAll(),
-          tenantService.getAll(),
-          receiptService.getAll(),
+          propertyService.getAll(userId),
+          tenantService.getAll(userId),
+          receiptService.getAll(userId),
           templateService.getAll(),
-          correspondenceService.getAll(),
+          correspondenceService.getAll(userId),
         ]);
 
         dispatch({ type: 'SET_PROPERTIES', payload: properties });
@@ -135,9 +140,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [showError]);
 
   // Property actions
-  const addProperty = async (propertyData: Omit<Property, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addProperty = async (propertyData: Omit<Property, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
+    if (!userId) throw new Error('User not authenticated');
     try {
-      const newProperty = await propertyService.create(propertyData);
+      const newProperty = await propertyService.create(userId, propertyData);
       dispatch({ type: 'SET_PROPERTIES', payload: [...state.properties, newProperty] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add property';
@@ -146,9 +152,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateProperty = async (id: string, propertyData: Partial<Property>) => {
+  const updateProperty = async (id: string, propertyData: Partial<Omit<Property, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>) => {
+    if (!userId) throw new Error('User not authenticated');
     try {
-      const updatedProperty = await propertyService.update(id, propertyData);
+      const updatedProperty = await propertyService.update(userId, id, propertyData);
       dispatch({
         type: 'SET_PROPERTIES',
         payload: state.properties.map(p => p.id === id ? updatedProperty : p)
@@ -161,8 +168,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteProperty = async (id: string) => {
+    if (!userId) throw new Error('User not authenticated');
     try {
-      await propertyService.delete(id);
+      await propertyService.delete(userId, id);
       dispatch({
         type: 'SET_PROPERTIES',
         payload: state.properties.filter(p => p.id !== id)
@@ -175,9 +183,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Tenant actions
-  const addTenant = async (tenantData: Omit<Tenant, 'id' | 'createdAt' | 'updatedAt' | 'propertyName'>) => {
+  const addTenant = async (tenantData: Omit<Tenant, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName'>) => {
+    if (!userId) throw new Error('User not authenticated');
     try {
-      const newTenant = await tenantService.create(tenantData);
+      const newTenant = await tenantService.create(userId, tenantData);
       dispatch({ type: 'SET_TENANTS', payload: [...state.tenants, newTenant] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add tenant';
@@ -186,9 +195,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateTenant = async (id: string, tenantData: Partial<Tenant>) => {
+  const updateTenant = async (id: string, tenantData: Partial<Omit<Tenant, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName'>>) => {
+    if (!userId) throw new Error('User not authenticated');
     try {
-      const updatedTenant = await tenantService.update(id, tenantData);
+      const updatedTenant = await tenantService.update(userId, id, tenantData);
       dispatch({
         type: 'SET_TENANTS',
         payload: state.tenants.map(t => t.id === id ? updatedTenant : t)
@@ -201,8 +211,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteTenant = async (id: string) => {
+    if (!userId) throw new Error('User not authenticated');
     try {
-      await tenantService.delete(id);
+      await tenantService.delete(userId, id);
       dispatch({
         type: 'SET_TENANTS',
         payload: state.tenants.filter(t => t.id !== id)
@@ -215,9 +226,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Receipt actions
-  const addReceipt = async (receiptData: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>) => {
+  const addReceipt = async (receiptData: Omit<Receipt, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>) => {
+    if (!userId) throw new Error('User not authenticated');
     try {
-      const newReceipt = await receiptService.create(receiptData);
+      const newReceipt = await receiptService.create(userId, receiptData);
       dispatch({ type: 'SET_RECEIPTS', payload: [...state.receipts, newReceipt] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add receipt';
@@ -226,9 +238,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateReceipt = async (id: string, receiptData: Partial<Receipt>) => {
+  const updateReceipt = async (id: string, receiptData: Partial<Omit<Receipt, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>>) => {
+    if (!userId) throw new Error('User not authenticated');
     try {
-      const updatedReceipt = await receiptService.update(id, receiptData);
+      const updatedReceipt = await receiptService.update(userId, id, receiptData);
       dispatch({
         type: 'SET_RECEIPTS',
         payload: state.receipts.map(r => r.id === id ? updatedReceipt : r)
@@ -241,8 +254,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteReceipt = async (id: string) => {
+    if (!userId) throw new Error('User not authenticated');
     try {
-      await receiptService.delete(id);
+      await receiptService.delete(userId, id);
       dispatch({
         type: 'SET_RECEIPTS',
         payload: state.receipts.filter(r => r.id !== id)
@@ -295,9 +309,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   // Correspondence actions
-  const addCorrespondence = async (correspondenceData: Omit<Correspondence, 'id' | 'createdAt' | 'updatedAt' | 'tenantName'>) => {
+  const addCorrespondence = async (correspondenceData: Omit<Correspondence, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName'>) => {
+    if (!userId) throw new Error('User not authenticated');
     try {
-      const newCorrespondence = await correspondenceService.create(correspondenceData);
+      const newCorrespondence = await correspondenceService.create(userId, correspondenceData);
       dispatch({ type: 'SET_CORRESPONDENCE', payload: [...state.correspondence, newCorrespondence] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add correspondence';
@@ -306,9 +321,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateCorrespondence = async (id: string, correspondenceData: Partial<Correspondence>) => {
+  const updateCorrespondence = async (id: string, correspondenceData: Partial<Omit<Correspondence, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName'>>) => {
+    if (!userId) throw new Error('User not authenticated');
     try {
-      const updatedCorrespondence = await correspondenceService.update(id, correspondenceData);
+      const updatedCorrespondence = await correspondenceService.update(userId, id, correspondenceData);
       dispatch({
         type: 'SET_CORRESPONDENCE',
         payload: state.correspondence.map(c => c.id === id ? updatedCorrespondence : c)
@@ -321,8 +337,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const deleteCorrespondence = async (id: string) => {
+    if (!userId) throw new Error('User not authenticated');
     try {
-      await correspondenceService.delete(id);
+      await correspondenceService.delete(userId, id);
       dispatch({
         type: 'SET_CORRESPONDENCE',
         payload: state.correspondence.filter(c => c.id !== id)

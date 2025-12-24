@@ -13,15 +13,33 @@ const globalForPrisma = globalThis as unknown as {
 
 function getPrismaClient() {
   if (!globalForPrisma.prisma) {
-    globalForPrisma.prisma = new PrismaClient();
+    // Only initialize PrismaClient if we have a database URL (not during build)
+    if (process.env.DATABASE_URL) {
+      globalForPrisma.prisma = new PrismaClient();
+    } else {
+      // During build time, create a mock client that throws an error if used
+      globalForPrisma.prisma = new Proxy({} as PrismaClient, {
+        get: (target, prop) => {
+          if (prop === '$connect' || prop === '$disconnect') {
+            return () => Promise.resolve();
+          }
+          throw new Error('PrismaClient not available during build time');
+        },
+      });
+    }
   }
   return globalForPrisma.prisma;
 }
 
+export { getPrismaClient };
+// Remove the default prisma export to prevent build-time initialization
+// export const prisma = getPrismaClient();
+
 // Property operations
 export const propertyService = {
-  async getAll(): Promise<Property[]> {
+  async getAll(userId: string): Promise<Property[]> {
     const properties = await getPrismaClient().property.findMany({
+      where: { userId },
       include: { tenants: true, receipts: true },
     });
     return properties.map(p => ({
@@ -33,9 +51,9 @@ export const propertyService = {
     }));
   },
 
-  async getById(id: string): Promise<Property | null> {
+  async getById(userId: string, id: string): Promise<Property | null> {
     const property = await getPrismaClient().property.findUnique({
-      where: { id },
+      where: { id, userId },
       include: { tenants: true, receipts: true },
     });
     if (!property) return null;
@@ -48,9 +66,10 @@ export const propertyService = {
     };
   },
 
-  async create(data: Omit<Property, 'id' | 'createdAt' | 'updatedAt'>): Promise<Property> {
+  async create(userId: string, data: Omit<Property, 'id' | 'userId' | 'createdAt' | 'updatedAt'>): Promise<Property> {
     const property = await getPrismaClient().property.create({
       data: {
+        userId,
         name: data.name,
         address: data.address,
         type: data.type,
@@ -71,9 +90,9 @@ export const propertyService = {
     };
   },
 
-  async update(id: string, data: Partial<Omit<Property, 'id' | 'createdAt' | 'updatedAt'>>): Promise<Property> {
+  async update(userId: string, id: string, data: Partial<Omit<Property, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>): Promise<Property> {
     const property = await getPrismaClient().property.update({
-      where: { id },
+      where: { id, userId },
       data: {
         name: data.name,
         address: data.address,
@@ -95,15 +114,16 @@ export const propertyService = {
     };
   },
 
-  async delete(id: string): Promise<void> {
-    await getPrismaClient().property.delete({ where: { id } });
+  async delete(userId: string, id: string): Promise<void> {
+    await getPrismaClient().property.delete({ where: { id, userId } });
   },
 };
 
 // Tenant operations
 export const tenantService = {
-  async getAll(): Promise<Tenant[]> {
+  async getAll(userId: string): Promise<Tenant[]> {
     const tenants = await getPrismaClient().tenant.findMany({
+      where: { userId },
       include: { property: true, receipts: true, correspondence: true },
     });
     return tenants.map(t => ({
@@ -119,9 +139,9 @@ export const tenantService = {
     }));
   },
 
-  async getById(id: string): Promise<Tenant | null> {
+  async getById(userId: string, id: string): Promise<Tenant | null> {
     const tenant = await getPrismaClient().tenant.findUnique({
-      where: { id },
+      where: { id, userId },
       include: { property: true, receipts: true, correspondence: true },
     });
     if (!tenant) return null;
@@ -138,9 +158,10 @@ export const tenantService = {
     };
   },
 
-  async create(data: Omit<Tenant, 'id' | 'createdAt' | 'updatedAt' | 'propertyName'>): Promise<Tenant> {
+  async create(userId: string, data: Omit<Tenant, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName'>): Promise<Tenant> {
     const tenant = await getPrismaClient().tenant.create({
       data: {
+        userId,
         name: data.name,
         email: data.email,
         phone: data.phone,
@@ -167,9 +188,9 @@ export const tenantService = {
     };
   },
 
-  async update(id: string, data: Partial<Omit<Tenant, 'id' | 'createdAt' | 'updatedAt' | 'propertyName'>>): Promise<Tenant> {
+  async update(userId: string, id: string, data: Partial<Omit<Tenant, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName'>>): Promise<Tenant> {
     const tenant = await getPrismaClient().tenant.update({
-      where: { id },
+      where: { id, userId },
       data: {
         name: data.name,
         email: data.email,
@@ -197,15 +218,16 @@ export const tenantService = {
     };
   },
 
-  async delete(id: string): Promise<void> {
-    await getPrismaClient().tenant.delete({ where: { id } });
+  async delete(userId: string, id: string): Promise<void> {
+    await getPrismaClient().tenant.delete({ where: { id, userId } });
   },
 };
 
 // Receipt operations
 export const receiptService = {
-  async getAll(): Promise<Receipt[]> {
+  async getAll(userId: string): Promise<Receipt[]> {
     const receipts = await getPrismaClient().receipt.findMany({
+      where: { userId },
       include: { tenant: true, property: true },
     });
     return receipts.map(r => ({
@@ -219,9 +241,9 @@ export const receiptService = {
     }));
   },
 
-  async getById(id: string): Promise<Receipt | null> {
+  async getById(userId: string, id: string): Promise<Receipt | null> {
     const receipt = await getPrismaClient().receipt.findUnique({
-      where: { id },
+      where: { id, userId },
       include: { tenant: true, property: true },
     });
     if (!receipt) return null;
@@ -237,9 +259,10 @@ export const receiptService = {
     };
   },
 
-  async create(data: Omit<Receipt, 'id' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>): Promise<Receipt> {
+  async create(userId: string, data: Omit<Receipt, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>): Promise<Receipt> {
     const receipt = await getPrismaClient().receipt.create({
       data: {
+        userId,
         tenantId: data.tenantId,
         propertyId: data.propertyId,
         amount: data.amount,
@@ -262,9 +285,9 @@ export const receiptService = {
     };
   },
 
-  async update(id: string, data: Partial<Omit<Receipt, 'id' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>>): Promise<Receipt> {
+  async update(userId: string, id: string, data: Partial<Omit<Receipt, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>>): Promise<Receipt> {
     const receipt = await getPrismaClient().receipt.update({
-      where: { id },
+      where: { id, userId },
       data: {
         tenantId: data.tenantId,
         propertyId: data.propertyId,
@@ -288,8 +311,8 @@ export const receiptService = {
     };
   },
 
-  async delete(id: string): Promise<void> {
-    await getPrismaClient().receipt.delete({ where: { id } });
+  async delete(userId: string, id: string): Promise<void> {
+    await getPrismaClient().receipt.delete({ where: { id, userId } });
   },
 };
 
@@ -365,8 +388,9 @@ export const templateService = {
 
 // Correspondence operations
 export const correspondenceService = {
-  async getAll(): Promise<Correspondence[]> {
+  async getAll(userId: string): Promise<Correspondence[]> {
     const correspondence = await getPrismaClient().correspondence.findMany({
+      where: { userId },
       include: { template: true, tenant: true },
     });
     return correspondence.map(c => ({
@@ -378,9 +402,9 @@ export const correspondenceService = {
     }));
   },
 
-  async getById(id: string): Promise<Correspondence | null> {
+  async getById(userId: string, id: string): Promise<Correspondence | null> {
     const correspondence = await getPrismaClient().correspondence.findUnique({
-      where: { id },
+      where: { id, userId },
       include: { template: true, tenant: true },
     });
     if (!correspondence) return null;
@@ -394,9 +418,10 @@ export const correspondenceService = {
     };
   },
 
-  async create(data: Omit<Correspondence, 'id' | 'createdAt' | 'updatedAt' | 'tenantName'>): Promise<Correspondence> {
+  async create(userId: string, data: Omit<Correspondence, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName'>): Promise<Correspondence> {
     const correspondence = await getPrismaClient().correspondence.create({
       data: {
+        userId,
         templateId: data.templateId,
         tenantId: data.tenantId,
         subject: data.subject,
@@ -416,9 +441,9 @@ export const correspondenceService = {
     };
   },
 
-  async update(id: string, data: Partial<Omit<Correspondence, 'id' | 'createdAt' | 'updatedAt' | 'tenantName'>>): Promise<Correspondence> {
+  async update(userId: string, id: string, data: Partial<Omit<Correspondence, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName'>>): Promise<Correspondence> {
     const correspondence = await getPrismaClient().correspondence.update({
-      where: { id },
+      where: { id, userId },
       data: {
         templateId: data.templateId,
         tenantId: data.tenantId,
@@ -439,8 +464,8 @@ export const correspondenceService = {
     };
   },
 
-  async delete(id: string): Promise<void> {
-    await getPrismaClient().correspondence.delete({ where: { id } });
+  async delete(userId: string, id: string): Promise<void> {
+    await getPrismaClient().correspondence.delete({ where: { id, userId } });
   },
 };
 

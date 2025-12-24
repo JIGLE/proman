@@ -2,6 +2,7 @@
 
 export interface Property {
   id: string;
+  userId: string;
   name: string;
   address: string;
   type: "apartment" | "house" | "condo" | "townhouse" | "other";
@@ -17,6 +18,7 @@ export interface Property {
 
 export interface Tenant {
   id: string;
+  userId: string;
   name: string;
   email: string;
   phone: string;
@@ -34,6 +36,7 @@ export interface Tenant {
 
 export interface Receipt {
   id: string;
+  userId: string;
   tenantId: string;
   tenantName: string;
   propertyId: string;
@@ -60,6 +63,7 @@ export interface CorrespondenceTemplate {
 
 export interface Correspondence {
   id: string;
+  userId: string;
   templateId: string;
   tenantId: string;
   tenantName: string;

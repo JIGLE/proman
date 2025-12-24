@@ -1,0 +1,88 @@
+import { NextRequest } from 'next/server';
+import { requireAuth, handleOptions } from '@/lib/auth-middleware';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
+import { templateService } from '@/lib/database';
+import { sanitizeForDatabase } from '@/lib/sanitize';
+import { z } from 'zod';
+
+// Validation schema for updates
+const updateTemplateSchema = z.object({
+  name: z.string().min(1).max(200).optional(),
+  type: z.enum(['welcome', 'rent_reminder', 'eviction_notice', 'maintenance_request', 'lease_renewal', 'custom']).optional(),
+  subject: z.string().min(1).max(500).optional(),
+  content: z.string().min(1).max(10000).optional(),
+  variables: z.array(z.string()).optional(),
+});
+
+// GET /api/correspondence/templates/[id] - Get a specific template
+async function handleGet(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+  try {
+    const template = await templateService.getById(params.id);
+
+    if (!template) {
+      return createErrorResponse(new Error('Template not found'), 404, request);
+    }
+
+    return createSuccessResponse(template);
+  } catch (error) {
+    return createErrorResponse(error as Error, 500, request);
+  }
+}
+
+// PUT /api/correspondence/templates/[id] - Update a specific template
+async function handlePut(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+  try {
+    // First check if template exists
+    const existingTemplate = await templateService.getById(params.id);
+    if (!existingTemplate) {
+      return createErrorResponse(new Error('Template not found'), 404, request);
+    }
+
+    const body = await request.json();
+
+    // Sanitize input
+    const sanitizedBody = {
+      ...body,
+      name: body.name ? sanitizeForDatabase(body.name) : undefined,
+      subject: body.subject ? sanitizeForDatabase(body.subject) : undefined,
+      content: body.content ? sanitizeForDatabase(body.content) : undefined,
+    };
+
+    // Validate input
+    const validatedData = updateTemplateSchema.parse(sanitizedBody);
+
+    const template = await templateService.update(params.id, validatedData);
+    return createSuccessResponse(template);
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return createErrorResponse(
+        new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
+        400,
+        request
+      );
+    }
+    return createErrorResponse(error as Error, 500, request);
+  }
+}
+
+// DELETE /api/correspondence/templates/[id] - Delete a specific template
+async function handleDelete(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+  try {
+    // First check if template exists
+    const existingTemplate = await templateService.getById(params.id);
+    if (!existingTemplate) {
+      return createErrorResponse(new Error('Template not found'), 404, request);
+    }
+
+    await templateService.delete(params.id);
+    return createSuccessResponse({ message: 'Template deleted successfully' });
+  } catch (error) {
+    return createErrorResponse(error as Error, 500, request);
+  }
+}
+
+// Main handler
+export const GET = withErrorHandler(handleGet);
+export const PUT = withErrorHandler(handlePut);
+export const DELETE = withErrorHandler(handleDelete);
+export const OPTIONS = handleOptions;

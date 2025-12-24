@@ -1,19 +1,23 @@
 import NextAuth from "next-auth";
-import GoogleProvider from "next-auth/providers/google";
+import { getAuthOptions } from "@/lib/auth";
+import { NextRequest } from "next/server";
 
-export const handler = NextAuth({
-  providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
-  ],
-  session: { strategy: "jwt" },
-  secret: process.env.NEXTAUTH_SECRET,
-  pages: {
-    signIn: "/api/auth/signin",
-    error: "/api/auth/error",
-  },
-});
+// Prevent static generation for auth routes
+export const dynamic = 'force-dynamic';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+
+// Check if we're in build time (no database available)
+const isBuildTime = !process.env.DATABASE_URL;
+
+async function handler(request: NextRequest) {
+  if (isBuildTime) {
+    // During build time, return a simple response
+    return new Response('Auth not available during build', { status: 503 });
+  }
+
+  const nextAuthHandler = NextAuth(getAuthOptions());
+  return nextAuthHandler(request);
+}
 
 export { handler as GET, handler as POST };

@@ -9,8 +9,27 @@ datasource db {
   provider = "sqlite"
 }
 
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  image     String?
+  role      UserRole @default(USER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  properties Property[]
+  tenants    Tenant[]
+  receipts   Receipt[]
+  correspondence Correspondence[]
+
+  @@map("users")
+}
+
 model Property {
   id          String   @id @default(cuid())
+  userId      String
   name        String
   address     String
   type        PropertyType
@@ -24,6 +43,7 @@ model Property {
   updatedAt   DateTime @updatedAt
 
   // Relations
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   tenants     Tenant[]
   receipts    Receipt[]
 
@@ -32,6 +52,7 @@ model Property {
 
 model Tenant {
   id            String   @id @default(cuid())
+  userId        String
   name          String
   email         String   @unique
   phone         String
@@ -46,6 +67,7 @@ model Tenant {
   updatedAt     DateTime @updatedAt
 
   // Relations
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   property      Property?     @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   receipts      Receipt[]
   correspondence Correspondence[]
@@ -55,6 +77,7 @@ model Tenant {
 
 model Receipt {
   id          String   @id @default(cuid())
+  userId      String
   tenantId    String
   propertyId  String
   amount      Float
@@ -66,6 +89,7 @@ model Receipt {
   updatedAt   DateTime @updatedAt
 
   // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
@@ -90,6 +114,7 @@ model CorrespondenceTemplate {
 
 model Correspondence {
   id         String   @id @default(cuid())
+  userId     String
   templateId String
   tenantId   String
   subject    String
@@ -100,8 +125,9 @@ model Correspondence {
   updatedAt  DateTime @updatedAt
 
   // Relations
+  user     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   template CorrespondenceTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  tenant   Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  tenant   Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@map("correspondence")
 }
@@ -152,4 +178,10 @@ enum CorrespondenceStatus {
   draft
   sent
   delivered
+}
+
+enum UserRole {
+  USER
+  ADMIN
+  MANAGER
 }
