@@ -29,6 +29,27 @@ To enable Google login:
    - `NEXTAUTH_SECRET=your_random_secret` (generate with `openssl rand -base64 32`)
    - `NEXTAUTH_URL=https://your-domain.com` (your app's URL)
 
+## Features
+
+### 🔐 Authentication
+- Google OAuth 2.0 login
+- Secure JWT-based sessions
+- Custom signin/error pages
+
+### 👤 User Profile & Settings
+- **Profile Page** (`/profile`): View account info, avatar, and statistics
+- **Settings Page** (`/settings`): Comprehensive preference management
+  - Notifications (email, push, reminders)
+  - Appearance (theme, language)
+  - Preferences (timezone, currency)
+  - Privacy & security controls
+
+### 🏠 Property Management
+- Dashboard overview
+- Properties management
+- Tenants tracking
+- Financials & receipts
+
 ## TrueNAS SCALE (recommended)
 - Apps → Discover Apps → Custom App
 - Image: `ghcr.io/jigle/proman:latest` (public)
