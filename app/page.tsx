@@ -14,6 +14,18 @@ export default function Home() {
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("overview");
 
+  const handleTabChange = (tab: string) => {
+    if (tab === 'profile') {
+      window.location.href = '/profile';
+      return;
+    }
+    if (tab === 'settings') {
+      window.location.href = '/settings';
+      return;
+    }
+    setActiveTab(tab);
+  };
+
   if (status === "loading") {
     return <div className="flex h-screen items-center justify-center">Loading...</div>;
   }
@@ -51,7 +63,7 @@ export default function Home() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-zinc-950">
-      <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
       <main className="flex-1 overflow-y-auto">
         <div className="container mx-auto p-6 md:p-8 lg:p-10">
           {renderContent()}
