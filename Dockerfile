@@ -6,6 +6,9 @@ RUN npm ci --only=production && npm cache clean --force
 FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
+# Ensure Prisma schema and config are available for postinstall hooks
+COPY prisma ./prisma
+COPY prisma.config.ts ./
 RUN npm ci && npm cache clean --force
 COPY --chown=node:node . .
 # Generate Prisma client before building
