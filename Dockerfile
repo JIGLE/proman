@@ -8,6 +8,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci && npm cache clean --force
 COPY --chown=node:node . .
+# Generate Prisma client before building
+RUN npx prisma generate
 RUN npm run build
 
 FROM node:20-alpine AS runner
