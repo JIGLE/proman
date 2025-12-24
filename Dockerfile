@@ -14,6 +14,8 @@ COPY --chown=node:node . .
 # Generate Prisma client before building
 RUN npx prisma generate
 RUN npm run build
+# Keep only production dependencies to reduce runner image size
+RUN npm prune --production
 
 FROM node:20-alpine AS runner
 WORKDIR /app
@@ -24,9 +26,8 @@ EXPOSE 3000
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-# Install only production dependencies from the standalone package.json
-# (run as root so npm can write to /app), then switch to non-root user
-RUN npm install --production --prefix . && npm cache clean --force
+# Copy production dependencies from builder (generated with npm prune --production)
+COPY --from=builder /app/node_modules ./node_modules
 # Run as non-root user provided by the official Node image
 USER node
 # Start the Next standalone server
