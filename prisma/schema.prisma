@@ -1,0 +1,155 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Property {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  type        PropertyType
+  bedrooms    Int
+  bathrooms   Int
+  rent        Float
+  status      PropertyStatus
+  description String?
+  image       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  tenants     Tenant[]
+  receipts    Receipt[]
+
+  @@map("properties")
+}
+
+model Tenant {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  phone         String
+  propertyId    String?
+  rent          Float
+  leaseStart    DateTime
+  leaseEnd      DateTime
+  paymentStatus PaymentStatus @default(pending)
+  lastPayment   DateTime?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  property      Property?     @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  receipts      Receipt[]
+  correspondence Correspondence[]
+
+  @@map("tenants")
+}
+
+model Receipt {
+  id          String   @id @default(cuid())
+  tenantId    String
+  propertyId  String
+  amount      Float
+  date        DateTime
+  type        ReceiptType
+  status      ReceiptStatus @default(paid)
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("receipts")
+}
+
+model CorrespondenceTemplate {
+  id        String   @id @default(cuid())
+  name      String
+  type      TemplateType
+  subject   String
+  content   String
+  variables String   // JSON string of variable names
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  correspondence Correspondence[]
+
+  @@map("correspondence_templates")
+}
+
+model Correspondence {
+  id         String   @id @default(cuid())
+  templateId String
+  tenantId   String
+  subject    String
+  content    String
+  status     CorrespondenceStatus @default(draft)
+  sentAt     DateTime?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  template CorrespondenceTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  tenant   Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("correspondence")
+}
+
+// Enums
+enum PropertyType {
+  apartment
+  house
+  condo
+  townhouse
+  other
+}
+
+enum PropertyStatus {
+  occupied
+  vacant
+  maintenance
+}
+
+enum PaymentStatus {
+  paid
+  overdue
+  pending
+}
+
+enum ReceiptType {
+  rent
+  deposit
+  maintenance
+  other
+}
+
+enum ReceiptStatus {
+  paid
+  pending
+}
+
+enum TemplateType {
+  welcome
+  rent_reminder
+  eviction_notice
+  maintenance_request
+  lease_renewal
+  custom
+}
+
+enum CorrespondenceStatus {
+  draft
+  sent
+  delivered
+}

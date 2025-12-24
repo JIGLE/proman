@@ -16,49 +16,76 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { useApp } from "@/lib/app-context";
+import { useApp } from "@/lib/app-context-db";
 import { CorrespondenceTemplate, Correspondence, Tenant } from "@/lib/types";
+import { templateSchema, TemplateFormData } from "@/lib/validation";
+import { useToast } from "@/lib/toast-context";
 
 export function CorrespondenceView() {
-  const { state, dispatch } = useApp();
-  const { templates, correspondence, tenants } = state;
+  const { state, addTemplate, updateTemplate, deleteTemplate, addCorrespondence } = useApp();
+  const { templates, correspondence, tenants, loading } = state;
+  const { success, error } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<CorrespondenceTemplate | null>(null);
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<CorrespondenceTemplate | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [composeData, setComposeData] = useState({
     tenantId: '',
     subject: '',
     content: '',
   });
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<TemplateFormData>({
     name: '',
-    type: 'welcome' as CorrespondenceTemplate['type'],
+    type: 'welcome',
     subject: '',
     content: '',
   });
+  const [formErrors, setFormErrors] = useState<Partial<TemplateFormData>>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setFormErrors({});
 
-    const templateData: CorrespondenceTemplate = {
-      id: editingTemplate?.id || `template-${Date.now()}`,
-      ...formData,
-      variables: extractVariables(formData.content),
-      createdAt: editingTemplate?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    try {
+      // Validate form data
+      const validatedData = templateSchema.parse(formData);
 
-    if (editingTemplate) {
-      dispatch({ type: 'UPDATE_TEMPLATE', payload: templateData });
-    } else {
-      dispatch({ type: 'ADD_TEMPLATE', payload: templateData });
+      const templateData = {
+        ...validatedData,
+        variables: extractVariables(validatedData.content),
+      };
+
+      if (editingTemplate) {
+        await updateTemplate(editingTemplate.id, templateData);
+        success('Template updated successfully!');
+      } else {
+        await addTemplate(templateData);
+        success('Template created successfully!');
+      }
+
+      setIsDialogOpen(false);
+      setEditingTemplate(null);
+      resetForm();
+    } catch (err) {
+      if (err instanceof Error && err.name === 'ZodError') {
+        // Handle validation errors
+        const errors: Partial<TemplateFormData> = {};
+        (err as any).errors.forEach((error: any) => {
+          const field = error.path[0] as keyof TemplateFormData;
+          errors[field] = error.message;
+        });
+        setFormErrors(errors);
+        error('Please fix the form errors below.');
+      } else {
+        error('Failed to save template. Please try again.');
+        console.error('Template save error:', err);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsDialogOpen(false);
-    setEditingTemplate(null);
-    resetForm();
   };
 
   const handleCompose = (template: CorrespondenceTemplate) => {
@@ -71,35 +98,39 @@ export function CorrespondenceView() {
     setIsComposeOpen(true);
   };
 
-  const handleSendCorrespondence = (e: React.FormEvent) => {
+  const handleSendCorrespondence = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!selectedTemplate) return;
 
     const selectedTenant = tenants.find(t => t.id === composeData.tenantId);
-    if (!selectedTenant) return;
+    if (!selectedTenant) {
+      error('Please select a tenant.');
+      return;
+    }
 
-    // Replace variables in content
-    const processedContent = replaceVariables(composeData.content, selectedTenant);
+    try {
+      // Replace variables in content
+      const processedContent = replaceVariables(composeData.content, selectedTenant);
 
-    const correspondenceData: Correspondence = {
-      id: `corr-${Date.now()}`,
-      templateId: selectedTemplate.id,
-      tenantId: selectedTenant.id,
-      tenantName: selectedTenant.name,
-      subject: composeData.subject,
-      content: processedContent,
-      status: 'sent',
-      sentAt: new Date().toISOString(),
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      const correspondenceData = {
+        templateId: selectedTemplate.id,
+        tenantId: selectedTenant.id,
+        subject: composeData.subject,
+        content: processedContent,
+        status: 'sent' as const,
+        sentAt: new Date().toISOString(),
+      };
 
-    dispatch({ type: 'ADD_CORRESPONDENCE', payload: correspondenceData });
+      await addCorrespondence(correspondenceData);
 
-    setIsComposeOpen(false);
-    setSelectedTemplate(null);
-    alert('Correspondence sent successfully!');
+      setIsComposeOpen(false);
+      setSelectedTemplate(null);
+      success('Correspondence sent successfully!');
+    } catch (err) {
+      error('Failed to send correspondence. Please try again.');
+      console.error('Correspondence send error:', err);
+    }
   };
 
   const handleEdit = (template: CorrespondenceTemplate) => {
@@ -113,9 +144,14 @@ export function CorrespondenceView() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this template?')) {
-      dispatch({ type: 'DELETE_TEMPLATE', payload: id });
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this template? This action cannot be undone.')) {
+      try {
+        await deleteTemplate(id);
+        success('Template deleted successfully!');
+      } catch (err) {
+        // Error is already handled in the context
+      }
     }
   };
 
@@ -145,6 +181,7 @@ export function CorrespondenceView() {
       subject: '',
       content: '',
     });
+    setFormErrors({});
   };
 
   const openAddDialog = () => {
@@ -171,6 +208,11 @@ export function CorrespondenceView() {
 
   return (
     <div className="space-y-6">
+      {loading && (
+        <div className="flex items-center justify-center p-8">
+          <div className="text-zinc-400">Loading correspondence...</div>
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
@@ -202,13 +244,16 @@ export function CorrespondenceView() {
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
+                    className={formErrors.name ? 'border-red-500' : ''}
                   />
+                  {formErrors.name && (
+                    <p className="text-sm text-red-400">{formErrors.name}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="type">Template Type</Label>
-                  <Select value={formData.type} onValueChange={(value: CorrespondenceTemplate['type']) => setFormData({ ...formData, type: value })}>
-                    <SelectTrigger>
+                  <Select value={formData.type} onValueChange={(value: TemplateFormData['type']) => setFormData({ ...formData, type: value })}>
+                    <SelectTrigger className={formErrors.type ? 'border-red-500' : ''}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

@@ -16,24 +16,29 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { useApp } from "@/lib/app-context";
+import { useApp } from "@/lib/app-context-db";
 import { Property } from "@/lib/types";
+import { propertySchema, PropertyFormData } from "@/lib/validation";
+import { useToast } from "@/lib/toast-context";
 
 export function PropertiesView() {
-  const { state, dispatch } = useApp();
-  const { properties } = state;
+  const { state, addProperty, updateProperty, deleteProperty } = useApp();
+  const { properties, loading } = state;
+  const { success, error } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
-  const [formData, setFormData] = useState({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<PropertyFormData>({
     name: '',
     address: '',
-    type: '',
+    type: 'apartment',
     bedrooms: 1,
     bathrooms: 1,
     rent: 0,
-    status: 'vacant' as Property['status'],
+    status: 'vacant',
     description: '',
   });
+  const [formErrors, setFormErrors] = useState<Partial<PropertyFormData>>({});
 
   const getStatusBadge = (status: Property["status"]) => {
     switch (status) {
@@ -46,25 +51,43 @@ export function PropertiesView() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setFormErrors({});
 
-    const propertyData: Property = {
-      id: editingProperty?.id || `prop-${Date.now()}`,
-      ...formData,
-      createdAt: editingProperty?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    try {
+      // Validate form data
+      const validatedData = propertySchema.parse(formData);
 
-    if (editingProperty) {
-      dispatch({ type: 'UPDATE_PROPERTY', payload: propertyData });
-    } else {
-      dispatch({ type: 'ADD_PROPERTY', payload: propertyData });
+      if (editingProperty) {
+        await updateProperty(editingProperty.id, validatedData);
+        success('Property updated successfully!');
+      } else {
+        await addProperty(validatedData);
+        success('Property added successfully!');
+      }
+
+      setIsDialogOpen(false);
+      setEditingProperty(null);
+      resetForm();
+    } catch (err) {
+      if (err instanceof Error && err.name === 'ZodError') {
+        // Handle validation errors
+        const errors: Partial<PropertyFormData> = {};
+        (err as any).errors.forEach((error: any) => {
+          const field = error.path[0] as keyof PropertyFormData;
+          errors[field] = error.message;
+        });
+        setFormErrors(errors);
+        error('Please fix the form errors below.');
+      } else {
+        error('Failed to save property. Please try again.');
+        console.error('Property save error:', err);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsDialogOpen(false);
-    setEditingProperty(null);
-    resetForm();
   };
 
   const handleEdit = (property: Property) => {
@@ -82,9 +105,14 @@ export function PropertiesView() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    if (confirm('Are you sure you want to delete this property?')) {
-      dispatch({ type: 'DELETE_PROPERTY', payload: id });
+  const handleDelete = async (id: string) => {
+    if (confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
+      try {
+        await deleteProperty(id);
+        success('Property deleted successfully!');
+      } catch (err) {
+        // Error is already handled in the context
+      }
     }
   };
 
@@ -92,13 +120,14 @@ export function PropertiesView() {
     setFormData({
       name: '',
       address: '',
-      type: '',
+      type: 'apartment',
       bedrooms: 1,
       bathrooms: 1,
       rent: 0,
       status: 'vacant',
       description: '',
     });
+    setFormErrors({});
   };
 
   const openAddDialog = () => {
@@ -109,6 +138,11 @@ export function PropertiesView() {
 
   return (
     <div className="space-y-6">
+      {loading && (
+        <div className="flex items-center justify-center p-8">
+          <div className="text-zinc-400">Loading properties...</div>
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
@@ -140,25 +174,29 @@ export function PropertiesView() {
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    required
+                    className={formErrors.name ? 'border-red-500' : ''}
                   />
+                  {formErrors.name && (
+                    <p className="text-sm text-red-400">{formErrors.name}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="type">Property Type</Label>
-                  <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
-                    <SelectTrigger>
+                  <Select value={formData.type} onValueChange={(value: PropertyFormData['type']) => setFormData({ ...formData, type: value })}>
+                    <SelectTrigger className={formErrors.type ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Single Family">Single Family</SelectItem>
-                      <SelectItem value="Apartment">Apartment</SelectItem>
-                      <SelectItem value="Condo">Condo</SelectItem>
-                      <SelectItem value="Townhouse">Townhouse</SelectItem>
-                      <SelectItem value="Studio">Studio</SelectItem>
-                      <SelectItem value="Cabin">Cabin</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
+                      <SelectItem value="apartment">Apartment</SelectItem>
+                      <SelectItem value="house">House</SelectItem>
+                      <SelectItem value="condo">Condo</SelectItem>
+                      <SelectItem value="townhouse">Townhouse</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
+                  {formErrors.type && (
+                    <p className="text-sm text-red-400">{formErrors.type}</p>
+                  )}
                 </div>
               </div>
 
@@ -168,8 +206,11 @@ export function PropertiesView() {
                   id="address"
                   value={formData.address}
                   onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  required
+                  className={formErrors.address ? 'border-red-500' : ''}
                 />
+                {formErrors.address && (
+                  <p className="text-sm text-red-400">{formErrors.address}</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -179,9 +220,14 @@ export function PropertiesView() {
                     id="bedrooms"
                     type="number"
                     min="0"
+                    max="20"
                     value={formData.bedrooms}
                     onChange={(e) => setFormData({ ...formData, bedrooms: parseInt(e.target.value) || 0 })}
+                    className={formErrors.bedrooms ? 'border-red-500' : ''}
                   />
+                  {formErrors.bedrooms && (
+                    <p className="text-sm text-red-400">{formErrors.bedrooms}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="bathrooms">Bathrooms</Label>
@@ -189,10 +235,15 @@ export function PropertiesView() {
                     id="bathrooms"
                     type="number"
                     min="0"
+                    max="20"
                     step="0.5"
                     value={formData.bathrooms}
                     onChange={(e) => setFormData({ ...formData, bathrooms: parseFloat(e.target.value) || 0 })}
+                    className={formErrors.bathrooms ? 'border-red-500' : ''}
                   />
+                  {formErrors.bathrooms && (
+                    <p className="text-sm text-red-400">{formErrors.bathrooms}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="rent">Monthly Rent ($)</Label>
@@ -202,12 +253,16 @@ export function PropertiesView() {
                     min="0"
                     value={formData.rent}
                     onChange={(e) => setFormData({ ...formData, rent: parseInt(e.target.value) || 0 })}
+                    className={formErrors.rent ? 'border-red-500' : ''}
                   />
+                  {formErrors.rent && (
+                    <p className="text-sm text-red-400">{formErrors.rent}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="status">Status</Label>
-                  <Select value={formData.status} onValueChange={(value: Property['status']) => setFormData({ ...formData, status: value })}>
-                    <SelectTrigger>
+                  <Select value={formData.status} onValueChange={(value: PropertyFormData['status']) => setFormData({ ...formData, status: value })}>
+                    <SelectTrigger className={formErrors.status ? 'border-red-500' : ''}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -216,6 +271,9 @@ export function PropertiesView() {
                       <SelectItem value="maintenance">Maintenance</SelectItem>
                     </SelectContent>
                   </Select>
+                  {formErrors.status && (
+                    <p className="text-sm text-red-400">{formErrors.status}</p>
+                  )}
                 </div>
               </div>
 
@@ -226,15 +284,19 @@ export function PropertiesView() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   rows={3}
+                  className={formErrors.description ? 'border-red-500' : ''}
                 />
+                {formErrors.description && (
+                  <p className="text-sm text-red-400">{formErrors.description}</p>
+                )}
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} disabled={isSubmitting}>
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingProperty ? 'Update Property' : 'Add Property'}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : (editingProperty ? 'Update Property' : 'Add Property')}
                 </Button>
               </div>
             </form>

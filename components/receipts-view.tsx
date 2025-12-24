@@ -16,50 +16,68 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { useApp } from "@/lib/app-context";
+import { useApp } from "@/lib/app-context-db";
 import { Receipt } from "@/lib/types";
+import { receiptSchema, ReceiptFormData } from "@/lib/validation";
+import { useToast } from "@/lib/toast-context";
 import jsPDF from "jspdf";
 
 export function ReceiptsView() {
-  const { state, dispatch } = useApp();
-  const { receipts, tenants, properties } = state;
+  const { state, addReceipt, updateReceipt, deleteReceipt } = useApp();
+  const { receipts, tenants, properties, loading } = state;
+  const { success, error } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null);
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
-  const [formData, setFormData] = useState({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<ReceiptFormData>({
     tenantId: '',
     propertyId: '',
     amount: 0,
     date: new Date().toISOString().split('T')[0],
-    type: 'rent' as Receipt['type'],
+    type: 'rent',
+    status: 'paid',
     description: '',
   });
+  const [formErrors, setFormErrors] = useState<Partial<ReceiptFormData>>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setFormErrors({});
 
-    const selectedTenant = tenants.find(t => t.id === formData.tenantId);
-    const selectedProperty = properties.find(p => p.id === formData.propertyId);
+    try {
+      // Validate form data
+      const validatedData = receiptSchema.parse(formData);
 
-    const receiptData: Receipt = {
-      id: editingReceipt?.id || `receipt-${Date.now()}`,
-      ...formData,
-      tenantName: selectedTenant?.name || '',
-      propertyName: selectedProperty?.name || '',
-      status: 'paid',
-      createdAt: editingReceipt?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      if (editingReceipt) {
+        await updateReceipt(editingReceipt.id, validatedData);
+        success('Receipt updated successfully!');
+      } else {
+        await addReceipt(validatedData);
+        success('Receipt created successfully!');
+      }
 
-    if (editingReceipt) {
-      dispatch({ type: 'UPDATE_RECEIPT', payload: receiptData });
-    } else {
-      dispatch({ type: 'ADD_RECEIPT', payload: receiptData });
+      setIsDialogOpen(false);
+      setEditingReceipt(null);
+      resetForm();
+    } catch (err) {
+      if (err instanceof Error && err.name === 'ZodError') {
+        // Handle validation errors
+        const errors: Partial<ReceiptFormData> = {};
+        (err as any).errors.forEach((error: any) => {
+          const field = error.path[0] as keyof ReceiptFormData;
+          errors[field] = error.message;
+        });
+        setFormErrors(errors);
+        error('Please fix the form errors below.');
+      } else {
+        error('Failed to save receipt. Please try again.');
+        console.error('Receipt save error:', err);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsDialogOpen(false);
-    setEditingReceipt(null);
-    resetForm();
   };
 
   const handleEdit = (receipt: Receipt) => {
@@ -70,14 +88,20 @@ export function ReceiptsView() {
       amount: receipt.amount,
       date: receipt.date,
       type: receipt.type,
+      status: receipt.status,
       description: receipt.description || '',
     });
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this receipt?')) {
-      dispatch({ type: 'DELETE_RECEIPT', payload: id });
+      try {
+        await deleteReceipt(id);
+        success('Receipt deleted successfully!');
+      } catch (err) {
+        // Error is already handled in the context
+      }
     }
   };
 
@@ -88,8 +112,10 @@ export function ReceiptsView() {
       amount: 0,
       date: new Date().toISOString().split('T')[0],
       type: 'rent',
+      status: 'paid',
       description: '',
     });
+    setFormErrors({});
   };
 
   const openAddDialog = () => {
@@ -165,6 +191,11 @@ export function ReceiptsView() {
 
   return (
     <div className="space-y-6">
+      {loading && (
+        <div className="flex items-center justify-center p-8">
+          <div className="text-zinc-400">Loading receipts...</div>
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
@@ -193,7 +224,7 @@ export function ReceiptsView() {
                 <div className="space-y-2">
                   <Label htmlFor="tenant">Tenant</Label>
                   <Select value={formData.tenantId} onValueChange={(value) => setFormData({ ...formData, tenantId: value })}>
-                    <SelectTrigger>
+                    <SelectTrigger className={formErrors.tenantId ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select tenant" />
                     </SelectTrigger>
                     <SelectContent>
@@ -204,11 +235,14 @@ export function ReceiptsView() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.tenantId && (
+                    <p className="text-sm text-red-500">{formErrors.tenantId}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="property">Property</Label>
                   <Select value={formData.propertyId} onValueChange={(value) => setFormData({ ...formData, propertyId: value })}>
-                    <SelectTrigger>
+                    <SelectTrigger className={formErrors.propertyId ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select property" />
                     </SelectTrigger>
                     <SelectContent>
@@ -219,6 +253,9 @@ export function ReceiptsView() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.propertyId && (
+                    <p className="text-sm text-red-500">{formErrors.propertyId}</p>
+                  )}
                 </div>
               </div>
 
@@ -232,8 +269,12 @@ export function ReceiptsView() {
                     step="0.01"
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                    className={formErrors.amount ? 'border-red-500' : ''}
                     required
                   />
+                  {formErrors.amount && (
+                    <p className="text-sm text-red-500">{formErrors.amount}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="date">Payment Date</Label>
@@ -242,13 +283,17 @@ export function ReceiptsView() {
                     type="date"
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    className={formErrors.date ? 'border-red-500' : ''}
                     required
                   />
+                  {formErrors.date && (
+                    <p className="text-sm text-red-500">{formErrors.date}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="type">Payment Type</Label>
                   <Select value={formData.type} onValueChange={(value: Receipt['type']) => setFormData({ ...formData, type: value })}>
-                    <SelectTrigger>
+                    <SelectTrigger className={formErrors.type ? 'border-red-500' : ''}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -258,6 +303,9 @@ export function ReceiptsView() {
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
+                  {formErrors.type && (
+                    <p className="text-sm text-red-500">{formErrors.type}</p>
+                  )}
                 </div>
               </div>
 
@@ -267,16 +315,20 @@ export function ReceiptsView() {
                   id="description"
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  className={formErrors.description ? 'border-red-500' : ''}
                   rows={3}
                 />
+                {formErrors.description && (
+                  <p className="text-sm text-red-500">{formErrors.description}</p>
+                )}
               </div>
 
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingReceipt ? 'Update Receipt' : 'Create Receipt'}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : (editingReceipt ? 'Update Receipt' : 'Create Receipt')}
                 </Button>
               </div>
             </form>

@@ -16,15 +16,19 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { useApp } from "@/lib/app-context";
+import { useApp } from "@/lib/app-context-db";
 import { Tenant } from "@/lib/types";
+import { tenantSchema, TenantFormData } from "@/lib/validation";
+import { useToast } from "@/lib/toast-context";
 
 export function TenantsView() {
-  const { state, dispatch } = useApp();
-  const { tenants, properties } = state;
+  const { state, addTenant, updateTenant, deleteTenant } = useApp();
+  const { tenants, properties, loading } = state;
+  const { success, error } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
-  const [formData, setFormData] = useState({
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState<TenantFormData>({
     name: '',
     email: '',
     phone: '',
@@ -32,9 +36,10 @@ export function TenantsView() {
     rent: 0,
     leaseStart: '',
     leaseEnd: '',
-    paymentStatus: 'pending' as Tenant['paymentStatus'],
+    paymentStatus: 'pending',
     notes: '',
   });
+  const [formErrors, setFormErrors] = useState<Partial<TenantFormData>>({});
 
   const getPaymentStatusBadge = (status: Tenant["paymentStatus"]) => {
     switch (status) {
@@ -47,29 +52,43 @@ export function TenantsView() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setFormErrors({});
 
-    const selectedProperty = properties.find(p => p.id === formData.propertyId);
+    try {
+      // Validate form data
+      const validatedData = tenantSchema.parse(formData);
 
-    const tenantData: Tenant = {
-      id: editingTenant?.id || `tenant-${Date.now()}`,
-      ...formData,
-      propertyName: selectedProperty?.name || '',
-      lastPayment: editingTenant?.lastPayment,
-      createdAt: editingTenant?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+      if (editingTenant) {
+        await updateTenant(editingTenant.id, validatedData);
+        success('Tenant updated successfully!');
+      } else {
+        await addTenant(validatedData);
+        success('Tenant added successfully!');
+      }
 
-    if (editingTenant) {
-      dispatch({ type: 'UPDATE_TENANT', payload: tenantData });
-    } else {
-      dispatch({ type: 'ADD_TENANT', payload: tenantData });
+      setIsDialogOpen(false);
+      setEditingTenant(null);
+      resetForm();
+    } catch (err) {
+      if (err instanceof Error && err.name === 'ZodError') {
+        // Handle validation errors
+        const errors: Partial<TenantFormData> = {};
+        (err as any).errors.forEach((error: any) => {
+          const field = error.path[0] as keyof TenantFormData;
+          errors[field] = error.message;
+        });
+        setFormErrors(errors);
+        error('Please fix the form errors below.');
+      } else {
+        error('Failed to save tenant. Please try again.');
+        console.error('Tenant save error:', err);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsDialogOpen(false);
-    setEditingTenant(null);
-    resetForm();
   };
 
   const handleEdit = (tenant: Tenant) => {
@@ -88,9 +107,14 @@ export function TenantsView() {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (confirm('Are you sure you want to delete this tenant?')) {
-      dispatch({ type: 'DELETE_TENANT', payload: id });
+      try {
+        await deleteTenant(id);
+        success('Tenant deleted successfully!');
+      } catch (err) {
+        // Error is already handled in the context
+      }
     }
   };
 
@@ -106,6 +130,7 @@ export function TenantsView() {
       paymentStatus: 'pending',
       notes: '',
     });
+    setFormErrors({});
   };
 
   const openAddDialog = () => {
@@ -116,6 +141,11 @@ export function TenantsView() {
 
   return (
     <div className="space-y-6">
+      {loading && (
+        <div className="flex items-center justify-center p-8">
+          <div className="text-zinc-400">Loading tenants...</div>
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
@@ -147,8 +177,12 @@ export function TenantsView() {
                     id="name"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className={formErrors.name ? 'border-red-500' : ''}
                     required
                   />
+                  {formErrors.name && (
+                    <p className="text-sm text-red-500">{formErrors.name}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
@@ -157,8 +191,12 @@ export function TenantsView() {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className={formErrors.email ? 'border-red-500' : ''}
                     required
                   />
+                  {formErrors.email && (
+                    <p className="text-sm text-red-500">{formErrors.email}</p>
+                  )}
                 </div>
               </div>
 
@@ -169,13 +207,17 @@ export function TenantsView() {
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className={formErrors.phone ? 'border-red-500' : ''}
                     required
                   />
+                  {formErrors.phone && (
+                    <p className="text-sm text-red-500">{formErrors.phone}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="property">Property</Label>
                   <Select value={formData.propertyId} onValueChange={(value) => setFormData({ ...formData, propertyId: value })}>
-                    <SelectTrigger>
+                    <SelectTrigger className={formErrors.propertyId ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select property" />
                     </SelectTrigger>
                     <SelectContent>
@@ -186,6 +228,9 @@ export function TenantsView() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.propertyId && (
+                    <p className="text-sm text-red-500">{formErrors.propertyId}</p>
+                  )}
                 </div>
               </div>
 
@@ -198,8 +243,12 @@ export function TenantsView() {
                     min="0"
                     value={formData.rent}
                     onChange={(e) => setFormData({ ...formData, rent: parseInt(e.target.value) || 0 })}
+                    className={formErrors.rent ? 'border-red-500' : ''}
                     required
                   />
+                  {formErrors.rent && (
+                    <p className="text-sm text-red-500">{formErrors.rent}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="leaseStart">Lease Start</Label>
@@ -208,8 +257,12 @@ export function TenantsView() {
                     type="date"
                     value={formData.leaseStart}
                     onChange={(e) => setFormData({ ...formData, leaseStart: e.target.value })}
+                    className={formErrors.leaseStart ? 'border-red-500' : ''}
                     required
                   />
+                  {formErrors.leaseStart && (
+                    <p className="text-sm text-red-500">{formErrors.leaseStart}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="leaseEnd">Lease End</Label>
@@ -218,15 +271,19 @@ export function TenantsView() {
                     type="date"
                     value={formData.leaseEnd}
                     onChange={(e) => setFormData({ ...formData, leaseEnd: e.target.value })}
+                    className={formErrors.leaseEnd ? 'border-red-500' : ''}
                     required
                   />
+                  {formErrors.leaseEnd && (
+                    <p className="text-sm text-red-500">{formErrors.leaseEnd}</p>
+                  )}
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="paymentStatus">Payment Status</Label>
                 <Select value={formData.paymentStatus} onValueChange={(value: Tenant['paymentStatus']) => setFormData({ ...formData, paymentStatus: value })}>
-                  <SelectTrigger>
+                  <SelectTrigger className={formErrors.paymentStatus ? 'border-red-500' : ''}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -235,6 +292,9 @@ export function TenantsView() {
                     <SelectItem value="overdue">Overdue</SelectItem>
                   </SelectContent>
                 </Select>
+                {formErrors.paymentStatus && (
+                  <p className="text-sm text-red-500">{formErrors.paymentStatus}</p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -243,16 +303,20 @@ export function TenantsView() {
                   id="notes"
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  className={formErrors.notes ? 'border-red-500' : ''}
                   rows={3}
                 />
+                {formErrors.notes && (
+                  <p className="text-sm text-red-500">{formErrors.notes}</p>
+                )}
               </div>
 
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingTenant ? 'Update Tenant' : 'Add Tenant'}
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : (editingTenant ? 'Update Tenant' : 'Add Tenant')}
                 </Button>
               </div>
             </form>

@@ -4,7 +4,7 @@ export interface Property {
   id: string;
   name: string;
   address: string;
-  type: string;
+  type: "apartment" | "house" | "condo" | "townhouse" | "other";
   bedrooms: number;
   bathrooms: number;
   rent: number;
