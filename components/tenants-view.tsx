@@ -1,6 +1,7 @@
 "use client";
 
-import { User, Mail, Phone, Calendar } from "lucide-react";
+import { useState } from "react";
+import { User, Mail, Phone, Calendar, Plus, Edit, Trash2, DollarSign } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -9,72 +10,32 @@ import {
   CardTitle,
 } from "./ui/card";
 import { Badge } from "./ui/badge";
-
-interface Tenant {
-  id: number;
-  name: string;
-  email: string;
-  phone: string;
-  property: string;
-  rent: number;
-  leaseStart: string;
-  leaseEnd: string;
-  paymentStatus: "paid" | "overdue" | "pending";
-  lastPayment: string;
-}
-
-const mockTenants: Tenant[] = [
-  {
-    id: 1,
-    name: "John Smith",
-    email: "john.smith@email.com",
-    phone: "(555) 123-4567",
-    property: "Sunset Villa",
-    rent: 3500,
-    leaseStart: "2024-01-01",
-    leaseEnd: "2024-12-31",
-    paymentStatus: "paid",
-    lastPayment: "2024-12-01",
-  },
-  {
-    id: 2,
-    name: "Sarah Johnson",
-    email: "sarah.j@email.com",
-    phone: "(555) 234-5678",
-    property: "Downtown Loft",
-    rent: 4200,
-    leaseStart: "2024-03-15",
-    leaseEnd: "2025-03-14",
-    paymentStatus: "paid",
-    lastPayment: "2024-12-15",
-  },
-  {
-    id: 3,
-    name: "Michael Chen",
-    email: "m.chen@email.com",
-    phone: "(555) 345-6789",
-    property: "Lakeside Condo",
-    rent: 2900,
-    leaseStart: "2024-06-01",
-    leaseEnd: "2025-05-31",
-    paymentStatus: "overdue",
-    lastPayment: "2024-11-01",
-  },
-  {
-    id: 4,
-    name: "Emily Davis",
-    email: "emily.davis@email.com",
-    phone: "(555) 456-7890",
-    property: "Urban Studio",
-    rent: 3200,
-    leaseStart: "2024-02-01",
-    leaseEnd: "2025-01-31",
-    paymentStatus: "pending",
-    lastPayment: "2024-11-01",
-  },
-];
+import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { useApp } from "@/lib/app-context";
+import { Tenant } from "@/lib/types";
 
 export function TenantsView() {
+  const { state, dispatch } = useApp();
+  const { tenants, properties } = state;
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    propertyId: '',
+    rent: 0,
+    leaseStart: '',
+    leaseEnd: '',
+    paymentStatus: 'pending' as Tenant['paymentStatus'],
+    notes: '',
+  });
+
   const getPaymentStatusBadge = (status: Tenant["paymentStatus"]) => {
     switch (status) {
       case "paid":
@@ -86,71 +47,306 @@ export function TenantsView() {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const selectedProperty = properties.find(p => p.id === formData.propertyId);
+
+    const tenantData: Tenant = {
+      id: editingTenant?.id || `tenant-${Date.now()}`,
+      ...formData,
+      propertyName: selectedProperty?.name || '',
+      lastPayment: editingTenant?.lastPayment,
+      createdAt: editingTenant?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (editingTenant) {
+      dispatch({ type: 'UPDATE_TENANT', payload: tenantData });
+    } else {
+      dispatch({ type: 'ADD_TENANT', payload: tenantData });
+    }
+
+    setIsDialogOpen(false);
+    setEditingTenant(null);
+    resetForm();
+  };
+
+  const handleEdit = (tenant: Tenant) => {
+    setEditingTenant(tenant);
+    setFormData({
+      name: tenant.name,
+      email: tenant.email,
+      phone: tenant.phone,
+      propertyId: tenant.propertyId || '',
+      rent: tenant.rent,
+      leaseStart: tenant.leaseStart,
+      leaseEnd: tenant.leaseEnd,
+      paymentStatus: tenant.paymentStatus,
+      notes: tenant.notes || '',
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this tenant?')) {
+      dispatch({ type: 'DELETE_TENANT', payload: id });
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      propertyId: '',
+      rent: 0,
+      leaseStart: '',
+      leaseEnd: '',
+      paymentStatus: 'pending',
+      notes: '',
+    });
+  };
+
+  const openAddDialog = () => {
+    setEditingTenant(null);
+    resetForm();
+    setIsDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
-          Tenant CRM
-        </h2>
-        <p className="text-zinc-400">Manage tenant relationships and payments</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
+            Tenant CRM
+          </h2>
+          <p className="text-zinc-400">Manage tenant relationships and payments</p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={openAddDialog} className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Add Tenant
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-zinc-50">
+                {editingTenant ? 'Edit Tenant' : 'Add New Tenant'}
+              </DialogTitle>
+              <DialogDescription>
+                {editingTenant ? 'Update tenant information' : 'Enter tenant details'}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Full Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="property">Property</Label>
+                  <Select value={formData.propertyId} onValueChange={(value) => setFormData({ ...formData, propertyId: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select property" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {properties.map((property) => (
+                        <SelectItem key={property.id} value={property.id}>
+                          {property.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="rent">Monthly Rent ($)</Label>
+                  <Input
+                    id="rent"
+                    type="number"
+                    min="0"
+                    value={formData.rent}
+                    onChange={(e) => setFormData({ ...formData, rent: parseInt(e.target.value) || 0 })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="leaseStart">Lease Start</Label>
+                  <Input
+                    id="leaseStart"
+                    type="date"
+                    value={formData.leaseStart}
+                    onChange={(e) => setFormData({ ...formData, leaseStart: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="leaseEnd">Lease End</Label>
+                  <Input
+                    id="leaseEnd"
+                    type="date"
+                    value={formData.leaseEnd}
+                    onChange={(e) => setFormData({ ...formData, leaseEnd: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="paymentStatus">Payment Status</Label>
+                <Select value={formData.paymentStatus} onValueChange={(value: Tenant['paymentStatus']) => setFormData({ ...formData, paymentStatus: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="overdue">Overdue</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notes">Notes (Optional)</Label>
+                <Textarea
+                  id="notes"
+                  value={formData.notes}
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  {editingTenant ? 'Update Tenant' : 'Add Tenant'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid gap-4">
-        {mockTenants.map((tenant) => (
-          <Card
-            key={tenant.id}
-            className="transition-all hover:shadow-lg hover:shadow-zinc-900/50"
-          >
-            <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="flex items-start gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800">
-                    <User className="h-6 w-6 text-zinc-400" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-zinc-50">{tenant.name}</CardTitle>
-                    <CardDescription>{tenant.property}</CardDescription>
-                  </div>
-                </div>
-                {getPaymentStatusBadge(tenant.paymentStatus)}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sm text-zinc-400">
-                    <Mail className="h-4 w-4" />
-                    <span>Email</span>
-                  </div>
-                  <p className="text-sm text-zinc-50">{tenant.email}</p>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sm text-zinc-400">
-                    <Phone className="h-4 w-4" />
-                    <span>Phone</span>
-                  </div>
-                  <p className="text-sm text-zinc-50">{tenant.phone}</p>
-                </div>
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 text-sm text-zinc-400">
-                    <Calendar className="h-4 w-4" />
-                    <span>Lease Period</span>
-                  </div>
-                  <p className="text-sm text-zinc-50">
-                    {new Date(tenant.leaseStart).toLocaleDateString()} -{" "}
-                    {new Date(tenant.leaseEnd).toLocaleDateString()}
-                  </p>
-                </div>
-                <div className="space-y-1">
-                  <div className="text-sm text-zinc-400">Monthly Rent</div>
-                  <p className="text-lg font-semibold text-zinc-50">
-                    ${tenant.rent.toLocaleString()}
-                  </p>
-                </div>
-              </div>
+        {tenants.length === 0 ? (
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardContent className="p-8 text-center">
+              <User className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-zinc-50 mb-2">No tenants yet</h3>
+              <p className="text-zinc-400 mb-4">Get started by adding your first tenant</p>
+              <Button onClick={openAddDialog} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Add Your First Tenant
+              </Button>
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          tenants.map((tenant) => (
+            <Card key={tenant.id} className="transition-all hover:shadow-lg hover:shadow-zinc-900/50">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800">
+                      <User className="h-6 w-6 text-zinc-400" />
+                    </div>
+                    <div>
+                      <CardTitle className="text-zinc-50">{tenant.name}</CardTitle>
+                      <CardDescription>{tenant.propertyName || 'No property assigned'}</CardDescription>
+                    </div>
+                  </div>
+                  {getPaymentStatusBadge(tenant.paymentStatus)}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-zinc-400">
+                      <Mail className="h-4 w-4" />
+                      <span>Email</span>
+                    </div>
+                    <p className="text-sm text-zinc-50">{tenant.email}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-zinc-400">
+                      <Phone className="h-4 w-4" />
+                      <span>Phone</span>
+                    </div>
+                    <p className="text-sm text-zinc-50">{tenant.phone}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2 text-sm text-zinc-400">
+                      <Calendar className="h-4 w-4" />
+                      <span>Lease Period</span>
+                    </div>
+                    <p className="text-sm text-zinc-50">
+                      {new Date(tenant.leaseStart).toLocaleDateString()} -{" "}
+                      {new Date(tenant.leaseEnd).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-sm text-zinc-400">Monthly Rent</div>
+                    <p className="text-lg font-semibold text-zinc-50">
+                      ${tenant.rent.toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(tenant)}
+                    className="flex items-center gap-1"
+                  >
+                    <Edit className="w-3 h-3" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(tenant.id)}
+                    className="flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Delete
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );

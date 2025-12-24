@@ -9,8 +9,35 @@ import {
 } from "./ui/card";
 import { Building2, Users, DollarSign, TrendingUp } from "lucide-react";
 import { Badge } from "./ui/badge";
+import { useApp } from "@/lib/app-context";
 
 export function OverviewView() {
+  const { state } = useApp();
+  const { properties, tenants, receipts } = state;
+
+  // Calculate stats
+  const totalProperties = properties.length;
+  const occupiedProperties = properties.filter(p => p.status === 'occupied').length;
+  const vacantProperties = properties.filter(p => p.status === 'vacant').length;
+
+  const activeTenants = tenants.length;
+  const overduePayments = tenants.filter(t => t.paymentStatus === 'overdue').length;
+
+  const monthlyRevenue = receipts
+    .filter(r => r.status === 'paid' && r.type === 'rent')
+    .reduce((sum, r) => sum + r.amount, 0);
+
+  const occupancyRate = totalProperties > 0 ? (occupiedProperties / totalProperties) * 100 : 0;
+
+  // Recent payments (last 5)
+  const recentPayments = receipts
+    .filter(r => r.status === 'paid')
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 3);
+
+  // Property status summary
+  const propertyStatus = properties.slice(0, 3);
+
   return (
     <div className="space-y-6">
       <div>
@@ -30,9 +57,9 @@ export function OverviewView() {
             <Building2 className="h-4 w-4 text-zinc-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">6</div>
+            <div className="text-2xl font-bold text-zinc-50">{totalProperties}</div>
             <p className="text-xs text-zinc-400 mt-1">
-              4 occupied, 2 vacant
+              {occupiedProperties} occupied, {vacantProperties} vacant
             </p>
           </CardContent>
         </Card>
@@ -45,9 +72,9 @@ export function OverviewView() {
             <Users className="h-4 w-4 text-zinc-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">4</div>
+            <div className="text-2xl font-bold text-zinc-50">{activeTenants}</div>
             <p className="text-xs text-zinc-400 mt-1">
-              1 payment overdue
+              {overduePayments} payment{overduePayments !== 1 ? 's' : ''} overdue
             </p>
           </CardContent>
         </Card>
@@ -60,10 +87,10 @@ export function OverviewView() {
             <DollarSign className="h-4 w-4 text-zinc-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">$19,600</div>
+            <div className="text-2xl font-bold text-zinc-50">${monthlyRevenue.toLocaleString()}</div>
             <p className="text-xs text-zinc-400 flex items-center gap-1 mt-1">
               <TrendingUp className="h-3 w-3 text-green-500" />
-              <span className="text-green-500">+8.2%</span> from last month
+              <span className="text-green-500">Current month</span>
             </p>
           </CardContent>
         </Card>
@@ -76,9 +103,9 @@ export function OverviewView() {
             <TrendingUp className="h-4 w-4 text-zinc-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">66.7%</div>
+            <div className="text-2xl font-bold text-zinc-50">{occupancyRate.toFixed(1)}%</div>
             <p className="text-xs text-zinc-400 mt-1">
-              4 of 6 properties
+              {occupiedProperties} of {totalProperties} properties
             </p>
           </CardContent>
         </Card>
@@ -92,36 +119,22 @@ export function OverviewView() {
             <CardDescription>Latest tenant payments</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-zinc-50">John Smith</p>
-                <p className="text-xs text-zinc-400">Sunset Villa</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-zinc-50">$3,500</p>
-                <Badge variant="success" className="text-xs">Paid</Badge>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-zinc-50">Sarah Johnson</p>
-                <p className="text-xs text-zinc-400">Downtown Loft</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-zinc-50">$4,200</p>
-                <Badge variant="success" className="text-xs">Paid</Badge>
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-zinc-50">Michael Chen</p>
-                <p className="text-xs text-zinc-400">Lakeside Condo</p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm font-semibold text-zinc-50">$2,900</p>
-                <Badge variant="destructive" className="text-xs">Overdue</Badge>
-              </div>
-            </div>
+            {recentPayments.length > 0 ? (
+              recentPayments.map((payment) => (
+                <div key={payment.id} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-zinc-50">{payment.tenantName}</p>
+                    <p className="text-xs text-zinc-400">{payment.propertyName}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-semibold text-zinc-50">${payment.amount.toLocaleString()}</p>
+                    <Badge variant="success" className="text-xs">Paid</Badge>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p className="text-zinc-400 text-sm">No recent payments</p>
+            )}
           </CardContent>
         </Card>
 
@@ -131,27 +144,26 @@ export function OverviewView() {
             <CardDescription>Current property conditions</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-zinc-50">Mountain Retreat</p>
-                <p className="text-xs text-zinc-400">3 bed, 2 bath</p>
-              </div>
-              <Badge variant="secondary">Vacant</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-zinc-50">Urban Studio</p>
-                <p className="text-xs text-zinc-400">1 bed, 1 bath</p>
-              </div>
-              <Badge variant="destructive">Maintenance</Badge>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-zinc-50">Garden Townhouse</p>
-                <p className="text-xs text-zinc-400">3 bed, 2.5 bath</p>
-              </div>
-              <Badge variant="secondary">Vacant</Badge>
-            </div>
+            {propertyStatus.length > 0 ? (
+              propertyStatus.map((property) => (
+                <div key={property.id} className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium text-zinc-50">{property.name}</p>
+                    <p className="text-xs text-zinc-400">{property.bedrooms} bed, {property.bathrooms} bath</p>
+                  </div>
+                  <Badge
+                    variant={
+                      property.status === 'occupied' ? 'success' :
+                      property.status === 'vacant' ? 'secondary' : 'destructive'
+                    }
+                  >
+                    {property.status}
+                  </Badge>
+                </div>
+              ))
+            ) : (
+              <p className="text-zinc-400 text-sm">No properties added yet</p>
+            )}
           </CardContent>
         </Card>
       </div>

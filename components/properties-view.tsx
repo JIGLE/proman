@@ -1,6 +1,7 @@
 "use client";
 
-import { Building2, MapPin, Bed, Bath } from "lucide-react";
+import { useState } from "react";
+import { Building2, MapPin, Bed, Bath, Plus, Edit, Trash2, DollarSign } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -9,89 +10,31 @@ import {
   CardTitle,
 } from "./ui/card";
 import { Badge } from "./ui/badge";
-
-interface Property {
-  id: number;
-  name: string;
-  address: string;
-  type: string;
-  bedrooms: number;
-  bathrooms: number;
-  rent: number;
-  status: "occupied" | "vacant" | "maintenance";
-  image: string;
-}
-
-const mockProperties: Property[] = [
-  {
-    id: 1,
-    name: "Sunset Villa",
-    address: "123 Ocean Drive, Miami, FL",
-    type: "Single Family",
-    bedrooms: 4,
-    bathrooms: 3,
-    rent: 3500,
-    status: "occupied",
-    image: "/api/placeholder/400/300",
-  },
-  {
-    id: 2,
-    name: "Downtown Loft",
-    address: "456 Main St, New York, NY",
-    type: "Apartment",
-    bedrooms: 2,
-    bathrooms: 2,
-    rent: 4200,
-    status: "occupied",
-    image: "/api/placeholder/400/300",
-  },
-  {
-    id: 3,
-    name: "Mountain Retreat",
-    address: "789 Pine Rd, Denver, CO",
-    type: "Cabin",
-    bedrooms: 3,
-    bathrooms: 2,
-    rent: 2800,
-    status: "vacant",
-    image: "/api/placeholder/400/300",
-  },
-  {
-    id: 4,
-    name: "Urban Studio",
-    address: "321 Tech Blvd, San Francisco, CA",
-    type: "Studio",
-    bedrooms: 1,
-    bathrooms: 1,
-    rent: 3200,
-    status: "maintenance",
-    image: "/api/placeholder/400/300",
-  },
-  {
-    id: 5,
-    name: "Lakeside Condo",
-    address: "654 Lake Shore Dr, Chicago, IL",
-    type: "Condo",
-    bedrooms: 2,
-    bathrooms: 2,
-    rent: 2900,
-    status: "occupied",
-    image: "/api/placeholder/400/300",
-  },
-  {
-    id: 6,
-    name: "Garden Townhouse",
-    address: "987 Garden Way, Seattle, WA",
-    type: "Townhouse",
-    bedrooms: 3,
-    bathrooms: 2.5,
-    rent: 3300,
-    status: "vacant",
-    image: "/api/placeholder/400/300",
-  },
-];
+import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { useApp } from "@/lib/app-context";
+import { Property } from "@/lib/types";
 
 export function PropertiesView() {
+  const { state, dispatch } = useApp();
+  const { properties } = state;
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingProperty, setEditingProperty] = useState<Property | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    address: '',
+    type: '',
+    bedrooms: 1,
+    bathrooms: 1,
+    rent: 0,
+    status: 'vacant' as Property['status'],
+    description: '',
+  });
+
   const getStatusBadge = (status: Property["status"]) => {
     switch (status) {
       case "occupied":
@@ -103,56 +46,277 @@ export function PropertiesView() {
     }
   };
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const propertyData: Property = {
+      id: editingProperty?.id || `prop-${Date.now()}`,
+      ...formData,
+      createdAt: editingProperty?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    if (editingProperty) {
+      dispatch({ type: 'UPDATE_PROPERTY', payload: propertyData });
+    } else {
+      dispatch({ type: 'ADD_PROPERTY', payload: propertyData });
+    }
+
+    setIsDialogOpen(false);
+    setEditingProperty(null);
+    resetForm();
+  };
+
+  const handleEdit = (property: Property) => {
+    setEditingProperty(property);
+    setFormData({
+      name: property.name,
+      address: property.address,
+      type: property.type,
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+      rent: property.rent,
+      status: property.status,
+      description: property.description || '',
+    });
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = (id: string) => {
+    if (confirm('Are you sure you want to delete this property?')) {
+      dispatch({ type: 'DELETE_PROPERTY', payload: id });
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      address: '',
+      type: '',
+      bedrooms: 1,
+      bathrooms: 1,
+      rent: 0,
+      status: 'vacant',
+      description: '',
+    });
+  };
+
+  const openAddDialog = () => {
+    setEditingProperty(null);
+    resetForm();
+    setIsDialogOpen(true);
+  };
+
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
-          Properties
-        </h2>
-        <p className="text-zinc-400">Manage your property portfolio</p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
+            Properties
+          </h2>
+          <p className="text-zinc-400">Manage your property portfolio</p>
+        </div>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={openAddDialog} className="flex items-center gap-2">
+              <Plus className="w-4 h-4" />
+              Add Property
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="text-zinc-50">
+                {editingProperty ? 'Edit Property' : 'Add New Property'}
+              </DialogTitle>
+              <DialogDescription>
+                {editingProperty ? 'Update property details' : 'Enter property information'}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Property Name</Label>
+                  <Input
+                    id="name"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="type">Property Type</Label>
+                  <Select value={formData.type} onValueChange={(value) => setFormData({ ...formData, type: value })}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Single Family">Single Family</SelectItem>
+                      <SelectItem value="Apartment">Apartment</SelectItem>
+                      <SelectItem value="Condo">Condo</SelectItem>
+                      <SelectItem value="Townhouse">Townhouse</SelectItem>
+                      <SelectItem value="Studio">Studio</SelectItem>
+                      <SelectItem value="Cabin">Cabin</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="address">Address</Label>
+                <Input
+                  id="address"
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bedrooms">Bedrooms</Label>
+                  <Input
+                    id="bedrooms"
+                    type="number"
+                    min="0"
+                    value={formData.bedrooms}
+                    onChange={(e) => setFormData({ ...formData, bedrooms: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="bathrooms">Bathrooms</Label>
+                  <Input
+                    id="bathrooms"
+                    type="number"
+                    min="0"
+                    step="0.5"
+                    value={formData.bathrooms}
+                    onChange={(e) => setFormData({ ...formData, bathrooms: parseFloat(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="rent">Monthly Rent ($)</Label>
+                  <Input
+                    id="rent"
+                    type="number"
+                    min="0"
+                    value={formData.rent}
+                    onChange={(e) => setFormData({ ...formData, rent: parseInt(e.target.value) || 0 })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="status">Status</Label>
+                  <Select value={formData.status} onValueChange={(value: Property['status']) => setFormData({ ...formData, status: value })}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="vacant">Vacant</SelectItem>
+                      <SelectItem value="occupied">Occupied</SelectItem>
+                      <SelectItem value="maintenance">Maintenance</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="description">Description (Optional)</Label>
+                <Textarea
+                  id="description"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  {editingProperty ? 'Update Property' : 'Add Property'}
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {mockProperties.map((property) => (
-          <Card
-            key={property.id}
-            className="overflow-hidden transition-all hover:shadow-lg hover:shadow-zinc-900/50"
-          >
-            <div className="aspect-video w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Building2 className="h-16 w-16 text-zinc-700" />
-              </div>
-              <div className="absolute top-3 right-3">
-                {getStatusBadge(property.status)}
-              </div>
-            </div>
-            <CardHeader>
-              <CardTitle className="text-zinc-50">{property.name}</CardTitle>
-              <CardDescription className="flex items-start gap-1">
-                <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
-                <span className="text-xs">{property.address}</span>
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-zinc-400">{property.type}</span>
-                <span className="font-semibold text-zinc-50">
-                  ${property.rent.toLocaleString()}/mo
-                </span>
-              </div>
-              <div className="flex items-center gap-4 text-sm text-zinc-400">
-                <div className="flex items-center gap-1">
-                  <Bed className="h-4 w-4" />
-                  <span>{property.bedrooms} bed</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Bath className="h-4 w-4" />
-                  <span>{property.bathrooms} bath</span>
-                </div>
-              </div>
+        {properties.length === 0 ? (
+          <Card className="bg-zinc-900 border-zinc-800 col-span-full">
+            <CardContent className="p-8 text-center">
+              <Building2 className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-zinc-50 mb-2">No properties yet</h3>
+              <p className="text-zinc-400 mb-4">Get started by adding your first property</p>
+              <Button onClick={openAddDialog} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Add Your First Property
+              </Button>
             </CardContent>
           </Card>
-        ))}
+        ) : (
+          properties.map((property) => (
+            <Card
+              key={property.id}
+              className="overflow-hidden transition-all hover:shadow-lg hover:shadow-zinc-900/50"
+            >
+              <div className="aspect-video w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <Building2 className="h-16 w-16 text-zinc-700" />
+                </div>
+                <div className="absolute top-3 right-3">
+                  {getStatusBadge(property.status)}
+                </div>
+              </div>
+              <CardHeader>
+                <CardTitle className="text-zinc-50">{property.name}</CardTitle>
+                <CardDescription className="flex items-start gap-1">
+                  <MapPin className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span className="text-xs">{property.address}</span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-zinc-400">{property.type}</span>
+                  <span className="font-semibold text-zinc-50">
+                    ${property.rent.toLocaleString()}/mo
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-zinc-400">
+                  <div className="flex items-center gap-1">
+                    <Bed className="h-4 w-4" />
+                    <span>{property.bedrooms} bed</span>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Bath className="h-4 w-4" />
+                    <span>{property.bathrooms} bath</span>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(property)}
+                    className="flex-1 flex items-center gap-1"
+                  >
+                    <Edit className="w-3 h-3" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(property.id)}
+                    className="flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Delete
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
     </div>
   );

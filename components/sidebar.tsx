@@ -14,12 +14,12 @@ import {
   User,
   Settings,
   LogOut,
+  Mail,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import Link from "next/link";
 
 interface SidebarProps {
   activeTab: string;
@@ -36,11 +36,12 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
     { id: "tenants", label: "Tenants", icon: Users },
     { id: "financials", label: "Financials", icon: DollarSign },
     { id: "receipts", label: "Receipts", icon: FileText },
+    { id: "correspondence", label: "Correspondence", icon: Mail },
   ];
 
   const accountItems = [
-    { id: "profile", label: "Profile", icon: User, href: "/profile" },
-    { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
+    { id: "profile", label: "Profile", icon: User },
+    { id: "settings", label: "Settings", icon: Settings },
   ];
 
   const user = session?.user;
@@ -93,20 +94,23 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps) {
         {/* Account Items */}
         {accountItems.map((item) => {
           const Icon = item.icon;
+          const isActive = activeTab === item.id;
 
           return (
-            <Link key={item.id} href={item.href}>
-              <button
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50",
-                  collapsed && "justify-center"
-                )}
-                title={collapsed ? item.label : undefined}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
-              </button>
-            </Link>
+            <button
+              key={item.id}
+              onClick={() => onTabChange(item.id)}
+              className={cn(
+                "flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                isActive
+                  ? "bg-zinc-800 text-zinc-50"
+                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-50"
+              )}
+              title={collapsed ? item.label : undefined}
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              {!collapsed && <span>{item.label}</span>}
+            </button>
           );
         })}
       </nav>
