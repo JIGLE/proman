@@ -74,6 +74,10 @@ To enable Google login:
 - Storage: Host path → `/data`
 - Health: `GET /api/health` → `{ status: 'ok' }`
 
+**Catalog / Icon:**
+- This repo includes a minimal Helm chart at `helm/proman/` and an app icon at `public/icon-128.svg`.
+- Add the repo as a Catalog in TrueNAS SCALE (Apps → Manage Catalogs → Add Catalog) using `https://github.com/JIGLE/proman` and branch `main` — the chart's `Chart.yaml` includes an `icon` entry so the app will appear with the icon in the SCALE UI. (Installing from a Catalog marks the app as an ix-app and the UI will append `(ix-app)` to the app name.)
+
 ## Fallback: Local tar
 
 ```bash
