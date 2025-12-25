@@ -4,6 +4,7 @@ import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { getPrismaClient } from '@/lib/database';
 
 const baseAuthOptions: NextAuthOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
@@ -60,27 +61,29 @@ const baseAuthOptions: NextAuthOptions = {
     signIn: '/auth/signin',
     error: '/auth/error',
   },
-  secret: process.env.NEXTAUTH_SECRET,
 };
 
 // Lazy adapter initialization to avoid build-time issues
 export function getAuthOptions(): NextAuthOptions {
+  console.log('getAuthOptions called, DATABASE_URL:', !!process.env.DATABASE_URL);
   // Only add adapter if we have database access and we're not in build time
   const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
   const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || !process.env.NODE_ENV;
 
   if (!hasDatabase || isBuildTime) {
+    console.log('Using base auth options, hasDatabase:', hasDatabase, 'isBuildTime:', isBuildTime);
     return baseAuthOptions;
   }
 
   try {
+    console.log('Trying to initialize Prisma adapter');
     return {
       ...baseAuthOptions,
       adapter: PrismaAdapter(getPrismaClient()),
     };
-  } catch (error) {
-    // If Prisma client fails to initialize, return without adapter
-    console.warn('Failed to initialize Prisma adapter, using base auth options:', error);
+  } catch (error: any) {
+    console.warn('Failed to initialize Prisma adapter, using base auth options:', error?.name, error?.message);
+    console.warn(error?.stack);
     return baseAuthOptions;
   }
 }
