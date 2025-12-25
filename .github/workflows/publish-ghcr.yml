@@ -44,29 +44,6 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Debug environment
-        run: |
-          echo "--- Build variables ---"
-          echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY}"
-          echo "GITHUB_REF=${GITHUB_REF}"
-          echo "GITHUB_SHA=${GITHUB_SHA}"
-          echo "VERSION=${{ steps.set-vars.outputs.VERSION }}"
-          echo "GIT_COMMIT=${{ steps.set-vars.outputs.GIT_COMMIT }}"
-          echo "BUILD_TIME=${{ steps.set-vars.outputs.BUILD_TIME }}"
-          echo
-          echo "--- Node / NPM ---"
-          node --version || true
-          npm --version || true
-          echo
-          echo "--- Docker / Buildx ---"
-          docker --version || true
-          docker buildx version || true
-          docker buildx ls || true
-          echo
-          echo "--- Docker login check (masked) ---"
-          if docker logout ghcr.io 2>/dev/null; then echo 'docker logout ok'; fi
-          echo 'NOTE: secrets are masked in Actions logs; this step only shows tools and variables.'
-
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
