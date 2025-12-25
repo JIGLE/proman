@@ -1,4 +1,6 @@
 # Proman
+<!-- GitHub Actions status badge for the publish-ghcr workflow -->
+[![Build and publish to GHCR](https://github.com/JIGLE/proman/actions/workflows/publish-ghcr.yml/badge.svg)](https://github.com/JIGLE/proman/actions/workflows/publish-ghcr.yml)
 
 Minimal property management dashboard (Next.js).
 
