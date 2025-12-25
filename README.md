@@ -81,7 +81,9 @@ ssh root@TRUENAS "docker load -i /tmp/proman.tar"
 ```
 
 ## CI
-- Workflow: `.github/workflows/docker-publish.yml` pushes to GHCR on `main`.
+- Workflow: `.github/workflows/publish-ghcr.yml` builds, tags and publishes to GHCR on `main` (also supports manual `workflow_dispatch`).
+   - The workflow sets `VERSION`, `GIT_COMMIT`, and `BUILD_TIME` and passes them as build-args and image labels so the running app can expose its build info at `/api/info`.
+   - The workflow uses `GITHUB_TOKEN` to publish to GHCR; no additional secrets are required for the repo to publish from GitHub Actions.
 
 License: MIT
 
@@ -244,19 +246,21 @@ If you want me to upload the artifacts somewhere or render the final YAML for yo
 
 ## Registry-based install (no local image tar)
 
-If you prefer to avoid building and loading image tars on SCALE nodes, use the published image on Docker Hub. Push `docker.io/jig019/proman:latest` (or use your preferred registry) and set the image repo in values when installing.
+If you prefer to avoid building and loading image tars on SCALE nodes, use the published image on GitHub Container Registry (GHCR). The repository workflow ` .github/workflows/publish-ghcr.yml` builds and pushes images to `ghcr.io/<owner>/proman` with versioned tags and `latest`.
 
-> CI: This repository contains a workflow (`.github/workflows/dockerhub-publish.yml`) that can publish `docker.io/jig019/proman:latest` automatically on pushes to `main`. To enable it, add repository secrets `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` (Docker Hub Access Token).
-
-Install the chart and use the registry image (default values already point to Docker Hub):
+Install the chart and use the GHCR image (replace `<owner>` with your GitHub org/user):
 
 ```bash
 helm install proman dist/proman-0.2.1.tgz \
-	--set image.repository=docker.io/jig019/proman \
-	--set image.tag=latest \
-	--set image.pullPolicy=IfNotPresent \
-	--set persistence.enabled=true --set persistence.storage=5Gi
+   --set image.repository=ghcr.io/<owner>/proman \
+   --set image.tag=latest \
+   --set image.pullPolicy=IfNotPresent \
+   --set persistence.enabled=true --set persistence.storage=5Gi
 ```
+
+Notes:
+- The Actions workflow uses `GITHUB_TOKEN` to publish to GHCR from this repository; no additional secrets are required for publishing from GitHub Actions.
+- If you want TrueNAS to pull a private GHCR image, create a personal access token (PAT) with `read:packages` and configure the registry credentials in TrueNAS.
 
 ## 🚀 Deployment
 
