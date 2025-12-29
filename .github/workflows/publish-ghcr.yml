@@ -57,13 +57,13 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository_owner }}/proman:${{ steps.set-vars.outputs.VERSION }}
-            ghcr.io/${{ github.repository_owner }}/proman:latest
-            ghcr.io/${{ github.repository_owner }}/proman:${{ github.sha }}
+            ghcr.io/jigle/proman:${{ steps.set-vars.outputs.VERSION }}
+            ghcr.io/jigle/proman:latest
+            ghcr.io/jigle/proman:${{ github.sha }}
           build-args: |
             BUILD_VERSION=${{ steps.set-vars.outputs.VERSION }}
             GIT_COMMIT=${{ steps.set-vars.outputs.GIT_COMMIT }}
             BUILD_TIME=${{ steps.set-vars.outputs.BUILD_TIME }}
 
       - name: Image digest
-        run: echo "Image pushed: ghcr.io/${{ github.repository_owner }}/proman:${{ steps.set-vars.outputs.VERSION }}"
+        run: echo "Image pushed: ghcr.io/jigle/proman:${{ steps.set-vars.outputs.VERSION }}"
