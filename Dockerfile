@@ -11,6 +11,7 @@ ENV BUILD_TIME=${BUILD_TIME}
 WORKDIR /app
 
 COPY package*.json ./
+COPY prisma ./prisma/
 RUN npm ci
 
 COPY . .
