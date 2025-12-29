@@ -3,7 +3,7 @@ name: Build and publish to GHCR
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -66,4 +66,5 @@ jobs:
             BUILD_TIME=${{ steps.set-vars.outputs.BUILD_TIME }}
 
       - name: Image digest
-        run: echo "Image pushed: ghcr.io/jigle/proman:${{ steps.set-vars.outputs.VERSION }}"
+        run: |
+          echo "Image pushed: ghcr.io/jigle/proman:${{ steps.set-vars.outputs.VERSION }}"
