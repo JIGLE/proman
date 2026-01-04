@@ -61,6 +61,7 @@ function getPrismaClient() {
           // Rethrow a clearer error for runtime logs
           throw new Error(`Prisma initialization failed: ${pcErr?.message}`);
         }
+      }
     } else {
       // During build time, create a mock client that throws an error if used
       globalForPrisma.prisma = new Proxy({} as PrismaClient, {
