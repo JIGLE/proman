@@ -30,31 +30,38 @@ const baseAuthOptions: NextAuthOptions = {
       return session;
     },
     async signIn({ user, account, profile }) {
-      // Only perform database operations if database is available
-      const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
-      if (!hasDatabase) {
-        return true; // Allow sign in without database during build
-      }
-
-      // Ensure user exists in database
-      if (user.email) {
-        const prisma = getPrismaClient();
-        const existingUser = await prisma.user.findUnique({
-          where: { email: user.email },
-        });
-
-        if (!existingUser) {
-          // Create user if they don't exist
-          await prisma.user.create({
-            data: {
-              email: user.email,
-              name: user.name || '',
-            },
-          });
+      try {
+        // Only perform database operations if database is available
+        const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
+        if (!hasDatabase) {
+          return true; // Allow sign in without database during build
         }
-      }
 
-      return true;
+        // Ensure user exists in database
+        if (user.email) {
+          const prisma = getPrismaClient();
+          const existingUser = await prisma.user.findUnique({
+            where: { email: user.email },
+          });
+
+          if (!existingUser) {
+            // Create user if they don't exist
+            await prisma.user.create({
+              data: {
+                email: user.email,
+                name: user.name || '',
+              },
+            });
+          }
+        }
+
+        return true;
+      } catch (err: any) {
+        // Log error for diagnostics and fail sign-in to surface the issue
+        console.error('NextAuth signIn error:', err?.name, err?.message);
+        console.error(err?.stack);
+        return false;
+      }
     },
   },
   pages: {
