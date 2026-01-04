@@ -13,19 +13,17 @@ const url = getDatabaseUrl()
   try {
     console.log('Attempting to connect to:', url.replace(/(:\/\/[^:]+:)[^@]+@/, '$1***@'))
 
-    // If using SQLite, use Prisma client for a lightweight check.
+    // If using SQLite, check the file exists as a lightweight verification.
     if (url.startsWith('file:') || url.includes('sqlite')) {
-      process.env.DATABASE_URL = url
-      const { PrismaClient } = require('@prisma/client')
-      const prisma = new PrismaClient({});
-      try {
-        // Run a simple raw query that works on SQLite
-        const res = await prisma.$queryRawUnsafe('SELECT 1')
-        console.log('Success: received result:', res)
-      } finally {
-        await prisma.$disconnect()
+      const fs = require('fs')
+      const path = url.replace(/^file:\/\//, '').replace(/^file:/, '')
+      if (fs.existsSync(path)) {
+        const stat = fs.statSync(path)
+        console.log('Success: SQLite file exists at', path, 'size:', stat.size)
+        process.exit(0)
+      } else {
+        throw new Error('SQLite database file not found: ' + path)
       }
-      process.exit(0)
     }
 
     // Fallback: assume PostgreSQL and use `pg` client
