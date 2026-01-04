@@ -15,13 +15,46 @@ function getPrismaClient() {
   if (!globalForPrisma.prisma) {
     // Only initialize PrismaClient if we have a database URL (not during build)
     if (process.env.DATABASE_URL) {
+      // Improve diagnostics: for sqlite, check file before constructing Prisma
       try {
+        const dbUrl = process.env.DATABASE_URL;
+        if (dbUrl.startsWith('file:')) {
+          const sqlitePath = dbUrl.replace(/^file:\/\//, '').replace(/^file:/, '');
+          const resolvedPath = require('path').resolve(process.cwd(), sqlitePath);
+          try {
+            // Use eval('require') to avoid bundlers trying to resolve server-only modules
+            const fs = eval("require")('fs');
+            const exists = fs.existsSync(resolvedPath);
+            const writable = exists ? (() => {
+              try {
+                fs.accessSync(resolvedPath, fs.constants.W_OK);
+                return true;
+              } catch (e) {
+                return false;
+              }
+            })() : false;
+            console.log('[database] Using SQLite at', resolvedPath, 'exists:', exists, 'writable:', writable);
+            if (!exists) {
+              throw new Error(`SQLite DB file does not exist: ${resolvedPath}. Ensure a writable dataset is mounted at the path and create the file, or use POST /api/debug/db/init to create it.`);
+            }
+            if (!writable) {
+              throw new Error(`SQLite DB file is not writable: ${resolvedPath}. Fix dataset permissions (chown/chmod) so the process can write the file.`);
+            }
+          } catch (fsErr: any) {
+            console.error('[database] Filesystem check failed:', fsErr?.message);
+            throw fsErr;
+          }
+        } else {
+          console.log('[database] Using non-sqlite datasource (url type):', dbUrl.startsWith('postgres') || dbUrl.startsWith('postgresql') ? 'postgres' : 'unknown');
+        }
+
         // Construct PrismaClient with default behavior; Prisma reads connection info from prisma.config.ts
         globalForPrisma.prisma = new PrismaClient();
       } catch (err: any) {
         console.error('Failed to construct PrismaClient:', err?.name, err?.message);
         console.error(err?.stack);
-        throw err;
+        // Rethrow a clearer error for runtime logs
+        throw new Error(`Prisma initialization failed: ${err?.message}`);
       }
     } else {
       // During build time, create a mock client that throws an error if used
