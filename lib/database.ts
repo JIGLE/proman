@@ -16,13 +16,11 @@ function getPrismaClient() {
     // Only initialize PrismaClient if we have a database URL (not during build)
     if (process.env.DATABASE_URL) {
       try {
-        // Pass the datasource URL explicitly to PrismaClient to avoid Prisma v7 requirements
-        const opts: any = { datasources: { db: { url: process.env.DATABASE_URL } } };
-        globalForPrisma.prisma = new PrismaClient(opts);
+        // Construct PrismaClient with default behavior; Prisma reads connection info from prisma.config.ts
+        globalForPrisma.prisma = new PrismaClient();
       } catch (err: any) {
-        console.error('Failed to construct PrismaClient with provided DATABASE_URL:', err?.name, err?.message);
+        console.error('Failed to construct PrismaClient:', err?.name, err?.message);
         console.error(err?.stack);
-        // Re-throw so callers see the original error
         throw err;
       }
     } else {
