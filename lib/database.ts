@@ -15,7 +15,16 @@ function getPrismaClient() {
   if (!globalForPrisma.prisma) {
     // Only initialize PrismaClient if we have a database URL (not during build)
     if (process.env.DATABASE_URL) {
-      globalForPrisma.prisma = new PrismaClient();
+      try {
+        // Pass the datasource URL explicitly to PrismaClient to avoid Prisma v7 requirements
+        const opts: any = { datasources: { db: { url: process.env.DATABASE_URL } } };
+        globalForPrisma.prisma = new PrismaClient(opts);
+      } catch (err: any) {
+        console.error('Failed to construct PrismaClient with provided DATABASE_URL:', err?.name, err?.message);
+        console.error(err?.stack);
+        // Re-throw so callers see the original error
+        throw err;
+      }
     } else {
       // During build time, create a mock client that throws an error if used
       globalForPrisma.prisma = new Proxy({} as PrismaClient, {
