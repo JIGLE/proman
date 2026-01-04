@@ -9,17 +9,21 @@ const handler = NextAuth(getAuthOptions());
 export async function GET(request: Request) {
   try {
     console.log('Auth route GET:', request.url);
-  } catch (e) {
-    console.warn('Failed to log request URL in auth GET');
+    return await handler(request as any);
+  } catch (err: any) {
+    console.error('Auth route GET error:', err?.name, err?.message);
+    console.error(err?.stack);
+    return new Response(JSON.stringify({ error: 'internal', message: err?.message }), { status: 500 });
   }
-  return handler(request as any);
 }
 
 export async function POST(request: Request) {
   try {
     console.log('Auth route POST:', request.url);
-  } catch (e) {
-    console.warn('Failed to log request URL in auth POST');
+    return await handler(request as any);
+  } catch (err: any) {
+    console.error('Auth route POST error:', err?.name, err?.message);
+    console.error(err?.stack);
+    return new Response(JSON.stringify({ error: 'internal', message: err?.message }), { status: 500 });
   }
-  return handler(request as any);
 }

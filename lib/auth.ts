@@ -23,11 +23,18 @@ const baseAuthOptions: NextAuthOptions = {
       return token;
     },
     async session({ session, token }) {
-      // Add user ID to session
-      if (token.id) {
-        (session.user as any).id = token.id;
+      try {
+        // Add user ID to session
+        if (token && (token as any).id) {
+          (session.user as any).id = (token as any).id;
+        }
+        return session;
+      } catch (err: any) {
+        console.error('NextAuth session callback error:', err?.name, err?.message);
+        console.error(err?.stack);
+        // Return session unchanged on error
+        return session;
       }
-      return session;
     },
     async signIn({ user, account, profile }) {
       try {
