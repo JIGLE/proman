@@ -33,7 +33,9 @@ const baseAuthOptions: NextAuthOptions = {
       try {
         // Only perform database operations if database is available
         const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
+        console.log('signIn called. hasDatabase:', hasDatabase, 'email:', user?.email, 'name:', user?.name);
         if (!hasDatabase) {
+          console.log('No DATABASE_URL set — allowing sign in (no DB)');
           return true; // Allow sign in without database during build
         }
 
@@ -44,22 +46,32 @@ const baseAuthOptions: NextAuthOptions = {
             where: { email: user.email },
           });
 
+          console.log('Prisma lookup result for', user.email, ':', !!existingUser);
+
           if (!existingUser) {
             // Create user if they don't exist
-            await prisma.user.create({
+            const created = await prisma.user.create({
               data: {
                 email: user.email,
                 name: user.name || '',
               },
             });
+            console.log('Created user:', created.id);
           }
         }
 
         return true;
       } catch (err: any) {
-        // Log error for diagnostics and fail sign-in to surface the issue
+        // Log error for diagnostics
         console.error('NextAuth signIn error:', err?.name, err?.message);
         console.error(err?.stack);
+
+        // Allow an override to permit sign-ins while DB issues are being resolved
+        if (process.env.NEXTAUTH_ALLOW_DB_FAILURE === 'true') {
+          console.warn('NEXTAUTH_ALLOW_DB_FAILURE=true — allowing sign-in despite DB error');
+          return true;
+        }
+
         return false;
       }
     },
