@@ -60,6 +60,7 @@ const baseAuthOptions: NextAuthOptions = {
           }
         }
 
+        console.log('signIn: returning true for', user?.email);
         return true;
       } catch (err: any) {
         // Log error for diagnostics
@@ -74,6 +75,14 @@ const baseAuthOptions: NextAuthOptions = {
 
         return false;
       }
+    },
+  },
+  events: {
+    async signIn({ user, account, profile, isNewUser }) {
+      console.log('NextAuth event signIn:', { email: user?.email, provider: account?.provider, isNewUser });
+    },
+    async createUser({ user }) {
+      console.log('NextAuth event createUser:', { id: user.id, email: user.email });
     },
   },
   pages: {

@@ -6,4 +6,20 @@ export const runtime = 'nodejs';
 
 const handler = NextAuth(getAuthOptions());
 
-export { handler as GET, handler as POST };
+export async function GET(request: Request) {
+  try {
+    console.log('Auth route GET:', request.url);
+  } catch (e) {
+    console.warn('Failed to log request URL in auth GET');
+  }
+  return handler(request as any);
+}
+
+export async function POST(request: Request) {
+  try {
+    console.log('Auth route POST:', request.url);
+  } catch (e) {
+    console.warn('Failed to log request URL in auth POST');
+  }
+  return handler(request as any);
+}
