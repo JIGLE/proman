@@ -68,6 +68,13 @@ npx prisma db push
 npx prisma generate
 ```
 
+You can also use the new debug endpoint to quickly check DB health and user count:
+
+```bash
+# GET a compact database health report
+curl -sS https://your-domain.example/api/debug/db | jq .
+```
+
 Then restart the app and inspect the server logs (container/pod logs) for lines starting with `signIn called` or `NextAuth signIn error:` to see the root cause.
 
 ### 👤 User Profile & Settings
