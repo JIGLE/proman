@@ -28,6 +28,14 @@ jobs:
           head -n 5 package.json || true
           head -n 5 package-lock.json || true
 
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies (ci then fallback)
         run: |
           echo "Running npm ci"
