@@ -48,14 +48,19 @@ function getPrismaClient() {
           console.log('[database] Using non-sqlite datasource (url type):', dbUrl.startsWith('postgres') || dbUrl.startsWith('postgresql') ? 'postgres' : 'unknown');
         }
 
-        // Construct PrismaClient with default behavior; Prisma reads connection info from prisma.config.ts
-        globalForPrisma.prisma = new PrismaClient();
-      } catch (err: any) {
-        console.error('Failed to construct PrismaClient:', err?.name, err?.message);
-        console.error(err?.stack);
-        // Rethrow a clearer error for runtime logs
-        throw new Error(`Prisma initialization failed: ${err?.message}`);
-      }
+        // Construct PrismaClient with explicit datasource override so runtime uses DATABASE_URL
+        try {
+          const prismaOptions: any = {};
+          if (process.env.DATABASE_URL) {
+            prismaOptions.datasources = { db: { url: process.env.DATABASE_URL } };
+          }
+          globalForPrisma.prisma = new PrismaClient(prismaOptions);
+        } catch (pcErr: any) {
+          console.error('[database] Failed to construct PrismaClient with options:', pcErr?.name, pcErr?.message);
+          console.error(pcErr?.stack);
+          // Rethrow a clearer error for runtime logs
+          throw new Error(`Prisma initialization failed: ${pcErr?.message}`);
+        }
     } else {
       // During build time, create a mock client that throws an error if used
       globalForPrisma.prisma = new Proxy({} as PrismaClient, {
