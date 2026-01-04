@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ClientProviders } from "@/components/client-providers";
+import VersionBadge from '@/components/version-badge';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,6 +21,9 @@ export default function RootLayout({
       <body className={inter.className}>
         <ClientProviders>
           {children}
+          <div style={{position: 'fixed', right: 12, bottom: 8}}>
+            <VersionBadge />
+          </div>
         </ClientProviders>
       </body>
     </html>
