@@ -56,6 +56,20 @@ To enable Google login:
 - Secure JWT-based sessions
 - Custom signin/error pages
 
+#### Debugging
+If a sign-in attempt returns "Access denied", the app will log detailed errors from the NextAuth `signIn` callback to the server logs. For debugging you can set the following environment variable to allow sign-ins while you fix database issues:
+
+- `NEXTAUTH_ALLOW_DB_FAILURE=true` — temporarily allows sign-ins even if database operations fail (useful for debugging; do not enable permanently in production).
+
+Also ensure `DATABASE_URL` points to a valid and writable SQLite file (e.g. `file:/data/proman.db`) or a reachable Postgres URL, and run:
+
+```bash
+npx prisma db push
+npx prisma generate
+```
+
+Then restart the app and inspect the server logs (container/pod logs) for lines starting with `signIn called` or `NextAuth signIn error:` to see the root cause.
+
 ### 👤 User Profile & Settings
 - **Profile Page** (`/profile`): View account info, avatar, and statistics
 - **Settings Page** (`/settings`): Comprehensive preference management
