@@ -1,0 +1,5 @@
+// Deprecated: use `prisma/schema.prisma` as the single-schema source-of-truth.
+// This file remains for historical purposes and will be removed in a future commit.
+
+// If you need the SQLite schema directly, see `prisma/schema.prisma`.
+

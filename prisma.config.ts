@@ -3,8 +3,10 @@
 import "dotenv/config";
 import { defineConfig } from "prisma/config";
 
+const schemaPath = "prisma/schema.prisma";
+
 export default defineConfig({
-  schema: "prisma/schema.prisma",
+  schema: schemaPath,
   migrations: {
     path: "prisma/migrations",
   },

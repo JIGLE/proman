@@ -15,19 +15,23 @@ docker run -d -p 3000:3000 --env NODE_ENV=production --name proman ghcr.io/jigle
 
 2) Open: http://localhost:3000
 
-## PostgreSQL setup (recommended for production)
+## Database (SQLite by default)
 
-Proman works with PostgreSQL in production to avoid file-permission limitations of SQLite in containerized environments.
+Proman uses SQLite by default for local development and for simple single-node deployments. SQLite stores the database in a single file and is suitable for small installations or testing.
 
-1. Install PostgreSQL in TrueNAS SCALE (Apps → Available Apps → PostgreSQL) or deploy a managed Postgres instance.
-2. Configure persistent storage for the database and set credentials:
-   - `POSTGRES_DB=proman`
-   - `POSTGRES_USER=proman_user`
-   - `POSTGRES_PASSWORD=your_secure_password`
-3. Set `DATABASE_URL` in Proman app environment variables to point at your Postgres instance, e.g.:
-   - `DATABASE_URL=postgresql://proman_user:your_secure_password@proman-postgres:5432/proman`
-4. Redeploy Proman and run migrations:
-   - `npx prisma migrate deploy` (inside the Proman container or during deployment); if you don't have migration files yet, run `npx prisma db push` to apply the schema directly.
+Default local configuration (already set in `.env`):
+
+- `DATABASE_URL="file:./dev.db"`
+
+Applying the database schema and generating the Prisma client:
+
+```bash
+# Create or update the SQLite DB and generate the client
+npx prisma db push
+npx prisma generate
+```
+
+If you prefer to run Proman with PostgreSQL in production (recommended for clustered or highly available setups), set `DATABASE_URL` to your Postgres connection string and run migrations with `npx prisma migrate deploy`.
 
 ## Google OAuth Setup
 
