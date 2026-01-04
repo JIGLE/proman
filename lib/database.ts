@@ -61,6 +61,10 @@ function getPrismaClient() {
           // Rethrow a clearer error for runtime logs
           throw new Error(`Prisma initialization failed: ${pcErr?.message}`);
         }
+      } catch (err: any) {
+        console.error('[database] Failed to construct PrismaClient:', err?.name, err?.message);
+        console.error(err?.stack);
+        throw new Error(`Prisma initialization failed: ${err?.message}`);
       }
     } else {
       // During build time, create a mock client that throws an error if used
