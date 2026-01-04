@@ -29,6 +29,7 @@
     "@sendgrid/mail": "^8.1.6",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^16.6.1",
     "isomorphic-dompurify": "^2.34.0",
     "jspdf": "^3.0.4",
     "lucide-react": "^0.562.0",
