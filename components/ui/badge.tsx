@@ -35,4 +35,6 @@ function Badge({ className, variant, ...props }: BadgeProps): React.ReactElement
   )
 }
 
+export type { BadgeProps }
+
 export { Badge, badgeVariants }

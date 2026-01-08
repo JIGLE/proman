@@ -108,6 +108,13 @@ const DialogDescription = React.forwardRef<
 ))
 DialogDescription.displayName = DialogPrimitive.Description.displayName
 
+export type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
+export type DialogOverlayProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
+export type DialogTitleProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+export type DialogDescriptionProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+export type DialogHeaderProps = React.HTMLAttributes<HTMLDivElement>
+export type DialogFooterProps = React.HTMLAttributes<HTMLDivElement>
+
 export {
   Dialog,
   DialogPortal,
