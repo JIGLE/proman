@@ -20,4 +20,6 @@ const Separator = React.forwardRef<
 ))
 Separator.displayName = "Separator"
 
+export type SeparatorProps = React.HTMLAttributes<HTMLDivElement> & { orientation?: "horizontal" | "vertical" }
+
 export { Separator }
