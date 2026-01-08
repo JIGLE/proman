@@ -30,7 +30,7 @@ import {
 } from "lucide-react";
 import { AppProvider } from "@/lib/app-context-db";
 
-export default function Home() {
+export default function Home(): React.ReactElement {
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("overview");
 

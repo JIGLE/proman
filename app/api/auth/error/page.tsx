@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-function AuthErrorContent() {
+function AuthErrorContent(): React.ReactElement {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
@@ -127,7 +127,7 @@ function AuthErrorContent() {
   );
 }
 
-export default function AuthError() {
+export default function AuthError(): React.ReactElement {
   return (
     <Suspense fallback={
       <div className="flex h-screen items-center justify-center bg-zinc-950">

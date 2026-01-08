@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-middleware';
 import { createErrorResponse, createSuccessResponse } from '@/lib/error-handling';
 import { emailService, EMAIL_TEMPLATES, EmailTemplate } from '@/lib/email-service';
@@ -21,7 +21,7 @@ const bulkEmailSchema = z.object({
 });
 
 // GET /api/email/templates - Get available email templates
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const templates = Object.values(EMAIL_TEMPLATES).map((template: EmailTemplate) => ({
       id: template.id,
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
 }
 
 // POST /api/email/send - Send a single email
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<Response | NextResponse> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
 }
 
 // PUT /api/email/bulk - Send bulk emails
-export async function PUT(request: NextRequest) {
+export async function PUT(request: NextRequest): Promise<Response | NextResponse> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 

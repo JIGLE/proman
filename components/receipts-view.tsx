@@ -17,7 +17,7 @@ import { receiptSchema, ReceiptFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";
 import jsPDF from "jspdf";
 
-export function ReceiptsView() {
+export function ReceiptsView(): React.ReactElement {
   const { state, addReceipt, updateReceipt, deleteReceipt } = useApp();
   const { receipts, tenants, properties, loading } = state;
   const { success, error } = useToast();

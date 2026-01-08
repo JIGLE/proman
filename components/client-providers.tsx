@@ -4,7 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import { ToastProvider } from "@/lib/toast-context";
 import { AppProvider } from "@/lib/app-context-db";
 
-export function ClientProviders({ children }: { children: React.ReactNode }) {
+export function ClientProviders({ children }: { children: React.ReactNode }): React.ReactElement {
   return (
     <SessionProvider>
       <ToastProvider>

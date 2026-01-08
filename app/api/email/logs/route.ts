@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/auth-middleware';
 import { createErrorResponse, createSuccessResponse } from '@/lib/error-handling';
 import { getPrismaClient } from '@/lib/database';
@@ -14,7 +14,7 @@ const querySchema = z.object({
 });
 
 // GET /api/email/logs - Get email logs with pagination and filtering
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<Response | NextResponse> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 

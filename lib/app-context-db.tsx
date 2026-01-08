@@ -94,7 +94,7 @@ const AppContext = createContext<{
   deleteCorrespondence: (id: string) => Promise<void>;
 } | null>(null);
 
-export function AppProvider({ children }: { children: ReactNode }) {
+export function AppProvider({ children }: { children: ReactNode }): React.ReactElement {
   const [state, dispatch] = React.useReducer(appReducer, initialState);
   const { data: session } = useSession();
   const { error: showError } = useToast();
@@ -378,7 +378,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useApp() {
+export function useApp(): NonNullable<React.ContextType<typeof AppContext>> {
   const context = useContext(AppContext);
   if (!context) {
     throw new Error('useApp must be used within an AppProvider');

@@ -11,7 +11,7 @@ type DebugAuthInfo = {
   timestamp: string;
 };
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   const info: DebugAuthInfo = {
     ok: false,
     nextauthUrlOk: false,

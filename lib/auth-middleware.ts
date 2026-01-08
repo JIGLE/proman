@@ -75,7 +75,7 @@ export async function requireOwnership(
 }
 
 // CORS headers for API responses
-export function corsHeaders() {
+export function corsHeaders(): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': process.env.NEXTAUTH_URL || 'http://localhost:3000',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',

@@ -11,7 +11,7 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-function getPrismaClient() {
+function getPrismaClient(): PrismaClient {
   if (!globalForPrisma.prisma) {
     // Only initialize PrismaClient if we have a database URL (not during build)
     if (process.env.DATABASE_URL) {
@@ -524,7 +524,7 @@ export const correspondenceService = {
 };
 
 // Database initialization and seeding
-export async function initializeDatabase() {
+export async function initializeDatabase(): Promise<void> {
   try {
     // Check if we have any templates (indicating database is seeded)
     const templateCount = await getPrismaClient().correspondenceTemplate.count();

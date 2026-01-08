@@ -6,7 +6,7 @@ import { getPrismaClient } from '@/lib/database'
 // Ensure this runs in Node runtime so we can access filesystem and Prisma
 export const runtime = 'nodejs'
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   const dbUrl = process.env.DATABASE_URL || ''
   if (!dbUrl) {
     return NextResponse.json({ ok: false, error: 'DATABASE_URL not set' }, { status: 400 })

@@ -5,7 +5,7 @@ import path from 'path'
 
 export const runtime = 'nodejs'
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   // Optional protection: set INIT_SECRET env var and send Authorization: Bearer <INIT_SECRET>
   const initSecret = process.env.INIT_SECRET
   if (initSecret) {

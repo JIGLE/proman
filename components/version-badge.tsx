@@ -9,7 +9,7 @@ type VersionInfo = {
   node_env?: string;
 };
 
-export default function VersionBadge() {
+export default function VersionBadge(): React.ReactElement | null {
   const [v, setV] = useState<VersionInfo | null>(null);
 
   useEffect(() => {

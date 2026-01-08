@@ -12,7 +12,7 @@ interface ToastContextType {
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
-export function ToastProvider({ children }: { children: ReactNode }) {
+export function ToastProvider({ children }: { children: ReactNode }): React.ReactElement {
   const value = {
     success: (message: string) => toast.success(message),
     error: (message: string) => toast.error(message),
@@ -38,7 +38,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export function useToast() {
+export function useToast(): ToastContextType {
   const context = useContext(ToastContext);
   if (context === undefined) {
     throw new Error('useToast must be used within a ToastProvider');
