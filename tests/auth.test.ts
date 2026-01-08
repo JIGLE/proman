@@ -18,7 +18,7 @@ describe('auth options', () => {
 
     const opts = getAuthOptions()
     expect(opts.pages).toBeDefined()
-    expect((opts.pages as any).signIn).toBe('/auth/signin')
+    expect(opts.pages?.signIn).toBe('/auth/signin')
   })
 
   it('falls back to base options when PrismaAdapter throws', async () => {
