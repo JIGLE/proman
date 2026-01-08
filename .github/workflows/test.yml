@@ -54,11 +54,8 @@ jobs:
       - name: Type-check
         run: npm run type-check
 
-      - name: Lint (non-fatal for now)
-        continue-on-error: true
-        run: |
-          echo "Running lint (non-fatal)"
-          npm run lint || true
+      - name: Lint
+        run: npm run lint
 
       - name: Run tests
         run: npm test -- --reporter dot

@@ -7,7 +7,7 @@
     "build": "next build",
     "prestart": "node scripts/ensure-sqlite.js",
     "start": "next start",
-    "lint": "eslint -c .eslintrc.cjs . --ext .ts,.tsx",
+    "lint": "eslint . --ext .ts,.tsx",
     "type-check": "tsc --noEmit",
     "verify": "npm run type-check && npm test",
     "verify:ci": "npm run type-check && npm run lint && npm test",
