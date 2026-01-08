@@ -9,6 +9,8 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      NODE_ENV: test
 
     steps:
       - name: Checkout
@@ -43,6 +45,20 @@ jobs:
             echo "npm ci failed, falling back to npm install";
             npm install --no-audit --no-fund
           )
+
+      - name: Prepare SQLite test DB
+        run: |
+          node scripts/ensure-sqlite.js || true
+          npx prisma generate || true
+
+      - name: Type-check
+        run: npm run type-check
+
+      - name: Lint (non-fatal for now)
+        continue-on-error: true
+        run: |
+          echo "Running lint (non-fatal)"
+          npm run lint || true
 
       - name: Run tests
         run: npm test -- --reporter dot

@@ -107,10 +107,37 @@ scp proman.tar root@TRUENAS:/tmp/
 ssh root@TRUENAS "docker load -i /tmp/proman.tar"
 ```
 
+## Developer setup & tests
+
+1. Install dependencies:
+
+```bash
+npm ci
+```
+
+2. Copy `.env.example` to `.env` and edit if needed. To run tests without production secrets, set:
+
+```bash
+export NODE_ENV=test
+```
+
+3. Run verification (type-check + lint + tests):
+
+```bash
+npm run verify
+```
+
+4. Run tests directly:
+
+```bash
+npm test
+```
+
+
 ## CI
 - Workflow: `.github/workflows/publish-ghcr.yml` builds, tags and publishes to GHCR on `main` (also supports manual `workflow_dispatch`).
    - The workflow sets `VERSION`, `GIT_COMMIT`, and `BUILD_TIME` and passes them as build-args and image labels so the running app can expose its build info at `/api/info`.
-   - The workflow uses `GITHUB_TOKEN` to publish to GHCR; no additional secrets are required for the repo to publish from GitHub Actions.
+   - The workflow uses `GITHUB_TOKEN` to publish to GHCR; no additional secrets are required for the repo to publish from GitHub Actions`
 
 License: MIT
 

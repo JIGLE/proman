@@ -24,16 +24,36 @@ const envSchema = z.object({
 });
 
 // Validate environment variables
-let env: z.infer<typeof envSchema>;
+let env: z.infer<typeof envSchema> | undefined;
 
-try {
-  env = envSchema.parse(process.env);
-} catch (error) {
-  console.error('❌ Invalid environment variables:', error);
-  process.exit(1);
+const parsed = envSchema.safeParse(process.env);
+
+if (parsed.success) {
+  env = parsed.data;
+} else {
+  // If we're in test mode, tolerate missing environment variables and provide sensible defaults
+  if (process.env.NODE_ENV === 'test') {
+    console.warn('⚠️ Environment validation failed, but continuing because NODE_ENV=test:', parsed.error);
+    const partialEnv = envSchema.partial().parse(process.env);
+    env = {
+      DATABASE_URL: partialEnv.DATABASE_URL ?? 'file:./dev.db',
+      NEXTAUTH_URL: partialEnv.NEXTAUTH_URL ?? 'http://localhost:3000',
+      NEXTAUTH_SECRET: partialEnv.NEXTAUTH_SECRET ?? 'test-secret-should-be-long-enough-for-dev',
+      GOOGLE_CLIENT_ID: partialEnv.GOOGLE_CLIENT_ID ?? '',
+      GOOGLE_CLIENT_SECRET: partialEnv.GOOGLE_CLIENT_SECRET ?? '',
+      NODE_ENV: (process.env.NODE_ENV as any) ?? 'test',
+      SMTP_HOST: partialEnv.SMTP_HOST,
+      SMTP_PORT: partialEnv.SMTP_PORT,
+      SMTP_USER: partialEnv.SMTP_USER,
+      SMTP_PASS: partialEnv.SMTP_PASS,
+    } as z.infer<typeof envSchema>;
+  } else {
+    console.error('❌ Invalid environment variables:', parsed.error);
+    process.exit(1);
+  }
 }
 
-export { env };
+export { env as env };
 
 // Type-safe environment variables
 export type Env = z.infer<typeof envSchema>;
