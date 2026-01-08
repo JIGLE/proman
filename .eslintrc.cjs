@@ -15,5 +15,13 @@ module.exports = {
     // minimal baseline rules
     'no-unused-vars': 'warn',
     'no-undef': 'error'
-  }
+  },
+  overrides: [
+    {
+      files: ['tests/**/*.ts', 'tests/**/*.tsx'],
+      rules: {
+        '@typescript-eslint/no-unused-vars': 'off'
+      }
+    }
+  ]
 };
