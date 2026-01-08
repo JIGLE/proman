@@ -6,7 +6,9 @@ interface TextareaProps
   extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {}
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, ...props }, ref) => {
+  ({ className, value, onChange, readOnly, ...props }, ref) => {
+    const controlledWithoutOnChange = value !== undefined && onChange === undefined && readOnly === undefined
+
     return (
       <textarea
         className={cn(
@@ -14,6 +16,9 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           className
         )}
         ref={ref}
+        value={value}
+        onChange={onChange}
+        readOnly={controlledWithoutOnChange ? true : readOnly}
         {...props}
       />
     )

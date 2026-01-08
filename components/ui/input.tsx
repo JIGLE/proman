@@ -6,7 +6,9 @@ export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
+  ({ className, type, value, onChange, readOnly, ...props }, ref) => {
+    const controlledWithoutOnChange = value !== undefined && onChange === undefined && readOnly === undefined
+
     return (
       <input
         type={type}
@@ -15,6 +17,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           className
         )}
         ref={ref}
+        value={value}
+        onChange={onChange}
+        readOnly={controlledWithoutOnChange ? true : readOnly}
         {...props}
       />
     )
