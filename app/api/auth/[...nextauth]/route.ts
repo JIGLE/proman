@@ -5,9 +5,9 @@ import { getAuthOptions } from '@/lib/auth';
 // Ensure this route executes in the Node.js runtime (Prisma client is not supported in Edge runtime)
 export const runtime = 'nodejs';
 
-// next-auth/next exports a handler function; cast to a callable that accepts NextRequest and returns Response | Promise<Response>.
-const handler = (NextAuth as unknown as (opts: unknown) => (req: NextRequest) => Response | Promise<Response>)(
-  getAuthOptions() as unknown
+// next-auth/next exports a handler factory; type it using the return type of `getAuthOptions` for safety
+const handler = (NextAuth as (opts: ReturnType<typeof getAuthOptions>) => (req: NextRequest) => Response | Promise<Response>)(
+  getAuthOptions()
 );
 
 // Export handler directly so Next.js provides the proper request context (including `query`)

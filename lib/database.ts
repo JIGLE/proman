@@ -7,9 +7,11 @@ import {
   Correspondence,
 } from './types';
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined;
-};
+declare global {
+  var prisma: PrismaClient | undefined;
+}
+
+const globalForPrisma = globalThis as typeof globalThis & { prisma?: PrismaClient };
 
 function getPrismaClient(): PrismaClient {
   if (!globalForPrisma.prisma) {
