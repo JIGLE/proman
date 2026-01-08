@@ -10,7 +10,7 @@ describe('EmailService', () => {
   it('isReady returns false when SENDGRID_API_KEY not set', async () => {
     delete process.env.SENDGRID_API_KEY
     const mod = await import('../lib/email-service')
-    const { EmailService } = mod as any
+    const { EmailService } = mod as { EmailService: typeof import('../lib/email-service').EmailService }
     // create a new instance directly to avoid singleton reuse
     const inst = EmailService.getInstance()
     expect(inst.isReady()).toBe(false)
@@ -28,7 +28,7 @@ describe('EmailService', () => {
     vi.resetModules()
     process.env.SENDGRID_API_KEY = 'fake-key'
     const mod = await import('../lib/email-service')
-    const { emailService } = mod as any
+    const { emailService } = mod as { emailService: import('../lib/email-service').EmailService }
 
     const res = await emailService.sendTemplatedEmail('rent_reminder', 'test@example.com', { tenantName: 'John', propertyAddress: '1 Main St', rentAmount: '100' }, 'user-1')
     expect(res.success).toBe(true)

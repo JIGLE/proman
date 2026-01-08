@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
+import type { Session } from 'next-auth';
 import { getAuthOptions } from '@/lib/auth';
 
 // Authentication middleware for API routes
 export async function requireAuth(_request: NextRequest): Promise<{
-  session: any;
+  session: Session;
   userId: string;
 } | NextResponse> {
   try {
-    const session = await getServerSession(getAuthOptions());
+    const session = await getServerSession(getAuthOptions()) as Session | null;
 
     if (!session || !session.user) {
       return new NextResponse(
@@ -21,7 +22,8 @@ export async function requireAuth(_request: NextRequest): Promise<{
     }
 
     // Extract user ID from session
-    const userId = (session.user as any).id;
+    const user = session.user as { id?: string };
+    const userId = user.id;
 
     if (!userId) {
       return new NextResponse(
@@ -34,7 +36,7 @@ export async function requireAuth(_request: NextRequest): Promise<{
     }
 
     return { session, userId };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('requireAuth error:', error);
     return new NextResponse(
       JSON.stringify({ error: 'Authentication failed' }),

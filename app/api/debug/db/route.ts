@@ -12,7 +12,7 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: 'DATABASE_URL not set' }, { status: 400 })
   }
 
-  const info: any = {
+  const info: Record<string, any> = {
     ok: false,
     database: {
       url: dbUrl.startsWith('file:') ? 'sqlite' : dbUrl.startsWith('postgres') || dbUrl.startsWith('postgresql') ? 'postgres' : 'unknown',
@@ -44,8 +44,8 @@ export async function GET() {
       } catch {
         info.database.writable = false
       }
-    } catch (err: any) {
-      info.database.error = `Filesystem check failed: ${err?.message}`
+    } catch (err: unknown) {
+      info.database.error = `Filesystem check failed: ${err instanceof Error ? err.message : String(err)}`
     }
   }
 

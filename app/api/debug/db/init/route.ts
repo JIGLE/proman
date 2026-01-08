@@ -26,21 +26,24 @@ export async function POST(request: Request) {
 
   try {
     fs.mkdirSync(dir, { recursive: true })
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: `failed to create directory: ${err?.message}` }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ ok: false, error: `failed to create directory: ${message}` }, { status: 500 })
   }
 
   try {
     const fd = fs.openSync(resolved, 'a')
     fs.closeSync(fd)
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: `failed to create file: ${err?.message}` }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ ok: false, error: `failed to create file: ${message}` }, { status: 500 })
   }
 
   try {
     fs.accessSync(resolved, fs.constants.W_OK)
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: `db file not writable: ${err?.message}` }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ ok: false, error: `db file not writable: ${message}` }, { status: 500 })
   }
 
   try {
