@@ -42,6 +42,15 @@ export function isRateLimited(ip: string): boolean {
   return false;
 }
 
+// Test helpers (for unit tests) — intentionally minimal
+export function _resetRateLimitMap(): void {
+  rateLimitMap.clear();
+}
+
+export function _setRateLimitForIP(ip: string, count: number, ttlMs?: number): void {
+  rateLimitMap.set(ip, { count, resetTime: Date.now() + (typeof ttlMs === 'number' ? ttlMs : RATE_LIMIT_WINDOW) });
+}
+
 export function checkRateLimit(request: Request): Response | null {
   const clientIP = getClientIP(request);
 
@@ -65,8 +74,11 @@ export function checkRateLimit(request: Request): Response | null {
 }
 
 // Higher-order function to wrap API handlers with rate limiting
-export function withRateLimit<T extends Request>(handler: (request: T, ...args: unknown[]) => Promise<Response>) {
-  return async (request: T, ...args: unknown[]): Promise<Response> => {
+export function withRateLimit<
+  T extends Request,
+  A extends readonly unknown[] = readonly unknown[]
+>(handler: (request: T, ...args: A) => Promise<Response>) {
+  return async (request: T, ...args: A): Promise<Response> => {
     const rateLimitResponse = checkRateLimit(request as Request);
     if (rateLimitResponse) return rateLimitResponse;
 
