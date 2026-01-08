@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import { PropertiesView } from '../../components/properties-view'
 
 vi.mock('@/lib/app-context-db', () => ({
@@ -9,6 +10,10 @@ vi.mock('@/lib/app-context-db', () => ({
     updateProperty: vi.fn(),
     deleteProperty: vi.fn(),
   })
+}))
+
+vi.mock('@/lib/toast-context', () => ({
+  useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }))
 
 describe('PropertiesView', () => {
