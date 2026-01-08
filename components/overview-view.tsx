@@ -11,6 +11,8 @@ import { Building2, Users, DollarSign, TrendingUp } from "lucide-react";
 import { Badge } from "./ui/badge";
 import { useApp } from "@/lib/app-context";
 
+export type OverviewViewProps = Record<string, never>
+
 export function OverviewView(): React.ReactElement {
   const { state } = useApp();
   const { properties, tenants, receipts } = state;
