@@ -22,6 +22,8 @@ import { Tenant } from "@/lib/types";
 import { tenantSchema, TenantFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";
 
+export type TenantsViewProps = Record<string, never>
+
 export function TenantsView(): React.ReactElement {
   const { state, addTenant, updateTenant, deleteTenant } = useApp();
   const { tenants, properties, loading } = state;

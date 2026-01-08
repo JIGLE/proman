@@ -45,6 +45,8 @@ const propertyPerformance = [
   { property: "Garden Townhouse", revenue: 39600 },
 ];
 
+export type FinancialsViewProps = Record<string, never>
+
 export function FinancialsView(): React.ReactElement {
   const totalRevenue = revenueData.reduce((acc, curr) => acc + curr.revenue, 0);
   const totalExpenses = revenueData.reduce((acc, curr) => acc + curr.expenses, 0);
