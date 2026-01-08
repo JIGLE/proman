@@ -34,7 +34,20 @@ export default function Home() {
   const { data: session, status } = useSession();
   const [activeTab, setActiveTab] = useState("overview");
 
-  const [settings, setSettings] = useState({
+  type Settings = {
+    emailNotifications: boolean;
+    pushNotifications: boolean;
+    maintenanceReminders: boolean;
+    paymentReminders: boolean;
+    theme: 'light' | 'dark' | 'system';
+    language: string;
+    profileVisibility: 'public' | 'private';
+    dataSharing: boolean;
+    timezone: string;
+    currency: string;
+  };
+
+  const [settings, setSettings] = useState<Settings>({
     // Notifications
     emailNotifications: true,
     pushNotifications: false,
@@ -54,7 +67,7 @@ export default function Home() {
     currency: 'USD',
   });
 
-  const handleSettingChange = (key: string, value: any) => {
+  const handleSettingChange = <K extends keyof Settings>(key: K, value: Settings[K]) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 
@@ -260,7 +273,7 @@ export default function Home() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="theme">Theme</Label>
-              <Select value={settings.theme} onValueChange={(value) => handleSettingChange('theme', value)}>
+              <Select value={settings.theme} onValueChange={(value) => handleSettingChange('theme', value as Settings['theme'])}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -405,7 +418,7 @@ export default function Home() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="profile-visibility">Profile Visibility</Label>
-              <Select value={settings.profileVisibility} onValueChange={(value) => handleSettingChange('profileVisibility', value)}>
+              <Select value={settings.profileVisibility} onValueChange={(value) => handleSettingChange('profileVisibility', value as Settings['profileVisibility'])}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

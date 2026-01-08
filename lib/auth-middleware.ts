@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
 import type { Session } from 'next-auth';
 import { getAuthOptions } from '@/lib/auth';
 
@@ -9,7 +8,9 @@ export async function requireAuth(_request: NextRequest): Promise<{
   userId: string;
 } | NextResponse> {
   try {
-    const session = await getServerSession(getAuthOptions()) as Session | null;
+    const mod = await import('next-auth/next').catch(() => import('next-auth'));
+    const getServerSession = (mod as any).getServerSession;
+    const session = (await getServerSession(getAuthOptions())) as Session | null;
 
     if (!session || !session.user) {
       return new NextResponse(

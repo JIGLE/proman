@@ -154,6 +154,8 @@ export class EmailService {
       } as const;
 
       const result = await sendGridClient.send(msg);
+      const sendResult = result as any[] | undefined;
+      const messageId = sendResult?.[0]?.headers?.['x-message-id'] as string | undefined;
 
       // Log the email in database for tracking
       await this.logEmail({
@@ -162,11 +164,11 @@ export class EmailService {
         subject: emailData.subject,
         templateId: emailData.templateId,
         status: 'sent',
-        messageId: result?.[0]?.headers?.['x-message-id'] as string | undefined,
+        messageId,
         userId,
       });
 
-      return { success: true, messageId: result?.[0]?.headers?.['x-message-id'] as string | undefined };
+      return { success: true, messageId };
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : String(error);
       console.error('Email send error:', error);

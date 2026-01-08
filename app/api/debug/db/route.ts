@@ -55,8 +55,9 @@ export async function GET() {
     const count = await prisma.user.count()
     info.database.userCount = count
     info.ok = true
-  } catch (err: any) {
-    info.database.error = info.database.error ? `${info.database.error}; ${err?.message}` : err?.message
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    info.database.error = info.database.error ? `${info.database.error}; ${message}` : message;
   }
 
   return NextResponse.json(info)

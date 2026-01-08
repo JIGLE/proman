@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Download, Calendar, Plus, Edit, Trash2 } from "lucide-react";
+import { ZodError } from 'zod';
+import { FileText, Download, Calendar, Plus, Edit, Trash2, DollarSign } from "lucide-react";
 import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -33,7 +34,7 @@ export function ReceiptsView() {
     status: 'paid',
     description: '',
   });
-  const [formErrors, setFormErrors] = useState<Partial<ReceiptFormData>>({});
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof ReceiptFormData, string>>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,13 +56,12 @@ export function ReceiptsView() {
       setIsDialogOpen(false);
       setEditingReceipt(null);
       resetForm();
-    } catch (err) {
-      if (err instanceof Error && err.name === 'ZodError') {
-        // Handle validation errors
-        const errors: Partial<ReceiptFormData> = {};
-        (err as any).errors.forEach((error: any) => {
-          const field = error.path[0] as keyof ReceiptFormData;
-          errors[field] = error.message;
+    } catch (err: unknown) {
+      if (err instanceof ZodError) {
+        const errors: Partial<Record<keyof ReceiptFormData, string>> = {};
+        err.issues.forEach((issue) => {
+          const field = issue.path[0] as keyof ReceiptFormData;
+          errors[field] = issue.message;
         });
         setFormErrors(errors);
         error('Please fix the form errors below.');

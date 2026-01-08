@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useApp } from "@/lib/app-context-db";
 import { CorrespondenceTemplate, Tenant } from "@/lib/types";
 import { templateSchema, TemplateFormData } from "@/lib/validation";
+import { ZodError, ZodIssue } from 'zod';
 import { useToast } from "@/lib/toast-context";
 
 export function CorrespondenceView() {
@@ -36,7 +37,7 @@ export function CorrespondenceView() {
     subject: '',
     content: '',
   });
-  const [formErrors, setFormErrors] = useState<Partial<TemplateFormData>>({});
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof TemplateFormData, string>>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,13 +64,12 @@ export function CorrespondenceView() {
       setIsDialogOpen(false);
       setEditingTemplate(null);
       resetForm();
-    } catch (err) {
-      if (err instanceof Error && err.name === 'ZodError') {
-        // Handle validation errors
-        const errors: Partial<TemplateFormData> = {};
-        (err as any).errors.forEach((error: any) => {
-          const field = error.path[0] as keyof TemplateFormData;
-          errors[field] = error.message;
+    } catch (err: unknown) {
+      if (err instanceof ZodError) {
+        const errors: Partial<Record<keyof TemplateFormData, string>> = {};
+        err.issues.forEach((issue: ZodIssue) => {
+          const field = issue.path[0] as keyof TemplateFormData;
+          errors[field] = issue.message;
         });
         setFormErrors(errors);
         error('Please fix the form errors below.');

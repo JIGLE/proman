@@ -19,14 +19,16 @@ const updatePropertySchema = z.object({
 });
 
 // GET /api/properties/[id] - Get a specific property
-async function handleGet(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handleGet(request: NextRequest, context?: any): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
+  const id = context?.params?.id;
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {
-    const property = await propertyService.getById(userId, params.id);
+    const property = await propertyService.getById(userId, id);
 
     if (!property) {
       return createErrorResponse(new Error('Property not found'), 404, request);
@@ -39,15 +41,17 @@ async function handleGet(request: NextRequest, { params }: { params: { id: strin
 }
 
 // PUT /api/properties/[id] - Update a specific property
-async function handlePut(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handlePut(request: NextRequest, context?: any): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
+  const id = context?.params?.id;
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {
     // First check if property exists and user owns it
-    const existingProperty = await propertyService.getById(userId, params.id);
+    const existingProperty = await propertyService.getById(userId, id);
     if (!existingProperty) {
       return createErrorResponse(new Error('Property not found'), 404, request);
     }
@@ -69,7 +73,7 @@ async function handlePut(request: NextRequest, { params }: { params: { id: strin
     // Validate input
     const validatedData = updatePropertySchema.parse(sanitizedBody);
 
-    const property = await propertyService.update(userId, params.id, validatedData);
+    const property = await propertyService.update(userId, id, validatedData);
     return createSuccessResponse(property);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -84,20 +88,22 @@ async function handlePut(request: NextRequest, { params }: { params: { id: strin
 }
 
 // DELETE /api/properties/[id] - Delete a specific property
-async function handleDelete(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handleDelete(request: NextRequest, context?: any): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
+  const id = context?.params?.id;
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {
     // First check if property exists and user owns it
-    const existingProperty = await propertyService.getById(userId, params.id);
+    const existingProperty = await propertyService.getById(userId, id);
     if (!existingProperty) {
       return createErrorResponse(new Error('Property not found'), 404, request);
     }
 
-    await propertyService.delete(userId, params.id);
+    await propertyService.delete(userId, id);
     return createSuccessResponse({ message: 'Property deleted successfully' });
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);

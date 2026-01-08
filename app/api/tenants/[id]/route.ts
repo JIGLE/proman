@@ -19,14 +19,17 @@ const updateTenantSchema = z.object({
 });
 
 // GET /api/tenants/[id] - Get a specific tenant
-async function handleGet(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handleGet(request: NextRequest, context?: any): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
 
+  const id = context?.params?.id;
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
+
   try {
-    const tenant = await tenantService.getById(userId, params.id);
+    const tenant = await tenantService.getById(userId, id);
 
     if (!tenant) {
       return createErrorResponse(new Error('Tenant not found'), 404, request);
@@ -39,15 +42,18 @@ async function handleGet(request: NextRequest, { params }: { params: { id: strin
 }
 
 // PUT /api/tenants/[id] - Update a specific tenant
-async function handlePut(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handlePut(request: NextRequest, context?: any): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
 
   try {
+    const id = context?.params?.id;
+    if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
+
     // First check if tenant exists and user owns it
-    const existingTenant = await tenantService.getById(userId, params.id);
+    const existingTenant = await tenantService.getById(userId, id);
     if (!existingTenant) {
       return createErrorResponse(new Error('Tenant not found'), 404, request);
     }
@@ -68,7 +74,7 @@ async function handlePut(request: NextRequest, { params }: { params: { id: strin
     // Validate input
     const validatedData = updateTenantSchema.parse(sanitizedBody);
 
-    const tenant = await tenantService.update(userId, params.id, validatedData);
+    const tenant = await tenantService.update(userId, id, validatedData);
     return createSuccessResponse(tenant);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -83,20 +89,22 @@ async function handlePut(request: NextRequest, { params }: { params: { id: strin
 }
 
 // DELETE /api/tenants/[id] - Delete a specific tenant
-async function handleDelete(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handleDelete(request: NextRequest, context?: any): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
+  const id = context?.params?.id;
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {
     // First check if tenant exists and user owns it
-    const existingTenant = await tenantService.getById(userId, params.id);
+    const existingTenant = await tenantService.getById(userId, id);
     if (!existingTenant) {
       return createErrorResponse(new Error('Tenant not found'), 404, request);
     }
 
-    await tenantService.delete(userId, params.id);
+    await tenantService.delete(userId, id);
     return createSuccessResponse({ message: 'Tenant deleted successfully' });
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);

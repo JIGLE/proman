@@ -1,11 +1,11 @@
-import type { NextAuthOptions } from 'next-auth';
 import type { Session, User as NextAuthUser } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
+
 import GoogleProvider from 'next-auth/providers/google';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { getPrismaClient } from '@/lib/database';
 
-function createBaseAuthOptions(): NextAuthOptions {
+function createBaseAuthOptions(): any {
   const secret = process.env.NEXTAUTH_SECRET;
   const googleClientId = process.env.GOOGLE_CLIENT_ID;
   const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -14,7 +14,7 @@ function createBaseAuthOptions(): NextAuthOptions {
     console.warn('Google OAuth not configured: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing');
   }
 
-  const options: NextAuthOptions = {
+  const options: any = {
     secret,
     providers: [
       GoogleProvider({
@@ -47,7 +47,7 @@ function createBaseAuthOptions(): NextAuthOptions {
           return session;
         }
       },
-      async signIn({ user, account: _account, profile: _profile }: { user: NextAuthUser; account?: unknown; profile?: unknown }): Promise<boolean> {
+      async signIn({ user, account: _account, profile: _profile }: any): Promise<boolean> {
         try {
           // Only perform database operations if database is available
           const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
@@ -95,10 +95,10 @@ function createBaseAuthOptions(): NextAuthOptions {
       },
     },
     events: {
-      async signIn({ user, account, profile: _profile, isNewUser }) {
+      async signIn({ user, account, profile: _profile, isNewUser }: any) {
         console.log('NextAuth event signIn:', { email: user?.email, provider: account?.provider, isNewUser });
       },
-      async createUser({ user }) {
+      async createUser({ user }: any) {
         console.log('NextAuth event createUser:', { id: user.id, email: user.email });
       },
     },
@@ -112,7 +112,7 @@ function createBaseAuthOptions(): NextAuthOptions {
 }
 
 // Lazy adapter initialization to avoid build-time issues
-export function getAuthOptions(): NextAuthOptions {
+export function getAuthOptions(): any {
   console.log('getAuthOptions called, DATABASE_URL:', !!process.env.DATABASE_URL);
   // Only add adapter if we have database access and we're not in build time
   const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';

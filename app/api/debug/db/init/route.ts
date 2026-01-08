@@ -51,7 +51,12 @@ export async function POST(request: Request) {
     const pushOut = execSync('npx prisma db push', { stdio: 'pipe' }).toString()
     const genOut = execSync('npx prisma generate', { stdio: 'pipe' }).toString()
     return NextResponse.json({ ok: true, dbPath: resolved, pushOut, genOut })
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err?.message || String(err), stdout: err?.stdout?.toString?.(), stderr: err?.stderr?.toString?.() }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    // Attempt to extract stdout/stderr if present (common for child_process errors)
+    const maybeErr = err as { stdout?: unknown; stderr?: unknown };
+    const stdout = typeof maybeErr.stdout === 'string' ? maybeErr.stdout : typeof maybeErr.stdout === 'object' && maybeErr.stdout?.toString ? maybeErr.stdout.toString() : undefined;
+    const stderr = typeof maybeErr.stderr === 'string' ? maybeErr.stderr : typeof maybeErr.stderr === 'object' && maybeErr.stderr?.toString ? maybeErr.stderr.toString() : undefined;
+    return NextResponse.json({ ok: false, error: message, stdout, stderr }, { status: 500 });
   }
 }

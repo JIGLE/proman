@@ -17,14 +17,16 @@ const updateReceiptSchema = z.object({
 });
 
 // GET /api/receipts/[id] - Get a specific receipt
-async function handleGet(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handleGet(request: NextRequest, context?: any): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
+  const id = context?.params?.id;
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {
-    const receipt = await receiptService.getById(userId, params.id);
+    const receipt = await receiptService.getById(userId, id);
 
     if (!receipt) {
       return createErrorResponse(new Error('Receipt not found'), 404, request);
@@ -37,15 +39,17 @@ async function handleGet(request: NextRequest, { params }: { params: { id: strin
 }
 
 // PUT /api/receipts/[id] - Update a specific receipt
-async function handlePut(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handlePut(request: NextRequest, context?: any): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
+  const id = context?.params?.id;
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {
     // First check if receipt exists and user owns it
-    const existingReceipt = await receiptService.getById(userId, params.id);
+    const existingReceipt = await receiptService.getById(userId, id);
     if (!existingReceipt) {
       return createErrorResponse(new Error('Receipt not found'), 404, request);
     }
@@ -64,7 +68,7 @@ async function handlePut(request: NextRequest, { params }: { params: { id: strin
     // Validate input
     const validatedData = updateReceiptSchema.parse(sanitizedBody);
 
-    const receipt = await receiptService.update(userId, params.id, validatedData);
+    const receipt = await receiptService.update(userId, id, validatedData);
     return createSuccessResponse(receipt);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -79,20 +83,22 @@ async function handlePut(request: NextRequest, { params }: { params: { id: strin
 }
 
 // DELETE /api/receipts/[id] - Delete a specific receipt
-async function handleDelete(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handleDelete(request: NextRequest, context?: any): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
+  const id = context?.params?.id;
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {
     // First check if receipt exists and user owns it
-    const existingReceipt = await receiptService.getById(userId, params.id);
+    const existingReceipt = await receiptService.getById(userId, id);
     if (!existingReceipt) {
       return createErrorResponse(new Error('Receipt not found'), 404, request);
     }
 
-    await receiptService.delete(userId, params.id);
+    await receiptService.delete(userId, id);
     return createSuccessResponse({ message: 'Receipt deleted successfully' });
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);

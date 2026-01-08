@@ -10,9 +10,11 @@ function AuthErrorContent() {
   const error = searchParams.get("error");
 
   const [showDetails, setShowDetails] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<any | null>(null);
+  const [debugInfo, setDebugInfo] = useState<unknown | null>(null);
   const [loadingDebug, setLoadingDebug] = useState(false);
   const [debugError, setDebugError] = useState<string | null>(null);
+
+  const showDebug = debugInfo != null;
 
   const getErrorMessage = (error: string | null) => {
     switch (error) {
@@ -35,8 +37,9 @@ function AuthErrorContent() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       setDebugInfo(json);
-    } catch (err: any) {
-      setDebugError(err?.message || 'Failed to fetch debug info');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setDebugError(message || 'Failed to fetch debug info');
     } finally {
       setLoadingDebug(false);
     }
@@ -94,9 +97,9 @@ function AuthErrorContent() {
                 <p className="font-medium">DB debug</p>
                 {loadingDebug && <p className="text-zinc-400">Loading…</p>}
                 {debugError && <p className="text-rose-400">{debugError}</p>}
-                {debugInfo && (
+                {showDebug && (
                   <>
-                    <pre className="max-h-48 overflow-auto text-xs bg-zinc-950 p-2 border border-zinc-800 rounded mt-2">{JSON.stringify(debugInfo, null, 2)}</pre>
+                    <pre className="max-h-48 overflow-auto text-xs bg-zinc-950 p-2 border border-zinc-800 rounded mt-2">{JSON.stringify(debugInfo as any, null, 2)}</pre>
                     <div className="flex gap-2 mt-2">
                       <Button size="sm" onClick={copyDebug}>Copy</Button>
                       <Button size="sm" variant="outline" asChild>

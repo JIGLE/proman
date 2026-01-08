@@ -37,8 +37,8 @@ export class Logger {
       timestamp,
       level,
       message,
-      ...(data && { data }),
     };
+    if (data !== undefined) logEntry.data = data;
 
     // In production, you might want to use a proper logging service
     if (level === 'error') {
@@ -114,7 +114,7 @@ export function createErrorResponse(
 // Success response utility
 export function createSuccessResponse(data: unknown, statusCode: number = 200): NextResponse {
   return new NextResponse(
-    JSON.stringify(data),
+    JSON.stringify({ data }),
     {
       status: statusCode,
       headers: {
@@ -124,11 +124,11 @@ export function createSuccessResponse(data: unknown, statusCode: number = 200): 
   );
 }
 
-// Async error wrapper for API routes
-export function withErrorHandler(
-  handler: (request: NextRequest, context?: unknown) => Promise<Response | NextResponse>
-): (request: NextRequest, context?: unknown) => Promise<Response | NextResponse> {
-  return async (request: NextRequest, context?: unknown): Promise<Response | NextResponse> => {
+// Async error wrapper for API routes (generic to allow typed context)
+export function withErrorHandler<C = unknown>(
+  handler: (request: NextRequest, context?: C) => Promise<Response | NextResponse>
+): (request: NextRequest, context?: C) => Promise<Response | NextResponse> {
+  return async (request: NextRequest, context?: C): Promise<Response | NextResponse> => {
     try {
       return await handler(request, context);
     } catch (error: unknown) {

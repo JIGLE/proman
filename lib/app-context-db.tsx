@@ -98,7 +98,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = React.useReducer(appReducer, initialState);
   const { data: session } = useSession();
   const { error: showError } = useToast();
-  const userId = session?.user?.id;
+  const userId = (session?.user as { id?: string } | undefined)?.id;
 
   // Load initial data
   useEffect(() => {

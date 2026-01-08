@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ZodError } from 'zod';
 import { User, Mail, Phone, Calendar, Plus, Edit, Trash2 } from "lucide-react";
 import {
   Card,
@@ -39,7 +40,7 @@ export function TenantsView() {
     paymentStatus: 'pending',
     notes: '',
   });
-  const [formErrors, setFormErrors] = useState<Partial<TenantFormData>>({});
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof TenantFormData, string>>>({});
 
   const getPaymentStatusBadge = (status: Tenant["paymentStatus"]) => {
     switch (status) {
@@ -72,13 +73,12 @@ export function TenantsView() {
       setIsDialogOpen(false);
       setEditingTenant(null);
       resetForm();
-    } catch (err) {
-      if (err instanceof Error && err.name === 'ZodError') {
-        // Handle validation errors
-        const errors: Partial<TenantFormData> = {};
-        (err as any).errors.forEach((error: any) => {
-          const field = error.path[0] as keyof TenantFormData;
-          errors[field] = error.message;
+    } catch (err: unknown) {
+      if (err instanceof ZodError) {
+        const errors: Partial<Record<keyof TenantFormData, string>> = {};
+        err.issues.forEach((issue) => {
+          const field = issue.path[0] as keyof TenantFormData;
+          errors[field] = issue.message;
         });
         setFormErrors(errors);
         error('Please fix the form errors below.');

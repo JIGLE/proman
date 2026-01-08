@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { ZodError } from 'zod';
 import { Building2, MapPin, Bed, Bath, Plus, Edit, Trash2 } from "lucide-react";
 import {
   Card,
@@ -38,7 +39,7 @@ export function PropertiesView() {
     status: 'vacant',
     description: '',
   });
-  const [formErrors, setFormErrors] = useState<Partial<PropertyFormData>>({});
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof PropertyFormData, string>>>({});
 
   const getStatusBadge = (status: Property["status"]) => {
     switch (status) {
@@ -71,13 +72,12 @@ export function PropertiesView() {
       setIsDialogOpen(false);
       setEditingProperty(null);
       resetForm();
-    } catch (err) {
-      if (err instanceof Error && err.name === 'ZodError') {
-        // Handle validation errors
-        const errors: Partial<PropertyFormData> = {};
-        (err as any).errors.forEach((error: any) => {
-          const field = error.path[0] as keyof PropertyFormData;
-          errors[field] = error.message;
+    } catch (err: unknown) {
+      if (err instanceof ZodError) {
+        const errors: Partial<Record<keyof PropertyFormData, string>> = {};
+        err.issues.forEach((issue) => {
+          const field = issue.path[0] as keyof PropertyFormData;
+          errors[field] = issue.message;
         });
         setFormErrors(errors);
         error('Please fix the form errors below.');
