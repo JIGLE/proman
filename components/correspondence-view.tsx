@@ -16,6 +16,8 @@ import { templateSchema, TemplateFormData } from "@/lib/validation";
 import { ZodError, ZodIssue } from 'zod';
 import { useToast } from "@/lib/toast-context";
 
+export type CorrespondenceViewProps = Record<string, never>
+
 export function CorrespondenceView(): React.ReactElement {
   const { state, addTemplate, updateTemplate, deleteTemplate, addCorrespondence } = useApp();
   const { templates, correspondence: _correspondence, tenants, loading } = state;

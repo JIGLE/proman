@@ -22,6 +22,8 @@ import { Property } from "@/lib/types";
 import { propertySchema, PropertyFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";
 
+export type PropertiesViewProps = Record<string, never>
+
 export function PropertiesView(): React.ReactElement {
   const { state, addProperty, updateProperty, deleteProperty } = useApp();
   const { properties, loading } = state;
