@@ -99,7 +99,7 @@ function AuthErrorContent() {
                 {debugError && <p className="text-rose-400">{debugError}</p>}
                 {showDebug && (
                   <>
-                    <pre className="max-h-48 overflow-auto text-xs bg-zinc-950 p-2 border border-zinc-800 rounded mt-2">{JSON.stringify(debugInfo as any, null, 2)}</pre>
+                    <pre className="max-h-48 overflow-auto text-xs bg-zinc-950 p-2 border border-zinc-800 rounded mt-2">{JSON.stringify(debugInfo, null, 2)}</pre>
                     <div className="flex gap-2 mt-2">
                       <Button size="sm" onClick={copyDebug}>Copy</Button>
                       <Button size="sm" variant="outline" asChild>

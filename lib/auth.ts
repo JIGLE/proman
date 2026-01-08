@@ -5,7 +5,7 @@ import GoogleProvider from 'next-auth/providers/google';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { getPrismaClient } from '@/lib/database';
 
-function createBaseAuthOptions(): any {
+function createBaseAuthOptions(): Record<string, unknown> {
   const secret = process.env.NEXTAUTH_SECRET;
   const googleClientId = process.env.GOOGLE_CLIENT_ID;
   const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -14,7 +14,7 @@ function createBaseAuthOptions(): any {
     console.warn('Google OAuth not configured: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing');
   }
 
-  const options: any = {
+  const options: Record<string, unknown> = {
     secret,
     providers: [
       GoogleProvider({
@@ -47,7 +47,7 @@ function createBaseAuthOptions(): any {
           return session;
         }
       },
-      async signIn({ user, account: _account, profile: _profile }: any): Promise<boolean> {
+      async signIn({ user, account: _account, profile: _profile }: { user?: NextAuthUser | null; account?: { provider?: string } | undefined; profile?: unknown }): Promise<boolean> {
         try {
           // Only perform database operations if database is available
           const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
@@ -57,8 +57,8 @@ function createBaseAuthOptions(): any {
             return true; // Allow sign in without database during build
           }
 
-          // Ensure user exists in database
-          if (user.email) {
+          // Ensure user exists in database (guard user and email)
+          if (user?.email) {
             const prisma = getPrismaClient();
             const existingUser = await prisma.user.findUnique({
               where: { email: user.email },
@@ -71,7 +71,7 @@ function createBaseAuthOptions(): any {
               const created = await prisma.user.create({
                 data: {
                   email: user.email,
-                  name: user.name || '',
+                  name: user?.name || '',
                 },
               });
               console.log('Created user:', created.id);
@@ -95,10 +95,10 @@ function createBaseAuthOptions(): any {
       },
     },
     events: {
-      async signIn({ user, account, profile: _profile, isNewUser }: any) {
+      async signIn({ user, account, profile: _profile, isNewUser }: { user?: NextAuthUser | null; account?: { provider?: string } | undefined; profile?: unknown; isNewUser?: boolean }) {
         console.log('NextAuth event signIn:', { email: user?.email, provider: account?.provider, isNewUser });
       },
-      async createUser({ user }: any) {
+      async createUser({ user }: { user: { id: string; email?: string } }) {
         console.log('NextAuth event createUser:', { id: user.id, email: user.email });
       },
     },
@@ -112,7 +112,7 @@ function createBaseAuthOptions(): any {
 }
 
 // Lazy adapter initialization to avoid build-time issues
-export function getAuthOptions(): any {
+export function getAuthOptions(): Record<string, unknown> {
   console.log('getAuthOptions called, DATABASE_URL:', !!process.env.DATABASE_URL);
   // Only add adapter if we have database access and we're not in build time
   const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';

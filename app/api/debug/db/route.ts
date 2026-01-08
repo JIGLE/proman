@@ -12,7 +12,20 @@ export async function GET() {
     return NextResponse.json({ ok: false, error: 'DATABASE_URL not set' }, { status: 400 })
   }
 
-  const info: Record<string, any> = {
+  type DebugDBInfo = {
+    ok: boolean;
+    database: {
+      url: string;
+      path?: string;
+      exists: boolean | null;
+      writable: boolean | null;
+      userCount: number | null;
+      error: string | null;
+    };
+    timestamp: string;
+  };
+
+  const info: DebugDBInfo = {
     ok: false,
     database: {
       url: dbUrl.startsWith('file:') ? 'sqlite' : dbUrl.startsWith('postgres') || dbUrl.startsWith('postgresql') ? 'postgres' : 'unknown',

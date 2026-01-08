@@ -3,8 +3,16 @@ import { getPrismaClient } from '@/lib/database'
 
 export const runtime = 'nodejs'
 
+type DebugAuthInfo = {
+  ok: boolean;
+  nextauthUrlOk: boolean;
+  googleConfigured: boolean;
+  db: { ok: boolean; userCount: number | null; error: string | null };
+  timestamp: string;
+};
+
 export async function GET() {
-  const info: Record<string, any> = {
+  const info: DebugAuthInfo = {
     ok: false,
     nextauthUrlOk: false,
     googleConfigured: false,

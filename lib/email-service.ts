@@ -154,8 +154,14 @@ export class EmailService {
       } as const;
 
       const result = await sendGridClient.send(msg);
-      const sendResult = result as any[] | undefined;
-      const messageId = sendResult?.[0]?.headers?.['x-message-id'] as string | undefined;
+      const sendResult = result as unknown[] | undefined;
+      let messageId: string | undefined;
+      if (Array.isArray(sendResult) && sendResult.length > 0) {
+        const first = sendResult[0] as Record<string, unknown> | undefined;
+        const headers = first?.headers as Record<string, unknown> | undefined;
+        const maybeMsgId = headers ? headers['x-message-id'] : undefined;
+        if (typeof maybeMsgId === 'string') messageId = maybeMsgId;
+      }
 
       // Log the email in database for tracking
       await this.logEmail({

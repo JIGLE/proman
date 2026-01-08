@@ -19,15 +19,19 @@ const updateTenantSchema = z.object({
 });
 
 // GET /api/tenants/[id] - Get a specific tenant
-async function handleGet(request: NextRequest, context?: any): Promise<Response> {
+async function handleGet(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
 
-  const id = context?.params?.id;
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
   if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
-
   try {
     const tenant = await tenantService.getById(userId, id);
 
@@ -42,14 +46,17 @@ async function handleGet(request: NextRequest, context?: any): Promise<Response>
 }
 
 // PUT /api/tenants/[id] - Update a specific tenant
-async function handlePut(request: NextRequest, context?: any): Promise<Response> {
+async function handlePut(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
 
   try {
-    const id = context?.params?.id;
+    // Resolve id from context params
+    const maybeParams = context?.params as Record<string, string> | Promise<Record<string, string>> | undefined;
+    const resolvedParams = maybeParams instanceof Promise ? await maybeParams : maybeParams;
+    const id = resolvedParams?.id;
     if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
     // First check if tenant exists and user owns it
@@ -89,12 +96,17 @@ async function handlePut(request: NextRequest, context?: any): Promise<Response>
 }
 
 // DELETE /api/tenants/[id] - Delete a specific tenant
-async function handleDelete(request: NextRequest, context?: any): Promise<Response> {
+async function handleDelete(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
-  const id = context?.params?.id;
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
   if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {

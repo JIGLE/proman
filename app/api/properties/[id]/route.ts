@@ -19,12 +19,17 @@ const updatePropertySchema = z.object({
 });
 
 // GET /api/properties/[id] - Get a specific property
-async function handleGet(request: NextRequest, context?: any): Promise<Response> {
+async function handleGet(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
-  const id = context?.params?.id;
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
   if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {
@@ -41,12 +46,17 @@ async function handleGet(request: NextRequest, context?: any): Promise<Response>
 }
 
 // PUT /api/properties/[id] - Update a specific property
-async function handlePut(request: NextRequest, context?: any): Promise<Response> {
+async function handlePut(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
-  const id = context?.params?.id;
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
   if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {
@@ -88,12 +98,17 @@ async function handlePut(request: NextRequest, context?: any): Promise<Response>
 }
 
 // DELETE /api/properties/[id] - Delete a specific property
-async function handleDelete(request: NextRequest, context?: any): Promise<Response> {
+async function handleDelete(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
-  const id = context?.params?.id;
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
   if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {

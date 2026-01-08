@@ -15,8 +15,13 @@ const updateTemplateSchema = z.object({
 });
 
 // GET /api/correspondence/templates/[id] - Get a specific template
-async function handleGet(request: NextRequest, context?: any): Promise<Response> {
-  const id = context?.params?.id;
+async function handleGet(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
   if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
   try {
     const template = await templateService.getById(id);
@@ -32,8 +37,13 @@ async function handleGet(request: NextRequest, context?: any): Promise<Response>
 }
 
 // PUT /api/correspondence/templates/[id] - Update a specific template
-async function handlePut(request: NextRequest, context?: any): Promise<Response> {
-  const id = context?.params?.id;
+async function handlePut(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
   if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {
@@ -71,8 +81,13 @@ async function handlePut(request: NextRequest, context?: any): Promise<Response>
 }
 
 // DELETE /api/correspondence/templates/[id] - Delete a specific template
-async function handleDelete(request: NextRequest, context?: any): Promise<Response> {
-  const id = context?.params?.id;
+async function handleDelete(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
   if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {

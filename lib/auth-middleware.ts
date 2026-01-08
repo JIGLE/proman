@@ -9,8 +9,9 @@ export async function requireAuth(_request: NextRequest): Promise<{
 } | NextResponse> {
   try {
     const mod = await import('next-auth/next').catch(() => import('next-auth'));
-    const getServerSession = (mod as any).getServerSession;
-    const session = (await getServerSession(getAuthOptions())) as Session | null;
+    const maybe = mod as unknown as { getServerSession?: (opts?: unknown) => Promise<unknown> };
+    const getServerSession = maybe.getServerSession;
+    const session = (await getServerSession?.(getAuthOptions())) as Session | null;
 
     if (!session || !session.user) {
       return new NextResponse(
