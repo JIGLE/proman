@@ -1,11 +1,22 @@
 import type { Session, User as NextAuthUser } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
 
+// Minimal local typing for NextAuth options we use to avoid fragile cross-package type imports
+type NextAuthOptions = {
+  secret?: string | undefined;
+  providers?: unknown[] | undefined;
+  session?: { strategy?: string } | undefined;
+  callbacks?: Record<string, unknown> | undefined;
+  events?: Record<string, unknown> | undefined;
+  pages?: Record<string, string> | undefined;
+  adapter?: unknown;
+};
+
 import GoogleProvider from 'next-auth/providers/google';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { getPrismaClient } from '@/lib/database';
 
-function createBaseAuthOptions(): Record<string, unknown> {
+function createBaseAuthOptions(): NextAuthOptions {
   const secret = process.env.NEXTAUTH_SECRET;
   const googleClientId = process.env.GOOGLE_CLIENT_ID;
   const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -14,7 +25,7 @@ function createBaseAuthOptions(): Record<string, unknown> {
     console.warn('Google OAuth not configured: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing');
   }
 
-  const options: Record<string, unknown> = {
+  const options: NextAuthOptions = {
     secret,
     providers: [
       GoogleProvider({
@@ -112,7 +123,7 @@ function createBaseAuthOptions(): Record<string, unknown> {
 }
 
 // Lazy adapter initialization to avoid build-time issues
-export function getAuthOptions(): Record<string, unknown> {
+export function getAuthOptions(): NextAuthOptions {
   console.log('getAuthOptions called, DATABASE_URL:', !!process.env.DATABASE_URL);
   // Only add adapter if we have database access and we're not in build time
   const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
