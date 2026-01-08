@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { getAuthOptions } from '@/lib/auth';
-import { AuthorizationError } from '@/lib/error-handling';
 
 // Authentication middleware for API routes
-export async function requireAuth(request: NextRequest): Promise<{
+export async function requireAuth(_request: NextRequest): Promise<{
   session: any;
   userId: string;
 } | NextResponse> {
@@ -36,6 +35,7 @@ export async function requireAuth(request: NextRequest): Promise<{
 
     return { session, userId };
   } catch (error) {
+    console.error('requireAuth error:', error);
     return new NextResponse(
       JSON.stringify({ error: 'Authentication failed' }),
       {

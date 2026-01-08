@@ -24,7 +24,7 @@ function createBaseAuthOptions(): NextAuthOptions {
       strategy: 'jwt',
     },
     callbacks: {
-      async jwt({ token, user, account }) {
+      async jwt({ token, user, account: _account }) {
         // Add user ID to token
         if (user) {
           token.id = user.id;
@@ -45,7 +45,7 @@ function createBaseAuthOptions(): NextAuthOptions {
           return session;
         }
       },
-      async signIn({ user, account, profile }) {
+      async signIn({ user, account: _account, profile: _profile }) {
         try {
           // Only perform database operations if database is available
           const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
@@ -94,7 +94,7 @@ function createBaseAuthOptions(): NextAuthOptions {
       },
     },
     events: {
-      async signIn({ user, account, profile, isNewUser }) {
+      async signIn({ user, account, profile: _profile, isNewUser }) {
         console.log('NextAuth event signIn:', { email: user?.email, provider: account?.provider, isNewUser });
       },
       async createUser({ user }) {

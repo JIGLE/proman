@@ -29,7 +29,7 @@ function getPrismaClient() {
               try {
                 fs.accessSync(resolvedPath, fs.constants.W_OK);
                 return true;
-              } catch (e) {
+              } catch {
                 return false;
               }
             })() : false;
@@ -294,7 +294,7 @@ export const receiptService = {
       include: { tenant: true, property: true },
     });
     if (!receipt) return null;
-    const { tenant, property, ...receiptData } = receipt;
+    const receiptData = receipt;
     return {
       ...receiptData,
       description: receiptData.description ?? undefined,
@@ -320,7 +320,7 @@ export const receiptService = {
       },
       include: { tenant: true, property: true },
     });
-    const { tenant, property, ...receiptData } = receipt;
+    const receiptData = receipt;
     return {
       ...receiptData,
       description: receiptData.description ?? undefined,
@@ -346,7 +346,7 @@ export const receiptService = {
       },
       include: { tenant: true, property: true },
     });
-    const { tenant, property, ...receiptData } = receipt;
+    const receiptData = receipt;
     return {
       ...receiptData,
       description: receiptData.description ?? undefined,
@@ -455,7 +455,7 @@ export const correspondenceService = {
       include: { template: true, tenant: true },
     });
     if (!correspondence) return null;
-    const { template, tenant, ...correspondenceData } = correspondence;
+    const correspondenceData = correspondence;
     return {
       ...correspondenceData,
       tenantName: correspondence.tenant.name,
@@ -478,7 +478,7 @@ export const correspondenceService = {
       },
       include: { template: true, tenant: true },
     });
-    const { template, tenant, ...correspondenceData } = correspondence;
+    const correspondenceData = correspondence;
     return {
       ...correspondenceData,
       tenantName: correspondence.tenant.name,
@@ -501,7 +501,7 @@ export const correspondenceService = {
       },
       include: { template: true, tenant: true },
     });
-    const { template, tenant, ...correspondenceData } = correspondence;
+    const correspondenceData = correspondence;
     return {
       ...correspondenceData,
       tenantName: correspondence.tenant.name,

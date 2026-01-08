@@ -46,7 +46,8 @@ function AuthErrorContent() {
     try {
       await navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2));
       alert('Debug info copied to clipboard');
-    } catch (e) {
+    } catch (err) {
+      console.error(err);
       alert('Unable to copy');
     }
   };

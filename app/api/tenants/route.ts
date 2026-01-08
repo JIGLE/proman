@@ -18,7 +18,7 @@ const createTenantSchema = z.object({
   notes: z.string().max(1000).optional(),
 });
 
-const updateTenantSchema = createTenantSchema.partial();
+const _updateTenantSchema = createTenantSchema.partial();
 
 // GET /api/tenants - Get all tenants for the authenticated user
 async function handleGet(request: NextRequest): Promise<Response> {

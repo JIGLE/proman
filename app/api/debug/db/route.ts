@@ -34,14 +34,14 @@ export async function GET() {
       try {
         await fs.promises.access(resolved, fs.constants.F_OK)
         info.database.exists = true
-      } catch (e) {
+      } catch {
         info.database.exists = false
       }
 
       try {
         await fs.promises.access(resolved, fs.constants.W_OK)
         info.database.writable = true
-      } catch (e) {
+      } catch {
         info.database.writable = false
       }
     } catch (err: any) {

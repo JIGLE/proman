@@ -16,7 +16,7 @@ const createReceiptSchema = z.object({
   description: z.string().max(500).optional(),
 });
 
-const updateReceiptSchema = createReceiptSchema.partial();
+const _updateReceiptSchema = createReceiptSchema.partial();
 
 // GET /api/receipts - Get all receipts for the authenticated user
 async function handleGet(request: NextRequest): Promise<Response> {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, MapPin, Bed, Bath, Plus, Edit, Trash2, DollarSign } from "lucide-react";
+import { Building2, MapPin, Bed, Bath, Plus, Edit, Trash2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -111,7 +111,7 @@ export function PropertiesView() {
         await deleteProperty(id);
         success('Property deleted successfully!');
       } catch (err) {
-        // Error is already handled in the context
+        console.error(err);
       }
     }
   };

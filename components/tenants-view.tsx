@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { User, Mail, Phone, Calendar, Plus, Edit, Trash2, DollarSign } from "lucide-react";
+import { User, Mail, Phone, Calendar, Plus, Edit, Trash2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -113,7 +113,7 @@ export function TenantsView() {
         await deleteTenant(id);
         success('Tenant deleted successfully!');
       } catch (err) {
-        // Error is already handled in the context
+        console.error(err);
       }
     }
   };
