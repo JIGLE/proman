@@ -41,7 +41,7 @@ if (parsed.success) {
       NEXTAUTH_SECRET: partialEnv.NEXTAUTH_SECRET ?? 'test-secret-should-be-long-enough-for-dev',
       GOOGLE_CLIENT_ID: partialEnv.GOOGLE_CLIENT_ID ?? '',
       GOOGLE_CLIENT_SECRET: partialEnv.GOOGLE_CLIENT_SECRET ?? '',
-      NODE_ENV: (process.env.NODE_ENV as any) ?? 'test',
+      NODE_ENV: (process.env.NODE_ENV as 'development' | 'production' | 'test') ?? 'test',
       SMTP_HOST: partialEnv.SMTP_HOST,
       SMTP_PORT: partialEnv.SMTP_PORT,
       SMTP_USER: partialEnv.SMTP_USER,

@@ -17,13 +17,13 @@ describe('env behavior', () => {
     delete process.env.DATABASE_URL;
     delete process.env.NEXTAUTH_URL;
     delete process.env.NEXTAUTH_SECRET;
-    (process.env as any).NODE_ENV = 'test';
+    (process.env as Partial<Record<string, string>>).NODE_ENV = 'test';
     clearEnvModule();
   });
 
   it('should not throw and provide defaults when NODE_ENV=test', async () => {
     const mod = await import('../lib/env');
-    const { env } = mod as { env: any };
+    const { env } = mod as { env: { NODE_ENV: 'development' | 'production' | 'test'; DATABASE_URL?: string; NEXTAUTH_SECRET?: string } };
     expect(env.NODE_ENV).toBe('test');
     expect(env.DATABASE_URL).toBeDefined();
     expect(env.NEXTAUTH_SECRET).toBeDefined();
