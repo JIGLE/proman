@@ -18,7 +18,7 @@
         "name": "next"
       }
     ],
-    "types": ["vitest/globals", "vite/client"],
+    "types": ["vitest/globals", "vite/client", "@testing-library/jest-dom"],
     "paths": {
       "@/*": ["./*"]
     },

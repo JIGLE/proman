@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, it, expect, beforeEach } from 'vitest'
 
-import { getClientIP, isRateLimited, checkRateLimit, withRateLimit, _resetRateLimitMap, _setRateLimitForIP } from '../lib/rate-limit'
+import { getClientIP, isRateLimited, withRateLimit, _resetRateLimitMap, _setRateLimitForIP } from '../lib/rate-limit'
 
 describe('rate-limit utilities', () => {
   beforeEach(() => {
@@ -23,7 +24,7 @@ describe('rate-limit utilities', () => {
     const ip = '10.0.0.2'
     _setRateLimitForIP(ip, 100)
 
-    const handler = async (req: Request) => new Response(null, { status: 200 })
+    const handler = async (_req: Request) => new Response(null, { status: 200 })
     const wrapped = withRateLimit(handler)
 
     const req = new Request('https://example.com', { headers: { 'x-forwarded-for': ip } })
