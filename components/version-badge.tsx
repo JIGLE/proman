@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 
-type VersionInfo = {
+export type VersionInfo = {
   version?: string;
   git_commit?: string;
   build_time?: string;
