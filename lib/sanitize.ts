@@ -80,12 +80,12 @@ export function sanitizeEmail(email: string): string | null {
  * @returns Sanitized number
  */
 export function sanitizeNumber(
-  input: any,
+  input: unknown,
   defaultValue: number = 0,
   min?: number,
   max?: number
 ): number {
-  const num = Number(input);
+  const num = Number(String(input));
 
   if (isNaN(num)) {
     return defaultValue;

@@ -5,14 +5,16 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-function AuthErrorContent() {
+function AuthErrorContent(): React.ReactElement {
   const searchParams = useSearchParams();
   const error = searchParams.get("error");
 
   const [showDetails, setShowDetails] = useState(false);
-  const [debugInfo, setDebugInfo] = useState<any | null>(null);
+  const [debugInfo, setDebugInfo] = useState<unknown | null>(null);
   const [loadingDebug, setLoadingDebug] = useState(false);
   const [debugError, setDebugError] = useState<string | null>(null);
+
+  const showDebug = debugInfo != null;
 
   const getErrorMessage = (error: string | null) => {
     switch (error) {
@@ -35,8 +37,9 @@ function AuthErrorContent() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       setDebugInfo(json);
-    } catch (err: any) {
-      setDebugError(err?.message || 'Failed to fetch debug info');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setDebugError(message || 'Failed to fetch debug info');
     } finally {
       setLoadingDebug(false);
     }
@@ -46,7 +49,8 @@ function AuthErrorContent() {
     try {
       await navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2));
       alert('Debug info copied to clipboard');
-    } catch (e) {
+    } catch (err) {
+      console.error(err);
       alert('Unable to copy');
     }
   };
@@ -93,7 +97,7 @@ function AuthErrorContent() {
                 <p className="font-medium">DB debug</p>
                 {loadingDebug && <p className="text-zinc-400">Loading…</p>}
                 {debugError && <p className="text-rose-400">{debugError}</p>}
-                {debugInfo && (
+                {showDebug && (
                   <>
                     <pre className="max-h-48 overflow-auto text-xs bg-zinc-950 p-2 border border-zinc-800 rounded mt-2">{JSON.stringify(debugInfo, null, 2)}</pre>
                     <div className="flex gap-2 mt-2">
@@ -123,7 +127,7 @@ function AuthErrorContent() {
   );
 }
 
-export default function AuthError() {
+export default function AuthError(): React.ReactElement {
   return (
     <Suspense fallback={
       <div className="flex h-screen items-center justify-center bg-zinc-950">

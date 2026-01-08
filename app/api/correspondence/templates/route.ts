@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
+import { handleOptions } from '@/lib/auth-middleware';
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
 import { templateService } from '@/lib/database';
 import { sanitizeForDatabase } from '@/lib/sanitize';
@@ -14,7 +14,7 @@ const createTemplateSchema = z.object({
   variables: z.array(z.string()).default([]),
 });
 
-const updateTemplateSchema = createTemplateSchema.partial();
+const _updateTemplateSchema = createTemplateSchema.partial();
 
 // GET /api/correspondence/templates - Get all correspondence templates
 async function handleGet(request: NextRequest): Promise<Response> {

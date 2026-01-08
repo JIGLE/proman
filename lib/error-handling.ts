@@ -23,7 +23,7 @@ export class AuthorizationError extends Error {
 }
 
 export class DatabaseError extends Error {
-  constructor(message: string, public originalError?: any) {
+  constructor(message: string, public originalError?: unknown) {
     super(message);
     this.name = 'DatabaseError';
   }
@@ -31,14 +31,14 @@ export class DatabaseError extends Error {
 
 // Logger utility
 export class Logger {
-  static log(level: 'info' | 'warn' | 'error', message: string, data?: any) {
+  static log(level: 'info' | 'warn' | 'error', message: string, data?: unknown): void {
     const timestamp = new Date().toISOString();
-    const logEntry = {
+    const logEntry: Record<string, unknown> = {
       timestamp,
       level,
       message,
-      ...(data && { data }),
     };
+    if (data !== undefined) logEntry.data = data;
 
     // In production, you might want to use a proper logging service
     if (level === 'error') {
@@ -50,15 +50,15 @@ export class Logger {
     }
   }
 
-  static info(message: string, data?: any) {
+  static info(message: string, data?: unknown): void {
     this.log('info', message, data);
   }
 
-  static warn(message: string, data?: any) {
+  static warn(message: string, data?: unknown): void {
     this.log('warn', message, data);
   }
 
-  static error(message: string, data?: any) {
+  static error(message: string, data?: unknown): void {
     this.log('error', message, data);
   }
 }
@@ -112,9 +112,9 @@ export function createErrorResponse(
 }
 
 // Success response utility
-export function createSuccessResponse(data: any, statusCode: number = 200): NextResponse {
+export function createSuccessResponse(data: unknown, statusCode: number = 200): NextResponse {
   return new NextResponse(
-    JSON.stringify(data),
+    JSON.stringify({ data }),
     {
       status: statusCode,
       headers: {
@@ -124,15 +124,17 @@ export function createSuccessResponse(data: any, statusCode: number = 200): Next
   );
 }
 
-// Async error wrapper for API routes
-export function withErrorHandler(
-  handler: (request: NextRequest, context?: any) => Promise<Response>
-) {
-  return async (request: NextRequest, context?: any): Promise<Response> => {
+// Async error wrapper for API routes (generic to allow typed context)
+export function withErrorHandler<C = unknown>(
+  handler: (request: NextRequest, context?: C) => Promise<Response | NextResponse>
+): (request: NextRequest, context?: C) => Promise<Response | NextResponse> {
+  return async (request: NextRequest, context?: C): Promise<Response | NextResponse> => {
     try {
       return await handler(request, context);
-    } catch (error) {
-      return createErrorResponse(error as Error, 500, request);
+    } catch (error: unknown) {
+      // If it's an Error, use it, otherwise wrap in a generic Error
+      const err = error instanceof Error ? error : new Error(JSON.stringify(error));
+      return createErrorResponse(err, 500, request);
     }
   };
 }

@@ -4,8 +4,9 @@ import { getPrismaClient } from '@/lib/database';
 import type { PrismaClient } from '@prisma/client';
 
 // Initialize SendGrid with API key
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const sendGridClient = sgMail as unknown as { setApiKey?: (k: string) => void; send: (msg: unknown) => Promise<unknown> };
+if (process.env.SENDGRID_API_KEY && sendGridClient.setApiKey) {
+  sendGridClient.setApiKey(process.env.SENDGRID_API_KEY);
 }
 
 export interface EmailTemplate {
@@ -24,7 +25,7 @@ export interface EmailData {
   html: string;
   text?: string;
   templateId?: string;
-  dynamicTemplateData?: Record<string, any>;
+  dynamicTemplateData?: Record<string, unknown>;
 }
 
 // Predefined email templates
@@ -150,23 +151,32 @@ export class EmailService {
         text: emailData.text,
         templateId: emailData.templateId,
         dynamicTemplateData: emailData.dynamicTemplateData,
-      };
+      } as const;
 
-      const result = await sgMail.send(msg);
+      const result = await sendGridClient.send(msg);
+      const sendResult = result as unknown[] | undefined;
+      let messageId: string | undefined;
+      if (Array.isArray(sendResult) && sendResult.length > 0) {
+        const first = sendResult[0] as Record<string, unknown> | undefined;
+        const headers = first?.headers as Record<string, unknown> | undefined;
+        const maybeMsgId = headers ? headers['x-message-id'] : undefined;
+        if (typeof maybeMsgId === 'string') messageId = maybeMsgId;
+      }
 
       // Log the email in database for tracking
       await this.logEmail({
         to: Array.isArray(emailData.to) ? emailData.to.join(', ') : emailData.to,
-        from: msg.from,
+        from: String(msg.from),
         subject: emailData.subject,
         templateId: emailData.templateId,
         status: 'sent',
-        messageId: result[0]?.headers?.['x-message-id'],
+        messageId,
         userId,
       });
 
-      return { success: true, messageId: result[0]?.headers?.['x-message-id'] };
-    } catch (error: any) {
+      return { success: true, messageId };
+    } catch (error: unknown) {
+      const errMsg = error instanceof Error ? error.message : String(error);
       console.error('Email send error:', error);
 
       // Log failed email
@@ -176,11 +186,11 @@ export class EmailService {
         subject: emailData.subject,
         templateId: emailData.templateId,
         status: 'failed',
-        error: error.message,
+        error: errMsg,
         userId,
       });
 
-      return { success: false, error: error.message };
+      return { success: false, error: errMsg };
     }
   }
 
@@ -190,7 +200,7 @@ export class EmailService {
   public async sendTemplatedEmail(
     templateId: string,
     recipientEmail: string,
-    variables: Record<string, any>,
+    variables: Record<string, unknown>,
     userId: string,
     customSubject?: string
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
@@ -222,7 +232,7 @@ export class EmailService {
    * Send bulk emails with rate limiting
    */
   public async sendBulkEmails(
-    emails: Array<{ email: string; templateId: string; variables: Record<string, any> }>,
+    emails: Array<{ email: string; templateId: string; variables: Record<string, unknown> }>,
     batchSize = 10,
     delayMs = 1000,
     userId: string
@@ -237,7 +247,7 @@ export class EmailService {
           const result = await this.sendTemplatedEmail(
             emailData.templateId,
             emailData.email,
-            emailData.variables,
+            emailData.variables as Record<string, unknown>,
             userId,
             undefined
           );
@@ -248,9 +258,10 @@ export class EmailService {
             results.failed++;
             results.errors.push(`Failed to send to ${emailData.email}: ${result.error}`);
           }
-        } catch (error: any) {
+        } catch (error: unknown) {
           results.failed++;
-          results.errors.push(`Error sending to ${emailData.email}: ${error.message}`);
+          const errMsg = error instanceof Error ? error.message : String(error);
+          results.errors.push(`Error sending to ${emailData.email}: ${errMsg}`);
         }
       });
 
@@ -277,7 +288,7 @@ export class EmailService {
     messageId?: string;
     error?: string;
     userId: string;
-  }) {
+  }): Promise<void> {
     try {
       const prisma: PrismaClient = getPrismaClient();
       await prisma.emailLog.create({
@@ -293,7 +304,7 @@ export class EmailService {
           userId: data.userId,
         },
       });
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Failed to log email:', error);
     }
   }
@@ -301,7 +312,7 @@ export class EmailService {
   /**
    * Get email delivery statistics
    */
-  public async getEmailStats(userId: string, days = 30) {
+  public async getEmailStats(userId: string, days = 30): Promise<Record<string, number>> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 

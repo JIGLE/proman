@@ -11,7 +11,7 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-function getPrismaClient() {
+function getPrismaClient(): PrismaClient {
   if (!globalForPrisma.prisma) {
     // Only initialize PrismaClient if we have a database URL (not during build)
     if (process.env.DATABASE_URL) {
@@ -29,7 +29,7 @@ function getPrismaClient() {
               try {
                 fs.accessSync(resolvedPath, fs.constants.W_OK);
                 return true;
-              } catch (e) {
+              } catch {
                 return false;
               }
             })() : false;
@@ -40,9 +40,10 @@ function getPrismaClient() {
             if (!writable) {
               throw new Error(`SQLite DB file is not writable: ${resolvedPath}. Fix dataset permissions (chown/chmod) so the process can write the file.`);
             }
-          } catch (fsErr: any) {
-            console.error('[database] Filesystem check failed:', fsErr?.message);
-            throw fsErr;
+          } catch (fsErr: unknown) {
+            const message = fsErr instanceof Error ? fsErr.message : String(fsErr);
+            console.error('[database] Filesystem check failed:', message);
+            throw new Error(message);
           }
         } else {
           console.log('[database] Using non-sqlite datasource (url type):', dbUrl.startsWith('postgres') || dbUrl.startsWith('postgresql') ? 'postgres' : 'unknown');
@@ -53,15 +54,21 @@ function getPrismaClient() {
         // so rely on `process.env.DATABASE_URL` being set inside the container.
         try {
           globalForPrisma.prisma = new PrismaClient();
-        } catch (pcErr: any) {
-          console.error('[database] Failed to construct PrismaClient:', pcErr?.name, pcErr?.message);
-          console.error(pcErr?.stack);
-          throw new Error(`Prisma initialization failed: ${pcErr?.message}`);
+        } catch (pcErr: unknown) {
+          const message = pcErr instanceof Error ? pcErr.message : String(pcErr);
+          const name = pcErr instanceof Error && (pcErr as Error).name ? (pcErr as Error).name : 'UnknownError';
+          const stack = pcErr instanceof Error ? (pcErr as Error).stack : undefined;
+          console.error('[database] Failed to construct PrismaClient:', name, message);
+          if (stack) console.error(stack);
+          throw new Error(`Prisma initialization failed: ${message}`);
         }
-      } catch (err: any) {
-        console.error('[database] Failed to construct PrismaClient:', err?.name, err?.message);
-        console.error(err?.stack);
-        throw new Error(`Prisma initialization failed: ${err?.message}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        const name = err instanceof Error && (err as Error).name ? (err as Error).name : 'UnknownError';
+        const stack = err instanceof Error ? (err as Error).stack : undefined;
+        console.error('[database] Failed to construct PrismaClient:', name, message);
+        if (stack) console.error(stack);
+        throw new Error(`Prisma initialization failed: ${message}`);
       }
     } else {
       // During build time, create a mock client that throws an error if used
@@ -294,7 +301,7 @@ export const receiptService = {
       include: { tenant: true, property: true },
     });
     if (!receipt) return null;
-    const { tenant, property, ...receiptData } = receipt;
+    const receiptData = receipt;
     return {
       ...receiptData,
       description: receiptData.description ?? undefined,
@@ -320,7 +327,7 @@ export const receiptService = {
       },
       include: { tenant: true, property: true },
     });
-    const { tenant, property, ...receiptData } = receipt;
+    const receiptData = receipt;
     return {
       ...receiptData,
       description: receiptData.description ?? undefined,
@@ -346,7 +353,7 @@ export const receiptService = {
       },
       include: { tenant: true, property: true },
     });
-    const { tenant, property, ...receiptData } = receipt;
+    const receiptData = receipt;
     return {
       ...receiptData,
       description: receiptData.description ?? undefined,
@@ -455,7 +462,7 @@ export const correspondenceService = {
       include: { template: true, tenant: true },
     });
     if (!correspondence) return null;
-    const { template, tenant, ...correspondenceData } = correspondence;
+    const correspondenceData = correspondence;
     return {
       ...correspondenceData,
       tenantName: correspondence.tenant.name,
@@ -478,7 +485,7 @@ export const correspondenceService = {
       },
       include: { template: true, tenant: true },
     });
-    const { template, tenant, ...correspondenceData } = correspondence;
+    const correspondenceData = correspondence;
     return {
       ...correspondenceData,
       tenantName: correspondence.tenant.name,
@@ -501,7 +508,7 @@ export const correspondenceService = {
       },
       include: { template: true, tenant: true },
     });
-    const { template, tenant, ...correspondenceData } = correspondence;
+    const correspondenceData = correspondence;
     return {
       ...correspondenceData,
       tenantName: correspondence.tenant.name,
@@ -517,7 +524,7 @@ export const correspondenceService = {
 };
 
 // Database initialization and seeding
-export async function initializeDatabase() {
+export async function initializeDatabase(): Promise<void> {
   try {
     // Check if we have any templates (indicating database is seeded)
     const templateCount = await getPrismaClient().correspondenceTemplate.count();

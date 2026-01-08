@@ -1,9 +1,11 @@
-import { NextAuthOptions } from 'next-auth';
+import type { Session, User as NextAuthUser } from 'next-auth';
+import type { JWT } from 'next-auth/jwt';
+
 import GoogleProvider from 'next-auth/providers/google';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { getPrismaClient } from '@/lib/database';
 
-function createBaseAuthOptions(): NextAuthOptions {
+function createBaseAuthOptions(): Record<string, unknown> {
   const secret = process.env.NEXTAUTH_SECRET;
   const googleClientId = process.env.GOOGLE_CLIENT_ID;
   const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
@@ -12,7 +14,7 @@ function createBaseAuthOptions(): NextAuthOptions {
     console.warn('Google OAuth not configured: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing');
   }
 
-  const options: NextAuthOptions = {
+  const options: Record<string, unknown> = {
     secret,
     providers: [
       GoogleProvider({
@@ -24,28 +26,28 @@ function createBaseAuthOptions(): NextAuthOptions {
       strategy: 'jwt',
     },
     callbacks: {
-      async jwt({ token, user, account }) {
+      async jwt({ token, user, account: _account }: { token: JWT; user?: NextAuthUser | null; account?: unknown }): Promise<JWT> {
         // Add user ID to token
         if (user) {
-          token.id = user.id;
+          (token as JWT & { id?: string }).id = user.id;
         }
         return token;
       },
-      async session({ session, token }) {
+      async session({ session, token }: { session: Session; token: JWT }): Promise<Session> {
         try {
           // Add user ID to session
-          if (token && (token as any).id) {
-            (session.user as any).id = (token as any).id;
+          if (token && (token as JWT & { id?: string }).id) {
+            const user = session.user as { id?: string };
+            user.id = (token as JWT & { id?: string }).id;
           }
           return session;
-        } catch (err: any) {
-          console.error('NextAuth session callback error:', err?.name, err?.message);
-          console.error(err?.stack);
+        } catch (err: unknown) {
+          console.error('NextAuth session callback error:', err);
           // Return session unchanged on error
           return session;
         }
       },
-      async signIn({ user, account, profile }) {
+      async signIn({ user, account: _account, profile: _profile }: { user?: NextAuthUser | null; account?: { provider?: string } | undefined; profile?: unknown }): Promise<boolean> {
         try {
           // Only perform database operations if database is available
           const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
@@ -55,8 +57,8 @@ function createBaseAuthOptions(): NextAuthOptions {
             return true; // Allow sign in without database during build
           }
 
-          // Ensure user exists in database
-          if (user.email) {
+          // Ensure user exists in database (guard user and email)
+          if (user?.email) {
             const prisma = getPrismaClient();
             const existingUser = await prisma.user.findUnique({
               where: { email: user.email },
@@ -69,7 +71,7 @@ function createBaseAuthOptions(): NextAuthOptions {
               const created = await prisma.user.create({
                 data: {
                   email: user.email,
-                  name: user.name || '',
+                  name: user?.name || '',
                 },
               });
               console.log('Created user:', created.id);
@@ -78,10 +80,9 @@ function createBaseAuthOptions(): NextAuthOptions {
 
           console.log('signIn: returning true for', user?.email);
           return true;
-        } catch (err: any) {
+        } catch (err: unknown) {
           // Log error for diagnostics
-          console.error('NextAuth signIn error:', err?.name, err?.message);
-          console.error(err?.stack);
+          console.error('NextAuth signIn error:', err);
 
           // Allow an override to permit sign-ins while DB issues are being resolved
           if (process.env.NEXTAUTH_ALLOW_DB_FAILURE === 'true') {
@@ -94,10 +95,10 @@ function createBaseAuthOptions(): NextAuthOptions {
       },
     },
     events: {
-      async signIn({ user, account, profile, isNewUser }) {
+      async signIn({ user, account, profile: _profile, isNewUser }: { user?: NextAuthUser | null; account?: { provider?: string } | undefined; profile?: unknown; isNewUser?: boolean }) {
         console.log('NextAuth event signIn:', { email: user?.email, provider: account?.provider, isNewUser });
       },
-      async createUser({ user }) {
+      async createUser({ user }: { user: { id: string; email?: string } }) {
         console.log('NextAuth event createUser:', { id: user.id, email: user.email });
       },
     },
@@ -111,7 +112,7 @@ function createBaseAuthOptions(): NextAuthOptions {
 }
 
 // Lazy adapter initialization to avoid build-time issues
-export function getAuthOptions(): NextAuthOptions {
+export function getAuthOptions(): Record<string, unknown> {
   console.log('getAuthOptions called, DATABASE_URL:', !!process.env.DATABASE_URL);
   // Only add adapter if we have database access and we're not in build time
   const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
@@ -130,9 +131,10 @@ export function getAuthOptions(): NextAuthOptions {
       ...baseAuthOptions,
       adapter: PrismaAdapter(getPrismaClient()),
     };
-  } catch (error: any) {
-    console.warn('Failed to initialize Prisma adapter, using base auth options:', error?.name, error?.message);
-    console.warn(error?.stack);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
+    console.warn('Failed to initialize Prisma adapter, using base auth options:', message);
+    if (error instanceof Error) console.warn(error.stack);
     return baseAuthOptions;
   }
 }

@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
+import { handleOptions } from '@/lib/auth-middleware';
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
 import { templateService } from '@/lib/database';
 import { sanitizeForDatabase } from '@/lib/sanitize';
@@ -15,9 +15,16 @@ const updateTemplateSchema = z.object({
 });
 
 // GET /api/correspondence/templates/[id] - Get a specific template
-async function handleGet(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handleGet(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
   try {
-    const template = await templateService.getById(params.id);
+    const template = await templateService.getById(id);
 
     if (!template) {
       return createErrorResponse(new Error('Template not found'), 404, request);
@@ -30,10 +37,18 @@ async function handleGet(request: NextRequest, { params }: { params: { id: strin
 }
 
 // PUT /api/correspondence/templates/[id] - Update a specific template
-async function handlePut(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handlePut(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
+
   try {
     // First check if template exists
-    const existingTemplate = await templateService.getById(params.id);
+    const existingTemplate = await templateService.getById(id);
     if (!existingTemplate) {
       return createErrorResponse(new Error('Template not found'), 404, request);
     }
@@ -51,7 +66,7 @@ async function handlePut(request: NextRequest, { params }: { params: { id: strin
     // Validate input
     const validatedData = updateTemplateSchema.parse(sanitizedBody);
 
-    const template = await templateService.update(params.id, validatedData);
+    const template = await templateService.update(id, validatedData);
     return createSuccessResponse(template);
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -66,15 +81,23 @@ async function handlePut(request: NextRequest, { params }: { params: { id: strin
 }
 
 // DELETE /api/correspondence/templates/[id] - Delete a specific template
-async function handleDelete(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handleDelete(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
+
   try {
     // First check if template exists
-    const existingTemplate = await templateService.getById(params.id);
+    const existingTemplate = await templateService.getById(id);
     if (!existingTemplate) {
       return createErrorResponse(new Error('Template not found'), 404, request);
     }
 
-    await templateService.delete(params.id);
+    await templateService.delete(id);
     return createSuccessResponse({ message: 'Template deleted successfully' });
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);

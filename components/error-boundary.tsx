@@ -25,15 +25,15 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
     console.error('Error caught by boundary:', error, errorInfo);
   }
 
-  resetError = () => {
+  resetError = (): void => {
     this.setState({ hasError: false, error: undefined });
   };
 
-  render() {
+  render(): React.ReactNode {
     if (this.state.hasError) {
       if (this.props.fallback) {
         const FallbackComponent = this.props.fallback;
@@ -47,7 +47,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 }
 
-function DefaultErrorFallback({ error, resetError }: { error?: Error; resetError: () => void }) {
+function DefaultErrorFallback({ error, resetError }: { error?: Error; resetError: () => void }): React.ReactElement {
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
       <Card className="w-full max-w-md bg-zinc-900 border-zinc-800">
@@ -88,7 +88,7 @@ function DefaultErrorFallback({ error, resetError }: { error?: Error; resetError
 }
 
 // Hook for functional components to catch errors
-export function useErrorHandler() {
+export function useErrorHandler(): (error: Error, errorInfo?: { componentStack?: string }) => void {
   return (error: Error, errorInfo?: { componentStack?: string }) => {
     console.error('Error handled by hook:', error, errorInfo);
     // In a real app, you might want to send this to an error reporting service

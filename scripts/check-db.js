@@ -3,7 +3,7 @@ const fs = require('fs')
 const path = require('path')
 
 const { Client } = (() => {
-  try { return require('pg') } catch (e) { return null }
+  try { return require('pg') } catch { return null }
 })()
 
 const getDatabaseUrl = () => {
@@ -48,7 +48,7 @@ if (url.startsWith('file:')) {
       console.error(err && err.message ? err.message : err)
       process.exit(1)
     } finally {
-      try { await client.end() } catch (e) {}
+      try { await client.end() } catch {}
     }
   })()
 }

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { User, Mail, Phone, Calendar, Plus, Edit, Trash2, DollarSign } from "lucide-react";
+import { ZodError } from 'zod';
+import { User, Mail, Phone, Calendar, Plus, Edit, Trash2 } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -21,7 +22,7 @@ import { Tenant } from "@/lib/types";
 import { tenantSchema, TenantFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";
 
-export function TenantsView() {
+export function TenantsView(): React.ReactElement {
   const { state, addTenant, updateTenant, deleteTenant } = useApp();
   const { tenants, properties, loading } = state;
   const { success, error } = useToast();
@@ -39,7 +40,7 @@ export function TenantsView() {
     paymentStatus: 'pending',
     notes: '',
   });
-  const [formErrors, setFormErrors] = useState<Partial<TenantFormData>>({});
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof TenantFormData, string>>>({});
 
   const getPaymentStatusBadge = (status: Tenant["paymentStatus"]) => {
     switch (status) {
@@ -72,13 +73,12 @@ export function TenantsView() {
       setIsDialogOpen(false);
       setEditingTenant(null);
       resetForm();
-    } catch (err) {
-      if (err instanceof Error && err.name === 'ZodError') {
-        // Handle validation errors
-        const errors: Partial<TenantFormData> = {};
-        (err as any).errors.forEach((error: any) => {
-          const field = error.path[0] as keyof TenantFormData;
-          errors[field] = error.message;
+    } catch (err: unknown) {
+      if (err instanceof ZodError) {
+        const errors: Partial<Record<keyof TenantFormData, string>> = {};
+        err.issues.forEach((issue) => {
+          const field = issue.path[0] as keyof TenantFormData;
+          errors[field] = issue.message;
         });
         setFormErrors(errors);
         error('Please fix the form errors below.');
@@ -113,7 +113,7 @@ export function TenantsView() {
         await deleteTenant(id);
         success('Tenant deleted successfully!');
       } catch (err) {
-        // Error is already handled in the context
+        console.error(err);
       }
     }
   };

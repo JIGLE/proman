@@ -3,8 +3,16 @@ import { getPrismaClient } from '@/lib/database'
 
 export const runtime = 'nodejs'
 
-export async function GET() {
-  const info: any = {
+type DebugAuthInfo = {
+  ok: boolean;
+  nextauthUrlOk: boolean;
+  googleConfigured: boolean;
+  db: { ok: boolean; userCount: number | null; error: string | null };
+  timestamp: string;
+};
+
+export async function GET(): Promise<NextResponse> {
+  const info: DebugAuthInfo = {
     ok: false,
     nextauthUrlOk: false,
     googleConfigured: false,
@@ -27,14 +35,15 @@ export async function GET() {
       const count = await prisma.user.count()
       info.db.ok = true
       info.db.userCount = count
-    } catch (err: any) {
+    } catch (err: unknown) {
       info.db.ok = false
-      info.db.error = err?.message || String(err)
+      info.db.error = err instanceof Error ? err.message : String(err)
     }
 
     info.ok = info.nextauthUrlOk && info.googleConfigured && info.db.ok
     return NextResponse.json(info)
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err?.message }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ ok: false, error: message }, { status: 500 })
   }
 }

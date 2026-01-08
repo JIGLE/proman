@@ -1,14 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { FileText, Plus, Edit, Trash2, Send, Eye } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { FileText, Plus, Edit, Trash2, Send } from "lucide-react";
+import { Card, CardContent } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
@@ -17,19 +11,20 @@ import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { useApp } from "@/lib/app-context-db";
-import { CorrespondenceTemplate, Correspondence, Tenant } from "@/lib/types";
+import { CorrespondenceTemplate, Tenant } from "@/lib/types";
 import { templateSchema, TemplateFormData } from "@/lib/validation";
+import { ZodError, ZodIssue } from 'zod';
 import { useToast } from "@/lib/toast-context";
 
-export function CorrespondenceView() {
+export function CorrespondenceView(): React.ReactElement {
   const { state, addTemplate, updateTemplate, deleteTemplate, addCorrespondence } = useApp();
-  const { templates, correspondence, tenants, loading } = state;
+  const { templates, correspondence: _correspondence, tenants, loading } = state;
   const { success, error } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<CorrespondenceTemplate | null>(null);
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<CorrespondenceTemplate | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [_isSubmitting, setIsSubmitting] = useState(false);
   const [composeData, setComposeData] = useState({
     tenantId: '',
     subject: '',
@@ -42,7 +37,7 @@ export function CorrespondenceView() {
     subject: '',
     content: '',
   });
-  const [formErrors, setFormErrors] = useState<Partial<TemplateFormData>>({});
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof TemplateFormData, string>>>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,13 +64,12 @@ export function CorrespondenceView() {
       setIsDialogOpen(false);
       setEditingTemplate(null);
       resetForm();
-    } catch (err) {
-      if (err instanceof Error && err.name === 'ZodError') {
-        // Handle validation errors
-        const errors: Partial<TemplateFormData> = {};
-        (err as any).errors.forEach((error: any) => {
-          const field = error.path[0] as keyof TemplateFormData;
-          errors[field] = error.message;
+    } catch (err: unknown) {
+      if (err instanceof ZodError) {
+        const errors: Partial<Record<keyof TemplateFormData, string>> = {};
+        err.issues.forEach((issue: ZodIssue) => {
+          const field = issue.path[0] as keyof TemplateFormData;
+          errors[field] = issue.message;
         });
         setFormErrors(errors);
         error('Please fix the form errors below.');
@@ -150,7 +144,7 @@ export function CorrespondenceView() {
         await deleteTemplate(id);
         success('Template deleted successfully!');
       } catch (err) {
-        // Error is already handled in the context
+        console.error(err);
       }
     }
   };

@@ -26,15 +26,22 @@ async function handleGet(request: NextRequest): Promise<Response> {
 }
 
 // PUT /api/correspondence/[id] - Update correspondence status
-async function handlePut(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handlePut(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {
     // First check if correspondence exists and user owns it
-    const existingCorrespondence = await correspondenceService.getById(userId, params.id);
+    const existingCorrespondence = await correspondenceService.getById(userId, id);
     if (!existingCorrespondence) {
       return createErrorResponse(new Error('Correspondence not found'), 404, request);
     }
@@ -44,7 +51,7 @@ async function handlePut(request: NextRequest, { params }: { params: { id: strin
     // Validate input
     const validatedData = updateCorrespondenceSchema.parse(body);
 
-    const correspondence = await correspondenceService.update(userId, params.id, validatedData);
+    const correspondence = await correspondenceService.update(userId, id, validatedData);
     return createSuccessResponse(correspondence);
   } catch (error) {
     if (error instanceof z.ZodError) {

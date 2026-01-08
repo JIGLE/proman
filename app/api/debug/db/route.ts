@@ -6,13 +6,26 @@ import { getPrismaClient } from '@/lib/database'
 // Ensure this runs in Node runtime so we can access filesystem and Prisma
 export const runtime = 'nodejs'
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   const dbUrl = process.env.DATABASE_URL || ''
   if (!dbUrl) {
     return NextResponse.json({ ok: false, error: 'DATABASE_URL not set' }, { status: 400 })
   }
 
-  const info: any = {
+  type DebugDBInfo = {
+    ok: boolean;
+    database: {
+      url: string;
+      path?: string;
+      exists: boolean | null;
+      writable: boolean | null;
+      userCount: number | null;
+      error: string | null;
+    };
+    timestamp: string;
+  };
+
+  const info: DebugDBInfo = {
     ok: false,
     database: {
       url: dbUrl.startsWith('file:') ? 'sqlite' : dbUrl.startsWith('postgres') || dbUrl.startsWith('postgresql') ? 'postgres' : 'unknown',
@@ -34,18 +47,18 @@ export async function GET() {
       try {
         await fs.promises.access(resolved, fs.constants.F_OK)
         info.database.exists = true
-      } catch (e) {
+      } catch {
         info.database.exists = false
       }
 
       try {
         await fs.promises.access(resolved, fs.constants.W_OK)
         info.database.writable = true
-      } catch (e) {
+      } catch {
         info.database.writable = false
       }
-    } catch (err: any) {
-      info.database.error = `Filesystem check failed: ${err?.message}`
+    } catch (err: unknown) {
+      info.database.error = `Filesystem check failed: ${err instanceof Error ? err.message : String(err)}`
     }
   }
 
@@ -55,8 +68,9 @@ export async function GET() {
     const count = await prisma.user.count()
     info.database.userCount = count
     info.ok = true
-  } catch (err: any) {
-    info.database.error = info.database.error ? `${info.database.error}; ${err?.message}` : err?.message
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    info.database.error = info.database.error ? `${info.database.error}; ${message}` : message;
   }
 
   return NextResponse.json(info)

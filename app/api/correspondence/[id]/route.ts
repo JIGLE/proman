@@ -4,14 +4,22 @@ import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/
 import { correspondenceService } from '@/lib/database';
 
 // GET /api/correspondence/[id] - Get a specific correspondence
-async function handleGet(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handleGet(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
+  // context.params may be a Promise<Record<string,string>> or a plain Record
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {
-    const correspondence = await correspondenceService.getById(userId, params.id);
+    const correspondence = await correspondenceService.getById(userId, id);
 
     if (!correspondence) {
       return createErrorResponse(new Error('Correspondence not found'), 404, request);
@@ -24,20 +32,28 @@ async function handleGet(request: NextRequest, { params }: { params: { id: strin
 }
 
 // DELETE /api/correspondence/[id] - Delete a specific correspondence
-async function handleDelete(request: NextRequest, { params }: { params: { id: string } }): Promise<Response> {
+async function handleDelete(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
+  // context.params may be a Promise<Record<string,string>> or a plain Record
+  let id: string | undefined;
+  if (context?.params) {
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
+    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    id = resolved?.id;
+  }
+  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
 
   try {
     // First check if correspondence exists and user owns it
-    const existingCorrespondence = await correspondenceService.getById(userId, params.id);
+    const existingCorrespondence = await correspondenceService.getById(userId, id);
     if (!existingCorrespondence) {
       return createErrorResponse(new Error('Correspondence not found'), 404, request);
     }
 
-    await correspondenceService.delete(userId, params.id);
+    await correspondenceService.delete(userId, id);
     return createSuccessResponse({ message: 'Correspondence deleted successfully' });
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);

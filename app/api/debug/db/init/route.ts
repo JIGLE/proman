@@ -5,7 +5,7 @@ import path from 'path'
 
 export const runtime = 'nodejs'
 
-export async function POST(request: Request) {
+export async function POST(request: Request): Promise<NextResponse> {
   // Optional protection: set INIT_SECRET env var and send Authorization: Bearer <INIT_SECRET>
   const initSecret = process.env.INIT_SECRET
   if (initSecret) {
@@ -26,21 +26,24 @@ export async function POST(request: Request) {
 
   try {
     fs.mkdirSync(dir, { recursive: true })
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: `failed to create directory: ${err?.message}` }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ ok: false, error: `failed to create directory: ${message}` }, { status: 500 })
   }
 
   try {
     const fd = fs.openSync(resolved, 'a')
     fs.closeSync(fd)
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: `failed to create file: ${err?.message}` }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ ok: false, error: `failed to create file: ${message}` }, { status: 500 })
   }
 
   try {
     fs.accessSync(resolved, fs.constants.W_OK)
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: `db file not writable: ${err?.message}` }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ ok: false, error: `db file not writable: ${message}` }, { status: 500 })
   }
 
   try {
@@ -48,7 +51,12 @@ export async function POST(request: Request) {
     const pushOut = execSync('npx prisma db push', { stdio: 'pipe' }).toString()
     const genOut = execSync('npx prisma generate', { stdio: 'pipe' }).toString()
     return NextResponse.json({ ok: true, dbPath: resolved, pushOut, genOut })
-  } catch (err: any) {
-    return NextResponse.json({ ok: false, error: err?.message || String(err), stdout: err?.stdout?.toString?.(), stderr: err?.stderr?.toString?.() }, { status: 500 })
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    // Attempt to extract stdout/stderr if present (common for child_process errors)
+    const maybeErr = err as { stdout?: unknown; stderr?: unknown };
+    const stdout = typeof maybeErr.stdout === 'string' ? maybeErr.stdout : typeof maybeErr.stdout === 'object' && maybeErr.stdout?.toString ? maybeErr.stdout.toString() : undefined;
+    const stderr = typeof maybeErr.stderr === 'string' ? maybeErr.stderr : typeof maybeErr.stderr === 'object' && maybeErr.stderr?.toString ? maybeErr.stderr.toString() : undefined;
+    return NextResponse.json({ ok: false, error: message, stdout, stderr }, { status: 500 });
   }
 }

@@ -3,7 +3,7 @@ import { requireAuth } from '@/lib/auth-middleware';
 import { createErrorResponse, createSuccessResponse } from '@/lib/error-handling';
 import { getPrismaClient } from '@/lib/database';
 import { z } from 'zod';
-import type { PrismaClient } from '@prisma/client';
+import type { PrismaClient, Prisma } from '@prisma/client';
 
 const querySchema = z.object({
   page: z.string().optional().transform(val => val ? parseInt(val) : 1),
@@ -14,7 +14,7 @@ const querySchema = z.object({
 });
 
 // GET /api/email/logs - Get email logs with pagination and filtering
-export async function GET(request: NextRequest) {
+export async function GET(request: NextRequest): Promise<Response | NextResponse> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const query = querySchema.parse(Object.fromEntries(searchParams));
 
-    const where: any = {
+    const where: Prisma.EmailLogWhereInput = {
       userId: authResult.userId,
     };
 
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (query.recipientEmail) {
-      where.recipientEmail = query.recipientEmail;
+      where.to = query.recipientEmail;
     }
 
     const [logs, total] = await Promise.all([

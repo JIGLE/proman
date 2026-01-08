@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
+import type { Session } from 'next-auth';
 import { getAuthOptions } from '@/lib/auth';
-import { AuthorizationError } from '@/lib/error-handling';
 
 // Authentication middleware for API routes
-export async function requireAuth(request: NextRequest): Promise<{
-  session: any;
+export async function requireAuth(_request: NextRequest): Promise<{
+  session: Session;
   userId: string;
 } | NextResponse> {
   try {
-    const session = await getServerSession(getAuthOptions());
+    const mod = await import('next-auth/next').catch(() => import('next-auth'));
+    const maybe = mod as unknown as { getServerSession?: (opts?: unknown) => Promise<unknown> };
+    const getServerSession = maybe.getServerSession;
+    const session = (await getServerSession?.(getAuthOptions())) as Session | null;
 
     if (!session || !session.user) {
       return new NextResponse(
@@ -22,7 +24,8 @@ export async function requireAuth(request: NextRequest): Promise<{
     }
 
     // Extract user ID from session
-    const userId = (session.user as any).id;
+    const user = session.user as { id?: string };
+    const userId = user.id;
 
     if (!userId) {
       return new NextResponse(
@@ -35,7 +38,8 @@ export async function requireAuth(request: NextRequest): Promise<{
     }
 
     return { session, userId };
-  } catch (error) {
+  } catch (error: unknown) {
+    console.error('requireAuth error:', error);
     return new NextResponse(
       JSON.stringify({ error: 'Authentication failed' }),
       {
@@ -71,7 +75,7 @@ export async function requireOwnership(
 }
 
 // CORS headers for API responses
-export function corsHeaders() {
+export function corsHeaders(): Record<string, string> {
   return {
     'Access-Control-Allow-Origin': process.env.NEXTAUTH_URL || 'http://localhost:3000',
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',

@@ -65,9 +65,9 @@ export function checkRateLimit(request: Request): Response | null {
 }
 
 // Higher-order function to wrap API handlers with rate limiting
-export function withRateLimit(handler: (request: any, ...args: any[]) => Promise<Response>) {
-  return async (request: any, ...args: any[]): Promise<Response> => {
-    const rateLimitResponse = checkRateLimit(request);
+export function withRateLimit<T extends Request>(handler: (request: T, ...args: unknown[]) => Promise<Response>) {
+  return async (request: T, ...args: unknown[]): Promise<Response> => {
+    const rateLimitResponse = checkRateLimit(request as Request);
     if (rateLimitResponse) return rateLimitResponse;
 
     return handler(request, ...args);
