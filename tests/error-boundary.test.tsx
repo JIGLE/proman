@@ -1,10 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import React from 'react'
-import { ErrorBoundary, useErrorHandler } from '../components/error-boundary'
+import { ErrorBoundary } from '../components/error-boundary'
 
-function Bomb() {
+function Bomb(): React.ReactElement {
   throw new Error('boom')
+  // unreachable, but provide a React node so TypeScript recognizes this as a component
+  return <div />
 }
 
 describe('ErrorBoundary', () => {
