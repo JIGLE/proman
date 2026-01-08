@@ -1,11 +1,15 @@
 // Email service for correspondence functionality
 import * as sgMail from '@sendgrid/mail';
+import type { MailDataRequired, ClientResponse } from '@sendgrid/mail';
 import { getPrismaClient } from '@/lib/database';
 import type { PrismaClient } from '@prisma/client';
 
 // Initialize SendGrid with API key
-const sendGridClient = sgMail as unknown as { setApiKey?: (k: string) => void; send: (msg: unknown) => Promise<unknown> };
-if (process.env.SENDGRID_API_KEY && sendGridClient.setApiKey) {
+const sendGridClient = sgMail as unknown as {
+  setApiKey?: (k: string) => void;
+  send: (msg: MailDataRequired) => Promise<[ClientResponse, unknown] | ClientResponse>;
+};
+if (process.env.SENDGRID_API_KEY && typeof sendGridClient.setApiKey === 'function') {
   sendGridClient.setApiKey(process.env.SENDGRID_API_KEY);
 }
 
@@ -154,12 +158,21 @@ export class EmailService {
       } as const;
 
       const result = await sendGridClient.send(msg);
-      const sendResult = result as unknown[] | undefined;
       let messageId: string | undefined;
-      if (Array.isArray(sendResult) && sendResult.length > 0) {
-        const first = sendResult[0] as Record<string, unknown> | undefined;
-        const headers = first?.headers as Record<string, unknown> | undefined;
-        const maybeMsgId = headers ? headers['x-message-id'] : undefined;
+
+      // Helper to safely extract headers from possible send result shapes
+      const getHeaders = (r: unknown): Record<string, string> | undefined => {
+        if (!r || typeof r !== 'object') return undefined;
+        return (r as { headers?: Record<string, string> }).headers;
+      };
+
+      if (Array.isArray(result) && result.length > 0) {
+        const headers = getHeaders(result[0]);
+        const maybeMsgId = headers?.['x-message-id'];
+        if (typeof maybeMsgId === 'string') messageId = maybeMsgId;
+      } else {
+        const headers = getHeaders(result);
+        const maybeMsgId = headers?.['x-message-id'];
         if (typeof maybeMsgId === 'string') messageId = maybeMsgId;
       }
 

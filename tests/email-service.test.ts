@@ -35,4 +35,22 @@ describe('EmailService', () => {
     expect(res.messageId).toBe('message-123')
     expect(mockSend).toHaveBeenCalled()
   })
+
+  it('handles single response object from send and extracts message id', async () => {
+    const mockSend = vi.fn().mockResolvedValue({ headers: { 'x-message-id': 'single-456' } })
+    vi.doMock('@sendgrid/mail', () => ({
+      setApiKey: vi.fn(),
+      send: mockSend,
+    }))
+
+    vi.resetModules()
+    process.env.SENDGRID_API_KEY = 'fake-key'
+    const mod = await import('../lib/email-service')
+    const { emailService } = mod as { emailService: import('../lib/email-service').EmailService }
+
+    const res = await emailService.sendTemplatedEmail('maintenance_complete', 'test2@example.com', { tenantName: 'Sam', propertyAddress: '2 Elm St', workDescription: 'Fix sink', completionDate: '2025-12-01' }, 'user-2')
+    expect(res.success).toBe(true)
+    expect(res.messageId).toBe('single-456')
+    expect(mockSend).toHaveBeenCalled()
+  })
 })
