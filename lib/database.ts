@@ -66,18 +66,28 @@ function getPrismaClient(): PrismaClient {
               prismaClientResolved: (() => {
                 try {
                   return require.resolve('@prisma/client');
-                } catch (e) {
+                } catch {
                   return undefined;
                 }
               })(),
               prismaClientExists: fs.existsSync(path.resolve(process.cwd(), 'node_modules', '@prisma', 'client')),
               prismaGeneratedExists: fs.existsSync(path.resolve(process.cwd(), 'node_modules', '.prisma', 'client')),
             });
-          } catch (diagErr) {
-            console.warn('[database] Diagnostics failed:', diagErr instanceof Error ? diagErr.message : String(diagErr));
+          } catch (diagErr: unknown) {
+            console.warn('[database] Diagnostics failed:', diagErr instanceof Error ? diagErr.message : String(diagErr))
           }
 
-          globalForPrisma.prisma = new PrismaClient();
+          try {
+            globalForPrisma.prisma = new PrismaClient();
+          } catch (pcInitErr: unknown) {
+            const msg = pcInitErr instanceof Error ? pcInitErr.message : String(pcInitErr);
+            if (msg.includes('needs to be constructed with a non-empty')) {
+              console.warn('[database] PrismaClient init requires options; retrying with {}');
+              globalForPrisma.prisma = new PrismaClient({});
+            } else {
+              throw pcInitErr;
+            }
+          }
           console.log('[database] PrismaClient constructed successfully');
         } catch (pcErr: unknown) {
           const message = pcErr instanceof Error ? pcErr.message : String(pcErr);
