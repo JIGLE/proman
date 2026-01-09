@@ -31,7 +31,8 @@ describe('integration: sqlite db init', () => {
     // Mock execSync to avoid running prisma in the test environment. Use vi.mock at module scope before we import the route.
     vi.mock('child_process', async (importOriginal) => {
       const actual = await importOriginal()
-      return { default: actual, ...actual, execSync: () => Buffer.from('ok') }
+      const actualObj = actual as Record<string, unknown>
+      return { default: actualObj, ...actualObj, execSync: () => Buffer.from('ok') }
     })
 
     // Dynamically import the route module using an absolute file URL to avoid Vite import resolution issues
