@@ -82,11 +82,11 @@ jobs:
         with:
           node-version: '20'
 
-        - name: Install system build dependencies (Ubuntu)
-          if: runner.os == 'Linux'
-          run: |
-            sudo apt-get update
-            sudo apt-get install -y build-essential python3 pkg-config libsqlite3-dev
+      - name: Install system build dependencies (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential python3 pkg-config libsqlite3-dev
 
       - name: Install dependencies (ci then fallback)
         run: |
