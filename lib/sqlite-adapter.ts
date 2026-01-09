@@ -4,7 +4,7 @@
 // needed by Prisma Client to run queries.
 
 import { resolve } from 'path';
-import type { SqlDriverAdapterFactory, SqlDriverAdapter, SqlResultSet } from '@prisma/driver-adapter-utils';
+import type { SqlDriverAdapterFactory, SqlDriverAdapter, SqlResultSet, Transaction } from '@prisma/driver-adapter-utils';
 
 // Use require to avoid bundler issues
 const BetterSqlite3 = require('better-sqlite3');
@@ -52,6 +52,13 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
         }
       }
 
+      function runExec(sql: string, args: unknown[] = []): number {
+        const stmt = db.prepare(sql);
+        const info = stmt.run(...args);
+        // better-sqlite3 exposes `changes` for affected rows
+        return (info && typeof info.changes === 'number') ? info.changes : 0;
+      }
+
       const adapter: SqlDriverAdapter = {
         provider: 'sqlite',
         adapterName: 'better-sqlite3-adapter',
@@ -67,16 +74,17 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
         },
         async startTransaction(_isolationLevel?: unknown) {
           db.exec('BEGIN');
-          const txAdapter: SqlDriverAdapter = {
+          const txAdapter = {
             adapterName: 'better-sqlite3-transaction',
             provider: 'sqlite',
+            options: { usePhantomQuery: false },
             async execute(query: { sql: string; args?: unknown[] }): Promise<SqlResultSet> {
               return runQuery(query.sql, query.args || []);
             },
-            async executeRaw(param: string | { sql: string; args?: unknown[] } , args?: unknown[]): Promise<SqlResultSet> {
+            async executeRaw(param: string | { sql: string; args?: unknown[] } , args?: unknown[]): Promise<number> {
               const sql = typeof param === 'string' ? param : param.sql;
               const a = typeof param === 'string' ? args || [] : param.args || [];
-              return runQuery(sql, a);
+              return runExec(sql, a);
             },
             async queryRaw(param: string | { sql: string; args?: unknown[] } , args?: unknown[]): Promise<SqlResultSet> {
               const sql = typeof param === 'string' ? param : param.sql;
@@ -107,14 +115,14 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
             getConnectionInfo() {
               return { supportsRelationJoins: false };
             },
-          };
+          } as unknown as Transaction;
 
           return txAdapter;
         },
-        async executeRaw(param: string | { sql: string; args?: unknown[] } , args?: unknown[]): Promise<SqlResultSet> {
+        async executeRaw(param: string | { sql: string; args?: unknown[] } , args?: unknown[]): Promise<number> {
           const sql = typeof param === 'string' ? param : param.sql;
           const a = typeof param === 'string' ? args || [] : param.args || [];
-          return runQuery(sql, a);
+          return runExec(sql, a);
         },
         async queryRaw(param: string | { sql: string; args?: unknown[] } , args?: unknown[]): Promise<SqlResultSet> {
           const sql = typeof param === 'string' ? param : param.sql;
