@@ -27,6 +27,15 @@ if (!dbUrl) {
       const path = require('path').resolve(process.cwd(), 'app/api/properties/route.ts')
       const routeModule = await import(pathToFileURL(path).href)
 
+      // Ensure sqlite DB file exists by calling the debug init endpoint (creates file even in test env)
+      const initPath = require('path').resolve(process.cwd(), 'app/api/debug/db/init/route.ts')
+      const initModule = await import(pathToFileURL(initPath).href)
+      const initRes = await initModule.POST(new Request('http://localhost/api/debug/db/init', { method: 'POST' }))
+      const initBody = await initRes.json()
+      if (initRes.status !== 200) {
+        throw new Error('DB init failed: ' + JSON.stringify(initBody))
+      }
+
       const payload = {
         name: 'Integration Property',
         address: '123 Test St',

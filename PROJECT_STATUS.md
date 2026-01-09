@@ -7,16 +7,17 @@
 
 ## Progress Summary
 - ✅ **Completed**: Data persistence, authentication, API layer, security hardening, middleware optimization
-- 🔄 **In Progress**: Email integration, testing framework
+- ✅ **CI & Test Baseline**: `verify:ci` (type-check + lint + tests) added; PR-first and CI-driven workflow established
+- 🔄 **In Progress**: Email integration (webhooks + delivery metrics), testing framework (unit + integration)
 - 📋 **Remaining**: Financial enhancements, responsive design, documentation
 
 ## Recently Completed ✅
-- [x] **Middleware Warning Resolution** - Moved rate limiting from middleware.ts to individual API routes (Dec 24, 2025)
-- [x] **API Layer Implementation** - Complete CRUD operations for all entities with validation and error handling
-- [x] **Security Hardening** - Rate limiting, input sanitization, authentication middleware, CORS headers
-- [x] **Build Stability** - Resolved Prisma client initialization issues and TypeScript compilation errors
-- [x] **Production Readiness** - Docker deployment, Helm charts, environment configuration
-- [x] **Email Integration (major features implemented)** - SendGrid integration, HTML templates, API endpoints (`/api/email`, `/api/email/send`, `/api/email/bulk`, `/api/email/logs`), Prisma `EmailLog` model, and migrations applied (Dec 24, 2025)
+- [x] **CI-first verification** - Added `verify:ci` script and GitHub Actions workflow to run type-check, lint, and tests in PRs
+- [x] **Stabilized flaky tests** - Deterministic Avatar tests, tolerant input/textarea tests, centralized env reset and `next-auth` test helper
+- [x] **Controlled input fix** - Mark controlled `Input`/`Textarea` as `readOnly` when `value` is supplied without `onChange`
+- [x] **Typing improvements** - Tightened NextAuth typing in `app/api/auth/[...nextauth]/route.ts`, improved auth-middleware and Prisma global typings
+- [x] **Integration tests** - Added `tests/integration/db-init.test.ts` and `tests/integration/create-property.test.ts`; CI now includes an `integration` job with job-scoped SQLite DB (ci-<run>.db)
+- [x] **PR #17** - `chore(ci/types): run CI for fix/ci-types — tighten types & stabilize tests` created and iterated to green (typing & test fixes merged/ongoing)
 
 ---
 
@@ -38,12 +39,12 @@
 - **Priority**: P0
 
 ### 2. Testing Framework Implementation
-- [ ] **Unit Tests** - Jest + React Testing Library for component testing
-- [ ] **Integration Tests** - API and database integration testing
-- [ ] **E2E Tests** - Playwright for critical user workflows
-- [ ] **CI/CD Integration** - Automated testing in GitHub Actions
-- **Status**: Not started
-- **Effort**: 2-3 weeks
+- [x] **Unit Tests** - Vitest + Testing Library in place; many component tests added and stabilized
+- [x] **Integration Tests** - Added integration tests for SQLite DB init and a sample end-to-end property creation; CI runs integration tests in a dedicated job with a job-scoped SQLite file
+- [ ] **E2E Tests** - Playwright (or similar) for critical user workflows (planned)
+- [x] **CI/CD Integration** - Automated test jobs added to GitHub Actions (`test` job and `integration` job)
+- **Status**: In progress — integration tests added and CI wired; E2E pending
+- **Effort**: 1–2 weeks to complete integration coverage; 1–2 weeks for E2E
 - **Priority**: P0
 
 ---
@@ -188,10 +189,11 @@
 
 ## 🎯 Immediate Next Steps
 
-1. **Start Email Integration** - Set up SMTP service and email templates
-2. **Implement Testing Framework** - Add Jest and Playwright for comprehensive testing
-3. **Financial Tracking Enhancement** - Complete the financial management system
-4. **Responsive Design** - Mobile-first design overhaul
+1. **Finish Email Integration** - Add SendGrid webhook receivers, delivery mapping to `EmailLog`, retry/backoff, and monitoring (P0)
+2. **Expand Integration Tests** - Add more API integration tests that perform DB writes (properties, tenants, receipts) and validate behavior end-to-end; iterate until CI is stable (P0)
+3. **E2E Test Strategy** - Add Playwright flows for critical user journeys (sign-in, property CRUD, email send) after integration coverage (P0)
+4. **Continue Type Hardening** - Sweep and reduce remaining `as unknown` and `any` usages in server code (auth, DB wrappers), in small PRs (S–M)
+5. **CI Cleanup** - After integration job stabilizes, consider removing `NODE_ENV === 'test'` prisma-skip and run full `prisma db push`/generate in the integration job (M)
 
 ---
 
@@ -205,7 +207,7 @@
 
 ---
 
-*Last Updated: December 24, 2025*  
-*Next Review: January 1, 2026*  
+*Last Updated: January 9, 2026*  
+*Next Review: January 16, 2026*  
 
 **Instructions**: Mark completed items with [x], update status, and add completion notes. Review weekly to track progress.
