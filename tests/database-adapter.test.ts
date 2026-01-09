@@ -1,4 +1,4 @@
-import { _describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import type { SqlDriverAdapterFactory } from '@prisma/driver-adapter-utils';
 
 it('constructs PrismaClient with sqlite adapter factory', async () => {
