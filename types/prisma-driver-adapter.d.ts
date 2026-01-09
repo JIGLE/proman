@@ -1,7 +1,7 @@
 declare module '@prisma/driver-adapter-utils' {
   export type Provider = 'mysql' | 'postgres' | 'sqlite' | 'sqlserver';
 
-  export type ColumnType = any;
+  export type ColumnType = unknown;
 
   export interface SqlResultSet {
     columnNames: string[];
@@ -15,12 +15,12 @@ declare module '@prisma/driver-adapter-utils' {
     adapterName: string;
     execute(query: { sql: string; args?: unknown[] }): Promise<SqlResultSet>;
     dispose(): Promise<void>;
-    startTransaction: (isolationLevel?: unknown) => Promise<any>;
+    startTransaction: (isolationLevel?: unknown) => Promise<unknown>;
     commit?: () => Promise<void> | void;
     rollback?: () => Promise<void> | void;
     getConnectionInfo?: () => { supportsRelationJoins: boolean };
-    executeRaw: (query: { sql: string; args?: unknown[] } | string) => Promise<any>;
-    queryRaw: (query: { sql: string; args?: unknown[] } | string) => Promise<any>;
+    executeRaw: (query: { sql: string; args?: unknown[] } | string) => Promise<unknown>;
+    queryRaw: (query: { sql: string; args?: unknown[] } | string) => Promise<unknown>;
     executeScript: (script: string) => Promise<void>;
   }
 

@@ -26,8 +26,7 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
       if (!dbPath) throw new Error('DATABASE_URL not set for sqlite adapter');
       const db = new BetterSqlite3(dbPath, { readonly: false });
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      function runQuery(sql: string, args: any[] = []): SqlResultSet {
+      function runQuery(sql: string, args: unknown[] = []): SqlResultSet {
         const trimmed = sql.trim().toLowerCase();
         if (trimmed.startsWith('select') || trimmed.startsWith('pragma')) {
           const stmt = db.prepare(sql);
@@ -56,8 +55,7 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
       const adapter: SqlDriverAdapter = {
         provider: 'sqlite',
         adapterName: 'better-sqlite3-adapter',
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        async execute(query: { sql: string; args?: any[] }): Promise<SqlResultSet> {
+        async execute(query: { sql: string; args?: unknown[] }): Promise<SqlResultSet> {
           return runQuery(query.sql, query.args || []);
         },
         async dispose() {
@@ -72,16 +70,15 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
           const txAdapter: SqlDriverAdapter = {
             adapterName: 'better-sqlite3-transaction',
             provider: 'sqlite',
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            async execute(query: { sql: string; args?: any[] }): Promise<SqlResultSet> {
+            async execute(query: { sql: string; args?: unknown[] }): Promise<SqlResultSet> {
               return runQuery(query.sql, query.args || []);
             },
-            async executeRaw(param: string | { sql: string; args?: any[] } , args?: any[]): Promise<SqlResultSet> {
+            async executeRaw(param: string | { sql: string; args?: unknown[] } , args?: unknown[]): Promise<SqlResultSet> {
               const sql = typeof param === 'string' ? param : param.sql;
               const a = typeof param === 'string' ? args || [] : param.args || [];
               return runQuery(sql, a);
             },
-            async queryRaw(param: string | { sql: string; args?: any[] } , args?: any[]): Promise<SqlResultSet> {
+            async queryRaw(param: string | { sql: string; args?: unknown[] } , args?: unknown[]): Promise<SqlResultSet> {
               const sql = typeof param === 'string' ? param : param.sql;
               const a = typeof param === 'string' ? args || [] : param.args || [];
               return runQuery(sql, a);
@@ -114,12 +111,12 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
 
           return txAdapter;
         },
-        async executeRaw(param: string | { sql: string; args?: any[] } , args?: any[]): Promise<SqlResultSet> {
+        async executeRaw(param: string | { sql: string; args?: unknown[] } , args?: unknown[]): Promise<SqlResultSet> {
           const sql = typeof param === 'string' ? param : param.sql;
           const a = typeof param === 'string' ? args || [] : param.args || [];
           return runQuery(sql, a);
         },
-        async queryRaw(param: string | { sql: string; args?: any[] } , args?: any[]): Promise<SqlResultSet> {
+        async queryRaw(param: string | { sql: string; args?: unknown[] } , args?: unknown[]): Promise<SqlResultSet> {
           const sql = typeof param === 'string' ? param : param.sql;
           const a = typeof param === 'string' ? args || [] : param.args || [];
           return runQuery(sql, a);
