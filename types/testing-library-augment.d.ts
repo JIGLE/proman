@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 declare module '@testing-library/react' {
   // Minimal ambient declarations to satisfy TypeScript for tests
   // Use permissive `any` so existing tests type-check without pulling

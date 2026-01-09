@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 declare module '@prisma/driver-adapter-utils' {
   export type Provider = 'mysql' | 'postgres' | 'sqlite' | 'sqlserver';
 
