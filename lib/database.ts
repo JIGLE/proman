@@ -84,8 +84,8 @@ function getPrismaClient(): PrismaClient {
                 const { createSqliteDriverAdapterFactory } = require('./sqlite-adapter');
                 const adapterFactory = createSqliteDriverAdapterFactory(process.env.DATABASE_URL);
                 globalForPrisma.prisma = new PrismaClient({ adapter: adapterFactory });
-              } catch (adapterErr: unknown) {
-                console.warn('[database] Failed to initialize sqlite adapter, falling back to default constructor:', adapterErr instanceof Error ? adapterErr.message : String(adapterErr));
+              } catch (_adapterErr: unknown) {
+                console.warn('[database] Failed to initialize sqlite adapter, falling back to default constructor:', _adapterErr instanceof Error ? _adapterErr.message : String(_adapterErr));
                 globalForPrisma.prisma = new PrismaClient();
               }
             } else {
@@ -102,7 +102,7 @@ function getPrismaClient(): PrismaClient {
                 const { createSqliteDriverAdapterFactory } = require('./sqlite-adapter');
                 const adapterFactory = createSqliteDriverAdapterFactory(process.env.DATABASE_URL);
                 globalForPrisma.prisma = new PrismaClient({ adapter: adapterFactory });
-              } catch (adapterErr: unknown) {
+              } catch {
                 throw pcInitErr;
               }
             } else {

@@ -25,6 +25,8 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
+VOLUME /app/data
+
 ENV NODE_ENV=production
 
 RUN addgroup --system --gid 1001 nodejs

@@ -99,6 +99,52 @@ Then restart the app and inspect the server logs (container/pod logs) for lines 
 - Storage: Host path → `/data`
 - Health: `GET /api/health` → `{ status: 'ok' }`
 
+## Docker Compose (for standalone deployments)
+
+For easy deployment on NAS or servers without Kubernetes:
+
+1. Ensure Docker and Docker Compose are installed.
+
+2. Clone or download the repository and navigate to the project directory.
+
+3. Copy `.env.example` to `.env` and configure your environment variables (DATABASE_URL, NEXTAUTH secrets, etc.).
+
+4. Run the application:
+
+```bash
+docker-compose up -d
+```
+
+This will pull the latest image from GHCR, mount a local `./data` directory for SQLite persistence, and start the app on port 3000.
+
+To stop:
+
+```bash
+docker-compose down
+```
+
+## Helm Chart (for Kubernetes/NAS clusters)
+
+For scalable deployments on Kubernetes (e.g., TrueNAS SCALE with Kubernetes):
+
+1. Ensure Helm is installed and you have access to a Kubernetes cluster.
+
+2. Add the chart repository (or use local path):
+
+```bash
+helm install proman ./helm/proman
+```
+
+3. Customize values if needed (e.g., image tag, environment variables, persistence):
+
+```bash
+helm install proman ./helm/proman --set image.tag=v1.0.0 --set env[0].value="your-nextauth-secret"
+```
+
+4. Access the app via the Service or Ingress (configure in values.yaml).
+
+The chart includes PVC for SQLite persistence, health checks, and optional autoscaling.
+
 ## Fallback: Local tar
 
 ```bash

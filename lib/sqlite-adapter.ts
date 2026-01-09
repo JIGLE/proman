@@ -4,61 +4,66 @@
 // needed by Prisma Client to run queries.
 
 import { resolve } from 'path';
+import type { SqlDriverAdapterFactory, SqlDriverAdapter, SqlResultSet } from '@prisma/driver-adapter-utils';
 
 // Use require to avoid bundler issues
 const BetterSqlite3 = require('better-sqlite3');
 
-function getSqlitePathFromDatabaseUrl(dbUrl: string) {
+function getSqlitePathFromDatabaseUrl(dbUrl: string): string {
   // dbUrl like file:./dev.db or file:./ci-123.db
   if (!dbUrl.startsWith('file:')) throw new Error('Not a sqlite DATABASE_URL');
   const sqlitePath = dbUrl.replace(/^file:\/\//, '').replace(/^file:/, '');
   return resolve(process.cwd(), sqlitePath);
 }
 
-export function createSqliteDriverAdapterFactory(dbUrl: string | undefined) {
+export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): SqlDriverAdapterFactory {
   const dbPath = dbUrl ? getSqlitePathFromDatabaseUrl(dbUrl) : undefined;
 
   return {
     provider: 'sqlite',
     adapterName: 'better-sqlite3-adapter',
-    async connect() {
+    async connect(): Promise<SqlDriverAdapter> {
       if (!dbPath) throw new Error('DATABASE_URL not set for sqlite adapter');
       const db = new BetterSqlite3(dbPath, { readonly: false });
 
-      function runQuery(sql: string, args: any[]) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      function runQuery(sql: string, args: any[] = []): SqlResultSet {
         const trimmed = sql.trim().toLowerCase();
         if (trimmed.startsWith('select') || trimmed.startsWith('pragma')) {
           const stmt = db.prepare(sql);
-          const rows = stmt.all(...(args || []));
+          const rows = stmt.all(...args);
           const columnNames = rows.length > 0 ? Object.keys(rows[0]) : [];
-          const resultRows = rows.map((r: any) => columnNames.map((k) => (r as any)[k]));
+          const resultRows: unknown[][] = rows.map((r: Record<string, unknown>) =>
+            columnNames.map((k) => (r as Record<string, unknown>)[k]),
+          );
           return {
             columnNames,
             columnTypes: [],
             rows: resultRows,
-          };
+          } as SqlResultSet;
         } else {
           const stmt = db.prepare(sql);
-          const info = stmt.run(...(args || []));
+          const info = stmt.run(...args);
           return {
             columnNames: [],
             columnTypes: [],
             rows: [],
             lastInsertId: info.lastInsertRowid ? String(info.lastInsertRowid) : undefined,
-          };
+          } as SqlResultSet;
         }
       }
 
       const adapter = {
         provider: 'sqlite',
         adapterName: 'better-sqlite3-adapter',
-        async execute(query: { sql: string; args: any[] }) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        async execute(query: { sql: string; args?: any[] }): Promise<SqlResultSet> {
           return runQuery(query.sql, query.args || []);
         },
         async dispose() {
           try {
             db.close();
-          } catch (e) {
+          } catch {
             // ignore
           }
         },
@@ -67,7 +72,8 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined) {
           return {
             adapterName: 'better-sqlite3-transaction',
             provider: 'sqlite',
-            async execute(query: { sql: string; args: any[] }) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            async execute(query: { sql: string; args?: any[] }): Promise<SqlResultSet> {
               return runQuery(query.sql, query.args || []);
             },
             async dispose() {
