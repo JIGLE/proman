@@ -55,7 +55,30 @@ function getPrismaClient(): PrismaClient {
         // Passing datasource overrides to the constructor is not supported in this runtime,
         // so rely on `process.env.DATABASE_URL` being set inside the container.
         try {
+          // Diagnostics: log environment & available prisma files to assist CI debugging
+          try {
+            const fs = require('fs');
+            const path = require('path');
+            console.log('[database] Constructing PrismaClient; diagnostics:', {
+              cwd: process.cwd(),
+              nodeEnv: process.env.NODE_ENV,
+              databaseUrl: process.env.DATABASE_URL ? process.env.DATABASE_URL : '(none)',
+              prismaClientResolved: (() => {
+                try {
+                  return require.resolve('@prisma/client');
+                } catch (e) {
+                  return undefined;
+                }
+              })(),
+              prismaClientExists: fs.existsSync(path.resolve(process.cwd(), 'node_modules', '@prisma', 'client')),
+              prismaGeneratedExists: fs.existsSync(path.resolve(process.cwd(), 'node_modules', '.prisma', 'client')),
+            });
+          } catch (diagErr) {
+            console.warn('[database] Diagnostics failed:', diagErr instanceof Error ? diagErr.message : String(diagErr));
+          }
+
           globalForPrisma.prisma = new PrismaClient();
+          console.log('[database] PrismaClient constructed successfully');
         } catch (pcErr: unknown) {
           const message = pcErr instanceof Error ? pcErr.message : String(pcErr);
           const name = pcErr instanceof Error && (pcErr as Error).name ? (pcErr as Error).name : 'UnknownError';
