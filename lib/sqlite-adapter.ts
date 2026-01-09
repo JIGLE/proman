@@ -53,7 +53,7 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
         }
       }
 
-      const adapter = {
+      const adapter: SqlDriverAdapter = {
         provider: 'sqlite',
         adapterName: 'better-sqlite3-adapter',
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -67,17 +67,39 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
             // ignore
           }
         },
-        async startTransaction() {
+        async startTransaction(_isolationLevel?: unknown) {
           db.exec('BEGIN');
-          return {
+          const txAdapter: SqlDriverAdapter = {
             adapterName: 'better-sqlite3-transaction',
             provider: 'sqlite',
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             async execute(query: { sql: string; args?: any[] }): Promise<SqlResultSet> {
               return runQuery(query.sql, query.args || []);
             },
+            async executeRaw(param: string | { sql: string; args?: any[] } , args?: any[]): Promise<SqlResultSet> {
+              const sql = typeof param === 'string' ? param : param.sql;
+              const a = typeof param === 'string' ? args || [] : param.args || [];
+              return runQuery(sql, a);
+            },
+            async queryRaw(param: string | { sql: string; args?: any[] } , args?: any[]): Promise<SqlResultSet> {
+              const sql = typeof param === 'string' ? param : param.sql;
+              const a = typeof param === 'string' ? args || [] : param.args || [];
+              return runQuery(sql, a);
+            },
+            async executeScript(script: string): Promise<void> {
+              // execute arbitrary SQL script
+              try {
+                db.exec(script);
+              } catch {
+                // ignore execution errors here
+              }
+            },
             async dispose() {
               // nothing special
+            },
+            async startTransaction(_isolationLevel?: unknown) {
+              // nested transactions not supported; return self
+              return txAdapter;
             },
             async commit() {
               db.exec('COMMIT');
@@ -85,12 +107,31 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
             async rollback() {
               db.exec('ROLLBACK');
             },
-            async getConnectionInfo() {
+            getConnectionInfo() {
               return { supportsRelationJoins: false };
             },
           };
+
+          return txAdapter;
         },
-        async getConnectionInfo() {
+        async executeRaw(param: string | { sql: string; args?: any[] } , args?: any[]): Promise<SqlResultSet> {
+          const sql = typeof param === 'string' ? param : param.sql;
+          const a = typeof param === 'string' ? args || [] : param.args || [];
+          return runQuery(sql, a);
+        },
+        async queryRaw(param: string | { sql: string; args?: any[] } , args?: any[]): Promise<SqlResultSet> {
+          const sql = typeof param === 'string' ? param : param.sql;
+          const a = typeof param === 'string' ? args || [] : param.args || [];
+          return runQuery(sql, a);
+        },
+        async executeScript(script: string): Promise<void> {
+          try {
+            db.exec(script);
+          } catch {
+            // ignore
+          }
+        },
+        getConnectionInfo() {
           return { supportsRelationJoins: false };
         },
       };
