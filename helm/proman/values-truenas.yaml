@@ -1,0 +1,49 @@
+# TrueNAS SCALE tuned Helm values for ProMan
+# Edit <POOL_NAME> and other values before installing.
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/jigle/proman
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: NodePort
+  port: 80
+  targetPort: 3000
+  # Common default NodePort for HTTP on TrueNAS SCALE; change if conflict
+  nodePort: 30080
+
+ingress:
+  enabled: false
+
+env:
+  - name: DATABASE_URL
+    # Use a hostPath-mounted file for SQLite on TrueNAS SCALE
+    value: "file:/data/proman.db"
+  - name: NEXTAUTH_URL
+    value: "http://<TRUENAS_IP_OR_HOSTNAME>"
+  - name: NEXTAUTH_SECRET
+    value: "replace-with-secure-secret"
+
+persistence:
+  enabled: true
+  # Use a hostPath on the TrueNAS SCALE pool (edit <POOL_NAME> to your pool)
+  hostPath: /mnt/pools/<POOL_NAME>/apps/proman/data
+  mountPath: /data
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  # storageClass: ""  # leave empty to use hostPath (no dynamic provisioning)
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 250m
+    memory: 256Mi
+
+# Notes:
+# - hostPath is not HA/resilient across node failures. Prefer a proper PVC backed by TrueNAS CSI if available.
+# - If you expose via Ingress (Traefik) instead, set service.type to ClusterIP and enable ingress in your cluster.
