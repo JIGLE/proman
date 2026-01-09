@@ -41,7 +41,7 @@ if (!dbUrl) {
       const prisma = getPrismaClient()
       try {
         await prisma.user.create({ data: { id: 'integration-user', email: 'integration@example.com' } })
-      } catch (e) {
+      } catch {
         // ignore duplicate/user exists errors
       }
 
