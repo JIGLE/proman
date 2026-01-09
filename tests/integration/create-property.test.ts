@@ -36,6 +36,15 @@ if (!dbUrl) {
         throw new Error('DB init failed: ' + JSON.stringify(initBody))
       }
 
+      // Ensure a corresponding User row exists for the mocked auth userId
+      const { getPrismaClient } = await import('../../lib/database')
+      const prisma = getPrismaClient()
+      try {
+        await prisma.user.create({ data: { id: 'integration-user', email: 'integration@example.com' } })
+      } catch (e) {
+        // ignore duplicate/user exists errors
+      }
+
       const payload = {
         name: 'Integration Property',
         address: '123 Test St',
