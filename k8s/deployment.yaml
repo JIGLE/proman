@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proman
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: proman
+  template:
+    metadata:
+      labels:
+        app: proman
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+        - name: proman
+          image: ghcr.io/JIGLE/proman:latest
+          imagePullPolicy: Always
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: NEXT_TELEMETRY_DISABLED
+              value: "1"
+            - name: NEXTAUTH_URL
+              value: "https://your.domain"
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: proman-secrets
+                  key: NEXTAUTH_SECRET
+            - name: SENDGRID_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: proman-secrets
+                  key: SENDGRID_API_KEY
+            - name: INIT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: proman-secrets
+                  key: INIT_SECRET
+            - name: DATABASE_URL
+              value: "file:/data/proman.sqlite"
+          ports:
+            - containerPort: 3000
+          volumeMounts:
+            - name: proman-data
+              mountPath: /data
+      volumes:
+        - name: proman-data
+          persistentVolumeClaim:
+            claimName: proman-data

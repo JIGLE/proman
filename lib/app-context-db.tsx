@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useEffect, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 import {
   Property,
@@ -9,14 +9,8 @@ import {
   CorrespondenceTemplate,
   Correspondence,
 } from './types';
-import {
-  propertyService,
-  tenantService,
-  receiptService,
-  templateService,
-  correspondenceService,
-  initializeDatabase,
-} from './database';
+// Import database helpers dynamically inside the client runtime to avoid bundling
+// server-only modules (Prisma, better-sqlite3) into client bundles.
 import { useToast } from './toast-context';
 
 interface AppState {
@@ -99,6 +93,22 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const { data: session } = useSession();
   const { error: showError } = useToast();
   const userId = (session?.user as { id?: string } | undefined)?.id;
+  // Use the server API routes from client code to avoid bundling server-only modules
+  async function apiFetch(path: string, method = 'GET', body?: unknown) {
+    const opts: RequestInit = {
+      method,
+      credentials: 'include',
+      headers: {},
+    };
+    if (body !== undefined) {
+      (opts.headers as Record<string, string>)['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(body);
+    }
+    const res = await fetch(path, opts);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || `Request failed: ${res.status}`);
+    return data;
+  }
 
   // Load initial data
   useEffect(() => {
@@ -109,17 +119,23 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         dispatch({ type: 'SET_LOADING', payload: true });
         dispatch({ type: 'SET_ERROR', payload: null });
 
-        // Initialize database and seed if needed
-        await initializeDatabase();
+        // Initialize database and seed if needed (server-side handler)
+        await apiFetch('/api/debug/db/init', 'POST');
 
-        // Load all data in parallel
-        const [properties, tenants, receipts, templates, correspondence] = await Promise.all([
-          propertyService.getAll(userId),
-          tenantService.getAll(userId),
-          receiptService.getAll(userId),
-          templateService.getAll(),
-          correspondenceService.getAll(userId),
+        // Load all data in parallel via server API endpoints
+        const [propertiesRes, tenantsRes, receiptsRes, templatesRes, correspondenceRes] = await Promise.all([
+          apiFetch('/api/properties'),
+          apiFetch('/api/tenants'),
+          apiFetch('/api/receipts'),
+          apiFetch('/api/correspondence/templates'),
+          apiFetch('/api/correspondence'),
         ]);
+
+        const properties = propertiesRes?.data ?? propertiesRes;
+        const tenants = tenantsRes?.data ?? tenantsRes;
+        const receipts = receiptsRes?.data ?? receiptsRes;
+        const templates = templatesRes?.data ?? templatesRes;
+        const correspondence = correspondenceRes?.data ?? correspondenceRes;
 
         dispatch({ type: 'SET_PROPERTIES', payload: properties });
         dispatch({ type: 'SET_TENANTS', payload: tenants });
@@ -143,7 +159,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const addProperty = async (propertyData: Omit<Property, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const newProperty = await propertyService.create(userId, propertyData);
+      const res = await apiFetch('/api/properties', 'POST', propertyData);
+      const newProperty = res.data;
       dispatch({ type: 'SET_PROPERTIES', payload: [...state.properties, newProperty] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add property';
@@ -155,7 +172,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const updateProperty = async (id: string, propertyData: Partial<Omit<Property, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const updatedProperty = await propertyService.update(userId, id, propertyData);
+      const res = await apiFetch(`/api/properties/${id}`, 'PUT', propertyData);
+      const updatedProperty = res.data;
       dispatch({
         type: 'SET_PROPERTIES',
         payload: state.properties.map(p => p.id === id ? updatedProperty : p)
@@ -170,7 +188,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const deleteProperty = async (id: string) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      await propertyService.delete(userId, id);
+      await apiFetch(`/api/properties/${id}`, 'DELETE');
       dispatch({
         type: 'SET_PROPERTIES',
         payload: state.properties.filter(p => p.id !== id)
@@ -186,7 +204,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const addTenant = async (tenantData: Omit<Tenant, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName'>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const newTenant = await tenantService.create(userId, tenantData);
+      const res = await apiFetch('/api/tenants', 'POST', tenantData);
+      const newTenant = res.data;
       dispatch({ type: 'SET_TENANTS', payload: [...state.tenants, newTenant] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add tenant';
@@ -198,7 +217,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const updateTenant = async (id: string, tenantData: Partial<Omit<Tenant, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName'>>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const updatedTenant = await tenantService.update(userId, id, tenantData);
+      const res = await apiFetch(`/api/tenants/${id}`, 'PUT', tenantData);
+      const updatedTenant = res.data;
       dispatch({
         type: 'SET_TENANTS',
         payload: state.tenants.map(t => t.id === id ? updatedTenant : t)
@@ -213,7 +233,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const deleteTenant = async (id: string) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      await tenantService.delete(userId, id);
+      await apiFetch(`/api/tenants/${id}`, 'DELETE');
       dispatch({
         type: 'SET_TENANTS',
         payload: state.tenants.filter(t => t.id !== id)
@@ -229,7 +249,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const addReceipt = async (receiptData: Omit<Receipt, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const newReceipt = await receiptService.create(userId, receiptData);
+      const res = await apiFetch('/api/receipts', 'POST', receiptData);
+      const newReceipt = res.data;
       dispatch({ type: 'SET_RECEIPTS', payload: [...state.receipts, newReceipt] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add receipt';
@@ -241,7 +262,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const updateReceipt = async (id: string, receiptData: Partial<Omit<Receipt, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const updatedReceipt = await receiptService.update(userId, id, receiptData);
+      const res = await apiFetch(`/api/receipts/${id}`, 'PUT', receiptData);
+      const updatedReceipt = res.data;
       dispatch({
         type: 'SET_RECEIPTS',
         payload: state.receipts.map(r => r.id === id ? updatedReceipt : r)
@@ -256,7 +278,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const deleteReceipt = async (id: string) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      await receiptService.delete(userId, id);
+      await apiFetch(`/api/receipts/${id}`, 'DELETE');
       dispatch({
         type: 'SET_RECEIPTS',
         payload: state.receipts.filter(r => r.id !== id)
@@ -271,7 +293,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   // Template actions
   const addTemplate = async (templateData: Omit<CorrespondenceTemplate, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const newTemplate = await templateService.create(templateData);
+      const res = await apiFetch('/api/correspondence/templates', 'POST', templateData);
+      const newTemplate = res.data;
       dispatch({ type: 'SET_TEMPLATES', payload: [...state.templates, newTemplate] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add template';
@@ -282,7 +305,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
 
   const updateTemplate = async (id: string, templateData: Partial<CorrespondenceTemplate>) => {
     try {
-      const updatedTemplate = await templateService.update(id, templateData);
+      const res = await apiFetch(`/api/correspondence/templates/${id}`, 'PUT', templateData);
+      const updatedTemplate = res.data;
       dispatch({
         type: 'SET_TEMPLATES',
         payload: state.templates.map(t => t.id === id ? updatedTemplate : t)
@@ -296,7 +320,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
 
   const deleteTemplate = async (id: string) => {
     try {
-      await templateService.delete(id);
+      await apiFetch(`/api/correspondence/templates/${id}`, 'DELETE');
       dispatch({
         type: 'SET_TEMPLATES',
         payload: state.templates.filter(t => t.id !== id)
@@ -312,7 +336,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const addCorrespondence = async (correspondenceData: Omit<Correspondence, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName'>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const newCorrespondence = await correspondenceService.create(userId, correspondenceData);
+      const res = await apiFetch('/api/correspondence', 'POST', correspondenceData);
+      const newCorrespondence = res.data;
       dispatch({ type: 'SET_CORRESPONDENCE', payload: [...state.correspondence, newCorrespondence] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add correspondence';
@@ -324,7 +349,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const updateCorrespondence = async (id: string, correspondenceData: Partial<Omit<Correspondence, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName'>>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const updatedCorrespondence = await correspondenceService.update(userId, id, correspondenceData);
+      const res = await apiFetch(`/api/correspondence/${id}`, 'PUT', correspondenceData);
+      const updatedCorrespondence = res.data;
       dispatch({
         type: 'SET_CORRESPONDENCE',
         payload: state.correspondence.map(c => c.id === id ? updatedCorrespondence : c)
@@ -339,7 +365,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const deleteCorrespondence = async (id: string) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      await correspondenceService.delete(userId, id);
+      await apiFetch(`/api/correspondence/${id}`, 'DELETE');
       dispatch({
         type: 'SET_CORRESPONDENCE',
         payload: state.correspondence.filter(c => c.id !== id)

@@ -11,6 +11,7 @@
     "type-check": "tsc --noEmit",
     "verify": "npm run type-check && npm test",
     "verify:ci": "npm run type-check && npm run lint && npm test",
+    "verify:no-native": "node -e \"const r=require('child_process').spawnSync('rg',[\"require(\\\"fs\\\")|better-sqlite3|node_modules/.prisma\",'.next'],{stdio:'pipe'}); if(r.status===0){console.error('Native/server modules found in .next'); process.exit(1);} else {console.log('OK: no native refs in .next')}\"",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:setup": "prisma db push && prisma generate",
