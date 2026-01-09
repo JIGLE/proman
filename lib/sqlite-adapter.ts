@@ -27,7 +27,7 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
       const db = new BetterSqlite3(dbPath, { readonly: false });
 
       function runQuery(sql: string, args: unknown[] = []): SqlResultSet {
-        try { console.log('[sqlite-adapter] runQuery SQL:', sql, 'args:', args); } catch (_) {}
+        try { console.log('[sqlite-adapter] runQuery SQL:', sql, 'args:', args); } catch { }
         const trimmed = sql.trim().toLowerCase();
         const hasReturning = trimmed.includes(' returning ') || trimmed.endsWith(' returning') || /\breturning\b/.test(trimmed);
         if (trimmed.startsWith('select') || trimmed.startsWith('pragma') || hasReturning) {
@@ -55,7 +55,7 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
       }
 
       function runExec(sql: string, args: unknown[] = []): number {
-        try { console.log('[sqlite-adapter] runExec SQL:', sql, 'args:', args); } catch (_) {}
+        try { console.log('[sqlite-adapter] runExec SQL:', sql, 'args:', args); } catch { }
         const stmt = db.prepare(sql);
         const info = stmt.run(...args);
         // better-sqlite3 exposes `changes` for affected rows

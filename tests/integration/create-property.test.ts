@@ -32,9 +32,9 @@ if (!dbUrl) {
       const initModule = await import(pathToFileURL(initPath).href)
       // In test environment the init route skips running prisma commands; temporarily set NODE_ENV
       const prevNodeEnv = process.env.NODE_ENV
-      ;(process.env as any).NODE_ENV = 'development'
+      ;(process.env as unknown as Record<string, string | undefined>).NODE_ENV = 'development'
       const initRes = await initModule.POST(new Request('http://localhost/api/debug/db/init', { method: 'POST' }))
-      ;(process.env as any).NODE_ENV = prevNodeEnv
+      ;(process.env as unknown as Record<string, string | undefined>).NODE_ENV = prevNodeEnv
       const initBody = await initRes.json()
       if (initRes.status !== 200) {
         throw new Error('DB init failed: ' + JSON.stringify(initBody))
