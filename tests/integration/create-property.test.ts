@@ -27,10 +27,14 @@ if (!dbUrl) {
       const path = require('path').resolve(process.cwd(), 'app/api/properties/route.ts')
       const routeModule = await import(pathToFileURL(path).href)
 
-      // Ensure sqlite DB file exists by calling the debug init endpoint (creates file even in test env)
+      // Ensure sqlite DB file exists by calling the debug init endpoint (creates file and runs migrations)
       const initPath = require('path').resolve(process.cwd(), 'app/api/debug/db/init/route.ts')
       const initModule = await import(pathToFileURL(initPath).href)
+      // In test environment the init route skips running prisma commands; temporarily set NODE_ENV
+      const prevNodeEnv = process.env.NODE_ENV
+      process.env.NODE_ENV = 'development'
       const initRes = await initModule.POST(new Request('http://localhost/api/debug/db/init', { method: 'POST' }))
+      process.env.NODE_ENV = prevNodeEnv
       const initBody = await initRes.json()
       if (initRes.status !== 200) {
         throw new Error('DB init failed: ' + JSON.stringify(initBody))
@@ -54,7 +58,7 @@ if (!dbUrl) {
         rent: 1200,
       }
 
-      const req = new Request('http://localhost/api/properties', { method: 'POST', body: JSON.stringify(payload) })
+      const req = new Request('http://localhost/api/properties', { method: 'POST', body: JSON.stringify(payload), headers: { 'content-type': 'application/json' } })
       const postRes = await routeModule.POST(req)
       const postBody = await postRes.json()
 

@@ -190,6 +190,10 @@ export const propertyService = {
         image: data.image,
       },
     });
+    // Debug: log created property to aid in diagnosing null/shape issues during tests
+    try {
+      console.log('[database] created property:', property);
+    } catch (_) {}
     return {
       ...property,
       description: property.description || undefined,
