@@ -9,22 +9,22 @@ describe('Avatar component', () => {
     expect(root).toBeDefined()
   })
 
-  it('renders fallback when image not present and image when provided', () => {
-    // fallback case
+  it('renders fallback when image not present', () => {
     render(
       <Avatar>
         <AvatarFallback>AB</AvatarFallback>
       </Avatar>
     )
-    expect(screen.getByText('AB')).toBeDefined()
+    expect(screen.getByText('AB')).toBeInTheDocument()
+  })
 
-    // image case — tolerate either image or fallback depending on environment
+  it('renders image when provided', () => {
     render(
       <Avatar>
         <img src="/avatar.png" alt="User avatar" />
       </Avatar>
     )
-    const img = screen.queryByAltText('User avatar')
-    expect(img || screen.queryByText('AB')).toBeDefined()
+    const img = screen.getByAltText('User avatar')
+    expect(img).toBeInTheDocument()
   })
 })

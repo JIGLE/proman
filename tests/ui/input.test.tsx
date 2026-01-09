@@ -12,7 +12,7 @@ describe('Input component', () => {
 
   it('accepts className prop', () => {
     render(<Input className="my-input" />)
-    const input = screen.getByRole('textbox')
-    expect(input).toHaveClass('my-input')
+    const input = screen.getByRole('textbox') as HTMLInputElement
+    expect(input.className).toContain('my-input')
   })
 })
