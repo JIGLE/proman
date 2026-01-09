@@ -86,8 +86,20 @@ jobs:
 
       - name: Prepare SQLite DB for integration tests
         run: |
-          node scripts/ensure-sqlite.js || true
-          npx prisma generate || true
+          set -euo pipefail
+          echo "DATABASE_URL=${DATABASE_URL}"
+          echo "Ensure sqlite DB and run prisma commands (fail loudly)"
+          node scripts/ensure-sqlite.js
+          npx prisma db push
+          npx prisma generate
+      - name: Show Prisma client and DB artifacts (diagnostics)
+        run: |
+          echo "-- node_modules/.prisma/client --"
+          ls -la node_modules/.prisma/client || true
+          echo "-- node_modules/@prisma/client --"
+          ls -la node_modules/@prisma/client || true
+          echo "-- DB file --"
+          ls -la "${DATABASE_URL//file:/}" || true
 
       - name: Run integration tests
         run: npx vitest run tests/integration --reporter dot
