@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { createSqliteDriverAdapterFactory } from './sqlite-adapter';
 import {
   Property,
   Tenant,
@@ -81,13 +82,12 @@ function getPrismaClient(): PrismaClient {
             // If we're using SQLite, provide a lightweight adapter so Prisma Client can initialize.
             if (dbUrl.startsWith('file:')) {
               try {
-                const { createSqliteDriverAdapterFactory } = require('./sqlite-adapter');
-                const adapterFactory = createSqliteDriverAdapterFactory(process.env.DATABASE_URL);
-                globalForPrisma.prisma = new PrismaClient({ adapter: adapterFactory });
-              } catch (_adapterErr: unknown) {
-                console.warn('[database] Failed to initialize sqlite adapter, falling back to default constructor:', _adapterErr instanceof Error ? _adapterErr.message : String(_adapterErr));
-                globalForPrisma.prisma = new PrismaClient();
-              }
+                  const adapterFactory = createSqliteDriverAdapterFactory(process.env.DATABASE_URL);
+                  globalForPrisma.prisma = new PrismaClient({ adapter: adapterFactory });
+                } catch (_adapterErr: unknown) {
+                  console.warn('[database] Failed to initialize sqlite adapter, falling back to default constructor:', _adapterErr instanceof Error ? _adapterErr.message : String(_adapterErr));
+                  globalForPrisma.prisma = new PrismaClient();
+                }
             } else {
               globalForPrisma.prisma = new PrismaClient();
             }
@@ -96,10 +96,9 @@ function getPrismaClient(): PrismaClient {
             if (msg.includes('needs to be constructed with a non-empty')) {
               console.warn('[database] PrismaClient init requires options; retrying with {}');
               globalForPrisma.prisma = new PrismaClient({});
-            } else if (msg.includes('requires either "adapter" or "accelerateUrl"')) {
+              } else if (msg.includes('requires either "adapter" or "accelerateUrl"')) {
               // Retry with explicit sqlite adapter if we failed to pick it up earlier
               try {
-                const { createSqliteDriverAdapterFactory } = require('./sqlite-adapter');
                 const adapterFactory = createSqliteDriverAdapterFactory(process.env.DATABASE_URL);
                 globalForPrisma.prisma = new PrismaClient({ adapter: adapterFactory });
               } catch {
