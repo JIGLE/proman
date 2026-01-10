@@ -55,12 +55,26 @@ jobs:
         id: release_note
         run: |
           VERSION=${{ steps.get_version.outputs.VERSION }}
-          # Find the first block in README.md that contains the version line
-          awk -v ver="$VERSION" 'BEGIN{found=0;}{printline=0} /- Version:[[:space:]]*"?"?{0,1}"?"?/{ if($0 ~ ver) {found=1; printline=1} } found && NF==0 {printline=0; exit} found {print} ' README.md > release-note.txt || true
+          # Extract the '## Releases' section and find the block for this version
+          awk '/^## Releases/{flag=1; next} /^## / && flag{exit} flag{print}' README.md > releases-section.txt || true
+
+          if [ -s releases-section.txt ]; then
+            awk -v ver="$VERSION" '
+              { lines[NR]=$0 }
+              $0 ~ ("- Version:[[:space:]]*" ver) { target=NR }
+              END {
+                if (target) {
+                  s=target-3; if (s<1) s=1
+                  e=target+6; if (e>NR) e=NR
+                  for(i=s;i<=e;i++) print lines[i]
+                }
+              }' releases-section.txt > release-note.txt || true
+          fi
+
           if [ -s release-note.txt ]; then
             cat release-note.txt
             echo "note<<EOF" >> $GITHUB_OUTPUT
-            echo "$(cat release-note.txt)" >> $GITHUB_OUTPUT
+            cat release-note.txt >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           else
             echo "note<<EOF" >> $GITHUB_OUTPUT
@@ -74,8 +88,7 @@ jobs:
         with:
           tag_name: v${{ steps.get_version.outputs.VERSION }}
           release_name: v${{ steps.get_version.outputs.VERSION }}
-          body: |
-            Automated release for v${{ steps.get_version.outputs.VERSION }}
+          body: ${{ steps.release_note.outputs.note }}
 
       - name: Upload packaged chart to release
         uses: softprops/action-gh-release@v1

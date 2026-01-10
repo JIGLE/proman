@@ -13,6 +13,8 @@ permissions:
 jobs:
   build-and-publish:
     runs-on: ubuntu-latest
+    env:
+      RELEASE_MERGE_METHOD: squash
 
     steps:
       - name: Checkout
@@ -125,7 +127,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           pull-request-number: ${{ steps.create_pr.outputs.pull-request-number }}
-          merge-method: squash
+          merge-method: ${{ env.RELEASE_MERGE_METHOD }}
 
       - name: Package Helm chart with appVersion
         run: |
