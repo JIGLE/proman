@@ -31,6 +31,8 @@ helm upgrade --install proman ./helm/proman -f helm/proman/values-truenas.yaml -
 - HostPath setup example (values): `hostPath: /mnt/pools/<POOL_NAME>/apps/proman/data`
 - Important: `hostPath` is suitable for single-node installs, but not for multi-node HA. If you need durability across node restarts or scheduling, use a TrueNAS CSI-backed PVC (if available) and set `persistence.storageClass`.
 
+Note: the Helm chart includes a post-install/post-upgrade Job that will run Prisma initialization (`npx prisma db push && npx prisma generate`) automatically when `persistence.enabled` is true and a PVC is available. This ensures the schema (including `users`) is created on install or upgrade.
+
 ## Environment variables
 
 - Ensure `NEXTAUTH_URL` is set to your reachable app URL.
