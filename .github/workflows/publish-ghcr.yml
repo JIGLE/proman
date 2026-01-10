@@ -111,6 +111,7 @@ jobs:
           git commit -m "chore(release): ${VERSION} - update Chart.appVersion and release note" || echo "no changes to commit"
 
       - name: Create Pull Request for release updates
+        id: create_pr
         uses: peter-evans/create-pull-request@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -118,6 +119,13 @@ jobs:
           branch: "release-${{ steps.set-vars.outputs.VERSION }}"
           title: "chore(release): ${{ steps.set-vars.outputs.VERSION }}"
           body: "Automated release PR: updates Chart.appVersion and adds release note to README."
+
+      - name: Enable auto-merge on release PR
+        uses: peter-evans/enable-pull-request-automerge@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ steps.create_pr.outputs.pull-request-number }}
+          merge-method: squash
 
       - name: Package Helm chart with appVersion
         run: |
