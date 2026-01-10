@@ -2,8 +2,6 @@ name: Build and publish to GHCR
 
 on:
   push:
-    branches: [ main, fix/ci-types ]
-  pull_request:
     branches: [ main ]
   workflow_dispatch: {}
 
