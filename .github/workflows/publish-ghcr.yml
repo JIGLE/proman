@@ -24,6 +24,8 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Cache npm
         uses: actions/cache@v4
@@ -39,11 +41,10 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate || true
 
-      - name: Run type-check, lint and tests
+      - name: Run type-check and lint
         run: |
           npm run type-check || true
           npm run lint
-          npm test || true
 
       - name: Clean build
         run: |
@@ -77,6 +78,8 @@ jobs:
         with:
           context: .
           platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           push: true
           tags: |
             ghcr.io/jigle/proman:${{ steps.set-vars.outputs.VERSION }}
