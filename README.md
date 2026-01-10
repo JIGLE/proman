@@ -63,6 +63,55 @@ Note: the image includes defaults (`HOSTNAME=0.0.0.0`, `PORT=3000`) and the cont
 - If you see database permission errors, confirm the dataset is mounted at `/data` and writable by the container (fsGroup in deployment can help).
 - Ensure `NEXTAUTH_URL` matches the externally reachable URL (used by NextAuth redirects).
 
+### Database initialization & recovery
+If you see an error like `no such table: main.users` the SQLite database file exists but the Prisma schema (tables) were not applied. You have two safe options to initialize the schema.
+
+1) Use the built-in init endpoint (recommended)
+
+- If you configured `INIT_SECRET` (recommended), send Authorization header:
+
+```bash
+curl -sS -X POST -H "Authorization: Bearer $INIT_SECRET" http://<node-ip>:<node-port>/api/debug/db/init | jq
+```
+
+- If you did not set `INIT_SECRET` (dev/test):
+
+```bash
+curl -sS -X POST http://<node-ip>:<node-port>/api/debug/db/init | jq
+```
+
+- Expected success: `{ "ok": true, "dbPath": "/data/proman.sqlite", "pushOut": "...", "genOut": "..." }`
+
+2) Run Prisma commands manually inside the running container or Pod
+
+- Docker:
+
+```bash
+docker exec -it <container> sh -c 'npx prisma db push && npx prisma generate'
+```
+
+- Kubernetes:
+
+```bash
+kubectl exec -it <pod> -- npx prisma db push && kubectl exec -it <pod> -- npx prisma generate
+```
+
+Verify tables exist:
+
+```bash
+# inside host/container where /data is mounted
+sqlite3 /data/proman.sqlite '.tables'
+```
+
+Temporary emergency fallback
+
+- You can allow sign-ins while DB is broken (not recommended long-term) by setting the environment variable `NEXTAUTH_ALLOW_DB_FAILURE=true` in your App/Helm values. This bypasses DB-dependent creation and lets sign-in proceed.
+
+Notes
+- The `POST /api/debug/db/init` route will create the DB file (if missing), run `npx prisma db push` and `npx prisma generate` (skipped in `NODE_ENV=test`). Protect it with `INIT_SECRET` in production to avoid unauthorized schema changes.
+- After successful init, retry the sign-in flow — the `signIn` callback will create the user record on first login if needed.
+
+
 ### Security & registry notes
 - Public GHCR image: `ghcr.io/jigle/proman:latest` is public and can be pulled without credentials.
 - Private registry: if you use a private GHCR image set registry credentials (PAT with `read:packages`) in SCALE.

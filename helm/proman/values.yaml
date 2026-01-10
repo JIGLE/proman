@@ -104,6 +104,13 @@ env:
       secretKeyRef:
         name: proman-secrets
         key: SENDGRID_API_KEY
+  - name: INIT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: proman-secrets
+        key: INIT_SECRET
+  - name: NEXTAUTH_ALLOW_DB_FAILURE
+    value: "false"
   # Add other env vars as needed (or set literals for NEXTAUTH_URL)
 
 # Persistent volume for SQLite database
