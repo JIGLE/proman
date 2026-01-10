@@ -2,6 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "proman.fullname" . }}
+  {{- if .Chart.AppVersion }}
+  annotations:
+    app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+    proman.image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+  {{- end }}
   labels:
     {{- include "proman.labels" . | nindent 4 }}
 spec:
@@ -13,9 +18,13 @@ spec:
       {{- include "proman.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
+        {{- if .Chart.AppVersion }}
+        app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+        {{- end }}
+        proman.image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+      {{- with .Values.podAnnotations }}
+      {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
         {{- include "proman.selectorLabels" . | nindent 8 }}

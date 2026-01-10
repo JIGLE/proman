@@ -16,7 +16,7 @@ spec:
         fsGroup: 1000
       containers:
         - name: proman
-          image: ghcr.io/jigle/proman:latest
+          image: ghcr.io/jigle/proman:<version>  # use a specific tag (avoid latest)
           imagePullPolicy: IfNotPresent
           env:
             - name: NODE_ENV

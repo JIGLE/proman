@@ -2,7 +2,7 @@
 
 This README provides concise, step-by-step instructions to install Proman as a Custom App on TrueNAS SCALE. Two main options are supported:
 
-- Registry-based install (pull `ghcr.io/jigle/proman:latest`) — simplest when GHCR is accessible from SCALE.
+- Registry-based install (pull `ghcr.io/jigle/proman:<tag>`) — use an explicit tag (e.g., `ghcr.io/jigle/proman:0.1.1`); avoid `latest` for production installs.
 - Local image tar (no registry) — useful when nodes cannot reach GHCR or you prefer local images.
 
 ### Prerequisites
@@ -12,7 +12,7 @@ This README provides concise, step-by-step instructions to install Proman as a C
 
 ### Option A — Install from GHCR (registry)
 1. In TrueNAS SCALE UI go to **Apps → Launch Docker Image** (or **Create App → Use YAML/Custom App**).
-2. Set image: `ghcr.io/jigle/proman:latest`.
+2. Set image: `ghcr.io/jigle/proman:<version>` (use a specific tag; avoid `latest`).
 3. Configure environment variables:
    - `NODE_ENV=production`
    - `PORT=3000`
@@ -46,9 +46,36 @@ Note: the image includes defaults (`HOSTNAME=0.0.0.0`, `PORT=3000`) and the cont
 ### Option C — Install via Helm (advanced)
 1. From a machine with `kubectl`/`helm` configured for SCALE's k8s cluster:
    ```bash
-   helm install proman ./helm/proman --set image.repository=ghcr.io/jigle/proman --set image.tag=latest
+   helm install proman ./helm/proman --set image.repository=ghcr.io/jigle/proman --set image.tag=<version>  # use a specific tag (avoid latest)
    ```
 2. Customize `values.yaml` for `persistence`, `service.type` (NodePort/ClusterIP), and `ingress` before installing.
+
+### Releases
+
+We publish Docker images to GitHub Container Registry (GHCR) and package the Helm chart with the app's release version. Use explicit image tags for installs and updates — avoid using `latest` for production.
+
+
+## Releases
+
+Releases are recorded here so you can see which image is pulled when restarting the app.
+
+Release note template:
+- Date: YYYY-MM-DD  
+- Version: vX.Y.Z  
+- Image: `ghcr.io/jigle/proman:VERSION`  
+- Notes: short description
+
+Example:
+- Date: 2026-01-10  
+- Version: 0.1.1  
+- Image: `ghcr.io/jigle/proman:0.1.1`  
+- Notes: "Bugfix: DB handling on first init."
+
+When restarting or updating the app in TrueNAS SCALE:
+- Use the specific image tag from the release (do not rely on `latest`).
+- Verify runtime version:
+  - GET `/version.json` (returns `{"version","git_commit","build_time"}`).
+  - `kubectl get deployment proman -o yaml` and inspect `metadata.annotations` for `app.kubernetes.io/version` or `proman.image`.
 
 ### Post-install checks and troubleshooting
 - Check pod status and logs:
@@ -113,7 +140,7 @@ Notes
 
 
 ### Security & registry notes
-- Public GHCR image: `ghcr.io/jigle/proman:latest` is public and can be pulled without credentials.
+- Public GHCR image: `ghcr.io/jigle/proman:<tag>` is available and can be pulled without credentials; prefer a fixed tag (e.g., `ghcr.io/jigle/proman:0.1.1`) for reproducible deployments.
 - Private registry: if you use a private GHCR image set registry credentials (PAT with `read:packages`) in SCALE.
 
 ### Removing the app

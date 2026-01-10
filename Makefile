@@ -12,6 +12,6 @@ verify: build
 
 docker-build:
 	docker buildx create --use --name proman-builder || true
-	docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/JIGLE/proman:latest -t ghcr.io/JIGLE/proman:$(shell git rev-parse --short HEAD) --push .
+	docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/jigle/proman:latest -t ghcr.io/jigle/proman:$(shell git rev-parse --short HEAD) --push .
 
 push: docker-build

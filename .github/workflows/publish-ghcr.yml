@@ -87,4 +87,25 @@ jobs:
 
       - name: Image info
         run: |
-          echo "Image pushed: ghcr.io/JIGLE/proman:${{ steps.set-vars.outputs.VERSION }}"
+          echo "Image pushed: ghcr.io/jigle/proman:${{ steps.set-vars.outputs.VERSION }}"
+
+      - name: Update Chart.yaml appVersion in repo
+        env:
+          VERSION: ${{ steps.set-vars.outputs.VERSION }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Update helm/proman/Chart.yaml appVersion to match built image version
+          sed -i "s/^appVersion: .*$/appVersion: \"${VERSION}\"/" helm/proman/Chart.yaml
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          git add helm/proman/Chart.yaml
+          git commit -m "chore: set helm/proman Chart.appVersion to ${VERSION}" || echo "no changes to commit"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git push origin HEAD:main || echo "push failed"
+
+      - name: Package Helm chart with appVersion
+        run: |
+          curl -fsSL https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz | tar xz
+          mv linux-amd64/helm /usr/local/bin/helm
+          helm package helm/proman --app-version ${{ steps.set-vars.outputs.VERSION }} -d release-charts
+        shell: bash
