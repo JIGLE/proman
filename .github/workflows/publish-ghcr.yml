@@ -72,9 +72,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/JIGLE/proman:${{ steps.set-vars.outputs.VERSION }}
-            ghcr.io/JIGLE/proman:latest
-            ghcr.io/JIGLE/proman:${{ github.sha }}
+            ghcr.io/jigle/proman:${{ steps.set-vars.outputs.VERSION }}
+            ghcr.io/jigle/proman:latest
+            ghcr.io/jigle/proman:${{ github.sha }}
           build-args: |
             BUILD_VERSION=${{ steps.set-vars.outputs.VERSION }}
             GIT_COMMIT=${{ steps.set-vars.outputs.GIT_COMMIT }}
