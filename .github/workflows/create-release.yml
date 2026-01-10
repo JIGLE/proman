@@ -1,0 +1,98 @@
+name: Create GitHub Release on merged release PR
+
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write
+
+jobs:
+  create_release:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release-')
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get release version from branch
+        id: get_version
+        run: |
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          echo "Branch: $BRANCH"
+          VERSION=${BRANCH#release-}
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Set up Helm
+        run: |
+          curl -fsSL https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz | tar xz
+          mv linux-amd64/helm /usr/local/bin/helm
+
+      - name: Package Helm chart
+        run: |
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          helm package helm/proman --app-version ${VERSION} -d .
+
+      - name: Create git tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git fetch --no-tags
+          # Create annotated tag if not exists
+          if git rev-parse "refs/tags/v${VERSION}" >/dev/null 2>&1; then
+            echo "Tag v${VERSION} already exists"
+          else
+            git tag -a "v${VERSION}" -m "Release v${VERSION}"
+            git push origin "v${VERSION}"
+          fi
+
+      - name: Extract release note for body
+        id: release_note
+        run: |
+          VERSION=${{ steps.get_version.outputs.VERSION }}
+          # Extract the '## Releases' section and find the block for this version
+          awk '/^## Releases/{flag=1; next} /^## / && flag{exit} flag{print}' README.md > releases-section.txt || true
+
+          if [ -s releases-section.txt ]; then
+            awk -v ver="$VERSION" '
+              { lines[NR]=$0 }
+              $0 ~ ("- Version:[[:space:]]*" ver) { target=NR }
+              END {
+                if (target) {
+                  s=target-3; if (s<1) s=1
+                  e=target+6; if (e>NR) e=NR
+                  for(i=s;i<=e;i++) print lines[i]
+                }
+              }' releases-section.txt > release-note.txt || true
+          fi
+
+          if [ -s release-note.txt ]; then
+            cat release-note.txt
+            echo "note<<EOF" >> $GITHUB_OUTPUT
+            cat release-note.txt >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "note<<EOF" >> $GITHUB_OUTPUT
+            echo "Automated release for ${VERSION}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: v${{ steps.get_version.outputs.VERSION }}
+          release_name: v${{ steps.get_version.outputs.VERSION }}
+          body: ${{ steps.release_note.outputs.note }}
+
+      - name: Upload packaged chart to release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "proman-*.tgz"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

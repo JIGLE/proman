@@ -1,392 +1,157 @@
-# Proman
-<!-- GitHub Actions status badge for the publish-ghcr workflow -->
-[![Build and publish to GHCR](https://github.com/JIGLE/proman/actions/workflows/publish-ghcr.yml/badge.svg)](https://github.com/JIGLE/proman/actions/workflows/publish-ghcr.yml)
+## Proman — TrueNAS SCALE Custom App install
 
-Minimal property management dashboard (Next.js).
+This README provides concise, step-by-step instructions to install Proman as a Custom App on TrueNAS SCALE. Two main options are supported:
 
-## Quick Start
+- Registry-based install (pull `ghcr.io/jigle/proman:<tag>`) — use an explicit tag (e.g., `ghcr.io/jigle/proman:0.1.1`); avoid `latest` for production installs.
+- Local image tar (no registry) — useful when nodes cannot reach GHCR or you prefer local images.
 
-1) Pull and run:
+### Prerequisites
+- TrueNAS SCALE with Apps enabled
+- A dataset for persistence (or allow the chart to create a PVC)
+- `kubectl` / `helm` (optional, for advanced installs)
 
-```bash
-docker pull ghcr.io/jigle/proman:latest
-docker run -d -p 3000:3000 --env NODE_ENV=production --name proman ghcr.io/jigle/proman:latest
-```
+### Option A — Install from GHCR (registry)
+1. In TrueNAS SCALE UI go to **Apps → Launch Docker Image** (or **Create App → Use YAML/Custom App**).
+2. Set image: `ghcr.io/jigle/proman:<version>` (use a specific tag; avoid `latest`).
+3. Configure environment variables:
+   - `NODE_ENV=production`
+   - `PORT=3000`
+   - `HOSTNAME=0.0.0.0` (default in image)
+   - `NEXTAUTH_URL=https://your.domain` (set to your external URL)
+   - `NEXTAUTH_SECRET` (set a secure random value)
+   - Any provider secrets (e.g. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SENDGRID_API_KEY`).
 
-2) Open: http://localhost:3000
+Note: the image includes defaults (`HOSTNAME=0.0.0.0`, `PORT=3000`) and the container runs a pre-start check that will fail startup if `HOSTNAME` or `PORT` are missing or invalid. Set these values in the TrueNAS Apps UI or Helm `values.yaml` when installing.
+4. Ports: map container `3000` to a NodePort (or let SCALE assign one). Example: NodePort 30555 → container 3000.
+5. Storage: map a dataset (Host Path) to `/data` inside the container; this stores the SQLite DB (`/data/proman.sqlite`).
+6. Deploy and verify:
+   - In SCALE Apps UI confirm the app becomes `Running`.
+   - Health endpoint: `GET http://<node-ip>:<node-port>/api/health` should return `{ "status": "ok" }`.
 
-## Database (SQLite by default)
+### Option B — Install using a local image tar (no registry)
+1. Build and save image tar locally (on your workstation):
+   ```bash
+   ./scripts/build-and-save.sh proman:local proman_local_image.tar
+   ```
+2. Copy the tar to each SCALE node and import it (example using SSH):
+   ```bash
+   scp proman_local_image.tar root@TRUENAS_NODE:/root/
+   # If SCALE node uses containerd/k3s:
+   ssh root@TRUENAS_NODE "ctr -n=k8s.io images import /root/proman_local_image.tar"
+   # Or if docker is available on the node:
+   ssh root@TRUENAS_NODE "docker load -i /root/proman_local_image.tar"
+   ```
+3. In the Apps UI use the image name you loaded (e.g., `proman:local`) and configure envs, ports and storage as in Option A.
 
-Proman uses SQLite by default for local development and for simple single-node deployments. SQLite stores the database in a single file and is suitable for small installations or testing.
+### Option C — Install via Helm (advanced)
+1. From a machine with `kubectl`/`helm` configured for SCALE's k8s cluster:
+   ```bash
+   helm install proman ./helm/proman --set image.repository=ghcr.io/jigle/proman --set image.tag=<version>  # use a specific tag (avoid latest)
+   ```
+2. Customize `values.yaml` for `persistence`, `service.type` (NodePort/ClusterIP), and `ingress` before installing.
 
-Default local configuration (already set in `.env`):
+### Releases
 
-- `DATABASE_URL="file:./dev.db"`
+We publish Docker images to GitHub Container Registry (GHCR) and package the Helm chart with the app's release version. Use explicit image tags for installs and updates — avoid using `latest` for production.
 
-Applying the database schema and generating the Prisma client:
 
-```bash
-# Create or update the SQLite DB and generate the client
-npx prisma db push
-npx prisma generate
-```
+## Releases
 
-If you prefer to run Proman with PostgreSQL in production (recommended for clustered or highly available setups), set `DATABASE_URL` to your Postgres connection string and run migrations with `npx prisma migrate deploy`.
+Releases are recorded here so you can see which image is pulled when restarting the app.
 
-## Google OAuth Setup
+Release note template:
+- Date: YYYY-MM-DD  
+- Version: vX.Y.Z  
+- Image: `ghcr.io/jigle/proman:VERSION`  
+- Notes: short description
 
-To enable Google login:
+Example:
+- Date: 2026-01-10  
+- Version: 0.1.1  
+- Image: `ghcr.io/jigle/proman:0.1.1`  
+- Notes: "Bugfix: DB handling on first init."
 
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select existing
-3. Enable Google+ API
-4. Create OAuth 2.0 credentials (Web application)
-5. Set authorized redirect URIs: `https://your-domain.com/api/auth/callback/google`
-6. Copy Client ID and Client Secret
-7. Set environment variables:
-   - `GOOGLE_CLIENT_ID=your_client_id`
-   - `GOOGLE_CLIENT_SECRET=your_client_secret`
-   - `NEXTAUTH_SECRET=your_random_secret` (generate with `openssl rand -base64 32`)
-   - `NEXTAUTH_URL=https://your-domain.com` (your app's URL)
+When restarting or updating the app in TrueNAS SCALE:
+- Use the specific image tag from the release (do not rely on `latest`).
+- Verify runtime version:
+  - GET `/version.json` (returns `{"version","git_commit","build_time"}`).
+  - `kubectl get deployment proman -o yaml` and inspect `metadata.annotations` for `app.kubernetes.io/version` or `proman.image`.
 
-## Features
+### Post-install checks and troubleshooting
+- Check pod status and logs:
+  ```bash
+  kubectl get pods -l app=proman -n <namespace> -o wide
+  kubectl logs deployment/proman -n <namespace> --tail=200
+  kubectl describe pod <pod-name> -n <namespace>
+  ```
+- If the app is `Running` but unreachable externally:
+  - If you used NodePort, curl the node IP and port: `curl -v http://<node-ip>:<node-port>`.
+  - Use port-forward to test locally: `kubectl port-forward svc/proman 3000:80 -n <namespace>` then `curl http://localhost:3000`.
+- If you see database permission errors, confirm the dataset is mounted at `/data` and writable by the container (fsGroup in deployment can help).
+- Ensure `NEXTAUTH_URL` matches the externally reachable URL (used by NextAuth redirects).
 
-### 🔐 Authentication
-- Google OAuth 2.0 login
-- Secure JWT-based sessions
-- Custom signin/error pages
+### Database initialization & recovery
+If you see an error like `no such table: main.users` the SQLite database file exists but the Prisma schema (tables) were not applied. You have two safe options to initialize the schema.
 
-#### Debugging
-If a sign-in attempt returns "Access denied", the app will log detailed errors from the NextAuth `signIn` callback to the server logs. For debugging you can set the following environment variable to allow sign-ins while you fix database issues:
+1) Use the built-in init endpoint (recommended)
 
-- `NEXTAUTH_ALLOW_DB_FAILURE=true` — temporarily allows sign-ins even if database operations fail (useful for debugging; do not enable permanently in production).
-
-Also ensure `DATABASE_URL` points to a valid and writable SQLite file (e.g. `file:/data/proman.db`) or a reachable Postgres URL, and run:
-
-```bash
-npx prisma db push
-npx prisma generate
-```
-
-You can also use the new debug endpoint to quickly check DB health and user count:
-
-```bash
-# GET a compact database health report
-curl -sS https://your-domain.example/api/debug/db | jq .
-```
-
-Then restart the app and inspect the server logs (container/pod logs) for lines starting with `signIn called` or `NextAuth signIn error:` to see the root cause.
-
-### 👤 User Profile & Settings
-- **Profile Page** (`/profile`): View account info, avatar, and statistics
-- **Settings Page** (`/settings`): Comprehensive preference management
-  - Notifications (email, push, reminders)
-  - Appearance (theme, language)
-  - Preferences (timezone, currency)
-  - Privacy & security controls
-
-### 🏠 Property Management
-- Dashboard overview
-- Properties management
-- Tenants tracking
-- Financials & receipts
-
-## TrueNAS SCALE (recommended)
-- Apps → Discover Apps → Custom App
-- Image: `ghcr.io/jigle/proman:latest` (public)
-- Envs: `NODE_ENV=production`, `PORT=3000`, `GOOGLE_CLIENT_ID=your_id`, `GOOGLE_CLIENT_SECRET=your_secret`, `NEXTAUTH_SECRET=your_secret`, `NEXTAUTH_URL=https://your-domain.com`
-- Ports: Container 3000 → Node port (e.g., 3000)
-- Storage: Host path → `/data`
-- Health: `GET /api/health` → `{ status: 'ok' }`
-
-## Docker Compose (for standalone deployments)
-
-For easy deployment on NAS or servers without Kubernetes:
-
-1. Ensure Docker and Docker Compose are installed.
-
-2. Clone or download the repository and navigate to the project directory.
-
-3. Copy `.env.example` to `.env` and configure your environment variables (DATABASE_URL, NEXTAUTH secrets, etc.).
-
-4. Run the application:
+- If you configured `INIT_SECRET` (recommended), send Authorization header:
 
 ```bash
-docker-compose up -d
+curl -sS -X POST -H "Authorization: Bearer $INIT_SECRET" http://<node-ip>:<node-port>/api/debug/db/init | jq
 ```
 
-This will pull the latest image from GHCR, mount a local `./data` directory for SQLite persistence, and start the app on port 3000.
-
-To stop:
+- If you did not set `INIT_SECRET` (dev/test):
 
 ```bash
-docker-compose down
+curl -sS -X POST http://<node-ip>:<node-port>/api/debug/db/init | jq
 ```
 
-## Helm Chart (for Kubernetes/NAS clusters)
+- Expected success: `{ "ok": true, "dbPath": "/data/proman.sqlite", "pushOut": "...", "genOut": "..." }`
 
-For scalable deployments on Kubernetes (e.g., TrueNAS SCALE with Kubernetes):
+2) Run Prisma commands manually inside the running container or Pod
 
-1. Ensure Helm is installed and you have access to a Kubernetes cluster.
-
-2. Add the chart repository (or use local path):
+- Docker:
 
 ```bash
-helm install proman ./helm/proman
+docker exec -it <container> sh -c 'npx prisma db push && npx prisma generate'
 ```
 
-3. Customize values if needed (e.g., image tag, environment variables, persistence):
+- Kubernetes:
 
 ```bash
-helm install proman ./helm/proman --set image.tag=v1.0.0 --set env[0].value="your-nextauth-secret"
+kubectl exec -it <pod> -- npx prisma db push && kubectl exec -it <pod> -- npx prisma generate
 ```
 
-4. Access the app via the Service or Ingress (configure in values.yaml).
-
-The chart includes PVC for SQLite persistence, health checks, and optional autoscaling.
-
-## Fallback: Local tar
+Verify tables exist:
 
 ```bash
-./scripts/build-and-save.sh ghcr.io/jigle/proman:latest proman.tar
-scp proman.tar root@TRUENAS:/tmp/
-ssh root@TRUENAS "docker load -i /tmp/proman.tar"
+# inside host/container where /data is mounted
+sqlite3 /data/proman.sqlite '.tables'
 ```
 
-## Developer setup & tests
+Temporary emergency fallback
 
-1. Install dependencies:
+- You can allow sign-ins while DB is broken (not recommended long-term) by setting the environment variable `NEXTAUTH_ALLOW_DB_FAILURE=true` in your App/Helm values. This bypasses DB-dependent creation and lets sign-in proceed.
 
-```bash
-npm ci
-```
-
-2. Copy `.env.example` to `.env` and edit if needed. To run tests without production secrets, set:
-
-```bash
-export NODE_ENV=test
-```
-
-3. Run verification (type-check + lint + tests):
-
-```bash
-npm run verify
-```
-
-4. Run tests directly:
-
-```bash
-npm test
-```
+Notes
+- The `POST /api/debug/db/init` route will create the DB file (if missing), run `npx prisma db push` and `npx prisma generate` (skipped in `NODE_ENV=test`). Protect it with `INIT_SECRET` in production to avoid unauthorized schema changes.
+- After successful init, retry the sign-in flow — the `signIn` callback will create the user record on first login if needed.
 
 
-## CI
-- Workflow: `.github/workflows/publish-ghcr.yml` builds, tags and publishes to GHCR on `main` (also supports manual `workflow_dispatch`).
-   - The workflow sets `VERSION`, `GIT_COMMIT`, and `BUILD_TIME` and passes them as build-args and image labels so the running app can expose its build info at `/api/info`.
-   - The workflow uses `GITHUB_TOKEN` to publish to GHCR; no additional secrets are required for the repo to publish from GitHub Actions`
+### Security & registry notes
+- Public GHCR image: `ghcr.io/jigle/proman:<tag>` is available and can be pulled without credentials; prefer a fixed tag (e.g., `ghcr.io/jigle/proman:0.1.1`) for reproducible deployments.
+- Private registry: if you use a private GHCR image set registry credentials (PAT with `read:packages`) in SCALE.
+
+### Removing the app
+- If installed via Helm: `helm uninstall proman` or remove via the SCALE Apps UI.
+
+If you want, I can:
+- Render a ready-to-install YAML (with your nodePort, hostname and secrets redacted), or
+- Help test a live install (port-forward, logs parsing) if you provide the cluster outputs.
 
 License: MIT
-
-## 📦 TrueNAS SCALE (no registry required)
-
-If you don't want to push to a registry you can build an image tar and import it into TrueNAS SCALE.
-
-- Build and save an image tar locally:
-
-```bash
-./scripts/build-and-save.sh proman:local proman_local_image.tar
 ```
 
-- Upload the `proman_local_image.tar` to your TrueNAS SCALE host and load it there:
-
-```bash
-docker load -i proman_local_image.tar
-```
-
-- Package the Helm chart (optional) and install on SCALE's Kubernetes cluster:
-
-```bash
-./scripts/package-helm.sh dist
-helm install proman helm/proman -f helm/proman/values.yaml
-```
-
-Alternatively, create a Custom App in the SCALE Apps UI and reference the image you loaded on the nodes or use the packaged chart.
-
-## 🧩 Install as a TrueNAS SCALE Custom App
-
-Follow these steps to install `Proman` as a Custom App on TrueNAS SCALE without pushing to a registry.
-
-### Quick install (recommended)
-
-If you already know how to add a Git catalog in SCALE, these are the minimal steps to get `Proman` running:
-
-1. Build and save the image tar locally:
-
-```bash
-./scripts/build-and-save.sh proman:local proman_local_image.tar
-```
-
-2. Copy the tar to each SCALE node and import it:
-
-```bash
-scp proman_local_image.tar root@TRUENAS_NODE:/root/
-ssh root@TRUENAS_NODE "ctr -n=k8s.io images import /root/proman_local_image.tar"
-```
-
-3. Add this repository as a SCALE Catalog (Apps → Manage Catalogs → Add Catalog) using the Git URL `https://github.com/JIGLE/Proman` and branch `main`.
-
-4. Install the app from Apps → Available Applications → `proman` and in the install form **pick a dataset** by either selecting an existing PVC name for `persistence.existingClaim` or leaving it blank and setting `persistence.storage` (the chart will create a PVC).
-
-That's it — the chart defaults to `image.repository=proman` and `image.tag=local`, so SCALE will use the image you loaded on the nodes.
-
-
-1) Build the image tar (local machine):
-
-```bash
-./scripts/build-and-save.sh proman:local proman_local_image.tar
-```
-
-2) Copy the tar to a SCALE host and import it into the node's image store (example using SSH):
-
-```bash
-scp proman_local_image.tar root@TRUENAS_HOST:/tmp/
-ssh root@TRUENAS_HOST "docker load -i /tmp/proman_local_image.tar"
-```
-
-If your SCALE installation uses containerd/k3s without `docker`, import with containerd on the host:
-
-```bash
-ctr -n=k8s.io images import /tmp/proman_local_image.tar
-```
-
-3) Option A — Install via the Apps UI (recommended for non-cluster admins):
-
-- In TrueNAS SCALE go to **Apps → Launch Docker Image** (or **Create App → Use YAML/Custom App**).
-- For the image name enter `proman:local` (or the tag you used when loading the tar).
-- Set the container port `3000`, add environment variable `NODE_ENV=production`, and configure storage mounts if you need persistence.
-- Deploy the app and use the SCALE UI to add Routes/Ingress as needed.
-
-4) Option B — Install using the packaged Helm chart or YAML (advanced/admin):
-
-- Package the Helm chart locally:
-
-```bash
-./scripts/package-helm.sh dist
-```
-
-- Copy the chart (`dist/proman-*.tgz`) to a node or upload it to your internal chart repo and then from a system with `kubectl`/`helm` configured for the SCALE cluster run:
-
-  **TrueNAS SCALE quick install:** If you prefer the SCALE UI, go to Apps → Discover → Custom App → Install via YAML and paste `dist/proman-with-ingress.yaml` (edit image tag / PVC size / ingress host before install).
-
-```bash
-helm install proman helm/proman -f helm/proman/values.yaml
-# OR (if you uploaded the chart file)
-helm install proman dist/proman-0.2.0.tgz
-```
-
-- If you prefer raw YAML, update `k8s/proman-deployment.yaml` to use the image tag you loaded (e.g., `proman:local`) and install it via the Apps UI YAML option or with `kubectl apply -f k8s/proman-deployment.yaml`.
-
-5) Post-install
-
-- If you used Helm, run the NOTES printed by Helm or port-forward to the pod:
-
-```bash
-kubectl port-forward svc/proman 3000:3000
-# then open http://localhost:3000
-```
-
-- To remove the app:
-
-```bash
-helm uninstall proman  # or remove via the SCALE Apps UI
-```
-
-Notes:
-- If SCALE nodes cannot access the image by the same `proman:local` tag, load the tar on each node or use a local registry on your network.
-- Adjust `helm/proman/values.yaml` for Ingress, resources, or service type before installing.
-
-## 🎁 Produced artifacts (in this repository)
-
-- Image tar: `proman_local_image.tar` — built with `make save-image` (or `./scripts/build-and-save.sh`). (Optional; may be available in `releases/`)
-- Packaged Helm chart: `dist/proman-*.tgz` (current v0.2.1) — created with `make package-helm` (or `./scripts/package-helm.sh`).
-
-Use these to install on TrueNAS SCALE without a registry:
-
-1. Copy and load the image tar on each SCALE node:
-
-```bash
-scp proman_local_image.tar root@TRUENAS_NODE:/root/
-# on the node (containerd):
-ctr -n=k8s.io images import /root/proman_local_image.tar
-# or if docker is available on the node:
-docker load -i /root/proman_local_image.tar
-```
-
-2. Install the packaged chart on the SCALE cluster (from a machine with `helm` configured for the cluster):
-
-```bash
-helm install proman dist/proman-0.2.0.tgz \
-	--set image.repository=proman \
-	--set image.tag=local \
-	--set image.pullPolicy=IfNotPresent \
-	--set persistence.enabled=true --set persistence.storage=5Gi
-```
-
-3. Or use the SCALE Apps UI to add this Git repo as a Catalog and install the chart via the UI. In the install form choose an existing dataset or let the chart create a PVC by leaving `persistence.existingClaim` empty and setting the desired `persistence.storage` value.
-
-4. Helpful Make commands (local):
-
-```bash
-make build-image    # docker build -t proman:local .
-make save-image     # builds and saves proman_local_image.tar
-make package-helm   # packages helm/proman into dist/
-```
-
-If you want me to upload the artifacts somewhere or render the final YAML for your target values, tell me where and I will do it.
-
-## Registry-based install (no local image tar)
-
-If you prefer to avoid building and loading image tars on SCALE nodes, use the published image on GitHub Container Registry (GHCR). The repository workflow ` .github/workflows/publish-ghcr.yml` builds and pushes images to `ghcr.io/<owner>/proman` with versioned tags and `latest`.
-
-Install the chart and use the GHCR image (replace `<owner>` with your GitHub org/user):
-
-```bash
-helm install proman dist/proman-0.2.1.tgz \
-   --set image.repository=ghcr.io/<owner>/proman \
-   --set image.tag=latest \
-   --set image.pullPolicy=IfNotPresent \
-   --set persistence.enabled=true --set persistence.storage=5Gi
-```
-
-Notes:
-- The Actions workflow uses `GITHUB_TOKEN` to publish to GHCR from this repository; no additional secrets are required for publishing from GitHub Actions.
-- If you want TrueNAS to pull a private GHCR image, create a personal access token (PAT) with `read:packages` and configure the registry credentials in TrueNAS.
-
-## 🚀 Deployment
-
-### TrueNAS SCALE Custom App (Recommended)
-1. Ensure the Docker image is pushed to GHCR (via GitHub Actions on push to `main`).
-2. In TrueNAS SCALE UI: **Apps > Discover Apps > Custom App**.
-3. Configure:
-   - **Application Name**: `proman`
-   - **Image Repository**: `ghcr.io/jigle/proman:latest`
-   - **Environment Variables**:
-     - `NODE_ENV=production`
-     - `PORT=3000`
-   - **Port Forwarding**: Container Port `3000` → Node Port `3000` (or your choice)
-   - **Storage**: Host Path `/mnt/pool/data` → Mount Path `/data`
-4. Launch the app. Access at `http://your-truenas-ip:node-port`.
-
-### Registry visibility & Actions permissions
-- The workflow publishes to `ghcr.io/JIGLE/proman:latest` using `GITHUB_TOKEN`. Ensure **Actions** permissions allow `packages: write` (Repository Settings → Actions → General → Workflow permissions).
-- For TrueNAS to pull without authentication, make the package public: GitHub → `Settings` → `Packages` → `proman` → **Package settings** → **Change visibility** → **Public**. (Done — package is public.)
-- Alternatively, keep the package private and configure TrueNAS with registry credentials (PAT with `read:packages`).
-
-### Alternative: Local Tar
-If registry access fails, use the build script:
-```bash
-./scripts/build-and-save.sh ghcr.io/jigle/proman:latest proman.tar
-```
-Transfer `proman.tar` to TrueNAS, load with `docker load -i proman.tar`, then use the image in Custom App.
 
 

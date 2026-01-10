@@ -46,3 +46,6 @@ proman_local_image.tar
 proman_image.tar
 
 /lib/generated/prisma
+
+# local temp DBs
+tmp/

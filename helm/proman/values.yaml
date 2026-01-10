@@ -25,8 +25,8 @@ serviceAccount:
 
 podAnnotations: {}
 
-podSecurityContext: {}
-  # fsGroup: 2000
+podSecurityContext:
+  fsGroup: 1000
 
 securityContext: {}
   # capabilities:
@@ -84,12 +84,34 @@ affinity: {}
 # Environment variables
 env:
   - name: DATABASE_URL
-    value: "file:./data/ci.db"
+    valueFrom:
+      secretKeyRef:
+        name: proman-secrets
+        key: DATABASE_URL
   - name: NEXTAUTH_SECRET
-    value: "your-secret-here"
+    valueFrom:
+      secretKeyRef:
+        name: proman-secrets
+        key: NEXTAUTH_SECRET
   - name: NEXTAUTH_URL
     value: "http://localhost"
-  # Add other env vars as needed
+  - name: HOSTNAME
+    value: "0.0.0.0"
+  - name: PORT
+    value: "3000"
+  - name: SENDGRID_API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: proman-secrets
+        key: SENDGRID_API_KEY
+  - name: INIT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: proman-secrets
+        key: INIT_SECRET
+  - name: NEXTAUTH_ALLOW_DB_FAILURE
+    value: "false"
+  # Add other env vars as needed (or set literals for NEXTAUTH_URL)
 
 # Persistent volume for SQLite database
 persistence:

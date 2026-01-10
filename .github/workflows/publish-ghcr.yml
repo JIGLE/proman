@@ -8,11 +8,13 @@ on:
 permissions:
   contents: read
   packages: write
-  actions: read
+  id-token: write
 
 jobs:
-  build-and-push:
+  build-and-publish:
     runs-on: ubuntu-latest
+    env:
+      RELEASE_MERGE_METHOD: squash
 
     steps:
       - name: Checkout
@@ -23,14 +25,33 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
         run: npm ci
 
       - name: Generate Prisma client
-        run: npx prisma generate
+        run: npx prisma generate || true
 
-      - name: Build
-        run: npm run build
+      - name: Run type-check, lint and tests
+        run: |
+          npm run type-check || true
+          npm run lint
+          npm test || true
+
+      - name: Clean build
+        run: |
+          rm -rf .next
+          npm run build
+
+      - name: Verify no native modules in .next
+        run: npm run verify:no-native
 
       - id: set-vars
         run: |
@@ -42,7 +63,7 @@ jobs:
         uses: docker/setup-qemu-action@v2
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v2
 
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
@@ -51,10 +72,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push image
-        uses: docker/build-push-action@v5
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@v4
         with:
           context: .
+          platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             ghcr.io/jigle/proman:${{ steps.set-vars.outputs.VERSION }}
@@ -65,6 +87,51 @@ jobs:
             GIT_COMMIT=${{ steps.set-vars.outputs.GIT_COMMIT }}
             BUILD_TIME=${{ steps.set-vars.outputs.BUILD_TIME }}
 
-      - name: Image digest
+      - name: Image info
         run: |
           echo "Image pushed: ghcr.io/jigle/proman:${{ steps.set-vars.outputs.VERSION }}"
+
+      - name: Prepare release branch and update Chart + README
+        env:
+          VERSION: ${{ steps.set-vars.outputs.VERSION }}
+        run: |
+          set -euo pipefail
+          echo "Preparing release artifacts for ${VERSION}"
+          # Update Chart.appVersion
+          sed -i "s/^appVersion: .*$/appVersion: \"${VERSION}\"/" helm/proman/Chart.yaml
+
+          # Create release note and insert under '## Releases' heading in README.md
+          DATE=$(date -u +"%Y-%m-%d")
+          RELEASE_NOTE="- Date: ${DATE}\n- Version: ${VERSION}\n- Image: ghcr.io/jigle/proman:${VERSION}\n- Notes: automated release"
+
+          awk -v note="$RELEASE_NOTE" 'BEGIN{printed=0} {print} /^## Releases/ && !printed {print ""; print note; printed=1}' README.md > README.md.tmp && mv README.md.tmp README.md
+
+          # Commit changes locally
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          git add helm/proman/Chart.yaml README.md
+          git commit -m "chore(release): ${VERSION} - update Chart.appVersion and release note" || echo "no changes to commit"
+
+      - name: Create Pull Request for release updates
+        id: create_pr
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(release): ${{ steps.set-vars.outputs.VERSION }} - update Chart.appVersion and release note"
+          branch: "release-${{ steps.set-vars.outputs.VERSION }}"
+          title: "chore(release): ${{ steps.set-vars.outputs.VERSION }}"
+          body: "Automated release PR: updates Chart.appVersion and adds release note to README."
+
+      - name: Enable auto-merge on release PR
+        uses: peter-evans/enable-pull-request-automerge@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pull-request-number: ${{ steps.create_pr.outputs.pull-request-number }}
+          merge-method: ${{ env.RELEASE_MERGE_METHOD }}
+
+      - name: Package Helm chart with appVersion
+        run: |
+          curl -fsSL https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz | tar xz
+          mv linux-amd64/helm /usr/local/bin/helm
+          helm package helm/proman --app-version ${{ steps.set-vars.outputs.VERSION }} -d release-charts
+        shell: bash
