@@ -91,7 +91,7 @@ When restarting or updating the app in TrueNAS SCALE:
 - Ensure `NEXTAUTH_URL` matches the externally reachable URL (used by NextAuth redirects).
 
 ### Database initialization & recovery
-If you see an error like `no such table: main.users` the SQLite database file exists but the Prisma schema (tables) were not applied. You have two safe options to initialize the schema.
+If you see an error like `no such table: main.users` the SQLite database file exists but the Prisma schema (tables) were not applied. The Helm chart includes a post-install/post-upgrade Job that will automatically apply the Prisma schema when `persistence.enabled` is true (it runs `npx prisma db push && npx prisma generate`). You have two safe options to initialize the schema.
 
 1) Use the built-in init endpoint (recommended)
 
