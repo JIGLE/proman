@@ -16,9 +16,12 @@ This README provides concise, step-by-step instructions to install Proman as a C
 3. Configure environment variables:
    - `NODE_ENV=production`
    - `PORT=3000`
+   - `HOSTNAME=0.0.0.0` (default in image)
    - `NEXTAUTH_URL=https://your.domain` (set to your external URL)
    - `NEXTAUTH_SECRET` (set a secure random value)
    - Any provider secrets (e.g. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SENDGRID_API_KEY`).
+
+Note: the image includes defaults (`HOSTNAME=0.0.0.0`, `PORT=3000`) and the container runs a pre-start check that will fail startup if `HOSTNAME` or `PORT` are missing or invalid. Set these values in the TrueNAS Apps UI or Helm `values.yaml` when installing.
 4. Ports: map container `3000` to a NodePort (or let SCALE assign one). Example: NodePort 30555 → container 3000.
 5. Storage: map a dataset (Host Path) to `/data` inside the container; this stores the SQLite DB (`/data/proman.sqlite`).
 6. Deploy and verify:
