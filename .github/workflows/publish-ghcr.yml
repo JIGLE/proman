@@ -89,19 +89,35 @@ jobs:
         run: |
           echo "Image pushed: ghcr.io/jigle/proman:${{ steps.set-vars.outputs.VERSION }}"
 
-      - name: Update Chart.yaml appVersion in repo
+      - name: Prepare release branch and update Chart + README
         env:
           VERSION: ${{ steps.set-vars.outputs.VERSION }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Update helm/proman/Chart.yaml appVersion to match built image version
+          set -euo pipefail
+          echo "Preparing release artifacts for ${VERSION}"
+          # Update Chart.appVersion
           sed -i "s/^appVersion: .*$/appVersion: \"${VERSION}\"/" helm/proman/Chart.yaml
+
+          # Create release note and insert under '## Releases' heading in README.md
+          DATE=$(date -u +"%Y-%m-%d")
+          RELEASE_NOTE="- Date: ${DATE}\n- Version: ${VERSION}\n- Image: ghcr.io/jigle/proman:${VERSION}\n- Notes: automated release"
+
+          awk -v note="$RELEASE_NOTE" 'BEGIN{printed=0} {print} /^## Releases/ && !printed {print ""; print note; printed=1}' README.md > README.md.tmp && mv README.md.tmp README.md
+
+          # Commit changes locally
           git config user.name "github-actions[bot]"
           git config user.email "actions@github.com"
-          git add helm/proman/Chart.yaml
-          git commit -m "chore: set helm/proman Chart.appVersion to ${VERSION}" || echo "no changes to commit"
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
-          git push origin HEAD:main || echo "push failed"
+          git add helm/proman/Chart.yaml README.md
+          git commit -m "chore(release): ${VERSION} - update Chart.appVersion and release note" || echo "no changes to commit"
+
+      - name: Create Pull Request for release updates
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "chore(release): ${{ steps.set-vars.outputs.VERSION }} - update Chart.appVersion and release note"
+          branch: "release-${{ steps.set-vars.outputs.VERSION }}"
+          title: "chore(release): ${{ steps.set-vars.outputs.VERSION }}"
+          body: "Automated release PR: updates Chart.appVersion and adds release note to README."
 
       - name: Package Helm chart with appVersion
         run: |
