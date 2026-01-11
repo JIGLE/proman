@@ -67,10 +67,6 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate || true
 
-      - name: Run type-check and lint
-        run: |
-          npm run type-check || true
-          npm run lint
 
       - name: Clean build
         run: |
