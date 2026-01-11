@@ -10,16 +10,19 @@ permissions:
   packages: write
   id-token: write
 
-jobs:
-  build-and-publish:
-    runs-on: ubuntu-latest
-    env:
-      RELEASE_MERGE_METHOD: squash
-      DRY_RUN: 'true'
+concurrency:
+  group: publish-ghcr-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -28,13 +31,35 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
 
-      - name: Cache npm
-        uses: actions/cache@v4
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check + lint
+        run: |
+          npm run type-check || (echo "Type-check failed" && false)
+          npm run lint || (echo "Lint failed" && false)
+
+  build-and-publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      RELEASE_MERGE_METHOD: squash
+      DRY_RUN: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
