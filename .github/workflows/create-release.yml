@@ -1,8 +1,8 @@
 name: Create GitHub Release on merged release PR
 
+# ARCHIVED: releases are now created from publish-ghcr.yml
 on:
-  pull_request:
-    types: [closed]
+  workflow_dispatch: {}
 
 permissions:
   contents: write
