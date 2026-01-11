@@ -57,6 +57,11 @@ We publish Docker images to GitHub Container Registry (GHCR) and package the Hel
 
 ## Releases
 
+- Date: 2026-01-11
+- Version: 0.1.1
+- Image: ghcr.io/jigle/proman:0.1.1
+- Notes: automated release
+
 Releases are recorded here so you can see which image is pulled when restarting the app.
 
 Release note template:
