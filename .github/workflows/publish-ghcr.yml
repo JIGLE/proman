@@ -19,7 +19,6 @@ on:
 permissions:
   contents: write
   packages: write
-  id-token: write
 
 concurrency:
   group: publish-ghcr-${{ github.ref }}
