@@ -2,7 +2,7 @@ name: Build and publish to GHCR
 
 on:
   push:
-    branches: [ main ]
+    tags: ['v*']
   workflow_dispatch: {}
 
 permissions:
@@ -10,15 +10,19 @@ permissions:
   packages: write
   id-token: write
 
-jobs:
-  build-and-publish:
-    runs-on: ubuntu-latest
-    env:
-      RELEASE_MERGE_METHOD: squash
+concurrency:
+  group: publish-ghcr-${{ github.ref }}
+  cancel-in-progress: true
 
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -27,13 +31,35 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
 
-      - name: Cache npm
-        uses: actions/cache@v4
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check + lint
+        run: |
+          npm run type-check || (echo "Type-check failed" && false)
+          npm run lint || (echo "Lint failed" && false)
+
+  build-and-publish:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      RELEASE_MERGE_METHOD: squash
+      DRY_RUN: 'true'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Install dependencies
         run: npm ci
@@ -41,10 +67,6 @@ jobs:
       - name: Generate Prisma client
         run: npx prisma generate || true
 
-      - name: Run type-check and lint
-        run: |
-          npm run type-check || true
-          npm run lint
 
       - name: Clean build
         run: |
@@ -122,3 +144,77 @@ jobs:
           mv linux-amd64/helm /usr/local/bin/helm
           helm package helm/proman --app-version ${{ steps.set-vars.outputs.VERSION }} -d release-charts
         shell: bash
+
+      - name: Extract release note for body
+        id: release_note
+        run: |
+          VERSION=${{ steps.set-vars.outputs.VERSION }}
+          # Extract the '## Releases' section and find the block for this version
+          awk '/^## Releases/{flag=1; next} /^## / && flag{exit} flag{print}' README.md > releases-section.txt || true
+
+          if [ -s releases-section.txt ]; then
+            awk -v ver="$VERSION" '
+              { lines[NR]=$0 }
+              $0 ~ ("- Version:[[:space:]]*" ver) { target=NR }
+              END {
+                if (target) {
+                  s=target-3; if (s<1) s=1
+                  e=target+6; if (e>NR) e=NR
+                  for(i=s;i<=e;i++) print lines[i]
+                }
+              }' releases-section.txt > release-note.txt || true
+          fi
+
+          if [ -s release-note.txt ]; then
+            cat release-note.txt
+            echo "note<<EOF" >> $GITHUB_OUTPUT
+            cat release-note.txt >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "note<<EOF" >> $GITHUB_OUTPUT
+            echo "Automated release for ${VERSION}" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: DRY-RUN: Show intended tag & release
+        if: ${{ env.DRY_RUN == 'true' }}
+        run: |
+          echo "DRY_RUN enabled — would create tag v${{ steps.set-vars.outputs.VERSION }} and release with extracted note"
+          echo "Release note preview:"
+          cat release-note.txt || true
+
+      - name: Create annotated git tag and push
+        if: ${{ env.DRY_RUN != 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.set-vars.outputs.VERSION }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git fetch --no-tags
+          if git rev-parse "refs/tags/v${VERSION}" >/dev/null 2>&1; then
+            echo "Tag v${VERSION} already exists"
+          else
+            git tag -a "v${VERSION}" -m "Release v${VERSION}"
+            git push origin "v${VERSION}"
+          fi
+
+      - name: Create GitHub Release
+        if: ${{ env.DRY_RUN != 'true' }}
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: v${{ steps.set-vars.outputs.VERSION }}
+          release_name: v${{ steps.set-vars.outputs.VERSION }}
+          body: ${{ steps.release_note.outputs.note }}
+
+      - name: Upload packaged chart to release
+        if: ${{ env.DRY_RUN != 'true' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          files: "release-charts/proman-*.tgz"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
