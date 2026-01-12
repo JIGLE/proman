@@ -8,7 +8,8 @@ on:
       dry_run:
         description: 'Run as dry run (true/false)'
         required: false
-        default: 'false'
+        # Make manual runs dry-by-default so we don't accidentally publish from a test run
+        default: 'true'
       version:
         description: 'Optional version override (e.g., 1.2.3)'
         required: false
@@ -19,6 +20,8 @@ on:
 permissions:
   contents: write
   packages: write
+  # needed for OIDC/token flows in some registries if used in future
+  id-token: write
 
 concurrency:
   group: publish-ghcr-${{ github.ref }}
@@ -128,6 +131,16 @@ jobs:
             echo "ERROR: version mismatch: package.json=${PKG_VERSION} computed=${{ steps.set-vars.outputs.VERSION }}"
             echo "If you intentionally want the tag to differ, re-run with workflow_dispatch and provide 'version' input."
             exit 1
+          fi
+        shell: bash
+
+      - name: Sanity check: ensure VERSION computed
+        run: |
+          if [ -z "${{ steps.set-vars.outputs.VERSION }}" ]; then
+            echo "ERROR: VERSION is empty; aborting"
+            exit 1
+          else
+            echo "VERSION=${{ steps.set-vars.outputs.VERSION }}"
           fi
         shell: bash
 
@@ -266,9 +279,8 @@ jobs:
         if: ${{ env.DRY_RUN != 'true' }}
         id: create_release
         uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: v${{ steps.set-vars.outputs.VERSION }}
           release_name: v${{ steps.set-vars.outputs.VERSION }}
           body: ${{ steps.release_note.outputs.note }}
