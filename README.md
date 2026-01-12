@@ -1,3 +1,5 @@
+[![Publish Release](https://github.com/JIGLE/proman/actions/workflows/publish-ghcr.yml/badge.svg)](https://github.com/JIGLE/proman/actions/workflows/publish-ghcr.yml)
+
 ## Proman — TrueNAS SCALE Custom App install
 
 This README provides concise, step-by-step instructions to install Proman as a Custom App on TrueNAS SCALE. Two main options are supported:
@@ -70,6 +72,26 @@ Example:
 - Version: 0.1.1  
 - Image: `ghcr.io/jigle/proman:0.1.1`  
 - Notes: "Bugfix: DB handling on first init."
+
+### How to release ✅
+
+Releases are created from the `publish-ghcr.yml` workflow. The recommended and safest method is to publish by creating an annotated tag `vX.Y.Z`. You can also run the workflow manually (via **Actions → Build and publish to GHCR → Run workflow**) and use the `dry_run` and `version` inputs for testing and overrides.
+
+- Recommended (tag-based release):
+  1. Update the package version: `npm version X.Y.Z --no-git-tag-version`
+  2. Commit the change: `git add package.json package-lock.json && git commit -m "chore(release): X.Y.Z"`
+  3. Create a tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`
+  4. Push the tag: `git push origin vX.Y.Z`
+  - The workflow will build and push images, package the Helm chart, and create a Release automatically.
+
+- Manual dry-run (inspect artifacts without creating a Release):
+  - Go to **Actions → Build and publish to GHCR → Run workflow**.
+  - Set `dry_run=true` and optionally `version=X.Y.Z` to override.
+  - The workflow uploads `release-charts` as an artifact and shows a release-note preview for inspection.
+
+- Notes & safeguards:
+  - Tag-triggered runs assert that the tag version (without `v`) matches `package.json` — if they differ the run will fail and prompt you to resolve the mismatch.
+  - Use the `version` workflow input when using manual dispatch to override version detection.
 
 When restarting or updating the app in TrueNAS SCALE:
 - Use the specific image tag from the release (do not rely on `latest`).
