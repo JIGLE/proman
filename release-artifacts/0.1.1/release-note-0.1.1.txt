@@ -1,0 +1,10 @@
+
+Example:
+- Date: 2026-01-10  
+- Version: 0.1.1  
+- Image: `ghcr.io/jigle/proman:0.1.1`  
+- Notes: "Bugfix: DB handling on first init."
+
+### How to release ✅
+
+Releases are created from the `publish-ghcr.yml` workflow. The recommended and safest method is to publish by creating an annotated tag `vX.Y.Z`. You can also run the workflow manually (via **Actions → Build and publish to GHCR → Run workflow**) and use the `dry_run` and `version` inputs for testing and overrides.
