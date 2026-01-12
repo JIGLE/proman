@@ -37,6 +37,7 @@ on:
       - '**/*.md'
       - 'README.md'
       - 'docs/**'
+  workflow_dispatch: {}
 
 concurrency:
   group: test-${{ github.ref }}
