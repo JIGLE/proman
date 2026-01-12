@@ -3,7 +3,16 @@ name: Build and publish to GHCR
 on:
   push:
     tags: ['v*']
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run as dry run (true/false)'
+        required: false
+        default: 'false'
+      version:
+        description: 'Optional version override (e.g., 1.2.3)'
+        required: false
+        default: ''
 
 permissions:
   contents: write
@@ -45,7 +54,7 @@ jobs:
     timeout-minutes: 45
     env:
       RELEASE_MERGE_METHOD: squash
-      DRY_RUN: 'true'
+      DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
 
     steps:
       - name: Checkout
@@ -78,9 +87,38 @@ jobs:
 
       - id: set-vars
         run: |
-          echo "VERSION=$(node -e 'console.log(require("./package.json").version)')" >> $GITHUB_OUTPUT
+          set -euo pipefail
+          # Determine VERSION: prefer tag (strip leading v), allow workflow input override, fallback to package.json
+          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
+            TAG=${GITHUB_REF#refs/tags/}
+            TAG=${TAG#v}
+            if [ -n "${{ github.event.inputs.version }}" ]; then
+              VERSION="${{ github.event.inputs.version }}"
+            else
+              VERSION="$TAG"
+            fi
+          else
+            if [ -n "${{ github.event.inputs.version }}" ]; then
+              VERSION="${{ github.event.inputs.version }}"
+            else
+              VERSION=$(node -e 'console.log(require("./package.json").version)')
+            fi
+          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
           echo "GIT_COMMIT=${GITHUB_SHA}" >> $GITHUB_OUTPUT
           echo "BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+        shell: bash
+
+      - name: Assert VERSION matches package.json (for tag-triggered runs)
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          PKG_VERSION=$(node -e 'console.log(require("./package.json").version)')
+          if [ "$PKG_VERSION" != "${{ steps.set-vars.outputs.VERSION }}" ]; then
+            echo "ERROR: version mismatch: package.json=${PKG_VERSION} computed=${{ steps.set-vars.outputs.VERSION }}"
+            echo "If you intentionally want the tag to differ, re-run with workflow_dispatch and provide 'version' input."
+            exit 1
+          fi
+        shell: bash
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -144,6 +182,13 @@ jobs:
           mv linux-amd64/helm /usr/local/bin/helm
           helm package helm/proman --app-version ${{ steps.set-vars.outputs.VERSION }} -d release-charts
         shell: bash
+
+      - name: Upload packaged chart for DRY_RUN inspection
+        if: ${{ env.DRY_RUN == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-charts
+          path: release-charts
 
       - name: Extract release note for body
         id: release_note

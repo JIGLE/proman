@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-const fs = require('fs');
 
 function log(...args) {
   console.log('[check-hostport]', ...args);
