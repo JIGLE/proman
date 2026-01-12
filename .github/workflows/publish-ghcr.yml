@@ -232,7 +232,7 @@ jobs:
             echo "EOF" >> $GITHUB_OUTPUT
           fi
 
-      - name: DRY-RUN: Show intended tag & release
+      - name: "DRY-RUN: Show intended tag & release"
         if: ${{ env.DRY_RUN == 'true' }}
         run: |
           echo "DRY_RUN enabled — would create tag v${{ steps.set-vars.outputs.VERSION }} and release with extracted note"
