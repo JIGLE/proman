@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { OverviewView } from '../../components/overview-view'
 
-vi.mock('@/lib/app-context', () => ({
+vi.mock('@/lib/app-context-db', () => ({
   useApp: () => ({
     state: {
       properties: [{ id: 'p1', name: 'One', status: 'occupied', bedrooms: 2, bathrooms: 1 }],
