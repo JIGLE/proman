@@ -1,0 +1,48 @@
+name: Auto-merge Dependabot minor/patch updates
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review, labeled]
+
+permissions:
+  contents: write
+  checks: read
+  pull-requests: write
+
+jobs:
+  detect-and-automerge:
+    runs-on: ubuntu-latest
+    if: startsWith(github.head_ref, 'dependabot/') || github.actor == 'dependabot[bot]'
+    steps:
+      - name: Check PR metadata and determine semver bump
+        uses: actions/github-script@v7
+        id: semver_check
+        with:
+          script: |
+            const semver = require('semver');
+            const pr = await github.rest.pulls.get({ owner: context.repo.owner, repo: context.repo.repo, pull_number: context.payload.pull_request.number });
+            const title = pr.data.title || '';
+            const m = title.match(/from\s+([0-9]+\.[0-9]+\.[0-9]+)\s+to\s+([0-9]+\.[0-9]+\.[0-9]+)/i);
+            if (!m) {
+              core.info('Could not parse versions from title; skipping auto-merge');
+              core.setOutput('skip', 'true');
+              return;
+            }
+            const from = m[1], to = m[2];
+            core.info(`Parsed versions: ${from} -> ${to}`);
+            const diff = semver.diff(from, to);
+            core.info(`Semver diff: ${diff}`);
+            if (diff === 'major') {
+              core.info('Major bump detected; skipping auto-merge');
+              core.setOutput('skip', 'true');
+              return;
+            }
+            core.setOutput('skip', 'false');
+      - name: Auto-merge when checks pass
+        if: steps.semver_check.outputs.skip == 'false'
+        uses: pascalgn/automerge-action@v0.14.3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          merge_method: squash
+          strict: 'true'
+          # Only attempt to merge when mergeable and all checks pass
