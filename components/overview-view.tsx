@@ -9,7 +9,7 @@ import {
 } from "./ui/card";
 import { Building2, Users, DollarSign, TrendingUp } from "lucide-react";
 import { Badge } from "./ui/badge";
-import { useApp } from "@/lib/app-context";
+import { useApp } from "@/lib/app-context-db";
 
 export type OverviewViewProps = Record<string, never>
 
