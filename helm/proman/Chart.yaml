@@ -3,4 +3,4 @@ name: proman
 description: A Helm chart for deploying Proman property management app
 type: application
 version: 0.1.0
-appVersion: "0.1.1"
+appVersion: "0.1.4"
