@@ -14,12 +14,23 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
-      - name: Install actionlint from latest release
+      - name: Install actionlint (download or build as fallback)
         run: |
           set -euo pipefail
-          curl -fsSL https://github.com/rhysd/actionlint/releases/latest/download/actionlint_linux_amd64.tar.gz | tar xz
-          chmod +x actionlint
-          sudo mv actionlint /usr/local/bin/
+          echo "Attempting to download actionlint binary from releases..."
+          if curl -fsSL https://github.com/rhysd/actionlint/releases/latest/download/actionlint_linux_amd64.tar.gz | tar xz; then
+            chmod +x actionlint
+            sudo mv actionlint /usr/local/bin/
+          else
+            echo "Download failed, installing via 'go install' fallback"
+            sudo apt-get update -y
+            sudo apt-get install -y golang-go
+            export GOPATH="$HOME/go"
+            export PATH="$GOPATH/bin:$PATH"
+            go install github.com/rhysd/actionlint/cmd/actionlint@v1.7.10
+            # go install places binary under $GOPATH/bin
+            sudo ln -sf "$GOPATH/bin/actionlint" /usr/local/bin/actionlint || true
+          fi
       - name: Run actionlint
         run: |
           set -euo pipefail
