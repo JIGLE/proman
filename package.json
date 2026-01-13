@@ -19,6 +19,7 @@
     "postinstall": "prisma generate",
     "test": "vitest",
     "test:watch": "vitest --watch",
+    "package:helm:verify": "bash scripts/package-helm-and-verify.sh release-charts-temp $(node -e 'console.log(require(\"./package.json\").version)')",
     "db:check": "node scripts/check-db.js"
   },
   "dependencies": {
