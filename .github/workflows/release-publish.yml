@@ -115,9 +115,19 @@ jobs:
           npm run build
       - name: Package Helm chart
         run: |
+          set -euo pipefail
+          mkdir -p release-charts
           curl -fsSL https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz | tar xz
           mv linux-amd64/helm /usr/local/bin/helm
           helm package helm/proman --app-version ${{ steps.set-vars.outputs.VERSION }} -d release-charts
+          ls -la release-charts || true
+          tgz=$(find release-charts -type f -name 'proman-*.tgz' | head -n1 || true)
+          if [ -z "$tgz" ]; then
+            echo "ERROR: packaged chart not found in release-charts"; ls -la release-charts; exit 1;
+          fi
+          if ! tar -tzf "$tgz" | grep -q "Chart.yaml"; then
+            echo "ERROR: packaged chart does not contain Chart.yaml"; tar -tzf "$tgz" || true; exit 1;
+          fi
         shell: bash
       - name: Upload artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
@@ -130,7 +140,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+      DRY_RUN: ${{ needs.verify.outputs.dry_run }}
 
     steps:
       - name: Checkout
