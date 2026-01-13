@@ -49,3 +49,8 @@ proman_image.tar
 
 # local temp DBs
 tmp/
+
+# Local release artifacts
+/release-charts-local/
+/release-charts-temp/
+/tmp-release-charts/
