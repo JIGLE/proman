@@ -18,7 +18,7 @@ jobs:
         run: |
           set -euo pipefail
           # pinned release
-          curl -fsSL https://github.com/rhysd/actionlint/releases/download/v1.6.30/actionlint_linux_amd64.tar.gz | tar xz
+          curl -fsSL https://github.com/rhysd/actionlint/releases/download/v1.6.28/actionlint_linux_amd64.tar.gz | tar xz
           chmod +x actionlint
           sudo mv actionlint /usr/local/bin/
       - name: Run actionlint
