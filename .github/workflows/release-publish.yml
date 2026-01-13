@@ -172,9 +172,13 @@ jobs:
               VERSION=$(node -e 'console.log(require("./package.json").version)')
             fi
           fi
+          # compute lowercase owner for GHCR tags
+          OWNER_LOWER=$(echo "${GITHUB_REPOSITORY%%/*}" | tr '[:upper:]' '[:lower:]')
+
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
           echo "GIT_COMMIT=${GITHUB_SHA}" >> $GITHUB_OUTPUT
           echo "BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+          echo "OWNER_LOWER=${OWNER_LOWER}" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: "Sanity check: ensure VERSION computed"
@@ -219,9 +223,9 @@ jobs:
           cache-to: type=gha,mode=max
           push: ${{ env.DRY_RUN != 'true' }}
           tags: |
-            ghcr.io/${{ toLower(github.repository_owner) }}/proman:${{ steps.set-vars.outputs.VERSION }}
-            ghcr.io/${{ toLower(github.repository_owner) }}/proman:latest
-            ghcr.io/${{ toLower(github.repository_owner) }}/proman:${{ github.sha }}
+            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ steps.set-vars.outputs.VERSION }}
+            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:latest
+            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
           build-args: |
             BUILD_VERSION=${{ steps.set-vars.outputs.VERSION }}
             GIT_COMMIT=${{ steps.set-vars.outputs.GIT_COMMIT }}
