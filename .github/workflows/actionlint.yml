@@ -1,0 +1,27 @@
+name: Actionlint
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  actionlint:
+    name: actionlint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+      - name: Install actionlint
+        run: |
+          set -euo pipefail
+          # pinned release
+          curl -fsSL https://github.com/rhysd/actionlint/releases/download/v1.6.30/actionlint_linux_amd64.tar.gz | tar xz
+          chmod +x actionlint
+          sudo mv actionlint /usr/local/bin/
+      - name: Run actionlint
+        run: |
+          set -euo pipefail
+          actionlint -no-color -verbose
