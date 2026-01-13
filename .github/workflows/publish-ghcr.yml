@@ -1,4 +1,5 @@
-name: Build and publish to GHCR
+# File (intended final path): `.github/workflows/release-publish.yml` — purpose: release/publish (build images, package helm, create release)
+name: Release - Publish to GHCR
 
 on:
   push:
@@ -21,6 +22,9 @@ permissions:
   packages: write
   id-token: write
 
+# Job outputs: verify will publish whether this is a dry run so downstream diagnostic job can conditionally run
+
+
 concurrency:
   group: publish-ghcr-${{ github.ref }}
   cancel-in-progress: true
@@ -36,12 +40,16 @@ jobs:
           fetch-depth: 0
 
       - name: Set DRY_RUN for scheduled runs
+        id: dryrun
         run: |
           if [ "${GITHUB_EVENT_NAME}" = "schedule" ]; then
             echo "DRY_RUN=true" >> $GITHUB_ENV
+            echo "dry_run=true" >> $GITHUB_OUTPUT
             echo "Scheduled run — setting DRY_RUN=true"
           else
-            echo "DRY_RUN=${{ github.event.inputs.dry_run || 'false' }}" >> $GITHUB_ENV
+            DRY=${{ github.event.inputs.dry_run || 'false' }}
+            echo "DRY_RUN=${DRY}" >> $GITHUB_ENV
+            echo "dry_run=${DRY}" >> $GITHUB_OUTPUT
           fi
         shell: bash
 
@@ -60,8 +68,39 @@ jobs:
           npm run type-check || (echo "Type-check failed" && false)
           npm run lint || (echo "Lint failed" && false)
 
-  build-and-publish:
+  diagnostic:
     needs: verify
+    runs-on: ubuntu-latest
+    if: needs.verify.outputs.dry_run == 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+        with:
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@65d868f8d4d85d7d4abb7de0875cde3fcc8798f5
+        with:
+          node-version: '20'
+      - name: Install dependencies
+        run: npm ci
+      - name: Build (dry-run)
+        run: |
+          rm -rf .next
+          npm run build
+      - name: Package Helm chart
+        run: |
+          curl -fsSL https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz | tar xz
+          mv linux-amd64/helm /usr/local/bin/helm
+          helm package helm/proman --app-version ${{ steps.set-vars.outputs.VERSION }} -d release-charts
+        shell: bash
+      - name: Upload artifacts
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: release-charts-dryrun
+          path: release-charts
+
+  build-and-publish:
+    needs: [verify, diagnostic]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
@@ -128,14 +167,22 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@c7c4c00f3eef127be487a50899a220e44c6bcc87
 
+      - name: Ensure publish credentials available (non-dry-run)
+        if: needs.verify.outputs.dry_run != 'true'
+        run: |
+          if [ -z "${{ secrets.GHCR_PAT }}" ]; then
+            echo "ERROR: GHCR_PAT secret is not set. For non-dry-run publishes we require a Personal Access Token with packages:write. Aborting.";
+            exit 1;
+          else
+            echo "GHCR_PAT present"
+          fi
       - name: Login to GitHub Container Registry (GHCR)
-        if: ${{ env.DRY_RUN != 'true' }}
+        if: needs.verify.outputs.dry_run != 'true'
         uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          # Prefer a user-provided PAT (GHCR_PAT) for package writes; fallback to GITHUB_TOKEN
-          password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT }}
 
       - name: Build and push multi-arch image
         uses: docker/build-push-action@64c9b141502b80dbbd71e008a0130ad330f480f8
