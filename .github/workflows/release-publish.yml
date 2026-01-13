@@ -219,9 +219,9 @@ jobs:
           cache-to: type=gha,mode=max
           push: ${{ env.DRY_RUN != 'true' }}
           tags: |
-            ghcr.io/${{ github.repository_owner }}/proman:${{ steps.set-vars.outputs.VERSION }}
-            ghcr.io/${{ github.repository_owner }}/proman:latest
-            ghcr.io/${{ github.repository_owner }}/proman:${{ github.sha }}
+            ghcr.io/${{ toLower(github.repository_owner) }}/proman:${{ steps.set-vars.outputs.VERSION }}
+            ghcr.io/${{ toLower(github.repository_owner) }}/proman:latest
+            ghcr.io/${{ toLower(github.repository_owner) }}/proman:${{ github.sha }}
           build-args: |
             BUILD_VERSION=${{ steps.set-vars.outputs.VERSION }}
             GIT_COMMIT=${{ steps.set-vars.outputs.GIT_COMMIT }}
@@ -237,9 +237,21 @@ jobs:
 
       - name: Package Helm chart with appVersion
         run: |
+          set -euo pipefail
+          # update Chart.appVersion so package reflects the release app version
+          sed -i "s/^appVersion: .*$/appVersion: \"${{ steps.set-vars.outputs.VERSION }}\"/" helm/proman/Chart.yaml
           curl -fsSL https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz | tar xz
           mv linux-amd64/helm /usr/local/bin/helm
           helm package helm/proman --app-version ${{ steps.set-vars.outputs.VERSION }} -d release-charts
+          # verify the tarball contains Chart.yaml
+          ls -la release-charts || true
+          tgz=$(ls release-charts/proman-*.tgz | head -n1 || true)
+          if [ -z "$tgz" ]; then
+            echo "ERROR: packaged chart not found in release-charts"; ls -la release-charts; exit 1;
+          fi
+          if ! tar -tzf "$tgz" | grep -q "Chart.yaml"; then
+            echo "ERROR: packaged chart does not contain Chart.yaml"; tar -tzf "$tgz" || true; exit 1;
+          fi
         shell: bash
 
       - name: Upload packaged chart for DRY_RUN inspection
