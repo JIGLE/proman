@@ -30,9 +30,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    # This unconditional smoke job helps diagnose whether workflows are allowed to run.
+    steps:
+      - name: Checkout
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+        with:
+          fetch-depth: 0
+      - name: Show basic context
+        run: |
+          echo "SMOKE CHECK"
+          echo "EVENT: ${GITHUB_EVENT_NAME}"
+          echo "REF: ${GITHUB_REF}"
+          echo "SHA: ${GITHUB_SHA}"
+          uname -a
+          whoami || true
+          ls -la || true
+          if [ -z "${{ secrets.GHCR_PAT }}" ]; then echo "GHCR_PAT_PRESENT=false" > smoke.txt; else echo "GHCR_PAT_PRESENT=true" > smoke.txt; fi
+      - name: Upload smoke artifact
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
+        with:
+          name: smoke
+          path: smoke.txt
+
   verify:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    outputs:
+      dry_run: ${{ steps.dryrun.outputs.dry_run }}
     steps:
       - name: Checkout
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
