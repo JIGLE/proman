@@ -139,7 +139,6 @@ jobs:
           # Use the verification helper which sets both Chart.version and appVersion, lints, packages, and verifies Chart.yaml
           ./scripts/package-helm-and-verify.sh release-charts "${VERSION}"
         shell: bash
-        shell: bash
       - name: Upload artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
