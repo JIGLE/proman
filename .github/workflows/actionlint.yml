@@ -14,8 +14,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+      - name: Install actionlint from latest release
+        run: |
+          set -euo pipefail
+          curl -fsSL https://github.com/rhysd/actionlint/releases/latest/download/actionlint_linux_amd64.tar.gz | tar xz
+          chmod +x actionlint
+          sudo mv actionlint /usr/local/bin/
       - name: Run actionlint
-        uses: rhysd/actionlint-action@v1
-        with:
-          args: -no-color -verbose
-          # optionally set: path: .github/workflows to limit the scope
+        run: |
+          set -euo pipefail
+          actionlint -no-color -verbose
+          # optionally limit scanning: actionlint -no-color -verbose .github/workflows
