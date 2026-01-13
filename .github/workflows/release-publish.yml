@@ -152,6 +152,12 @@ jobs:
     env:
       DRY_RUN: ${{ needs.verify.outputs.dry_run }}
 
+    outputs:
+      VERSION: ${{ steps.set-vars.outputs.VERSION }}
+      OWNER_LOWER: ${{ steps.set-vars.outputs.OWNER_LOWER }}
+      GIT_COMMIT: ${{ steps.set-vars.outputs.GIT_COMMIT }}
+      BUILD_TIME: ${{ steps.set-vars.outputs.BUILD_TIME }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
@@ -243,27 +249,27 @@ jobs:
           cache-to: type=gha,mode=max
           push: ${{ env.DRY_RUN != 'true' }}
           tags: |
-            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ steps.set-vars.outputs.VERSION }}
-            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:latest
-            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
+            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ needs.build-and-publish.outputs.VERSION }}
+            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:latest
+            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
           build-args: |
-            BUILD_VERSION=${{ steps.set-vars.outputs.VERSION }}
-            GIT_COMMIT=${{ steps.set-vars.outputs.GIT_COMMIT }}
-            BUILD_TIME=${{ steps.set-vars.outputs.BUILD_TIME }}
+            BUILD_VERSION=${{ needs.build-and-publish.outputs.VERSION }}
+            GIT_COMMIT=${{ needs.build-and-publish.outputs.GIT_COMMIT }}
+            BUILD_TIME=${{ needs.build-and-publish.outputs.BUILD_TIME }}
 
       - name: Image info
         run: |
           if [ "${DRY_RUN:-false}" = "true" ]; then
-            echo "DRY_RUN: image push was skipped for ghcr.io/${{ github.repository_owner }}/proman:${{ steps.set-vars.outputs.VERSION }}"
+            echo "DRY_RUN: image push was skipped for ghcr.io/${{ github.repository_owner }}/proman:${{ needs.build-and-publish.outputs.VERSION }}"
           else
-            echo "Image pushed: ghcr.io/${{ github.repository_owner }}/proman:${{ steps.set-vars.outputs.VERSION }}"
+            echo "Image pushed: ghcr.io/${{ github.repository_owner }}/proman:${{ needs.build-and-publish.outputs.VERSION }}"
           fi
 
       - name: Package Helm chart with appVersion (verify)
         run: |
           set -euo pipefail
           # Use the verification helper which sets Chart.version and appVersion, lints, packages, and verifies Chart.yaml
-          ./scripts/package-helm-and-verify.sh release-charts "${{ steps.set-vars.outputs.VERSION }}"
+          ./scripts/package-helm-and-verify.sh release-charts "${{ needs.build-and-publish.outputs.VERSION }}"
         shell: bash
 
       - name: Upload packaged chart for inspection
@@ -312,17 +318,17 @@ jobs:
           cache-to: type=gha,mode=max
           push: true
           tags: |
-            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ steps.set-vars.outputs.VERSION }}
-            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:latest
-            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
+            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ needs.build-and-publish.outputs.VERSION }}
+            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:latest
+            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
           build-args: |
-            BUILD_VERSION=${{ steps.set-vars.outputs.VERSION }}
-            GIT_COMMIT=${{ steps.set-vars.outputs.GIT_COMMIT }}
-            BUILD_TIME=${{ steps.set-vars.outputs.BUILD_TIME }}
+            BUILD_VERSION=${{ needs.build-and-publish.outputs.VERSION }}
+            GIT_COMMIT=${{ needs.build-and-publish.outputs.GIT_COMMIT }}
+            BUILD_TIME=${{ needs.build-and-publish.outputs.BUILD_TIME }}
       - name: Create annotated git tag and push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.set-vars.outputs.VERSION }}
+          VERSION: ${{ needs.build-and-publish.outputs.VERSION }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -335,14 +341,8 @@ jobs:
             git tag -a "v${VERSION}" -m "Release v${VERSION}"
             git push origin "v${VERSION}"
           fi
-      - name: Create GitHub Release
-        id: create_release
-        uses: actions/create-release@4c11c9fe1dcd9636620a16455165783b20fc7ea0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: v${{ steps.set-vars.outputs.VERSION }}
-          release_name: v${{ steps.set-vars.outputs.VERSION }}
-          body: ${{ steps.release_note.outputs.note }}
+      # Release creation is gated in the later non-dry-run path
+      # (Create Release step is executed only when DRY_RUN is false)
       - name: Upload packaged chart to release
         uses: softprops/action-gh-release@78237c54eb15310cb292a15480c4be010be47aeb
         with:
@@ -353,7 +353,7 @@ jobs:
       - name: Extract release note for body
         id: release_note
         run: |
-          VERSION=${{ steps.set-vars.outputs.VERSION }}
+          VERSION=${{ needs.build-and-publish.outputs.VERSION }}
           awk '/^## Releases/{flag=1; next} /^## / && flag{exit} flag{print}' README.md > releases-section.txt || true
 
           if [ -s releases-section.txt ]; then
@@ -383,7 +383,7 @@ jobs:
       - name: "DRY-RUN: Show intended tag & release"
         if: ${{ env.DRY_RUN == 'true' }}
         run: |
-          echo "DRY_RUN enabled — would create tag v${{ steps.set-vars.outputs.VERSION }} and release with extracted note"
+          echo "DRY_RUN enabled — would create tag v${{ needs.build-and-publish.outputs.VERSION }} and release with extracted note"
           echo "Release note preview:"
           cat release-note.txt || true
 
@@ -391,7 +391,7 @@ jobs:
         if: ${{ env.DRY_RUN != 'true' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ steps.set-vars.outputs.VERSION }}
+          VERSION: ${{ needs.build-and-publish.outputs.VERSION }}
         run: |
           set -euo pipefail
           git config user.name "github-actions[bot]"
@@ -411,8 +411,8 @@ jobs:
         uses: actions/create-release@4c11c9fe1dcd9636620a16455165783b20fc7ea0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: v${{ steps.set-vars.outputs.VERSION }}
-          release_name: v${{ steps.set-vars.outputs.VERSION }}
+          tag_name: v${{ needs.build-and-publish.outputs.VERSION }}
+          release_name: v${{ needs.build-and-publish.outputs.VERSION }}
           body: ${{ steps.release_note.outputs.note }}
 
       - name: Upload packaged chart to release

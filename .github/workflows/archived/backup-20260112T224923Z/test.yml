@@ -15,10 +15,6 @@ on:
       - 'components/**'
       - 'scripts/**'
       - 'tests/**'
-    paths-ignore:
-      - '**/*.md'
-      - 'README.md'
-      - 'docs/**'
   pull_request:
     branches: [ main ]
     paths:
@@ -33,10 +29,6 @@ on:
       - 'components/**'
       - 'scripts/**'
       - 'tests/**'
-    paths-ignore:
-      - '**/*.md'
-      - 'README.md'
-      - 'docs/**'
   workflow_dispatch: {}
 
 concurrency:
