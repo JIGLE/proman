@@ -113,21 +113,32 @@ jobs:
         run: |
           rm -rf .next
           npm run build
-      - name: Package Helm chart
+      - name: Set VERSION for diagnostic
+        id: set-vars
         run: |
           set -euo pipefail
-          mkdir -p release-charts
-          curl -fsSL https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz | tar xz
-          mv linux-amd64/helm /usr/local/bin/helm
-          helm package helm/proman --app-version ${{ steps.set-vars.outputs.VERSION }} -d release-charts
-          ls -la release-charts || true
-          tgz=$(find release-charts -type f -name 'proman-*.tgz' | head -n1 || true)
-          if [ -z "$tgz" ]; then
-            echo "ERROR: packaged chart not found in release-charts"; ls -la release-charts; exit 1;
+          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
+            TAG=${GITHUB_REF#refs/tags/}
+            TAG=${TAG#v}
+            if [ -n "${{ github.event.inputs.version }}" ]; then
+              VERSION="${{ github.event.inputs.version }}"
+            else
+              VERSION="$TAG"
+            fi
+          else
+            if [ -n "${{ github.event.inputs.version }}" ]; then
+              VERSION="${{ github.event.inputs.version }}"
+            else
+              VERSION=$(node -e 'console.log(require("./package.json").version)')
+            fi
           fi
-          if ! tar -tzf "$tgz" | grep -q "Chart.yaml"; then
-            echo "ERROR: packaged chart does not contain Chart.yaml"; tar -tzf "$tgz" || true; exit 1;
-          fi
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
+      - name: Package Helm chart (verify)
+        run: |
+          set -euo pipefail
+          # Use the verification helper which sets both Chart.version and appVersion, lints, packages, and verifies Chart.yaml
+          ./scripts/package-helm-and-verify.sh release-charts "${VERSION}"
+        shell: bash
         shell: bash
       - name: Upload artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
@@ -249,23 +260,11 @@ jobs:
             echo "Image pushed: ghcr.io/${{ github.repository_owner }}/proman:${{ steps.set-vars.outputs.VERSION }}"
           fi
 
-      - name: Package Helm chart with appVersion
+      - name: Package Helm chart with appVersion (verify)
         run: |
           set -euo pipefail
-          # update Chart.appVersion so package reflects the release app version
-          sed -i "s/^appVersion: .*$/appVersion: \"${{ steps.set-vars.outputs.VERSION }}\"/" helm/proman/Chart.yaml
-          curl -fsSL https://get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz | tar xz
-          mv linux-amd64/helm /usr/local/bin/helm
-          helm package helm/proman --app-version ${{ steps.set-vars.outputs.VERSION }} -d release-charts
-          # verify the tarball contains Chart.yaml
-          ls -la release-charts || true
-          tgz=$(ls release-charts/proman-*.tgz | head -n1 || true)
-          if [ -z "$tgz" ]; then
-            echo "ERROR: packaged chart not found in release-charts"; ls -la release-charts; exit 1;
-          fi
-          if ! tar -tzf "$tgz" | grep -q "Chart.yaml"; then
-            echo "ERROR: packaged chart does not contain Chart.yaml"; tar -tzf "$tgz" || true; exit 1;
-          fi
+          # Use the verification helper which sets Chart.version and appVersion, lints, packages, and verifies Chart.yaml
+          ./scripts/package-helm-and-verify.sh release-charts "${{ steps.set-vars.outputs.VERSION }}"
         shell: bash
 
       - name: Upload packaged chart for DRY_RUN inspection
