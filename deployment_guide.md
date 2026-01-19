@@ -9,11 +9,13 @@ This guide describes how to deploy Proman as a **Custom App** on TrueNAS SCALE. 
 ## Step 1: Create a Custom App
 1. Go to **Apps** -> **Discover Apps** -> **Custom App**.
 2. **Application Name**: `proman`
+3. **App Icon URL**: (Optional) You can use a URL to a professional icon to make it look great in your dashboard.
 
 ## Step 2: Container Configuration
 1. **Image Repository**: `ghcr.io/jigle/proman`
-2. **Image Tag**: `latest` (or a specific version like `0.2.0`)
+2. **Image Tag**: `latest`
 3. **Container Port**: `3000`
+4. **App Version**: Set this to `0.2.0` in the UI to match the current code.
 
 ## Step 3: Environment Variables
 Add the following mandatory variables:
