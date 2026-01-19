@@ -5,8 +5,9 @@ import { getPrismaClient } from '@/lib/database';
 import { getAuthOptions } from "@/lib/auth";
 import { expenseSchema } from '@/lib/validation';
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
     try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const session = await getServerSession(getAuthOptions() as any) as Session | null;
         if (!session?.user?.email) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -35,7 +36,7 @@ export async function GET() {
         });
 
         // Transform expenses to include propertyName flat
-        const transformedExpenses = expenses.map((expense: any) => ({
+        const transformedExpenses = expenses.map((expense) => ({
             ...expense,
             propertyName: expense.property.name,
         }));
@@ -50,8 +51,9 @@ export async function GET() {
     }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<NextResponse> {
     try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const session = await getServerSession(getAuthOptions() as any) as Session | null;
         if (!session?.user?.email) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

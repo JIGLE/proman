@@ -17,8 +17,7 @@ import jsPDF from "jspdf";
 
 export function OwnersView(): React.ReactElement {
     const { state, addOwner, updateOwner, deleteOwner } = useApp();
-    const { owners, receipts, expenses, loading, properties } = state;
-    const getProperty = (id: string) => properties.find(p => p.id === id);
+    const { owners, receipts, expenses, loading } = state;
     const { success, error } = useToast();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingOwner, setEditingOwner] = useState<Owner | null>(null);

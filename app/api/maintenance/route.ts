@@ -5,8 +5,9 @@ import { getPrismaClient } from '@/lib/database';
 import { getAuthOptions } from "@/lib/auth";
 import { maintenanceSchema } from '@/lib/validation';
 
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
     try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const session = await getServerSession(getAuthOptions() as any) as Session | null;
         if (!session?.user?.email) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -36,7 +37,7 @@ export async function GET() {
         });
 
         // Transform to flat structure
-        const transformedTickets = tickets.map((ticket: any) => ({
+        const transformedTickets = tickets.map((ticket) => ({
             ...ticket,
             propertyName: ticket.property.name,
             tenantName: ticket.tenant?.name,
@@ -52,8 +53,9 @@ export async function GET() {
     }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: Request): Promise<NextResponse> {
     try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const session = await getServerSession(getAuthOptions() as any) as Session | null;
         if (!session?.user?.email) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

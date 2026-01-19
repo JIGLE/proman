@@ -474,7 +474,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     }
   };
 
-  const deleteExpense = async (id: string) => {
+  const deleteExpense = async (_id: string) => {
     if (!userId) throw new Error('User not authenticated');
     // Note: Delete API not implemented yet, so we'll just optimistically update state or throw
     // Actually, I should probably implement the DELETE route for completeness, but for now I'll skip it or add a TODO.
@@ -486,7 +486,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   };
 
   // Maintenance actions
-  const addMaintenance = async (ticketData: any) => { // Type check relaxed for now as payload varies
+  const addMaintenance = async (ticketData: Omit<MaintenanceTicket, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName' | 'tenantName' | 'resolvedAt' | 'images'>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
       const res = await apiFetch('/api/maintenance', 'POST', ticketData);
@@ -499,12 +499,12 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     }
   };
 
-  const updateMaintenance = async (id: string, ticketData: Partial<MaintenanceTicket>) => {
+  const updateMaintenance = async (_id: string, _ticketData: Partial<MaintenanceTicket>) => {
     // TODO: Implement update API
     throw new Error('Update maintenance not implemented yet');
   };
 
-  const deleteMaintenance = async (id: string) => {
+  const deleteMaintenance = async (_id: string) => {
     // TODO: Implement delete API
     throw new Error('Delete maintenance not implemented yet');
   };

@@ -35,5 +35,5 @@ jobs:
         run: |
           set -euo pipefail
           # Run actionlint but do not fail the job automatically; report findings as annotations
-          actionlint -no-color -verbose || true
+          actionlint -no-color -verbose .github/workflows/*.yml || true
           # optionally limit scanning: actionlint -no-color -verbose .github/workflows

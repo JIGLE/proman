@@ -290,12 +290,14 @@ jobs:
         uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
         with:
           fetch-depth: 0
+
       - name: Download built charts
         uses: actions/download-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
           name: release-charts
           path: release-charts
-      - name: Ensure publish credentials available (non-dry-run)
+
+      - name: Ensure publish credentials available
         run: |
           if [ -z "${{ secrets.GHCR_PAT }}" ]; then
             echo "ERROR: GHCR_PAT secret is not set. For non-dry-run publishes we require a Personal Access Token with packages:write. Aborting.";
@@ -303,12 +305,14 @@ jobs:
           else
             echo "GHCR_PAT present"
           fi
+
       - name: Login to GitHub Container Registry (GHCR)
         uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GHCR_PAT }}
+
       - name: Build and push multi-arch image
         uses: docker/build-push-action@64c9b141502b80dbbd71e008a0130ad330f480f8
         with:
@@ -325,38 +329,16 @@ jobs:
             BUILD_VERSION=${{ needs.build-and-publish.outputs.VERSION }}
             GIT_COMMIT=${{ needs.build-and-publish.outputs.GIT_COMMIT }}
             BUILD_TIME=${{ needs.build-and-publish.outputs.BUILD_TIME }}
-      - name: Create annotated git tag and push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.build-and-publish.outputs.VERSION }}
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "actions@github.com"
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
-          git fetch --no-tags
-          if git rev-parse "refs/tags/v${VERSION}" >/dev/null 2>&1; then
-            echo "Tag v${VERSION} already exists"
-          else
-            git tag -a "v${VERSION}" -m "Release v${VERSION}"
-            git push origin "v${VERSION}"
-          fi
-      # Release creation is gated in the later non-dry-run path
-      # (Create Release step is executed only when DRY_RUN is false)
-      - name: Upload packaged chart to release
-        uses: softprops/action-gh-release@78237c54eb15310cb292a15480c4be010be47aeb
-        with:
-          files: "release-charts/proman-*.tgz"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract release note for body
         id: release_note
         run: |
           VERSION=${{ needs.build-and-publish.outputs.VERSION }}
+          # Try to extract the specific version section from README.md
           awk '/^## Releases/{flag=1; next} /^## / && flag{exit} flag{print}' README.md > releases-section.txt || true
-
+          
           if [ -s releases-section.txt ]; then
+            # Look for the version pattern in the section
             awk -v ver="$VERSION" '
               { lines[NR]=$0 }
               $0 ~ ("- Version:[[:space:]]*" ver) { target=NR }
@@ -376,49 +358,18 @@ jobs:
             echo "EOF" >> $GITHUB_OUTPUT
           else
             echo "note<<EOF" >> $GITHUB_OUTPUT
-            echo "Automated release for ${VERSION}" >> $GITHUB_OUTPUT
+            echo "Automated release for v${VERSION}" >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
           fi
 
-      - name: "DRY-RUN: Show intended tag & release"
-        if: ${{ env.DRY_RUN == 'true' }}
-        run: |
-          echo "DRY_RUN enabled — would create tag v${{ needs.build-and-publish.outputs.VERSION }} and release with extracted note"
-          echo "Release note preview:"
-          cat release-note.txt || true
-
-      - name: Create annotated git tag and push
-        if: ${{ env.DRY_RUN != 'true' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.build-and-publish.outputs.VERSION }}
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "actions@github.com"
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
-          git fetch --no-tags
-          if git rev-parse "refs/tags/v${VERSION}" >/dev/null 2>&1; then
-            echo "Tag v${VERSION} already exists"
-          else
-            git tag -a "v${VERSION}" -m "Release v${VERSION}"
-            git push origin "v${VERSION}"
-          fi
-
-      - name: Create GitHub Release
-        if: ${{ env.DRY_RUN != 'true' }}
-        id: create_release
-        uses: actions/create-release@4c11c9fe1dcd9636620a16455165783b20fc7ea0
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          tag_name: v${{ needs.build-and-publish.outputs.VERSION }}
-          release_name: v${{ needs.build-and-publish.outputs.VERSION }}
-          body: ${{ steps.release_note.outputs.note }}
-
-      - name: Upload packaged chart to release
-        if: ${{ env.DRY_RUN != 'true' }}
+      - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@78237c54eb15310cb292a15480c4be010be47aeb
         with:
+          tag_name: v${{ needs.build-and-publish.outputs.VERSION }}
+          name: v${{ needs.build-and-publish.outputs.VERSION }}
+          body: ${{ steps.release_note.outputs.note }}
           files: "release-charts/proman-*.tgz"
+          draft: false
+          prerelease: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -20,7 +20,7 @@ import { MaintenanceStatus, MaintenancePriority } from "@/lib/types";
 
 export function MaintenanceView(): React.ReactElement {
     const { state, addMaintenance } = useApp();
-    const { properties, tenants, maintenance, loading } = state;
+    const { properties, maintenance } = state;
     const { success, error } = useToast();
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);

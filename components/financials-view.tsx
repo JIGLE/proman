@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { ZodError } from "zod";
-import { DollarSign, TrendingUp, TrendingDown, Plus, Filter, Calendar as CalendarIcon, FileText } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Plus, Calendar as CalendarIcon, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 
 export function FinancialsView(): React.ReactElement {
   const { state, addExpense } = useApp();
-  const { properties, receipts, expenses, loading } = state;
+  const { properties, receipts, expenses } = state;
   const { success, error } = useToast();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
