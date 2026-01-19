@@ -234,7 +234,7 @@ jobs:
           fi
       - name: Login to GitHub Container Registry (GHCR)
         if: needs.verify.outputs.dry_run != 'true'
-        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
+        uses: docker/login-action@0567fa5ae8c9a197cb207537dc5cbb43ca3d803f
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -304,7 +304,7 @@ jobs:
             echo "GHCR_PAT present"
           fi
       - name: Login to GitHub Container Registry (GHCR)
-        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
+        uses: docker/login-action@0567fa5ae8c9a197cb207537dc5cbb43ca3d803f
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
