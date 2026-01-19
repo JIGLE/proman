@@ -68,6 +68,11 @@ Release note template:
 - Notes: short description
 
 Example:
+- Date: 2026-01-20  
+- Version: 0.2.0  
+- Image: `ghcr.io/jigle/proman:0.2.0`  
+- Notes: "Stability & TrueNAS SCALE support. Fixed CI/CD lint/test errors, added hostPath support to Helm chart, and resolved container prestart crash."
+
 - Date: 2026-01-10  
 - Version: 0.1.1  
 - Image: `ghcr.io/jigle/proman:0.1.1`  
