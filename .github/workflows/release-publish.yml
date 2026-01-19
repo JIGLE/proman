@@ -249,20 +249,20 @@ jobs:
           cache-to: type=gha,mode=max
           push: ${{ env.DRY_RUN != 'true' }}
           tags: |
-            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ needs.build-and-publish.outputs.VERSION }}
-            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:latest
-            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
+            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ steps.set-vars.outputs.VERSION }}
+            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:latest
+            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
           build-args: |
-            BUILD_VERSION=${{ needs.build-and-publish.outputs.VERSION }}
-            GIT_COMMIT=${{ needs.build-and-publish.outputs.GIT_COMMIT }}
-            BUILD_TIME=${{ needs.build-and-publish.outputs.BUILD_TIME }}
+            BUILD_VERSION=${{ steps.set-vars.outputs.VERSION }}
+            GIT_COMMIT=${{ steps.set-vars.outputs.GIT_COMMIT }}
+            BUILD_TIME=${{ steps.set-vars.outputs.BUILD_TIME }}
 
       - name: Image info
         run: |
           if [ "${DRY_RUN:-false}" = "true" ]; then
-            echo "DRY_RUN: image push was skipped for ghcr.io/${{ github.repository_owner }}/proman:${{ needs.build-and-publish.outputs.VERSION }}"
+            echo "DRY_RUN: image push was skipped for ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ steps.set-vars.outputs.VERSION }}"
           else
-            echo "Image pushed: ghcr.io/${{ github.repository_owner }}/proman:${{ needs.build-and-publish.outputs.VERSION }}"
+            echo "Image pushed: ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ steps.set-vars.outputs.VERSION }}"
           fi
 
       - name: Package Helm chart with appVersion (verify)
