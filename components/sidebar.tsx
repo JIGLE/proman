@@ -15,6 +15,8 @@ import {
   Settings,
   LogOut,
   Mail,
+  Briefcase,
+  Hammer,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -33,7 +35,9 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps): React.ReactEl
   const menuItems = [
     { id: "overview", label: "Overview", icon: Home },
     { id: "properties", label: "Properties", icon: Building2 },
+    { id: "owners", label: "Owners", icon: Briefcase },
     { id: "tenants", label: "Tenants", icon: Users },
+    { id: "maintenance", label: "Maintenance", icon: Hammer },
     { id: "financials", label: "Financials", icon: DollarSign },
     { id: "receipts", label: "Receipts", icon: FileText },
     { id: "correspondence", label: "Correspondence", icon: Mail },

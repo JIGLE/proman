@@ -75,10 +75,72 @@ export interface Correspondence {
   updatedAt: string;
 }
 
+export interface Owner {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  phone?: string;
+  address?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  properties?: PropertyOwner[];
+}
+
+export interface PropertyOwner {
+  id: string;
+  propertyId: string;
+  property?: Property;
+  ownerId: string;
+  ownershipPercentage: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Expense {
+  id: string;
+  userId: string;
+  propertyId: string;
+  propertyName?: string;
+  amount: number;
+  date: string;
+  category: string;
+  description?: string;
+  receiptImage?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type MaintenanceStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+export type MaintenancePriority = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface MaintenanceTicket {
+  id: string;
+  userId: string;
+  propertyId: string;
+  propertyName?: string;
+  tenantId?: string;
+  tenantName?: string;
+  title: string;
+  description: string;
+  status: MaintenanceStatus;
+  priority: MaintenancePriority;
+  images: string; // JSON string
+  cost?: number;
+  assignedTo?: string;
+  resolvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 // Initial empty data
 export const initialProperties: Property[] = [];
 export const initialTenants: Tenant[] = [];
+export const initialOwners: Owner[] = [];
 export const initialReceipts: Receipt[] = [];
+export const initialExpenses: Expense[] = [];
+export const initialMaintenance: MaintenanceTicket[] = [];
 export const initialTemplates: CorrespondenceTemplate[] = [
   {
     id: "welcome-template",

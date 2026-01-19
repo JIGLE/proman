@@ -5,7 +5,9 @@ import { useSession, signIn, signOut } from "next-auth/react";
 import { Sidebar } from "@/components/sidebar";
 import { OverviewView } from "@/components/overview-view";
 import { PropertiesView } from "@/components/properties-view";
+import { OwnersView } from "@/components/owners-view";
 import { TenantsView } from "@/components/tenants-view";
+import { MaintenanceView } from "@/components/maintenance-view";
 import { FinancialsView } from "@/components/financials-view";
 import { ReceiptsView } from "@/components/receipts-view";
 import { CorrespondenceView } from "@/components/correspondence-view";
@@ -489,8 +491,12 @@ export default function Home(): React.ReactElement {
         return <OverviewView />;
       case "properties":
         return <PropertiesView />;
+      case "owners":
+        return <OwnersView />;
       case "tenants":
         return <TenantsView />;
+      case "maintenance":
+        return <MaintenanceView />;
       case "financials":
         return <FinancialsView />;
       case "receipts":

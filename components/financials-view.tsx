@@ -1,215 +1,339 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
-import {
-  LineChart,
-  Line,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from "recharts";
-import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
-
-const revenueData = [
-  { month: "Jan", revenue: 28400, expenses: 12000 },
-  { month: "Feb", revenue: 31200, expenses: 13500 },
-  { month: "Mar", revenue: 29800, expenses: 11800 },
-  { month: "Apr", revenue: 32400, expenses: 14200 },
-  { month: "May", revenue: 30100, expenses: 12900 },
-  { month: "Jun", revenue: 33800, expenses: 13100 },
-  { month: "Jul", revenue: 35200, expenses: 14500 },
-  { month: "Aug", revenue: 34600, expenses: 13800 },
-  { month: "Sep", revenue: 36100, expenses: 14900 },
-  { month: "Oct", revenue: 37500, expenses: 15200 },
-  { month: "Nov", revenue: 35800, expenses: 14100 },
-  { month: "Dec", revenue: 38200, expenses: 15800 },
-];
-
-const propertyPerformance = [
-  { property: "Sunset Villa", revenue: 42000 },
-  { property: "Downtown Loft", revenue: 50400 },
-  { property: "Mountain Retreat", revenue: 33600 },
-  { property: "Urban Studio", revenue: 38400 },
-  { property: "Lakeside Condo", revenue: 34800 },
-  { property: "Garden Townhouse", revenue: 39600 },
-];
-
-export type FinancialsViewProps = Record<string, never>
+import { useState, useMemo } from "react";
+import { ZodError } from "zod";
+import { DollarSign, TrendingUp, TrendingDown, Plus, Filter, Calendar as CalendarIcon, FileText } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { useApp } from "@/lib/app-context-db";
+import { expenseSchema, ExpenseFormData } from "@/lib/validation";
+import { useToast } from "@/lib/toast-context";
+import { cn } from "@/lib/utils";
 
 export function FinancialsView(): React.ReactElement {
-  const totalRevenue = revenueData.reduce((acc, curr) => acc + curr.revenue, 0);
-  const totalExpenses = revenueData.reduce((acc, curr) => acc + curr.expenses, 0);
-  const netIncome = totalRevenue - totalExpenses;
-  const avgMonthlyRevenue = totalRevenue / revenueData.length;
+  const { state, addExpense } = useApp();
+  const { properties, receipts, expenses, loading } = state;
+  const { success, error } = useToast();
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [timeRange, setTimeRange] = useState("all"); // all, month, year
+
+  const [formData, setFormData] = useState<ExpenseFormData>({
+    propertyId: "",
+    amount: 0,
+    date: new Date().toISOString().split('T')[0],
+    category: "",
+    description: "",
+  });
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof ExpenseFormData, string>>>({});
+
+  // Calculations
+  const metrics = useMemo(() => {
+    let filteredReceipts = receipts;
+    let filteredExpenses = expenses;
+
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    if (timeRange === "month") {
+      filteredReceipts = receipts.filter(r => {
+        const d = new Date(r.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+      filteredExpenses = expenses.filter(e => {
+        const d = new Date(e.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      });
+    } else if (timeRange === "year") {
+      filteredReceipts = receipts.filter(r => {
+        const d = new Date(r.date);
+        return d.getFullYear() === currentYear;
+      });
+      filteredExpenses = expenses.filter(e => {
+        const d = new Date(e.date);
+        return d.getFullYear() === currentYear;
+      });
+    }
+
+    const totalIncome = filteredReceipts.reduce((sum, r) => sum + r.amount, 0);
+    const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const netIncome = totalIncome - totalExpenses;
+
+    return { totalIncome, totalExpenses, netIncome, filteredReceipts, filteredExpenses };
+  }, [receipts, expenses, timeRange]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setFormErrors({});
+
+    try {
+      const validatedData = expenseSchema.parse(formData);
+      await addExpense(validatedData);
+      success('Expense recorded successfully!');
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (err: unknown) {
+      if (err instanceof ZodError) {
+        const errors: Partial<Record<keyof ExpenseFormData, string>> = {};
+        err.issues.forEach((issue) => {
+          const field = issue.path[0] as keyof ExpenseFormData;
+          errors[field] = issue.message;
+        });
+        setFormErrors(errors);
+        error('Please fix the form errors below.');
+      } else {
+        error('Failed to save expense.');
+        console.error(err);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      propertyId: "",
+      amount: 0,
+      date: new Date().toISOString().split('T')[0],
+      category: "",
+      description: "",
+    });
+    setFormErrors({});
+  };
+
+  const categories = [
+    "Maintenance",
+    "Repairs",
+    "Utilities",
+    "Insurance",
+    "Taxes",
+    "Mortgage",
+    "Management Fees",
+    "Other"
+  ];
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
-          Financial Overview
-        </h2>
-        <p className="text-zinc-400">Track revenue, expenses, and profitability</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-zinc-50">Financials</h2>
+          <p className="text-zinc-400">Track income, expenses, and cash flow</p>
+        </div>
+        <div className="flex gap-2">
+          <Select value={timeRange} onValueChange={setTimeRange}>
+            <SelectTrigger className="w-[150px]">
+              <CalendarIcon className="w-4 h-4 mr-2" />
+              <SelectValue placeholder="Time Range" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Time</SelectItem>
+              <SelectItem value="month">This Month</SelectItem>
+              <SelectItem value="year">This Year</SelectItem>
+            </SelectContent>
+          </Select>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={resetForm} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Add Expense
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-zinc-900 border-zinc-800 sm:max-w-[500px]">
+              <DialogHeader>
+                <DialogTitle>Record Expense</DialogTitle>
+                <DialogDescription>Add a new property expense to track your spending</DialogDescription>
+              </DialogHeader>
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="property">Property</Label>
+                    <Select
+                      value={formData.propertyId}
+                      onValueChange={(val) => setFormData({ ...formData, propertyId: val })}
+                    >
+                      <SelectTrigger id="property" className={formErrors.propertyId ? 'border-red-500' : ''}>
+                        <SelectValue placeholder="Select property" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {properties.map(p => (
+                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {formErrors.propertyId && <p className="text-xs text-red-500">{formErrors.propertyId}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={formData.category}
+                      onValueChange={(val) => setFormData({ ...formData, category: val })}
+                    >
+                      <SelectTrigger id="category" className={formErrors.category ? 'border-red-500' : ''}>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {categories.map(c => (
+                          <SelectItem key={c} value={c}>{c}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {formErrors.category && <p className="text-xs text-red-500">{formErrors.category}</p>}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="amount">Amount ($)</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      step="0.01"
+                      value={formData.amount || ''}
+                      onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) })}
+                      className={formErrors.amount ? 'border-red-500' : ''}
+                    />
+                    {formErrors.amount && <p className="text-xs text-red-500">{formErrors.amount}</p>}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Input
+                      id="date"
+                      type="date"
+                      value={formData.date}
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                      className={formErrors.date ? 'border-red-500' : ''}
+                    />
+                    {formErrors.date && <p className="text-xs text-red-500">{formErrors.date}</p>}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description || ''}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    placeholder="Details about the expense..."
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-4">
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
+                  <Button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Saving...' : 'Save Expense'}</Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Total Revenue
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-zinc-400" />
+            <CardTitle className="text-sm font-medium text-zinc-400">Total Income</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">
-              ${totalRevenue.toLocaleString()}
-            </div>
-            <p className="text-xs text-zinc-400 flex items-center gap-1 mt-1">
-              <TrendingUp className="h-3 w-3 text-green-500" />
-              <span className="text-green-500">+12.5%</span> from last year
-            </p>
+            <div className="text-2xl font-bold text-zinc-50">${metrics.totalIncome.toLocaleString()}</div>
+            <p className="text-xs text-zinc-500">From rent and deposits</p>
           </CardContent>
         </Card>
-
-        <Card>
+        <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Total Expenses
-            </CardTitle>
-            <TrendingDown className="h-4 w-4 text-zinc-400" />
+            <CardTitle className="text-sm font-medium text-zinc-400">Total Expenses</CardTitle>
+            <TrendingDown className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">
-              ${totalExpenses.toLocaleString()}
-            </div>
-            <p className="text-xs text-zinc-400 flex items-center gap-1 mt-1">
-              <TrendingUp className="h-3 w-3 text-red-500" />
-              <span className="text-red-500">+3.2%</span> from last year
-            </p>
+            <div className="text-2xl font-bold text-zinc-50">${metrics.totalExpenses.toLocaleString()}</div>
+            <p className="text-xs text-zinc-500">Maintenance, repairs, etc.</p>
           </CardContent>
         </Card>
-
-        <Card>
+        <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Net Income
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-zinc-400" />
+            <CardTitle className="text-sm font-medium text-zinc-400">Net Income</CardTitle>
+            <DollarSign className={cn("h-4 w-4", metrics.netIncome >= 0 ? "text-green-500" : "text-red-500")} />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">
-              ${netIncome.toLocaleString()}
+            <div className={cn("text-2xl font-bold", metrics.netIncome >= 0 ? "text-green-500" : "text-red-500")}>
+              ${metrics.netIncome.toLocaleString()}
             </div>
-            <p className="text-xs text-zinc-400 flex items-center gap-1 mt-1">
-              <TrendingUp className="h-3 w-3 text-green-500" />
-              <span className="text-green-500">+18.7%</span> from last year
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Avg Monthly Revenue
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-zinc-400" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">
-              ${Math.round(avgMonthlyRevenue).toLocaleString()}
-            </div>
-            <p className="text-xs text-zinc-400 mt-1">
-              Across all properties
-            </p>
+            <p className="text-xs text-zinc-500">Cash flow for period</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+        {/* Recent Income */}
+        <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
-            <CardTitle className="text-zinc-50">Revenue vs Expenses</CardTitle>
-            <CardDescription>Monthly comparison for the year</CardDescription>
+            <CardTitle>Recent Income</CardTitle>
+            <CardDescription>Latest rent payments received</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={revenueData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis
-                  dataKey="month"
-                  stroke="#71717a"
-                  style={{ fontSize: "12px" }}
-                />
-                <YAxis stroke="#71717a" style={{ fontSize: "12px" }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#18181b",
-                    border: "1px solid #27272a",
-                    borderRadius: "6px",
-                    color: "#fafafa",
-                  }}
-                />
-                <Legend />
-                <Line
-                  type="monotone"
-                  dataKey="revenue"
-                  stroke="#22c55e"
-                  strokeWidth={2}
-                  dot={{ fill: "#22c55e", r: 4 }}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="expenses"
-                  stroke="#ef4444"
-                  strokeWidth={2}
-                  dot={{ fill: "#ef4444", r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <div className="space-y-4">
+              {metrics.filteredReceipts.slice(0, 5).map(receipt => (
+                <div key={receipt.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-green-900/20 rounded-full">
+                      <DollarSign className="w-4 h-4 text-green-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-zinc-200">{receipt.propertyName}</p>
+                      <p className="text-xs text-zinc-500">{new Date(receipt.date).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-green-500">
+                    +${receipt.amount.toLocaleString()}
+                  </div>
+                </div>
+              ))}
+              {metrics.filteredReceipts.length === 0 && (
+                <p className="text-sm text-zinc-500 text-center py-4">No income records found</p>
+              )}
+            </div>
           </CardContent>
         </Card>
 
-        <Card>
+        {/* Recent Expenses */}
+        <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader>
-            <CardTitle className="text-zinc-50">Property Performance</CardTitle>
-            <CardDescription>Annual revenue by property</CardDescription>
+            <CardTitle>Recent Expenses</CardTitle>
+            <CardDescription>Latest tracked property costs</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={propertyPerformance}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis
-                  dataKey="property"
-                  stroke="#71717a"
-                  style={{ fontSize: "11px" }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis stroke="#71717a" style={{ fontSize: "12px" }} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#18181b",
-                    border: "1px solid #27272a",
-                    borderRadius: "6px",
-                    color: "#fafafa",
-                  }}
-                />
-                <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            <div className="space-y-4">
+              {metrics.filteredExpenses.slice(0, 5).map(expense => (
+                <div key={expense.id} className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-2 bg-red-900/20 rounded-full">
+                      <FileText className="w-4 h-4 text-red-500" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-zinc-200">{expense.category}</p>
+                      <p className="text-xs text-zinc-500">
+                        {expense.propertyName ? expense.propertyName : 'Unknown Property'} • {new Date(expense.date).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-red-500">
+                    -${expense.amount.toLocaleString()}
+                  </div>
+                </div>
+              ))}
+              {metrics.filteredExpenses.length === 0 && (
+                <p className="text-sm text-zinc-500 text-center py-4">No expense records found</p>
+              )}
+            </div>
           </CardContent>
         </Card>
       </div>
