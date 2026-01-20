@@ -22,7 +22,7 @@ ingress:
 env:
   - name: DATABASE_URL
     # Use a hostPath-mounted file for SQLite on TrueNAS SCALE
-    value: "file:/data/proman.db"
+    value: "file:/app/data/proman.db"
   - name: NEXTAUTH_URL
     value: "http://<TRUENAS_IP_OR_HOSTNAME>"
   - name: NEXTAUTH_SECRET
