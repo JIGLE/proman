@@ -151,8 +151,50 @@ jobs:
           name: release-charts-dryrun
           path: release-charts
 
-  build-and-publish:
+  # Pre-publish credential verification
+  verify-publish-auth:
     needs: verify
+    runs-on: ubuntu-latest
+    if: needs.verify.outputs.dry_run != 'true'
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+        with:
+          fetch-depth: 0
+      - name: Detect publish credential
+        id: detect-creds
+        run: |
+          # Prefer GHCR_PAT but allow fallback to GITHUB_TOKEN
+          if [ -n "${{ secrets.GHCR_PAT }}" ]; then
+            echo "creds=ghcr_pat" >> $GITHUB_OUTPUT
+            echo "TOKEN=${{ secrets.GHCR_PAT }}" >> $GITHUB_ENV
+          elif [ -n "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "creds=github_token" >> $GITHUB_OUTPUT
+            echo "TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+          else
+            echo "::error ::No publish credential found (GHCR_PAT or GITHUB_TOKEN). Aborting.";
+            exit 1;
+          fi
+      - name: Test GHCR login
+        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ env.TOKEN }}
+      - name: Optional: verify registry access
+        run: |
+          set -euo pipefail
+          OWNER=${{ github.repository_owner }}
+          # Best-effort check: try listing tags for the repository (may 403 if token has limited scope)
+          if curl -sS -f -H "Authorization: Bearer ${TOKEN}" "https://ghcr.io/v2/${OWNER}/proman/tags/list" >/dev/null 2>&1; then
+            echo "GHCR access verified for ${OWNER}/proman"
+          else
+            echo "Warning: GHCR login succeeded but listing tags failed; token may lack registry read permissions. Proceeding as login succeeded."
+          fi
+
+  build-and-publish:
+    needs: [verify, verify-publish-auth]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:

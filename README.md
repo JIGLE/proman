@@ -77,6 +77,13 @@ Example:
 
 Releases are created from the `publish-ghcr.yml` workflow. The recommended and safest method is to publish by creating an annotated tag `vX.Y.Z`. You can also run the workflow manually (via **Actions → Build and publish to GHCR → Run workflow**) and use the `dry_run` and `version` inputs for testing and overrides.
 
+**Credential requirements for publishing**
+
+- The workflow prefers a user-provided Personal Access Token stored as the repository secret `GHCR_PAT` (must include `packages: write`).
+- If `GHCR_PAT` is not present the workflow will **fall back to** using the built-in `GITHUB_TOKEN` (only if repository **Actions → Workflow permissions** include **packages: write**).
+- A new pre-publish job validates credentials by attempting a `docker login` to `ghcr.io` and will fail early if no usable credential is found.
+- If your `production` environment has protection rules, ensure the environment grants access to the needed secret (or add `GHCR_PAT` to the environment secrets) before running a non-dry-run publish.
+
 - Recommended (tag-based release):
   1. Update the package version: `npm version X.Y.Z --no-git-tag-version`
   2. Commit the change: `git add package.json package-lock.json && git commit -m "chore(release): X.Y.Z"`
