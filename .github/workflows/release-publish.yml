@@ -1,7 +1,4 @@
-# File (intended final path): `.github/workflows/release-publish.yml` — purpose: release/publish (build images, package helm, create release)
 name: Release - Publish to GHCR
-# Note: For publishing to GHCR this workflow prefers a user-provided PAT stored in the repository secret `GHCR_PAT`.
-# If `GHCR_PAT` is not present the workflow will fall back to using `GITHUB_TOKEN` (requires Actions permissions: `packages: write`).
 
 on:
   push:
@@ -11,454 +8,144 @@ on:
       dry_run:
         description: 'Run as dry run (true/false)'
         required: false
-        default: 'true'
+        default: 'false'
       version:
         description: 'Optional version override (e.g., 1.2.3)'
         required: false
         default: ''
-  schedule:
-    - cron: '0 6 * * 1' # weekly on Monday at 06:00 UTC (DRY_RUN)
 
 permissions:
   contents: write
   packages: write
   id-token: write
 
-# Job outputs: verify will publish whether this is a dry run so downstream diagnostic job can conditionally run
-
-
 concurrency:
-  group: publish-ghcr-${{ github.ref }}
+  group: release-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  smoke:
-    runs-on: ubuntu-latest
-    # This unconditional smoke job helps diagnose whether workflows are allowed to run.
-    steps:
-      - name: Checkout
-        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
-        with:
-          fetch-depth: 0
-      - name: Show basic context
-        run: |
-          echo "SMOKE CHECK"
-          echo "EVENT: ${GITHUB_EVENT_NAME}"
-          echo "REF: ${GITHUB_REF}"
-          echo "SHA: ${GITHUB_SHA}"
-          uname -a
-          whoami || true
-          ls -la || true
-          if [ -z "${{ secrets.GHCR_PAT }}" ] && [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
-            echo "GHCR_AUTH_PRESENT=false" > smoke.txt;
-          else
-            echo "GHCR_AUTH_PRESENT=true" > smoke.txt;
-          fi
-      - name: Upload smoke artifact
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
-        with:
-          name: smoke
-          path: smoke.txt
-
-  verify:
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    outputs:
-      dry_run: ${{ steps.dryrun.outputs.dry_run }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
-        with:
-          fetch-depth: 0
-
-      - name: Set DRY_RUN for scheduled runs and tag pushes
-        id: dryrun
-        run: |
-          if [ "${GITHUB_EVENT_NAME}" = "schedule" ] || [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
-            echo "DRY_RUN=false" >> $GITHUB_ENV
-            echo "dry_run=false" >> $GITHUB_OUTPUT
-            echo "Scheduled or tag run — setting DRY_RUN=false to allow release"
-          else
-            DRY=${{ github.event.inputs.dry_run || 'false' }}
-            echo "DRY_RUN=${DRY}" >> $GITHUB_ENV
-            echo "dry_run=${DRY}" >> $GITHUB_OUTPUT
-          fi
-        shell: bash
-
-      - name: Setup Node.js
-        uses: actions/setup-node@65d868f8d4d85d7d4abb7de0875cde3fcc8798f5
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Type-check + lint
-        run: |
-          npm run type-check || (echo "Type-check failed" && false)
-          npm run lint || (echo "Lint failed" && false)
-
-  diagnostic:
-    needs: verify
-    runs-on: ubuntu-latest
-    if: needs.verify.outputs.dry_run == 'true'
-    steps:
-      - name: Checkout
-        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
-        with:
-          fetch-depth: 0
-      - name: Setup Node.js
-        uses: actions/setup-node@65d868f8d4d85d7d4abb7de0875cde3fcc8798f5
-        with:
-          node-version: '20'
-      - name: Install dependencies
-        run: npm ci
-      - name: Build (dry-run)
-        run: |
-          rm -rf .next
-          npm run build
-      - name: Set VERSION for diagnostic
-        id: set-vars
-        run: |
-          set -euo pipefail
-          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
-            TAG=${GITHUB_REF#refs/tags/}
-            TAG=${TAG#v}
-            if [ -n "${{ github.event.inputs.version }}" ]; then
-              VERSION="${{ github.event.inputs.version }}"
-            else
-              VERSION="$TAG"
-            fi
-          else
-            if [ -n "${{ github.event.inputs.version }}" ]; then
-              VERSION="${{ github.event.inputs.version }}"
-            else
-              VERSION=$(node -e 'console.log(require("./package.json").version)')
-            fi
-          fi
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-      - name: Package Helm chart (verify)
-        run: |
-          set -euo pipefail
-          # Use the verification helper which sets both Chart.version and appVersion, lints, packages, and verifies Chart.yaml
-          ./scripts/package-helm-and-verify.sh release-charts "${VERSION}"
-        shell: bash
-      - name: Upload artifacts
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
-        with:
-          name: release-charts-dryrun
-          path: release-charts
-
-  # Pre-publish credential verification
-  verify-publish-auth:
-    needs: verify
-    runs-on: ubuntu-latest
-    if: needs.verify.outputs.dry_run != 'true'
-    timeout-minutes: 10
-    steps:
-      - name: Checkout
-        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
-        with:
-          fetch-depth: 0
-      - name: Detect publish credential
-        id: detect-creds
-        run: |
-          # Prefer GHCR_PAT but allow fallback to GITHUB_TOKEN
-          if [ -n "${{ secrets.GHCR_PAT }}" ]; then
-            echo "creds=ghcr_pat" >> $GITHUB_OUTPUT
-            echo "TOKEN=${{ secrets.GHCR_PAT }}" >> $GITHUB_ENV
-          elif [ -n "${{ secrets.GITHUB_TOKEN }}" ]; then
-            echo "creds=github_token" >> $GITHUB_OUTPUT
-            echo "TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
-          else
-            echo "::error ::No publish credential found (GHCR_PAT or GITHUB_TOKEN). Aborting.";
-            exit 1;
-          fi
-      - name: Test GHCR login
-        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ env.TOKEN }}
-      - name: "Optional: verify registry access"
-        run: |
-          set -euo pipefail
-          OWNER=${{ github.repository_owner }}
-          # Best-effort check: try listing tags for the repository (may 403 if token has limited scope)
-          if curl -sS -f -H "Authorization: Bearer ${TOKEN}" "https://ghcr.io/v2/${OWNER}/proman/tags/list" >/dev/null 2>&1; then
-            echo "GHCR access verified for ${OWNER}/proman"
-          else
-            echo "Warning: GHCR login succeeded but listing tags failed; token may lack registry read permissions. Proceeding as login succeeded."
-          fi
-
-  build-and-publish:
-    needs: [verify, verify-publish-auth]
+  release:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
-      DRY_RUN: ${{ needs.verify.outputs.dry_run }}
-      DOCKERHUB_CONFIGURED: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
-      REGISTRY_CONFIGURED: ${{ secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '' && secrets.REGISTRY_PASSWORD != '' }}
-
-    outputs:
-      VERSION: ${{ steps.set-vars.outputs.VERSION }}
-      OWNER_LOWER: ${{ steps.set-vars.outputs.OWNER_LOWER }}
-      GIT_COMMIT: ${{ steps.set-vars.outputs.GIT_COMMIT }}
-      BUILD_TIME: ${{ steps.set-vars.outputs.BUILD_TIME }}
-      DRY_RUN: ${{ needs.verify.outputs.dry_run }}
-
+      DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+    
     steps:
       - name: Checkout
-        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          persist-credentials: true
 
-      - name: Setup Node.js
-        uses: actions/setup-node@65d868f8d4d85d7d4abb7de0875cde3fcc8798f5
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: '**/package-lock.json'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Clean build
+      - name: Set Variables
+        id: vars
         run: |
-          rm -rf .next
-          npm run build
-
-      - id: set-vars
-        run: |
-          set -euo pipefail
-          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
-            TAG=${GITHUB_REF#refs/tags/}
-            TAG=${TAG#v}
-            if [ -n "${{ github.event.inputs.version }}" ]; then
-              VERSION="${{ github.event.inputs.version }}"
-            else
-              VERSION="$TAG"
-            fi
+          # Determine version
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+            VERSION=${VERSION#refs/tags/}
           else
-            if [ -n "${{ github.event.inputs.version }}" ]; then
-              VERSION="${{ github.event.inputs.version }}"
-            else
-              VERSION=$(node -e 'console.log(require("./package.json").version)')
+            VERSION="${{ github.event.inputs.version }}"
+            if [ -z "$VERSION" ]; then
+              VERSION=$(grep '"version":' package.json | cut -d'"' -f4)
             fi
           fi
-          # compute lowercase owner for GHCR tags
-          OWNER_LOWER=$(echo "${GITHUB_REPOSITORY%%/*}" | tr '[:upper:]' '[:lower:]')
-          REPO_NAME_LOWER=$(echo "${GITHUB_REPOSITORY#*/}" | tr '[:upper:]' '[:lower:]')
-
-          # Prepare tags as a comma-separated list to avoid empty line issues
-          TAGS="ghcr.io/${OWNER_LOWER}/${REPO_NAME_LOWER}:${VERSION},ghcr.io/${OWNER_LOWER}/${REPO_NAME_LOWER}:latest,ghcr.io/${OWNER_LOWER}/${REPO_NAME_LOWER}:${GITHUB_SHA}"
-
-          if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
-            DOCKERHUB_USER_LOWER=$(echo "${{ secrets.DOCKERHUB_USERNAME }}" | tr '[:upper:]' '[:lower:]')
-            TAGS="${TAGS},${DOCKERHUB_USER_LOWER}/${REPO_NAME_LOWER}:${VERSION},${DOCKERHUB_USER_LOWER}/${REPO_NAME_LOWER}:latest"
-          fi
-
-          if [ -n "${{ secrets.REGISTRY }}" ] && [ -n "${{ secrets.REGISTRY_USERNAME }}" ]; then
-             REGISTRY_USER_LOWER=$(echo "${{ secrets.REGISTRY_USERNAME }}" | tr '[:upper:]' '[:lower:]')
-             TAGS="${TAGS},${{ secrets.REGISTRY }}/${REGISTRY_USER_LOWER}/${REPO_NAME_LOWER}:${VERSION},${{ secrets.REGISTRY }}/${REGISTRY_USER_LOWER}/${REPO_NAME_LOWER}:latest"
-          fi
-
-          echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
-          echo "GIT_COMMIT=${GITHUB_SHA}" >> $GITHUB_OUTPUT
-          echo "BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
-          echo "OWNER_LOWER=${OWNER_LOWER}" >> $GITHUB_OUTPUT
-          echo "TAGS=${TAGS}" >> $GITHUB_OUTPUT
-        shell: bash
-
-      - name: "Sanity check: ensure VERSION computed"
-        run: |
-          if [ -z "${{ steps.set-vars.outputs.VERSION }}" ]; then
-            echo "ERROR: VERSION is empty; aborting"
-            exit 1
-          else
-            echo "VERSION=${{ steps.set-vars.outputs.VERSION }}"
-          fi
+          
+          # Compute lowercase names for registries
+          OWNER_LOWER=$(echo "${{ github.repository_owner }}" | tr '[:upper:]' '[:lower:]')
+          REPO_NAME_LOWER=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]')
+          
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "owner_lower=${OWNER_LOWER}" >> $GITHUB_OUTPUT
+          echo "repo_lower=${REPO_NAME_LOWER}" >> $GITHUB_OUTPUT
+          echo "full_repo_ghcr=ghcr.io/${OWNER_LOWER}/${REPO_NAME_LOWER}" >> $GITHUB_OUTPUT
+          
+          # Build Time and Commit
+          echo "build_time=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
+          echo "git_commit=${{ github.sha }}" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@45136fd328ae20ed788d00d3bada68ab496c214c
+        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@c7c4c00f3eef127be487a50899a220e44c6bcc87
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: 'latest'
+
       - name: Login to GitHub Container Registry (GHCR)
-        if: needs.verify.outputs.dry_run != 'true'
-        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
+        if: env.DRY_RUN != 'true'
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          # Prefer GHCR_PAT (user PAT) for package writes; fallback to GITHUB_TOKEN
           password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Login to Docker Hub
-        if: github.event_name != 'schedule' && env.DOCKERHUB_CONFIGURED == 'true'
-        continue-on-error: true
-        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
+        if: env.DRY_RUN != 'true' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to Custom Registry
-        if: github.event_name != 'schedule' && env.REGISTRY_CONFIGURED == 'true'
-        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
+        if: env.DRY_RUN != 'true' && secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '' && secrets.REGISTRY_PASSWORD != ''
+        uses: docker/login-action@v3
         with:
           registry: ${{ secrets.REGISTRY }}
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Build and push multi-arch image
-        uses: docker/build-push-action@64c9b141502b80dbbd71e008a0130ad330f480f8
+      - name: Docker Metadata
+        id: meta
+        uses: docker/metadata-action@v5
         with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          push: ${{ env.DRY_RUN != 'true' }}
-          tags: ${{ steps.set-vars.outputs.TAGS }}
-          build-args: |
-            BUILD_VERSION=${{ steps.set-vars.outputs.VERSION }}
-            GIT_COMMIT=${{ steps.set-vars.outputs.GIT_COMMIT }}
-            BUILD_TIME=${{ steps.set-vars.outputs.BUILD_TIME }}
-
-      - name: Image info
-        run: |
-          if [ "${DRY_RUN:-false}" = "true" ]; then
-            echo "DRY_RUN: image push was skipped for ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ steps.set-vars.outputs.VERSION }}"
-          else
-            echo "Image pushed: ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ steps.set-vars.outputs.VERSION }}"
-          fi
-
-      - name: Package Helm chart with appVersion (verify)
-        run: |
-          set -euo pipefail
-          # Use the verification helper which sets Chart.version and appVersion, lints, packages, and verifies Chart.yaml
-          ./scripts/package-helm-and-verify.sh release-charts "${{ steps.set-vars.outputs.VERSION }}"
-        shell: bash
-
-      - name: Upload packaged chart for inspection
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
-        with:
-          name: release-charts
-          path: release-charts
-
-  publish:
-    name: Publish (requires approval)
-    needs: [build-and-publish, verify]
-    runs-on: ubuntu-latest
-    if: needs.verify.outputs.dry_run != 'true'
-    environment: production
-    timeout-minutes: 60
-    steps:
-      - name: Checkout
-        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
-        with:
-          fetch-depth: 0
-
-      - name: Download built charts
-        uses: actions/download-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
-        with:
-          name: release-charts
-          path: release-charts
-      - name: Ensure publish credentials available (non-dry-run)
-        run: |
-          if [ -z "${{ secrets.GHCR_PAT }}" ] && [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
-            echo "ERROR: No publish credential found (GHCR_PAT or GITHUB_TOKEN). Aborting.";
-            exit 1;
-          else
-            echo "Publish auth present (GHCR_PAT preferred; GITHUB_TOKEN will be used if it has 'packages: write' permission)"
-            if [ -z "${{ secrets.GHCR_PAT }}" ]; then
-              echo "Using GITHUB_TOKEN — ensure Actions permissions allow 'packages: write' in repository settings"
-            fi
-          fi
-      - name: Login to GitHub Container Registry (GHCR)
-        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          # Prefer GHCR_PAT (user PAT) but fallback to GITHUB_TOKEN
-          password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
-      - name: Build and push multi-arch image
-        uses: docker/build-push-action@64c9b141502b80dbbd71e008a0130ad330f480f8
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          push: true
+          images: |
+            ghcr.io/${{ steps.vars.outputs.owner_lower }}/${{ steps.vars.outputs.repo_lower }}
+            ${{ secrets.DOCKERHUB_USERNAME != '' && format('{0}/{1}', secrets.DOCKERHUB_USERNAME, steps.vars.outputs.repo_lower) || '' }}
+            ${{ secrets.REGISTRY != '' && format('{0}/{1}/{2}', secrets.REGISTRY, secrets.REGISTRY_USERNAME, steps.vars.outputs.repo_lower) || '' }}
           tags: |
-            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ needs.build-and-publish.outputs.VERSION }}
-            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:latest
-            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
-          build-args: |
-            BUILD_VERSION=${{ needs.build-and-publish.outputs.VERSION }}
-            GIT_COMMIT=${{ needs.build-and-publish.outputs.GIT_COMMIT }}
-            BUILD_TIME=${{ needs.build-and-publish.outputs.BUILD_TIME }}
-      - name: Create annotated git tag and push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          VERSION: ${{ needs.build-and-publish.outputs.VERSION }}
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "actions@github.com"
-          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
-          git fetch --no-tags
-          if git rev-parse "refs/tags/v${VERSION}" >/dev/null 2>&1; then
-            echo "Tag v${VERSION} already exists"
-          else
-            git tag -a "v${VERSION}" -m "Release v${VERSION}"
-            git push origin "v${VERSION}"
-          fi
-      # The image was already pushed in build-and-publish if DRY_RUN was false.
-      # The 'publish' job now focuses on creating the GitHub Release.
-      # We skip redundant login and build steps here.
+            type=raw,value=${{ steps.vars.outputs.version }}
+            type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', github.event.repository.default_branch) || startsWith(github.ref, 'refs/tags/v') }}
+            type=sha
 
-      - name: Extract release note for body
-        id: release_note
-        run: |
-          VERSION="${{ needs.build-and-publish.outputs.VERSION }}"
-          # Try to extract the specific version section from README.md
-          awk '/^## Releases/{flag=1; next} /^## / && flag{exit} flag{print}' README.md > releases-section.txt || true
-          
-          if [ -s releases-section.txt ]; then
-            # Look for the version pattern in the section
-            awk -v ver="$VERSION" '
-              { lines[NR]=$0 }
-              $0 ~ ("- Version:[[:space:]]*" ver) { target=NR }
-              END {
-                if (target) {
-                  s=target-3; if (s<1) s=1
-                  e=target+6; if (e>NR) e=NR
-                  for(i=s;i<=e;i++) print lines[i]
-                }
-              }' releases-section.txt > release-note.txt || true
-          fi
-
-          if [ -s release-note.txt ]; then
-            cat release-note.txt
-            echo "note<<EOF" >> $GITHUB_OUTPUT
-            cat release-note.txt >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          else
-            echo "note<<EOF" >> $GITHUB_OUTPUT
-            echo "Automated release for v${VERSION}" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create Release and Upload Assets
-        uses: softprops/action-gh-release@78237c54eb15310cb292a15480c4be010be47aeb
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v6
         with:
-          tag_name: v${{ needs.build-and-publish.outputs.VERSION }}
-          name: v${{ needs.build-and-publish.outputs.VERSION }}
-          body: ${{ steps.release_note.outputs.note }}
-          files: "release-charts/proman-*.tgz"
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ env.DRY_RUN != 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            BUILD_VERSION=${{ steps.vars.outputs.version }}
+            GIT_COMMIT=${{ steps.vars.outputs.git_commit }}
+            BUILD_TIME=${{ steps.vars.outputs.build_time }}
+
+      - name: Package Helm Chart
+        run: |
+          chmod +x ./scripts/package-helm-and-verify.sh
+          ./scripts/package-helm-and-verify.sh release-charts "${{ steps.vars.outputs.version }}"
+
+      - name: Create GitHub Release
+        if: env.DRY_RUN != 'true' && startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release v${{ steps.vars.outputs.version }}
+          body: |
+            ## ProMan Release v${{ steps.vars.outputs.version }}
+            
+            Multi-arch Docker images are available at:
+            - `ghcr.io/${{ steps.vars.outputs.owner_lower }}/${{ steps.vars.outputs.repo_lower }}:${{ steps.vars.outputs.version }}`
+            
+            To install on TrueNAS SCALE or any Kubernetes cluster:
+            1. Download the `proman-${{ steps.vars.outputs.version }}.tgz` chart from this release.
+            2. Follow the instructions in [README_TRUENAS.md](https://github.com/${{ github.repository }}/blob/main/README_TRUENAS.md).
+          files: release-charts/*.tgz
           draft: false
           prerelease: false
         env:
