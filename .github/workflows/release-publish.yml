@@ -1,5 +1,7 @@
 # File (intended final path): `.github/workflows/release-publish.yml` — purpose: release/publish (build images, package helm, create release)
 name: Release - Publish to GHCR
+# Note: For publishing to GHCR this workflow prefers a user-provided PAT stored in the repository secret `GHCR_PAT`.
+# If `GHCR_PAT` is not present the workflow will fall back to using `GITHUB_TOKEN` (requires Actions permissions: `packages: write`).
 
 on:
   push:
@@ -47,7 +49,11 @@ jobs:
           uname -a
           whoami || true
           ls -la || true
-          if [ -z "${{ secrets.GHCR_PAT }}" ]; then echo "GHCR_PAT_PRESENT=false" > smoke.txt; else echo "GHCR_PAT_PRESENT=true" > smoke.txt; fi
+          if [ -z "${{ secrets.GHCR_PAT }}" ] && [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "GHCR_AUTH_PRESENT=false" > smoke.txt;
+          else
+            echo "GHCR_AUTH_PRESENT=true" > smoke.txt;
+          fi
       - name: Upload smoke artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
@@ -145,8 +151,50 @@ jobs:
           name: release-charts-dryrun
           path: release-charts
 
-  build-and-publish:
+  # Pre-publish credential verification
+  verify-publish-auth:
     needs: verify
+    runs-on: ubuntu-latest
+    if: needs.verify.outputs.dry_run != 'true'
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+        with:
+          fetch-depth: 0
+      - name: Detect publish credential
+        id: detect-creds
+        run: |
+          # Prefer GHCR_PAT but allow fallback to GITHUB_TOKEN
+          if [ -n "${{ secrets.GHCR_PAT }}" ]; then
+            echo "creds=ghcr_pat" >> $GITHUB_OUTPUT
+            echo "TOKEN=${{ secrets.GHCR_PAT }}" >> $GITHUB_ENV
+          elif [ -n "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "creds=github_token" >> $GITHUB_OUTPUT
+            echo "TOKEN=${{ secrets.GITHUB_TOKEN }}" >> $GITHUB_ENV
+          else
+            echo "::error ::No publish credential found (GHCR_PAT or GITHUB_TOKEN). Aborting.";
+            exit 1;
+          fi
+      - name: Test GHCR login
+        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ env.TOKEN }}
+      - name: Optional: verify registry access
+        run: |
+          set -euo pipefail
+          OWNER=${{ github.repository_owner }}
+          # Best-effort check: try listing tags for the repository (may 403 if token has limited scope)
+          if curl -sS -f -H "Authorization: Bearer ${TOKEN}" "https://ghcr.io/v2/${OWNER}/proman/tags/list" >/dev/null 2>&1; then
+            echo "GHCR access verified for ${OWNER}/proman"
+          else
+            echo "Warning: GHCR login succeeded but listing tags failed; token may lack registry read permissions. Proceeding as login succeeded."
+          fi
+
+  build-and-publish:
+    needs: [verify, verify-publish-auth]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     env:
@@ -238,13 +286,13 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@c7c4c00f3eef127be487a50899a220e44c6bcc87
-
       - name: Login to GitHub Container Registry (GHCR)
         if: needs.verify.outputs.dry_run != 'true'
         uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
+          # Prefer GHCR_PAT (user PAT) for package writes; fallback to GITHUB_TOKEN
           password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Login to Docker Hub
@@ -316,7 +364,56 @@ jobs:
         with:
           name: release-charts
           path: release-charts
-
+      - name: Ensure publish credentials available (non-dry-run)
+        run: |
+          if [ -z "${{ secrets.GHCR_PAT }}" ] && [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "ERROR: No publish credential found (GHCR_PAT or GITHUB_TOKEN). Aborting.";
+            exit 1;
+          else
+            echo "Publish auth present (GHCR_PAT preferred; GITHUB_TOKEN will be used if it has 'packages: write' permission)"
+            if [ -z "${{ secrets.GHCR_PAT }}" ]; then
+              echo "Using GITHUB_TOKEN — ensure Actions permissions allow 'packages: write' in repository settings"
+            fi
+          fi
+      - name: Login to GitHub Container Registry (GHCR)
+        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          # Prefer GHCR_PAT (user PAT) but fallback to GITHUB_TOKEN
+          password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
+      - name: Build and push multi-arch image
+        uses: docker/build-push-action@64c9b141502b80dbbd71e008a0130ad330f480f8
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          push: true
+          tags: |
+            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ needs.build-and-publish.outputs.VERSION }}
+            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:latest
+            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
+          build-args: |
+            BUILD_VERSION=${{ needs.build-and-publish.outputs.VERSION }}
+            GIT_COMMIT=${{ needs.build-and-publish.outputs.GIT_COMMIT }}
+            BUILD_TIME=${{ needs.build-and-publish.outputs.BUILD_TIME }}
+      - name: Create annotated git tag and push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.build-and-publish.outputs.VERSION }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          git remote set-url origin https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}
+          git fetch --no-tags
+          if git rev-parse "refs/tags/v${VERSION}" >/dev/null 2>&1; then
+            echo "Tag v${VERSION} already exists"
+          else
+            git tag -a "v${VERSION}" -m "Release v${VERSION}"
+            git push origin "v${VERSION}"
+          fi
       # The image was already pushed in build-and-publish if DRY_RUN was false.
       # The 'publish' job now focuses on creating the GitHub Release.
       # We skip redundant login and build steps here.
@@ -324,7 +421,7 @@ jobs:
       - name: Extract release note for body
         id: release_note
         run: |
-          VERSION=${{ needs.build-and-publish.outputs.VERSION }}
+          VERSION="${{ needs.build-and-publish.outputs.VERSION }}"
           # Try to extract the specific version section from README.md
           awk '/^## Releases/{flag=1; next} /^## / && flag{exit} flag{print}' README.md > releases-section.txt || true
           
