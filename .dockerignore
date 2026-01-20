@@ -14,7 +14,7 @@ env.local
 .env.*.local
 helm
 k8s
-scripts
+# scripts (un-ignored because Dockerfile needs them for prestart)
 proman_local_image.tar
 *.tar
 *.log

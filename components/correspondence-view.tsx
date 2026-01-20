@@ -15,6 +15,7 @@ import { CorrespondenceTemplate, Tenant } from "@/lib/types";
 import { templateSchema, TemplateFormData } from "@/lib/validation";
 import { ZodError, ZodIssue } from 'zod';
 import { useToast } from "@/lib/toast-context";
+import jsPDF from "jspdf";
 
 export type CorrespondenceViewProps = Record<string, never>
 
@@ -32,6 +33,10 @@ export function CorrespondenceView(): React.ReactElement {
     subject: '',
     content: '',
   });
+
+  const [isBatchOpen, setIsBatchOpen] = useState(false);
+  const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>([]);
+  const [generatingBatch, setGeneratingBatch] = useState(false);
 
   const [formData, setFormData] = useState<TemplateFormData>({
     name: '',
@@ -92,6 +97,61 @@ export function CorrespondenceView(): React.ReactElement {
       content: template.content,
     });
     setIsComposeOpen(true);
+  };
+
+  const handleBatchClick = (template: CorrespondenceTemplate) => {
+    setSelectedTemplate(template);
+    setSelectedRecipientIds([]);
+    setIsBatchOpen(true);
+  };
+
+  const toggleRecipient = (id: string) => {
+    setSelectedRecipientIds(prev =>
+      prev.includes(id) ? prev.filter(r => r !== id) : [...prev, id]
+    );
+  };
+
+  const generateBatchPDF = async () => {
+    if (!selectedTemplate) return;
+    if (selectedRecipientIds.length === 0) {
+      error('Please select at least one recipient.');
+      return;
+    }
+
+    setGeneratingBatch(true);
+    try {
+      const doc = new jsPDF();
+      const recipients = tenants.filter(t => selectedRecipientIds.includes(t.id));
+
+      recipients.forEach((tenant, index) => {
+        if (index > 0) doc.addPage();
+
+        const content = replaceVariables(selectedTemplate.content, tenant);
+
+        // Header
+        doc.setFontSize(20);
+        doc.text(selectedTemplate.subject, 105, 20, { align: "center" });
+
+        // Content
+        doc.setFontSize(12);
+        const splitText = doc.splitTextToSize(content, 170);
+        doc.text(splitText, 20, 40);
+
+        // Footer
+        doc.setFontSize(10);
+        doc.text(`Generated on ${new Date().toLocaleDateString()}`, 20, 280);
+        doc.text(`Page ${index + 1} of ${recipients.length}`, 180, 280);
+      });
+
+      doc.save(`batch-correspondence-${selectedTemplate.name.replace(/\s+/g, '-')}.pdf`);
+      success(`Generated PDF for ${recipients.length} recipients.`);
+      setIsBatchOpen(false);
+    } catch (err) {
+      console.error('Batch generation error:', err);
+      error('Failed to generate batch PDF.');
+    } finally {
+      setGeneratingBatch(false);
+    }
   };
 
   const handleSendCorrespondence = async (e: React.FormEvent) => {
@@ -341,6 +401,15 @@ export function CorrespondenceView(): React.ReactElement {
                   </div>
                   <div className="flex gap-2">
                     <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => handleBatchClick(template)}
+                      className="flex items-center gap-1"
+                    >
+                      <FileText className="w-3 h-3" />
+                      Batch PDF
+                    </Button>
+                    <Button
                       variant="outline"
                       size="sm"
                       onClick={() => handleCompose(template)}
@@ -432,6 +501,53 @@ export function CorrespondenceView(): React.ReactElement {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Batch Dialog */}
+      <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-zinc-50">Batch Generate PDF</DialogTitle>
+            <DialogDescription>
+              Select recipients to generate letters for: {selectedTemplate?.name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="border border-zinc-800 rounded-md p-4 max-h-[300px] overflow-y-auto">
+              <div className="flex items-center justify-between mb-2">
+                <Label>Select Recipients</Label>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedRecipientIds(tenants.map(t => t.id))}>Select All</Button>
+              </div>
+              <div className="space-y-2">
+                {tenants.map(tenant => (
+                  <div key={tenant.id} className="flex items-center space-x-2 p-2 hover:bg-zinc-800 rounded">
+                    <input
+                      type="checkbox"
+                      id={`batch-${tenant.id}`}
+                      checked={selectedRecipientIds.includes(tenant.id)}
+                      onChange={() => toggleRecipient(tenant.id)}
+                      className="rounded border-zinc-700 bg-zinc-800 text-blue-600 focus:ring-blue-600"
+                    />
+                    <div className="flex-1">
+                      <Label htmlFor={`batch-${tenant.id}`} className="cursor-pointer font-medium text-zinc-200">
+                        {tenant.name}
+                      </Label>
+                      <p className="text-xs text-zinc-500">{tenant.propertyName}</p>
+                    </div>
+                  </div>
+                ))}
+                {tenants.length === 0 && <p className="text-sm text-zinc-500 text-center">No tenants found.</p>}
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsBatchOpen(false)}>Cancel</Button>
+              <Button onClick={generateBatchPDF} disabled={generatingBatch}>
+                {generatingBatch ? 'Generating...' : `Generate Batch (${selectedRecipientIds.length})`}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

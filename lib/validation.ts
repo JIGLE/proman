@@ -64,3 +64,37 @@ export type TenantFormData = z.infer<typeof tenantSchema>;
 export type ReceiptFormData = z.infer<typeof receiptSchema>;
 export type TemplateFormData = z.infer<typeof templateSchema>;
 export type SettingsFormData = z.infer<typeof settingsSchema>;
+
+// Owner validation schema
+export const ownerSchema = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
+  email: z.string().email('Invalid email address'),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  notes: z.string().max(500, 'Notes too long').optional(),
+});
+
+// Expense validation schema
+export const expenseSchema = z.object({
+  propertyId: z.string().min(1, 'Property is required'),
+  amount: z.number().min(0.01, 'Amount must be greater than 0'),
+  date: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
+  category: z.string().min(1, 'Category is required'),
+  description: z.string().max(200, 'Description too long').optional(),
+});
+
+// Maintenance validation schema
+export const maintenanceSchema = z.object({
+  propertyId: z.string().min(1, 'Property is required'),
+  tenantId: z.string().optional(),
+  title: z.string().min(1, 'Title is required').max(100, 'Title too long'),
+  description: z.string().min(1, 'Description is required').max(1000, 'Description too long'),
+  status: z.enum(['open', 'in_progress', 'resolved', 'closed']),
+  priority: z.enum(['low', 'medium', 'high', 'urgent']),
+  cost: z.number().min(0).optional(),
+  assignedTo: z.string().optional(),
+});
+
+export type OwnerFormData = z.infer<typeof ownerSchema>;
+export type ExpenseFormData = z.infer<typeof expenseSchema>;
+export type MaintenanceFormData = z.infer<typeof maintenanceSchema>;

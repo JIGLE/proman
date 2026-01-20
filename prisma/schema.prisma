@@ -21,13 +21,50 @@ model User {
   // Relations
   properties Property[]
   tenants    Tenant[]
-  receipts   Receipt[]
-  correspondence Correspondence[]
   emailLogs EmailLog[]
   accounts Account[]
   sessions Session[]
+  receipts Receipt[]
+  correspondence Correspondence[]
+  owners   Owner[]
+  expenses Expense[]
+  maintenanceTickets MaintenanceTicket[]
 
   @@map("users")
+}
+
+model Owner {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  email     String   @unique
+  phone     String?
+  address   String?
+  notes     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  properties PropertyOwner[]
+
+  @@map("owners")
+}
+
+model PropertyOwner {
+  id                  String   @id @default(cuid())
+  propertyId          String
+  ownerId             String
+  ownershipPercentage Float
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  owner    Owner    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, ownerId])
+  @@map("property_owners")
 }
 
 model Account {
@@ -103,6 +140,9 @@ model Property {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   tenants     Tenant[]
   receipts    Receipt[]
+  owners      PropertyOwner[]
+  expenses    Expense[]
+  maintenance MaintenanceTicket[]
 
   @@map("properties")
 }
@@ -128,6 +168,7 @@ model Tenant {
   property      Property?     @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   receipts      Receipt[]
   correspondence Correspondence[]
+  maintenance    MaintenanceTicket[]
 
   @@map("tenants")
 }
@@ -151,6 +192,49 @@ model Receipt {
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@map("receipts")
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  userId      String
+  propertyId  String
+  amount      Float
+  date        DateTime
+  category    String
+  description String?
+  receiptImage String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@map("expenses")
+}
+
+model MaintenanceTicket {
+  id          String   @id @default(cuid())
+  userId      String
+  propertyId  String
+  tenantId    String?
+  title       String
+  description String
+  status      MaintenanceStatus @default(open)
+  priority    MaintenancePriority @default(medium)
+  images      String   // JSON string of image URLs
+  cost        Float?
+  assignedTo  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenant   Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@map("maintenance_tickets")
 }
 
 model CorrespondenceTemplate {
@@ -248,4 +332,18 @@ enum EmailStatus {
   delivered
   bounced
   failed
+}
+
+enum MaintenanceStatus {
+  open
+  in_progress
+  resolved
+  closed
+}
+
+enum MaintenancePriority {
+  low
+  medium
+  high
+  urgent
 }

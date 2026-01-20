@@ -66,8 +66,13 @@ spec:
       {{- if .Values.persistence.enabled }}
       volumes:
         - name: data
+          {{- if .Values.persistence.hostPath }}
+          hostPath:
+            path: {{ .Values.persistence.hostPath }}
+          {{- else }}
           persistentVolumeClaim:
             claimName: {{ include "proman.fullname" . }}-pvc
+          {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
