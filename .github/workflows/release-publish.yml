@@ -249,6 +249,7 @@ jobs:
 
       - name: Login to Docker Hub
         if: github.event_name != 'schedule' && env.DOCKERHUB_CONFIGURED == 'true'
+        continue-on-error: true
         uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
