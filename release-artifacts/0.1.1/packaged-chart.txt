@@ -1,1 +1,0 @@
-Packaged chart: release-charts/proman-0.1.0.tgz
