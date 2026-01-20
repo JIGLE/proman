@@ -257,11 +257,13 @@ jobs:
           TAGS="ghcr.io/${OWNER_LOWER}/${REPO_NAME_LOWER}:${VERSION},ghcr.io/${OWNER_LOWER}/${REPO_NAME_LOWER}:latest,ghcr.io/${OWNER_LOWER}/${REPO_NAME_LOWER}:${GITHUB_SHA}"
 
           if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
-            TAGS="${TAGS},${{ secrets.DOCKERHUB_USERNAME }}/${REPO_NAME_LOWER}:${VERSION},${{ secrets.DOCKERHUB_USERNAME }}/${REPO_NAME_LOWER}:latest"
+            DOCKERHUB_USER_LOWER=$(echo "${{ secrets.DOCKERHUB_USERNAME }}" | tr '[:upper:]' '[:lower:]')
+            TAGS="${TAGS},${DOCKERHUB_USER_LOWER}/${REPO_NAME_LOWER}:${VERSION},${DOCKERHUB_USER_LOWER}/${REPO_NAME_LOWER}:latest"
           fi
 
           if [ -n "${{ secrets.REGISTRY }}" ] && [ -n "${{ secrets.REGISTRY_USERNAME }}" ]; then
-             TAGS="${TAGS},${{ secrets.REGISTRY }}/${{ secrets.REGISTRY_USERNAME }}/${REPO_NAME_LOWER}:${VERSION},${{ secrets.REGISTRY }}/${{ secrets.REGISTRY_USERNAME }}/${REPO_NAME_LOWER}:latest"
+             REGISTRY_USER_LOWER=$(echo "${{ secrets.REGISTRY_USERNAME }}" | tr '[:upper:]' '[:lower:]')
+             TAGS="${TAGS},${{ secrets.REGISTRY }}/${REGISTRY_USER_LOWER}/${REPO_NAME_LOWER}:${VERSION},${{ secrets.REGISTRY }}/${REGISTRY_USER_LOWER}/${REPO_NAME_LOWER}:latest"
           fi
 
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
