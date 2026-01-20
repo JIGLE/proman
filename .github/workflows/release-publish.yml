@@ -151,12 +151,15 @@ jobs:
     timeout-minutes: 60
     env:
       DRY_RUN: ${{ needs.verify.outputs.dry_run }}
+      DOCKERHUB_CONFIGURED: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
+      REGISTRY_CONFIGURED: ${{ secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '' && secrets.REGISTRY_PASSWORD != '' }}
 
     outputs:
       VERSION: ${{ steps.set-vars.outputs.VERSION }}
       OWNER_LOWER: ${{ steps.set-vars.outputs.OWNER_LOWER }}
       GIT_COMMIT: ${{ steps.set-vars.outputs.GIT_COMMIT }}
       BUILD_TIME: ${{ steps.set-vars.outputs.BUILD_TIME }}
+      DRY_RUN: ${{ needs.verify.outputs.dry_run }}
 
     steps:
       - name: Checkout
@@ -245,14 +248,14 @@ jobs:
           password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Login to Docker Hub
-        if: github.event_name != 'schedule' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
+        if: github.event_name != 'schedule' && env.DOCKERHUB_CONFIGURED == 'true'
         uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to Custom Registry
-        if: github.event_name != 'schedule' && secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '' && secrets.REGISTRY_PASSWORD != ''
+        if: github.event_name != 'schedule' && env.REGISTRY_CONFIGURED == 'true'
         uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
         with:
           registry: ${{ secrets.REGISTRY }}
@@ -296,7 +299,7 @@ jobs:
 
   publish:
     name: Publish (requires approval)
-    needs: build-and-publish
+    needs: [build-and-publish, verify]
     runs-on: ubuntu-latest
     if: needs.verify.outputs.dry_run != 'true'
     environment: production
@@ -313,31 +316,9 @@ jobs:
           name: release-charts
           path: release-charts
 
-      - name: Login to GitHub Container Registry (GHCR)
-        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
-
-      - name: Login to Docker Hub (Publish)
-        if: secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
-        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Login to Custom Registry (Publish)
-        if: secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '' && secrets.REGISTRY_PASSWORD != ''
-        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
-        with:
-          registry: ${{ secrets.REGISTRY }}
-          username: ${{ secrets.REGISTRY_USERNAME }}
-          password: ${{ secrets.REGISTRY_PASSWORD }}
-
       # The image was already pushed in build-and-publish if DRY_RUN was false.
       # The 'publish' job now focuses on creating the GitHub Release.
-      # We skip the redundant build-and-push step here.
+      # We skip redundant login and build steps here.
 
       - name: Extract release note for body
         id: release_note
