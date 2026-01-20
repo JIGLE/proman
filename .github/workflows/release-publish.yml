@@ -229,7 +229,22 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub
+        if: github.event_name != 'schedule' && secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
+        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to Custom Registry
+        if: github.event_name != 'schedule' && secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '' && secrets.REGISTRY_PASSWORD != ''
+        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
+        with:
+          registry: ${{ secrets.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
       - name: Build and push multi-arch image
         uses: docker/build-push-action@64c9b141502b80dbbd71e008a0130ad330f480f8
@@ -243,6 +258,10 @@ jobs:
             ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ steps.set-vars.outputs.VERSION }}
             ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:latest
             ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME != '' && format('{0}/proman:{1}', secrets.DOCKERHUB_USERNAME, steps.set-vars.outputs.VERSION) || '' }}
+            ${{ secrets.DOCKERHUB_USERNAME != '' && format('{0}/proman:latest', secrets.DOCKERHUB_USERNAME) || '' }}
+            ${{ (secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '') && format('{0}/{1}/proman:{2}', secrets.REGISTRY, secrets.REGISTRY_USERNAME, steps.set-vars.outputs.VERSION) || '' }}
+            ${{ (secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '') && format('{0}/{1}/proman:latest', secrets.REGISTRY, secrets.REGISTRY_USERNAME) || '' }}
           build-args: |
             BUILD_VERSION=${{ steps.set-vars.outputs.VERSION }}
             GIT_COMMIT=${{ steps.set-vars.outputs.GIT_COMMIT }}
@@ -260,7 +279,7 @@ jobs:
         run: |
           set -euo pipefail
           # Use the verification helper which sets Chart.version and appVersion, lints, packages, and verifies Chart.yaml
-          ./scripts/package-helm-and-verify.sh release-charts "${{ needs.build-and-publish.outputs.VERSION }}"
+          ./scripts/package-helm-and-verify.sh release-charts "${{ steps.set-vars.outputs.VERSION }}"
         shell: bash
 
       - name: Upload packaged chart for inspection
@@ -293,7 +312,22 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Login to Docker Hub (Publish)
+        if: secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != ''
+        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Login to Custom Registry (Publish)
+        if: secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '' && secrets.REGISTRY_PASSWORD != ''
+        uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
+        with:
+          registry: ${{ secrets.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
 
       - name: Build and push multi-arch image
         uses: docker/build-push-action@64c9b141502b80dbbd71e008a0130ad330f480f8
@@ -307,6 +341,10 @@ jobs:
             ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ needs.build-and-publish.outputs.VERSION }}
             ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:latest
             ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME != '' && format('{0}/proman:{1}', secrets.DOCKERHUB_USERNAME, needs.build-and-publish.outputs.VERSION) || '' }}
+            ${{ secrets.DOCKERHUB_USERNAME != '' && format('{0}/proman:latest', secrets.DOCKERHUB_USERNAME) || '' }}
+            ${{ (secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '') && format('{0}/{1}/proman:{2}', secrets.REGISTRY, secrets.REGISTRY_USERNAME, needs.build-and-publish.outputs.VERSION) || '' }}
+            ${{ (secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '') && format('{0}/{1}/proman:latest', secrets.REGISTRY, secrets.REGISTRY_USERNAME) || '' }}
           build-args: |
             BUILD_VERSION=${{ needs.build-and-publish.outputs.VERSION }}
             GIT_COMMIT=${{ needs.build-and-publish.outputs.GIT_COMMIT }}
