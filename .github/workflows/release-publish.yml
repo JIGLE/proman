@@ -182,7 +182,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ env.TOKEN }}
-      - name: Optional: verify registry access
+      - name: "Optional: verify registry access"
         run: |
           set -euo pipefail
           OWNER=${{ github.repository_owner }}
