@@ -200,11 +200,24 @@ jobs:
           fi
           # compute lowercase owner for GHCR tags
           OWNER_LOWER=$(echo "${GITHUB_REPOSITORY%%/*}" | tr '[:upper:]' '[:lower:]')
+          REPO_NAME_LOWER=$(echo "${GITHUB_REPOSITORY#*/}" | tr '[:upper:]' '[:lower:]')
+
+          # Prepare tags as a comma-separated list to avoid empty line issues
+          TAGS="ghcr.io/${OWNER_LOWER}/${REPO_NAME_LOWER}:${VERSION},ghcr.io/${OWNER_LOWER}/${REPO_NAME_LOWER}:latest,ghcr.io/${OWNER_LOWER}/${REPO_NAME_LOWER}:${GITHUB_SHA}"
+
+          if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+            TAGS="${TAGS},${{ secrets.DOCKERHUB_USERNAME }}/${REPO_NAME_LOWER}:${VERSION},${{ secrets.DOCKERHUB_USERNAME }}/${REPO_NAME_LOWER}:latest"
+          fi
+
+          if [ -n "${{ secrets.REGISTRY }}" ] && [ -n "${{ secrets.REGISTRY_USERNAME }}" ]; then
+             TAGS="${TAGS},${{ secrets.REGISTRY }}/${{ secrets.REGISTRY_USERNAME }}/${REPO_NAME_LOWER}:${VERSION},${{ secrets.REGISTRY }}/${{ secrets.REGISTRY_USERNAME }}/${REPO_NAME_LOWER}:latest"
+          fi
 
           echo "VERSION=${VERSION}" >> $GITHUB_OUTPUT
           echo "GIT_COMMIT=${GITHUB_SHA}" >> $GITHUB_OUTPUT
           echo "BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
           echo "OWNER_LOWER=${OWNER_LOWER}" >> $GITHUB_OUTPUT
+          echo "TAGS=${TAGS}" >> $GITHUB_OUTPUT
         shell: bash
 
       - name: "Sanity check: ensure VERSION computed"
@@ -254,14 +267,7 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
           push: ${{ env.DRY_RUN != 'true' }}
-          tags: |
-            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ steps.set-vars.outputs.VERSION }}
-            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:latest
-            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME != '' && format('{0}/proman:{1}', secrets.DOCKERHUB_USERNAME, steps.set-vars.outputs.VERSION) || '' }}
-            ${{ secrets.DOCKERHUB_USERNAME != '' && format('{0}/proman:latest', secrets.DOCKERHUB_USERNAME) || '' }}
-            ${{ (secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '') && format('{0}/{1}/proman:{2}', secrets.REGISTRY, secrets.REGISTRY_USERNAME, steps.set-vars.outputs.VERSION) || '' }}
-            ${{ (secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '') && format('{0}/{1}/proman:latest', secrets.REGISTRY, secrets.REGISTRY_USERNAME) || '' }}
+          tags: ${{ steps.set-vars.outputs.TAGS }}
           build-args: |
             BUILD_VERSION=${{ steps.set-vars.outputs.VERSION }}
             GIT_COMMIT=${{ steps.set-vars.outputs.GIT_COMMIT }}
@@ -329,26 +335,9 @@ jobs:
           username: ${{ secrets.REGISTRY_USERNAME }}
           password: ${{ secrets.REGISTRY_PASSWORD }}
 
-      - name: Build and push multi-arch image
-        uses: docker/build-push-action@64c9b141502b80dbbd71e008a0130ad330f480f8
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          push: true
-          tags: |
-            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ needs.build-and-publish.outputs.VERSION }}
-            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:latest
-            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
-            ${{ secrets.DOCKERHUB_USERNAME != '' && format('{0}/proman:{1}', secrets.DOCKERHUB_USERNAME, needs.build-and-publish.outputs.VERSION) || '' }}
-            ${{ secrets.DOCKERHUB_USERNAME != '' && format('{0}/proman:latest', secrets.DOCKERHUB_USERNAME) || '' }}
-            ${{ (secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '') && format('{0}/{1}/proman:{2}', secrets.REGISTRY, secrets.REGISTRY_USERNAME, needs.build-and-publish.outputs.VERSION) || '' }}
-            ${{ (secrets.REGISTRY != '' && secrets.REGISTRY_USERNAME != '') && format('{0}/{1}/proman:latest', secrets.REGISTRY, secrets.REGISTRY_USERNAME) || '' }}
-          build-args: |
-            BUILD_VERSION=${{ needs.build-and-publish.outputs.VERSION }}
-            GIT_COMMIT=${{ needs.build-and-publish.outputs.GIT_COMMIT }}
-            BUILD_TIME=${{ needs.build-and-publish.outputs.BUILD_TIME }}
+      # The image was already pushed in build-and-publish if DRY_RUN was false.
+      # The 'publish' job now focuses on creating the GitHub Release.
+      # We skip the redundant build-and-push step here.
 
       - name: Extract release note for body
         id: release_note
