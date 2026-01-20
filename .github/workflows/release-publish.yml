@@ -1,5 +1,7 @@
 # File (intended final path): `.github/workflows/release-publish.yml` — purpose: release/publish (build images, package helm, create release)
 name: Release - Publish to GHCR
+# Note: For publishing to GHCR this workflow prefers a user-provided PAT stored in the repository secret `GHCR_PAT`.
+# If `GHCR_PAT` is not present the workflow will fall back to using `GITHUB_TOKEN` (requires Actions permissions: `packages: write`).
 
 on:
   push:
@@ -47,7 +49,11 @@ jobs:
           uname -a
           whoami || true
           ls -la || true
-          if [ -z "${{ secrets.GHCR_PAT }}" ]; then echo "GHCR_PAT_PRESENT=false" > smoke.txt; else echo "GHCR_PAT_PRESENT=true" > smoke.txt; fi
+          if [ -z "${{ secrets.GHCR_PAT }}" ] && [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "GHCR_AUTH_PRESENT=false" > smoke.txt;
+          else
+            echo "GHCR_AUTH_PRESENT=true" > smoke.txt;
+          fi
       - name: Upload smoke artifact
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f
         with:
@@ -226,11 +232,14 @@ jobs:
       - name: Ensure publish credentials available (non-dry-run)
         if: needs.verify.outputs.dry_run != 'true'
         run: |
-          if [ -z "${{ secrets.GHCR_PAT }}" ]; then
-            echo "ERROR: GHCR_PAT secret is not set. For non-dry-run publishes we require a Personal Access Token with packages:write. Aborting.";
+          if [ -z "${{ secrets.GHCR_PAT }}" ] && [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "ERROR: No publish credential found (GHCR_PAT or GITHUB_TOKEN). Aborting.";
             exit 1;
           else
-            echo "GHCR_PAT present"
+            echo "Publish auth present (GHCR_PAT preferred; GITHUB_TOKEN will be used if it has 'packages: write' permission)"
+            if [ -z "${{ secrets.GHCR_PAT }}" ]; then
+              echo "Using GITHUB_TOKEN — ensure Actions permissions allow 'packages: write' in repository settings"
+            fi
           fi
       - name: Login to GitHub Container Registry (GHCR)
         if: needs.verify.outputs.dry_run != 'true'
@@ -238,7 +247,8 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          # Prefer user-provided PAT (GHCR_PAT) for package writes; fallback to GITHUB_TOKEN
+          password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}    
 
       - name: Build and push multi-arch image
         uses: docker/build-push-action@64c9b141502b80dbbd71e008a0130ad330f480f8
@@ -249,27 +259,27 @@ jobs:
           cache-to: type=gha,mode=max
           push: ${{ env.DRY_RUN != 'true' }}
           tags: |
-            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ needs.build-and-publish.outputs.VERSION }}
-            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:latest
-            ghcr.io/${{ needs.build-and-publish.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
+            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ steps.set-vars.outputs.VERSION }}
+            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:latest
+            ghcr.io/${{ steps.set-vars.outputs.OWNER_LOWER }}/proman:${{ github.sha }}
           build-args: |
-            BUILD_VERSION=${{ needs.build-and-publish.outputs.VERSION }}
-            GIT_COMMIT=${{ needs.build-and-publish.outputs.GIT_COMMIT }}
-            BUILD_TIME=${{ needs.build-and-publish.outputs.BUILD_TIME }}
+            BUILD_VERSION=${{ steps.set-vars.outputs.VERSION }}
+            GIT_COMMIT=${{ steps.set-vars.outputs.GIT_COMMIT }}
+            BUILD_TIME=${{ steps.set-vars.outputs.BUILD_TIME }} 
 
       - name: Image info
         run: |
           if [ "${DRY_RUN:-false}" = "true" ]; then
-            echo "DRY_RUN: image push was skipped for ghcr.io/${{ github.repository_owner }}/proman:${{ needs.build-and-publish.outputs.VERSION }}"
+            echo "DRY_RUN: image push was skipped for ghcr.io/${{ github.repository_owner }}/proman:${{ steps.set-vars.outputs.VERSION }}"
           else
-            echo "Image pushed: ghcr.io/${{ github.repository_owner }}/proman:${{ needs.build-and-publish.outputs.VERSION }}"
+            echo "Image pushed: ghcr.io/${{ github.repository_owner }}/proman:${{ steps.set-vars.outputs.VERSION }}"
           fi
 
       - name: Package Helm chart with appVersion (verify)
         run: |
           set -euo pipefail
           # Use the verification helper which sets Chart.version and appVersion, lints, packages, and verifies Chart.yaml
-          ./scripts/package-helm-and-verify.sh release-charts "${{ needs.build-and-publish.outputs.VERSION }}"
+          ./scripts/package-helm-and-verify.sh release-charts "${{ steps.set-vars.outputs.VERSION }}"
         shell: bash
 
       - name: Upload packaged chart for inspection
@@ -297,18 +307,22 @@ jobs:
           path: release-charts
       - name: Ensure publish credentials available (non-dry-run)
         run: |
-          if [ -z "${{ secrets.GHCR_PAT }}" ]; then
-            echo "ERROR: GHCR_PAT secret is not set. For non-dry-run publishes we require a Personal Access Token with packages:write. Aborting.";
+          if [ -z "${{ secrets.GHCR_PAT }}" ] && [ -z "${{ secrets.GITHUB_TOKEN }}" ]; then
+            echo "ERROR: No publish credential found (GHCR_PAT or GITHUB_TOKEN). Aborting.";
             exit 1;
           else
-            echo "GHCR_PAT present"
+            echo "Publish auth present (GHCR_PAT preferred; GITHUB_TOKEN will be used if it has 'packages: write' permission)"
+            if [ -z "${{ secrets.GHCR_PAT }}" ]; then
+              echo "Using GITHUB_TOKEN — ensure Actions permissions allow 'packages: write' in repository settings"
+            fi
           fi
       - name: Login to GitHub Container Registry (GHCR)
         uses: docker/login-action@916386b00027d425839f8da46d302dab33f5875b
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          # Prefer GHCR_PAT (user PAT) but fallback to GITHUB_TOKEN
+          password: ${{ secrets.GHCR_PAT || secrets.GITHUB_TOKEN }}
       - name: Build and push multi-arch image
         uses: docker/build-push-action@64c9b141502b80dbbd71e008a0130ad330f480f8
         with:
@@ -353,7 +367,7 @@ jobs:
       - name: Extract release note for body
         id: release_note
         run: |
-          VERSION=${{ needs.build-and-publish.outputs.VERSION }}
+          VERSION="${{ needs.build-and-publish.outputs.VERSION }}"
           awk '/^## Releases/{flag=1; next} /^## / && flag{exit} flag{print}' README.md > releases-section.txt || true
 
           if [ -s releases-section.txt ]; then
