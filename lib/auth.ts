@@ -12,6 +12,19 @@ type NextAuthOptions = {
   adapter?: unknown;
 };
 
+type Account = {
+  provider: string;
+  providerAccountId: string;
+  type: string;
+  access_token?: string;
+  expires_at?: number;
+  refresh_token?: string;
+  id_token?: string;
+  scope?: string;
+  token_type?: string;
+  session_state?: string;
+};
+
 import GoogleProvider from 'next-auth/providers/google';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { getPrismaClient } from '@/lib/database';
@@ -34,7 +47,12 @@ function createBaseAuthOptions(): NextAuthOptions {
       }),
     ],
     session: {
-      strategy: 'jwt',
+      strategy: 'database', // Use database sessions for better account linking
+      maxAge: 30 * 24 * 60 * 60, // 30 days
+    } as any, // Type assertion needed for NextAuth types
+    pages: {
+      signIn: '/auth/signin',
+      error: '/auth/error',
     },
     callbacks: {
       async jwt({ token, user, account: _account }: { token: JWT; user?: NextAuthUser | null; account?: unknown }): Promise<JWT> {
@@ -58,51 +76,63 @@ function createBaseAuthOptions(): NextAuthOptions {
           return session;
         }
       },
-      async signIn({ user, account: _account, profile: _profile }: { user?: NextAuthUser | null; account?: { provider?: string } | undefined; profile?: unknown }): Promise<boolean> {
-        try {
-          // Only perform database operations if database is available
+      async signIn({ user, account, profile }: { user?: NextAuthUser | null; account?: Account | undefined; profile?: unknown }): Promise<boolean> {
+        console.log('signIn called:', {
+          hasDatabase: !!(process.env.DATABASE_URL && process.env.DATABASE_URL.trim()),
+          email: user?.email,
+          provider: account?.provider,
+          userId: user?.id
+        });
+
+        // Handle account linking for existing users
+        if (account && user?.email) {
           const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
-          console.log('signIn called. hasDatabase:', hasDatabase, 'email:', user?.email, 'name:', user?.name);
-          if (!hasDatabase) {
-            console.log('No DATABASE_URL set — allowing sign in (no DB)');
-            return true; // Allow sign in without database during build
-          }
-
-          // Ensure user exists in database (guard user and email)
-          if (user?.email) {
-            const prisma = getPrismaClient();
-            const existingUser = await prisma.user.findUnique({
-              where: { email: user.email },
-            });
-
-            console.log('Prisma lookup result for', user.email, ':', !!existingUser);
-
-            if (!existingUser) {
-              // Create user if they don't exist
-              const created = await prisma.user.create({
-                data: {
-                  email: user.email,
-                  name: user?.name || '',
-                },
+          if (hasDatabase) {
+            try {
+              const prisma = getPrismaClient();
+              const existingUser = await prisma.user.findUnique({
+                where: { email: user.email },
               });
-              console.log('Created user:', created.id);
+
+              if (existingUser) {
+                // Check if account already exists
+                const existingAccount = await prisma.account.findUnique({
+                  where: {
+                    provider_providerAccountId: {
+                      provider: account.provider,
+                      providerAccountId: account.providerAccountId,
+                    },
+                  },
+                });
+
+                if (!existingAccount) {
+                  // Link the account to the existing user
+                  await prisma.account.create({
+                    data: {
+                      userId: existingUser.id,
+                      type: account.type,
+                      provider: account.provider,
+                      providerAccountId: account.providerAccountId,
+                      access_token: account.access_token,
+                      expires_at: account.expires_at,
+                      refresh_token: account.refresh_token,
+                      id_token: account.id_token,
+                      scope: account.scope,
+                      token_type: account.token_type,
+                      session_state: account.session_state,
+                    },
+                  });
+                  console.log('Linked OAuth account to existing user:', existingUser.email);
+                }
+              }
+            } catch (err: unknown) {
+              console.error('Error linking account:', err);
+              // Continue anyway to allow sign-in
             }
           }
-
-          console.log('signIn: returning true for', user?.email);
-          return true;
-        } catch (err: unknown) {
-          // Log error for diagnostics
-          console.error('NextAuth signIn error:', err);
-
-          // Allow an override to permit sign-ins while DB issues are being resolved
-          if (process.env.NEXTAUTH_ALLOW_DB_FAILURE === 'true') {
-            console.warn('NEXTAUTH_ALLOW_DB_FAILURE=true — allowing sign-in despite DB error');
-            return true;
-          }
-
-          return false;
         }
+
+        return true;
       },
     },
     events: {
@@ -112,10 +142,6 @@ function createBaseAuthOptions(): NextAuthOptions {
       async createUser({ user }: { user: { id: string; email?: string } }) {
         console.log('NextAuth event createUser:', { id: user.id, email: user.email });
       },
-    },
-    pages: {
-      signIn: '/auth/signin',
-      error: '/auth/error',
     },
   };
 
