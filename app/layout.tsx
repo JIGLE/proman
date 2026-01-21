@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ClientProviders } from "@/components/client-providers";
 import VersionBadge from '@/components/version-badge';
+import { CurrencyProvider } from '@/lib/currency-context';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,12 +20,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <ClientProviders>
-          {children}
-          <div style={{position: 'fixed', right: 12, bottom: 8}}>
-            <VersionBadge />
-          </div>
-        </ClientProviders>
+        <CurrencyProvider>
+          <ClientProviders>
+            {children}
+            <div style={{position: 'fixed', right: 12, bottom: 8}}>
+              <VersionBadge />
+            </div>
+          </ClientProviders>
+        </CurrencyProvider>
       </body>
     </html>
   );

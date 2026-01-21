@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ZodError } from 'zod';
 import { Building2, MapPin, Bed, Bath, Plus, Edit, Trash2 } from "lucide-react";
+import { useCurrency } from "@/lib/currency-context";
 import {
   Card,
   CardContent,
@@ -28,6 +29,7 @@ export function PropertiesView(): React.ReactElement {
   const { state, addProperty, updateProperty, deleteProperty } = useApp();
   const { properties, loading } = state;
   const { success, error } = useToast();
+  const { formatCurrency } = useCurrency();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProperty, setEditingProperty] = useState<Property | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -344,7 +346,7 @@ export function PropertiesView(): React.ReactElement {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-zinc-400">{property.type}</span>
                   <span className="font-semibold text-zinc-50">
-                    ${property.rent.toLocaleString()}/mo
+{formatCurrency(property.rent)}/mo
                   </span>
                 </div>
                 <div className="flex items-center gap-4 text-sm text-zinc-400">

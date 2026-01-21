@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ZodError } from 'zod';
 import { Briefcase, Download, Plus, Edit, Trash2, Phone, Mail, MapPin, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
+import { useCurrency } from "@/lib/currency-context";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Input } from "./ui/input";
@@ -19,6 +20,7 @@ export function OwnersView(): React.ReactElement {
     const { state, addOwner, updateOwner, deleteOwner } = useApp();
     const { owners, receipts, expenses, loading } = state;
     const { success, error } = useToast();
+    const { formatCurrency } = useCurrency();
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [editingOwner, setEditingOwner] = useState<Owner | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -156,11 +158,9 @@ export function OwnersView(): React.ReactElement {
                     doc.text(`- ${propName} (${po.ownershipPercentage}%)`, 25, yPos);
                     yPos += 7;
                     doc.setFontSize(10);
-                    doc.text(`  Share of Income: $${ownerIncome.toFixed(2)}`, 30, yPos);
-                    yPos += 5;
-                    doc.text(`  Share of Expenses: $${ownerExpenses.toFixed(2)}`, 30, yPos);
-                    yPos += 5;
-                    doc.text(`  Net: $${net.toFixed(2)}`, 30, yPos);
+                    doc.text(`  Share of Income: ${formatCurrency(ownerIncome)}`, 30, yPos);
+                    doc.text(`  Share of Expenses: ${formatCurrency(ownerExpenses)}`, 30, yPos);
+                    doc.text(`  Net: ${formatCurrency(net)}`, 30, yPos);
                     yPos += 10;
                     doc.setFontSize(12);
                 });
@@ -173,7 +173,7 @@ export function OwnersView(): React.ReactElement {
             doc.line(20, yPos, 190, yPos);
             yPos += 10;
             doc.setFontSize(14);
-            doc.text(`Total Net Income: $${totalNetIncome.toFixed(2)}`, 20, yPos);
+            doc.text(`Total Net Income: ${formatCurrency(totalNetIncome)}`, 20, yPos);
 
             doc.save(`statement-${owner.name.replace(/\s+/g, '-')}-${new Date().toISOString().split('T')[0]}.pdf`);
             success('Statement generated!');

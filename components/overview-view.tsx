@@ -9,6 +9,7 @@ import {
 } from "./ui/card";
 import { Building2, Users, DollarSign, TrendingUp } from "lucide-react";
 import { Badge } from "./ui/badge";
+import { useCurrency } from "@/lib/currency-context";
 import { useApp } from "@/lib/app-context-db";
 
 export type OverviewViewProps = Record<string, never>
@@ -16,6 +17,7 @@ export type OverviewViewProps = Record<string, never>
 export function OverviewView(): React.ReactElement {
   const { state } = useApp();
   const { properties, tenants, receipts } = state;
+  const { formatCurrency } = useCurrency();
 
   // Calculate stats
   const totalProperties = properties.length;
@@ -89,7 +91,7 @@ export function OverviewView(): React.ReactElement {
             <DollarSign className="h-4 w-4 text-zinc-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">${monthlyRevenue.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-zinc-50">{formatCurrency(monthlyRevenue)}</div>
             <p className="text-xs text-zinc-400 flex items-center gap-1 mt-1">
               <TrendingUp className="h-3 w-3 text-green-500" />
               <span className="text-green-500">Current month</span>
@@ -129,7 +131,7 @@ export function OverviewView(): React.ReactElement {
                     <p className="text-xs text-zinc-400">{payment.propertyName}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-zinc-50">${payment.amount.toLocaleString()}</p>
+                     <p className="text-sm font-semibold text-zinc-50">{formatCurrency(payment.amount)}</p>
                     <Badge variant="success" className="text-xs">Paid</Badge>
                   </div>
                 </div>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ZodError } from 'zod';
 import { User, Mail, Phone, Calendar, Plus, Edit, Trash2 } from "lucide-react";
+import { useCurrency } from "@/lib/currency-context";
 import {
   Card,
   CardContent,
@@ -28,6 +29,7 @@ export function TenantsView(): React.ReactElement {
   const { state, addTenant, updateTenant, deleteTenant } = useApp();
   const { tenants, properties, loading } = state;
   const { success, error } = useToast();
+  const { formatCurrency } = useCurrency();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -385,7 +387,7 @@ export function TenantsView(): React.ReactElement {
                   <div className="space-y-1">
                     <div className="text-sm text-zinc-400">Monthly Rent</div>
                     <p className="text-lg font-semibold text-zinc-50">
-                      ${tenant.rent.toLocaleString()}
+{formatCurrency(tenant.rent)}
                     </p>
                   </div>
                 </div>

@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { ZodError } from "zod";
 import { DollarSign, TrendingUp, TrendingDown, Plus, Calendar as CalendarIcon, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
+import { useCurrency } from "@/lib/currency-context";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Input } from "./ui/input";
@@ -19,6 +20,7 @@ export function FinancialsView(): React.ReactElement {
   const { state, addExpense } = useApp();
   const { properties, receipts, expenses } = state;
   const { success, error } = useToast();
+  const { formatCurrency } = useCurrency();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -244,7 +246,7 @@ export function FinancialsView(): React.ReactElement {
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">${metrics.totalIncome.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-zinc-50">{formatCurrency(metrics.totalIncome)}</div>
             <p className="text-xs text-zinc-500">From rent and deposits</p>
           </CardContent>
         </Card>
@@ -254,7 +256,7 @@ export function FinancialsView(): React.ReactElement {
             <TrendingDown className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">${metrics.totalExpenses.toLocaleString()}</div>
+            <div className="text-2xl font-bold text-zinc-50">{formatCurrency(metrics.totalExpenses)}</div>
             <p className="text-xs text-zinc-500">Maintenance, repairs, etc.</p>
           </CardContent>
         </Card>
@@ -265,7 +267,7 @@ export function FinancialsView(): React.ReactElement {
           </CardHeader>
           <CardContent>
             <div className={cn("text-2xl font-bold", metrics.netIncome >= 0 ? "text-green-500" : "text-red-500")}>
-              ${metrics.netIncome.toLocaleString()}
+{formatCurrency(metrics.netIncome)}
             </div>
             <p className="text-xs text-zinc-500">Cash flow for period</p>
           </CardContent>
@@ -293,7 +295,7 @@ export function FinancialsView(): React.ReactElement {
                     </div>
                   </div>
                   <div className="text-sm font-bold text-green-500">
-                    +${receipt.amount.toLocaleString()}
+                    +{formatCurrency(receipt.amount)}
                   </div>
                 </div>
               ))}
@@ -326,7 +328,7 @@ export function FinancialsView(): React.ReactElement {
                     </div>
                   </div>
                   <div className="text-sm font-bold text-red-500">
-                    -${expense.amount.toLocaleString()}
+                    -{formatCurrency(expense.amount)}
                   </div>
                 </div>
               ))}

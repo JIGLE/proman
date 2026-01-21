@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ZodError } from "zod";
 import { Hammer, Plus, AlertCircle, Clock, CheckCircle, XCircle, MoreVertical } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "./ui/card";
+import { useCurrency } from "@/lib/currency-context";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Input } from "./ui/input";
@@ -22,6 +23,7 @@ export function MaintenanceView(): React.ReactElement {
     const { state, addMaintenance } = useApp();
     const { properties, maintenance } = state;
     const { success, error } = useToast();
+    const { formatCurrency } = useCurrency();
 
     const [isDialogOpen, setIsDialogOpen] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -283,7 +285,7 @@ export function MaintenanceView(): React.ReactElement {
                                         <span className="capitalize">{ticket.status.replace('_', ' ')}</span>
                                     </div>
                                     {ticket.cost && (
-                                        <span className="font-medium text-zinc-300">${ticket.cost.toLocaleString()}</span>
+                                        <span className="font-medium text-zinc-300">{formatCurrency(ticket.cost || 0)}</span>
                                     )}
                                 </div>
                             </CardContent>

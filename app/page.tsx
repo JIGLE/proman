@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import { OverviewView } from "@/components/overview-view";
 import { PropertiesView } from "@/components/properties-view";
@@ -19,6 +20,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useCurrency } from "@/lib/currency-context";
 import {
   User,
   LogOut,
@@ -34,6 +36,7 @@ import { AppProvider } from "@/lib/app-context-db";
 
 export default function Home(): React.ReactElement {
   const { data: session, status } = useSession();
+  const { currency, setCurrency, locale, setLocale } = useCurrency();
   const [activeTab, setActiveTab] = useState("overview");
 
   type Settings = {
@@ -42,11 +45,9 @@ export default function Home(): React.ReactElement {
     maintenanceReminders: boolean;
     paymentReminders: boolean;
     theme: 'light' | 'dark' | 'system';
-    language: string;
     profileVisibility: 'public' | 'private';
     dataSharing: boolean;
     timezone: string;
-    currency: string;
   };
 
   const [settings, setSettings] = useState<Settings>({
@@ -58,7 +59,6 @@ export default function Home(): React.ReactElement {
 
     // Appearance
     theme: 'dark',
-    language: 'en',
 
     // Privacy
     profileVisibility: 'private',
@@ -66,7 +66,6 @@ export default function Home(): React.ReactElement {
 
     // Account
     timezone: 'UTC',
-    currency: 'USD',
   });
 
   const handleSettingChange = <K extends keyof Settings>(key: K, value: Settings[K]) => {
@@ -289,7 +288,7 @@ export default function Home(): React.ReactElement {
 
             <div className="space-y-2">
               <Label htmlFor="language">Language</Label>
-              <Select value={settings.language} onValueChange={(value) => handleSettingChange('language', value)}>
+              <Select value={locale} onValueChange={setLocale}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
@@ -374,7 +373,7 @@ export default function Home(): React.ReactElement {
 
               <div className="space-y-2">
                 <Label htmlFor="currency">Currency</Label>
-                <Select value={settings.currency} onValueChange={(value) => handleSettingChange('currency', value)}>
+                <Select value={currency} onValueChange={setCurrency}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>

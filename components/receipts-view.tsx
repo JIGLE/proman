@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ZodError } from 'zod';
 import { FileText, Download, Calendar, Plus, Edit, Trash2, DollarSign } from "lucide-react";
 import { Card, CardContent } from "./ui/card";
+import { useCurrency } from "@/lib/currency-context";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
@@ -23,6 +24,7 @@ export function ReceiptsView(): React.ReactElement {
   const { state, addReceipt, updateReceipt, deleteReceipt } = useApp();
   const { receipts, tenants, properties, loading } = state;
   const { success, error } = useToast();
+  const { formatCurrency } = useCurrency();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null);
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
@@ -150,7 +152,7 @@ export function ReceiptsView(): React.ReactElement {
       doc.setFontSize(14);
       doc.text("PAYMENT DETAILS", 20, 115);
       doc.setFontSize(11);
-      doc.text(`Amount: $${receipt.amount.toLocaleString()}`, 20, 125);
+      doc.text(`Amount: ${formatCurrency(receipt.amount)}`, 20, 125);
       doc.text(`Type: ${receipt.type.charAt(0).toUpperCase() + receipt.type.slice(1)}`, 20, 135);
       if (receipt.description) {
         doc.text(`Description: ${receipt.description}`, 20, 145);
@@ -371,7 +373,7 @@ export function ReceiptsView(): React.ReactElement {
                         </div>
                         <div className="flex items-center gap-1">
                           <DollarSign className="w-4 h-4" />
-                          <span>${receipt.amount.toLocaleString()}</span>
+                          <span>{formatCurrency(receipt.amount)}</span>
                         </div>
                       </div>
                     </div>
