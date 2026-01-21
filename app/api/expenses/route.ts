@@ -15,12 +15,19 @@ export async function GET(): Promise<NextResponse> {
 
         const prisma = getPrismaClient();
 
-        const user = await prisma.user.findUnique({
+        let user = await prisma.user.findUnique({
             where: { email: session.user.email },
         });
 
         if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            // Create user if not found (fallback for auth issues)
+            user = await prisma.user.create({
+                data: {
+                    email: session.user.email,
+                    name: session.user.name || '',
+                },
+            });
+            console.log('Created missing user:', user.id);
         }
 
         const expenses = await prisma.expense.findMany({
@@ -61,12 +68,19 @@ export async function POST(req: Request): Promise<NextResponse> {
 
         const prisma = getPrismaClient();
 
-        const user = await prisma.user.findUnique({
+        let user = await prisma.user.findUnique({
             where: { email: session.user.email },
         });
 
         if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
+            // Create user if not found (fallback for auth issues)
+            user = await prisma.user.create({
+                data: {
+                    email: session.user.email,
+                    name: session.user.name || '',
+                },
+            });
+            console.log('Created missing user:', user.id);
         }
 
         const json = await req.json();

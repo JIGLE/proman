@@ -15,7 +15,7 @@ export async function requireAuth(_request: NextRequest): Promise<{
     const getServerSession = maybe.getServerSession;
     const session = (await getServerSession?.(getAuthOptions())) ?? null;
 
-    if (!session || !session.user) {
+    if (!session || !session.user?.email) {
       return new NextResponse(
         JSON.stringify({ error: 'Authentication required' }),
         {
@@ -25,21 +25,25 @@ export async function requireAuth(_request: NextRequest): Promise<{
       );
     }
 
-    // Extract user ID from session
-    const user = session.user as { id?: string };
-    const userId = user.id;
+    // Find user in database
+    const { getPrismaClient } = await import('@/lib/database');
+    const prisma = getPrismaClient();
+    let user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
 
-    if (!userId) {
-      return new NextResponse(
-        JSON.stringify({ error: 'Invalid session' }),
-        {
-          status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+    if (!user) {
+      // Create user if not found (fallback for auth issues)
+      user = await prisma.user.create({
+        data: {
+          email: session.user.email,
+          name: session.user.name || '',
+        },
+      });
+      console.log('Created missing user:', user.id);
     }
 
-    return { session, userId };
+    return { session, userId: user.id };
   } catch (error: unknown) {
     console.error('requireAuth error:', error);
     return new NextResponse(
