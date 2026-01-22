@@ -1,0 +1,528 @@
+import { useState } from "react";
+import { ZodError } from 'zod';
+import { FileText, Upload, Download, Plus, Edit, Trash2, Calendar, User, Building2 } from "lucide-react";
+import { useCurrency } from "@/lib/currency-context";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import { Textarea } from "./ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { useApp } from "@/lib/app-context-db";
+import { leaseSchema, LeaseFormData } from "@/lib/validation";
+import { useToast } from "@/lib/toast-context";
+import { LeaseStatus } from "@prisma/client";
+
+export type LeasesViewProps = Record<string, never>
+
+export function LeasesView(): React.ReactElement {
+  const { state, addLease, updateLease, deleteLease } = useApp();
+  const { properties, tenants, leases, loading } = state;
+  const { success, error } = useToast();
+  const { formatCurrency } = useCurrency();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingLease, setEditingLease] = useState<any | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contractFile, setContractFile] = useState<File | null>(null);
+
+  const [formData, setFormData] = useState<LeaseFormData>({
+    propertyId: '',
+    tenantId: '',
+    startDate: '',
+    endDate: '',
+    monthlyRent: 0,
+    deposit: 0,
+    taxRegime: undefined,
+    autoRenew: false,
+    renewalNoticeDays: 60,
+    notes: '',
+  });
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof LeaseFormData, string>>>({});
+
+  const getStatusBadge = (status: LeaseStatus) => {
+    switch (status) {
+      case "active":
+        return <Badge variant="success">Active</Badge>;
+      case "expired":
+        return <Badge variant="destructive">Expired</Badge>;
+      case "terminated":
+        return <Badge variant="secondary">Terminated</Badge>;
+      case "pending":
+        return <Badge variant="default">Pending</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        error('File size must be less than 5MB');
+        return;
+      }
+      // Validate file type
+      if (file.type !== 'application/pdf') {
+        error('Only PDF files are allowed');
+        return;
+      }
+      setContractFile(file);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      setIsSubmitting(true);
+      setFormErrors({});
+
+      // Validate form data
+      const validatedData = leaseSchema.parse(formData);
+
+      // Convert file to buffer if present
+      let contractBuffer: Buffer | undefined;
+      if (contractFile) {
+        contractBuffer = Buffer.from(await contractFile.arrayBuffer());
+      }
+
+      const leaseData = {
+        ...validatedData,
+        contractFile: contractBuffer,
+        contractFileName: contractFile?.name,
+        contractFileSize: contractFile?.size,
+        status: 'active' as const,
+      };
+
+      if (editingLease) {
+        await updateLease(editingLease.id, leaseData);
+        success('Lease updated successfully');
+      } else {
+        await addLease(leaseData);
+        success('Lease created successfully');
+      }
+
+      setIsDialogOpen(false);
+      resetForm();
+    } catch (err) {
+      if (err instanceof ZodError) {
+        const errors: Partial<Record<keyof LeaseFormData, string>> = {};
+        err.issues.forEach((issue) => {
+          const field = issue.path[0] as keyof LeaseFormData;
+          errors[field] = issue.message;
+        });
+        setFormErrors(errors);
+      } else {
+        error('Failed to save lease');
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEdit = (lease: any) => {
+    setEditingLease(lease);
+    setFormData({
+      propertyId: lease.propertyId,
+      tenantId: lease.tenantId,
+      startDate: lease.startDate.split('T')[0],
+      endDate: lease.endDate.split('T')[0],
+      monthlyRent: lease.monthlyRent,
+      deposit: lease.deposit,
+      taxRegime: lease.taxRegime,
+      autoRenew: lease.autoRenew,
+      renewalNoticeDays: lease.renewalNoticeDays,
+      notes: lease.notes || '',
+    });
+    setContractFile(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this lease?')) {
+      try {
+        await deleteLease(id);
+        success('Lease deleted successfully');
+      } catch (err) {
+        error('Failed to delete lease');
+      }
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      propertyId: '',
+      tenantId: '',
+      startDate: '',
+      endDate: '',
+      monthlyRent: 0,
+      deposit: 0,
+      taxRegime: undefined,
+      autoRenew: false,
+      renewalNoticeDays: 60,
+      notes: '',
+    });
+    setContractFile(null);
+    setEditingLease(null);
+    setFormErrors({});
+  };
+
+  const handleDownloadContract = (lease: any) => {
+    if (lease.contractFile) {
+      const blob = new Blob([lease.contractFile], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = lease.contractFileName || `lease-${lease.id}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-zinc-400">Loading leases...</div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
+            Lease Management
+          </h2>
+          <p className="text-zinc-400">Manage lease agreements and contract documents</p>
+        </div>
+        <Button
+          onClick={() => {
+            resetForm();
+            setIsDialogOpen(true);
+          }}
+          className="flex items-center gap-2"
+        >
+          <Plus className="w-4 h-4" />
+          Add Lease
+        </Button>
+      </div>
+
+      {/* Lease Form Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-zinc-900 border-zinc-800">
+          <DialogHeader>
+            <DialogTitle className="text-zinc-50">
+              {editingLease ? 'Edit Lease' : 'Add New Lease'}
+            </DialogTitle>
+            <DialogDescription>
+              {editingLease ? 'Update lease agreement details' : 'Create a new lease agreement'}
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="propertyId">Property</Label>
+                <Select
+                  value={formData.propertyId}
+                  onValueChange={(value) => setFormData({ ...formData, propertyId: value })}
+                >
+                  <SelectTrigger className={formErrors.propertyId ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="Select property" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {properties.map((property) => (
+                      <SelectItem key={property.id} value={property.id}>
+                        {property.name} - {property.address}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formErrors.propertyId && (
+                  <p className="text-sm text-red-400">{formErrors.propertyId}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="tenantId">Tenant</Label>
+                <Select
+                  value={formData.tenantId}
+                  onValueChange={(value) => setFormData({ ...formData, tenantId: value })}
+                >
+                  <SelectTrigger className={formErrors.tenantId ? 'border-red-500' : ''}>
+                    <SelectValue placeholder="Select tenant" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tenants.map((tenant) => (
+                      <SelectItem key={tenant.id} value={tenant.id}>
+                        {tenant.name} - {tenant.email}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {formErrors.tenantId && (
+                  <p className="text-sm text-red-400">{formErrors.tenantId}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="startDate">Start Date</Label>
+                <Input
+                  id="startDate"
+                  type="date"
+                  value={formData.startDate}
+                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  className={formErrors.startDate ? 'border-red-500' : ''}
+                />
+                {formErrors.startDate && (
+                  <p className="text-sm text-red-400">{formErrors.startDate}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="endDate">End Date</Label>
+                <Input
+                  id="endDate"
+                  type="date"
+                  value={formData.endDate}
+                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  className={formErrors.endDate ? 'border-red-500' : ''}
+                />
+                {formErrors.endDate && (
+                  <p className="text-sm text-red-400">{formErrors.endDate}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="monthlyRent">Monthly Rent (€)</Label>
+                <Input
+                  id="monthlyRent"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.monthlyRent}
+                  onChange={(e) => setFormData({ ...formData, monthlyRent: parseFloat(e.target.value) || 0 })}
+                  className={formErrors.monthlyRent ? 'border-red-500' : ''}
+                />
+                {formErrors.monthlyRent && (
+                  <p className="text-sm text-red-400">{formErrors.monthlyRent}</p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="deposit">Deposit (€)</Label>
+                <Input
+                  id="deposit"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.deposit}
+                  onChange={(e) => setFormData({ ...formData, deposit: parseFloat(e.target.value) || 0 })}
+                  className={formErrors.deposit ? 'border-red-500' : ''}
+                />
+                {formErrors.deposit && (
+                  <p className="text-sm text-red-400">{formErrors.deposit}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="taxRegime">Tax Regime</Label>
+                <Select
+                  value={formData.taxRegime || ''}
+                  onValueChange={(value) => setFormData({ ...formData, taxRegime: value as any })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select tax regime" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="portugal_rendimentos">Portugal - Rendimentos</SelectItem>
+                    <SelectItem value="spain_inmuebles">Spain - Inmuebles Urbanos</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="renewalNoticeDays">Renewal Notice (Days)</Label>
+                <Input
+                  id="renewalNoticeDays"
+                  type="number"
+                  min="0"
+                  value={formData.renewalNoticeDays}
+                  onChange={(e) => setFormData({ ...formData, renewalNoticeDays: parseInt(e.target.value) || 60 })}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="contractFile">Lease Contract (PDF)</Label>
+              <div className="flex items-center gap-2">
+                <Input
+                  id="contractFile"
+                  type="file"
+                  accept=".pdf"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                />
+                <Label
+                  htmlFor="contractFile"
+                  className="flex items-center gap-2 px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-md cursor-pointer hover:bg-zinc-700"
+                >
+                  <Upload className="w-4 h-4" />
+                  {contractFile ? contractFile.name : 'Choose PDF file'}
+                </Label>
+                {contractFile && (
+                  <span className="text-sm text-zinc-400">
+                    {(contractFile.size / 1024 / 1024).toFixed(2)} MB
+                  </span>
+                )}
+              </div>
+              <p className="text-xs text-zinc-500">Maximum file size: 5MB. PDF format only.</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="notes">Notes</Label>
+              <Textarea
+                id="notes"
+                value={formData.notes}
+                onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                placeholder="Additional lease terms or notes..."
+                className={formErrors.notes ? 'border-red-500' : ''}
+              />
+              {formErrors.notes && (
+                <p className="text-sm text-red-400">{formErrors.notes}</p>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? 'Saving...' : (editingLease ? 'Update Lease' : 'Create Lease')}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Leases List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {leases.length === 0 ? (
+          <Card className="col-span-full bg-zinc-900 border-zinc-800">
+            <CardContent className="flex flex-col items-center justify-center py-12">
+              <FileText className="h-12 w-12 text-zinc-600 mb-4" />
+              <h3 className="text-lg font-semibold text-zinc-50 mb-2">No Leases Yet</h3>
+              <p className="text-zinc-400 text-center mb-4">
+                Create your first lease agreement to get started with lease management.
+              </p>
+              <Button
+                onClick={() => {
+                  resetForm();
+                  setIsDialogOpen(true);
+                }}
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Add Your First Lease
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          leases.map((lease: any) => (
+            <Card
+              key={lease.id}
+              className="overflow-hidden transition-all hover:shadow-lg hover:shadow-zinc-900/50"
+            >
+              <div className="aspect-video w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <FileText className="h-16 w-16 text-zinc-700" />
+                </div>
+                <div className="absolute top-3 right-3">
+                  {getStatusBadge(lease.status)}
+                </div>
+              </div>
+              <CardHeader>
+                <CardTitle className="text-zinc-50 flex items-center gap-2">
+                  <User className="h-4 w-4" />
+                  {lease.tenant?.name}
+                </CardTitle>
+                <CardDescription className="flex items-start gap-1">
+                  <Building2 className="h-4 w-4 shrink-0 mt-0.5" />
+                  <span className="text-xs">{lease.property?.name}</span>
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-zinc-400">Rent</span>
+                  <span className="font-semibold text-zinc-50">
+                    {formatCurrency(lease.monthlyRent)}/mo
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-sm text-zinc-400">
+                  <div className="flex items-center gap-1">
+                    <Calendar className="h-4 w-4" />
+                    <span>{new Date(lease.startDate).toLocaleDateString()}</span>
+                  </div>
+                  <span>to</span>
+                  <span>{new Date(lease.endDate).toLocaleDateString()}</span>
+                </div>
+                {lease.contractFile && (
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-zinc-400">Contract</span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadContract(lease)}
+                      className="flex items-center gap-1"
+                    >
+                      <Download className="w-3 h-3" />
+                      Download
+                    </Button>
+                  </div>
+                )}
+                <div className="flex gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEdit(lease)}
+                    className="flex-1 flex items-center gap-1"
+                  >
+                    <Edit className="w-3 h-3" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => handleDelete(lease.id)}
+                    className="flex items-center gap-1"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                    Delete
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
+    </div>
+  );
+}

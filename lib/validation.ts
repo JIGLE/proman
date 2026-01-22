@@ -4,6 +4,17 @@ import { z } from 'zod';
 export const propertySchema = z.object({
   name: z.string().min(1, 'Property name is required').max(100, 'Name too long'),
   address: z.string().min(1, 'Address is required').max(200, 'Address too long'),
+  // Enhanced address fields
+  streetAddress: z.string().max(200, 'Street address too long').optional(),
+  city: z.string().max(100, 'City name too long').optional(),
+  zipCode: z.string().regex(/^(?:[0-9]{4}-[0-9]{3}|[0-9]{5})$/, 'Invalid postal code format').optional(),
+  country: z.enum(['Portugal', 'Spain']).default('Portugal'),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
+  addressVerified: z.boolean().default(false),
+  // Building grouping
+  buildingId: z.string().optional(),
+  buildingName: z.string().max(100, 'Building name too long').optional(),
   type: z.enum(['apartment', 'house', 'condo', 'townhouse', 'other']),
   bedrooms: z.number().min(0).max(20),
   bathrooms: z.number().min(0).max(20),
@@ -95,6 +106,21 @@ export const maintenanceSchema = z.object({
   assignedTo: z.string().optional(),
 });
 
+// Lease validation schema
+export const leaseSchema = z.object({
+  propertyId: z.string().min(1, 'Property is required'),
+  tenantId: z.string().min(1, 'Tenant is required'),
+  startDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid start date'),
+  endDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid end date'),
+  monthlyRent: z.number().min(0, 'Monthly rent must be positive'),
+  deposit: z.number().min(0, 'Deposit cannot be negative').default(0),
+  taxRegime: z.enum(['portugal_rendimentos', 'spain_inmuebles']).optional(),
+  autoRenew: z.boolean().default(false),
+  renewalNoticeDays: z.number().min(0).max(365).default(60),
+  notes: z.string().max(1000, 'Notes too long').optional(),
+});
+
 export type OwnerFormData = z.infer<typeof ownerSchema>;
 export type ExpenseFormData = z.infer<typeof expenseSchema>;
 export type MaintenanceFormData = z.infer<typeof maintenanceSchema>;
+export type LeaseFormData = z.infer<typeof leaseSchema>;

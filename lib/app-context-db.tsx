@@ -11,6 +11,7 @@ import {
   Owner,
   Expense,
   MaintenanceTicket,
+  Lease,
 } from './types';
 // Import database helpers dynamically inside the client runtime to avoid bundling
 // server-only modules (Prisma, better-sqlite3) into client bundles.
@@ -25,6 +26,7 @@ interface AppState {
   owners: Owner[];
   expenses: Expense[];
   maintenance: MaintenanceTicket[];
+  leases: Lease[];
   loading: boolean;
   error: string | null;
 }
@@ -39,7 +41,8 @@ type AppAction =
   | { type: 'SET_CORRESPONDENCE'; payload: Correspondence[] }
   | { type: 'SET_OWNERS'; payload: Owner[] }
   | { type: 'SET_EXPENSES'; payload: Expense[] }
-  | { type: 'SET_MAINTENANCE'; payload: MaintenanceTicket[] };
+  | { type: 'SET_MAINTENANCE'; payload: MaintenanceTicket[] }
+  | { type: 'SET_LEASES'; payload: Lease[] };
 
 const initialState: AppState = {
   properties: [],
@@ -50,7 +53,8 @@ const initialState: AppState = {
   owners: [],
   expenses: [],
   maintenance: [],
-  loading: true,
+  leases: [],
+  loading: false,
   error: null,
 };
 
@@ -76,6 +80,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, expenses: action.payload };
     case 'SET_MAINTENANCE':
       return { ...state, maintenance: action.payload };
+    case 'SET_LEASES':
+      return { ...state, leases: action.payload };
     default:
       return state;
   }
@@ -115,6 +121,10 @@ const AppContext = createContext<{
   addMaintenance: (ticket: Omit<MaintenanceTicket, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName' | 'tenantName' | 'resolvedAt' | 'images'>) => Promise<void>;
   updateMaintenance: (id: string, ticket: Partial<MaintenanceTicket>) => Promise<void>;
   deleteMaintenance: (id: string) => Promise<void>;
+  // Lease actions
+  addLease: (lease: Omit<Lease, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'contractFileName' | 'contractFileSize'>) => Promise<void>;
+  updateLease: (id: string, lease: Partial<Lease>) => Promise<void>;
+  deleteLease: (id: string) => Promise<void>;
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }): React.ReactElement {
@@ -152,7 +162,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         await apiFetch('/api/debug/db/init', 'POST');
 
         // Load all data in parallel via server API endpoints
-        const [propertiesRes, tenantsRes, receiptsRes, templatesRes, correspondenceRes, ownersRes, expensesRes, maintenanceRes] = await Promise.all([
+        const [propertiesRes, tenantsRes, receiptsRes, templatesRes, correspondenceRes, ownersRes, expensesRes, maintenanceRes, leasesRes] = await Promise.all([
           apiFetch('/api/properties'),
           apiFetch('/api/tenants'),
           apiFetch('/api/receipts'),
@@ -161,6 +171,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
           apiFetch('/api/owners'),
           apiFetch('/api/expenses'),
           apiFetch('/api/maintenance'),
+          apiFetch('/api/leases'),
         ]);
 
         const properties = propertiesRes?.data ?? propertiesRes;
@@ -171,6 +182,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         const owners = ownersRes?.data ?? ownersRes;
         const expenses = expensesRes?.data ?? expensesRes;
         const maintenance = maintenanceRes?.data ?? maintenanceRes;
+        const leases = leasesRes?.data ?? leasesRes;
 
         dispatch({ type: 'SET_PROPERTIES', payload: properties });
         dispatch({ type: 'SET_TENANTS', payload: tenants });
@@ -180,6 +192,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         dispatch({ type: 'SET_OWNERS', payload: owners });
         dispatch({ type: 'SET_EXPENSES', payload: expenses });
         dispatch({ type: 'SET_MAINTENANCE', payload: maintenance });
+        dispatch({ type: 'SET_LEASES', payload: leases });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
         dispatch({ type: 'SET_ERROR', payload: errorMessage });
@@ -509,6 +522,37 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     throw new Error('Delete maintenance not implemented yet');
   };
 
+  // Lease operations
+  const addLease = async (leaseData: Omit<Lease, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'contractFileName' | 'contractFileSize'>) => {
+    try {
+      const newLease = await apiFetch('/api/leases', 'POST', leaseData);
+      dispatch({ type: 'SET_LEASES', payload: [newLease, ...state.leases] });
+    } catch (err) {
+      console.error('Failed to add lease:', err);
+      throw err;
+    }
+  };
+
+  const updateLease = async (id: string, leaseData: Partial<Lease>) => {
+    try {
+      const updatedLease = await apiFetch(`/api/leases/${id}`, 'PUT', leaseData);
+      dispatch({ type: 'SET_LEASES', payload: state.leases.map(l => l.id === id ? updatedLease : l) });
+    } catch (err) {
+      console.error('Failed to update lease:', err);
+      throw err;
+    }
+  };
+
+  const deleteLease = async (id: string) => {
+    try {
+      await apiFetch(`/api/leases/${id}`, 'DELETE');
+      dispatch({ type: 'SET_LEASES', payload: state.leases.filter(l => l.id !== id) });
+    } catch (err) {
+      console.error('Failed to delete lease:', err);
+      throw err;
+    }
+  };
+
 
   const contextValue = {
     state,
@@ -536,6 +580,9 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     addMaintenance,
     updateMaintenance,
     deleteMaintenance,
+    addLease,
+    updateLease,
+    deleteLease,
   };
 
   return (

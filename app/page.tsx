@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import { Sidebar } from "@/components/sidebar";
 import { OverviewView } from "@/components/overview-view";
 import { PropertiesView } from "@/components/properties-view";
+import { LeasesView } from "@/components/leases-view";
+import { PaymentMatrixView } from "@/components/payment-matrix-view";
 import { OwnersView } from "@/components/owners-view";
 import { TenantsView } from "@/components/tenants-view";
 import { MaintenanceView } from "@/components/maintenance-view";
@@ -402,6 +404,26 @@ export default function Home(): React.ReactElement {
                 </Select>
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="defaultCountry">Default Country</Label>
+              <Select value={settings.timezone?.includes('Madrid') ? 'Spain' : 'Portugal'} onValueChange={(value) => {
+                // Update timezone based on country selection
+                const defaultTimezone = value === 'Spain' ? 'Europe/Madrid' : 'Europe/Lisbon';
+                handleSettingChange('timezone', defaultTimezone);
+              }}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select default country" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Portugal">Portugal</SelectItem>
+                  <SelectItem value="Spain">Spain</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-zinc-500">
+                This affects tax calculations and address formatting defaults
+              </p>
+            </div>
           </CardContent>
         </Card>
 
@@ -490,6 +512,10 @@ export default function Home(): React.ReactElement {
         return <OverviewView />;
       case "properties":
         return <PropertiesView />;
+      case "leases":
+        return <LeasesView />;
+      case "payments":
+        return <PaymentMatrixView />;
       case "owners":
         return <OwnersView />;
       case "tenants":

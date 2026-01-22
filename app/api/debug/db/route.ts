@@ -20,6 +20,9 @@ export async function GET(): Promise<NextResponse> {
       exists: boolean | null;
       writable: boolean | null;
       userCount: number | null;
+      users?: any[];
+      accounts?: any[];
+      sessionCount?: number;
       error: string | null;
     };
     timestamp: string;
@@ -62,11 +65,44 @@ export async function GET(): Promise<NextResponse> {
     }
   }
 
-  // Try to contact database via Prisma to get a user count
+  // Try to contact database via Prisma to get detailed user/account info
   try {
     const prisma = getPrismaClient()
-    const count = await prisma.user.count()
-    info.database.userCount = count
+    const userCount = await prisma.user.count()
+    info.database.userCount = userCount
+
+    // Get detailed user and account information for OAuth debugging
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        createdAt: true,
+        _count: {
+          select: {
+            accounts: true,
+            properties: true,
+            leases: true,
+          }
+        }
+      }
+    })
+
+    const accounts = await prisma.account.findMany({
+      select: {
+        id: true,
+        userId: true,
+        type: true,
+        provider: true,
+        providerAccountId: true,
+      }
+    })
+
+    const sessions = await prisma.session.count()
+
+    info.database.users = users
+    info.database.accounts = accounts
+    info.database.sessionCount = sessions
     info.ok = true
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);

@@ -5,7 +5,7 @@ import type { JWT } from 'next-auth/jwt';
 type NextAuthOptions = {
   secret?: string | undefined;
   providers?: unknown[] | undefined;
-  session?: { strategy?: string } | undefined;
+  session?: { strategy?: string; maxAge?: number } | undefined;
   callbacks?: Record<string, unknown> | undefined;
   events?: Record<string, unknown> | undefined;
   pages?: Record<string, string> | undefined;

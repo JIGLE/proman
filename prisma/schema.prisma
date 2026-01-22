@@ -29,6 +29,7 @@ model User {
   owners   Owner[]
   expenses Expense[]
   maintenanceTickets MaintenanceTicket[]
+  leases   Lease[]
 
   @@map("users")
 }
@@ -126,6 +127,18 @@ model Property {
   userId      String
   name        String
   address     String
+  // Enhanced address fields
+  streetAddress   String?
+  city           String?
+  zipCode        String?
+  country        String?  @default("Portugal")
+  latitude       Float?
+  longitude      Float?
+  addressVerified Boolean @default(false)
+  // Building grouping
+  buildingId     String?
+  buildingName   String?
+
   type        PropertyType
   bedrooms    Int
   bathrooms   Int
@@ -143,6 +156,7 @@ model Property {
   owners      PropertyOwner[]
   expenses    Expense[]
   maintenance MaintenanceTicket[]
+  leases      Lease[]
 
   @@map("properties")
 }
@@ -169,6 +183,7 @@ model Tenant {
   receipts      Receipt[]
   correspondence Correspondence[]
   maintenance    MaintenanceTicket[]
+  leases        Lease[]
 
   @@map("tenants")
 }
@@ -273,6 +288,34 @@ model Correspondence {
   @@map("correspondence")
 }
 
+model Lease {
+  id                  String   @id @default(cuid())
+  userId              String
+  propertyId          String
+  tenantId            String
+  startDate           DateTime
+  endDate             DateTime
+  monthlyRent         Float
+  deposit             Float    @default(0)
+  contractFile        Bytes?  // Store PDF content as BLOB
+  contractFileName    String?
+  contractFileSize    Int?
+  taxRegime           String? // 'portugal_rendimentos' or 'spain_inmuebles'
+  status              LeaseStatus @default(active)
+  autoRenew           Boolean  @default(false)
+  renewalNoticeDays   Int      @default(60)
+  notes               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("leases")
+}
+
 // Enums
 enum PropertyType {
   apartment
@@ -346,4 +389,11 @@ enum MaintenancePriority {
   medium
   high
   urgent
+}
+
+enum LeaseStatus {
+  active
+  expired
+  terminated
+  pending
 }

@@ -5,6 +5,18 @@ export interface Property {
   userId: string;
   name: string;
   address: string;
+  // Enhanced address fields
+  streetAddress?: string;
+  city?: string;
+  zipCode?: string;
+  country?: string;
+  latitude?: number;
+  longitude?: number;
+  addressVerified?: boolean;
+  // Building grouping
+  buildingId?: string;
+  buildingName?: string;
+
   type: "apartment" | "house" | "condo" | "townhouse" | "other";
   bedrooms: number;
   bathrooms: number;
@@ -94,6 +106,35 @@ export interface PropertyOwner {
   property?: Property;
   ownerId: string;
   ownershipPercentage: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Lease {
+  id: string;
+  userId: string;
+  propertyId: string;
+  property?: {
+    name: string;
+    address: string;
+  };
+  tenantId: string;
+  tenant?: {
+    name: string;
+    email: string;
+  };
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  deposit: number;
+  contractFile?: Buffer;
+  contractFileName?: string;
+  contractFileSize?: number;
+  taxRegime?: string;
+  status: "active" | "expired" | "terminated" | "pending";
+  autoRenew: boolean;
+  renewalNoticeDays: number;
+  notes?: string;
   createdAt: string;
   updatedAt: string;
 }

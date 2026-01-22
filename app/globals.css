@@ -18,10 +18,107 @@
   --color-border: oklch(0.16 0.02 264);
   --color-input: oklch(0.16 0.02 264);
   --color-ring: oklch(0.84 0.01 264);
+
+  /* Enhanced color palette for UI enhancements */
+  --color-success: oklch(0.62 0.17 160); /* Deep emerald */
+  --color-success-foreground: oklch(0.98 0 0);
+  --color-warning: oklch(0.75 0.18 85); /* Warm amber */
+  --color-warning-foreground: oklch(0.15 0.02 85);
+  --color-info: oklch(0.55 0.05 250); /* Slate blue */
+  --color-info-foreground: oklch(0.98 0 0);
+  --color-progress: oklch(0.55 0.15 142); /* Forest green */
+  --color-progress-foreground: oklch(0.98 0 0);
+  --color-accent-primary: oklch(0.65 0.20 262); /* Warm indigo */
+  --color-accent-primary-foreground: oklch(0.98 0 0);
 }
 
 body {
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Animation utilities */
+@keyframes shimmer {
+  0% {
+    background-position: -200px 0;
+  }
+  100% {
+    background-position: calc(200px + 100%) 0;
+  }
+}
+
+@keyframes pulse-gentle {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite linear;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  background-size: 200px 100%;
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 2s infinite;
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.3s ease-out;
+}
+
+.animate-slide-in-left {
+  animation: slide-in-left 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scale-in 0.2s ease-out;
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer,
+  .animate-pulse-gentle,
+  .animate-slide-in-right,
+  .animate-slide-in-left,
+  .animate-scale-in {
+    animation: none;
+  }
 }

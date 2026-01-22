@@ -35,8 +35,10 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps): React.ReactEl
   const menuItems = [
     { id: "overview", label: "Overview", icon: Home },
     { id: "properties", label: "Properties", icon: Building2 },
+    { id: "leases", label: "Leases", icon: FileText },
     { id: "owners", label: "Owners", icon: Briefcase },
     { id: "tenants", label: "Tenants", icon: Users },
+    { id: "payments", label: "Payment Matrix", icon: DollarSign },
     { id: "maintenance", label: "Maintenance", icon: Hammer },
     { id: "financials", label: "Financials", icon: DollarSign },
     { id: "receipts", label: "Receipts", icon: FileText },
