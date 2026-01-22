@@ -1,14 +1,32 @@
+'use client'
+
 import { Suspense } from 'react'
-import { signIn, getSession } from 'next-auth/react'
-import { redirect } from 'next/navigation'
+import { signIn, useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Button } from '@/components/ui/button'
 
-async function SignInContent() {
-  const session = await getSession()
+function SignInContent() {
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (status === 'authenticated') {
+      router.push('/')
+    }
+  }, [status, router])
+
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+        <div className="text-zinc-400">Loading...</div>
+      </div>
+    )
+  }
 
   if (session) {
-    redirect('/')
+    return null // Will redirect via useEffect
   }
 
   return (
