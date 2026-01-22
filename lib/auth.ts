@@ -49,7 +49,7 @@ function createBaseAuthOptions(): NextAuthOptions {
     session: {
       strategy: 'database', // Use database sessions for better account linking
       maxAge: 30 * 24 * 60 * 60, // 30 days
-    } as any, // Type assertion needed for NextAuth types
+    },
     pages: {
       signIn: '/auth/signin',
       error: '/auth/error',
@@ -76,7 +76,7 @@ function createBaseAuthOptions(): NextAuthOptions {
           return session;
         }
       },
-      async signIn({ user, account, profile }: { user?: NextAuthUser | null; account?: Account | undefined; profile?: unknown }): Promise<boolean> {
+      async signIn({ user, account, profile: _profile }: { user?: NextAuthUser | null; account?: Account | undefined; profile?: unknown }): Promise<boolean> {
         console.log('signIn called:', {
           hasDatabase: !!(process.env.DATABASE_URL && process.env.DATABASE_URL.trim()),
           email: user?.email,
