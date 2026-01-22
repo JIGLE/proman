@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ApiError } from "@/lib/errors";
 import { prisma } from "@/lib/database";
-import { requireAdmin } from "@/lib/auth-helpers";
+import { requireAdmin } from "@/lib/auth-middleware";
 
 export async function GET(request: NextRequest) {
   try {

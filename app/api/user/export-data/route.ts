@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { ApiError } from "@/lib/errors";
 import { prisma } from "@/lib/database";
-import { requireAuth } from "@/lib/auth-helpers";
+import { requireAuth } from "@/lib/auth-middleware";
 
 export async function POST(request: NextRequest) {
   try {
