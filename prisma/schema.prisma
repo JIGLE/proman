@@ -277,7 +277,7 @@ model CorrespondenceTemplate {
   updatedAt DateTime @updatedAt
 
   // Relations
-  correspondence Correspondence[]
+  correspondences Correspondence[]
 
   @@map("correspondence_templates")
 }
