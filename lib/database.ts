@@ -282,7 +282,7 @@ export const tenantService = {
   async getAll(userId: string): Promise<Tenant[]> {
     const tenants = await getPrismaClient().tenant.findMany({
       where: { userId },
-      include: { property: true, receipts: true, correspondence: true },
+      include: { property: true, receipts: true, correspondences: true },
     });
     return tenants.map(t => ({
       ...t,
@@ -298,9 +298,9 @@ export const tenantService = {
   },
 
   async getById(userId: string, id: string): Promise<Tenant | null> {
-    const tenant = await getPrismaClient().tenant.findUnique({
+    const tenant = await getPrismaClient().tenant.findFirst({
       where: { id, userId },
-      include: { property: true, receipts: true, correspondence: true },
+      include: { property: true, receipts: true, correspondences: true },
     });
     if (!tenant) return null;
     return {
