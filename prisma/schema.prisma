@@ -195,7 +195,7 @@ model Tenant {
   user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   property      Property?     @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   receipts      Receipt[]
-  correspondence Correspondence[]
+  correspondences Correspondence[]
   maintenance    MaintenanceTicket[]
   leases        Lease[]
 
