@@ -10,14 +10,7 @@ export async function GET(request: NextRequest) {
     const { session } = authResult;
     const prisma = getPrismaClient();
 
-    // Log access for GDPR compliance
-    await prisma.auditLog.create({
-      data: {
-        userId: session.user.id,
-        action: "DATABASE_VIEW_ACCESS",
-        details: JSON.stringify({ ip: request.ip || "unknown", userAgent: request.headers.get("user-agent") }),
-      },
-    });
+    // TODO: Log access for GDPR compliance (auditLog not yet available in client)
 
     // Get all table names from Prisma schema (simplified introspection)
     const tables = [

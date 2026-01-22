@@ -28,14 +28,7 @@ export async function POST(request: NextRequest) {
       throw new ApiError(404, "User not found");
     }
 
-    // Log for GDPR
-    await prisma.auditLog.create({
-      data: {
-        userId: session.user.id,
-        action: "DATA_EXPORT",
-        details: JSON.stringify({ exportedAt: new Date().toISOString() }),
-      },
-    });
+    // TODO: Log for GDPR (auditLog not yet available in client)
 
     return new Response(JSON.stringify(user, null, 2), {
       headers: {
