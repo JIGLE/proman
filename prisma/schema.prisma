@@ -33,7 +33,6 @@ model User {
   leases         Lease[]
   correspondences Correspondence[]
   owners         Owner[]
-  propertyOwners PropertyOwner[]
   emailLogs      EmailLog[]
 }
 
