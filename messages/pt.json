@@ -1,99 +1,21 @@
 {
-  "common": {
-    "save": "Guardar",
-    "cancel": "Cancelar",
-    "delete": "Eliminar",
-    "edit": "Editar",
-    "add": "Adicionar",
-    "loading": "A carregar...",
-    "error": "Erro",
-    "success": "Sucesso",
-    "confirm": "Confirmar",
-    "yes": "Sim",
-    "no": "Não"
-  },
-  "navigation": {
-    "dashboard": "Painel de Controlo",
-    "properties": "Propriedades",
-    "tenants": "Inquilinos",
-    "receipts": "Recibos",
-    "financials": "Financeiros",
-    "owners": "Proprietários",
-    "maintenance": "Manutenção",
-    "settings": "Definições",
-    "profile": "Perfil"
-  },
-  "dashboard": {
-    "welcome": "Bem-vindo ao ProMan",
-    "monthlyRevenue": "Receitas Mensais",
-    "totalProperties": "Total de Propriedades",
-    "activeTenants": "Inquilinos Ativos",
-    "pendingPayments": "Pagamentos Pendentes",
-    "maintenanceRequests": "Pedidos de Manutenção"
-  },
-  "properties": {
-    "title": "Propriedades",
-    "addProperty": "Adicionar Propriedade",
-    "name": "Nome",
-    "address": "Morada",
-    "type": "Tipo",
-    "bedrooms": "Quartos",
-    "bathrooms": "Casas de Banho",
-    "monthlyRent": "Renda Mensal",
-    "status": "Estado"
-  },
-  "tenants": {
-    "title": "Inquilinos",
-    "addTenant": "Adicionar Inquilino",
-    "name": "Nome",
-    "email": "Email",
-    "phone": "Telefone",
-    "monthlyRent": "Renda Mensal",
-    "leaseStart": "Início do Contrato",
-    "leaseEnd": "Fim do Contrato",
-    "paymentStatus": "Estado do Pagamento"
-  },
-  "receipts": {
-    "title": "Recibos",
-    "addReceipt": "Adicionar Recibo",
-    "amount": "Montante",
-    "date": "Data",
-    "type": "Tipo",
-    "status": "Estado",
-    "description": "Descrição"
-  },
-  "financials": {
-    "title": "Financeiros",
-    "totalIncome": "Rendimento Total",
-    "totalExpenses": "Despesas Totais",
-    "netIncome": "Rendimento Líquido",
-    "monthly": "Mensal",
-    "yearly": "Anual"
-  },
-  "owners": {
-    "title": "Proprietários",
-    "addOwner": "Adicionar Proprietário",
-    "name": "Nome",
-    "email": "Email",
-    "phone": "Telefone",
-    "address": "Morada",
-    "notes": "Notas"
-  },
-  "maintenance": {
-    "title": "Manutenção",
-    "addTicket": "Adicionar Pedido de Manutenção",
-    "title_field": "Título",
-    "description": "Descrição",
-    "status": "Estado",
-    "priority": "Prioridade",
-    "estimatedCost": "Custo Estimado"
-  },
   "settings": {
-    "title": "Definições",
-    "language": "Idioma",
-    "currency": "Moeda",
-    "theme": "Tema",
-    "notifications": "Notificações",
-    "privacy": "Privacidade"
+    "title": "Configurações",
+    "description": "Gerencie as configurações da sua conta e preferências",
+    "imageConsent": "Exibir Imagem do Perfil",
+    "imageConsentDesc": "Permitir a exibição da sua imagem de perfil do Google no app (compatível com GDPR)."
+  },
+  "gdpr": {
+    "title": "Seus Direitos de Dados (GDPR)",
+    "description": "Sob o GDPR, você tem o direito de acessar, exportar ou excluir seus dados pessoais.",
+    "export": "Exportar Meus Dados",
+    "delete": "Excluir Meus Dados"
+  },
+  "admin": {
+    "database": {
+      "title": "Visualização de Banco de Dados do Admin",
+      "description": "Visualização somente leitura das tabelas do banco de dados. Acesso registrado para conformidade com GDPR."
+    }
   }
+}
 }

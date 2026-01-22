@@ -1,99 +1,21 @@
 {
-  "common": {
-    "save": "Save",
-    "cancel": "Cancel",
-    "delete": "Delete",
-    "edit": "Edit",
-    "add": "Add",
-    "loading": "Loading...",
-    "error": "Error",
-    "success": "Success",
-    "confirm": "Confirm",
-    "yes": "Yes",
-    "no": "No"
-  },
-  "navigation": {
-    "dashboard": "Dashboard",
-    "properties": "Properties",
-    "tenants": "Tenants",
-    "receipts": "Receipts",
-    "financials": "Financials",
-    "owners": "Owners",
-    "maintenance": "Maintenance",
-    "settings": "Settings",
-    "profile": "Profile"
-  },
-  "dashboard": {
-    "welcome": "Welcome to ProMan",
-    "monthlyRevenue": "Monthly Revenue",
-    "totalProperties": "Total Properties",
-    "activeTenants": "Active Tenants",
-    "pendingPayments": "Pending Payments",
-    "maintenanceRequests": "Maintenance Requests"
-  },
-  "properties": {
-    "title": "Properties",
-    "addProperty": "Add Property",
-    "name": "Name",
-    "address": "Address",
-    "type": "Type",
-    "bedrooms": "Bedrooms",
-    "bathrooms": "Bathrooms",
-    "monthlyRent": "Monthly Rent",
-    "status": "Status"
-  },
-  "tenants": {
-    "title": "Tenants",
-    "addTenant": "Add Tenant",
-    "name": "Name",
-    "email": "Email",
-    "phone": "Phone",
-    "monthlyRent": "Monthly Rent",
-    "leaseStart": "Lease Start",
-    "leaseEnd": "Lease End",
-    "paymentStatus": "Payment Status"
-  },
-  "receipts": {
-    "title": "Receipts",
-    "addReceipt": "Add Receipt",
-    "amount": "Amount",
-    "date": "Date",
-    "type": "Type",
-    "status": "Status",
-    "description": "Description"
-  },
-  "financials": {
-    "title": "Financials",
-    "totalIncome": "Total Income",
-    "totalExpenses": "Total Expenses",
-    "netIncome": "Net Income",
-    "monthly": "Monthly",
-    "yearly": "Yearly"
-  },
-  "owners": {
-    "title": "Owners",
-    "addOwner": "Add Owner",
-    "name": "Name",
-    "email": "Email",
-    "phone": "Phone",
-    "address": "Address",
-    "notes": "Notes"
-  },
-  "maintenance": {
-    "title": "Maintenance",
-    "addTicket": "Add Maintenance Ticket",
-    "title_field": "Title",
-    "description": "Description",
-    "status": "Status",
-    "priority": "Priority",
-    "estimatedCost": "Estimated Cost"
-  },
   "settings": {
     "title": "Settings",
-    "language": "Language",
-    "currency": "Currency",
-    "theme": "Theme",
-    "notifications": "Notifications",
-    "privacy": "Privacy"
+    "description": "Manage your account settings and preferences",
+    "imageConsent": "Display Profile Image",
+    "imageConsentDesc": "Allow displaying your Google profile image in the app (GDPR compliant)."
+  },
+  "gdpr": {
+    "title": "Your Data Rights (GDPR)",
+    "description": "Under GDPR, you have the right to access, export, or delete your personal data.",
+    "export": "Export My Data",
+    "delete": "Delete My Data"
+  },
+  "admin": {
+    "database": {
+      "title": "Admin Database View",
+      "description": "Read-only view of database tables. Access logged for GDPR compliance."
+    }
   }
+}
 }

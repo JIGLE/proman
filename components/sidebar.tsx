@@ -46,7 +46,6 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps): React.ReactEl
   ];
 
   const accountItems = [
-    { id: "profile", label: "Profile", icon: User },
     { id: "settings", label: "Settings", icon: Settings },
   ];
 

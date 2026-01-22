@@ -10,28 +10,31 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  image     String?
-  role      UserRole @default(USER)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  imageConsent  Boolean   @default(false) // GDPR: Consent for displaying image
+  role          Role      @default(USER)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  // Relations
-  properties Property[]
-  tenants    Tenant[]
-  emailLogs EmailLog[]
-  accounts Account[]
-  sessions Session[]
-  receipts Receipt[]
-  correspondence Correspondence[]
-  owners   Owner[]
-  expenses Expense[]
+  accounts      Account[]
+  sessions      Session[]
+  auditLogs     AuditLog[] // GDPR logging
+
+  // App-specific relations
+  properties     Property[]
+  tenants        Tenant[]
+  receipts       Receipt[]
+  expenses       Expense[]
   maintenanceTickets MaintenanceTicket[]
-  leases   Lease[]
-
-  @@map("users")
+  leases         Lease[]
+  correspondences Correspondence[]
+  owners         Owner[]
+  propertyOwners PropertyOwner[]
+  emailLogs      EmailLog[]
 }
 
 model Owner {
@@ -100,6 +103,18 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  details   String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("audit_logs")
 }
 
 model EmailLog {
