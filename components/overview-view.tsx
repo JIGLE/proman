@@ -14,6 +14,7 @@ import { useApp } from "@/lib/app-context-db";
 import { ProgressRing } from "./ui/progress";
 import { AchievementGrid } from "./ui/achievements";
 import { motion } from "framer-motion";
+import { useTranslations } from 'next-intl';
 
 export type OverviewViewProps = Record<string, never>
 
@@ -21,6 +22,7 @@ export function OverviewView(): React.ReactElement {
   const { state } = useApp();
   const { properties, tenants, receipts } = state;
   const { formatCurrency } = useCurrency();
+  const t = useTranslations();
 
   // Calculate stats
   const totalProperties = properties.length;
@@ -49,9 +51,9 @@ export function OverviewView(): React.ReactElement {
     <div className="space-y-6">
       <div>
         <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
-          Dashboard Overview
+          {t('navigation.dashboard')} Overview
         </h2>
-        <p className="text-zinc-400">Welcome to your property management dashboard</p>
+        <p className="text-zinc-400">{t('dashboard.welcome')}</p>
       </div>
 
       {/* Stats Grid */}
@@ -70,7 +72,7 @@ export function OverviewView(): React.ReactElement {
           <Card className="hover:border-accent-primary/30 transition-colors duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-zinc-400">
-                Total Properties
+                {t('dashboard.totalProperties')}
               </CardTitle>
               <Building2 className="h-4 w-4 text-zinc-400" />
             </CardHeader>
@@ -107,7 +109,7 @@ export function OverviewView(): React.ReactElement {
           <Card className="hover:border-accent-primary/30 transition-colors duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-zinc-400">
-                Active Tenants
+                {t('dashboard.activeTenants')}
               </CardTitle>
               <Users className="h-4 w-4 text-zinc-400" />
             </CardHeader>
@@ -146,7 +148,7 @@ export function OverviewView(): React.ReactElement {
           <Card className="hover:border-success/30 transition-colors duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-zinc-400">
-                Monthly Revenue
+                {t('dashboard.monthlyRevenue')}
               </CardTitle>
               <DollarSign className="h-4 w-4 text-success" />
             </CardHeader>

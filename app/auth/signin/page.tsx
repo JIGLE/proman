@@ -7,6 +7,8 @@ import { useEffect } from 'react'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { Button } from '@/components/ui/button'
 
+export const dynamic = 'force-dynamic'
+
 function SignInContent() {
   const { data: session, status } = useSession()
   const router = useRouter()

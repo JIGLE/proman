@@ -3,6 +3,8 @@
 import { Suspense } from 'react'
 import { ErrorBoundary } from '@/components/error-boundary'
 
+export const dynamic = 'force-dynamic'
+
 function AuthErrorContent() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950">
