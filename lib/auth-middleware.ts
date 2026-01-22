@@ -97,3 +97,21 @@ export function handleOptions(): NextResponse {
     headers: corsHeaders(),
   });
 }
+
+export async function requireAdmin(request: NextRequest) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+  const { session } = authResult;
+  if (session.user.role !== 'ADMIN') {
+    return new NextResponse(
+      JSON.stringify({ error: 'Forbidden: Admin access required' }),
+      {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
+  }
+  return authResult;
+}

@@ -1,13 +1,14 @@
 import { NextRequest } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { ApiError } from "@/lib/errors";
-import { prisma } from "@/lib/database";
+import { getPrismaClient } from "@/lib/database";
 import { requireAuth } from "@/lib/auth-middleware";
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireAuth(request);
+    const authResult = await requireAuth(request);
+    if (authResult instanceof Response) return authResult;
+    const { session } = authResult;
+    const prisma = getPrismaClient();
 
     // GDPR: Delete user's data
     await prisma.user.delete({

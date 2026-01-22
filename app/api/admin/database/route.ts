@@ -1,13 +1,14 @@
 import { NextRequest } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/lib/auth";
 import { ApiError } from "@/lib/errors";
-import { prisma } from "@/lib/database";
+import { getPrismaClient } from "@/lib/database";
 import { requireAdmin } from "@/lib/auth-middleware";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireAdmin(request);
+    const authResult = await requireAdmin(request);
+    if (authResult instanceof Response) return authResult;
+    const { session } = authResult;
+    const prisma = getPrismaClient();
 
     // Log access for GDPR compliance
     await prisma.auditLog.create({
