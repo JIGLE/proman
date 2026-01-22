@@ -478,7 +478,7 @@ export const receiptService = {
 export const templateService = {
   async getAll(): Promise<CorrespondenceTemplate[]> {
     const templates = await getPrismaClient().correspondenceTemplate.findMany({
-      include: { correspondence: true },
+      include: { correspondences: true },
     });
     return templates.map(t => ({
       ...t,
@@ -491,7 +491,7 @@ export const templateService = {
   async getById(id: string): Promise<CorrespondenceTemplate | null> {
     const template = await getPrismaClient().correspondenceTemplate.findUnique({
       where: { id },
-      include: { correspondence: true },
+      include: { correspondences: true },
     });
     if (!template) return null;
     return {
