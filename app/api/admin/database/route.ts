@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
           orderBy: { createdAt: "desc" },
         });
         // Anonymize sensitive fields for GDPR
-        data[table] = records.map(record => {
+        data[table] = records.map((record: any) => {
           const anonymized = { ...record };
           if (anonymized.email) anonymized.email = anonymized.email.replace(/(.{2}).*(@.*)/, "$1***$2");
           if (anonymized.name && table !== "User") anonymized.name = anonymized.name.replace(/(.).*/, "$1***");
