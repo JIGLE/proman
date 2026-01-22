@@ -77,7 +77,8 @@ try {
 try {
   log('Applying Prisma schema (db push) and generating client...');
   // Run db push and generate. Let the outputs stream to stdout/stderr so containers show logs.
-  execSync('npx prisma db push', { stdio: 'inherit' });
+  const pushCommand = resetDb ? 'npx prisma db push --accept-data-loss' : 'npx prisma db push';
+  execSync(pushCommand, { stdio: 'inherit' });
   execSync('npx prisma generate', { stdio: 'inherit' });
 } catch (err) {
   error('Error preparing sqlite DB (prisma commands failed):', err && err.message);
@@ -149,6 +150,10 @@ try {
   }
 
   log('Verified sqlite tables exist:', critical.join(', '));
+  // Also log all tables for debugging
+  const allRows = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
+  const allTables = allRows.map(r => String(r.name)).join(', ');
+  log('All sqlite tables present:', allTables);
   db.close();
   process.exit(0);
 } catch (err) {
