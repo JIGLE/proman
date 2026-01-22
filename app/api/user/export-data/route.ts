@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
         expenses: true,
         maintenanceTickets: true,
         leases: true,
-        correspondences: true,
+        correspondence: true,
       },
     });
 
