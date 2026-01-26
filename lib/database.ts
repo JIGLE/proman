@@ -36,7 +36,7 @@ function getPrismaClient(): PrismaClient {
                 return false;
               }
             })() : false;
-            console.log('[database] Using SQLite at', resolvedPath, 'exists:', exists, 'writable:', writable);
+            console.debug('[database] Using SQLite at', resolvedPath, 'exists:', exists, 'writable:', writable);
             if (!exists) {
               throw new Error(`SQLite DB file does not exist: ${resolvedPath}. Ensure a writable dataset is mounted at the path and create the file, or use POST /api/debug/db/init to create it.`);
             }
@@ -48,35 +48,35 @@ function getPrismaClient(): PrismaClient {
             console.error('[database] Filesystem check failed:', message);
             throw new Error(message);
           }
-        } else {
-          console.log('[database] Using non-sqlite datasource (url type):', dbUrl.startsWith('postgres') || dbUrl.startsWith('postgresql') ? 'postgres' : 'unknown');
-        }
+          } else {
+            console.debug('[database] Using non-sqlite datasource (url type):', dbUrl.startsWith('postgres') || dbUrl.startsWith('postgresql') ? 'postgres' : 'unknown');
+          }
 
         // Construct PrismaClient using environment configuration (DATABASE_URL)
         // Passing datasource overrides to the constructor is not supported in this runtime,
         // so rely on `process.env.DATABASE_URL` being set inside the container.
-        try {
-          // Diagnostics: log environment & available prisma files to assist CI debugging
-          try {
-            const fs = require('fs');
-            const path = require('path');
-            console.log('[database] Constructing PrismaClient; diagnostics:', {
-              cwd: process.cwd(),
-              nodeEnv: process.env.NODE_ENV,
-              databaseUrl: process.env.DATABASE_URL ? process.env.DATABASE_URL : '(none)',
-              prismaClientResolved: (() => {
-                try {
-                  return require.resolve('@prisma/client');
-                } catch {
-                  return undefined;
-                }
-              })(),
-              prismaClientExists: fs.existsSync(path.resolve(process.cwd(), 'node_modules', '@prisma', 'client')),
-              prismaGeneratedExists: fs.existsSync(path.resolve(process.cwd(), 'node_modules', '.prisma', 'client')),
-            });
-          } catch (diagErr: unknown) {
-            console.warn('[database] Diagnostics failed:', diagErr instanceof Error ? diagErr.message : String(diagErr))
-          }
+           try {
+             // Diagnostics: log environment & available prisma files to assist CI debugging
+             try {
+               const fs = require('fs');
+               const path = require('path');
+               console.debug('[database] Constructing PrismaClient; diagnostics:', {
+                 cwd: process.cwd(),
+                 nodeEnv: process.env.NODE_ENV,
+                 databaseUrl: process.env.DATABASE_URL ? process.env.DATABASE_URL : '(none)',
+                 prismaClientResolved: (() => {
+                   try {
+                     return require.resolve('@prisma/client');
+                   } catch {
+                     return undefined;
+                   }
+                 })(),
+                 prismaClientExists: fs.existsSync(path.resolve(process.cwd(), 'node_modules', '@prisma', 'client')),
+                 prismaGeneratedExists: fs.existsSync(path.resolve(process.cwd(), 'node_modules', '.prisma', 'client')),
+               });
+             } catch (diagErr: unknown) {
+               console.debug('[database] Diagnostics failed:', diagErr instanceof Error ? diagErr.message : String(diagErr))
+             }
 
           try {
             // If we're using SQLite, provide a lightweight adapter so Prisma Client can initialize.
@@ -85,7 +85,7 @@ function getPrismaClient(): PrismaClient {
                   const adapterFactory = createSqliteDriverAdapterFactory(process.env.DATABASE_URL);
                   globalForPrisma.prisma = new PrismaClient({ adapter: adapterFactory });
                 } catch (adapterErr: unknown) {
-                  console.warn('[database] Failed to initialize sqlite adapter, falling back to default constructor:', adapterErr instanceof Error ? adapterErr.message : String(adapterErr));
+                   console.debug('[database] Failed to initialize sqlite adapter, falling back to default constructor:', adapterErr instanceof Error ? adapterErr.message : String(adapterErr));
                   globalForPrisma.prisma = new PrismaClient();
                 }
             } else {
@@ -108,23 +108,23 @@ function getPrismaClient(): PrismaClient {
               throw pcInitErr;
             }
           }
-          console.log('[database] PrismaClient constructed successfully');
+           console.debug('[database] PrismaClient constructed successfully');
         } catch (pcErr: unknown) {
           const message = pcErr instanceof Error ? pcErr.message : String(pcErr);
           const name = pcErr instanceof Error && (pcErr as Error).name ? (pcErr as Error).name : 'UnknownError';
           const stack = pcErr instanceof Error ? (pcErr as Error).stack : undefined;
+           console.error('[database] Failed to construct PrismaClient:', name, message);
+          if (stack) console.error(stack);
+          throw new Error(`Prisma initialization failed: ${message}`);
+        }
+        } catch (err: unknown) {
+          const message = err instanceof Error ? err.message : String(err);
+          const name = err instanceof Error && (err as Error).name ? (err as Error).name : 'UnknownError';
+          const stack = err instanceof Error ? (err as Error).stack : undefined;
           console.error('[database] Failed to construct PrismaClient:', name, message);
           if (stack) console.error(stack);
           throw new Error(`Prisma initialization failed: ${message}`);
         }
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        const name = err instanceof Error && (err as Error).name ? (err as Error).name : 'UnknownError';
-        const stack = err instanceof Error ? (err as Error).stack : undefined;
-        console.error('[database] Failed to construct PrismaClient:', name, message);
-        if (stack) console.error(stack);
-        throw new Error(`Prisma initialization failed: ${message}`);
-      }
     } else {
       // During build time, create a mock client that throws an error if used
       // Keep behavior but make error message easier to match in tests
