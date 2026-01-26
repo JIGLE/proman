@@ -18,16 +18,35 @@ function clone<T>(v: T): T {
 
 function matches(where: AnyRecord | undefined, item: AnyRecord): boolean {
   if (!where) return true;
+  // Support top-level logical operators
+  if ('OR' in where && Array.isArray(where.OR)) {
+    return where.OR.some((sub: AnyRecord) => matches(sub, item));
+  }
+  if ('AND' in where && Array.isArray(where.AND)) {
+    return where.AND.every((sub: AnyRecord) => matches(sub, item));
+  }
+
   for (const key of Object.keys(where)) {
     const val = where[key];
     if (val === undefined) continue;
     if (typeof val === 'object' && val !== null) {
+      // Support { in: [...] }, { equals: x }, { contains: 'x' }, { startsWith: 'x' }
       if ('in' in val) {
         if (!Array.isArray(val.in) || !val.in.includes(item[key])) return false;
         continue;
       }
       if ('equals' in val) {
         if (item[key] !== val.equals) return false;
+        continue;
+      }
+      if ('contains' in val) {
+        const it = item[key];
+        if (typeof it !== 'string' || !it.includes(val.contains)) return false;
+        continue;
+      }
+      if ('startsWith' in val) {
+        const it = item[key];
+        if (typeof it !== 'string' || !it.startsWith(val.startsWith)) return false;
         continue;
       }
     }
@@ -103,6 +122,25 @@ export function createPrismaMock() {
         return clone(results);
       },
       create: async ({ data }: { data: AnyRecord }) => {
+        // Basic unique constraint simulation for common models
+        if (name === 'user' && data.email) {
+          const exists = ensureModel('user').some((u) => u.email === data.email);
+          if (exists) {
+            const err = new Error(`Unique constraint failed on the fields: (email)`);
+            // @ts-ignore add code to mimic Prisma error
+            err.code = 'P2002';
+            throw err;
+          }
+        }
+        if (name === 'account' && data.provider && data.providerAccountId) {
+          const exists = ensureModel('account').some((a) => a.provider === data.provider && a.providerAccountId === data.providerAccountId);
+          if (exists) {
+            const err = new Error(`Unique constraint failed on the fields: (provider, providerAccountId)`);
+            // @ts-ignore
+            err.code = 'P2002';
+            throw err;
+          }
+        }
         const newItem = Object.assign({ id: nextId(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }, data);
         storage().push(newItem);
         return clone(newItem);
@@ -164,6 +202,13 @@ export function createPrismaMock() {
   // Expose common models
   const models = Object.keys(state);
   for (const m of models) client[m] = makeModel(m);
+
+  // Convenience helpers to mimic a small subset of PrismaClient API used in tests
+  client.findFirst = client.findUnique = async ({ model, where }: { model: string; where?: AnyRecord }) => {
+    const mod = client[model];
+    if (!mod) return null;
+    return await mod.findFirst ? await mod.findFirst({ where }) : await mod.findUnique({ where });
+  };
 
   return client as any;
 }
