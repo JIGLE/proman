@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { renderWithProviders as render, screen, fireEvent } from './helpers/render-with-providers'
 import { Sidebar } from '../components/sidebar'
 
 vi.mock('next-auth/react', () => ({

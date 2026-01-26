@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { renderWithProviders, screen } from '../helpers/render-with-providers'
 import { FinancialsView } from '../../components/financials-view'
 
 vi.mock('@/lib/app-context-db', () => ({
@@ -15,7 +15,7 @@ vi.mock('@/lib/toast-context', () => ({
 
 describe('FinancialsView', () => {
   it('renders summary cards', () => {
-    render(<FinancialsView />)
+    renderWithProviders(<FinancialsView />)
     expect(screen.getByText(/Financials/)).toBeDefined()
     expect(screen.getByText(/Total Income/)).toBeDefined()
   })

@@ -1,62 +1,42 @@
-import '@testing-library/jest-dom'
-import './helpers/env'
-import React from 'react'
-import { afterEach, vi } from 'vitest'
-import { CurrencyProvider } from '@/lib/currency-context'
-import { NextIntlClientProvider } from 'next-intl'
-import { setPrismaClientForTests, resetPrismaClientForTests } from '@/lib/database'
-import { createMinimalPrismaMock } from './helpers/prisma-mock'
+import './helpers/globals';
+import { beforeEach, afterEach, vi } from 'vitest';
+import { setPrismaClientForTests, resetPrismaClientForTests } from '../lib/database';
+import prismaMock from './helpers/prisma-mock';
+import '@testing-library/jest-dom';
 
-// Mock @testing-library/react synchronously so tests that import `render`
-// directly receive a wrapped version that provides the CurrencyProvider.
-// Use `eval('require')` to synchronously load the actual module so we can
-// return a patched object from the mock factory (avoids async factory issues
-// with the test runner's transform).
-vi.mock('@testing-library/react', () => {
-  // eslint-disable-next-line no-eval
-  const actual = eval("require")('@testing-library/react')
-  const originalRender = actual.render
-  // Load english messages synchronously for the test environment
-  // eslint-disable-next-line no-eval
-  const messages = eval("require")('../messages/en.json')
+// Prefer an explicit render helper instead of globally patching @testing-library/react.
+// This reduces test-side mutation and makes tests easier to reason about.
+// Use `renderWithProviders` from `tests/helpers/render-with-providers` in tests that
+// need the intl and currency contexts.
 
-  function customRender(ui: React.ReactElement, options: Record<string, unknown> = {}) {
-    return originalRender(ui, {
-      wrapper: ({ children }: any) => React.createElement(NextIntlClientProvider as any, { locale: 'en', messages }, React.createElement(CurrencyProvider, null, children)),
-      ...(options as any),
-    } as any)
-  }
+// Prefer explicit use of `renderWithProviders` from
+// `tests/helpers/render-with-providers` in tests that need the intl and
+// currency contexts. We previously provided a compatibility mock for
+// `@testing-library/react` here, but importing the helper at module scope
+// caused an import cycle in some worker orders. Tests in this branch are
+// being migrated to import `renderWithProviders` directly; remove the
+// compatibility shim to keep the test environment simple.
 
-  // expose cleanup on global to be used by afterEach below
-  ;(globalThis as any).__rtl_cleanup = actual.cleanup
-
-  return {
-    ...actual,
-    render: customRender,
-  }
-})
-
-// Use the real cleanup implementation after each test
-afterEach(() => {
-  const cleanupFn = (globalThis as any).__rtl_cleanup
-  if (typeof cleanupFn === 'function') cleanupFn()
-  // Reset any Prisma client injection between tests
-  try {
-    resetPrismaClientForTests()
-  } catch {}
-})
-
-// no explicit exports needed from setup
-
-// Inject a minimal Prisma mock by default so modules that call getPrismaClient()
-// during tests can operate without the real DB. Individual tests can replace
-// this by calling setPrismaClientForTests with a different mock or real client.
-try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires, no-eval
-  const env = process.env.NODE_ENV
-  if (!process.env.DATABASE_URL) {
-    setPrismaClientForTests(createMinimalPrismaMock() as any)
-  }
-} catch (err) {
-  // best-effort; tests should still run even if injection fails
+// Inject our minimal Prisma mock when DATABASE_URL is not set. This keeps tests
+// hermetic and avoids requiring a sqlite file for every run.
+if (!process.env.DATABASE_URL) {
+  setPrismaClientForTests(prismaMock as any);
 }
+
+beforeEach(() => {
+  // Reset the in-memory mock to keep tests isolated.
+  if ((prismaMock as any).__reset) (prismaMock as any).__reset();
+});
+
+afterEach(() => {
+  // Keep the injected mock available for the worker lifetime; tests may reset
+  // or override it if needed. We still call resetPrismaClientForTests to be
+  // safe in case a test replaced the client.
+  try {
+    resetPrismaClientForTests();
+  } catch {}
+});
+
+// Note: the test harness also patches @testing-library/react in a separate file
+// so that components render with necessary providers (intl, currency). Keep this
+// file minimal — tests import it via vitest config `setupFiles`.

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { renderWithProviders, screen } from '../helpers/render-with-providers'
 import { OverviewView } from '../../components/overview-view'
 
 vi.mock('@/lib/app-context-db', () => ({
@@ -14,7 +14,7 @@ vi.mock('@/lib/app-context-db', () => ({
 
 describe('OverviewView', () => {
   it('renders dashboard overview and stats', () => {
-    render(<OverviewView />)
+    renderWithProviders(<OverviewView />)
     expect(screen.getByText(/Dashboard Overview/)).toBeDefined()
     expect(screen.getByText(/Total Properties/)).toBeDefined()
     expect(screen.getByText(/Monthly Revenue/)).toBeDefined()

@@ -9,6 +9,19 @@ import type { SqlDriverAdapterFactory, SqlDriverAdapter, SqlResultSet, Transacti
 // Use require to avoid bundler issues
 const BetterSqlite3 = require('better-sqlite3');
 
+function normalizeArg(a: unknown): unknown {
+  if (a === undefined) return null;
+  if (a === null) return null;
+  if (a instanceof Date) return a.toISOString();
+  // Buffer is accepted by better-sqlite3
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  if (typeof Buffer !== 'undefined' && Buffer.isBuffer && Buffer.isBuffer(a)) return a;
+  if (typeof a === 'boolean') return a ? 1 : 0;
+  if (typeof a === 'object') return JSON.stringify(a);
+  return a;
+}
+
 function getSqlitePathFromDatabaseUrl(dbUrl: string): string {
   // dbUrl like file:./dev.db or file:./ci-123.db
   if (!dbUrl.startsWith('file:')) throw new Error('Not a sqlite DATABASE_URL');
@@ -32,7 +45,8 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
         const hasReturning = trimmed.includes(' returning ') || trimmed.endsWith(' returning') || /\breturning\b/.test(trimmed);
         if (trimmed.startsWith('select') || trimmed.startsWith('pragma') || hasReturning) {
           const stmt = db.prepare(sql);
-          const rows = stmt.all(...args);
+          const normArgs = (args || []).map((a) => normalizeArg(a));
+          const rows = stmt.all(...normArgs);
           const columnNames = rows.length > 0 ? Object.keys(rows[0]) : [];
           const resultRows: unknown[][] = rows.map((r: Record<string, unknown>) =>
             columnNames.map((k) => (r as Record<string, unknown>)[k]),
@@ -43,8 +57,9 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
             rows: resultRows,
           } as SqlResultSet;
         } else {
-          const stmt = db.prepare(sql);
-          const info = stmt.run(...args);
+           const stmt = db.prepare(sql);
+           const normArgs = (args || []).map((a) => normalizeArg(a));
+           const info = stmt.run(...normArgs);
           return {
             columnNames: [],
             columnTypes: [],
@@ -57,7 +72,8 @@ export function createSqliteDriverAdapterFactory(dbUrl: string | undefined): Sql
       function runExec(sql: string, args: unknown[] = []): number {
                 try { /* debug: sqlite-adapter exec */ } catch { }
         const stmt = db.prepare(sql);
-        const info = stmt.run(...args);
+        const normArgs = (args || []).map((a) => normalizeArg(a));
+        const info = stmt.run(...normArgs);
         // better-sqlite3 exposes `changes` for affected rows
         return (info && typeof info.changes === 'number') ? info.changes : 0;
       }

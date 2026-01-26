@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render } from '@testing-library/react'
+import { renderWithProviders as render } from '../helpers/render-with-providers'
 import { Separator } from '../../components/ui/separator'
 
 describe('Separator component', () => {
