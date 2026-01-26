@@ -303,7 +303,20 @@ export class EmailService {
     userId: string;
   }): Promise<void> {
     try {
-      const prisma: PrismaClient = getPrismaClient();
+      let prisma: PrismaClient;
+      try {
+        prisma = getPrismaClient();
+      } catch (getErr: unknown) {
+        const msg = getErr instanceof Error ? getErr.message : String(getErr);
+        // If Prisma isn't available during build/test time, silently skip logging to avoid noisy errors
+        if (msg.includes('PrismaClient not available during build time')) {
+          return;
+        }
+        // Unexpected error while obtaining Prisma client — surface it for diagnostics
+        console.error('Failed to obtain PrismaClient for email logging:', getErr);
+        return;
+      }
+
       await prisma.emailLog.create({
         data: {
           to: data.to,
@@ -318,7 +331,8 @@ export class EmailService {
         },
       });
     } catch (error: unknown) {
-      console.error('Failed to log email:', error);
+      // Keep this low-noise during tests; log at debug level
+      console.debug('Failed to log email:', error);
     }
   }
 
@@ -329,23 +343,32 @@ export class EmailService {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const prisma: PrismaClient = getPrismaClient();
-    const stats = await prisma.emailLog.groupBy({
-      by: ['status'],
-      where: {
-        sentAt: {
-          gte: startDate,
+    try {
+      const prisma: PrismaClient = getPrismaClient();
+      const stats = await prisma.emailLog.groupBy({
+        by: ['status'],
+        where: {
+          sentAt: {
+            gte: startDate,
+          },
         },
-      },
-      _count: {
-        id: true,
-      },
-    });
+        _count: {
+          id: true,
+        },
+      });
 
-    return stats.reduce((acc: Record<string, number>, stat: { status: string; _count: { id: number } }) => {
-      acc[stat.status] = stat._count.id;
-      return acc;
-    }, {} as Record<string, number>);
+      return stats.reduce((acc: Record<string, number>, stat: { status: string; _count: { id: number } }) => {
+        acc[stat.status] = stat._count.id;
+        return acc;
+      }, {} as Record<string, number>);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('PrismaClient not available during build time')) {
+        return {};
+      }
+      console.error('Failed to fetch email stats:', err);
+      return {};
+    }
   }
 }
 

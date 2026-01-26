@@ -9,12 +9,20 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const DB_PATH = path.join(process.cwd(), 'proman.db');
-const BACKUP_PATH = path.join(process.cwd(), 'proman.db.backup');
+// Determine DB path from DATABASE_URL (if provided) or default to ./dev.db
+const dbUrlFromEnv = process.env.DATABASE_URL;
+let DB_PATH
+if (dbUrlFromEnv && dbUrlFromEnv.startsWith('file:')) {
+  const dbPath = dbUrlFromEnv.replace(/^file:\/\//, '').replace(/^file:/, '');
+  DB_PATH = path.resolve(process.cwd(), dbPath);
+} else {
+  DB_PATH = path.resolve(process.cwd(), 'dev.db');
+}
+const BACKUP_PATH = `${DB_PATH}.backup`;
 
 // Check if DB exists
 const dbExists = fs.existsSync(DB_PATH);
-console.log(`[ensure-sqlite] DB exists: ${dbExists}`);
+console.log(`[ensure-sqlite] DB path: ${DB_PATH} exists: ${dbExists}`);
 
 // DB Reset Logic
 const resetDb = process.env.RESET_DB === 'true';
@@ -38,20 +46,12 @@ if (resetDb) {
   }
 }
 
-// Apply schema
-console.log('[ensure-sqlite] Applying Prisma schema (db push) and generating client...');
-try {
-  const pushCommand = resetDb ? 'npx prisma db push --accept-data-loss' : 'npx prisma db push';
-  execSync(pushCommand, { stdio: 'inherit' });
-  execSync('npx prisma generate', { stdio: 'inherit' });
-  console.log('[ensure-sqlite] Verified sqlite tables exist:', execSync('sqlite3 proman.db ".tables"', { encoding: 'utf8' }).trim());
-} catch (error) {
-  console.error('[ensure-sqlite] Error preparing sqlite DB (prisma commands failed):', error);
-  process.exit(1);
-}
-
 function error(...args) {
   console.error('[ensure-sqlite]', ...args);
+}
+
+function log(...args) {
+  console.log('[ensure-sqlite]', ...args);
 }
 
 const dbUrl = process.env.DATABASE_URL;

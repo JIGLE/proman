@@ -17,5 +17,14 @@
       "description": "Read-only view of database tables. Access logged for GDPR compliance."
     }
   }
-}
+  ,
+  "navigation": {
+    "dashboard": "Dashboard"
+  },
+  "dashboard": {
+    "welcome": "Welcome to your dashboard",
+    "totalProperties": "Total Properties",
+    "activeTenants": "Active Tenants",
+    "monthlyRevenue": "Monthly Revenue"
+  }
 }

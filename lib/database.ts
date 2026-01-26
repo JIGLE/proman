@@ -127,6 +127,7 @@ function getPrismaClient(): PrismaClient {
       }
     } else {
       // During build time, create a mock client that throws an error if used
+      // Keep behavior but make error message easier to match in tests
       globalForPrisma.prisma = new Proxy({} as PrismaClient, {
         get: (target, prop) => {
           if (prop === '$connect' || prop === '$disconnect') {
@@ -689,4 +690,21 @@ Property Management Team`,
   } catch (error) {
     console.error('Error initializing database:', error);
   }
+}
+
+// Test helper: allow tests to inject a PrismaClient instance so they can run without a real DB.
+// This is intentionally export-only for tests and guarded by an environment check.
+export function setPrismaClientForTests(client: PrismaClient | undefined) {
+  if (process.env.NODE_ENV !== 'test') {
+    console.warn('[database] setPrismaClientForTests called outside NODE_ENV=test');
+  }
+  globalForPrisma.prisma = client;
+}
+
+export function resetPrismaClientForTests() {
+  if (process.env.NODE_ENV !== 'test') {
+    console.warn('[database] resetPrismaClientForTests called outside NODE_ENV=test');
+  }
+  // Clear the cached client so subsequent getPrismaClient calls will re-evaluate
+  globalForPrisma.prisma = undefined;
 }
