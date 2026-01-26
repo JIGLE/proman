@@ -170,8 +170,8 @@ export function getAuthOptions(): NextAuthOptions {
     };
   } catch (error: unknown) {
     const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-    console.debug('Failed to initialize Prisma adapter, using base auth options:', message);
-    if (error instanceof Error) console.debug(error.stack);
+    console.warn('Failed to initialize Prisma adapter, using base auth options:', message);
+    if (error instanceof Error) console.warn(error.stack);
     return baseAuthOptions;
   }
 }
