@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { renderWithProviders, screen } from '../helpers/render-with-providers'
 import { TenantsView } from '../../components/tenants-view'
 
 vi.mock('@/lib/app-context-db', () => ({
@@ -17,7 +17,7 @@ vi.mock('@/lib/toast-context', () => ({
 
 describe('TenantsView', () => {
   it('renders empty state when no tenants', () => {
-    render(<TenantsView />)
+    renderWithProviders(<TenantsView />)
     expect(screen.getByText(/No tenants yet/)).toBeDefined()
   })
 })
