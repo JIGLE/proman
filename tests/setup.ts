@@ -9,6 +9,19 @@ import '@testing-library/jest-dom';
 // Use `renderWithProviders` from `tests/helpers/render-with-providers` in tests that
 // need the intl and currency contexts.
 
+// For compatibility with existing tests that import `render` from
+// `@testing-library/react`, provide a lightweight mock that delegates to
+// our explicit `renderWithProviders` helper. This keeps test files unchanged
+// while avoiding complex inline provider wiring.
+vi.mock('@testing-library/react', async () => {
+  const actual = await vi.importActual('@testing-library/react');
+  const helper = await vi.importActual('./helpers/render-with-providers');
+  return {
+    ...actual,
+    render: helper.renderWithProviders,
+  };
+});
+
 // Inject our minimal Prisma mock when DATABASE_URL is not set. This keeps tests
 // hermetic and avoids requiring a sqlite file for every run.
 if (!process.env.DATABASE_URL) {
