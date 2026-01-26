@@ -13,12 +13,31 @@ import '@testing-library/jest-dom';
 // `@testing-library/react`, provide a lightweight mock that delegates to
 // our explicit `renderWithProviders` helper. This keeps test files unchanged
 // while avoiding complex inline provider wiring.
+// Provide a compatibility wrapper for tests that import `render` from
+// `@testing-library/react` without creating an import cycle. Some helpers
+// (eg. `tests/helpers/render-with-providers`) import RTL at module scope and
+// that can create a circular dependency when we mock the package. Instead,
+// construct the provider-wrapped render function inline using runtime
+// imports to avoid the cycle.
 vi.mock('@testing-library/react', async () => {
   const actual = await vi.importActual('@testing-library/react');
-  const helper = await vi.importActual('./helpers/render-with-providers');
+  const React = await vi.importActual('react');
+  const nextIntl = await vi.importActual('next-intl');
+  const enMessages = await vi.importActual('../messages/en.json');
+  const currency = await vi.importActual('../lib/currency-context');
+
+  const renderWithProviders = (ui: any, options?: any) => {
+    const wrapped = React.createElement(
+      nextIntl.NextIntlClientProvider,
+      { locale: 'en', messages: enMessages },
+      React.createElement(currency.CurrencyProvider, null, ui),
+    );
+    return actual.render(wrapped, options);
+  };
+
   return {
     ...actual,
-    render: helper.renderWithProviders,
+    render: renderWithProviders,
   };
 });
 
