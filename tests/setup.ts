@@ -4,30 +4,10 @@ import { setPrismaClientForTests, resetPrismaClientForTests } from '../lib/datab
 import prismaMock from './helpers/prisma-mock';
 import '@testing-library/jest-dom';
 
-// Patch @testing-library/react so components render with necessary providers
-// (intl messages and currency context) without editing each test file.
-vi.mock('@testing-library/react', async () => {
-  const actual = await vi.importActual('@testing-library/react');
-  const React = (await vi.importActual('react')) as any;
-  const nextIntl = await vi.importActual('next-intl');
-  const enMessages = await vi.importActual('../messages/en.json');
-  const currency = await vi.importActual('../lib/currency-context');
-
-  const NextIntlClientProvider = nextIntl.NextIntlClientProvider || nextIntl.default?.NextIntlClientProvider;
-  const CurrencyProvider = currency.CurrencyProvider || currency.default?.CurrencyProvider || currency;
-
-  return {
-    ...actual,
-    render: (ui: any, options?: any) => {
-      const wrapped = React.createElement(
-        NextIntlClientProvider,
-        { locale: 'en', messages: enMessages },
-        React.createElement(CurrencyProvider, null, ui),
-      );
-      return (actual as any).render(wrapped, options);
-    },
-  };
-});
+// Prefer an explicit render helper instead of globally patching @testing-library/react.
+// This reduces test-side mutation and makes tests easier to reason about.
+// Use `renderWithProviders` from `tests/helpers/render-with-providers` in tests that
+// need the intl and currency contexts.
 
 // Inject our minimal Prisma mock when DATABASE_URL is not set. This keeps tests
 // hermetic and avoids requiring a sqlite file for every run.
