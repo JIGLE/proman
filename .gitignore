@@ -54,3 +54,8 @@ tmp/
 /release-charts-local/
 /release-charts-temp/
 /tmp-release-charts/
+
+# Local CI test DB (created by workflow or during local sqlite-mode runs)
+ci-test.db
+# test DBs in tests/ directory
+tests/*.db
