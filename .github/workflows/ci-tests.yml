@@ -36,6 +36,12 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}
           touch ${{ github.workspace }}/ci-test.db
+      - name: SQLite DB info (debug)
+        run: |
+          echo "ci-test.db details:"
+          ls -l ${{ github.workspace }}/ci-test.db || true
+          echo "Tables in DB:"
+          sqlite3 ${{ github.workspace }}/ci-test.db ".tables" || true
       - name: Run prisma db push
         env:
           DATABASE_URL: file:./ci-test.db
