@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 function log(...args) {
-  console.log('[check-hostport]', ...args);
+  console.debug('[check-hostport]', ...args);
 }
 
 const host = process.env.HOSTNAME;

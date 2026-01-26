@@ -46,7 +46,8 @@ export class Logger {
     } else if (level === 'warn') {
       console.warn(JSON.stringify(logEntry));
     } else {
-      console.log(JSON.stringify(logEntry));
+      // Use debug for informational logs to reduce noise during tests
+      console.debug(JSON.stringify(logEntry));
     }
   }
 

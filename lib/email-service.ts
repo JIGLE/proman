@@ -332,6 +332,7 @@ export class EmailService {
       });
     } catch (error: unknown) {
       // Keep this low-noise during tests; log at debug level
+      // Keep as debug so test runs don't spam stderr
       console.debug('Failed to log email:', error);
     }
   }

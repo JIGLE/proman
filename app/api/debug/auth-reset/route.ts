@@ -21,7 +21,7 @@ export async function POST(): Promise<NextResponse> {
     await prisma.verificationToken.deleteMany()
 
     // Log what was reset
-    console.log('OAuth data reset completed')
+    console.debug('OAuth data reset completed')
 
     return NextResponse.json({
       success: true,

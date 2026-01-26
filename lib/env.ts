@@ -33,7 +33,7 @@ if (parsed.success) {
 } else {
   // If we're in test mode, tolerate missing environment variables and provide sensible defaults
   if (process.env.NODE_ENV === 'test') {
-    console.warn('⚠️ Environment validation failed, but continuing because NODE_ENV=test:', parsed.error);
+    console.debug('⚠️ Environment validation failed, but continuing because NODE_ENV=test:', parsed.error);
     const partialEnv = envSchema.partial().parse(process.env);
     env = {
       DATABASE_URL: partialEnv.DATABASE_URL ?? 'file:./dev.db',

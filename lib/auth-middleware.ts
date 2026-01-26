@@ -45,7 +45,7 @@ export async function requireAuth(_request: NextRequest): Promise<{
             name: session.user.name || '',
           },
         });
-        console.log('Created missing user:', user.id);
+        console.debug('Created missing user:', user.id);
       }
 
       return { session, userId: user.id };

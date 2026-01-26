@@ -19,13 +19,13 @@ const url = getDatabaseUrl()
 if (url.startsWith('file:')) {
   const dbPath = url.replace(/^file:\/\//, '').replace(/^file:/, '')
   const resolved = path.resolve(dbPath)
-  console.log('Checking SQLite DB file at:', resolved)
+  console.debug('Checking SQLite DB file at:', resolved)
 
   if (fs.existsSync(resolved)) {
-    console.log('Success: SQLite DB file exists')
+    console.debug('Success: SQLite DB file exists')
     process.exit(0)
   } else {
-    console.log('SQLite DB file does not exist. You can create it with `npx prisma db push`')
+    console.debug('SQLite DB file does not exist. You can create it with `npx prisma db push`')
     process.exit(1)
   }
 } else {
@@ -38,10 +38,10 @@ if (url.startsWith('file:')) {
 
   ;(async () => {
     try {
-      console.log('Attempting to connect to:', url.replace(/(:\/\/[^:]+:)[^@]+@/, '$1***@'))
+      console.debug('Attempting to connect to:', url.replace(/(:\/\/[^:]+:)[^@]+@/, '$1***@'))
       await client.connect()
       const res = await client.query('SELECT 1')
-      console.log('Success: received result:', res.rows)
+      console.debug('Success: received result:', res.rows)
       process.exit(0)
     } catch (err) {
       console.error('Connection failed:')

@@ -41,7 +41,9 @@ describe('integration: sqlite db init', () => {
     const module = await import(pathToFileURL(path).href)
     const res = await module.POST(new Request('http://localhost', { method: 'POST' }))
     const body = await res.json()
-    console.log('integration body:', body)
+    // Use debug-level log so test output isn't noisy unless needed
+    // eslint-disable-next-line no-console
+    console.debug('integration body:', body)
 
     expect(res.status).toBe(200)
     expect(body).toHaveProperty('ok', true)

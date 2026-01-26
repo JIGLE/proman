@@ -22,12 +22,12 @@ const BACKUP_PATH = `${DB_PATH}.backup`;
 
 // Check if DB exists
 const dbExists = fs.existsSync(DB_PATH);
-console.log(`[ensure-sqlite] DB path: ${DB_PATH} exists: ${dbExists}`);
+console.debug(`[ensure-sqlite] DB path: ${DB_PATH} exists: ${dbExists}`);
 
 // DB Reset Logic
 const resetDb = process.env.RESET_DB === 'true';
 if (resetDb) {
-  console.log('[ensure-sqlite] DB reset enabled.');
+  console.debug('[ensure-sqlite] DB reset enabled.');
   if (fs.existsSync(BACKUP_PATH)) {
     const expectedChecksum = process.env.DB_BACKUP_CHECKSUM;
     if (expectedChecksum) {
@@ -37,12 +37,12 @@ if (resetDb) {
         console.error(`[ensure-sqlite] Backup checksum mismatch! Expected: ${expectedChecksum}, Actual: ${actualChecksum}`);
         process.exit(1);
       }
-      console.log('[ensure-sqlite] Backup checksum validated.');
+      console.debug('[ensure-sqlite] Backup checksum validated.');
     } else {
-      console.log('[ensure-sqlite] No checksum provided; proceeding without validation.');
+      console.debug('[ensure-sqlite] No checksum provided; proceeding without validation.');
     }
   } else {
-    console.log('[ensure-sqlite] No backup found; proceeding with clean DB.');
+    console.debug('[ensure-sqlite] No backup found; proceeding with clean DB.');
   }
 }
 
@@ -51,7 +51,7 @@ function error(...args) {
 }
 
 function log(...args) {
-  console.log('[ensure-sqlite]', ...args);
+  console.debug('[ensure-sqlite]', ...args);
 }
 
 const dbUrl = process.env.DATABASE_URL;

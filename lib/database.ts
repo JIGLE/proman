@@ -75,7 +75,8 @@ function getPrismaClient(): PrismaClient {
                  prismaGeneratedExists: fs.existsSync(path.resolve(process.cwd(), 'node_modules', '.prisma', 'client')),
                });
              } catch (diagErr: unknown) {
-               console.debug('[database] Diagnostics failed:', diagErr instanceof Error ? diagErr.message : String(diagErr))
+            // debug diagnostics only
+            console.debug('[database] Diagnostics failed:', diagErr instanceof Error ? diagErr.message : String(diagErr))
              }
 
           try {
@@ -211,7 +212,8 @@ export const propertyService = {
     });
     // Debug: log created property to aid in diagnosing null/shape issues during tests
     try {
-      console.log('[database] created property:', property);
+            // Keep this debug-only to avoid noisy stdout during tests
+            console.debug('[database] created property:', property);
     } catch {}
     return {
       ...property,
@@ -630,19 +632,19 @@ export const correspondenceService = {
 
 // Database initialization and seeding
 export async function initializeDatabase(): Promise<void> {
-  try {
-    // Check if we have any templates (indicating database is seeded)
-    const templateCount = await getPrismaClient().correspondenceTemplate.count();
+    try {
+      // Check if we have any templates (indicating database is seeded)
+      const templateCount = await getPrismaClient().correspondenceTemplate.count();
 
-    if (templateCount === 0) {
-      // Seed initial templates
-      await getPrismaClient().correspondenceTemplate.createMany({
-        data: [
-          {
-            name: "Welcome Letter",
-            type: "welcome",
-            subject: "Welcome to {{property_name}}",
-            content: `Dear {{tenant_name}},
+      if (templateCount === 0) {
+        // Seed initial templates
+        await getPrismaClient().correspondenceTemplate.createMany({
+          data: [
+            {
+              name: "Welcome Letter",
+              type: "welcome",
+              subject: "Welcome to {{property_name}}",
+              content: `Dear {{tenant_name}},
 
 Welcome to {{property_name}}! We're excited to have you as our tenant.
 
@@ -658,13 +660,13 @@ Please don't hesitate to contact us if you need anything.
 
 Best regards,
 Property Management Team`,
-            variables: JSON.stringify(["tenant_name", "property_name", "lease_start", "lease_end", "property_address", "rent_amount", "bedrooms", "bathrooms"]),
-          },
-          {
-            name: "Rent Payment Reminder",
-            type: "rent_reminder",
-            subject: "Rent Payment Due - {{property_name}}",
-            content: `Dear {{tenant_name}},
+              variables: JSON.stringify(["tenant_name", "property_name", "lease_start", "lease_end", "property_address", "rent_amount", "bedrooms", "bathrooms"]),
+            },
+            {
+              name: "Rent Payment Reminder",
+              type: "rent_reminder",
+              subject: "Rent Payment Due - {{property_name}}",
+              content: `Dear {{tenant_name}},
 
 This is a friendly reminder that your rent payment of $\{{rent_amount}} for {{property_name}} is due on {{due_date}}.
 
@@ -681,29 +683,29 @@ Thank you for your prompt attention to this matter.
 
 Best regards,
 Property Management Team`,
-            variables: JSON.stringify(["tenant_name", "property_name", "rent_amount", "due_date"]),
-          },
-        ],
-      });
-      console.log('Database seeded with initial templates');
+              variables: JSON.stringify(["tenant_name", "property_name", "rent_amount", "due_date"]),
+            },
+          ],
+        });
+        console.debug('Database seeded with initial templates');
+      }
+    } catch (error) {
+      console.error('Error initializing database:', error);
     }
-  } catch (error) {
-    console.error('Error initializing database:', error);
-  }
 }
 
 // Test helper: allow tests to inject a PrismaClient instance so they can run without a real DB.
 // This is intentionally export-only for tests and guarded by an environment check.
 export function setPrismaClientForTests(client: PrismaClient | undefined) {
   if (process.env.NODE_ENV !== 'test') {
-    console.warn('[database] setPrismaClientForTests called outside NODE_ENV=test');
+    console.debug('[database] setPrismaClientForTests called outside NODE_ENV=test');
   }
   globalForPrisma.prisma = client;
 }
 
 export function resetPrismaClientForTests() {
   if (process.env.NODE_ENV !== 'test') {
-    console.warn('[database] resetPrismaClientForTests called outside NODE_ENV=test');
+    console.debug('[database] resetPrismaClientForTests called outside NODE_ENV=test');
   }
   // Clear the cached client so subsequent getPrismaClient calls will re-evaluate
   globalForPrisma.prisma = undefined;

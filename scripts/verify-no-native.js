@@ -6,5 +6,5 @@ if (r.status === 0) {
   console.error('Native/server modules found in .next');
   process.exit(1);
 } else {
-  console.log('OK: no native refs in .next');
+  console.debug('OK: no native refs in .next');
 }

@@ -80,7 +80,7 @@ export default function Home(): React.ReactElement {
 
   const handleSave = () => {
     // Here you would typically save to a database or API
-    console.log('Saving settings:', settings);
+    console.debug('Saving settings:', settings);
     // For now, just show a success message
     alert('Settings saved successfully!');
   };

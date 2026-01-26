@@ -35,7 +35,7 @@ function createBaseAuthOptions(): NextAuthOptions {
   const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
   if (!googleClientId || !googleClientSecret) {
-    console.warn('Google OAuth not configured: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing');
+    console.debug('Google OAuth not configured: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing');
   }
 
   const options: NextAuthOptions = {
@@ -77,7 +77,7 @@ function createBaseAuthOptions(): NextAuthOptions {
         }
       },
       async signIn({ user, account, profile: _profile }: { user?: NextAuthUser | null; account?: Account | undefined; profile?: unknown }): Promise<boolean> {
-        console.log('signIn called:', {
+        console.debug('signIn called:', {
           hasDatabase: !!(process.env.DATABASE_URL && process.env.DATABASE_URL.trim()),
           email: user?.email,
           provider: account?.provider,
@@ -122,7 +122,7 @@ function createBaseAuthOptions(): NextAuthOptions {
                       session_state: account.session_state,
                     },
                   });
-                  console.log('Linked OAuth account to existing user:', existingUser.email);
+                  console.debug('Linked OAuth account to existing user:', existingUser.email);
                 }
               }
             } catch (err: unknown) {
@@ -137,10 +137,10 @@ function createBaseAuthOptions(): NextAuthOptions {
     },
     events: {
       async signIn({ user, account, profile: _profile, isNewUser }: { user?: NextAuthUser | null; account?: { provider?: string } | undefined; profile?: unknown; isNewUser?: boolean }) {
-        console.log('NextAuth event signIn:', { email: user?.email, provider: account?.provider, isNewUser });
+        console.debug('NextAuth event signIn:', { email: user?.email, provider: account?.provider, isNewUser });
       },
       async createUser({ user }: { user: { id: string; email?: string } }) {
-        console.log('NextAuth event createUser:', { id: user.id, email: user.email });
+        console.debug('NextAuth event createUser:', { id: user.id, email: user.email });
       },
     },
   };
@@ -150,7 +150,7 @@ function createBaseAuthOptions(): NextAuthOptions {
 
 // Lazy adapter initialization to avoid build-time issues
 export function getAuthOptions(): NextAuthOptions {
-  console.log('getAuthOptions called, DATABASE_URL:', !!process.env.DATABASE_URL);
+  console.debug('getAuthOptions called, DATABASE_URL:', !!process.env.DATABASE_URL);
   // Only add adapter if we have database access and we're not in build time
   const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
   const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || !process.env.NODE_ENV;
@@ -158,20 +158,20 @@ export function getAuthOptions(): NextAuthOptions {
   const baseAuthOptions = createBaseAuthOptions();
 
   if (!hasDatabase || isBuildTime) {
-    console.log('Using base auth options, hasDatabase:', hasDatabase, 'isBuildTime:', isBuildTime);
+    console.debug('Using base auth options, hasDatabase:', hasDatabase, 'isBuildTime:', isBuildTime);
     return baseAuthOptions;
   }
 
   try {
-    console.log('Trying to initialize Prisma adapter');
+    console.debug('Trying to initialize Prisma adapter');
     return {
       ...baseAuthOptions,
       adapter: PrismaAdapter(getPrismaClient()),
     };
   } catch (error: unknown) {
     const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-    console.warn('Failed to initialize Prisma adapter, using base auth options:', message);
-    if (error instanceof Error) console.warn(error.stack);
+    console.debug('Failed to initialize Prisma adapter, using base auth options:', message);
+    if (error instanceof Error) console.debug(error.stack);
     return baseAuthOptions;
   }
 }
