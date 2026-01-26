@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { renderWithProviders, screen } from '../helpers/render-with-providers'
+import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
 import { ReceiptsView } from '../../components/receipts-view'
 
 vi.mock('@/lib/app-context-db', () => ({
@@ -17,7 +17,7 @@ vi.mock('@/lib/toast-context', () => ({
 
 describe('ReceiptsView', () => {
   it('renders empty receipts state', () => {
-    renderWithProviders(<ReceiptsView />)
+    render(<ReceiptsView />)
     expect(screen.getByText(/No receipts yet/)).toBeDefined()
   })
 })

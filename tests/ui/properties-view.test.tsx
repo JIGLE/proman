@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { renderWithProviders, screen } from '../helpers/render-with-providers'
+import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
 import { PropertiesView } from '../../components/properties-view'
 
 vi.mock('@/lib/app-context-db', () => ({
@@ -17,7 +17,7 @@ vi.mock('@/lib/toast-context', () => ({
 
 describe('PropertiesView', () => {
   it('shows empty state when no properties', () => {
-    renderWithProviders(<PropertiesView />)
+    render(<PropertiesView />)
     expect(screen.getByText(/No properties yet/)).toBeDefined()
   })
 })
