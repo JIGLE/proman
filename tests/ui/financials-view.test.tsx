@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
 import { FinancialsView } from '../../components/financials-view'
 
 vi.mock('@/lib/app-context-db', () => ({

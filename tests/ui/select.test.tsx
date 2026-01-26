@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
 import { Select, SelectTrigger, SelectContent, SelectItem } from '../../components/ui/select'
 
 describe('Select component', () => {
