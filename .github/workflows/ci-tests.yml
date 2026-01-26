@@ -1,0 +1,46 @@
+name: CI - Tests (mock & sqlite)
+
+on:
+  push:
+    branches: [ main, '**/test/**', '**/ci/**' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-mock:
+    name: Tests (in-memory mock)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install deps
+        run: npm ci
+      - name: Run tests (mock)
+        run: npm test
+
+  test-sqlite:
+    name: Tests (sqlite DATABASE_URL)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install deps
+        run: npm ci
+      - name: Create sqlite file
+        run: |
+          mkdir -p ${{ github.workspace }}
+          touch ${{ github.workspace }}/ci-test.db
+      - name: Run prisma db push
+        env:
+          DATABASE_URL: file:./ci-test.db
+        run: npx prisma db push --accept-data-loss
+      - name: Run tests (sqlite)
+        env:
+          DATABASE_URL: file:./ci-test.db
+        run: npm test
