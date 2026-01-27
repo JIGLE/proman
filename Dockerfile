@@ -13,6 +13,9 @@ WORKDIR /app
 # Install build dependencies required for native modules (better-sqlite3)
 RUN apk add --no-cache python3 make g++ pkgconfig
 
+# Update npm to latest version to avoid deprecation notices
+RUN npm install -g npm@latest
+
 # Copy package files and prisma schema (needed for postinstall prisma generate)
 COPY package*.json ./
 COPY prisma ./prisma/
