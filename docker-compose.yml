@@ -1,10 +1,11 @@
 version: '3.8'
 
 services:
-  proman:
+  # Production deployment (from registry)
+  proman-prod:
     image: ghcr.io/jigle/proman:latest
     ports:
-      - "3000:3000"
+      - "3001:3000"
     env_file:
       - .env
     volumes:
@@ -15,3 +16,63 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    profiles:
+      - prod
+
+  # Local development (build from source)
+  proman-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "3000:3000"
+    environment:
+      # Database
+      DATABASE_URL: file:./dev.db
+      
+      # NextAuth Configuration
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-in-production}
+      
+      # Google OAuth (configure in Google Cloud Console)
+      GOOGLE_ID: ${GOOGLE_ID:-}
+      GOOGLE_SECRET: ${GOOGLE_SECRET:-}
+      
+      # Email Configuration (SendGrid)
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL:-noreply@example.com}
+      SENDGRID_WEBHOOK_PUBLIC_KEY: ${SENDGRID_WEBHOOK_PUBLIC_KEY:-}
+      
+      # Debug Endpoints (safe for local dev)
+      DEBUG_MODE: "true"
+      INIT_SECRET: ${INIT_SECRET:-dev-init-secret}
+      
+      # Application Settings
+      NODE_ENV: development
+      NEXT_PUBLIC_APP_VERSION: 0.5.3
+      
+    volumes:
+      # Hot reload for development
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+      - ./dev.db:/app/dev.db
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    profiles:
+      - dev
+
+volumes:
+  dev_data:
+
+networks:
+  default:
+    name: proman-network
