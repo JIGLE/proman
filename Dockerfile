@@ -15,7 +15,7 @@ RUN apk add --no-cache python3 make g++ pkgconfig
 
 # Copy package files first (dependency layer - cached unless lock changes)
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
 # Copy source code and build (invalidates on code changes only)
 COPY prisma ./prisma/
