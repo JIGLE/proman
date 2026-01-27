@@ -6,10 +6,11 @@ export const runtime = 'nodejs'
 
 export async function POST(): Promise<NextResponse> {
   try {
-    // Only allow in development or with explicit permission
-    if (process.env.NODE_ENV === 'production' && process.env.ALLOW_AUTH_RESET !== 'true') {
+    // Disable in production — this is a dangerous endpoint
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[auth-reset] This endpoint is disabled in production for security')
       return NextResponse.json({
-        error: 'Auth reset not allowed in production'
+        error: 'Auth reset endpoint is disabled in production'
       }, { status: 403 })
     }
 

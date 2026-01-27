@@ -2,15 +2,88 @@ import { NextResponse } from 'next/server'
 import { execSync } from 'child_process'
 import fs from 'fs'
 import path from 'path'
+import crypto from 'crypto'
 
 export const runtime = 'nodejs'
 
+// Simple in-memory rate limiting (per IP)
+const initRequestTimestamps = new Map<string, number[]>()
+const MAX_INIT_REQUESTS = 5 // max 5 requests
+const RATE_LIMIT_WINDOW = 3600000 // 1 hour
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const timestamps = initRequestTimestamps.get(ip) || []
+  const recentTimestamps = timestamps.filter(t => now - t < RATE_LIMIT_WINDOW)
+  
+  if (recentTimestamps.length >= MAX_INIT_REQUESTS) {
+    return true
+  }
+  
+  recentTimestamps.push(now)
+  initRequestTimestamps.set(ip, recentTimestamps)
+  return false
+}
+
+function verifyHmacSignature(payload: string, signature: string, secret: string): boolean {
+  try {
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(payload)
+      .digest('hex')
+    return crypto.timingSafeEqual(
+      Buffer.from(signature),
+      Buffer.from(expectedSignature)
+    )
+  } catch {
+    return false
+  }
+}
+
 export async function POST(request: Request): Promise<NextResponse> {
-  // Optional protection: set INIT_SECRET env var and send Authorization: Bearer <INIT_SECRET>
+  // Security: INIT_SECRET is required for production
   const initSecret = process.env.INIT_SECRET
+  const nodeEnv = process.env.NODE_ENV
+  
+  // In production, always require INIT_SECRET
+  if (nodeEnv === 'production' && !initSecret) {
+    console.error('[db/init] Production deployment without INIT_SECRET — this endpoint is disabled for security')
+    return NextResponse.json({ ok: false, error: 'not available' }, { status: 403 })
+  }
+  
+  // Get client IP for rate limiting
+  const ip = request.headers.get('x-forwarded-for')?.split(',')[0].trim() || 
+             request.headers.get('x-real-ip') ||
+             'unknown'
+  
+  // Apply rate limiting
+  if (isRateLimited(ip)) {
+    return NextResponse.json(
+      { ok: false, error: 'rate limit exceeded — max 5 requests per hour' },
+      { status: 429 }
+    )
+  }
+  
+  // HMAC signature verification (if secret is set)
   if (initSecret) {
     const auth = request.headers.get('authorization') || ''
-    if (!auth.startsWith('Bearer ') || auth.slice(7) !== initSecret) {
+    const signature = request.headers.get('x-signature') || ''
+    
+    // Accept either Bearer token or HMAC signature (Bearer for backwards compatibility)
+    const isBearerValid = auth.startsWith('Bearer ') && auth.slice(7) === initSecret
+    
+    let isSignatureValid = false
+    if (signature && auth) {
+      try {
+        const payload = `${request.method}${request.url}${initSecret}`
+        isSignatureValid = verifyHmacSignature(payload, signature, initSecret)
+      } catch (err) {
+        console.debug('HMAC verification failed:', err instanceof Error ? err.message : String(err))
+      }
+    }
+    
+    if (!isBearerValid && !isSignatureValid) {
+      console.warn(`[db/init] Unauthorized attempt from IP: ${ip}`)
       return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 })
     }
   }

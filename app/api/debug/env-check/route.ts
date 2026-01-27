@@ -4,10 +4,11 @@ import { NextResponse } from 'next/server'
 export const runtime = 'nodejs'
 
 export async function GET(): Promise<NextResponse> {
-  // Only allow in development or with explicit permission
-  if (process.env.NODE_ENV === 'production' && process.env.ALLOW_ENV_CHECK !== 'true') {
+  // Disable in production for security
+  if (process.env.NODE_ENV === 'production') {
+    console.warn('[env-check] This endpoint is disabled in production for security')
     return NextResponse.json({
-      error: 'Environment check not allowed in production'
+      error: 'Environment check endpoint is disabled in production'
     }, { status: 403 })
   }
 

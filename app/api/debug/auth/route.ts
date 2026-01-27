@@ -26,7 +26,7 @@ export async function GET(): Promise<NextResponse> {
 
   try {
     const nextauthUrl = process.env.NEXTAUTH_URL
-    info.nextauthUrlOk = !!nextauthUrl && nextauthUrl === 'https://proman.mj25.eu'
+    info.nextauthUrlOk = !!nextauthUrl && nextauthUrl.startsWith('http')
     info.googleConfigured = !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET
 
     // DB check via Prisma
