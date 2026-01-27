@@ -13,12 +13,12 @@ WORKDIR /app
 # Install build dependencies required for native modules (better-sqlite3)
 RUN apk add --no-cache python3 make g++ pkgconfig
 
-# Copy package files first (dependency layer - cached unless lock changes)
+# Copy package files and prisma schema (needed for postinstall prisma generate)
 COPY package*.json ./
+COPY prisma ./prisma/
 RUN npm install
 
 # Copy source code and build (invalidates on code changes only)
-COPY prisma ./prisma/
 COPY next.config.ts tsconfig.json postcss.config.mjs eslint.config.js ./
 COPY app ./app/
 COPY components ./components/
