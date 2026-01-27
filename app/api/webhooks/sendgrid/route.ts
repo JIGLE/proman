@@ -86,17 +86,16 @@ async function processEvent(event: SendGridEvent): Promise<void> {
         lastEventAt: new Date(event.timestamp * 1000),
         lastEventType: event.event,
         ...(event.reason && { failureReason: event.reason }),
-        ...(event.response && { lastResponse: event.response }),
       },
       create: {
-        recipient: event.email,
+        to: event.email,
+        from: 'noreply@proman.local',
+        subject: '[Webhook] Email Status Update',
         sendgridMessageId: sgMessageId,
         status,
-        eventType: event.event,
         lastEventAt: new Date(event.timestamp * 1000),
         lastEventType: event.event,
         ...(event.reason && { failureReason: event.reason }),
-        ...(event.response && { lastResponse: event.response }),
       },
     })
 

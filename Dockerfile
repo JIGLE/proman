@@ -1,4 +1,4 @@
-FROM node:20-bullseye-slim AS builder
+FROM node:22-alpine AS builder
 
 ARG BUILD_VERSION
 ARG GIT_COMMIT
@@ -9,6 +9,9 @@ ENV GIT_COMMIT=${GIT_COMMIT}
 ENV BUILD_TIME=${BUILD_TIME}
 
 WORKDIR /app
+
+# Install build dependencies required for native modules (better-sqlite3)
+RUN apk add --no-cache python3 make g++ pkgconfig
 
 COPY package*.json ./
 COPY prisma ./prisma/
@@ -21,7 +24,7 @@ RUN npm run build
 # Generate version.json
 RUN echo "{\"version\":\"${BUILD_VERSION}\",\"git_commit\":\"${GIT_COMMIT}\",\"build_time\":\"${BUILD_TIME}\",\"node_env\":\"production\"}" > public/version.json
 
-FROM node:20-bullseye-slim AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
@@ -29,8 +32,8 @@ VOLUME /app/data
 
 ENV NODE_ENV=production
 
-RUN addgroup --system --gid 1001 nodejs
-RUN adduser --system --uid 1001 nextjs
+RUN addgroup -g 1001 -S nextjs
+RUN adduser -u 1001 -S nextjs -G nextjs
 
 COPY --from=builder /app/public ./public
 

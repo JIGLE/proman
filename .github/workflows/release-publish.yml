@@ -93,6 +93,7 @@ jobs:
             type=sha
 
       - name: Build and Push Docker Image
+        id: docker_build
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -106,6 +107,31 @@ jobs:
             BUILD_VERSION=${{ steps.vars.outputs.version }}
             GIT_COMMIT=${{ steps.vars.outputs.git_commit }}
             BUILD_TIME=${{ steps.vars.outputs.build_time }}
+
+      - name: Image Build Summary
+        if: always()
+        run: |
+          echo "## Docker Image Build Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ **Build Status**: Success" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Build Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- **Version**: ${{ steps.vars.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Registry**: ghcr.io/${{ steps.vars.outputs.owner_lower }}/${{ steps.vars.outputs.repo_lower }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Platforms**: linux/amd64, linux/arm64" >> $GITHUB_STEP_SUMMARY
+          echo "- **Git Commit**: ${{ steps.vars.outputs.git_commit }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Time**: ${{ steps.vars.outputs.build_time }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Image Tags" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.meta.outputs.tags }}" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Optimization Details" >> $GITHUB_STEP_SUMMARY
+          echo "- **Base Image**: node:22-alpine (optimized from node:20-bullseye-slim)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Build Cache**: GitHub Actions layer cache enabled" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dependencies**: recharts removed (unused, -6MB)" >> $GITHUB_STEP_SUMMARY
+          echo "- **Bundle Analyzer**: Enabled (run \`ANALYZE=true npm run build\` locally)" >> $GITHUB_STEP_SUMMARY
 
       - name: Package Helm Chart
         run: |

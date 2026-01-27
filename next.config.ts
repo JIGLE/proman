@@ -4,11 +4,13 @@ const nextConfig: NextConfig = {
   compress: true,
   output: 'standalone',
   experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-slot', 'recharts'],
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-slot'],
   },
   images: {
     unoptimized: true,
   },
+  // Empty turbopack config to avoid webpack conflict
+  turbopack: {},
   async headers() {
     return [
       {
