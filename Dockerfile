@@ -13,11 +13,20 @@ WORKDIR /app
 # Install build dependencies required for native modules (better-sqlite3)
 RUN apk add --no-cache python3 make g++ pkgconfig
 
+# Copy package files first (dependency layer - cached unless lock changes)
 COPY package*.json ./
-COPY prisma ./prisma/
-RUN npm ci
+RUN npm ci --frozen-lockfile
 
-COPY . .
+# Copy source code and build (invalidates on code changes only)
+COPY prisma ./prisma/
+COPY next.config.ts tsconfig.json postcss.config.mjs eslint.config.js ./
+COPY app ./app/
+COPY components ./components/
+COPY lib ./lib/
+COPY types ./types/
+COPY public ./public/
+COPY middleware.ts i18n.ts ./
+COPY messages ./messages/
 
 RUN npm run build
 
