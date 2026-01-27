@@ -6,7 +6,7 @@ import VersionBadge from '@/components/version-badge';
 import { CurrencyProvider } from '@/lib/currency-context';
 import {NextIntlClientProvider} from 'next-intl';
 import {getMessages} from 'next-intl/server';
-import {locales} from '@/lib/i18n';
+import {locales} from '@/i18n';
 
 const inter = Inter({ subsets: ["latin"] });
 
