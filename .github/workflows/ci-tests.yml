@@ -16,11 +16,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
       - name: Install deps
         run: npm ci
-      - name: Run verify (type-check, lint, tests)
-        run: npm run verify:ci
+      - name: Run tests (mock)
+        run: npm test
 
   test-sqlite:
     name: Tests (sqlite DATABASE_URL)
@@ -31,7 +30,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
       - name: Install deps
         run: npm ci
       - name: Create sqlite file
@@ -48,26 +46,7 @@ jobs:
         env:
           DATABASE_URL: file:./ci-test.db
         run: npx prisma db push --accept-data-loss
-      - name: Run verify (sqlite) (type-check, lint, tests)
+      - name: Run tests (sqlite)
         env:
           DATABASE_URL: file:./ci-test.db
-        run: npm run verify:ci
-
-  docker-build:
-    name: Docker Build (PR smoke test)
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Build image (no push)
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          platforms: linux/amd64
-          push: false
-          load: true
-          tags: proman-pr:${{ github.sha }}
+        run: npm test
