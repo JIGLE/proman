@@ -9,6 +9,13 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// Ensure DATABASE_URL is available for Prisma commands
+if (!process.env.DATABASE_URL) {
+  console.error('[ensure-sqlite] ERROR: DATABASE_URL environment variable is not set');
+  process.exit(1);
+}
+console.debug('[ensure-sqlite] DATABASE_URL is available:', process.env.DATABASE_URL.substring(0, 20) + '...');
+
 // Determine DB path from DATABASE_URL (if provided) or default to ./dev.db
 const dbUrlFromEnv = process.env.DATABASE_URL;
 let DB_PATH
@@ -78,8 +85,9 @@ try {
   log('Applying Prisma schema (db push) and generating client...');
   // Run db push and generate. Let the outputs stream to stdout/stderr so containers show logs.
   const pushCommand = resetDb ? 'npx prisma db push --accept-data-loss' : 'npx prisma db push';
-  execSync(pushCommand, { stdio: 'inherit' });
-  execSync('npx prisma generate', { stdio: 'inherit' });
+  const childEnv = { ...process.env };
+  execSync(pushCommand, { stdio: 'inherit', env: childEnv });
+  execSync('npx prisma generate', { stdio: 'inherit', env: childEnv });
 } catch (err) {
   error('Error preparing sqlite DB (prisma commands failed):', err && err.message);
   process.exit(1);
