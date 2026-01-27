@@ -1,103 +1,182 @@
-[![Publish Release](https://github.com/JIGLE/proman/actions/workflows/publish-ghcr.yml/badge.svg)](https://github.com/JIGLE/proman/actions/workflows/publish-ghcr.yml)
+[![CI Tests](https://github.com/JIGLE/proman/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/JIGLE/proman/actions/workflows/ci-tests.yml)
+[![Release - Publish to GHCR](https://github.com/JIGLE/proman/actions/workflows/release-publish.yml/badge.svg)](https://github.com/JIGLE/proman/actions/workflows/release-publish.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Node.js 20+](https://img.shields.io/badge/Node.js-20+-green)](https://nodejs.org/)
 
-## Proman — TrueNAS SCALE Custom App install
+# 🏠 ProMan — Property Management Dashboard
 
-This README provides concise, step-by-step instructions to install Proman as a Custom App on TrueNAS SCALE. Two main options are supported:
+A modern, self-hosted property management system for property owners and managers. Built with Next.js, Prisma, and SQLite for easy deployment on TrueNAS SCALE or any Kubernetes cluster.
 
-- Registry-based install (pull `ghcr.io/jigle/proman:<tag>`) — use an explicit tag (e.g., `ghcr.io/jigle/proman:0.1.1`); avoid `latest` for production installs.
-- Local image tar (no registry) — useful when nodes cannot reach GHCR or you prefer local images.
+## ✨ Features
 
-### Prerequisites
-- TrueNAS SCALE with Apps enabled
-- A dataset for persistence (or allow the chart to create a PVC)
-- `kubectl` / `helm` (optional, for advanced installs)
+- 📋 **Property Management** - Manage properties, units, and tenants
+- 💰 **Financial Tracking** - Receipts, expenses, and lease payments
+- 📧 **Email Integration** - SendGrid webhooks for delivery tracking
+- 🔐 **Secure Authentication** - Google OAuth with session management
+- 🌍 **Multi-language** - English and Portuguese support
+- 📱 **Responsive UI** - Modern interface with Tailwind CSS and shadcn/ui
+- 🚀 **Production Ready** - Container-based deployment with health checks
 
-### Option A — Install from GHCR (registry)
-1. In TrueNAS SCALE UI go to **Apps → Launch Docker Image** (or **Create App → Use YAML/Custom App**).
-2. Set image: `ghcr.io/jigle/proman:<version>` (use a specific tag; avoid `latest`).
-3. Configure environment variables:
-   - `NODE_ENV=production`
-   - `PORT=3000`
-   - `HOSTNAME=0.0.0.0` (default in image)
-   - `NEXTAUTH_URL=https://your.domain` (set to your external URL)
-   - `NEXTAUTH_SECRET` (set a secure random value)
-   - Any provider secrets (e.g. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SENDGRID_API_KEY`).
+## 🚀 Quick Start
 
-Note: the image includes defaults (`HOSTNAME=0.0.0.0`, `PORT=3000`) and the container runs a pre-start check that will fail startup if `HOSTNAME` or `PORT` are missing or invalid. Set these values in the TrueNAS Apps UI or Helm `values.yaml` when installing.
-4. Ports: map container `3000` to a NodePort (or let SCALE assign one). Example: NodePort 30555 → container 3000.
-5. Storage: map a dataset (Host Path) to `/data` inside the container; this stores the SQLite DB (`/data/proman.sqlite`).
-6. Deploy and verify:
-   - In SCALE Apps UI confirm the app becomes `Running`.
-   - Health endpoint: `GET http://<node-ip>:<node-port>/api/health` should return `{ "status": "ok" }`.
+### Local Development
 
-### Option B — Install using a local image tar (no registry)
-1. Build and save image tar locally (on your workstation):
-   ```bash
-   ./scripts/build-and-save.sh proman:local proman_local_image.tar
-   ```
-2. Copy the tar to each SCALE node and import it (example using SSH):
-   ```bash
-   scp proman_local_image.tar root@TRUENAS_NODE:/root/
-   # If SCALE node uses containerd/k3s:
-   ssh root@TRUENAS_NODE "ctr -n=k8s.io images import /root/proman_local_image.tar"
-   # Or if docker is available on the node:
-   ssh root@TRUENAS_NODE "docker load -i /root/proman_local_image.tar"
-   ```
-3. In the Apps UI use the image name you loaded (e.g., `proman:local`) and configure envs, ports and storage as in Option A.
+```bash
+# Install dependencies
+npm install
 
-### Option C — Install via Helm (advanced)
-1. From a machine with `kubectl`/`helm` configured for SCALE's k8s cluster:
-   ```bash
-   helm install proman ./helm/proman --set image.repository=ghcr.io/jigle/proman --set image.tag=<version>  # use a specific tag (avoid latest)
-   ```
-2. Customize `values.yaml` for `persistence`, `service.type` (NodePort/ClusterIP), and `ingress` before installing.
+# Set up environment
+cp .env.example .env
+# Edit .env with your Google OAuth credentials
 
-### Releases
+# Run development server
+npm run dev
+```
 
-We publish Docker images to GitHub Container Registry (GHCR) and package the Helm chart with the app's release version. Use explicit image tags for installs and updates — avoid using `latest` for production.
+Open [http://localhost:3000](http://localhost:3000) to start using ProMan.
 
+### Deploy to TrueNAS SCALE
 
-## Releases
+See [TRUENAS_DEPLOYMENT.md](TRUENAS_DEPLOYMENT.md) for step-by-step instructions.
 
-Releases are recorded here so you can see which image is pulled when restarting the app.
+### Deploy with Docker
 
-Release note template:
-- Date: YYYY-MM-DD  
-- Version: vX.Y.Z  
-- Image: `ghcr.io/jigle/proman:VERSION`  
-- Notes: short description
+```bash
+docker run -p 3000:3000 \
+  -e NEXTAUTH_SECRET=your-secret \
+  -e NEXTAUTH_URL=http://localhost:3000 \
+  -v proman-data:/app/data \
+  ghcr.io/JIGLE/proman:latest
+```
 
-Example:
-- Date: 2026-01-20  
-- Version: 0.2.0  
-- Image: `ghcr.io/jigle/proman:0.2.0`  
-- Notes: "Stability & TrueNAS SCALE support. Fixed CI/CD lint/test errors, added hostPath support to Helm chart, and resolved container prestart crash."
+## 📚 Documentation
 
-- Date: 2026-01-10  
-- Version: 0.1.1  
-- Image: `ghcr.io/jigle/proman:0.1.1`  
-- Notes: "Bugfix: DB handling on first init."
+- **[TrueNAS Deployment](TRUENAS_DEPLOYMENT.md)** - Complete TrueNAS SCALE setup guide
+- **[SendGrid Webhooks](SENDGRID_WEBHOOKS.md)** - Email delivery tracking configuration
+- **[Docker & Optimization](OPTIMIZATION.md)** - Image size optimization and monitoring
+- **[Release Notes](RELEASES.md)** - Version history and changes
 
-### How to release ✅
+## 🔧 Configuration
 
-Releases are created from the `publish-ghcr.yml` workflow. The recommended and safest method is to publish by creating an annotated tag `vX.Y.Z`. You can also run the workflow manually (via **Actions → Build and publish to GHCR → Run workflow**) and use the `dry_run` and `version` inputs for testing and overrides.
+### Environment Variables
 
-**Credential requirements for publishing**
+See [.env.example](.env.example) for all available options. Key variables:
 
-- The workflow prefers a user-provided Personal Access Token stored as the repository secret `GHCR_PAT` (must include `packages: write`).
-- If `GHCR_PAT` is not present the workflow will **fall back to** using the built-in `GITHUB_TOKEN` (only if repository **Actions → Workflow permissions** include **packages: write**).
-- A new pre-publish job validates credentials by attempting a `docker login` to `ghcr.io` and will fail early if no usable credential is found.
-- If your `production` environment has protection rules, ensure the environment grants access to the needed secret (or add `GHCR_PAT` to the environment secrets) before running a non-dry-run publish.
+```bash
+# Database
+DATABASE_URL=file:./dev.db
 
-- Recommended (tag-based release):
-  1. Update the package version: `npm version X.Y.Z --no-git-tag-version`
-  2. Commit the change: `git add package.json package-lock.json && git commit -m "chore(release): X.Y.Z"`
-  3. Create a tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`
-  4. Push the tag: `git push origin vX.Y.Z`
-  - The workflow will build and push images, package the Helm chart, and create a Release automatically.
+# Authentication
+NEXTAUTH_URL=https://yourdomain.com
+NEXTAUTH_SECRET=your-random-secret
 
-- Manual dry-run (inspect artifacts without creating a Release):
-  - Go to **Actions → Build and publish to GHCR → Run workflow**.
+# Google OAuth
+GOOGLE_ID=your-google-id
+GOOGLE_SECRET=your-google-secret
+
+# Email (SendGrid)
+SENDGRID_API_KEY=your-api-key
+SENDGRID_FROM_EMAIL=noreply@yourdomain.com
+SENDGRID_WEBHOOK_PUBLIC_KEY=your-public-key
+```
+
+## 🛠️ Development
+
+### Available Scripts
+
+```bash
+npm run dev           # Start development server
+npm run build         # Build for production
+npm run start         # Start production server
+npm run lint          # Run ESLint
+npm test              # Run tests
+npm run prisma:setup  # Initialize database
+```
+
+### Tech Stack
+
+- **Framework**: [Next.js 16](https://nextjs.org/) with TypeScript
+- **Database**: SQLite with [Prisma ORM](https://prisma.io/)
+- **Authentication**: [NextAuth.js v5](https://authjs.dev/)
+- **UI**: [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/)
+- **Email**: [SendGrid API](https://sendgrid.com/)
+- **Testing**: [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/)
+
+## 🚢 Deployment & Releases
+
+Releases are published to [GitHub Container Registry (GHCR)](https://ghcr.io/JIGLE/proman).
+
+**To create a release:**
+
+```bash
+# 1. Update version in package.json
+npm version X.Y.Z --no-git-tag-version
+
+# 2. Commit changes
+git add package.json package-lock.json
+git commit -m "chore(release): X.Y.Z"
+
+# 3. Create and push tag
+git tag -a vX.Y.Z -m "Release vX.Y.Z"
+git push origin vX.Y.Z
+```
+
+GitHub Actions will automatically:
+- Build multi-architecture Docker images (amd64 + arm64)
+- Publish to GHCR
+- Package Helm charts
+- Create a GitHub Release
+
+### Image Tags
+
+- `ghcr.io/JIGLE/proman:X.Y.Z` - Specific version
+- `ghcr.io/JIGLE/proman:latest` - Latest release
+- `ghcr.io/JIGLE/proman:SHA` - Git commit SHA
+
+## 🔐 Security
+
+- ✅ Non-root container user
+- ✅ Security headers (CSP, HSTS, X-Frame-Options)
+- ✅ SendGrid webhook signature verification
+- ✅ Rate limiting on initialization endpoints
+- ✅ Environment variable isolation (no hardcoded secrets)
+- ✅ Input validation and sanitization
+
+## 📊 Performance
+
+- **Image size**: ~140-150 MB compressed (optimized Alpine base)
+- **Startup time**: ~60 seconds (with database initialization)
+- **Memory**: 256 MB base request
+- **CPU**: 100m base request, 500m limit
+
+See [OPTIMIZATION.md](OPTIMIZATION.md) for detailed performance metrics and tuning.
+
+## 🤝 Contributing
+
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
+
+## 🆘 Support
+
+- **Issues**: [GitHub Issues](https://github.com/JIGLE/proman/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/JIGLE/proman/discussions)
+- **Documentation**: See docs/ directory
+
+## 🙏 Acknowledgments
+
+- [Next.js](https://nextjs.org/) - React framework
+- [Prisma](https://prisma.io/) - Database ORM
+- [shadcn/ui](https://ui.shadcn.com/) - UI components
+- [TrueNAS](https://www.truenas.com/) - NAS platform
   - Set `dry_run=true` and optionally `version=X.Y.Z` to override.
   - The workflow uploads `release-charts` as an artifact and shows a release-note preview for inspection.
 
