@@ -27,6 +27,7 @@ COPY types ./types/
 COPY public ./public/
 COPY middleware.ts i18n.ts ./
 COPY messages ./messages/
+COPY scripts ./scripts/
 
 RUN npm run build
 
