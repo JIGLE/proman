@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from 'next-intl';
@@ -45,6 +45,35 @@ export default function Home(): React.ReactElement {
   const router = useRouter();
   const currentLocale = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : 'en';
 
+  // Redirect to signin if not authenticated
+  useEffect(() => {
+    if (status === 'loading') {
+      // Wait for session to load
+      return;
+    }
+    if (status === 'unauthenticated') {
+      // Redirect to signin page with current locale
+      router.push(`/${currentLocale}/auth/signin`);
+    }
+  }, [status, router, currentLocale]);
+
+  // Show loading state while session is being checked
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-zinc-950">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-zinc-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render page content if not authenticated (will redirect)
+  if (status === 'unauthenticated' || !session) {
+    return <></>;
+  }
+
   type Settings = {
     emailNotifications: boolean;
     pushNotifications: boolean;
@@ -87,6 +116,7 @@ export default function Home(): React.ReactElement {
 
   const renderProfileContent = () => {
     const user = session?.user;
+    if (!user) return null;
     const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
 
     return (
@@ -484,31 +514,6 @@ export default function Home(): React.ReactElement {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
   };
-
-  if (status === "loading") {
-    return (
-      <div className="flex h-screen items-center justify-center bg-zinc-950">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-zinc-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-zinc-950">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-4">{t('dashboard.welcome')}</h1>
-          <p className="text-zinc-400 mb-8">Please sign in to access your property management dashboard.</p>
-          <Button onClick={() => signIn("google", { callbackUrl: "/" })} className="bg-blue-600 hover:bg-blue-700">
-            Sign in with Google
-          </Button>
-        </div>
-      </div>
-    );
-  }
 
   const renderContent = () => {
     switch (activeTab) {

@@ -64,8 +64,8 @@ function createBaseAuthOptions(): NextAuthOptions {
       },
       async session({ session, token }: { session: Session; token: JWT }): Promise<Session> {
         try {
-          // Add user ID to session
-          if (token && (token as JWT & { id?: string }).id) {
+          // Add user ID to session, but ensure session.user exists
+          if (session?.user && token && (token as JWT & { id?: string }).id) {
             const user = session.user as { id?: string };
             user.id = (token as JWT & { id?: string }).id;
           }
