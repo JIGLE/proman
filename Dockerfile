@@ -19,6 +19,7 @@ RUN npm install -g npm@latest
 # Copy package files and prisma schema (needed for postinstall prisma generate)
 COPY package*.json ./
 COPY prisma ./prisma/
+COPY prisma.config.ts ./
 RUN npm install
 
 # Copy source code and build (invalidates on code changes only)
