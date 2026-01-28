@@ -3,10 +3,6 @@ import createNextIntlPlugin from 'next-intl/plugin';
 
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
-// Supported locales
-const locales = ['en', 'pt'];
-const defaultLocale = 'en';
-
 const nextConfig: NextConfig = {
   compress: true,
   output: 'standalone',
@@ -18,23 +14,6 @@ const nextConfig: NextConfig = {
   },
   // Empty turbopack config to avoid webpack conflict
   turbopack: {},
-  // Handle locale redirects with rewrites (preferred over middleware for reverse proxies)
-  async rewrites() {
-    return {
-      beforeFiles: [
-        // Rewrite root / to /en (default locale)
-        {
-          source: '/',
-          destination: `/${defaultLocale}`,
-        },
-        // Rewrite paths without locale to include locale prefix
-        {
-          source: '/:path((?!(?:api|_next|_static|[\\w-]+\\.\\w+)).*)',
-          destination: `/${defaultLocale}/:path`,
-        },
-      ],
-    };
-  },
   async headers() {
     return [
       {
