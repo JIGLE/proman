@@ -323,7 +323,7 @@ export default function Home(): React.ReactElement {
 
             <div className="space-y-2">
               <Label htmlFor="language">{t('settings.language')}</Label>
-              <Select value={currentLocale} onValueChange={(value) => router.push(`/${value}`)}>
+              <Select value={locale} onValueChange={(value) => router.push(`/${value}`)}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
