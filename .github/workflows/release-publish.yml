@@ -113,8 +113,8 @@ jobs:
           push: ${{ env.DRY_RUN != 'true' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          no-cache: true
+          pull: true
           build-args: |
             BUILD_VERSION=${{ steps.vars.outputs.version }}
             GIT_COMMIT=${{ steps.vars.outputs.git_commit }}

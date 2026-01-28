@@ -59,3 +59,11 @@ tmp/
 ci-test.db
 # test DBs in tests/ directory
 tests/*.db
+
+# Build artifacts
+/dist/
+
+# Legacy eslint configs (using eslint.config.js only)
+.eslintrc.cjs
+.eslintrc.json
+eslint.config.cjs
