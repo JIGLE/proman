@@ -1,4 +1,4 @@
-name: Release - Publish to GHCR
+name: Release - Full publish with Helm & GitHub Release (use fast-release for quick builds)
 
 on:
   push:
