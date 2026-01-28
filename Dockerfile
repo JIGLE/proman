@@ -1,7 +1,9 @@
 FROM node:22-alpine AS builder
 
-# Cache bust argument - pass timestamp to force complete rebuild
+# Cache bust - this RUN command uses the ARG, forcing all subsequent layers to rebuild
 ARG CACHE_BUST
+RUN echo "Cache bust: ${CACHE_BUST}"
+
 ARG BUILD_VERSION
 ARG GIT_COMMIT
 ARG BUILD_TIME
