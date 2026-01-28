@@ -44,6 +44,7 @@ function createBaseAuthOptions(): NextAuthOptions {
       GoogleProvider({
         clientId: googleClientId || '',
         clientSecret: googleClientSecret || '',
+        allowDangerousEmailAccountLinking: true,
       }),
     ],
     session: {
@@ -83,54 +84,6 @@ function createBaseAuthOptions(): NextAuthOptions {
           provider: account?.provider,
           userId: user?.id
         });
-
-        // Handle account linking for existing users
-        if (account && user?.email) {
-          const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
-          if (hasDatabase) {
-            try {
-              const prisma = getPrismaClient();
-              const existingUser = await prisma.user.findUnique({
-                where: { email: user.email },
-              });
-
-              if (existingUser) {
-                // Check if account already exists
-                const existingAccount = await prisma.account.findUnique({
-                  where: {
-                    provider_providerAccountId: {
-                      provider: account.provider,
-                      providerAccountId: account.providerAccountId,
-                    },
-                  },
-                });
-
-                if (!existingAccount) {
-                  // Link the account to the existing user
-                  await prisma.account.create({
-                    data: {
-                      userId: existingUser.id,
-                      type: account.type,
-                      provider: account.provider,
-                      providerAccountId: account.providerAccountId,
-                      access_token: account.access_token,
-                      expires_at: account.expires_at,
-                      refresh_token: account.refresh_token,
-                      id_token: account.id_token,
-                      scope: account.scope,
-                      token_type: account.token_type,
-                      session_state: account.session_state,
-                    },
-                  });
-                  console.debug('Linked OAuth account to existing user:', existingUser.email);
-                }
-              }
-            } catch (err: unknown) {
-              console.error('Error linking account:', err);
-              // Continue anyway to allow sign-in
-            }
-          }
-        }
 
         return true;
       },
