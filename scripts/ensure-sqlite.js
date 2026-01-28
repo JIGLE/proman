@@ -83,9 +83,14 @@ try {
 
 try {
   log('Applying Prisma schema (db push) and generating client...');
+  // Ensure DATABASE_URL is in the environment for Prisma CLI
+  const childEnv = { ...process.env };
+  if (!childEnv.DATABASE_URL && dbUrl && dbUrl.startsWith('file:')) {
+    childEnv.DATABASE_URL = dbUrl;
+    log('Set DATABASE_URL from detection logic:', dbUrl.substring(0, 20) + '...');
+  }
   // Run db push and generate. Let the outputs stream to stdout/stderr so containers show logs.
   const pushCommand = resetDb ? 'npx prisma db push --accept-data-loss' : 'npx prisma db push';
-  const childEnv = { ...process.env };
   execSync(pushCommand, { stdio: 'inherit', env: childEnv });
   execSync('npx prisma generate', { stdio: 'inherit', env: childEnv });
 } catch (err) {
