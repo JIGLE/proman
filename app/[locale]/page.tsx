@@ -43,7 +43,6 @@ export default function Home(): React.ReactElement {
   const [activeTab, setActiveTab] = useState("overview");
   const t = useTranslations();
   const router = useRouter();
-  const currentLocale = typeof window !== 'undefined' ? window.location.pathname.split('/')[1] : 'en';
 
   // Redirect to signin if not authenticated
   useEffect(() => {
@@ -52,10 +51,10 @@ export default function Home(): React.ReactElement {
       return;
     }
     if (status === 'unauthenticated') {
-      // Redirect to signin page with current locale
-      router.push(`/${currentLocale}/auth/signin`);
+      // Redirect to signin page (auth routes are outside locale prefix)
+      router.push('/auth/signin');
     }
-  }, [status, router, currentLocale]);
+  }, [status, router]);
 
   // Show loading state while session is being checked
   if (status === 'loading') {

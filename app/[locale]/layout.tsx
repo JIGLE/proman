@@ -4,9 +4,9 @@ import "../globals.css";
 import { ClientProviders } from "@/components/client-providers";
 import VersionBadge from '@/components/version-badge';
 import { CurrencyProvider } from '@/lib/currency-context';
-import {NextIntlClientProvider} from 'next-intl';
-import {getMessages} from 'next-intl/server';
-import {locales} from '@/i18n';
+import {NextIntlClientProvider, hasLocale} from 'next-intl';
+import {getMessages, setRequestLocale} from 'next-intl/server';
+import {locales, defaultLocale} from '@/i18n';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,6 +15,11 @@ export const metadata: Metadata = {
   description: "Minimal property management dashboard",
 };
 
+// Generate static params for all supported locales
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
 export default async function Layout({
   children,
   params
@@ -22,18 +27,20 @@ export default async function Layout({
   children: React.ReactNode;
   params: Promise<{locale: string}>;
 }): Promise<React.ReactElement> {
-  let {locale} = await params;
-  // Ensure that the incoming `locale` is valid
-  if (!locales.includes(locale as any)) {
-    locale = 'en';
-  }
+  const {locale: requestedLocale} = await params;
+  
+  // Validate locale and fallback to default
+  const locale = hasLocale(locales, requestedLocale) ? requestedLocale : defaultLocale;
+  
+  // Enable static rendering for this locale
+  setRequestLocale(locale);
 
   // Providing all messages to the client
   // side is the easiest way to get started
   const messages = await getMessages();
 
   return (
-    <NextIntlClientProvider messages={messages}>
+    <NextIntlClientProvider locale={locale} messages={messages}>
       {children}
     </NextIntlClientProvider>
   );

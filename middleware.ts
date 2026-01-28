@@ -35,10 +35,11 @@ export const config = {
   matcher: [
     // Match all pathnames except:
     // - api routes
+    // - auth routes (NextAuth pages)
     // - _next internals
     // - _vercel internals  
     // - _static folder
     // - static files
-    '/((?!api|_next|_vercel|_static|.*\\..*|favicon\\.ico|robots\\.txt|sitemap\\.xml).)*',
+    '/((?!api|auth|_next|_vercel|_static|.*\..*|favicon\.ico|robots\.txt|sitemap\.xml).)*',
   ],
 };
