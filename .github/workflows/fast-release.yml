@@ -94,6 +94,7 @@ jobs:
           no-cache: true
           pull: true
           build-args: |
+            CACHE_BUST=${{ github.run_id }}-${{ github.run_number }}
             BUILD_VERSION=${{ steps.vars.outputs.version }}
             GIT_COMMIT=${{ steps.vars.outputs.git_commit }}
             BUILD_TIME=${{ steps.vars.outputs.build_time }}

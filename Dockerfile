@@ -1,5 +1,7 @@
 FROM node:22-alpine AS builder
 
+# Cache bust argument - pass timestamp to force complete rebuild
+ARG CACHE_BUST
 ARG BUILD_VERSION
 ARG GIT_COMMIT
 ARG BUILD_TIME
