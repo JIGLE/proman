@@ -1,26 +1,36 @@
-import createMiddleware from 'next-intl/middleware';
+import { NextRequest, NextResponse } from 'next/server';
 import { locales, defaultLocale } from './i18n';
 
-export default createMiddleware({
-  // A list of all locales that are supported
-  locales,
+// Use the proxy pattern for Next.js 16+ instead of deprecated middleware
+export function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname;
 
-  // Used when no locale matches
-  defaultLocale,
+  // Check if pathname already starts with a supported locale
+  const pathnameHasLocale = locales.some(
+    (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`
+  );
 
-  // Used to prefix locale to routes (ensures /en/page, /pt/page structure)
-  localePrefix: 'always',
-});
+  if (pathnameHasLocale) {
+    // Pathname already has locale, let it through
+    return NextResponse.next();
+  }
 
+  // Rewrite to add default locale
+  // This is the "proxy" pattern - internally rewriting the request
+  return NextResponse.rewrite(
+    new URL(`/${defaultLocale}${pathname}`, request.url)
+  );
+}
+
+// Configuration for which routes to apply the proxy to
 export const config = {
-  // Match only internationalized pathnames
   matcher: [
-    // Match all pathnames except for:
-    // - api (API routes)
-    // - _next (Next.js internals)
-    // - _vercel (Vercel internals)
-    // - _static (static files)
-    // - files with extensions (e.g., favicon.ico)
-    '/((?!api|_next|_vercel|_static|.*\\..*).)*',
+    // Match all pathnames except:
+    // - api routes
+    // - _next internals
+    // - _vercel internals  
+    // - _static folder
+    // - static files
+    '/((?!api|_next|_vercel|_static|.*\\..*|favicon\\.ico|robots\\.txt|sitemap\\.xml).)*',
   ],
 };
