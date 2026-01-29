@@ -342,6 +342,16 @@ kubectl exec deployment/proman -n proman -- ls -la /app/data/
 kubectl exec deployment/proman -n proman -- du -h /app/data/dev.db
 ```
 
+### Authentication stuck due to orphaned OAuth accounts
+
+If Google sign-in reports `OAuthAccountNotLinked` or `Callback` errors because an old OAuth account still exists, run the cleanup script inside the pod:
+
+```bash
+kubectl exec -it deployment/proman -n proman -- /bin/sh -c "cd /app && USER_EMAIL='user@example.com' npm run user:delete"
+```
+
+Replace `user@example.com` with the email to remove. The script deletes the user, related sessions, and any orphaned OAuth account rows so the next login can recreate them cleanly.
+
 ### Health check failing
 
 ```bash
