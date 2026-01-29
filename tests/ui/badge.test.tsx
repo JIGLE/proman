@@ -7,6 +7,6 @@ describe('Badge component', () => {
     render(<Badge variant="success">OK</Badge>)
     expect(screen.getByText('OK')).toBeDefined()
     const el = screen.getByText('OK')
-    expect(el.className).toMatch(/bg-green-500|bg-green-900/)
+    expect(el.className).toMatch(/bg-\[var\(--color-success\)\]/);
   })
 })

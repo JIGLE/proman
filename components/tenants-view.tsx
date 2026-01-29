@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ZodError } from 'zod';
-import { User, Mail, Phone, Calendar, Plus, Edit, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { User, Mail, Phone, Calendar, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useCurrency } from "@/lib/currency-context";
 import {
   Card,
@@ -18,22 +17,51 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { LoadingState } from "./ui/loading-state";
+import { SearchFilter } from "./ui/search-filter";
+import { ExportButton } from "./ui/export-button";
 import { useApp } from "@/lib/app-context-db";
 import { Tenant } from "@/lib/types";
 import { tenantSchema, TenantFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";
+import { useFormDialog } from "@/lib/hooks/use-form-dialog";
+import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
 
 export type TenantsViewProps = Record<string, never>
+
+interface SortableHeaderProps {
+  column: keyof Tenant;
+  label: string;
+  sortDirection: SortDirection;
+  onSort: (column: keyof Tenant) => void;
+}
+
+function SortableHeader({ column, label, sortDirection, onSort }: SortableHeaderProps) {
+  return (
+    <button
+      onClick={() => onSort(column)}
+      className="flex items-center gap-1 text-sm font-medium text-zinc-400 hover:text-zinc-50 transition-colors"
+    >
+      {label}
+      {sortDirection === 'asc' && <ArrowUp className="w-3 h-3" />}
+      {sortDirection === 'desc' && <ArrowDown className="w-3 h-3" />}
+      {sortDirection === null && <ArrowUpDown className="w-3 h-3 opacity-50" />}
+    </button>
+  );
+}
 
 export function TenantsView(): React.ReactElement {
   const { state, addTenant, updateTenant, deleteTenant } = useApp();
   const { tenants, properties, loading } = state;
-  const { success, error } = useToast();
+  const { success } = useToast();
   const { formatCurrency } = useCurrency();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTenant, setEditingTenant] = useState<Tenant | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<TenantFormData>({
+
+  // Search and filter state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [propertyFilter, setPropertyFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  const initialFormData: TenantFormData = {
     name: '',
     email: '',
     phone: '',
@@ -43,8 +71,23 @@ export function TenantsView(): React.ReactElement {
     leaseEnd: '',
     paymentStatus: 'pending',
     notes: '',
+  };
+
+  const dialog = useFormDialog<TenantFormData, Tenant>({
+    schema: tenantSchema,
+    initialData: initialFormData,
+    onSubmit: async (data, isEdit) => {
+      if (isEdit && dialog.editingItem) {
+        await updateTenant(dialog.editingItem.id, data);
+      } else {
+        await addTenant(data);
+      }
+    },
+    successMessage: {
+      create: 'Tenant added successfully!',
+      update: 'Tenant updated successfully!',
+    },
   });
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof TenantFormData, string>>>({});
 
   const getPaymentStatusBadge = (status: Tenant["paymentStatus"]) => {
     switch (status) {
@@ -57,58 +100,18 @@ export function TenantsView(): React.ReactElement {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setFormErrors({});
-
-    try {
-      // Validate form data
-      const validatedData = tenantSchema.parse(formData);
-
-      if (editingTenant) {
-        await updateTenant(editingTenant.id, validatedData);
-        success('Tenant updated successfully!');
-      } else {
-        await addTenant(validatedData);
-        success('Tenant added successfully!');
-      }
-
-      setIsDialogOpen(false);
-      setEditingTenant(null);
-      resetForm();
-    } catch (err: unknown) {
-      if (err instanceof ZodError) {
-        const errors: Partial<Record<keyof TenantFormData, string>> = {};
-        err.issues.forEach((issue) => {
-          const field = issue.path[0] as keyof TenantFormData;
-          errors[field] = issue.message;
-        });
-        setFormErrors(errors);
-        error('Please fix the form errors below.');
-      } else {
-        error('Failed to save tenant. Please try again.');
-        console.error('Tenant save error:', err);
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleEdit = (tenant: Tenant) => {
-    setEditingTenant(tenant);
-    setFormData({
-      name: tenant.name,
-      email: tenant.email,
-      phone: tenant.phone,
-      propertyId: tenant.propertyId || '',
-      rent: tenant.rent,
-      leaseStart: tenant.leaseStart,
-      leaseEnd: tenant.leaseEnd,
-      paymentStatus: tenant.paymentStatus,
-      notes: tenant.notes || '',
-    });
-    setIsDialogOpen(true);
+    dialog.openEditDialog(tenant, (t) => ({
+      name: t.name,
+      email: t.email,
+      phone: t.phone,
+      propertyId: t.propertyId || '',
+      rent: t.rent,
+      leaseStart: t.leaseStart,
+      leaseEnd: t.leaseEnd,
+      paymentStatus: t.paymentStatus,
+      notes: t.notes || '',
+    }));
   };
 
   const handleDelete = async (id: string) => {
@@ -122,70 +125,97 @@ export function TenantsView(): React.ReactElement {
     }
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      propertyId: '',
-      rent: 0,
-      leaseStart: '',
-      leaseEnd: '',
-      paymentStatus: 'pending',
-      notes: '',
-    });
-    setFormErrors({});
-  };
+  // Filter and search tenants
+  const filteredTenants = useMemo(() => {
+    return tenants.filter((tenant) => {
+      // Search filter (name, email, phone)
+      const matchesSearch = searchQuery.length === 0 || 
+        tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tenant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        tenant.phone.toLowerCase().includes(searchQuery.toLowerCase());
 
-  const openAddDialog = () => {
-    setEditingTenant(null);
-    resetForm();
-    setIsDialogOpen(true);
-  };
+      // Property filter
+      const matchesProperty = propertyFilter === 'all' || tenant.propertyId === propertyFilter;
+
+      // Status filter
+      const matchesStatus = statusFilter === 'all' || tenant.paymentStatus === statusFilter;
+
+      return matchesSearch && matchesProperty && matchesStatus;
+    });
+  }, [tenants, searchQuery, propertyFilter, statusFilter]);
+
+  // Sorting
+  const { sortedData: sortedTenants, requestSort, getSortDirection } = useSortableData(filteredTenants);
 
   return (
-    <div className="space-y-6">
-      {loading && (
-        <div className="flex items-center justify-center p-8">
-          <div className="text-zinc-400">Loading tenants...</div>
-        </div>
-      )}
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
-            Tenant CRM
-          </h2>
-          <p className="text-zinc-400">Manage tenant relationships and payments</p>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openAddDialog} className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Add Tenant
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="text-zinc-50">
-                {editingTenant ? 'Edit Tenant' : 'Add New Tenant'}
-              </DialogTitle>
-              <DialogDescription>
-                {editingTenant ? 'Update tenant information' : 'Enter tenant details'}
-              </DialogDescription>
-            </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
+    <>
+      {loading ? (
+        <LoadingState variant="cards" count={6} />
+      ) : (
+        <div className="space-y-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
+                Tenant CRM
+              </h2>
+              <p className="text-zinc-400">Manage tenant relationships and payments</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <ExportButton
+                data={sortedTenants}
+                filename="tenants"
+                columns={[
+                  { key: 'name', label: 'Name' },
+                  { key: 'email', label: 'Email' },
+                  { key: 'phone', label: 'Phone' },
+                  { key: 'propertyName', label: 'Property' },
+                  { 
+                    key: 'rent', 
+                    label: 'Monthly Rent',
+                    format: (value) => formatCurrency(value)
+                  },
+                  { 
+                    key: 'leaseStart', 
+                    label: 'Lease Start',
+                    format: (value) => new Date(value).toLocaleDateString()
+                  },
+                  { 
+                    key: 'leaseEnd', 
+                    label: 'Lease End',
+                    format: (value) => new Date(value).toLocaleDateString()
+                  },
+                  { key: 'paymentStatus', label: 'Payment Status' },
+                ]}
+              />
+              <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
+                <DialogTrigger asChild>
+                  <Button onClick={dialog.openDialog} className="flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Tenant
+                  </Button>
+                </DialogTrigger>
+              <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="text-zinc-50">
+                    {dialog.editingItem ? 'Edit Tenant' : 'Add New Tenant'}
+                  </DialogTitle>
+                  <DialogDescription>
+                    {dialog.editingItem ? 'Update tenant information' : 'Enter tenant details'}
+                  </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={dialog.handleSubmit} className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
                   <Label htmlFor="name">Full Name</Label>
                   <Input
                     id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className={formErrors.name ? 'border-red-500' : ''}
+                    value={dialog.formData.name}
+                    onChange={(e) => dialog.updateFormData({ name: e.target.value })}
+                    className={dialog.formErrors.name ? 'border-red-500' : ''}
                     required
                   />
-                  {formErrors.name && (
-                    <p className="text-sm text-red-500">{formErrors.name}</p>
+                  {dialog.formErrors.name && (
+                    <p className="text-sm text-red-500">{dialog.formErrors.name}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -193,13 +223,13 @@ export function TenantsView(): React.ReactElement {
                   <Input
                     id="email"
                     type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className={formErrors.email ? 'border-red-500' : ''}
+                    value={dialog.formData.email}
+                    onChange={(e) => dialog.updateFormData({ email: e.target.value })}
+                    className={dialog.formErrors.email ? 'border-red-500' : ''}
                     required
                   />
-                  {formErrors.email && (
-                    <p className="text-sm text-red-500">{formErrors.email}</p>
+                  {dialog.formErrors.email && (
+                    <p className="text-sm text-red-500">{dialog.formErrors.email}</p>
                   )}
                 </div>
               </div>
@@ -209,19 +239,19 @@ export function TenantsView(): React.ReactElement {
                   <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className={formErrors.phone ? 'border-red-500' : ''}
+                    value={dialog.formData.phone}
+                    onChange={(e) => dialog.updateFormData({ phone: e.target.value })}
+                    className={dialog.formErrors.phone ? 'border-red-500' : ''}
                     required
                   />
-                  {formErrors.phone && (
-                    <p className="text-sm text-red-500">{formErrors.phone}</p>
+                  {dialog.formErrors.phone && (
+                    <p className="text-sm text-red-500">{dialog.formErrors.phone}</p>
                   )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="property">Property</Label>
-                  <Select value={formData.propertyId} onValueChange={(value) => setFormData({ ...formData, propertyId: value })}>
-                    <SelectTrigger className={formErrors.propertyId ? 'border-red-500' : ''}>
+                  <Select value={dialog.formData.propertyId} onValueChange={(value) => dialog.updateFormData({ propertyId: value })}>
+                    <SelectTrigger className={dialog.formErrors.propertyId ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select property" />
                     </SelectTrigger>
                     <SelectContent>
@@ -232,8 +262,8 @@ export function TenantsView(): React.ReactElement {
                       ))}
                     </SelectContent>
                   </Select>
-                  {formErrors.propertyId && (
-                    <p className="text-sm text-red-500">{formErrors.propertyId}</p>
+                  {dialog.formErrors.propertyId && (
+                    <p className="text-sm text-red-500">{dialog.formErrors.propertyId}</p>
                   )}
                 </div>
               </div>
@@ -245,13 +275,13 @@ export function TenantsView(): React.ReactElement {
                     id="rent"
                     type="number"
                     min="0"
-                    value={formData.rent}
-                    onChange={(e) => setFormData({ ...formData, rent: parseInt(e.target.value) || 0 })}
-                    className={formErrors.rent ? 'border-red-500' : ''}
+                    value={dialog.formData.rent}
+                    onChange={(e) => dialog.updateFormData({ rent: parseInt(e.target.value) || 0 })}
+                    className={dialog.formErrors.rent ? 'border-red-500' : ''}
                     required
                   />
-                  {formErrors.rent && (
-                    <p className="text-sm text-red-500">{formErrors.rent}</p>
+                  {dialog.formErrors.rent && (
+                    <p className="text-sm text-red-500">{dialog.formErrors.rent}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -259,13 +289,13 @@ export function TenantsView(): React.ReactElement {
                   <Input
                     id="leaseStart"
                     type="date"
-                    value={formData.leaseStart}
-                    onChange={(e) => setFormData({ ...formData, leaseStart: e.target.value })}
-                    className={formErrors.leaseStart ? 'border-red-500' : ''}
+                    value={dialog.formData.leaseStart}
+                    onChange={(e) => dialog.updateFormData({ leaseStart: e.target.value })}
+                    className={dialog.formErrors.leaseStart ? 'border-red-500' : ''}
                     required
                   />
-                  {formErrors.leaseStart && (
-                    <p className="text-sm text-red-500">{formErrors.leaseStart}</p>
+                  {dialog.formErrors.leaseStart && (
+                    <p className="text-sm text-red-500">{dialog.formErrors.leaseStart}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -273,21 +303,21 @@ export function TenantsView(): React.ReactElement {
                   <Input
                     id="leaseEnd"
                     type="date"
-                    value={formData.leaseEnd}
-                    onChange={(e) => setFormData({ ...formData, leaseEnd: e.target.value })}
-                    className={formErrors.leaseEnd ? 'border-red-500' : ''}
+                    value={dialog.formData.leaseEnd}
+                    onChange={(e) => dialog.updateFormData({ leaseEnd: e.target.value })}
+                    className={dialog.formErrors.leaseEnd ? 'border-red-500' : ''}
                     required
                   />
-                  {formErrors.leaseEnd && (
-                    <p className="text-sm text-red-500">{formErrors.leaseEnd}</p>
+                  {dialog.formErrors.leaseEnd && (
+                    <p className="text-sm text-red-500">{dialog.formErrors.leaseEnd}</p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label htmlFor="paymentStatus">Payment Status</Label>
-                <Select value={formData.paymentStatus} onValueChange={(value: Tenant['paymentStatus']) => setFormData({ ...formData, paymentStatus: value })}>
-                  <SelectTrigger className={formErrors.paymentStatus ? 'border-red-500' : ''}>
+                <Select value={dialog.formData.paymentStatus} onValueChange={(value: Tenant['paymentStatus']) => dialog.updateFormData({ paymentStatus: value })}>
+                  <SelectTrigger className={dialog.formErrors.paymentStatus ? 'border-red-500' : ''}>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -296,8 +326,8 @@ export function TenantsView(): React.ReactElement {
                     <SelectItem value="overdue">Overdue</SelectItem>
                   </SelectContent>
                 </Select>
-                {formErrors.paymentStatus && (
-                  <p className="text-sm text-red-500">{formErrors.paymentStatus}</p>
+                {dialog.formErrors.paymentStatus && (
+                  <p className="text-sm text-red-500">{dialog.formErrors.paymentStatus}</p>
                 )}
               </div>
 
@@ -305,44 +335,103 @@ export function TenantsView(): React.ReactElement {
                 <Label htmlFor="notes">Notes (Optional)</Label>
                 <Textarea
                   id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  className={formErrors.notes ? 'border-red-500' : ''}
+                  value={dialog.formData.notes}
+                  onChange={(e) => dialog.updateFormData({ notes: e.target.value })}
+                  className={dialog.formErrors.notes ? 'border-red-500' : ''}
                   rows={3}
                 />
-                {formErrors.notes && (
-                  <p className="text-sm text-red-500">{formErrors.notes}</p>
+                {dialog.formErrors.notes && (
+                  <p className="text-sm text-red-500">{dialog.formErrors.notes}</p>
                 )}
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={dialog.closeDialog}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Saving...' : (editingTenant ? 'Update Tenant' : 'Add Tenant')}
+                <Button type="submit" disabled={dialog.isSubmitting}>
+                  {dialog.isSubmitting ? 'Saving...' : (dialog.editingItem ? 'Update Tenant' : 'Add Tenant')}
                 </Button>
               </div>
             </form>
           </DialogContent>
         </Dialog>
-      </div>
+            </div>
+          </div>
+
+          {/* Search and Filter */}
+          <SearchFilter
+            searchPlaceholder="Search tenants by name, email, or phone..."
+            onSearchChange={setSearchQuery}
+            onFilterChange={(key, value) => {
+              if (key === 'property') setPropertyFilter(value);
+              if (key === 'status') setStatusFilter(value);
+            }}
+            filters={[
+              {
+                key: 'property',
+                label: 'Property',
+                options: [
+                  { label: 'All Properties', value: 'all' },
+                  ...properties.map(p => ({ label: p.name, value: p.id }))
+                ],
+                defaultValue: 'all'
+              },
+              {
+                key: 'status',
+                label: 'Payment Status',
+                options: [
+                  { label: 'All Statuses', value: 'all' },
+                  { label: 'Paid', value: 'paid' },
+                  { label: 'Pending', value: 'pending' },
+                  { label: 'Overdue', value: 'overdue' }
+                ],
+                defaultValue: 'all'
+              }
+            ]}
+          />
+
+      {/* Sortable Column Headers */}
+      {filteredTenants.length > 0 && (
+        <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
+          <div className="flex-1">
+            <SortableHeader column="name" label="Tenant" sortDirection={getSortDirection('name')} onSort={requestSort} />
+          </div>
+          <div className="w-32">
+            <SortableHeader column="paymentStatus" label="Status" sortDirection={getSortDirection('paymentStatus')} onSort={requestSort} />
+          </div>
+          <div className="w-32">
+            <SortableHeader column="rent" label="Rent" sortDirection={getSortDirection('rent')} onSort={requestSort} />
+          </div>
+          <div className="w-48">
+            <SortableHeader column="leaseStart" label="Lease Period" sortDirection={getSortDirection('leaseStart')} onSort={requestSort} />
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-4">
-        {tenants.length === 0 ? (
+        {filteredTenants.length === 0 ? (
           <Card className="bg-zinc-900 border-zinc-800">
             <CardContent className="p-8 text-center">
               <User className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-zinc-50 mb-2">No tenants yet</h3>
-              <p className="text-zinc-400 mb-4">Get started by adding your first tenant</p>
-              <Button onClick={openAddDialog} className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Add Your First Tenant
-              </Button>
+              <h3 className="text-lg font-semibold text-zinc-50 mb-2">
+                {tenants.length === 0 ? 'No tenants yet' : 'No tenants found'}
+              </h3>
+              <p className="text-zinc-400 mb-4">
+                {tenants.length === 0 
+                  ? 'Get started by adding your first tenant' 
+                  : 'Try adjusting your search or filters'}
+              </p>
+              {tenants.length === 0 && (
+                <Button onClick={dialog.openDialog} className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Your First Tenant
+                </Button>
+              )}
             </CardContent>
           </Card>
         ) : (
-          tenants.map((tenant) => (
+          sortedTenants.map((tenant) => (
             <Card key={tenant.id} className="transition-all hover:shadow-lg hover:shadow-zinc-900/50">
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -416,6 +505,8 @@ export function TenantsView(): React.ReactElement {
           ))
         )}
       </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 }

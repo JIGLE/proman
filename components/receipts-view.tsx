@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ZodError } from 'zod';
 import { FileText, Download, Calendar, Plus, Edit, Trash2, DollarSign } from "lucide-react";
 import { Card, CardContent } from "./ui/card";
 import { useCurrency } from "@/lib/currency-context";
@@ -12,10 +11,12 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { LoadingState } from "./ui/loading-state";
 import { useApp } from "@/lib/app-context-db";
 import { Receipt } from "@/lib/types";
 import { receiptSchema, ReceiptFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";
+import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import jsPDF from "jspdf";
 
 export type ReceiptsViewProps = Record<string, never>
@@ -25,11 +26,9 @@ export function ReceiptsView(): React.ReactElement {
   const { receipts, tenants, properties, loading } = state;
   const { success, error } = useToast();
   const { formatCurrency } = useCurrency();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingReceipt, setEditingReceipt] = useState<Receipt | null>(null);
   const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState<ReceiptFormData>({
+
+  const initialFormData: ReceiptFormData = {
     tenantId: '',
     propertyId: '',
     amount: 0,
@@ -37,59 +36,35 @@ export function ReceiptsView(): React.ReactElement {
     type: 'rent',
     status: 'paid',
     description: '',
-  });
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof ReceiptFormData, string>>>({});
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setFormErrors({});
-
-    try {
-      // Validate form data
-      const validatedData = receiptSchema.parse(formData);
-
-      if (editingReceipt) {
-        await updateReceipt(editingReceipt.id, validatedData);
-        success('Receipt updated successfully!');
-      } else {
-        await addReceipt(validatedData);
-        success('Receipt created successfully!');
-      }
-
-      setIsDialogOpen(false);
-      setEditingReceipt(null);
-      resetForm();
-    } catch (err: unknown) {
-      if (err instanceof ZodError) {
-        const errors: Partial<Record<keyof ReceiptFormData, string>> = {};
-        err.issues.forEach((issue) => {
-          const field = issue.path[0] as keyof ReceiptFormData;
-          errors[field] = issue.message;
-        });
-        setFormErrors(errors);
-        error('Please fix the form errors below.');
-      } else {
-        error('Failed to save receipt. Please try again.');
-        console.error('Receipt save error:', err);
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
   };
 
+  const dialog = useFormDialog<ReceiptFormData>({
+    schema: receiptSchema,
+    initialData: initialFormData,
+    onSubmit: async (data, isEdit) => {
+      if (isEdit && dialog.editingItem) {
+        await updateReceipt((dialog.editingItem as any).id, data);
+        success('Receipt updated successfully');
+      } else {
+        await addReceipt(data);
+        success('Receipt created successfully');
+      }
+    },
+    onError: (errorMessage) => {
+      error(errorMessage);
+    },
+  });
+
   const handleEdit = (receipt: Receipt) => {
-    setEditingReceipt(receipt);
-    setFormData({
-      tenantId: receipt.tenantId,
-      propertyId: receipt.propertyId,
-      amount: receipt.amount,
-      date: receipt.date,
-      type: receipt.type,
-      status: receipt.status,
-      description: receipt.description || '',
-    });
-    setIsDialogOpen(true);
+    dialog.openEditDialog(receipt, (r) => ({
+      tenantId: r.tenantId,
+      propertyId: r.propertyId,
+      amount: r.amount,
+      date: r.date,
+      type: r.type,
+      status: r.status,
+      description: r.description || '',
+    }));
   };
 
   const handleDelete = async (id: string) => {
@@ -101,25 +76,6 @@ export function ReceiptsView(): React.ReactElement {
         console.error(err);
       }
     }
-  };
-
-  const resetForm = () => {
-    setFormData({
-      tenantId: '',
-      propertyId: '',
-      amount: 0,
-      date: new Date().toISOString().split('T')[0],
-      type: 'rent',
-      status: 'paid',
-      description: '',
-    });
-    setFormErrors({});
-  };
-
-  const openAddDialog = () => {
-    setEditingReceipt(null);
-    resetForm();
-    setIsDialogOpen(true);
   };
 
   const generatePDF = async (receipt: Receipt) => {
@@ -188,12 +144,11 @@ export function ReceiptsView(): React.ReactElement {
   };
 
   return (
+    <>
+    {loading ? (
+      <LoadingState variant="cards" count={6} />
+    ) : (
     <div className="space-y-6">
-      {loading && (
-        <div className="flex items-center justify-center p-8">
-          <div className="text-zinc-400">Loading receipts...</div>
-        </div>
-      )}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
@@ -201,9 +156,9 @@ export function ReceiptsView(): React.ReactElement {
           </h2>
           <p className="text-zinc-400">Manage payment receipts and generate PDFs</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
           <DialogTrigger asChild>
-            <Button onClick={openAddDialog} className="flex items-center gap-2">
+            <Button onClick={dialog.openDialog} className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
               Add Receipt
             </Button>
@@ -211,18 +166,18 @@ export function ReceiptsView(): React.ReactElement {
           <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-zinc-50">
-                {editingReceipt ? 'Edit Receipt' : 'Add New Receipt'}
+                {dialog.editingItem ? 'Edit Receipt' : 'Add New Receipt'}
               </DialogTitle>
               <DialogDescription>
-                {editingReceipt ? 'Update receipt information' : 'Create a new payment receipt'}
+                {dialog.editingItem ? 'Update receipt information' : 'Create a new payment receipt'}
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={dialog.handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="tenant">Tenant</Label>
-                  <Select value={formData.tenantId} onValueChange={(value) => setFormData({ ...formData, tenantId: value })}>
-                    <SelectTrigger className={formErrors.tenantId ? 'border-red-500' : ''}>
+                  <Select value={dialog.formData.tenantId} onValueChange={(value) => dialog.updateFormData({ tenantId: value })}>
+                    <SelectTrigger className={dialog.formErrors.tenantId ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select tenant" />
                     </SelectTrigger>
                     <SelectContent>
@@ -233,14 +188,14 @@ export function ReceiptsView(): React.ReactElement {
                       ))}
                     </SelectContent>
                   </Select>
-                  {formErrors.tenantId && (
-                    <p className="text-sm text-red-500">{formErrors.tenantId}</p>
+                  {dialog.formErrors.tenantId && (
+                    <p className="text-sm text-red-500">{dialog.formErrors.tenantId}</p>
                   )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="property">Property</Label>
-                  <Select value={formData.propertyId} onValueChange={(value) => setFormData({ ...formData, propertyId: value })}>
-                    <SelectTrigger className={formErrors.propertyId ? 'border-red-500' : ''}>
+                  <Select value={dialog.formData.propertyId} onValueChange={(value) => dialog.updateFormData({ propertyId: value })}>
+                    <SelectTrigger className={dialog.formErrors.propertyId ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select property" />
                     </SelectTrigger>
                     <SelectContent>
@@ -251,8 +206,8 @@ export function ReceiptsView(): React.ReactElement {
                       ))}
                     </SelectContent>
                   </Select>
-                  {formErrors.propertyId && (
-                    <p className="text-sm text-red-500">{formErrors.propertyId}</p>
+                  {dialog.formErrors.propertyId && (
+                    <p className="text-sm text-red-500">{dialog.formErrors.propertyId}</p>
                   )}
                 </div>
               </div>
@@ -265,13 +220,13 @@ export function ReceiptsView(): React.ReactElement {
                     type="number"
                     min="0"
                     step="0.01"
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-                    className={formErrors.amount ? 'border-red-500' : ''}
+                    value={dialog.formData.amount}
+                    onChange={(e) => dialog.updateFormData({ amount: parseFloat(e.target.value) || 0 })}
+                    className={dialog.formErrors.amount ? 'border-red-500' : ''}
                     required
                   />
-                  {formErrors.amount && (
-                    <p className="text-sm text-red-500">{formErrors.amount}</p>
+                  {dialog.formErrors.amount && (
+                    <p className="text-sm text-red-500">{dialog.formErrors.amount}</p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -279,19 +234,19 @@ export function ReceiptsView(): React.ReactElement {
                   <Input
                     id="date"
                     type="date"
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    className={formErrors.date ? 'border-red-500' : ''}
+                    value={dialog.formData.date}
+                    onChange={(e) => dialog.updateFormData({ date: e.target.value })}
+                    className={dialog.formErrors.date ? 'border-red-500' : ''}
                     required
                   />
-                  {formErrors.date && (
-                    <p className="text-sm text-red-500">{formErrors.date}</p>
+                  {dialog.formErrors.date && (
+                    <p className="text-sm text-red-500">{dialog.formErrors.date}</p>
                   )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="type">Payment Type</Label>
-                  <Select value={formData.type} onValueChange={(value: Receipt['type']) => setFormData({ ...formData, type: value })}>
-                    <SelectTrigger className={formErrors.type ? 'border-red-500' : ''}>
+                  <Select value={dialog.formData.type} onValueChange={(value: Receipt['type']) => dialog.updateFormData({ type: value })}>
+                    <SelectTrigger className={dialog.formErrors.type ? 'border-red-500' : ''}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -301,8 +256,8 @@ export function ReceiptsView(): React.ReactElement {
                       <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
-                  {formErrors.type && (
-                    <p className="text-sm text-red-500">{formErrors.type}</p>
+                  {dialog.formErrors.type && (
+                    <p className="text-sm text-red-500">{dialog.formErrors.type}</p>
                   )}
                 </div>
               </div>
@@ -311,22 +266,22 @@ export function ReceiptsView(): React.ReactElement {
                 <Label htmlFor="description">Description (Optional)</Label>
                 <Textarea
                   id="description"
-                  value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                  className={formErrors.description ? 'border-red-500' : ''}
+                  value={dialog.formData.description}
+                  onChange={(e) => dialog.updateFormData({ description: e.target.value })}
+                  className={dialog.formErrors.description ? 'border-red-500' : ''}
                   rows={3}
                 />
-                {formErrors.description && (
-                  <p className="text-sm text-red-500">{formErrors.description}</p>
+                {dialog.formErrors.description && (
+                  <p className="text-sm text-red-500">{dialog.formErrors.description}</p>
                 )}
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={dialog.closeDialog}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Saving...' : (editingReceipt ? 'Update Receipt' : 'Create Receipt')}
+                <Button type="submit" disabled={dialog.isSubmitting}>
+                  {dialog.isSubmitting ? 'Saving...' : (dialog.editingItem ? 'Update Receipt' : 'Create Receipt')}
                 </Button>
               </div>
             </form>
@@ -341,7 +296,7 @@ export function ReceiptsView(): React.ReactElement {
               <FileText className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-zinc-50 mb-2">No receipts yet</h3>
               <p className="text-zinc-400 mb-4">Get started by creating your first payment receipt</p>
-              <Button onClick={openAddDialog} className="flex items-center gap-2">
+              <Button onClick={dialog.openDialog} className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 Create Your First Receipt
               </Button>
@@ -418,5 +373,7 @@ export function ReceiptsView(): React.ReactElement {
         )}
       </div>
     </div>
+    )}
+    </>
   );
 }

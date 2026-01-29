@@ -10,11 +10,12 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
+import { LoadingState } from "./ui/loading-state";
 import { useApp } from "@/lib/app-context-db";
 import { CorrespondenceTemplate, Tenant } from "@/lib/types";
 import { templateSchema, TemplateFormData } from "@/lib/validation";
-import { ZodError, ZodIssue } from 'zod';
 import { useToast } from "@/lib/toast-context";
+import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import jsPDF from "jspdf";
 
 export type CorrespondenceViewProps = Record<string, never>
@@ -23,11 +24,8 @@ export function CorrespondenceView(): React.ReactElement {
   const { state, addTemplate, updateTemplate, deleteTemplate, addCorrespondence } = useApp();
   const { templates, correspondence: _correspondence, tenants, loading } = state;
   const { success, error } = useToast();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<CorrespondenceTemplate | null>(null);
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<CorrespondenceTemplate | null>(null);
-  const [_isSubmitting, setIsSubmitting] = useState(false);
   const [composeData, setComposeData] = useState({
     tenantId: '',
     subject: '',
@@ -38,56 +36,34 @@ export function CorrespondenceView(): React.ReactElement {
   const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>([]);
   const [generatingBatch, setGeneratingBatch] = useState(false);
 
-  const [formData, setFormData] = useState<TemplateFormData>({
+  const initialFormData: TemplateFormData = {
     name: '',
     type: 'welcome',
     subject: '',
     content: '',
-  });
-  const [formErrors, setFormErrors] = useState<Partial<Record<keyof TemplateFormData, string>>>({});
+  };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setFormErrors({});
-
-    try {
-      // Validate form data
-      const validatedData = templateSchema.parse(formData);
-
+  const dialog = useFormDialog<TemplateFormData>({
+    schema: templateSchema,
+    initialData: initialFormData,
+    onSubmit: async (data, isEdit) => {
       const templateData = {
-        ...validatedData,
-        variables: extractVariables(validatedData.content),
+        ...data,
+        variables: extractVariables(data.content),
       };
 
-      if (editingTemplate) {
-        await updateTemplate(editingTemplate.id, templateData);
-        success('Template updated successfully!');
+      if (isEdit && dialog.editingItem) {
+        await updateTemplate((dialog.editingItem as any).id, templateData);
+        success('Template updated successfully');
       } else {
         await addTemplate(templateData);
-        success('Template created successfully!');
+        success('Template created successfully');
       }
-
-      setIsDialogOpen(false);
-      setEditingTemplate(null);
-      resetForm();
-    } catch (err: unknown) {
-      if (err instanceof ZodError) {
-        const errors: Partial<Record<keyof TemplateFormData, string>> = {};
-        err.issues.forEach((issue: ZodIssue) => {
-          const field = issue.path[0] as keyof TemplateFormData;
-          errors[field] = issue.message;
-        });
-        setFormErrors(errors);
-        error('Please fix the form errors below.');
-      } else {
-        error('Failed to save template. Please try again.');
-        console.error('Template save error:', err);
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+    },
+    onError: (errorMessage) => {
+      error(errorMessage);
+    },
+  });
 
   const handleCompose = (template: CorrespondenceTemplate) => {
     setSelectedTemplate(template);
@@ -190,14 +166,12 @@ export function CorrespondenceView(): React.ReactElement {
   };
 
   const handleEdit = (template: CorrespondenceTemplate) => {
-    setEditingTemplate(template);
-    setFormData({
-      name: template.name,
-      type: template.type,
-      subject: template.subject,
-      content: template.content,
-    });
-    setIsDialogOpen(true);
+    dialog.openEditDialog(template, (t) => ({
+      name: t.name,
+      type: t.type,
+      subject: t.subject,
+      content: t.content,
+    }));
   };
 
   const handleDelete = async (id: string) => {
@@ -230,22 +204,6 @@ export function CorrespondenceView(): React.ReactElement {
       .replace(/\{\{due_date\}\}/g, new Date().toLocaleDateString());
   };
 
-  const resetForm = () => {
-    setFormData({
-      name: '',
-      type: 'welcome',
-      subject: '',
-      content: '',
-    });
-    setFormErrors({});
-  };
-
-  const openAddDialog = () => {
-    setEditingTemplate(null);
-    resetForm();
-    setIsDialogOpen(true);
-  };
-
   const getTypeBadge = (type: CorrespondenceTemplate["type"]) => {
     const colors = {
       welcome: "bg-green-600/20 text-green-400",
@@ -263,12 +221,11 @@ export function CorrespondenceView(): React.ReactElement {
   };
 
   return (
+    <>
+    {loading ? (
+      <LoadingState variant="cards" count={6} />
+    ) : (
     <div className="space-y-6">
-      {loading && (
-        <div className="flex items-center justify-center p-8">
-          <div className="text-zinc-400">Loading correspondence...</div>
-        </div>
-      )}
       <div className="flex justify-between items-center">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
@@ -276,9 +233,9 @@ export function CorrespondenceView(): React.ReactElement {
           </h2>
           <p className="text-zinc-400">Manage templates and send communications</p>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
           <DialogTrigger asChild>
-            <Button onClick={openAddDialog} className="flex items-center gap-2">
+            <Button onClick={dialog.openDialog} className="flex items-center gap-2">
               <Plus className="w-4 h-4" />
               Add Template
             </Button>
@@ -286,30 +243,30 @@ export function CorrespondenceView(): React.ReactElement {
           <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-zinc-50">
-                {editingTemplate ? 'Edit Template' : 'Create Template'}
+                {dialog.editingItem ? 'Edit Template' : 'Create Template'}
               </DialogTitle>
               <DialogDescription>
                 Create or edit correspondence templates with variable placeholders
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={dialog.handleSubmit} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Template Name</Label>
                   <Input
                     id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className={formErrors.name ? 'border-red-500' : ''}
+                    value={dialog.formData.name}
+                    onChange={(e) => dialog.updateFormData({ name: e.target.value })}
+                    className={dialog.formErrors.name ? 'border-red-500' : ''}
                   />
-                  {formErrors.name && (
-                    <p className="text-sm text-red-400">{formErrors.name}</p>
+                  {dialog.formErrors.name && (
+                    <p className="text-sm text-red-400">{dialog.formErrors.name}</p>
                   )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="type">Template Type</Label>
-                  <Select value={formData.type} onValueChange={(value: TemplateFormData['type']) => setFormData({ ...formData, type: value })}>
-                    <SelectTrigger className={formErrors.type ? 'border-red-500' : ''}>
+                  <Select value={dialog.formData.type} onValueChange={(value: TemplateFormData['type']) => dialog.updateFormData({ type: value })}>
+                    <SelectTrigger className={dialog.formErrors.type ? 'border-red-500' : ''}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -328,8 +285,8 @@ export function CorrespondenceView(): React.ReactElement {
                 <Label htmlFor="subject">Email Subject</Label>
                 <Input
                   id="subject"
-                  value={formData.subject}
-                  onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                  value={dialog.formData.subject}
+                  onChange={(e) => dialog.updateFormData({ subject: e.target.value })}
                   required
                 />
               </div>
@@ -338,8 +295,8 @@ export function CorrespondenceView(): React.ReactElement {
                 <Label htmlFor="content">Email Content</Label>
                 <Textarea
                   id="content"
-                  value={formData.content}
-                  onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                  value={dialog.formData.content}
+                  onChange={(e) => dialog.updateFormData({ content: e.target.value })}
                   rows={8}
                   placeholder="Use {{variable_name}} for dynamic content. Available variables: {{tenant_name}}, {{property_name}}, {{rent_amount}}, {{lease_start}}, {{lease_end}}, etc."
                   required
@@ -347,11 +304,11 @@ export function CorrespondenceView(): React.ReactElement {
               </div>
 
               <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                <Button type="button" variant="outline" onClick={dialog.closeDialog}>
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingTemplate ? 'Update Template' : 'Create Template'}
+                <Button type="submit" disabled={dialog.isSubmitting}>
+                  {dialog.isSubmitting ? 'Saving...' : (dialog.editingItem ? 'Update Template' : 'Create Template')}
                 </Button>
               </div>
             </form>
@@ -366,7 +323,7 @@ export function CorrespondenceView(): React.ReactElement {
               <FileText className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-zinc-50 mb-2">No templates yet</h3>
               <p className="text-zinc-400 mb-4">Create your first correspondence template</p>
-              <Button onClick={openAddDialog} className="flex items-center gap-2">
+              <Button onClick={dialog.openDialog} className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 Create Template
               </Button>
@@ -551,5 +508,7 @@ export function CorrespondenceView(): React.ReactElement {
         </DialogContent>
       </Dialog>
     </div>
+    )}
+    </>
   );
 }

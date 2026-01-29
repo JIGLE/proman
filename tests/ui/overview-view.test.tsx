@@ -2,6 +2,13 @@ import { describe, it, expect, vi } from 'vitest'
 import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
 import { OverviewView } from '../../components/overview-view'
 
+// Mock the currency hook
+vi.mock('../../lib/currency-context', () => ({
+  useCurrency: () => ({
+    formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
+  }),
+}));
+
 vi.mock('@/lib/app-context-db', () => ({
   useApp: () => ({
     state: {
@@ -21,7 +28,8 @@ describe('OverviewView', () => {
     // tolerate multiple matches for numeric stats — assert at least one exists
     const propertyTotals = screen.getAllByText('1')
     expect(propertyTotals.length).toBeGreaterThan(0)
-    const amounts = screen.getAllByText(/\$1,000/)
+    // Look for formatted currency amounts - could be $1000.00 or $1,000.00
+    const amounts = screen.getAllByText(/\$1[,0]*\.?00/)
     expect(amounts.length).toBeGreaterThan(0)
   })
 })

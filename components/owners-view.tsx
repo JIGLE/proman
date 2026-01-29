@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ZodError } from 'zod';
 import { Briefcase, Download, Plus, Edit, Trash2, Phone, Mail, MapPin, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { useCurrency } from "@/lib/currency-context";
@@ -10,10 +9,12 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
+import { LoadingState } from "./ui/loading-state";
 import { useApp } from "@/lib/app-context-db";
 import { Owner } from "@/lib/types";
 import { ownerSchema, OwnerFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";
+import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import jsPDF from "jspdf";
 
 export function OwnersView(): React.ReactElement {
@@ -21,66 +22,41 @@ export function OwnersView(): React.ReactElement {
     const { owners, receipts, expenses, loading } = state;
     const { success, error } = useToast();
     const { formatCurrency } = useCurrency();
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [editingOwner, setEditingOwner] = useState<Owner | null>(null);
-    const [isSubmitting, setIsSubmitting] = useState(false);
     const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
-    const [formData, setFormData] = useState<OwnerFormData>({
+
+    const initialFormData: OwnerFormData = {
         name: '',
         email: '',
         phone: '',
         address: '',
         notes: '',
-    });
-    const [formErrors, setFormErrors] = useState<Partial<Record<keyof OwnerFormData, string>>>({});
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSubmitting(true);
-        setFormErrors({});
-
-        try {
-            const validatedData = ownerSchema.parse(formData);
-
-            if (editingOwner) {
-                await updateOwner(editingOwner.id, validatedData);
-                success('Owner updated successfully!');
-            } else {
-                await addOwner(validatedData);
-                success('Owner created successfully!');
-            }
-
-            setIsDialogOpen(false);
-            setEditingOwner(null);
-            resetForm();
-        } catch (err: unknown) {
-            if (err instanceof ZodError) {
-                const errors: Partial<Record<keyof OwnerFormData, string>> = {};
-                err.issues.forEach((issue) => {
-                    const field = issue.path[0] as keyof OwnerFormData;
-                    errors[field] = issue.message;
-                });
-                setFormErrors(errors);
-                error('Please fix the form errors below.');
-            } else {
-                error('Failed to save owner. Please try again.');
-                console.error('Owner save error:', err);
-            }
-        } finally {
-            setIsSubmitting(false);
-        }
     };
 
+    const dialog = useFormDialog<OwnerFormData>({
+        schema: ownerSchema,
+        initialData: initialFormData,
+        onSubmit: async (data, isEdit) => {
+            if (isEdit && dialog.editingItem) {
+                await updateOwner((dialog.editingItem as any).id, data);
+                success('Owner updated successfully');
+            } else {
+                await addOwner(data);
+                success('Owner created successfully');
+            }
+        },
+        onError: (errorMessage) => {
+            error(errorMessage);
+        },
+    });
+
     const handleEdit = (owner: Owner) => {
-        setEditingOwner(owner);
-        setFormData({
-            name: owner.name,
-            email: owner.email,
-            phone: owner.phone || '',
-            address: owner.address || '',
-            notes: owner.notes || '',
-        });
-        setIsDialogOpen(true);
+        dialog.openEditDialog(owner, (o) => ({
+            name: o.name,
+            email: o.email,
+            phone: o.phone || '',
+            address: o.address || '',
+            notes: o.notes || '',
+        }));
     };
 
     const handleDelete = async (id: string) => {
@@ -92,23 +68,6 @@ export function OwnersView(): React.ReactElement {
                 console.error(err);
             }
         }
-    };
-
-    const resetForm = () => {
-        setFormData({
-            name: '',
-            email: '',
-            phone: '',
-            address: '',
-            notes: '',
-        });
-        setFormErrors({});
-    };
-
-    const openAddDialog = () => {
-        setEditingOwner(null);
-        resetForm();
-        setIsDialogOpen(true);
     };
 
     const generateStatement = async (owner: Owner) => {
@@ -187,12 +146,11 @@ export function OwnersView(): React.ReactElement {
     };
 
     return (
+        <>
+        {loading ? (
+            <LoadingState variant="cards" count={6} />
+        ) : (
         <div className="space-y-6">
-            {loading && (
-                <div className="flex items-center justify-center p-8">
-                    <div className="text-zinc-400">Loading owners...</div>
-                </div>
-            )}
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
@@ -200,9 +158,9 @@ export function OwnersView(): React.ReactElement {
                     </h2>
                     <p className="text-zinc-400">Manage property owners and split ownership</p>
                 </div>
-                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
                     <DialogTrigger asChild>
-                        <Button onClick={openAddDialog} className="flex items-center gap-2">
+                        <Button onClick={dialog.openDialog} className="flex items-center gap-2">
                             <Plus className="w-4 h-4" />
                             Add Owner
                         </Button>
@@ -210,24 +168,24 @@ export function OwnersView(): React.ReactElement {
                     <DialogContent className="bg-zinc-900 border-zinc-800 max-w-lg">
                         <DialogHeader>
                             <DialogTitle className="text-zinc-50">
-                                {editingOwner ? 'Edit Owner' : 'Add New Owner'}
+                                {dialog.editingItem ? 'Edit Owner' : 'Add New Owner'}
                             </DialogTitle>
                             <DialogDescription>
-                                {editingOwner ? 'Update owner details' : 'Register a new property owner'}
+                                {dialog.editingItem ? 'Update owner details' : 'Register a new property owner'}
                             </DialogDescription>
                         </DialogHeader>
-                        <form onSubmit={handleSubmit} className="space-y-4">
+                        <form onSubmit={dialog.handleSubmit} className="space-y-4">
                             <div className="space-y-2">
                                 <Label htmlFor="name">Full Name</Label>
                                 <Input
                                     id="name"
-                                    value={formData.name}
-                                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                                    className={formErrors.name ? 'border-red-500' : ''}
+                                    value={dialog.formData.name}
+                                    onChange={(e) => dialog.updateFormData({ name: e.target.value })}
+                                    className={dialog.formErrors.name ? 'border-red-500' : ''}
                                     placeholder="John Doe"
                                 />
-                                {formErrors.name && (
-                                    <p className="text-sm text-red-500">{formErrors.name}</p>
+                                {dialog.formErrors.name && (
+                                    <p className="text-sm text-red-500">{dialog.formErrors.name}</p>
                                 )}
                             </div>
 
@@ -237,26 +195,26 @@ export function OwnersView(): React.ReactElement {
                                     <Input
                                         id="email"
                                         type="email"
-                                        value={formData.email}
-                                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                                        className={formErrors.email ? 'border-red-500' : ''}
+                                        value={dialog.formData.email}
+                                        onChange={(e) => dialog.updateFormData({ email: e.target.value })}
+                                        className={dialog.formErrors.email ? 'border-red-500' : ''}
                                         placeholder="john@example.com"
                                     />
-                                    {formErrors.email && (
-                                        <p className="text-sm text-red-500">{formErrors.email}</p>
+                                    {dialog.formErrors.email && (
+                                        <p className="text-sm text-red-500">{dialog.formErrors.email}</p>
                                     )}
                                 </div>
                                 <div className="space-y-2">
                                     <Label htmlFor="phone">Phone</Label>
                                     <Input
                                         id="phone"
-                                        value={formData.phone}
-                                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                        className={formErrors.phone ? 'border-red-500' : ''}
+                                        value={dialog.formData.phone}
+                                        onChange={(e) => dialog.updateFormData({ phone: e.target.value })}
+                                        className={dialog.formErrors.phone ? 'border-red-500' : ''}
                                         placeholder="+1 234 567 8900"
                                     />
-                                    {formErrors.phone && (
-                                        <p className="text-sm text-red-500">{formErrors.phone}</p>
+                                    {dialog.formErrors.phone && (
+                                        <p className="text-sm text-red-500">{dialog.formErrors.phone}</p>
                                     )}
                                 </div>
                             </div>
@@ -265,13 +223,13 @@ export function OwnersView(): React.ReactElement {
                                 <Label htmlFor="address">Address</Label>
                                 <Input
                                     id="address"
-                                    value={formData.address}
-                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                    className={formErrors.address ? 'border-red-500' : ''}
+                                    value={dialog.formData.address}
+                                    onChange={(e) => dialog.updateFormData({ address: e.target.value })}
+                                    className={dialog.formErrors.address ? 'border-red-500' : ''}
                                     placeholder="123 Main St, City, Country"
                                 />
-                                {formErrors.address && (
-                                    <p className="text-sm text-red-500">{formErrors.address}</p>
+                                {dialog.formErrors.address && (
+                                    <p className="text-sm text-red-500">{dialog.formErrors.address}</p>
                                 )}
                             </div>
 
@@ -279,23 +237,23 @@ export function OwnersView(): React.ReactElement {
                                 <Label htmlFor="notes">Notes</Label>
                                 <Textarea
                                     id="notes"
-                                    value={formData.notes}
-                                    onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                                    className={formErrors.notes ? 'border-red-500' : ''}
+                                    value={dialog.formData.notes}
+                                    onChange={(e) => dialog.updateFormData({ notes: e.target.value })}
+                                    className={dialog.formErrors.notes ? 'border-red-500' : ''}
                                     placeholder="Additional information..."
                                     rows={3}
                                 />
-                                {formErrors.notes && (
-                                    <p className="text-sm text-red-500">{formErrors.notes}</p>
+                                {dialog.formErrors.notes && (
+                                    <p className="text-sm text-red-500">{dialog.formErrors.notes}</p>
                                 )}
                             </div>
 
                             <div className="flex justify-end gap-2">
-                                <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                                <Button type="button" variant="outline" onClick={dialog.closeDialog}>
                                     Cancel
                                 </Button>
-                                <Button type="submit" disabled={isSubmitting}>
-                                    {isSubmitting ? 'Saving...' : (editingOwner ? 'Update Owner' : 'Create Owner')}
+                                <Button type="submit" disabled={dialog.isSubmitting}>
+                                    {dialog.isSubmitting ? 'Saving...' : (dialog.editingItem ? 'Update Owner' : 'Create Owner')}
                                 </Button>
                             </div>
                         </form>
@@ -311,7 +269,7 @@ export function OwnersView(): React.ReactElement {
                                 <Briefcase className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
                                 <h3 className="text-lg font-semibold text-zinc-50 mb-2">No owners yet</h3>
                                 <p className="text-zinc-400 mb-4">Add owners to start tracking shared property ownership</p>
-                                <Button onClick={openAddDialog} className="flex items-center gap-2">
+                                <Button onClick={dialog.openDialog} className="flex items-center gap-2">
                                     <Plus className="w-4 h-4" />
                                     Add First Owner
                                 </Button>
@@ -387,5 +345,7 @@ export function OwnersView(): React.ReactElement {
                 )}
             </div>
         </div>
+        )}
+        </>
     );
 }

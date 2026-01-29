@@ -1,0 +1,103 @@
+/**
+ * @vitest-environment jsdom
+ */
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { ExportButton } from '../../components/ui/export-button';
+import { renderWithProviders } from '../helpers/render-with-providers';
+
+// Mock currency context
+vi.mock('../../lib/currency-context', () => ({
+  useCurrency: () => ({
+    formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
+  }),
+}));
+
+describe('ExportButton', () => {
+  const mockData = [
+    { id: '1', name: 'John', email: 'john@example.com', age: 30 },
+    { id: '2', name: 'Jane', email: 'jane@example.com', age: 25 },
+  ];
+
+  const mockColumns = [
+    { key: 'name' as keyof typeof mockData[0], label: 'Name' },
+    { key: 'email' as keyof typeof mockData[0], label: 'Email' },
+    { 
+      key: 'age' as keyof typeof mockData[0], 
+      label: 'Age',
+      format: (value: number) => `${value} years`
+    },
+  ];
+
+  const defaultProps = {
+    data: mockData,
+    filename: 'test-export',
+    columns: mockColumns,
+  };
+
+  // Mock DOM APIs
+  const mockCreateObjectURL = vi.fn(() => 'mock-blob-url');
+  const mockRevokeObjectURL = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    
+    // Reset URL mocks
+    global.URL.createObjectURL = mockCreateObjectURL;
+    global.URL.revokeObjectURL = mockRevokeObjectURL;
+  });
+
+  it('should render export button with data', () => {
+    renderWithProviders(<ExportButton {...defaultProps} />);
+    
+    const exportButton = screen.getByRole('button', { name: /export/i });
+    expect(exportButton).toBeInTheDocument();
+    expect(exportButton).not.toBeDisabled();
+  });
+
+  it('should render disabled button when no data', () => {
+    renderWithProviders(<ExportButton {...defaultProps} data={[]} />);
+    
+    const exportButton = screen.getByRole('button', { name: /export/i });
+    expect(exportButton).toBeInTheDocument();
+    expect(exportButton).toBeDisabled();
+  });
+
+  it('should be disabled when disabled prop is true', () => {
+    renderWithProviders(<ExportButton {...defaultProps} disabled={true} />);
+
+    const exportButton = screen.getByRole('button', { name: /export/i });
+    expect(exportButton).toBeDisabled();
+  });
+
+  it('should apply custom className', () => {
+    renderWithProviders(<ExportButton {...defaultProps} className="custom-export-class" />);
+
+    const exportButton = screen.getByRole('button', { name: /export/i });
+    expect(exportButton).toHaveClass('custom-export-class');
+  });
+
+  it('should show dropdown when clicked', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<ExportButton {...defaultProps} />);
+    
+    const exportButton = screen.getByRole('button', { name: /export/i });
+    await user.click(exportButton);
+    
+    expect(screen.getByText('Export as CSV')).toBeInTheDocument();
+  });
+
+  it('should trigger export when CSV option is selected', async () => {
+    const user = userEvent.setup();
+    renderWithProviders(<ExportButton {...defaultProps} />);
+    
+    const exportButton = screen.getByRole('button', { name: /export/i });
+    await user.click(exportButton);
+    
+    const csvOption = screen.getByText('Export as CSV');
+    await user.click(csvOption);
+    
+    expect(mockCreateObjectURL).toHaveBeenCalled();
+  });
+});
