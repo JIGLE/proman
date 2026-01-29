@@ -151,13 +151,6 @@ export function FinancialsView(): React.ReactElement {
     return colors[category] || colors.other;
   };
 
-    const totalIncome = filteredReceipts.reduce((sum, r) => sum + r.amount, 0);
-    const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
-    const netIncome = totalIncome - totalExpenses;
-
-    return { totalIncome, totalExpenses, netIncome, filteredReceipts, filteredExpenses };
-  }, [receipts, expenses, timeRange]);
-
   // Tax Calculations
   const taxCalculation = useMemo((): TaxCalculationResult | null => {
     if (timeRange !== "year") return null;

@@ -285,7 +285,7 @@ export function OverviewView(): React.ReactElement {
             </CardContent>
           </Card>
         </motion.div>
-      </motion.div>
+      </div>
 
       {/* Achievements */}
       <motion.div
