@@ -365,11 +365,11 @@ export function FinancialsView(): React.ReactElement {
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-zinc-400">Net Income</CardTitle>
-            <DollarSign className={cn("h-4 w-4", metrics.netIncome >= 0 ? "text-green-500" : "text-red-500")} />
+            <DollarSign className={cn("h-4 w-4", metrics.netProfit >= 0 ? "text-green-500" : "text-red-500")} />
           </CardHeader>
           <CardContent>
-            <div className={cn("text-2xl font-bold", metrics.netIncome >= 0 ? "text-green-500" : "text-red-500")}>
-{formatCurrency(metrics.netIncome)}
+            <div className={cn("text-2xl font-bold", metrics.netProfit >= 0 ? "text-green-500" : "text-red-500")}>
+{formatCurrency(metrics.netProfit)}
             </div>
             <p className="text-xs text-zinc-500">Cash flow for period</p>
           </CardContent>
