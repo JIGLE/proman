@@ -17,6 +17,7 @@ import { MaintenanceView } from "@/components/maintenance-view";
 import { FinancialsView } from "@/components/financials-view";
 import { ReceiptsView } from "@/components/receipts-view";
 import { CorrespondenceView } from "@/components/correspondence-view";
+import { FormTestDialog } from "@/components/form-test-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -540,7 +541,18 @@ export default function Home(): React.ReactElement {
       case "receipts":
         return <ReceiptsView />;
       case "correspondence":
-        return <CorrespondenceView />;
+        return (
+          <div className="space-y-6">
+            <CorrespondenceView />
+            <div className="border-t border-zinc-800 pt-6">
+              <h2 className="text-xl font-semibold text-white mb-4">🧪 Form Components Testing</h2>
+              <p className="text-zinc-400 mb-4">
+                Test the new enhanced form components with validation, auto-resize, character counting, and more.
+              </p>
+              <FormTestDialog />
+            </div>
+          </div>
+        );
       case "profile":
         return renderProfileContent();
       case "settings":

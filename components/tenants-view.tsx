@@ -40,12 +40,18 @@ function SortableHeader({ column, label, sortDirection, onSort }: SortableHeader
   return (
     <button
       onClick={() => onSort(column)}
-      className="flex items-center gap-1 text-sm font-medium text-zinc-400 hover:text-zinc-50 transition-colors"
+      className={cn(
+        "flex items-center gap-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider",
+        "hover:text-zinc-200 transition-colors group focus-ring",
+        "px-2 py-1 rounded-md hover:bg-[var(--color-surface-hover)]"
+      )}
     >
-      {label}
-      {sortDirection === 'asc' && <ArrowUp className="w-3 h-3" />}
-      {sortDirection === 'desc' && <ArrowDown className="w-3 h-3" />}
-      {sortDirection === null && <ArrowUpDown className="w-3 h-3 opacity-50" />}
+      <span>{label}</span>
+      <span className="opacity-70 group-hover:opacity-100 transition-opacity">
+        {sortDirection === 'asc' && <ArrowUp className="w-3 h-3" />}
+        {sortDirection === 'desc' && <ArrowDown className="w-3 h-3" />}
+        {sortDirection === null && <ArrowUpDown className="w-3 h-3" />}
+      </span>
     </button>
   );
 }
@@ -391,9 +397,9 @@ export function TenantsView(): React.ReactElement {
             ]}
           />
 
-      {/* Sortable Column Headers */}
+      {/* Enhanced Sortable Column Headers */}
       {filteredTenants.length > 0 && (
-        <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
+        <div className="flex items-center gap-4 px-6 py-4 surface-elevated rounded-lg border border-[var(--color-border)]">
           <div className="flex-1">
             <SortableHeader column="name" label="Tenant" sortDirection={getSortDirection('name')} onSort={requestSort} />
           </div>
@@ -432,19 +438,41 @@ export function TenantsView(): React.ReactElement {
           </Card>
         ) : (
           sortedTenants.map((tenant) => (
-            <Card key={tenant.id} className="transition-all hover:shadow-lg hover:shadow-zinc-900/50">
-              <CardHeader>
+            <Card key={tenant.id} className="transition-all duration-200 hover-lift surface-elevated group hover:border-accent-primary/30">
+              <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800">
-                      <User className="h-6 w-6 text-zinc-400" />
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30">
+                      <span className="text-sm font-semibold text-accent-primary">
+                        {tenant.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                      </span>
                     </div>
                     <div>
-                      <CardTitle className="text-zinc-50">{tenant.name}</CardTitle>
-                      <CardDescription>{tenant.propertyName || 'No property assigned'}</CardDescription>
+                      <CardTitle className="text-zinc-50 group-hover:text-accent-primary transition-colors">{tenant.name}</CardTitle>
+                      <CardDescription className="text-zinc-400">{tenant.propertyName || 'No property assigned'}</CardDescription>
                     </div>
                   </div>
-                  {getPaymentStatusBadge(tenant.paymentStatus)}
+                  <div className="flex items-center gap-2">
+                    {getPaymentStatusBadge(tenant.paymentStatus)}
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => dialog.edit(tenant)}
+                        className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-50"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteTenant(tenant.id)}
+                        className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>

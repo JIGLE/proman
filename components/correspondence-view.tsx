@@ -9,6 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
+import { EnhancedInput, EnhancedTextarea } from "./ui/enhanced-input";
+import { FormField, FormGrid, FormActions } from "./ui/form-components";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { LoadingState } from "./ui/loading-state";
 import { useApp } from "@/lib/app-context-db";
@@ -249,25 +251,32 @@ export function CorrespondenceView(): React.ReactElement {
                 Create or edit correspondence templates with variable placeholders
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={dialog.handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Template Name</Label>
-                  <Input
+            <form onSubmit={dialog.handleSubmit} className="space-y-6">
+              <FormGrid columns={2} gap="md">
+                <FormField
+                  label="Template Name"
+                  required
+                  error={dialog.formErrors.name}
+                  tooltip="Choose a descriptive name for this template"
+                >
+                  <EnhancedInput
                     id="name"
                     value={dialog.formData.name}
                     onChange={(e) => dialog.updateFormData({ name: e.target.value })}
-                    className={dialog.formErrors.name ? 'border-red-500' : ''}
+                    placeholder="Enter template name..."
+                    required
                   />
-                  {dialog.formErrors.name && (
-                    <p className="text-sm text-red-400">{dialog.formErrors.name}</p>
-                  )}
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="type">Template Type</Label>
+                </FormField>
+                
+                <FormField
+                  label="Template Type"
+                  required
+                  error={dialog.formErrors.type}
+                  tooltip="Select the type of correspondence this template is for"
+                >
                   <Select value={dialog.formData.type} onValueChange={(value: TemplateFormData['type']) => dialog.updateFormData({ type: value })}>
-                    <SelectTrigger className={dialog.formErrors.type ? 'border-red-500' : ''}>
-                      <SelectValue />
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select template type..." />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="welcome">Welcome Letter</SelectItem>
@@ -278,39 +287,54 @@ export function CorrespondenceView(): React.ReactElement {
                       <SelectItem value="custom">Custom</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
-              </div>
+                </FormField>
+              </FormGrid>
 
-              <div className="space-y-2">
-                <Label htmlFor="subject">Email Subject</Label>
-                <Input
+              <FormField
+                label="Email Subject"
+                required
+                error={dialog.formErrors.subject}
+                tooltip="Subject line for the email (supports variables)"
+              >
+                <EnhancedInput
                   id="subject"
                   value={dialog.formData.subject}
                   onChange={(e) => dialog.updateFormData({ subject: e.target.value })}
+                  placeholder="Enter email subject..."
+                  maxLength={200}
+                  showCharCount
                   required
                 />
-              </div>
+              </FormField>
 
-              <div className="space-y-2">
-                <Label htmlFor="content">Email Content</Label>
-                <Textarea
+              <FormField
+                label="Email Content"
+                required
+                error={dialog.formErrors.content}
+                hint="Use {{variable_name}} for dynamic content. Available: {{tenant_name}}, {{property_name}}, {{rent_amount}}, {{lease_start}}, {{lease_end}}"
+                tooltip="Template content with variable placeholders"
+              >
+                <EnhancedTextarea
                   id="content"
                   value={dialog.formData.content}
                   onChange={(e) => dialog.updateFormData({ content: e.target.value })}
                   rows={8}
-                  placeholder="Use {{variable_name}} for dynamic content. Available variables: {{tenant_name}}, {{property_name}}, {{rent_amount}}, {{lease_start}}, {{lease_end}}, etc."
+                  placeholder="Enter email content with {{variable}} placeholders..."
+                  maxLength={5000}
+                  showCharCount
+                  autoResize
                   required
                 />
-              </div>
+              </FormField>
 
-              <div className="flex justify-end gap-2">
+              <FormActions align="right">
                 <Button type="button" variant="outline" onClick={dialog.closeDialog}>
                   Cancel
                 </Button>
                 <Button type="submit" disabled={dialog.isSubmitting}>
                   {dialog.isSubmitting ? 'Saving...' : (dialog.editingItem ? 'Update Template' : 'Create Template')}
                 </Button>
-              </div>
+              </FormActions>
             </form>
           </DialogContent>
         </Dialog>

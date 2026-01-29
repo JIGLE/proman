@@ -2,8 +2,9 @@
 
 import { useState, useMemo } from "react";
 import { ZodError } from "zod";
-import { DollarSign, TrendingUp, TrendingDown, Plus, Calendar as CalendarIcon, FileText, Calculator } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Plus, Calendar as CalendarIcon, FileText, Calculator, BarChart3, PieChart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
+import { BarChart, LineChart, DonutChart, MetricCard } from "./ui/charts";
 import { useCurrency } from "@/lib/currency-context";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
@@ -37,34 +38,118 @@ export function FinancialsView(): React.ReactElement {
   });
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof ExpenseFormData, string>>>({});
 
-  // Calculations
+  // Enhanced Calculations with trends
   const metrics = useMemo(() => {
     let filteredReceipts = receipts;
     let filteredExpenses = expenses;
+    let previousReceipts = receipts;
+    let previousExpenses = expenses;
 
     const now = new Date();
     const currentMonth = now.getMonth();
     const currentYear = now.getFullYear();
+    
+    // Previous period for trend calculation
+    const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
     if (timeRange === "month") {
       filteredReceipts = receipts.filter(r => {
-        const d = new Date(r.date);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        const date = new Date(r.date);
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
       });
       filteredExpenses = expenses.filter(e => {
-        const d = new Date(e.date);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        const date = new Date(e.date);
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
+      });
+      
+      // Previous month for trend
+      previousReceipts = receipts.filter(r => {
+        const date = new Date(r.date);
+        return date.getMonth() === previousMonth && date.getFullYear() === previousYear;
+      });
+      previousExpenses = expenses.filter(e => {
+        const date = new Date(e.date);
+        return date.getMonth() === previousMonth && date.getFullYear() === previousYear;
       });
     } else if (timeRange === "year") {
-      filteredReceipts = receipts.filter(r => {
-        const d = new Date(r.date);
-        return d.getFullYear() === currentYear;
+      filteredReceipts = receipts.filter(r => new Date(r.date).getFullYear() === currentYear);
+      filteredExpenses = expenses.filter(e => new Date(e.date).getFullYear() === currentYear);
+      
+      // Previous year for trend
+      previousReceipts = receipts.filter(r => new Date(r.date).getFullYear() === currentYear - 1);
+      previousExpenses = expenses.filter(e => new Date(e.date).getFullYear() === currentYear - 1);
+    }
+
+    const totalIncome = filteredReceipts.reduce((sum, receipt) => sum + receipt.amount, 0);
+    const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const netProfit = totalIncome - totalExpenses;
+    
+    // Previous period totals
+    const prevIncome = previousReceipts.reduce((sum, receipt) => sum + receipt.amount, 0);
+    const prevExpenses = previousExpenses.reduce((sum, expense) => sum + expense.amount, 0);
+    const prevNetProfit = prevIncome - prevExpenses;
+    
+    // Calculate trends
+    const incomeTrend = prevIncome > 0 ? ((totalIncome - prevIncome) / prevIncome) * 100 : 0;
+    const expensesTrend = prevExpenses > 0 ? ((totalExpenses - prevExpenses) / prevExpenses) * 100 : 0;
+    const profitTrend = prevNetProfit !== 0 ? ((netProfit - prevNetProfit) / Math.abs(prevNetProfit)) * 100 : 0;
+
+    // Group expenses by category
+    const expensesByCategory = filteredExpenses.reduce((acc, expense) => {
+      acc[expense.category] = (acc[expense.category] || 0) + expense.amount;
+      return acc;
+    }, {} as Record<string, number>);
+
+    // Monthly revenue trend (last 6 months)
+    const monthlyRevenue = [];
+    for (let i = 5; i >= 0; i--) {
+      const targetDate = new Date(currentYear, currentMonth - i, 1);
+      const monthReceipts = receipts.filter(r => {
+        const receiptDate = new Date(r.date);
+        return receiptDate.getMonth() === targetDate.getMonth() && 
+               receiptDate.getFullYear() === targetDate.getFullYear();
       });
-      filteredExpenses = expenses.filter(e => {
-        const d = new Date(e.date);
-        return d.getFullYear() === currentYear;
+      
+      monthlyRevenue.push({
+        label: targetDate.toLocaleString('default', { month: 'short' }),
+        value: monthReceipts.reduce((sum, r) => sum + r.amount, 0)
       });
     }
+
+    return {
+      totalIncome,
+      totalExpenses,
+      netProfit,
+      profitMargin: totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0,
+      incomeTrend,
+      expensesTrend,
+      profitTrend,
+      expensesByCategory,
+      monthlyRevenue,
+      totalProperties: properties.length,
+      avgRevenuePerProperty: properties.length > 0 ? totalIncome / properties.length : 0
+    };
+  }, [receipts, expenses, properties, timeRange]);
+
+  // Prepare chart data
+  const expenseCategoryData = Object.entries(metrics.expensesByCategory).map(([category, amount]) => ({
+    label: category.charAt(0).toUpperCase() + category.slice(1),
+    value: amount,
+    color: getCategoryColor(category)
+  }));
+
+  const getCategoryColor = (category: string) => {
+    const colors: Record<string, string> = {
+      maintenance: '#ef4444',
+      utilities: '#f59e0b',
+      insurance: '#3b82f6',
+      taxes: '#8b5cf6',
+      management: '#10b981',
+      other: '#6b7280'
+    };
+    return colors[category] || colors.other;
+  };
 
     const totalIncome = filteredReceipts.reduce((sum, r) => sum + r.amount, 0);
     const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);

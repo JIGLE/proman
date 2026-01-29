@@ -2,7 +2,8 @@
  * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
 import { SearchFilter } from '../../components/ui/search-filter';
 

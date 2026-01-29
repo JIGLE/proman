@@ -20,22 +20,40 @@ const badgeVariants = cva(
           "border-transparent bg-[var(--color-warning)] text-[var(--color-warning-foreground)] hover:bg-[var(--color-warning)]/80",
         info:
           "border-transparent bg-[var(--color-info)] text-[var(--color-info-foreground)] hover:bg-[var(--color-info)]/80",
-        outline: "border-[var(--color-border)] text-[var(--color-foreground)]",
+        outline: "border-[var(--color-border)] text-[var(--color-foreground)] hover:bg-[var(--color-hover)]",
+        ghost: "border-transparent bg-[var(--color-muted)]/10 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/20",
+      },
+      size: {
+        sm: "px-2 py-0.5 text-xs",
+        default: "px-2.5 py-0.5 text-xs",
+        lg: "px-3 py-1 text-sm",
+      },
+      emphasis: {
+        low: "font-medium",
+        medium: "font-semibold",
+        high: "font-bold",
       },
     },
     defaultVariants: {
       variant: "default",
+      size: "default",
+      emphasis: "medium",
     },
   }
 )
 
 interface BadgeProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
+    VariantProps<typeof badgeVariants> {
+  icon?: React.ReactNode
+}
 
-function Badge({ className, variant, ...props }: BadgeProps): React.ReactElement {
+function Badge({ className, variant, size, emphasis, icon, children, ...props }: BadgeProps): React.ReactElement {
   return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
+    <div className={cn(badgeVariants({ variant, size, emphasis }), className)} {...props}>
+      {icon && <span className="mr-1 flex items-center">{icon}</span>}
+      {children}
+    </div>
   )
 }
 
