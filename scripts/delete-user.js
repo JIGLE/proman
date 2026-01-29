@@ -28,15 +28,12 @@ if (!emailArg) {
   process.exit(1);
 }
 
-const prisma = new PrismaClient({
-  datasources: {
-    db: {
-      url:
-        process.env.DATABASE_URL ||
-        (process.env.NODE_ENV === 'production' ? 'file:/data/proman.db' : 'file:./dev.db'),
-    },
-  },
-});
+const fallbackDbUrl =
+  process.env.DATABASE_URL ||
+  (process.env.NODE_ENV === 'production' ? 'file:/data/proman.db' : 'file:./dev.db');
+process.env.DATABASE_URL = fallbackDbUrl;
+
+const prisma = new PrismaClient();
 
 async function deleteUserByEmail(email) {
   console.log(`Deleting user data for ${email}...`);
