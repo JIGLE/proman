@@ -7,6 +7,8 @@ import { useTranslations } from 'next-intl';
 import { Sidebar } from "@/components/sidebar";
 import { OverviewView } from "@/components/overview-view";
 import { PropertiesView } from "@/components/properties-view";
+import UnitsView from "@/components/units-view";
+import PropertyMap from "@/components/property-map";
 import { LeasesView } from "@/components/leases-view";
 import { PaymentMatrixView } from "@/components/payment-matrix-view";
 import { OwnersView } from "@/components/owners-view";
@@ -519,6 +521,10 @@ export default function Home(): React.ReactElement {
         return <OverviewView />;
       case "properties":
         return <PropertiesView />;
+      case "units":
+        return <UnitsView />;
+      case "map":
+        return <PropertyMap />;
       case "leases":
         return <LeasesView />;
       case "payments":

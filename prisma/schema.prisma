@@ -34,6 +34,8 @@ model User {
   correspondences Correspondence[]
   owners         Owner[]
   emailLogs      EmailLog[]
+  documents      Document[]
+  notifications  Notification[]
 }
 
 model EmailLog {
@@ -73,6 +75,8 @@ model Owner {
   // Relations
   user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   properties PropertyOwner[]
+  documents  Document[]
+  invoices   Invoice[]
 
   @@map("owners")
 }
@@ -174,6 +178,9 @@ model Property {
   expenses    Expense[]
   maintenance MaintenanceTicket[]
   leases      Lease[]
+  units       Unit[]
+  documents   Document[]
+  invoices    Invoice[]
 
   @@map("properties")
 }
@@ -201,6 +208,8 @@ model Tenant {
   correspondences Correspondence[]
   maintenance    MaintenanceTicket[]
   leases        Lease[]
+  documents     Document[]
+  invoices      Invoice[]
 
   @@map("tenants")
 }
@@ -310,6 +319,7 @@ model Lease {
   userId              String
   propertyId          String
   tenantId            String
+  unitId              String?
   startDate           DateTime
   endDate             DateTime
   monthlyRent         Float
@@ -329,8 +339,121 @@ model Lease {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  unit     Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
 
   @@map("leases")
+}
+
+model Unit {
+  id          String   @id @default(cuid())
+  propertyId  String
+  number      String   // Unit/apartment number
+  floor       Int?
+  sizeSqM     Float?
+  bedrooms    Int?
+  bathrooms   Int?
+  status      UnitStatus @default(vacant)
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  leases      Lease[]
+  documents   Document[]
+
+  @@unique([propertyId, number])
+  @@map("units")
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  type        DocumentType
+  mimeType    String
+  storagePath String   // File path or URL
+  fileSize    Int
+  
+  // Polymorphic relations (nullable FKs)
+  propertyId  String?
+  unitId      String?
+  ownerId     String?
+  tenantId    String?
+  
+  uploadedAt  DateTime @default(now())
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  unit     Unit?     @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  owner    Owner?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@map("documents")
+}
+
+model Invoice {
+  id          String   @id @default(cuid())
+  userId      String
+  number      String   @unique // Invoice number
+  amount      Float
+  dueDate     DateTime
+  paidDate    DateTime?
+  status      InvoiceStatus @default(pending)
+  description String?
+  metadata    String?  // JSON for additional data
+  
+  // Optional relations
+  propertyId  String?
+  ownerId     String?
+  tenantId    String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  owner    Owner?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+
+  @@map("invoices")
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  type        NotificationType
+  title       String
+  message     String
+  entityType  String?  // 'Property', 'Lease', 'Tenant', etc.
+  entityId    String?  // ID of related entity
+  read        Boolean  @default(false)
+  payload     String?  // JSON for additional data
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model MapPoint {
+  id          String   @id @default(cuid())
+  name        String
+  latitude    Float
+  longitude   Float
+  zoom        Int?     @default(15)
+  description String?
+  metadata    String?  // JSON for additional data
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("map_points")
 }
 
 // Enums
@@ -413,4 +536,39 @@ enum LeaseStatus {
   expired
   terminated
   pending
+}
+
+enum UnitStatus {
+  vacant
+  occupied
+  maintenance
+  reserved
+}
+
+enum DocumentType {
+  contract
+  invoice
+  receipt
+  photo
+  floor_plan
+  certificate
+  other
+}
+
+enum InvoiceStatus {
+  pending
+  paid
+  overdue
+  cancelled
+}
+
+enum NotificationType {
+  lease_expiring
+  payment_due
+  payment_received
+  maintenance_created
+  maintenance_completed
+  document_uploaded
+  system
+  other
 }

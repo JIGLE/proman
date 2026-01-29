@@ -1,8 +1,5 @@
 -- AlterTable: Add SendGrid webhook tracking fields to email_logs
-ALTER TABLE "email_logs" ADD COLUMN "sendgridMessageId" TEXT UNIQUE;
-ALTER TABLE "email_logs" ADD COLUMN "lastEventType" TEXT;
-ALTER TABLE "email_logs" ADD COLUMN "lastEventAt" DATETIME;
-ALTER TABLE "email_logs" ADD COLUMN "failureReason" TEXT;
+-- Note: SQLite doesn't support adding UNIQUE columns directly, so we rebuild the table
 
 -- Make userId optional (nullable) for webhook-initiated logs
 ALTER TABLE "email_logs" RENAME TO "email_logs_old";

@@ -17,6 +17,7 @@ import {
   Mail,
   Briefcase,
   Hammer,
+  MapPin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -35,6 +36,8 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps): React.ReactEl
   const menuItems = [
     { id: "overview", label: "Overview", icon: Home },
     { id: "properties", label: "Properties", icon: Building2 },
+    { id: "units", label: "Units", icon: Building2 },
+    { id: "map", label: "Map", icon: MapPin },
     { id: "leases", label: "Leases", icon: FileText },
     { id: "owners", label: "Owners", icon: Briefcase },
     { id: "tenants", label: "Tenants", icon: Users },
