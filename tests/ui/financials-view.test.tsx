@@ -5,13 +5,26 @@ import { FinancialsView } from '../../components/financials-view'
 // Mock the currency hook
 vi.mock('../../lib/currency-context', () => ({
   useCurrency: () => ({
-    formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
+    formatCurrency: (amount: number | undefined) => 
+      amount !== undefined ? `$${amount.toFixed(2)}` : '$0.00',
   }),
 }));
 
 vi.mock('@/lib/app-context-db', () => ({
   useApp: () => ({
-    state: { properties: [], receipts: [], expenses: [], loading: false },
+    state: { 
+      properties: [], 
+      receipts: [], 
+      expenses: [], 
+      loading: false,
+      metrics: {
+        totalIncome: 0,
+        totalExpenses: 0,
+        netIncome: 0,
+        filteredReceipts: [],
+        filteredExpenses: []
+      }
+    },
     addExpense: vi.fn(),
   })
 }))

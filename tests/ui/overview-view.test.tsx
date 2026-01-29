@@ -24,7 +24,9 @@ describe('OverviewView', () => {
     render(<OverviewView />)
     expect(screen.getByText(/Dashboard Overview/)).toBeDefined()
     expect(screen.getByText(/Total Properties/)).toBeDefined()
-    expect(screen.getByText(/Monthly Revenue/)).toBeDefined()
+    // There are multiple "Monthly Revenue" texts - check that at least one exists
+    const monthlyRevenueElements = screen.getAllByText(/Monthly Revenue/)
+    expect(monthlyRevenueElements.length).toBeGreaterThan(0)
     // tolerate multiple matches for numeric stats — assert at least one exists
     const propertyTotals = screen.getAllByText('1')
     expect(propertyTotals.length).toBeGreaterThan(0)

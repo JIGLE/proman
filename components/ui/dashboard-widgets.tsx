@@ -1,1 +1,357 @@
-import * as React from \"react\"\nimport { LucideIcon, MoreVertical, Maximize2, Minimize2, RefreshCw, Download, TrendingUp, TrendingDown } from \"lucide-react\"\nimport { cn } from \"@/lib/utils\"\nimport { Card, CardContent, CardHeader, CardTitle } from \"./card\"\nimport { Button } from \"./button\"\nimport {\n  DropdownMenu,\n  DropdownMenuContent,\n  DropdownMenuItem,\n  DropdownMenuSeparator,\n  DropdownMenuTrigger\n} from \"./dropdown-menu\"\nimport { Badge } from \"./badge\"\n\ninterface WidgetProps {\n  title: string\n  subtitle?: string\n  icon?: LucideIcon\n  value?: string | number\n  change?: {\n    value: number\n    label?: string\n    period?: string\n  }\n  className?: string\n  loading?: boolean\n  error?: string\n  onRefresh?: () => void\n  onExport?: () => void\n  onExpand?: () => void\n  children?: React.ReactNode\n  size?: 'sm' | 'md' | 'lg' | 'xl'\n  variant?: 'default' | 'outlined' | 'elevated'\n  actions?: React.ReactNode\n}\n\nexport function DashboardWidget({\n  title,\n  subtitle,\n  icon: Icon,\n  value,\n  change,\n  className,\n  loading = false,\n  error,\n  onRefresh,\n  onExport,\n  onExpand,\n  children,\n  size = 'md',\n  variant = 'elevated',\n  actions\n}: WidgetProps) {\n  const sizeClasses = {\n    sm: 'p-4',\n    md: 'p-6',\n    lg: 'p-8',\n    xl: 'p-10'\n  }\n\n  const variantClasses = {\n    default: '',\n    outlined: 'border-2',\n    elevated: 'surface-elevated shadow-lg'\n  }\n\n  return (\n    <Card className={cn(\n      'transition-all duration-200 hover-lift group',\n      variantClasses[variant],\n      className\n    )}>\n      <CardHeader className={cn(\n        'flex flex-row items-start justify-between space-y-0',\n        sizeClasses[size]\n      )}>\n        <div className=\"space-y-1 flex-1\">\n          <div className=\"flex items-center gap-2\">\n            {Icon && (\n              <div className=\"p-2 rounded-lg bg-accent-primary/10 group-hover:bg-accent-primary/20 transition-colors\">\n                <Icon className=\"h-4 w-4 text-accent-primary\" />\n              </div>\n            )}\n            <CardTitle className=\"text-heading-medium font-semibold text-zinc-50\">\n              {title}\n            </CardTitle>\n          </div>\n          \n          {subtitle && (\n            <p className=\"text-body-small text-zinc-400\">{subtitle}</p>\n          )}\n          \n          {value && (\n            <div className=\"space-y-2\">\n              <p className=\"text-display-medium font-bold text-zinc-50\">\n                {typeof value === 'number' ? value.toLocaleString() : value}\n              </p>\n              \n              {change && (\n                <div className=\"flex items-center gap-2\">\n                  <div className={cn(\n                    \"flex items-center gap-1 text-sm font-medium\",\n                    change.value > 0 ? \"text-green-400\" : \n                    change.value < 0 ? \"text-red-400\" : \"text-zinc-400\"\n                  )}>\n                    {change.value > 0 && <TrendingUp className=\"h-3 w-3\" />}\n                    {change.value < 0 && <TrendingDown className=\"h-3 w-3\" />}\n                    {Math.abs(change.value).toFixed(1)}%\n                  </div>\n                  \n                  <span className=\"text-xs text-zinc-500\">\n                    {change.label} {change.period && `vs ${change.period}`}\n                  </span>\n                </div>\n              )}\n            </div>\n          )}\n        </div>\n        \n        {/* Widget Actions */}\n        <div className=\"flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity\">\n          {actions}\n          \n          <DropdownMenu>\n            <DropdownMenuTrigger asChild>\n              <Button variant=\"ghost\" size=\"sm\" className=\"h-8 w-8 p-0\">\n                <MoreVertical className=\"h-4 w-4\" />\n              </Button>\n            </DropdownMenuTrigger>\n            <DropdownMenuContent align=\"end\">\n              {onRefresh && (\n                <DropdownMenuItem onClick={onRefresh} className=\"gap-2\">\n                  <RefreshCw className=\"h-4 w-4\" />\n                  Refresh\n                </DropdownMenuItem>\n              )}\n              {onExpand && (\n                <DropdownMenuItem onClick={onExpand} className=\"gap-2\">\n                  <Maximize2 className=\"h-4 w-4\" />\n                  Expand\n                </DropdownMenuItem>\n              )}\n              {onExport && (\n                <>\n                  <DropdownMenuSeparator />\n                  <DropdownMenuItem onClick={onExport} className=\"gap-2\">\n                    <Download className=\"h-4 w-4\" />\n                    Export Data\n                  </DropdownMenuItem>\n                </>\n              )}\n            </DropdownMenuContent>\n          </DropdownMenu>\n        </div>\n      </CardHeader>\n      \n      {(children || loading || error) && (\n        <CardContent className={cn('pt-0', sizeClasses[size])}>\n          {loading && (\n            <div className=\"flex items-center justify-center h-32\">\n              <div className=\"animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary\" />\n            </div>\n          )}\n          \n          {error && (\n            <div className=\"flex items-center justify-center h-32\">\n              <div className=\"text-center\">\n                <p className=\"text-sm text-red-400 mb-2\">Error loading data</p>\n                <p className=\"text-xs text-zinc-500\">{error}</p>\n                {onRefresh && (\n                  <Button variant=\"outline\" size=\"sm\" onClick={onRefresh} className=\"mt-2\">\n                    Try Again\n                  </Button>\n                )}\n              </div>\n            </div>\n          )}\n          \n          {!loading && !error && children}\n        </CardContent>\n      )}\n    </Card>\n  )\n}\n\n// Pre-built widget variants\ninterface StatWidgetProps {\n  title: string\n  value: string | number\n  change?: number\n  changeLabel?: string\n  icon: LucideIcon\n  className?: string\n  color?: string\n}\n\nexport function StatWidget({\n  title,\n  value,\n  change,\n  changeLabel = \"vs last period\",\n  icon: Icon,\n  className,\n  color = \"var(--color-accent-primary)\"\n}: StatWidgetProps) {\n  return (\n    <DashboardWidget\n      title={title}\n      value={value}\n      change={change ? {\n        value: change,\n        label: changeLabel\n      } : undefined}\n      icon={Icon}\n      className={className}\n      size=\"sm\"\n    />\n  )\n}\n\ninterface ChartWidgetProps {\n  title: string\n  subtitle?: string\n  chart: React.ReactNode\n  className?: string\n  onRefresh?: () => void\n  onExport?: () => void\n  loading?: boolean\n  error?: string\n}\n\nexport function ChartWidget({\n  title,\n  subtitle,\n  chart,\n  className,\n  onRefresh,\n  onExport,\n  loading,\n  error\n}: ChartWidgetProps) {\n  return (\n    <DashboardWidget\n      title={title}\n      subtitle={subtitle}\n      className={className}\n      onRefresh={onRefresh}\n      onExport={onExport}\n      loading={loading}\n      error={error}\n      size=\"lg\"\n    >\n      {chart}\n    </DashboardWidget>\n  )\n}\n\ninterface ListWidgetProps<T> {\n  title: string\n  subtitle?: string\n  items: T[]\n  renderItem: (item: T, index: number) => React.ReactNode\n  className?: string\n  emptyMessage?: string\n  showAll?: boolean\n  onSeeMore?: () => void\n  loading?: boolean\n}\n\nexport function ListWidget<T>({\n  title,\n  subtitle,\n  items,\n  renderItem,\n  className,\n  emptyMessage = \"No items to display\",\n  showAll = false,\n  onSeeMore,\n  loading = false\n}: ListWidgetProps<T>) {\n  const displayItems = showAll ? items : items.slice(0, 5)\n  const hasMore = items.length > 5 && !showAll\n\n  return (\n    <DashboardWidget\n      title={title}\n      subtitle={subtitle}\n      className={className}\n      loading={loading}\n      size=\"md\"\n    >\n      {items.length === 0 ? (\n        <div className=\"text-center py-8\">\n          <p className=\"text-sm text-zinc-400\">{emptyMessage}</p>\n        </div>\n      ) : (\n        <div className=\"space-y-3\">\n          {displayItems.map((item, index) => (\n            <div key={index} className=\"border-l-2 border-transparent hover:border-accent-primary transition-colors\">\n              <div className=\"pl-3\">\n                {renderItem(item, index)}\n              </div>\n            </div>\n          ))}\n          \n          {hasMore && onSeeMore && (\n            <Button variant=\"ghost\" size=\"sm\" onClick={onSeeMore} className=\"w-full mt-4\">\n              Show {items.length - 5} more items\n            </Button>\n          )}\n        </div>\n      )}\n    </DashboardWidget>\n  )\n}\n\n// Widget Grid Layout\ninterface DashboardGridProps {\n  children: React.ReactNode\n  columns?: 1 | 2 | 3 | 4 | 6\n  gap?: 2 | 3 | 4 | 6 | 8\n  className?: string\n}\n\nexport function DashboardGrid({\n  children,\n  columns = 3,\n  gap = 6,\n  className\n}: DashboardGridProps) {\n  const gridClasses = {\n    1: 'grid-cols-1',\n    2: 'md:grid-cols-2',\n    3: 'md:grid-cols-2 lg:grid-cols-3',\n    4: 'md:grid-cols-2 lg:grid-cols-4',\n    6: 'md:grid-cols-3 lg:grid-cols-6'\n  }\n\n  const gapClasses = {\n    2: 'gap-2',\n    3: 'gap-3', \n    4: 'gap-4',\n    6: 'gap-6',\n    8: 'gap-8'\n  }\n\n  return (\n    <div className={cn(\n      'grid',\n      gridClasses[columns],\n      gapClasses[gap],\n      className\n    )}>\n      {children}\n    </div>\n  )\n}\n
+import * as React from "react"
+import { LucideIcon, MoreVertical, Maximize2, Minimize2, RefreshCw, Download, TrendingUp, TrendingDown } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Card, CardContent, CardHeader, CardTitle } from "./card"
+import { Button } from "./button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
+} from "./dropdown-menu"
+import { Badge } from "./badge"
+
+interface WidgetProps {
+  title: string
+  subtitle?: string
+  icon?: LucideIcon
+  value?: string | number
+  change?: {
+    value: number
+    label?: string
+    period?: string
+  }
+  className?: string
+  loading?: boolean
+  error?: string
+  onRefresh?: () => void
+  onExport?: () => void
+  onExpand?: () => void
+  children?: React.ReactNode
+  size?: 'sm' | 'md' | 'lg' | 'xl'
+  variant?: 'default' | 'outlined' | 'elevated'
+  actions?: React.ReactNode
+}
+
+export function DashboardWidget({
+  title,
+  subtitle,
+  icon: Icon,
+  value,
+  change,
+  className,
+  loading = false,
+  error,
+  onRefresh,
+  onExport,
+  onExpand,
+  children,
+  size = 'md',
+  variant = 'elevated',
+  actions
+}: WidgetProps) {
+  const sizeClasses = {
+    sm: 'p-4',
+    md: 'p-6',
+    lg: 'p-8',
+    xl: 'p-10'
+  }
+
+  const variantClasses = {
+    default: '',
+    outlined: 'border-2',
+    elevated: 'surface-elevated shadow-lg'
+  }
+
+  return (
+    <Card className={cn(
+      'transition-all duration-200 hover-lift group',
+      variantClasses[variant],
+      className
+    )}>
+      <CardHeader className={cn(
+        'flex flex-row items-start justify-between space-y-0',
+        sizeClasses[size]
+      )}>
+        <div className="space-y-1 flex-1">
+          <div className="flex items-center gap-2">
+            {Icon && (
+              <div className="p-2 rounded-lg bg-accent-primary/10 group-hover:bg-accent-primary/20 transition-colors">
+                <Icon className="h-4 w-4 text-accent-primary" />
+              </div>
+            )}
+            <CardTitle className="text-heading-medium font-semibold text-zinc-50">
+              {title}
+            </CardTitle>
+          </div>
+          
+          {subtitle && (
+            <p className="text-body-small text-zinc-400">{subtitle}</p>
+          )}
+          
+          {value && (
+            <div className="space-y-2">
+              <p className="text-display-medium font-bold text-zinc-50">
+                {typeof value === 'number' ? value.toLocaleString() : value}
+              </p>
+              
+              {change && (
+                <div className="flex items-center gap-2">
+                  <div className={cn(
+                    "flex items-center gap-1 text-sm font-medium",
+                    change.value > 0 ? "text-green-400" : 
+                    change.value < 0 ? "text-red-400" : "text-zinc-400"
+                  )}>
+                    {change.value > 0 && <TrendingUp className="h-3 w-3" />}
+                    {change.value < 0 && <TrendingDown className="h-3 w-3" />}
+                    {Math.abs(change.value).toFixed(1)}%
+                  </div>
+                  
+                  <span className="text-xs text-zinc-500">
+                    {change.label} {change.period && `vs ${change.period}`}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Widget Actions */}
+        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {actions}
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {onRefresh && (
+                <DropdownMenuItem onClick={onRefresh} className="gap-2">
+                  <RefreshCw className="h-4 w-4" />
+                  Refresh
+                </DropdownMenuItem>
+              )}
+              {onExpand && (
+                <DropdownMenuItem onClick={onExpand} className="gap-2">
+                  <Maximize2 className="h-4 w-4" />
+                  Expand
+                </DropdownMenuItem>
+              )}
+              {onExport && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={onExport} className="gap-2">
+                    <Download className="h-4 w-4" />
+                    Export Data
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </CardHeader>
+      
+      {(children || loading || error) && (
+        <CardContent className={cn('pt-0', sizeClasses[size])}>
+          {loading && (
+            <div className="flex items-center justify-center h-32">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary" />
+            </div>
+          )}
+          
+          {error && (
+            <div className="flex items-center justify-center h-32">
+              <div className="text-center">
+                <p className="text-sm text-red-400 mb-2">Error loading data</p>
+                <p className="text-xs text-zinc-500">{error}</p>
+                {onRefresh && (
+                  <Button variant="outline" size="sm" onClick={onRefresh} className="mt-2">
+                    Try Again
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {!loading && !error && children}
+        </CardContent>
+      )}
+    </Card>
+  )
+}
+
+// Pre-built widget variants
+interface StatWidgetProps {
+  title: string
+  value: string | number
+  change?: number
+  changeLabel?: string
+  icon: LucideIcon
+  className?: string
+  color?: string
+}
+
+export function StatWidget({
+  title,
+  value,
+  change,
+  changeLabel = "vs last period",
+  icon: Icon,
+  className,
+  color = "var(--color-accent-primary)"
+}: StatWidgetProps) {
+  return (
+    <DashboardWidget
+      title={title}
+      value={value}
+      change={change ? {
+        value: change,
+        label: changeLabel
+      } : undefined}
+      icon={Icon}
+      className={className}
+      size="sm"
+    />
+  )
+}
+
+interface ChartWidgetProps {
+  title: string
+  subtitle?: string
+  chart: React.ReactNode
+  className?: string
+  onRefresh?: () => void
+  onExport?: () => void
+  loading?: boolean
+  error?: string
+}
+
+export function ChartWidget({
+  title,
+  subtitle,
+  chart,
+  className,
+  onRefresh,
+  onExport,
+  loading,
+  error
+}: ChartWidgetProps) {
+  return (
+    <DashboardWidget
+      title={title}
+      subtitle={subtitle}
+      className={className}
+      onRefresh={onRefresh}
+      onExport={onExport}
+      loading={loading}
+      error={error}
+      size="lg"
+    >
+      {chart}
+    </DashboardWidget>
+  )
+}
+
+interface ListWidgetProps<T> {
+  title: string
+  subtitle?: string
+  items: T[]
+  renderItem: (item: T, index: number) => React.ReactNode
+  className?: string
+  emptyMessage?: string
+  showAll?: boolean
+  onSeeMore?: () => void
+  loading?: boolean
+}
+
+export function ListWidget<T>({
+  title,
+  subtitle,
+  items,
+  renderItem,
+  className,
+  emptyMessage = "No items to display",
+  showAll = false,
+  onSeeMore,
+  loading = false
+}: ListWidgetProps<T>) {
+  const displayItems = showAll ? items : items.slice(0, 5)
+  const hasMore = items.length > 5 && !showAll
+
+  return (
+    <DashboardWidget
+      title={title}
+      subtitle={subtitle}
+      className={className}
+      loading={loading}
+      size="md"
+    >
+      {items.length === 0 ? (
+        <div className="text-center py-8">
+          <p className="text-sm text-zinc-400">{emptyMessage}</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {displayItems.map((item, index) => (
+            <div key={index} className="border-l-2 border-transparent hover:border-accent-primary transition-colors">
+              <div className="pl-3">
+                {renderItem(item, index)}
+              </div>
+            </div>
+          ))}
+          
+          {hasMore && onSeeMore && (
+            <Button variant="ghost" size="sm" onClick={onSeeMore} className="w-full mt-4">
+              Show {items.length - 5} more items
+            </Button>
+          )}
+        </div>
+      )}
+    </DashboardWidget>
+  )
+}
+
+// Widget Grid Layout
+interface DashboardGridProps {
+  children: React.ReactNode
+  columns?: 1 | 2 | 3 | 4 | 6
+  gap?: 2 | 3 | 4 | 6 | 8
+  className?: string
+}
+
+export function DashboardGrid({
+  children,
+  columns = 3,
+  gap = 6,
+  className
+}: DashboardGridProps) {
+  const gridClasses = {
+    1: 'grid-cols-1',
+    2: 'md:grid-cols-2',
+    3: 'md:grid-cols-2 lg:grid-cols-3',
+    4: 'md:grid-cols-2 lg:grid-cols-4',
+    6: 'md:grid-cols-3 lg:grid-cols-6'
+  }
+
+  const gapClasses = {
+    2: 'gap-2',
+    3: 'gap-3', 
+    4: 'gap-4',
+    6: 'gap-6',
+    8: 'gap-8'
+  }
+
+  return (
+    <div className={cn(
+      'grid',
+      gridClasses[columns],
+      gapClasses[gap],
+      className
+    )}>
+      {children}
+    </div>
+  )
+}

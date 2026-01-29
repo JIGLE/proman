@@ -41,11 +41,66 @@ export function OverviewView(): React.ReactElement {
 
   const occupancyRate = totalProperties > 0 ? (occupiedProperties / totalProperties) * 100 : 0;
 
+  // Monthly revenue trend (last 6 months)
+  const monthlyTrend = [];
+  const now = new Date();
+  for (let i = 5; i >= 0; i--) {
+    const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    const monthReceipts = receipts.filter(r => {
+      const receiptDate = new Date(r.date);
+      return receiptDate.getMonth() === targetDate.getMonth() && 
+             receiptDate.getFullYear() === targetDate.getFullYear() &&
+             r.status === 'paid' && r.type === 'rent';
+    });
+    
+    monthlyTrend.push({
+      label: targetDate.toLocaleString('default', { month: 'short' }),
+      value: monthReceipts.reduce((sum, r) => sum + r.amount, 0)
+    });
+  }
+
+  // Property type distribution
+  const propertyTypes = properties.reduce((acc, property) => {
+    const type = property.type || 'other';
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const propertyTypeData = Object.entries(propertyTypes).map(([type, count]) => ({
+    label: type.charAt(0).toUpperCase() + type.slice(1),
+    value: count,
+    color: getPropertyTypeColor(type)
+  }));
+
+  function getPropertyTypeColor(type: string) {
+    const colors: Record<string, string> = {
+      apartment: '#3b82f6',
+      house: '#10b981',
+      commercial: '#f59e0b',
+      other: '#6b7280'
+    };
+    return colors[type] || colors.other;
+  }
+
   // Recent payments (last 5)
   const recentPayments = receipts
     .filter(r => r.status === 'paid')
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 3);
+
+  // Recent activities (combining payments, new tenants, etc)
+  const recentActivities = [
+    ...recentPayments.map(payment => ({
+      id: payment.id,
+      type: 'payment' as const,
+      message: `Payment received from ${payment.propertyName}`,
+      amount: payment.amount,
+      timestamp: payment.date,
+      icon: '💰'
+    })),
+    // Add more activity types as needed
+  ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+   .slice(0, 5);
 
   // Property status summary
   const propertyStatus = properties.slice(0, 3);
@@ -172,8 +227,10 @@ export function OverviewView(): React.ReactElement {
         />
       </DashboardGrid>
 
-            {/* Tenant Activity */}
-            <motion.div
+      {/* Financial Metrics Grid */}
+      <DashboardGrid columns={3} gap={6}>
+        {/* Tenant Activity */}
+        <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -285,7 +342,7 @@ export function OverviewView(): React.ReactElement {
             </CardContent>
           </Card>
         </motion.div>
-      </div>
+      </DashboardGrid>
 
       {/* Achievements */}
       <motion.div

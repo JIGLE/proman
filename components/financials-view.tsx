@@ -128,7 +128,9 @@ export function FinancialsView(): React.ReactElement {
       expensesByCategory,
       monthlyRevenue,
       totalProperties: properties.length,
-      avgRevenuePerProperty: properties.length > 0 ? totalIncome / properties.length : 0
+      avgRevenuePerProperty: properties.length > 0 ? totalIncome / properties.length : 0,
+      filteredReceipts,
+      filteredExpenses
     };
   }, [receipts, expenses, properties, timeRange]);
 
