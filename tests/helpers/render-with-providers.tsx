@@ -5,17 +5,9 @@ import enMessages from '../../messages/en.json';
 
 // Mock providers for tests with proper context
 const MockCurrencyProvider = ({ children }: { children: React.ReactNode }) => {
-  const mockCurrencyContext = {
-    formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
-    currency: 'USD' as const,
-    setCurrency: () => {},
-  };
-  
   return (
     <div data-testid="mock-currency-provider">
-      {React.cloneElement(children as React.ReactElement, {
-        'data-currency-context': JSON.stringify(mockCurrencyContext)
-      })}
+      {children}
     </div>
   );
 };

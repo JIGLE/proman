@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { User, Mail, Phone, Calendar, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useCurrency } from "@/lib/currency-context";
+import { cn } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -458,7 +459,7 @@ export function TenantsView(): React.ReactElement {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => dialog.edit(tenant)}
+                        onClick={() => dialog.openEditDialog(tenant)}
                         className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-50"
                       >
                         <Edit className="h-4 w-4" />
@@ -466,7 +467,7 @@ export function TenantsView(): React.ReactElement {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteTenant(tenant.id)}
+                        onClick={() => handleDelete(tenant.id)}
                         className="h-8 w-8 p-0 text-red-400 hover:text-red-300"
                       >
                         <Trash2 className="h-4 w-4" />

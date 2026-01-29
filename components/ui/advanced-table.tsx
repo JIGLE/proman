@@ -1,1 +1,471 @@
-import * as React from \"react\"\nimport { ChevronDown, ChevronUp, ChevronsUpDown, Filter, Download, Settings2, Eye, EyeOff } from \"lucide-react\"\nimport { cn } from \"@/lib/utils\"\nimport { Button } from \"./button\"\nimport { Checkbox } from \"./checkbox\"\nimport {\n  DropdownMenu,\n  DropdownMenuContent,\n  DropdownMenuItem,\n  DropdownMenuTrigger,\n  DropdownMenuCheckboxItem,\n  DropdownMenuSeparator,\n  DropdownMenuLabel\n} from \"./dropdown-menu\"\nimport { Input } from \"./input\"\nimport { Badge } from \"./badge\"\n\nexport interface AdvancedTableColumn<T> {\n  id: keyof T\n  header: string | React.ReactNode\n  accessorKey?: keyof T\n  cell?: (item: T) => React.ReactNode\n  sortable?: boolean\n  filterable?: boolean\n  resizable?: boolean\n  width?: number\n  minWidth?: number\n  maxWidth?: number\n  align?: 'left' | 'center' | 'right'\n  sticky?: boolean\n  hidden?: boolean\n}\n\ninterface TableState<T> {\n  sorting: { id: keyof T; desc: boolean }[]\n  columnFilters: { id: keyof T; value: unknown }[]\n  columnVisibility: Record<keyof T, boolean>\n  rowSelection: Record<string, boolean>\n  globalFilter: string\n  pagination: {\n    pageIndex: number\n    pageSize: number\n  }\n}\n\ninterface AdvancedTableProps<T> {\n  data: T[]\n  columns: AdvancedTableColumn<T>[]\n  className?: string\n  enableSorting?: boolean\n  enableFiltering?: boolean\n  enableColumnVisibility?: boolean\n  enableRowSelection?: boolean\n  enablePagination?: boolean\n  enableExport?: boolean\n  pageSize?: number\n  loading?: boolean\n  onRowSelectionChange?: (selectedRows: T[]) => void\n  onExport?: (data: T[]) => void\n  emptyMessage?: string\n}\n\nexport function AdvancedTable<T extends Record<string, any>>({\n  data,\n  columns,\n  className,\n  enableSorting = true,\n  enableFiltering = true,\n  enableColumnVisibility = true,\n  enableRowSelection = false,\n  enablePagination = true,\n  enableExport = false,\n  pageSize = 10,\n  loading = false,\n  onRowSelectionChange,\n  onExport,\n  emptyMessage = \"No data available\"\n}: AdvancedTableProps<T>) {\n  const [state, setState] = React.useState<TableState<T>>({\n    sorting: [],\n    columnFilters: [],\n    columnVisibility: columns.reduce((acc, col) => {\n      acc[col.id] = !col.hidden\n      return acc\n    }, {} as Record<keyof T, boolean>),\n    rowSelection: {},\n    globalFilter: '',\n    pagination: {\n      pageIndex: 0,\n      pageSize\n    }\n  })\n\n  // Memoized filtered and sorted data\n  const processedData = React.useMemo(() => {\n    let filtered = [...data]\n\n    // Apply global filter\n    if (state.globalFilter) {\n      filtered = filtered.filter(item =>\n        Object.values(item).some(value =>\n          String(value).toLowerCase().includes(state.globalFilter.toLowerCase())\n        )\n      )\n    }\n\n    // Apply column filters\n    state.columnFilters.forEach(filter => {\n      filtered = filtered.filter(item => {\n        const value = item[filter.id]\n        return String(value).toLowerCase().includes(String(filter.value).toLowerCase())\n      })\n    })\n\n    // Apply sorting\n    if (state.sorting.length > 0) {\n      filtered.sort((a, b) => {\n        for (const sort of state.sorting) {\n          const aValue = a[sort.id]\n          const bValue = b[sort.id]\n          \n          if (aValue < bValue) return sort.desc ? 1 : -1\n          if (aValue > bValue) return sort.desc ? -1 : 1\n        }\n        return 0\n      })\n    }\n\n    return filtered\n  }, [data, state.globalFilter, state.columnFilters, state.sorting])\n\n  // Paginated data\n  const paginatedData = React.useMemo(() => {\n    if (!enablePagination) return processedData\n    \n    const start = state.pagination.pageIndex * state.pagination.pageSize\n    return processedData.slice(start, start + state.pagination.pageSize)\n  }, [processedData, state.pagination, enablePagination])\n\n  // Handle sorting\n  const handleSort = (columnId: keyof T) => {\n    setState(prev => {\n      const existing = prev.sorting.find(s => s.id === columnId)\n      let newSorting\n      \n      if (!existing) {\n        newSorting = [{ id: columnId, desc: false }]\n      } else if (!existing.desc) {\n        newSorting = [{ id: columnId, desc: true }]\n      } else {\n        newSorting = []\n      }\n      \n      return { ...prev, sorting: newSorting }\n    })\n  }\n\n  // Handle row selection\n  const handleRowSelection = (rowIndex: string, selected: boolean) => {\n    setState(prev => {\n      const newSelection = { ...prev.rowSelection }\n      if (selected) {\n        newSelection[rowIndex] = true\n      } else {\n        delete newSelection[rowIndex]\n      }\n      return { ...prev, rowSelection: newSelection }\n    })\n  }\n\n  // Handle select all\n  const handleSelectAll = (selected: boolean) => {\n    setState(prev => {\n      if (selected) {\n        const newSelection: Record<string, boolean> = {}\n        paginatedData.forEach((_, index) => {\n          newSelection[String(index)] = true\n        })\n        return { ...prev, rowSelection: newSelection }\n      } else {\n        return { ...prev, rowSelection: {} }\n      }\n    })\n  }\n\n  // Get selected rows\n  const selectedRows = React.useMemo(() => {\n    return paginatedData.filter((_, index) => state.rowSelection[String(index)])\n  }, [paginatedData, state.rowSelection])\n\n  React.useEffect(() => {\n    onRowSelectionChange?.(selectedRows)\n  }, [selectedRows, onRowSelectionChange])\n\n  const getSortIcon = (columnId: keyof T) => {\n    const sort = state.sorting.find(s => s.id === columnId)\n    if (!sort) return <ChevronsUpDown className=\"h-4 w-4 opacity-50\" />\n    return sort.desc ? <ChevronDown className=\"h-4 w-4\" /> : <ChevronUp className=\"h-4 w-4\" />\n  }\n\n  const isAllSelected = paginatedData.length > 0 && Object.keys(state.rowSelection).length === paginatedData.length\n  const isIndeterminate = Object.keys(state.rowSelection).length > 0 && !isAllSelected\n\n  return (\n    <div className={cn(\"space-y-4\", className)}>\n      {/* Table Controls */}\n      <div className=\"flex items-center justify-between gap-4\">\n        <div className=\"flex items-center gap-3 flex-1\">\n          {/* Global Search */}\n          {enableFiltering && (\n            <div className=\"relative max-w-sm\">\n              <Input\n                placeholder=\"Search all columns...\"\n                value={state.globalFilter}\n                onChange={(e) => setState(prev => ({ ...prev, globalFilter: e.target.value }))}\n                className=\"pl-8\"\n              />\n              <Filter className=\"absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400\" />\n            </div>\n          )}\n          \n          {/* Selected Count */}\n          {enableRowSelection && Object.keys(state.rowSelection).length > 0 && (\n            <Badge variant=\"secondary\">\n              {Object.keys(state.rowSelection).length} selected\n            </Badge>\n          )}\n        </div>\n        \n        <div className=\"flex items-center gap-2\">\n          {/* Column Visibility */}\n          {enableColumnVisibility && (\n            <DropdownMenu>\n              <DropdownMenuTrigger asChild>\n                <Button variant=\"outline\" size=\"sm\" className=\"gap-2\">\n                  <Settings2 className=\"h-4 w-4\" />\n                  Columns\n                </Button>\n              </DropdownMenuTrigger>\n              <DropdownMenuContent align=\"end\" className=\"w-48\">\n                <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>\n                <DropdownMenuSeparator />\n                {columns.map(column => (\n                  <DropdownMenuCheckboxItem\n                    key={String(column.id)}\n                    checked={state.columnVisibility[column.id]}\n                    onCheckedChange={(checked) => {\n                      setState(prev => ({\n                        ...prev,\n                        columnVisibility: {\n                          ...prev.columnVisibility,\n                          [column.id]: checked\n                        }\n                      }))\n                    }}\n                  >\n                    {typeof column.header === 'string' ? column.header : String(column.id)}\n                  </DropdownMenuCheckboxItem>\n                ))}\n              </DropdownMenuContent>\n            </DropdownMenu>\n          )}\n          \n          {/* Export */}\n          {enableExport && (\n            <Button\n              variant=\"outline\"\n              size=\"sm\"\n              onClick={() => onExport?.(processedData)}\n              className=\"gap-2\"\n            >\n              <Download className=\"h-4 w-4\" />\n              Export\n            </Button>\n          )}\n        </div>\n      </div>\n\n      {/* Table */}\n      <div className=\"surface-elevated rounded-lg border border-[var(--color-border)] overflow-hidden\">\n        <div className=\"overflow-x-auto\">\n          <table className=\"w-full\">\n            {/* Header */}\n            <thead className=\"bg-[var(--color-surface-muted)]\">\n              <tr>\n                {enableRowSelection && (\n                  <th className=\"w-12 px-4 py-3\">\n                    <Checkbox\n                      checked={isAllSelected}\n                      indeterminate={isIndeterminate}\n                      onCheckedChange={handleSelectAll}\n                    />\n                  </th>\n                )}\n                \n                {columns.map(column => {\n                  if (!state.columnVisibility[column.id]) return null\n                  \n                  return (\n                    <th\n                      key={String(column.id)}\n                      className={cn(\n                        \"px-4 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider\",\n                        column.align === 'center' && \"text-center\",\n                        column.align === 'right' && \"text-right\",\n                        column.sticky && \"sticky left-0 bg-[var(--color-surface-muted)] z-10\"\n                      )}\n                      style={{\n                        width: column.width,\n                        minWidth: column.minWidth,\n                        maxWidth: column.maxWidth\n                      }}\n                    >\n                      {column.sortable && enableSorting ? (\n                        <button\n                          onClick={() => handleSort(column.id)}\n                          className={cn(\n                            \"flex items-center gap-2 hover:text-zinc-200 transition-colors group\",\n                            column.align === 'center' && \"justify-center\",\n                            column.align === 'right' && \"justify-end\"\n                          )}\n                        >\n                          {column.header}\n                          <span className=\"opacity-70 group-hover:opacity-100 transition-opacity\">\n                            {getSortIcon(column.id)}\n                          </span>\n                        </button>\n                      ) : (\n                        column.header\n                      )}\n                    </th>\n                  )\n                })}\n              </tr>\n            </thead>\n\n            {/* Body */}\n            <tbody className=\"divide-y divide-[var(--color-border)]\">\n              {loading ? (\n                // Loading skeleton\n                Array.from({ length: state.pagination.pageSize }).map((_, index) => (\n                  <tr key={index} className=\"animate-pulse\">\n                    {enableRowSelection && (\n                      <td className=\"px-4 py-3\">\n                        <div className=\"w-4 h-4 bg-[var(--color-surface-muted)] rounded\" />\n                      </td>\n                    )}\n                    {columns.map(column => {\n                      if (!state.columnVisibility[column.id]) return null\n                      return (\n                        <td key={String(column.id)} className=\"px-4 py-3\">\n                          <div className=\"h-4 bg-[var(--color-surface-muted)] rounded\" />\n                        </td>\n                      )\n                    })}\n                  </tr>\n                ))\n              ) : paginatedData.length === 0 ? (\n                // Empty state\n                <tr>\n                  <td \n                    colSpan={columns.length + (enableRowSelection ? 1 : 0)} \n                    className=\"px-4 py-12 text-center\"\n                  >\n                    <div className=\"text-zinc-400\">\n                      <p className=\"text-sm\">{emptyMessage}</p>\n                    </div>\n                  </td>\n                </tr>\n              ) : (\n                // Data rows\n                paginatedData.map((item, index) => {\n                  const isSelected = state.rowSelection[String(index)]\n                  \n                  return (\n                    <tr\n                      key={index}\n                      className={cn(\n                        \"hover:bg-[var(--color-surface-hover)] transition-colors\",\n                        isSelected && \"bg-accent-primary/10\"\n                      )}\n                    >\n                      {enableRowSelection && (\n                        <td className=\"px-4 py-3\">\n                          <Checkbox\n                            checked={isSelected}\n                            onCheckedChange={(checked) => handleRowSelection(String(index), checked as boolean)}\n                          />\n                        </td>\n                      )}\n                      \n                      {columns.map(column => {\n                        if (!state.columnVisibility[column.id]) return null\n                        \n                        const value = column.accessorKey ? item[column.accessorKey] : item[column.id]\n                        const content = column.cell ? column.cell(item) : String(value || '')\n                        \n                        return (\n                          <td\n                            key={String(column.id)}\n                            className={cn(\n                              \"px-4 py-3 text-sm text-zinc-300\",\n                              column.align === 'center' && \"text-center\",\n                              column.align === 'right' && \"text-right\",\n                              column.sticky && \"sticky left-0 bg-[var(--color-surface)] z-10\"\n                            )}\n                          >\n                            {content}\n                          </td>\n                        )\n                      })}\n                    </tr>\n                  )\n                })\n              )}\n            </tbody>\n          </table>\n        </div>\n        \n        {/* Pagination */}\n        {enablePagination && processedData.length > state.pagination.pageSize && (\n          <div className=\"border-t border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-3\">\n            <div className=\"flex items-center justify-between\">\n              <div className=\"text-sm text-zinc-400\">\n                Showing {state.pagination.pageIndex * state.pagination.pageSize + 1} to{' '}\n                {Math.min(\n                  (state.pagination.pageIndex + 1) * state.pagination.pageSize,\n                  processedData.length\n                )} of {processedData.length} results\n              </div>\n              \n              <div className=\"flex items-center gap-2\">\n                <Button\n                  variant=\"outline\"\n                  size=\"sm\"\n                  onClick={() => setState(prev => ({\n                    ...prev,\n                    pagination: { ...prev.pagination, pageIndex: prev.pagination.pageIndex - 1 }\n                  }))}\n                  disabled={state.pagination.pageIndex === 0}\n                >\n                  Previous\n                </Button>\n                \n                <span className=\"text-sm text-zinc-400 px-2\">\n                  Page {state.pagination.pageIndex + 1} of{' '}\n                  {Math.ceil(processedData.length / state.pagination.pageSize)}\n                </span>\n                \n                <Button\n                  variant=\"outline\"\n                  size=\"sm\"\n                  onClick={() => setState(prev => ({\n                    ...prev,\n                    pagination: { ...prev.pagination, pageIndex: prev.pagination.pageIndex + 1 }\n                  }))}\n                  disabled={\n                    state.pagination.pageIndex >= \n                    Math.ceil(processedData.length / state.pagination.pageSize) - 1\n                  }\n                >\n                  Next\n                </Button>\n              </div>\n            </div>\n          </div>\n        )}\n      </div>\n    </div>\n  )\n}\n
+import * as React from "react"
+import { ChevronDown, ChevronUp, ChevronsUpDown, Filter, Download, Settings2, Eye, EyeOff } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Button } from "./button"
+import { Checkbox } from "./checkbox"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from "./dropdown-menu"
+import { Input } from "./input"
+import { Badge } from "./badge"
+
+export interface AdvancedTableColumn<T> {
+  id: keyof T
+  header: string | React.ReactNode
+  accessorKey?: keyof T
+  cell?: (item: T) => React.ReactNode
+  sortable?: boolean
+  filterable?: boolean
+  resizable?: boolean
+  width?: number
+  minWidth?: number
+  maxWidth?: number
+  align?: 'left' | 'center' | 'right'
+  sticky?: boolean
+  hidden?: boolean
+}
+
+interface TableState<T> {
+  sorting: { id: keyof T; desc: boolean }[]
+  columnFilters: { id: keyof T; value: unknown }[]
+  columnVisibility: Record<keyof T, boolean>
+  rowSelection: Record<string, boolean>
+  globalFilter: string
+  pagination: {
+    pageIndex: number
+    pageSize: number
+  }
+}
+
+interface AdvancedTableProps<T> {
+  data: T[]
+  columns: AdvancedTableColumn<T>[]
+  className?: string
+  enableSorting?: boolean
+  enableFiltering?: boolean
+  enableColumnVisibility?: boolean
+  enableRowSelection?: boolean
+  enablePagination?: boolean
+  enableExport?: boolean
+  pageSize?: number
+  loading?: boolean
+  onRowSelectionChange?: (selectedRows: T[]) => void
+  onExport?: (data: T[]) => void
+  emptyMessage?: string
+}
+
+export function AdvancedTable<T extends Record<string, any>>({
+  data,
+  columns,
+  className,
+  enableSorting = true,
+  enableFiltering = true,
+  enableColumnVisibility = true,
+  enableRowSelection = false,
+  enablePagination = true,
+  enableExport = false,
+  pageSize = 10,
+  loading = false,
+  onRowSelectionChange,
+  onExport,
+  emptyMessage = "No data available"
+}: AdvancedTableProps<T>) {
+  const [state, setState] = React.useState<TableState<T>>({
+    sorting: [],
+    columnFilters: [],
+    columnVisibility: columns.reduce((acc, col) => {
+      acc[col.id] = !col.hidden
+      return acc
+    }, {} as Record<keyof T, boolean>),
+    rowSelection: {},
+    globalFilter: '',
+    pagination: {
+      pageIndex: 0,
+      pageSize
+    }
+  })
+
+  // Memoized filtered and sorted data
+  const processedData = React.useMemo(() => {
+    let filtered = [...data]
+
+    // Apply global filter
+    if (state.globalFilter) {
+      filtered = filtered.filter(item =>
+        Object.values(item).some(value =>
+          String(value).toLowerCase().includes(state.globalFilter.toLowerCase())
+        )
+      )
+    }
+
+    // Apply column filters
+    state.columnFilters.forEach(filter => {
+      filtered = filtered.filter(item => {
+        const value = item[filter.id]
+        return String(value).toLowerCase().includes(String(filter.value).toLowerCase())
+      })
+    })
+
+    // Apply sorting
+    if (state.sorting.length > 0) {
+      filtered.sort((a, b) => {
+        for (const sort of state.sorting) {
+          const aValue = a[sort.id]
+          const bValue = b[sort.id]
+          
+          if (aValue < bValue) return sort.desc ? 1 : -1
+          if (aValue > bValue) return sort.desc ? -1 : 1
+        }
+        return 0
+      })
+    }
+
+    return filtered
+  }, [data, state.globalFilter, state.columnFilters, state.sorting])
+
+  // Paginated data
+  const paginatedData = React.useMemo(() => {
+    if (!enablePagination) return processedData
+    
+    const start = state.pagination.pageIndex * state.pagination.pageSize
+    return processedData.slice(start, start + state.pagination.pageSize)
+  }, [processedData, state.pagination, enablePagination])
+
+  // Handle sorting
+  const handleSort = (columnId: keyof T) => {
+    setState(prev => {
+      const existing = prev.sorting.find(s => s.id === columnId)
+      let newSorting: { id: keyof T; desc: boolean }[]
+      
+      if (!existing) {
+        newSorting = [{ id: columnId, desc: false }]
+      } else if (!existing.desc) {
+        newSorting = [{ id: columnId, desc: true }]
+      } else {
+        newSorting = []
+      }
+      
+      return { ...prev, sorting: newSorting }
+    })
+  }
+
+  // Handle row selection
+  const handleRowSelection = (rowIndex: string, selected: boolean) => {
+    setState(prev => {
+      const newSelection = { ...prev.rowSelection }
+      if (selected) {
+        newSelection[rowIndex] = true
+      } else {
+        delete newSelection[rowIndex]
+      }
+      return { ...prev, rowSelection: newSelection }
+    })
+  }
+
+  // Handle select all
+  const handleSelectAll = (selected: boolean) => {
+    setState(prev => {
+      if (selected) {
+        const newSelection: Record<string, boolean> = {}
+        paginatedData.forEach((_, index) => {
+          newSelection[String(index)] = true
+        })
+        return { ...prev, rowSelection: newSelection }
+      } else {
+        return { ...prev, rowSelection: {} }
+      }
+    })
+  }
+
+  // Get selected rows
+  const selectedRows = React.useMemo(() => {
+    return paginatedData.filter((_, index) => state.rowSelection[String(index)])
+  }, [paginatedData, state.rowSelection])
+
+  React.useEffect(() => {
+    onRowSelectionChange?.(selectedRows)
+  }, [selectedRows, onRowSelectionChange])
+
+  const getSortIcon = (columnId: keyof T) => {
+    const sort = state.sorting.find(s => s.id === columnId)
+    if (!sort) return <ChevronsUpDown className="h-4 w-4 opacity-50" />
+    return sort.desc ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />
+  }
+
+  const isAllSelected = paginatedData.length > 0 && Object.keys(state.rowSelection).length === paginatedData.length
+  const isIndeterminate = Object.keys(state.rowSelection).length > 0 && !isAllSelected
+
+  return (
+    <div className={cn("space-y-4", className)}>
+      {/* Table Controls */}
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3 flex-1">
+          {/* Global Search */}
+          {enableFiltering && (
+            <div className="relative max-w-sm">
+              <Input
+                placeholder="Search all columns..."
+                value={state.globalFilter}
+                onChange={(e) => setState(prev => ({ ...prev, globalFilter: e.target.value }))}
+                className="pl-8"
+              />
+              <Filter className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400" />
+            </div>
+          )}
+          
+          {/* Selected Count */}
+          {enableRowSelection && Object.keys(state.rowSelection).length > 0 && (
+            <Badge variant="secondary">
+              {Object.keys(state.rowSelection).length} selected
+            </Badge>
+          )}
+        </div>
+        
+        <div className="flex items-center gap-2">
+          {/* Column Visibility */}
+          {enableColumnVisibility && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Settings2 className="h-4 w-4" />
+                  Columns
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuLabel>Toggle Columns</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {columns.map(column => (
+                  <DropdownMenuCheckboxItem
+                    key={String(column.id)}
+                    checked={state.columnVisibility[column.id]}
+                    onCheckedChange={(checked) => {
+                      setState(prev => ({
+                        ...prev,
+                        columnVisibility: {
+                          ...prev.columnVisibility,
+                          [column.id]: checked
+                        }
+                      }))
+                    }}
+                  >
+                    {typeof column.header === 'string' ? column.header : String(column.id)}
+                  </DropdownMenuCheckboxItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+          
+          {/* Export */}
+          {enableExport && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onExport?.(processedData)}
+              className="gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="surface-elevated rounded-lg border border-[var(--color-border)] overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            {/* Header */}
+            <thead className="bg-[var(--color-surface-muted)]">
+              <tr>
+                {enableRowSelection && (
+                  <th className="w-12 px-4 py-3">
+                    <Checkbox
+                      checked={isAllSelected}
+                      indeterminate={isIndeterminate}
+                      onCheckedChange={handleSelectAll}
+                    />
+                  </th>
+                )}
+                
+                {columns.map(column => {
+                  if (!state.columnVisibility[column.id]) return null
+                  
+                  return (
+                    <th
+                      key={String(column.id)}
+                      className={cn(
+                        "px-4 py-3 text-left text-xs font-semibold text-zinc-400 uppercase tracking-wider",
+                        column.align === 'center' && "text-center",
+                        column.align === 'right' && "text-right",
+                        column.sticky && "sticky left-0 bg-[var(--color-surface-muted)] z-10"
+                      )}
+                      style={{
+                        width: column.width,
+                        minWidth: column.minWidth,
+                        maxWidth: column.maxWidth
+                      }}
+                    >
+                      {column.sortable && enableSorting ? (
+                        <button
+                          onClick={() => handleSort(column.id)}
+                          className={cn(
+                            "flex items-center gap-2 hover:text-zinc-200 transition-colors group",
+                            column.align === 'center' && "justify-center",
+                            column.align === 'right' && "justify-end"
+                          )}
+                        >
+                          {column.header}
+                          <span className="opacity-70 group-hover:opacity-100 transition-opacity">
+                            {getSortIcon(column.id)}
+                          </span>
+                        </button>
+                      ) : (
+                        column.header
+                      )}
+                    </th>
+                  )
+                })}
+              </tr>
+            </thead>
+
+            {/* Body */}
+            <tbody className="divide-y divide-[var(--color-border)]">
+              {loading ? (
+                // Loading skeleton
+                Array.from({ length: state.pagination.pageSize }).map((_, index) => (
+                  <tr key={index} className="animate-pulse">
+                    {enableRowSelection && (
+                      <td className="px-4 py-3">
+                        <div className="w-4 h-4 bg-[var(--color-surface-muted)] rounded" />
+                      </td>
+                    )}
+                    {columns.map(column => {
+                      if (!state.columnVisibility[column.id]) return null
+                      return (
+                        <td key={String(column.id)} className="px-4 py-3">
+                          <div className="h-4 bg-[var(--color-surface-muted)] rounded" />
+                        </td>
+                      )
+                    })}
+                  </tr>
+                ))
+              ) : paginatedData.length === 0 ? (
+                // Empty state
+                <tr>
+                  <td 
+                    colSpan={columns.length + (enableRowSelection ? 1 : 0)} 
+                    className="px-4 py-12 text-center"
+                  >
+                    <div className="text-zinc-400">
+                      <p className="text-sm">{emptyMessage}</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                // Data rows
+                paginatedData.map((item, index) => {
+                  const isSelected = state.rowSelection[String(index)]
+                  
+                  return (
+                    <tr
+                      key={index}
+                      className={cn(
+                        "hover:bg-[var(--color-surface-hover)] transition-colors",
+                        isSelected && "bg-accent-primary/10"
+                      )}
+                    >
+                      {enableRowSelection && (
+                        <td className="px-4 py-3">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => handleRowSelection(String(index), checked as boolean)}
+                          />
+                        </td>
+                      )}
+                      
+                      {columns.map(column => {
+                        if (!state.columnVisibility[column.id]) return null
+                        
+                        const value = column.accessorKey ? item[column.accessorKey] : item[column.id]
+                        const content = column.cell ? column.cell(item) : String(value || '')
+                        
+                        return (
+                          <td
+                            key={String(column.id)}
+                            className={cn(
+                              "px-4 py-3 text-sm text-zinc-300",
+                              column.align === 'center' && "text-center",
+                              column.align === 'right' && "text-right",
+                              column.sticky && "sticky left-0 bg-[var(--color-surface)] z-10"
+                            )}
+                          >
+                            {content}
+                          </td>
+                        )
+                      })}
+                    </tr>
+                  )
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+        
+        {/* Pagination */}
+        {enablePagination && processedData.length > state.pagination.pageSize && (
+          <div className="border-t border-[var(--color-border)] bg-[var(--color-surface-muted)] px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-zinc-400">
+                Showing {state.pagination.pageIndex * state.pagination.pageSize + 1} to{' '}
+                {Math.min(
+                  (state.pagination.pageIndex + 1) * state.pagination.pageSize,
+                  processedData.length
+                )} of {processedData.length} results
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setState(prev => ({
+                    ...prev,
+                    pagination: { ...prev.pagination, pageIndex: prev.pagination.pageIndex - 1 }
+                  }))}
+                  disabled={state.pagination.pageIndex === 0}
+                >
+                  Previous
+                </Button>
+                
+                <span className="text-sm text-zinc-400 px-2">
+                  Page {state.pagination.pageIndex + 1} of{' '}
+                  {Math.ceil(processedData.length / state.pagination.pageSize)}
+                </span>
+                
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setState(prev => ({
+                    ...prev,
+                    pagination: { ...prev.pagination, pageIndex: prev.pagination.pageIndex + 1 }
+                  }))}
+                  disabled={
+                    state.pagination.pageIndex >= 
+                    Math.ceil(processedData.length / state.pagination.pageSize) - 1
+                  }
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

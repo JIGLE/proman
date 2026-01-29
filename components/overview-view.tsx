@@ -212,15 +212,19 @@ export function OverviewView(): React.ReactElement {
           items={recentActivities}
           renderItem={(activity, index) => (
             <div className="flex items-center justify-between py-2">
-              <div className="space-y-1">
-                <p className="text-sm font-medium text-zinc-300">{activity.description}</p>
-                <div className="flex items-center gap-2 text-xs text-zinc-500">
-                  {activity.tenant && <span>• {activity.tenant}</span>}
-                  {activity.property && <span>• {activity.property}</span>}
-                  {activity.amount && <span>• {activity.amount}</span>}
+              <div className="flex items-center gap-3">
+                <span className="text-lg">{activity.icon}</span>
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-zinc-300">{activity.message}</p>
+                  <div className="flex items-center gap-2 text-xs text-zinc-500">
+                    <span>{activity.type}</span>
+                    {activity.amount && <span>• ${activity.amount.toLocaleString()}</span>}
+                  </div>
                 </div>
               </div>
-              <span className="text-xs text-zinc-500">{activity.time}</span>
+              <span className="text-xs text-zinc-500">
+                {new Date(activity.timestamp).toLocaleDateString()}
+              </span>
             </div>
           )}
           emptyMessage="No recent activities"

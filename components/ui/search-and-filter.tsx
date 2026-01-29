@@ -1,1 +1,257 @@
-import * as React from \"react\"\nimport { Search, Filter, SlidersHorizontal, X } from \"lucide-react\"\nimport { cn } from \"@/lib/utils\"\nimport { Button } from \"./button\"\nimport { Input } from \"./input\"\nimport {\n  DropdownMenu,\n  DropdownMenuContent,\n  DropdownMenuItem,\n  DropdownMenuTrigger,\n  DropdownMenuCheckboxItem,\n  DropdownMenuSeparator,\n  DropdownMenuLabel\n} from \"./dropdown-menu\"\nimport { Badge } from \"./badge\"\n\ninterface FilterOption {\n  label: string\n  value: string\n}\n\ninterface FilterGroup {\n  key: string\n  label: string\n  options: FilterOption[]\n  multiple?: boolean\n  defaultValue?: string | string[]\n}\n\ninterface SearchAndFilterProps {\n  searchValue: string\n  onSearchChange: (value: string) => void\n  placeholder?: string\n  filters?: FilterGroup[]\n  onFiltersChange?: (filters: Record<string, string | string[]>) => void\n  className?: string\n  showFilterCount?: boolean\n}\n\nexport function SearchAndFilter({\n  searchValue,\n  onSearchChange,\n  placeholder = \"Search...\",\n  filters = [],\n  onFiltersChange,\n  className,\n  showFilterCount = true\n}: SearchAndFilterProps) {\n  const [activeFilters, setActiveFilters] = React.useState<Record<string, string | string[]>>({})\n  const [isFilterOpen, setIsFilterOpen] = React.useState(false)\n\n  React.useEffect(() => {\n    // Initialize filters with default values\n    const initialFilters: Record<string, string | string[]> = {}\n    filters.forEach(filter => {\n      if (filter.defaultValue) {\n        initialFilters[filter.key] = filter.defaultValue\n      }\n    })\n    setActiveFilters(initialFilters)\n  }, [filters])\n\n  React.useEffect(() => {\n    onFiltersChange?.(activeFilters)\n  }, [activeFilters, onFiltersChange])\n\n  const handleFilterChange = (filterKey: string, value: string, multiple = false) => {\n    setActiveFilters(prev => {\n      const current = prev[filterKey]\n      \n      if (multiple) {\n        const currentArray = Array.isArray(current) ? current : []\n        const newArray = currentArray.includes(value)\n          ? currentArray.filter(v => v !== value)\n          : [...currentArray, value]\n        \n        return {\n          ...prev,\n          [filterKey]: newArray.length > 0 ? newArray : undefined\n        }\n      } else {\n        return {\n          ...prev,\n          [filterKey]: current === value ? undefined : value\n        }\n      }\n    })\n  }\n\n  const clearFilter = (filterKey: string) => {\n    setActiveFilters(prev => {\n      const newFilters = { ...prev }\n      delete newFilters[filterKey]\n      return newFilters\n    })\n  }\n\n  const clearAllFilters = () => {\n    setActiveFilters({})\n  }\n\n  const getActiveFilterCount = () => {\n    return Object.keys(activeFilters).filter(key => {\n      const value = activeFilters[key]\n      if (Array.isArray(value)) {\n        return value.length > 0\n      }\n      return value !== undefined\n    }).length\n  }\n\n  const getFilterDisplayValue = (filter: FilterGroup) => {\n    const value = activeFilters[filter.key]\n    if (!value) return null\n    \n    if (Array.isArray(value)) {\n      return value.length > 0 ? `${value.length} selected` : null\n    }\n    \n    const option = filter.options.find(opt => opt.value === value)\n    return option?.label || value\n  }\n\n  return (\n    <div className={cn(\"space-y-4\", className)}>\n      {/* Search and Filter Bar */}\n      <div className=\"flex items-center gap-3\">\n        {/* Search Input */}\n        <div className=\"relative flex-1 max-w-md\">\n          <Search className=\"absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400\" />\n          <Input\n            placeholder={placeholder}\n            value={searchValue}\n            onChange={(e) => onSearchChange(e.target.value)}\n            className=\"pl-10 focus-ring\"\n          />\n          {searchValue && (\n            <button\n              onClick={() => onSearchChange(\"\")}\n              className=\"absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors\"\n            >\n              <X className=\"h-4 w-4\" />\n            </button>\n          )}\n        </div>\n\n        {/* Filter Dropdown */}\n        {filters.length > 0 && (\n          <DropdownMenu open={isFilterOpen} onOpenChange={setIsFilterOpen}>\n            <DropdownMenuTrigger asChild>\n              <Button\n                variant=\"outline\"\n                size=\"sm\"\n                className={cn(\n                  \"gap-2 relative\",\n                  getActiveFilterCount() > 0 && \"border-accent-primary/50 text-accent-primary\"\n                )}\n              >\n                <SlidersHorizontal className=\"h-4 w-4\" />\n                <span>Filters</span>\n                {showFilterCount && getActiveFilterCount() > 0 && (\n                  <Badge variant=\"secondary\" size=\"sm\" className=\"ml-1 h-5 px-1.5\">\n                    {getActiveFilterCount()}\n                  </Badge>\n                )}\n              </Button>\n            </DropdownMenuTrigger>\n            \n            <DropdownMenuContent align=\"end\" className=\"w-64 surface-overlay\">\n              <DropdownMenuLabel className=\"flex items-center justify-between\">\n                <span>Filter Options</span>\n                {getActiveFilterCount() > 0 && (\n                  <Button\n                    variant=\"ghost\"\n                    size=\"sm\"\n                    onClick={clearAllFilters}\n                    className=\"h-auto p-0 text-xs text-zinc-400 hover:text-zinc-200\"\n                  >\n                    Clear all\n                  </Button>\n                )}\n              </DropdownMenuLabel>\n              \n              <DropdownMenuSeparator />\n              \n              {filters.map((filter, index) => (\n                <div key={filter.key}>\n                  <DropdownMenuLabel className=\"text-xs font-medium text-zinc-400 uppercase tracking-wider\">\n                    {filter.label}\n                  </DropdownMenuLabel>\n                  \n                  {filter.options.map((option) => {\n                    const isActive = filter.multiple\n                      ? Array.isArray(activeFilters[filter.key]) && \n                        (activeFilters[filter.key] as string[]).includes(option.value)\n                      : activeFilters[filter.key] === option.value\n                    \n                    return filter.multiple ? (\n                      <DropdownMenuCheckboxItem\n                        key={option.value}\n                        checked={isActive}\n                        onCheckedChange={() => handleFilterChange(filter.key, option.value, true)}\n                      >\n                        {option.label}\n                      </DropdownMenuCheckboxItem>\n                    ) : (\n                      <DropdownMenuItem\n                        key={option.value}\n                        onClick={() => handleFilterChange(filter.key, option.value, false)}\n                        className={cn(isActive && \"bg-accent-primary/10 text-accent-primary\")}\n                      >\n                        {option.label}\n                        {isActive && <span className=\"ml-auto\">✓</span>}\n                      </DropdownMenuItem>\n                    )\n                  })}\n                  \n                  {index < filters.length - 1 && <DropdownMenuSeparator />}\n                </div>\n              ))}\n            </DropdownMenuContent>\n          </DropdownMenu>\n        )}\n      </div>\n\n      {/* Active Filters */}\n      {getActiveFilterCount() > 0 && (\n        <div className=\"flex items-center gap-2 flex-wrap\">\n          <span className=\"text-xs text-zinc-500 font-medium\">Active filters:</span>\n          \n          {filters.map((filter) => {\n            const displayValue = getFilterDisplayValue(filter)\n            if (!displayValue) return null\n            \n            return (\n              <Badge\n                key={filter.key}\n                variant=\"secondary\"\n                className=\"gap-1 cursor-pointer hover:bg-red-500/10 hover:text-red-400 transition-colors\"\n                onClick={() => clearFilter(filter.key)}\n              >\n                <span>{filter.label}: {displayValue}</span>\n                <X className=\"h-3 w-3\" />\n              </Badge>\n            )\n          })}\n        </div>\n      )}\n    </div>\n  )\n}\n
+import * as React from "react"
+import { Search, Filter, SlidersHorizontal, X } from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Button } from "./button"
+import { Input } from "./input"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel
+} from "./dropdown-menu"
+import { Badge } from "./badge"
+
+interface FilterOption {
+  label: string
+  value: string
+}
+
+interface FilterGroup {
+  key: string
+  label: string
+  options: FilterOption[]
+  multiple?: boolean
+  defaultValue?: string | string[]
+}
+
+interface SearchAndFilterProps {
+  searchValue: string
+  onSearchChange: (value: string) => void
+  placeholder?: string
+  filters?: FilterGroup[]
+  onFiltersChange?: (filters: Record<string, string | string[]>) => void
+  className?: string
+  showFilterCount?: boolean
+}
+
+export function SearchAndFilter({
+  searchValue,
+  onSearchChange,
+  placeholder = "Search...",
+  filters = [],
+  onFiltersChange,
+  className,
+  showFilterCount = true
+}: SearchAndFilterProps) {
+  const [activeFilters, setActiveFilters] = React.useState<Record<string, string | string[]>>({})
+  const [isFilterOpen, setIsFilterOpen] = React.useState(false)
+
+  React.useEffect(() => {
+    // Initialize filters with default values
+    const initialFilters: Record<string, string | string[]> = {}
+    filters.forEach(filter => {
+      if (filter.defaultValue) {
+        initialFilters[filter.key] = filter.defaultValue
+      }
+    })
+    setActiveFilters(initialFilters)
+  }, [filters])
+
+  React.useEffect(() => {
+    onFiltersChange?.(activeFilters)
+  }, [activeFilters, onFiltersChange])
+
+  const handleFilterChange = (filterKey: string, value: string, multiple = false) => {
+    setActiveFilters(prev => {
+      const current = prev[filterKey]
+      
+      if (multiple) {
+        const currentArray = Array.isArray(current) ? current : []
+        const newArray = currentArray.includes(value)
+          ? currentArray.filter(v => v !== value)
+          : [...currentArray, value]
+        
+        const result = { ...prev }
+        if (newArray.length > 0) {
+          result[filterKey] = newArray
+        } else {
+          delete result[filterKey]
+        }
+        return result
+      } else {
+        const result = { ...prev }
+        if (current === value) {
+          delete result[filterKey]
+        } else {
+          result[filterKey] = value
+        }
+        return result
+      }
+    })
+  }
+
+  const clearFilter = (filterKey: string) => {
+    setActiveFilters(prev => {
+      const newFilters = { ...prev }
+      delete newFilters[filterKey]
+      return newFilters
+    })
+  }
+
+  const clearAllFilters = () => {
+    setActiveFilters({})
+  }
+
+  const getActiveFilterCount = () => {
+    return Object.keys(activeFilters).filter(key => {
+      const value = activeFilters[key]
+      if (Array.isArray(value)) {
+        return value.length > 0
+      }
+      return value !== undefined
+    }).length
+  }
+
+  const getFilterDisplayValue = (filter: FilterGroup) => {
+    const value = activeFilters[filter.key]
+    if (!value) return null
+    
+    if (Array.isArray(value)) {
+      return value.length > 0 ? `${value.length} selected` : null
+    }
+    
+    const option = filter.options.find(opt => opt.value === value)
+    return option?.label || value
+  }
+
+  return (
+    <div className={cn("space-y-4", className)}>
+      {/* Search and Filter Bar */}
+      <div className="flex items-center gap-3">
+        {/* Search Input */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-zinc-400" />
+          <Input
+            placeholder={placeholder}
+            value={searchValue}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="pl-10 focus-ring"
+          />
+          {searchValue && (
+            <button
+              onClick={() => onSearchChange("")}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-zinc-400 hover:text-zinc-200 transition-colors"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Filter Dropdown */}
+        {filters.length > 0 && (
+          <DropdownMenu open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                className={cn(
+                  "gap-2 relative",
+                  getActiveFilterCount() > 0 && "border-accent-primary/50 text-accent-primary"
+                )}
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                <span>Filters</span>
+                {showFilterCount && getActiveFilterCount() > 0 && (
+                  <Badge variant="secondary" size="sm" className="ml-1 h-5 px-1.5">
+                    {getActiveFilterCount()}
+                  </Badge>
+                )}
+              </Button>
+            </DropdownMenuTrigger>
+            
+            <DropdownMenuContent align="end" className="w-64 surface-overlay">
+              <DropdownMenuLabel className="flex items-center justify-between">
+                <span>Filter Options</span>
+                {getActiveFilterCount() > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearAllFilters}
+                    className="h-auto p-0 text-xs text-zinc-400 hover:text-zinc-200"
+                  >
+                    Clear all
+                  </Button>
+                )}
+              </DropdownMenuLabel>
+              
+              <DropdownMenuSeparator />
+              
+              {filters.map((filter, index) => (
+                <div key={filter.key}>
+                  <DropdownMenuLabel className="text-xs font-medium text-zinc-400 uppercase tracking-wider">
+                    {filter.label}
+                  </DropdownMenuLabel>
+                  
+                  {filter.options.map((option) => {
+                    const isActive = filter.multiple
+                      ? Array.isArray(activeFilters[filter.key]) && 
+                        (activeFilters[filter.key] as string[]).includes(option.value)
+                      : activeFilters[filter.key] === option.value
+                    
+                    return filter.multiple ? (
+                      <DropdownMenuCheckboxItem
+                        key={option.value}
+                        checked={isActive}
+                        onCheckedChange={() => handleFilterChange(filter.key, option.value, true)}
+                      >
+                        {option.label}
+                      </DropdownMenuCheckboxItem>
+                    ) : (
+                      <DropdownMenuItem
+                        key={option.value}
+                        onClick={() => handleFilterChange(filter.key, option.value, false)}
+                        className={cn(isActive && "bg-accent-primary/10 text-accent-primary")}
+                      >
+                        {option.label}
+                        {isActive && <span className="ml-auto">✓</span>}
+                      </DropdownMenuItem>
+                    )
+                  })}
+                  
+                  {index < filters.length - 1 && <DropdownMenuSeparator />}
+                </div>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+      </div>
+
+      {/* Active Filters */}
+      {getActiveFilterCount() > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-zinc-500 font-medium">Active filters:</span>
+          
+          {filters.map((filter) => {
+            const displayValue = getFilterDisplayValue(filter)
+            if (!displayValue) return null
+            
+            return (
+              <Badge
+                key={filter.key}
+                variant="secondary"
+                className="gap-1 cursor-pointer hover:bg-red-500/10 hover:text-red-400 transition-colors"
+                onClick={() => clearFilter(filter.key)}
+              >
+                <span>{filter.label}: {displayValue}</span>
+                <X className="h-3 w-3" />
+              </Badge>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}

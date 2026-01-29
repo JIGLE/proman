@@ -1,117 +1,136 @@
 "use client";
 
-import { useState } from 'react';
-import { Download, FileDown, Loader2 } from 'lucide-react';
-import { Button } from './button';
+import * as React from "react";
+import { Download, FileSpreadsheet, FileText } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "./button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from './dropdown-menu';
-import { cn } from '@/lib/utils';
+} from "./dropdown-menu";
 
-export interface ExportButtonProps<T> {
-  data: T[];
-  filename: string;
-  columns: {
-    key: keyof T;
-    label: string;
-    format?: (value: any) => string;
-  }[];
-  disabled?: boolean;
-  className?: string;
-  variant?: 'default' | 'outline' | 'ghost';
-  size?: 'default' | 'sm' | 'lg' | 'icon';
+export interface ExportColumn {
+  key: string;
+  label: string;
+  format?: (value: any) => string;
 }
 
-export function ExportButton<T>({
+export interface ExportButtonProps {
+  data: any[];
+  filename: string;
+  columns: ExportColumn[];
+  disabled?: boolean;
+  className?: string;
+  onExport?: () => void;
+}
+
+function formatValue(value: any, format?: (value: any) => string): string {
+  if (format) {
+    return format(value);
+  }
+  if (value === null || value === undefined) {
+    return "";
+  }
+  if (typeof value === "object") {
+    return JSON.stringify(value);
+  }
+  return String(value);
+}
+
+function escapeCSVValue(value: string): string {
+  // If the value contains commas, quotes, or newlines, wrap it in quotes
+  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
+    // Escape any existing quotes by doubling them
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
+function generateCSV(data: any[], columns: ExportColumn[]): string {
+  // Header row
+  const headers = columns.map((col) => escapeCSVValue(col.label)).join(",");
+
+  // Data rows
+  const rows = data.map((item) => {
+    return columns
+      .map((col) => {
+        const value = item[col.key];
+        const formattedValue = formatValue(value, col.format);
+        return escapeCSVValue(formattedValue);
+      })
+      .join(",");
+  });
+
+  return [headers, ...rows].join("\n");
+}
+
+function downloadFile(content: string, filename: string, mimeType: string) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+export function ExportButton({
   data,
   filename,
   columns,
   disabled = false,
   className,
-  variant = 'outline',
-  size = 'default',
-}: ExportButtonProps<T>): React.ReactElement {
-  const [isExporting, setIsExporting] = useState(false);
-
-  const exportToCSV = async () => {
-    setIsExporting(true);
-    try {
-      // Create CSV header
-      const headers = columns.map(col => col.label).join(',');
-      
-      // Create CSV rows
-      const rows = data.map(item => {
-        return columns.map(col => {
-          const value = item[col.key];
-          const formatted = col.format ? col.format(value) : String(value ?? '');
-          // Escape commas and quotes in CSV
-          return `"${formatted.replace(/"/g, '""')}"`;
-        }).join(',');
-      });
-
-      // Combine header and rows
-      const csv = [headers, ...rows].join('\n');
-
-      // Create blob and download
-      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${filename}_${new Date().toISOString().split('T')[0]}.csv`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Export failed:', error);
-    } finally {
-      setIsExporting(false);
-    }
+  onExport,
+}: ExportButtonProps) {
+  const handleExportCSV = () => {
+    const csv = generateCSV(data, columns);
+    downloadFile(csv, `${filename}.csv`, "text/csv;charset=utf-8;");
+    onExport?.();
   };
 
-  if (data.length === 0) {
-    return (
-      <Button
-        variant={variant}
-        size={size}
-        disabled={true}
-        className={cn('flex items-center gap-2', className)}
-      >
-        <Download className="w-4 h-4" />
-        Export
-      </Button>
-    );
-  }
+  const handleExportJSON = () => {
+    // Create a simplified JSON with only the specified columns
+    const exportData = data.map((item) => {
+      const row: Record<string, any> = {};
+      columns.forEach((col) => {
+        const value = item[col.key];
+        row[col.label] = col.format ? col.format(value) : value;
+      });
+      return row;
+    });
+
+    const json = JSON.stringify(exportData, null, 2);
+    downloadFile(json, `${filename}.json`, "application/json");
+    onExport?.();
+  };
+
+  const isDisabled = disabled || data.length === 0;
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant={variant}
-          size={size}
-          disabled={disabled || isExporting}
-          className={cn('flex items-center gap-2', className)}
+          variant="outline"
+          size="sm"
+          disabled={isDisabled}
+          className={cn("flex items-center gap-2", className)}
         >
-          {isExporting ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Exporting...
-            </>
-          ) : (
-            <>
-              <Download className="w-4 h-4" />
-              Export
-            </>
-          )}
+          <Download className="h-4 w-4" />
+          Export
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={exportToCSV} disabled={isExporting}>
-          <FileDown className="w-4 h-4 mr-2" />
+      <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuItem onClick={handleExportCSV} className="cursor-pointer">
+          <FileSpreadsheet className="h-4 w-4 mr-2" />
           Export as CSV
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleExportJSON} className="cursor-pointer">
+          <FileText className="h-4 w-4 mr-2" />
+          Export as JSON
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
