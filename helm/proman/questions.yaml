@@ -1,0 +1,209 @@
+groups:
+  - name: General
+    description: Core settings for the Proman application.
+  - name: Networking
+    description: Service exposure and ingress configuration.
+  - name: Storage
+    description: Persistence configuration for the SQLite database.
+  - name: Application
+    description: Application-specific environment variables.
+
+questions:
+  - variable: replicaCount
+    group: General
+    label: Replicas
+    description: Number of Proman pods to run.
+    schema:
+      type: int
+      default: 1
+      min: 1
+
+  - variable: image
+    group: General
+    label: Container Image
+    schema:
+      type: dict
+      attrs:
+        - variable: repository
+          label: Repository
+          schema:
+            type: string
+            default: ghcr.io/jigle/proman
+        - variable: tag
+          label: Tag
+          schema:
+            type: string
+            default: ""
+        - variable: pullPolicy
+          label: Image Pull Policy
+          schema:
+            type: string
+            default: IfNotPresent
+            enum:
+              - IfNotPresent
+              - Always
+              - Never
+
+  - variable: service
+    group: Networking
+    label: Service Configuration
+    schema:
+      type: dict
+      attrs:
+        - variable: type
+          label: Service Type
+          schema:
+            type: string
+            default: NodePort
+            enum:
+              - NodePort
+              - ClusterIP
+        - variable: port
+          label: Service Port
+          schema:
+            type: int
+            default: 80
+            min: 1
+            max: 65535
+        - variable: targetPort
+          label: Target Port
+          schema:
+            type: int
+            default: 3000
+            min: 1
+            max: 65535
+        - variable: nodePort
+          label: NodePort (if NodePort service)
+          schema:
+            type: int
+            default: 30080
+            min: 30000
+            max: 32767
+
+  - variable: ingress
+    group: Networking
+    label: Ingress
+    schema:
+      type: dict
+      attrs:
+        - variable: enabled
+          label: Enable Ingress
+          schema:
+            type: boolean
+            default: false
+        - variable: hosts
+          label: Host Entries
+          schema:
+            type: list
+            default:
+              - host: proman.local
+                paths:
+                  - path: /
+                    pathType: Prefix
+            items:
+              - variable: hostEntry
+                schema:
+                  type: dict
+                  attrs:
+                    - variable: host
+                      label: Hostname
+                      schema:
+                        type: string
+                        default: proman.local
+                    - variable: paths
+                      label: Paths
+                      schema:
+                        type: list
+                        default:
+                          - path: /
+                            pathType: Prefix
+                        items:
+                          - variable: pathEntry
+                            schema:
+                              type: dict
+                              attrs:
+                                - variable: path
+                                  label: Path
+                                  schema:
+                                    type: string
+                                    default: /
+                                - variable: pathType
+                                  label: Path Type
+                                  schema:
+                                    type: string
+                                    default: Prefix
+                                    enum:
+                                      - Prefix
+                                      - ImplementationSpecific
+                                      - Exact
+
+  - variable: persistence
+    group: Storage
+    label: Persistence
+    schema:
+      type: dict
+      attrs:
+        - variable: enabled
+          label: Enable Persistence
+          schema:
+            type: boolean
+            default: true
+        - variable: hostPath
+          label: Host Path
+          schema:
+            type: string
+            default: /mnt/pools/<POOL_NAME>/apps/proman/data
+        - variable: size
+          label: Requested Size
+          schema:
+            type: string
+            default: 1Gi
+        - variable: accessMode
+          label: Access Mode
+          schema:
+            type: string
+            default: ReadWriteOnce
+            enum:
+              - ReadWriteOnce
+              - ReadWriteMany
+
+  - variable: env
+    group: Application
+    label: Environment Variables
+    schema:
+      type: list
+      default:
+        - name: DATABASE_URL
+          value: file:/app/data/proman.db
+        - name: NEXTAUTH_URL
+          value: http://<TRUENAS_IP_OR_HOSTNAME>:30080
+        - name: NEXTAUTH_SECRET
+          value: replace-with-secure-secret
+        - name: NODE_ENV
+          value: production
+        - name: HOSTNAME
+          value: 0.0.0.0
+        - name: PORT
+          value: "3000"
+      items:
+        - variable: envvar
+          schema:
+            type: dict
+            attrs:
+              - variable: name
+                label: Name
+                schema:
+                  type: string
+                  required: true
+              - variable: value
+                label: Value
+                schema:
+                  type: string
+                  required: true
+
+portals:
+  web_portal:
+    protocols:
+      - name: HTTP
+        port: 30080
+        host: "$node_ip"

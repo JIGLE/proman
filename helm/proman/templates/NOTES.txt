@@ -1,0 +1,36 @@
+Thank you for installing Proman.
+
+Release Information
+-------------------
+- Chart version: {{ .Chart.Version }}
+- App version: {{ .Chart.AppVersion }}
+- Image: {{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+
+Access
+------
+- Service type: {{ .Values.service.type }}
+- Cluster address: {{ include "proman.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
+{{- if eq .Values.service.type "NodePort" }}
+- NodePort: http://<truenas-ip>:{{ .Values.service.nodePort | default 30000 }}
+{{- end }}
+
+Credentials & Secrets
+---------------------
+{{- $secretName := "proman-secrets" }}
+{{- if .Values.secrets }}
+	{{- if .Values.secrets.existingSecret }}
+		{{- $secretName = .Values.secrets.existingSecret }}
+	{{- end }}
+{{- end }}
+- Review OAuth, email, and runtime environment variables in the application section of the install form.
+- Secrets stored in Kubernetes secret: {{ $secretName }}
+
+Database
+--------
+- SQLite path: {{ .Values.persistence.mountPath }}/proman.db
+- PVC: {{ include "proman.fullname" . }}-data
+
+Support
+-------
+- Docs: https://github.com/JIGLE/proman/blob/main/TRUENAS_DEPLOYMENT.md
+- Issues: https://github.com/JIGLE/proman/issues
