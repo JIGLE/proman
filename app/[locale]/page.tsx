@@ -44,35 +44,6 @@ export default function Home(): React.ReactElement {
   const t = useTranslations();
   const router = useRouter();
 
-  // Redirect to signin if not authenticated
-  useEffect(() => {
-    if (status === 'loading') {
-      // Wait for session to load
-      return;
-    }
-    if (status === 'unauthenticated') {
-      // Redirect to signin page (auth routes are outside locale prefix)
-      router.push('/auth/signin');
-    }
-  }, [status, router]);
-
-  // Show loading state while session is being checked
-  if (status === 'loading') {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-zinc-950">
-        <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-          <p className="text-zinc-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Don't render page content if not authenticated (will redirect)
-  if (status === 'unauthenticated' || !session) {
-    return <></>;
-  }
-
   type Settings = {
     emailNotifications: boolean;
     pushNotifications: boolean;
@@ -113,6 +84,34 @@ export default function Home(): React.ReactElement {
     alert('Settings saved successfully!');
   };
 
+  // Redirect to signin if not authenticated
+  useEffect(() => {
+    if (status === 'loading') {
+      // Wait for session to load
+      return;
+    }
+    if (status === 'unauthenticated') {
+      // Redirect to signin page (auth routes are outside locale prefix)
+      router.push('/auth/signin');
+    }
+  }, [status, router]);
+
+  // Show loading state while session is being checked
+  if (status === 'loading') {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-zinc-950">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-zinc-400">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render page content if not authenticated (will redirect)
+  if (status === 'unauthenticated' || !session) {
+    return <></>;
+  }
   const renderProfileContent = () => {
     const user = session?.user;
     if (!user) return null;

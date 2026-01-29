@@ -15,7 +15,8 @@ module.exports = [
       globals: {}
     },
     plugins: {
-      '@typescript-eslint': require('@typescript-eslint/eslint-plugin')
+      '@typescript-eslint': require('@typescript-eslint/eslint-plugin'),
+      'react-hooks': require('eslint-plugin-react-hooks')
     },
     rules: {
       // Minimal baseline (turn off noisy unused var warnings for now)
@@ -23,7 +24,9 @@ module.exports = [
       '@typescript-eslint/no-unused-vars': ['error', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
       'no-undef': 'off',
       '@typescript-eslint/no-explicit-any': ['error'],
-      '@typescript-eslint/explicit-module-boundary-types': ['error']
+      '@typescript-eslint/explicit-module-boundary-types': ['error'],
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn'
     }
   },
 
