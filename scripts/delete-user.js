@@ -33,7 +33,13 @@ const fallbackDbUrl =
   (process.env.NODE_ENV === 'production' ? 'file:/data/proman.db' : 'file:./dev.db');
 process.env.DATABASE_URL = fallbackDbUrl;
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url: fallbackDbUrl,
+    },
+  },
+});
 
 async function deleteUserByEmail(email) {
   console.log(`Deleting user data for ${email}...`);
