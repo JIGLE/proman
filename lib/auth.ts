@@ -85,6 +85,23 @@ function createBaseAuthOptions(): NextAuthOptions {
           userId: user?.id
         });
 
+        if (user && account && account.provider && account.providerAccountId) {
+          try {
+            const prisma = getPrismaClient();
+            await prisma.account.deleteMany({
+              where: {
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                userId: {
+                  not: user.id,
+                },
+              },
+            });
+          } catch (error: unknown) {
+            console.warn('Failed to remove stale account before linking:', error);
+          }
+        }
+
         return true;
       },
     },
