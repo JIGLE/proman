@@ -1,4 +1,4 @@
-name: CI - Tests (mock & sqlite)
+name: CI - Tests & Build
 
 on:
   push:
@@ -6,47 +6,47 @@ on:
   pull_request:
     branches: [ main ]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test-mock:
-    name: Tests (in-memory mock)
+  test-and-build:
+    name: Tests & Build Validation
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-      - name: Use Node.js 22
+      
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Install deps
+          cache: 'npm'
+      
+      - name: Install dependencies
         run: npm ci
+      
       - name: Run tests (mock)
         run: npm test
 
-  test-sqlite:
-    name: Tests (sqlite DATABASE_URL)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Use Node.js 22
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Install deps
-        run: npm ci
-      - name: Create sqlite file
+      - name: Test with SQLite
         run: |
-          mkdir -p ${{ github.workspace }}
-          touch ${{ github.workspace }}/ci-test.db
-      - name: SQLite DB info (debug)
+          touch ./ci-test.db
+          DATABASE_URL=file:./ci-test.db npx prisma db push --accept-data-loss
+          DATABASE_URL=file:./ci-test.db npm test
+          
+      - name: Build validation (Docker)
         run: |
-          echo "ci-test.db details:"
-          ls -l ${{ github.workspace }}/ci-test.db || true
-          echo "Tables in DB:"
-          sqlite3 ${{ github.workspace }}/ci-test.db ".tables" || true
-      - name: Run prisma db push
-        env:
-          DATABASE_URL: file:./ci-test.db
-        run: npx prisma db push --accept-data-loss
-      - name: Run tests (sqlite)
-        env:
-          DATABASE_URL: file:./ci-test.db
-        run: npm test
+          docker build \
+            --build-arg BUILD_VERSION="0.7.0" \
+            --build-arg GIT_COMMIT="${{ github.sha }}" \
+            --build-arg BUILD_TIME="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
+            -t proman:test .
+            
+      - name: Test Summary
+        run: |
+          echo "## ✅ CI Tests Passed" >> $GITHUB_STEP_SUMMARY
+          echo "- Mock tests: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- SQLite tests: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- Docker build: ✅" >> $GITHUB_STEP_SUMMARY
