@@ -11,10 +11,13 @@ A modern, self-hosted property management system for property owners and manager
 
 - 📋 **Property Management** - Manage properties, units, and tenants
 - 💰 **Financial Tracking** - Receipts, expenses, and lease payments
+- � **Advanced Search & Filtering** - Debounced search with multi-filter support
+- 📊 **Data Export** - CSV export functionality across all views
 - 📧 **Email Integration** - SendGrid webhooks for delivery tracking
 - 🔐 **Secure Authentication** - Google OAuth with session management
 - 🌍 **Multi-language** - English and Portuguese support
 - 📱 **Responsive UI** - Modern interface with Tailwind CSS and shadcn/ui
+- ⚡ **Enhanced UX** - Sortable columns, loading states, and consistent interactions
 - 🚀 **Production Ready** - Container-based deployment with health checks
 
 ## 🚀 Quick Start
