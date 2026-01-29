@@ -28,7 +28,15 @@ if (!emailArg) {
   process.exit(1);
 }
 
-const prisma = new PrismaClient();
+const prisma = new PrismaClient({
+  datasources: {
+    db: {
+      url:
+        process.env.DATABASE_URL ||
+        (process.env.NODE_ENV === 'production' ? 'file:/data/proman.db' : 'file:./dev.db'),
+    },
+  },
+});
 
 async function deleteUserByEmail(email) {
   console.log(`Deleting user data for ${email}...`);
