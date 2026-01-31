@@ -16,7 +16,8 @@ describe('Sidebar', () => {
     const onTabChange = vi.fn()
     render(<Sidebar activeTab="overview" onTabChange={onTabChange} />)
 
-    const btn = screen.getByRole('button', { name: /Properties/i })
+    // Find the button by its text content and click it
+    const btn = screen.getByText('Properties').closest('button')!
     fireEvent.click(btn)
     expect(onTabChange).toHaveBeenCalledWith('properties')
   })
