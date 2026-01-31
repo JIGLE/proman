@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MobileBottomNav, MobileHeader } from "@/components/ui/mobile-nav";
 import { CommandPalette, useCommandPalette } from "@/components/ui/command-palette";
+import { useNavigationShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { useCurrency } from "@/lib/currency-context";
 import {
   User,
@@ -520,6 +521,9 @@ export default function Home(): React.ReactElement {
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
   };
+
+  // Keyboard shortcuts for navigation (Ctrl+1-9)
+  useNavigationShortcuts(handleTabChange);
 
   const renderContent = () => {
     switch (activeTab) {
