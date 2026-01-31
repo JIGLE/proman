@@ -35,7 +35,7 @@ jobs:
         run: npx prisma generate
       
       - name: Setup test database
-        run: npx prisma db push --skip-generate
+        run: npx prisma db push
       
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
