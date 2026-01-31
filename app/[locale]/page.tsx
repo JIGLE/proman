@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MobileBottomNav, MobileHeader } from "@/components/ui/mobile-nav";
 import { CommandPalette, useCommandPalette } from "@/components/ui/command-palette";
+import { NavigationBreadcrumbs, CompactBreadcrumbs } from "@/components/ui/breadcrumbs";
 import { useNavigationShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { useNavigationPersistence } from "@/lib/hooks/use-navigation-persistence";
 import { useCurrency } from "@/lib/currency-context";
@@ -597,6 +598,22 @@ export default function Home(): React.ReactElement {
           <MobileHeader title="Proman" />
           
           <div className="container mx-auto p-4 md:p-6 lg:p-8 xl:p-10">
+            {/* Breadcrumbs - Desktop */}
+            <div className="hidden md:block mb-4">
+              <NavigationBreadcrumbs
+                activeTab={activeTab}
+                onNavigate={handleTabChange}
+              />
+            </div>
+            
+            {/* Breadcrumbs - Mobile (Compact) */}
+            <div className="md:hidden mb-3">
+              <CompactBreadcrumbs
+                activeTab={activeTab}
+                onNavigate={handleTabChange}
+              />
+            </div>
+            
             {renderContent()}
           </div>
         </main>
