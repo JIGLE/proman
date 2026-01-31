@@ -112,17 +112,45 @@ export const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
   }
 };
 
+export interface RetryConfig {
+  maxRetries: number;
+  baseDelayMs: number;
+  maxDelayMs: number;
+  backoffMultiplier: number;
+}
+
+export interface EmailMetrics {
+  totalSent: number;
+  totalDelivered: number;
+  totalFailed: number;
+  totalBounced: number;
+  totalOpened: number;
+  deliveryRate: number;
+  openRate: number;
+  bounceRate: number;
+  periodDays: number;
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxRetries: 3,
+  baseDelayMs: 1000,
+  maxDelayMs: 30000,
+  backoffMultiplier: 2,
+};
+
 export class EmailService {
   private static instance: EmailService;
   private isInitialized = false;
+  private retryConfig: RetryConfig;
 
-  private constructor() {
+  private constructor(retryConfig?: Partial<RetryConfig>) {
+    this.retryConfig = { ...DEFAULT_RETRY_CONFIG, ...retryConfig };
     this.initialize();
   }
 
-  public static getInstance(): EmailService {
+  public static getInstance(retryConfig?: Partial<RetryConfig>): EmailService {
     if (!EmailService.instance) {
-      EmailService.instance = new EmailService();
+      EmailService.instance = new EmailService(retryConfig);
     }
     return EmailService.instance;
   }
@@ -139,72 +167,146 @@ export class EmailService {
   }
 
   /**
-   * Send a single email
+   * Calculate exponential backoff delay
    */
-  public async sendEmail(emailData: EmailData, userId: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  private calculateBackoffDelay(attempt: number): number {
+    const delay = this.retryConfig.baseDelayMs * Math.pow(this.retryConfig.backoffMultiplier, attempt);
+    // Add jitter (10% randomization) to prevent thundering herd
+    const jitter = delay * 0.1 * Math.random();
+    return Math.min(delay + jitter, this.retryConfig.maxDelayMs);
+  }
+
+  /**
+   * Check if error is retryable (rate limits, temporary failures)
+   */
+  private isRetryableError(error: unknown): boolean {
+    if (error instanceof Error) {
+      const message = error.message.toLowerCase();
+      // Retryable conditions: rate limits, timeouts, temporary server errors
+      return (
+        message.includes('rate limit') ||
+        message.includes('timeout') ||
+        message.includes('econnreset') ||
+        message.includes('enotfound') ||
+        message.includes('503') ||
+        message.includes('502') ||
+        message.includes('429')
+      );
+    }
+    return false;
+  }
+
+  /**
+   * Sleep helper for retry delays
+   */
+  private async sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  /**
+   * Internal send method (single attempt)
+   */
+  private async sendEmailInternal(emailData: EmailData): Promise<{ success: boolean; messageId?: string; error?: string }> {
+    const msg = {
+      to: emailData.to,
+      from: emailData.from || process.env.FROM_EMAIL || 'noreply@proman.app',
+      subject: emailData.subject,
+      html: emailData.html,
+      text: emailData.text,
+      templateId: emailData.templateId,
+      dynamicTemplateData: emailData.dynamicTemplateData,
+    } as const;
+
+    const result = await sendGridClient.send(msg);
+    let messageId: string | undefined;
+
+    // Helper to safely extract headers from possible send result shapes
+    const getHeaders = (r: unknown): Record<string, string> | undefined => {
+      if (!r || typeof r !== 'object') return undefined;
+      return (r as { headers?: Record<string, string> }).headers;
+    };
+
+    if (Array.isArray(result) && result.length > 0) {
+      const headers = getHeaders(result[0]);
+      const maybeMsgId = headers?.['x-message-id'];
+      if (typeof maybeMsgId === 'string') messageId = maybeMsgId;
+    } else {
+      const headers = getHeaders(result);
+      const maybeMsgId = headers?.['x-message-id'];
+      if (typeof maybeMsgId === 'string') messageId = maybeMsgId;
+    }
+
+    return { success: true, messageId };
+  }
+
+  /**
+   * Send a single email with exponential backoff retry
+   */
+  public async sendEmail(
+    emailData: EmailData, 
+    userId: string,
+    options?: { skipRetry?: boolean }
+  ): Promise<{ success: boolean; messageId?: string; error?: string; attempts?: number }> {
     if (!this.isReady()) {
-      return { success: false, error: 'Email service not configured' };
+      return { success: false, error: 'Email service not configured', attempts: 0 };
     }
 
-    try {
-      const msg = {
-        to: emailData.to,
-        from: emailData.from || process.env.FROM_EMAIL || 'noreply@proman.app',
-        subject: emailData.subject,
-        html: emailData.html,
-        text: emailData.text,
-        templateId: emailData.templateId,
-        dynamicTemplateData: emailData.dynamicTemplateData,
-      } as const;
+    const maxAttempts = options?.skipRetry ? 1 : this.retryConfig.maxRetries + 1;
+    let lastError: string = '';
+    let attempts = 0;
 
-      const result = await sendGridClient.send(msg);
-      let messageId: string | undefined;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      attempts++;
+      
+      try {
+        const result = await this.sendEmailInternal(emailData);
 
-      // Helper to safely extract headers from possible send result shapes
-      const getHeaders = (r: unknown): Record<string, string> | undefined => {
-        if (!r || typeof r !== 'object') return undefined;
-        return (r as { headers?: Record<string, string> }).headers;
-      };
+        // Log successful email
+        await this.logEmail({
+          to: Array.isArray(emailData.to) ? emailData.to.join(', ') : emailData.to,
+          from: emailData.from || process.env.FROM_EMAIL || 'noreply@proman.app',
+          subject: emailData.subject,
+          templateId: emailData.templateId,
+          status: 'sent',
+          messageId: result.messageId,
+          userId,
+          retryCount: attempt,
+        });
 
-      if (Array.isArray(result) && result.length > 0) {
-        const headers = getHeaders(result[0]);
-        const maybeMsgId = headers?.['x-message-id'];
-        if (typeof maybeMsgId === 'string') messageId = maybeMsgId;
-      } else {
-        const headers = getHeaders(result);
-        const maybeMsgId = headers?.['x-message-id'];
-        if (typeof maybeMsgId === 'string') messageId = maybeMsgId;
+        return { success: true, messageId: result.messageId, attempts };
+      } catch (error: unknown) {
+        lastError = error instanceof Error ? error.message : String(error);
+        
+        // Check if we should retry
+        const isRetryable = this.isRetryableError(error);
+        const hasMoreAttempts = attempt < maxAttempts - 1;
+
+        if (isRetryable && hasMoreAttempts) {
+          const delay = this.calculateBackoffDelay(attempt);
+          console.warn(`Email send failed (attempt ${attempt + 1}/${maxAttempts}), retrying in ${delay}ms:`, lastError);
+          await this.sleep(delay);
+          continue;
+        }
+
+        // Final failure - log and return
+        console.error('Email send error (final):', lastError);
+        break;
       }
-
-      // Log the email in database for tracking
-      await this.logEmail({
-        to: Array.isArray(emailData.to) ? emailData.to.join(', ') : emailData.to,
-        from: String(msg.from),
-        subject: emailData.subject,
-        templateId: emailData.templateId,
-        status: 'sent',
-        messageId,
-        userId,
-      });
-
-      return { success: true, messageId };
-    } catch (error: unknown) {
-      const errMsg = error instanceof Error ? error.message : String(error);
-      console.error('Email send error:', error);
-
-      // Log failed email
-      await this.logEmail({
-        to: Array.isArray(emailData.to) ? emailData.to.join(', ') : emailData.to,
-        from: emailData.from || process.env.FROM_EMAIL || 'noreply@proman.app',
-        subject: emailData.subject,
-        templateId: emailData.templateId,
-        status: 'failed',
-        error: errMsg,
-        userId,
-      });
-
-      return { success: false, error: errMsg };
     }
+
+    // Log failed email after all retries exhausted
+    await this.logEmail({
+      to: Array.isArray(emailData.to) ? emailData.to.join(', ') : emailData.to,
+      from: emailData.from || process.env.FROM_EMAIL || 'noreply@proman.app',
+      subject: emailData.subject,
+      templateId: emailData.templateId,
+      status: 'failed',
+      error: lastError,
+      userId,
+      retryCount: attempts - 1,
+    });
+
+    return { success: false, error: lastError, attempts };
   }
 
   /**
@@ -301,6 +403,7 @@ export class EmailService {
     messageId?: string;
     error?: string;
     userId: string;
+    retryCount?: number;
   }): Promise<void> {
     try {
       let prisma: PrismaClient;
@@ -326,6 +429,7 @@ export class EmailService {
           status: data.status,
           messageId: data.messageId,
           error: data.error,
+          retryCount: data.retryCount || 0,
           sentAt: new Date(),
           userId: data.userId,
         },
@@ -338,7 +442,7 @@ export class EmailService {
   }
 
   /**
-   * Get email delivery statistics
+   * Get email delivery statistics (simple)
    */
   public async getEmailStats(userId: string, days = 30): Promise<Record<string, number>> {
     const startDate = new Date();
@@ -369,6 +473,143 @@ export class EmailService {
       }
       console.error('Failed to fetch email stats:', err);
       return {};
+    }
+  }
+
+  /**
+   * Get comprehensive email delivery metrics
+   */
+  public async getEmailMetrics(userId: string, days = 30): Promise<EmailMetrics> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    try {
+      const prisma: PrismaClient = getPrismaClient();
+      
+      // Get counts by status
+      const stats = await prisma.emailLog.groupBy({
+        by: ['status'],
+        where: {
+          sentAt: { gte: startDate },
+        },
+        _count: { id: true },
+      });
+
+      const statusCounts = stats.reduce((acc: Record<string, number>, stat) => {
+        acc[stat.status] = stat._count.id;
+        return acc;
+      }, {} as Record<string, number>);
+
+      const totalSent = statusCounts['sent'] || 0;
+      const totalDelivered = statusCounts['delivered'] || 0;
+      const totalFailed = statusCounts['failed'] || 0;
+      const totalBounced = statusCounts['bounced'] || 0;
+      const totalOpened = statusCounts['opened'] || 0;
+
+      // Calculate rates (avoid division by zero)
+      const totalAttempted = totalSent + totalFailed;
+      const deliveryRate = totalAttempted > 0 ? (totalDelivered / totalAttempted) * 100 : 0;
+      const openRate = totalDelivered > 0 ? (totalOpened / totalDelivered) * 100 : 0;
+      const bounceRate = totalAttempted > 0 ? (totalBounced / totalAttempted) * 100 : 0;
+
+      return {
+        totalSent,
+        totalDelivered,
+        totalFailed,
+        totalBounced,
+        totalOpened,
+        deliveryRate: Math.round(deliveryRate * 100) / 100,
+        openRate: Math.round(openRate * 100) / 100,
+        bounceRate: Math.round(bounceRate * 100) / 100,
+        periodDays: days,
+      };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('PrismaClient not available during build time')) {
+        return {
+          totalSent: 0, totalDelivered: 0, totalFailed: 0, totalBounced: 0, totalOpened: 0,
+          deliveryRate: 0, openRate: 0, bounceRate: 0, periodDays: days,
+        };
+      }
+      console.error('Failed to fetch email metrics:', err);
+      return {
+        totalSent: 0, totalDelivered: 0, totalFailed: 0, totalBounced: 0, totalOpened: 0,
+        deliveryRate: 0, openRate: 0, bounceRate: 0, periodDays: days,
+      };
+    }
+  }
+
+  /**
+   * Get recent email logs for dashboard
+   */
+  public async getRecentEmails(userId: string, limit = 10): Promise<Array<{
+    id: string;
+    to: string;
+    subject: string;
+    status: string;
+    sentAt: Date;
+    templateId?: string | null;
+  }>> {
+    try {
+      const prisma: PrismaClient = getPrismaClient();
+      
+      const logs = await prisma.emailLog.findMany({
+        where: { userId },
+        orderBy: { sentAt: 'desc' },
+        take: limit,
+        select: {
+          id: true,
+          to: true,
+          subject: true,
+          status: true,
+          sentAt: true,
+          templateId: true,
+        },
+      });
+
+      return logs;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('PrismaClient not available during build time')) {
+        return [];
+      }
+      console.error('Failed to fetch recent emails:', err);
+      return [];
+    }
+  }
+
+  /**
+   * Retry a failed email by ID
+   */
+  public async retryFailedEmail(emailLogId: string, userId: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const prisma: PrismaClient = getPrismaClient();
+      
+      const emailLog = await prisma.emailLog.findUnique({
+        where: { id: emailLogId },
+      });
+
+      if (!emailLog) {
+        return { success: false, error: 'Email log not found' };
+      }
+
+      if (emailLog.status !== 'failed') {
+        return { success: false, error: 'Only failed emails can be retried' };
+      }
+
+      // Resend the email
+      const result = await this.sendEmail({
+        to: emailLog.to,
+        from: emailLog.from,
+        subject: emailLog.subject,
+        html: `<p>This is a retry of a previously failed email.</p>`,
+        templateId: emailLog.templateId || undefined,
+      }, userId);
+
+      return result;
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      return { success: false, error: msg };
     }
   }
 }

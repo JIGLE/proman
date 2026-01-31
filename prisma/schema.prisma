@@ -52,6 +52,7 @@ model EmailLog {
   lastEventType       String?
   lastEventAt         DateTime?
   failureReason       String?
+  retryCount          Int      @default(0)
   sentAt              DateTime  @default(now())
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
