@@ -1,0 +1,89 @@
+// Stripe Webhook Handler - Process payment events
+import { NextRequest, NextResponse } from 'next/server';
+import { paymentService } from '@/lib/payment';
+import Stripe from 'stripe';
+
+// Lazy initialization of Stripe
+function getStripe(): Stripe {
+  if (!process.env.STRIPE_SECRET_KEY) {
+    throw new Error('STRIPE_SECRET_KEY not configured');
+  }
+  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2025-02-24.acacia',
+  });
+}
+
+/**
+ * POST /api/webhooks/stripe - Handle Stripe webhook events
+ * 
+ * Supported events:
+ * - payment_intent.succeeded
+ * - payment_intent.payment_failed
+ * - payment_intent.canceled
+ * - charge.refunded
+ */
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  try {
+    const body = await request.text();
+    const signature = request.headers.get('stripe-signature');
+
+    if (!signature) {
+      console.warn('[Stripe webhook] Missing signature header');
+      return NextResponse.json({ error: 'Missing signature' }, { status: 400 });
+    }
+
+    // Verify webhook signature
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('[Stripe webhook] STRIPE_WEBHOOK_SECRET not configured');
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
+    }
+
+    let event: Stripe.Event;
+    try {
+      const stripe = getStripe();
+      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Signature verification failed';
+      console.error('[Stripe webhook] Signature verification failed:', message);
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 400 });
+    }
+
+    console.debug(`[Stripe webhook] Received event: ${event.type}`, { id: event.id });
+
+    // Process the event
+    const result = await paymentService.processStripeWebhook(event);
+
+    if (!result.success) {
+      console.error(`[Stripe webhook] Processing failed for ${event.type}:`, result.error);
+      // Still return 200 to acknowledge receipt (Stripe will retry otherwise)
+      return NextResponse.json({ 
+        received: true, 
+        processed: false,
+        error: result.error,
+      }, { status: 200 });
+    }
+
+    console.debug(`[Stripe webhook] Processed ${event.type}`, {
+      transactionId: result.transactionId,
+      newStatus: result.newStatus,
+    });
+
+    return NextResponse.json({ 
+      received: true, 
+      processed: true,
+      transactionId: result.transactionId,
+    }, { status: 200 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[Stripe webhook] Unexpected error:', message);
+    return NextResponse.json({ error: 'Internal error' }, { status: 500 });
+  }
+}
+
+// Stripe webhooks should not be rate-limited
+export const config = {
+  api: {
+    bodyParser: false, // Required for webhook signature verification
+  },
+};

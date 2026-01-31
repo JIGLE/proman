@@ -3,12 +3,22 @@
 
 import Stripe from 'stripe';
 import { getPrismaClient } from '@/lib/database';
-import type { PrismaClient, PaymentMethod, PaymentTransaction, Tenant, Invoice, TransactionStatus, PaymentMethodType } from '@prisma/client';
+import type { PrismaClient, PaymentTransaction, Tenant, TransactionStatus, PaymentMethodType } from '@prisma/client';
 
-// Initialize Stripe client
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '', {
-  apiVersion: '2025-02-24.acacia',
-});
+// Initialize Stripe client lazily to avoid build-time errors
+let stripeInstance: Stripe | null = null;
+
+function getStripeInstance(): Stripe {
+  if (!stripeInstance) {
+    if (!process.env.STRIPE_SECRET_KEY) {
+      throw new Error('STRIPE_SECRET_KEY environment variable is not set');
+    }
+    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2025-02-24.acacia',
+    });
+  }
+  return stripeInstance;
+}
 
 export interface CreatePaymentIntentParams {
   amount: number; // Amount in cents
@@ -71,7 +81,7 @@ export class PaymentService {
    * Get Stripe client for advanced operations
    */
   public getStripeClient(): Stripe {
-    return stripe;
+    return getStripeInstance();
   }
 
   /**
@@ -96,6 +106,7 @@ export class PaymentService {
     }
 
     // Create new Stripe customer
+    const stripe = getStripeInstance();
     const customer = await stripe.customers.create({
       email: tenant.email,
       name: tenant.name,
@@ -179,6 +190,7 @@ export class PaymentService {
           return { success: false, error: `Unsupported payment method: ${params.paymentMethodType}` };
       }
 
+      const stripe = getStripeInstance();
       const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
 
       // Create transaction record
