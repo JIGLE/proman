@@ -1,14 +1,83 @@
+# Dependabot configuration
+# https://docs.github.com/en/code-security/dependabot/dependabot-version-updates
+
 version: 2
 updates:
+  # NPM dependencies
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
-    open-pull-requests-limit: 5
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 10
     rebase-strategy: "auto"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps(dev)"
+    labels:
+      - "dependencies"
+      - "npm"
+    groups:
+      # Group minor and patch updates for production dependencies
+      production-minor:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "@types/*"
+          - "eslint*"
+          - "vitest*"
+          - "@testing-library/*"
+          - "typescript"
+        update-types:
+          - "minor"
+          - "patch"
+      # Group all dev dependencies together
+      dev-dependencies:
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "vitest*"
+          - "@testing-library/*"
+          - "typescript"
+          - "prettier"
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Ignore major version updates for stability (review manually)
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+
+  # GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
     open-pull-requests-limit: 5
     rebase-strategy: "auto"
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "dependencies"
+      - "github-actions"
+
+  # Docker dependencies (Dockerfile base images)
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 3
+    rebase-strategy: "auto"
+    commit-message:
+      prefix: "docker"
+    labels:
+      - "dependencies"
+      - "docker"

@@ -10,43 +10,125 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  NODE_VERSION: '22'
+
 jobs:
-  test-and-build:
-    name: Tests & Build Validation
+  lint-and-typecheck:
+    name: Lint & Type Check
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
       
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
       
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-
+      
       - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
       
-      - name: Run tests (mock)
-        run: npm test
+      - name: Run linter
+        run: npm run lint
+      
+      - name: Type check
+        run: npx tsc --noEmit
 
+  test:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: lint-and-typecheck
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+      
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        id: cache-node-modules
+        with:
+          path: node_modules
+          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            node-modules-${{ runner.os }}-
+      
+      - name: Install dependencies
+        if: steps.cache-node-modules.outputs.cache-hit != 'true'
+        run: npm ci
+      
+      - name: Generate Prisma Client
+        run: npx prisma generate
+      
+      - name: Run unit tests
+        run: npm test -- --coverage
+      
       - name: Test with SQLite
         run: |
           touch ./ci-test.db
           DATABASE_URL=file:./ci-test.db npx prisma db push --accept-data-loss
           DATABASE_URL=file:./ci-test.db npm test
-          
-      - name: Build validation (Docker)
+
+  build:
+    name: Build Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: docker-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            docker-${{ runner.os }}-
+      
+      - name: Build Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: proman:test
+          build-args: |
+            BUILD_VERSION=${{ github.event.pull_request.head.sha || github.sha }}
+            GIT_COMMIT=${{ github.sha }}
+            BUILD_TIME=${{ github.event.head_commit.timestamp || github.event.pull_request.updated_at }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+      
+      - name: Move cache
         run: |
-          docker build \
-            --build-arg BUILD_VERSION="0.7.0" \
-            --build-arg GIT_COMMIT="${{ github.sha }}" \
-            --build-arg BUILD_TIME="$(date -u +'%Y-%m-%dT%H:%M:%SZ')" \
-            -t proman:test .
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
             
-      - name: Test Summary
+      - name: CI Summary
         run: |
-          echo "## ✅ CI Tests Passed" >> $GITHUB_STEP_SUMMARY
-          echo "- Mock tests: ✅" >> $GITHUB_STEP_SUMMARY
-          echo "- SQLite tests: ✅" >> $GITHUB_STEP_SUMMARY
-          echo "- Docker build: ✅" >> $GITHUB_STEP_SUMMARY
+          echo "## ✅ CI Pipeline Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint & Type Check | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| SQLite Integration | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Build | ✅ |" >> $GITHUB_STEP_SUMMARY
