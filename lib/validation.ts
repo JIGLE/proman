@@ -120,7 +120,35 @@ export const leaseSchema = z.object({
   notes: z.string().max(1000, 'Notes too long').optional(),
 });
 
+// Invoice validation schema
+export const invoiceSchema = z.object({
+  tenantId: z.string().optional(),
+  propertyId: z.string().optional(),
+  ownerId: z.string().optional(),
+  amount: z.number().min(0.01, 'Amount must be greater than 0'),
+  dueDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid due date'),
+  description: z.string().max(500, 'Description too long').optional(),
+  lineItems: z.array(z.object({
+    description: z.string().min(1, 'Line item description required'),
+    quantity: z.number().min(1, 'Quantity must be at least 1'),
+    unitPrice: z.number().min(0, 'Unit price cannot be negative'),
+    total: z.number().min(0, 'Total cannot be negative'),
+  })).optional(),
+  notes: z.string().max(1000, 'Notes too long').optional(),
+});
+
+// Late fee configuration schema
+export const lateFeeConfigSchema = z.object({
+  enabled: z.boolean().default(true),
+  gracePeriodDays: z.number().min(0).max(30).default(5),
+  percentageRate: z.number().min(0).max(50).default(5),
+  flatFee: z.number().min(0).optional(),
+  maxPercentage: z.number().min(0).max(100).optional(),
+});
+
 export type OwnerFormData = z.infer<typeof ownerSchema>;
 export type ExpenseFormData = z.infer<typeof expenseSchema>;
 export type MaintenanceFormData = z.infer<typeof maintenanceSchema>;
 export type LeaseFormData = z.infer<typeof leaseSchema>;
+export type InvoiceFormData = z.infer<typeof invoiceSchema>;
+export type LateFeeConfigFormData = z.infer<typeof lateFeeConfigSchema>;
