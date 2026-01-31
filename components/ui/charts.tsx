@@ -299,6 +299,137 @@ export function DonutChart({
   )
 }
 
+// Area Chart Component
+export function AreaChart({ 
+  data, 
+  title, 
+  subtitle, 
+  height = 200, 
+  className,
+  showValues = false
+}: ChartProps) {
+  const maxValue = Math.max(...data.map(d => Math.abs(d.value)))
+  const minValue = Math.min(...data.map(d => d.value))
+  const range = maxValue - minValue || 1
+  const padding = 10
+  
+  // Calculate points for the area
+  const points = data.map((item, index) => {
+    const x = padding + (index / (data.length - 1)) * (100 - padding * 2)
+    const normalizedValue = ((item.value - minValue) / range)
+    const y = 100 - padding - normalizedValue * (100 - padding * 2)
+    return { x, y, ...item }
+  })
+
+  // Create SVG path for the line
+  const linePath = points
+    .map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`)
+    .join(' ')
+
+  // Create SVG path for the filled area
+  const areaPath = `${linePath} L ${points[points.length - 1].x} ${100 - padding} L ${padding} ${100 - padding} Z`
+
+  return (
+    <div className={cn("space-y-4", className)}>
+      {(title || subtitle) && (
+        <div className="space-y-1">
+          {title && (
+            <h3 className="text-heading-medium font-semibold text-zinc-50 flex items-center gap-2">
+              <Activity className="h-5 w-5 text-accent-primary" />
+              {title}
+            </h3>
+          )}
+          {subtitle && (
+            <p className="text-body-small text-zinc-400">{subtitle}</p>
+          )}
+        </div>
+      )}
+      
+      <div className="relative" style={{ height }}>
+        <svg
+          width="100%"
+          height="100%"
+          viewBox="0 0 100 100"
+          className="overflow-visible"
+          preserveAspectRatio="none"
+        >
+          {/* Gradient definition */}
+          <defs>
+            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="var(--color-accent-primary)" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="var(--color-accent-primary)" stopOpacity="0.05" />
+            </linearGradient>
+          </defs>
+
+          {/* Grid Lines */}
+          {[0, 25, 50, 75, 100].map(y => (
+            <line
+              key={y}
+              x1={padding}
+              y1={y}
+              x2={100 - padding}
+              y2={y}
+              stroke="var(--color-border)"
+              strokeWidth="0.5"
+              opacity="0.3"
+            />
+          ))}
+          
+          {/* Filled Area */}
+          <path
+            d={areaPath}
+            fill="url(#areaGradient)"
+            className="transition-all duration-1000 ease-out"
+          />
+          
+          {/* Line */}
+          <path
+            d={linePath}
+            fill="none"
+            stroke="var(--color-accent-primary)"
+            strokeWidth="2"
+            className="drop-shadow-sm transition-all duration-1000 ease-out"
+          />
+          
+          {/* Data Points */}
+          {points.map((point, index) => (
+            <g key={index}>
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r="3"
+                fill="var(--color-surface)"
+                stroke="var(--color-accent-primary)"
+                strokeWidth="2"
+                className="drop-shadow-sm"
+              />
+              {showValues && (
+                <text
+                  x={point.x}
+                  y={point.y - 8}
+                  textAnchor="middle"
+                  className="text-xs fill-zinc-300 font-medium"
+                >
+                  {point.value}
+                </text>
+              )}
+            </g>
+          ))}
+        </svg>
+        
+        {/* X-Axis Labels */}
+        <div className="flex justify-between mt-2 px-2">
+          {data.map((item, index) => (
+            <span key={index} className="text-xs text-zinc-400 font-medium">
+              {item.label}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // Metric Card with Chart
 interface MetricCardProps {
   title: string
