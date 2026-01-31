@@ -29,6 +29,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MobileBottomNav, MobileHeader } from "@/components/ui/mobile-nav";
+import { CommandPalette, useCommandPalette } from "@/components/ui/command-palette";
 import { useCurrency } from "@/lib/currency-context";
 import {
   User,
@@ -47,6 +48,7 @@ export default function Home(): React.ReactElement {
   const { data: session, status } = useSession();
   const { currency, setCurrency, locale, setLocale } = useCurrency();
   const [activeTab, setActiveTab] = useState("overview");
+  const commandPalette = useCommandPalette();
   const t = useTranslations();
   const router = useRouter();
 
@@ -572,6 +574,13 @@ export default function Home(): React.ReactElement {
   return (
     <AppProvider>
       <div className="flex h-screen overflow-hidden bg-zinc-950">
+        {/* Command Palette - Global Search */}
+        <CommandPalette
+          isOpen={commandPalette.isOpen}
+          onClose={commandPalette.close}
+          onNavigate={handleTabChange}
+        />
+        
         {/* Desktop Sidebar - hidden on mobile */}
         <div className="hidden md:block">
           <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
