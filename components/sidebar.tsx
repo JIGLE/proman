@@ -18,6 +18,8 @@ import {
   Briefcase,
   Hammer,
   MapPin,
+  BarChart3,
+  PieChart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
@@ -69,6 +71,13 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps): React.ReactEl
       items: [
         { id: "maintenance", label: "Maintenance", icon: Hammer },
         { id: "correspondence", label: "Correspondence", icon: Mail },
+      ]
+    },
+    { 
+      group: "Insights", 
+      items: [
+        { id: "analytics", label: "Analytics", icon: BarChart3 },
+        { id: "reports", label: "Reports", icon: PieChart },
       ]
     }
   ];

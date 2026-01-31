@@ -17,6 +17,8 @@ import { MaintenanceView } from "@/components/maintenance-view";
 import { FinancialsView } from "@/components/financials-view";
 import { ReceiptsView } from "@/components/receipts-view";
 import { CorrespondenceView } from "@/components/correspondence-view";
+import { AnalyticsDashboard } from "@/components/analytics-dashboard";
+import { ReportsView } from "@/components/reports-view";
 import { FormTestDialog } from "@/components/form-test-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -554,6 +556,10 @@ export default function Home(): React.ReactElement {
             </div>
           </div>
         );
+      case "analytics":
+        return <AnalyticsDashboard />;
+      case "reports":
+        return <ReportsView />;
       case "profile":
         return renderProfileContent();
       case "settings":
