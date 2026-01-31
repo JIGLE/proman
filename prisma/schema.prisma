@@ -211,6 +211,8 @@ model Tenant {
   leases        Lease[]
   documents     Document[]
   invoices      Invoice[]
+  paymentMethods PaymentMethod[]
+  paymentTransactions PaymentTransaction[]
 
   @@map("tenants")
 }
@@ -420,6 +422,7 @@ model Invoice {
   property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   owner    Owner?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  paymentTransactions PaymentTransaction[]
 
   @@map("invoices")
 }
@@ -455,6 +458,110 @@ model MapPoint {
   updatedAt   DateTime @updatedAt
 
   @@map("map_points")
+}
+
+// Payment System Models for Portugal/Spain
+model PaymentMethod {
+  id            String   @id @default(cuid())
+  tenantId      String
+  type          PaymentMethodType
+  provider      String   // 'stripe', 'manual', 'bank_transfer'
+  
+  // Stripe-specific fields
+  stripeCustomerId     String?
+  stripePaymentMethodId String?
+  
+  // Bank account details (for SEPA/bank transfers)
+  bankName      String?
+  iban          String?  // Masked IBAN for display
+  ibanLast4     String?  // Last 4 digits
+  bic           String?  // BIC/SWIFT code
+  accountHolder String?
+  
+  // Regional payment method details
+  country       String   @default("PT") // PT, ES, etc.
+  
+  // Multibanco reference (Portugal)
+  multibancoEntity    String?  // 5-digit entity
+  multibancoReference String?  // Reference number
+  
+  // MB WAY (Portugal)
+  mbwayPhone    String?  // Phone number for MB WAY
+  
+  isDefault     Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  metadata      String?  // JSON for additional data
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  transactions  PaymentTransaction[]
+
+  @@map("payment_methods")
+}
+
+model PaymentTransaction {
+  id              String   @id @default(cuid())
+  paymentMethodId String?
+  invoiceId       String?
+  tenantId        String
+  
+  // Amount details
+  amount          Float    // Amount in cents
+  currency        String   @default("EUR")
+  
+  // Transaction status
+  status          TransactionStatus @default(pending)
+  
+  // Provider details
+  provider        String   // 'stripe', 'multibanco', 'mbway', 'sepa', 'bank_transfer'
+  providerTransactionId String?  // External transaction ID
+  
+  // Stripe-specific
+  stripePaymentIntentId String?
+  stripeChargeId        String?
+  
+  // Multibanco-specific (Portugal)
+  multibancoEntity      String?
+  multibancoReference   String?
+  multibancoExpiresAt   DateTime?
+  
+  // MB WAY-specific (Portugal)
+  mbwayRequestId        String?
+  
+  // SEPA-specific
+  sepaMandateId         String?
+  sepaDebitDate         DateTime?
+  
+  // Processing details
+  processedAt   DateTime?
+  failedAt      DateTime?
+  failureCode   String?
+  failureMessage String?
+  
+  // Refund details
+  refundedAmount Float?
+  refundedAt    DateTime?
+  refundReason  String?
+  
+  // Metadata
+  description   String?
+  metadata      String?  // JSON for webhooks, additional data
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  paymentMethod PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
+  invoice       Invoice?       @relation(fields: [invoiceId], references: [id])
+  tenant        Tenant         @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@index([tenantId])
+  @@index([status])
+  @@map("payment_transactions")
 }
 
 // Enums
@@ -572,4 +679,26 @@ enum NotificationType {
   document_uploaded
   system
   other
+}
+
+// Payment-specific enums
+enum PaymentMethodType {
+  card             // Credit/debit card via Stripe
+  sepa_debit       // SEPA Direct Debit
+  multibanco       // Portugal: Multibanco reference
+  mbway            // Portugal: MB WAY
+  bank_transfer    // Manual bank transfer
+  cash             // Cash payment
+  other
+}
+
+enum TransactionStatus {
+  pending          // Transaction initiated
+  processing       // Being processed by provider
+  requires_action  // Needs customer action (3D Secure, MB WAY confirm)
+  succeeded        // Payment successful
+  failed           // Payment failed
+  cancelled        // Cancelled by user/system
+  refunded         // Fully refunded
+  partially_refunded // Partially refunded
 }
