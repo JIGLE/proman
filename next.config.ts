@@ -12,8 +12,10 @@ const nextConfig: NextConfig = {
   images: {
     unoptimized: true,
   },
-  // Empty turbopack config to avoid webpack conflict
-  turbopack: {},
+  // Configure turbopack with explicit root to avoid lockfile detection issues
+  turbopack: {
+    root: process.cwd(),
+  },
   async headers() {
     return [
       {

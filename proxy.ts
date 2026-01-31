@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { locales, defaultLocale } from './i18n';
 
 // Proxy pattern for Next.js 16+ - handle locale routing with redirects
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
 
   // Check if pathname already starts with a supported locale
