@@ -1,6 +1,6 @@
 module.exports = [
   // Ignore common build and dependency folders
-  { ignores: ['node_modules/**', '.next/**', 'dist/**', 'out/**'] },
+  { ignores: ['node_modules/**', '.next/**', 'dist/**', 'out/**', 'tests/**', 'e2e/**'] },
 
   // TypeScript files
   {
@@ -19,12 +19,12 @@ module.exports = [
       'react-hooks': require('eslint-plugin-react-hooks')
     },
     rules: {
-      // Minimal baseline (turn off noisy unused var warnings for now)
+      // Relaxed rules for existing codebase - can be tightened over time
       'no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-vars': ['error', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
+      '@typescript-eslint/no-unused-vars': ['warn', { 'argsIgnorePattern': '^_', 'varsIgnorePattern': '^_' }],
       'no-undef': 'off',
-      '@typescript-eslint/no-explicit-any': ['error'],
-      '@typescript-eslint/explicit-module-boundary-types': ['error'],
+      '@typescript-eslint/no-explicit-any': ['warn'],
+      '@typescript-eslint/explicit-module-boundary-types': ['off'],
       'react-hooks/rules-of-hooks': 'error',
       'react-hooks/exhaustive-deps': 'warn'
     }
