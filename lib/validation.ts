@@ -146,9 +146,64 @@ export const lateFeeConfigSchema = z.object({
   maxPercentage: z.number().min(0).max(100).optional(),
 });
 
+// Document validation schema
+export const documentSchema = z.object({
+  name: z.string().min(1, 'Document name is required').max(255, 'Name too long'),
+  description: z.string().max(1000, 'Description too long').optional(),
+  type: z.enum(['contract', 'invoice', 'receipt', 'photo', 'floor_plan', 'certificate', 'other']),
+  mimeType: z.string().min(1, 'MIME type is required'),
+  fileContent: z.string().min(1, 'File content is required'), // Base64 encoded
+  propertyId: z.string().optional(),
+  unitId: z.string().optional(),
+  ownerId: z.string().optional(),
+  tenantId: z.string().optional(),
+});
+
+// Document update schema
+export const documentUpdateSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  description: z.string().max(1000).optional().nullable(),
+  type: z.enum(['contract', 'invoice', 'receipt', 'photo', 'floor_plan', 'certificate', 'other']).optional(),
+  propertyId: z.string().optional().nullable(),
+  unitId: z.string().optional().nullable(),
+  ownerId: z.string().optional().nullable(),
+  tenantId: z.string().optional().nullable(),
+});
+
+// Lease template data schema
+export const leaseTemplateDataSchema = z.object({
+  propertyName: z.string().min(1, 'Property name is required'),
+  propertyAddress: z.string().min(1, 'Property address is required'),
+  unitNumber: z.string().optional(),
+  tenantName: z.string().min(1, 'Tenant name is required'),
+  tenantEmail: z.string().email('Invalid tenant email'),
+  tenantPhone: z.string().optional(),
+  tenantAddress: z.string().optional(),
+  ownerName: z.string().min(1, 'Owner name is required'),
+  ownerEmail: z.string().email().optional(),
+  ownerPhone: z.string().optional(),
+  ownerAddress: z.string().optional(),
+  startDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid start date'),
+  endDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid end date'),
+  monthlyRent: z.number().min(0, 'Monthly rent must be positive'),
+  securityDeposit: z.number().min(0, 'Security deposit cannot be negative'),
+  currency: z.string().default('USD'),
+  paymentDueDay: z.number().min(1).max(31).optional(),
+  lateFeePercentage: z.number().min(0).max(100).optional(),
+  lateFeeGracePeriod: z.number().min(0).max(30).optional(),
+  petPolicy: z.string().optional(),
+  utilities: z.array(z.string()).optional(),
+  parkingSpaces: z.number().min(0).optional(),
+  specialTerms: z.array(z.string()).optional(),
+  signatureDate: z.string().optional(),
+});
+
 export type OwnerFormData = z.infer<typeof ownerSchema>;
 export type ExpenseFormData = z.infer<typeof expenseSchema>;
 export type MaintenanceFormData = z.infer<typeof maintenanceSchema>;
 export type LeaseFormData = z.infer<typeof leaseSchema>;
 export type InvoiceFormData = z.infer<typeof invoiceSchema>;
 export type LateFeeConfigFormData = z.infer<typeof lateFeeConfigSchema>;
+export type DocumentFormData = z.infer<typeof documentSchema>;
+export type DocumentUpdateFormData = z.infer<typeof documentUpdateSchema>;
+export type LeaseTemplateDataFormData = z.infer<typeof leaseTemplateDataSchema>;
