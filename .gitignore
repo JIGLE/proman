@@ -73,3 +73,7 @@ tests/*.db
 .eslintrc.cjs
 .eslintrc.json
 eslint.config.cjs
+
+# Playwright
+node_modules/
+/blob-report/
