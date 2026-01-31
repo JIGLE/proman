@@ -31,6 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MobileBottomNav, MobileHeader } from "@/components/ui/mobile-nav";
 import { CommandPalette, useCommandPalette } from "@/components/ui/command-palette";
 import { NavigationBreadcrumbs, CompactBreadcrumbs } from "@/components/ui/breadcrumbs";
+import { SkipLinks } from "@/components/ui/accessibility";
 import { useNavigationShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { useNavigationPersistence } from "@/lib/hooks/use-navigation-persistence";
 import { useCurrency } from "@/lib/currency-context";
@@ -579,6 +580,14 @@ export default function Home(): React.ReactElement {
 
   return (
     <AppProvider>
+      {/* Skip Links for keyboard navigation */}
+      <SkipLinks
+        links={[
+          { href: "#main-content", label: "Skip to main content" },
+          { href: "#main-navigation", label: "Skip to navigation" },
+        ]}
+      />
+      
       <div className="flex h-screen overflow-hidden bg-zinc-950">
         {/* Command Palette - Global Search */}
         <CommandPalette
@@ -593,7 +602,12 @@ export default function Home(): React.ReactElement {
         </div>
         
         {/* Main content area */}
-        <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
+        <main
+          id="main-content"
+          aria-label="Main content"
+          tabIndex={-1}
+          className="flex-1 overflow-y-auto pb-20 md:pb-0 focus:outline-none"
+        >
           {/* Mobile Header */}
           <MobileHeader title="Proman" />
           

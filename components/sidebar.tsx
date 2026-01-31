@@ -108,18 +108,30 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps): React.ReactEl
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 p-2">
+      <nav
+        id="main-navigation"
+        aria-label="Main navigation"
+        className="flex-1 space-y-1 p-2"
+      >
         {menuItems.map((group, groupIndex) => (
-          <div key={group.group} className={cn("space-y-1", groupIndex > 0 && "mt-6")}>
+          <div
+            key={group.group}
+            role="group"
+            aria-labelledby={`nav-group-${groupIndex}`}
+            className={cn("space-y-1", groupIndex > 0 && "mt-6")}
+          >
             {!collapsed && (
               <div className="px-3 py-2">
-                <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
+                <h3
+                  id={`nav-group-${groupIndex}`}
+                  className="text-xs font-semibold text-zinc-500 uppercase tracking-wider"
+                >
                   {group.group}
                 </h3>
               </div>
             )}
             
-            <div className="space-y-1">
+            <div className="space-y-1" role="list">
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const isActive = activeTab === item.id;
@@ -127,7 +139,9 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps): React.ReactEl
                 return (
                   <button
                     key={item.id}
+                    role="listitem"
                     onClick={() => onTabChange(item.id)}
+                    aria-current={isActive ? "page" : undefined}
                     className={cn(
                       "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 group",
                       "hover:bg-[var(--color-surface-hover)] hover:text-zinc-50",
@@ -138,6 +152,7 @@ export function Sidebar({ activeTab, onTabChange }: SidebarProps): React.ReactEl
                         : "text-zinc-400"
                     )}
                     title={collapsed ? item.label : undefined}
+                    aria-label={collapsed ? item.label : undefined}
                   >
                     <Icon className={cn(
                       "h-4 w-4 shrink-0 transition-colors",
