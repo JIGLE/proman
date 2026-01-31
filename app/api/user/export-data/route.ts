@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { ApiError } from "@/lib/errors";
 import { getPrismaClient } from "@/lib/database";
 import { requireAuth } from "@/lib/auth-middleware";
+import { logAudit, getAuditLogsForUser } from "@/lib/audit-log";
 
 export async function POST(request: NextRequest) {
   try {
@@ -28,9 +29,24 @@ export async function POST(request: NextRequest) {
       throw new ApiError(404, "User not found");
     }
 
-    // TODO: Log for GDPR (auditLog not yet available in client)
+    // Get audit logs for GDPR export
+    const auditLogs = await getAuditLogsForUser(session.user.id);
 
-    return new Response(JSON.stringify(user, null, 2), {
+    // Log this export action for GDPR compliance
+    await logAudit({
+      userId: session.user.id,
+      action: 'EXPORT_PERSONAL_DATA',
+      details: { exportedAt: new Date().toISOString() },
+    });
+
+    // Include audit logs in the export
+    const exportData = {
+      ...user,
+      auditLogs,
+      exportedAt: new Date().toISOString(),
+    };
+
+    return new Response(JSON.stringify(exportData, null, 2), {
       headers: {
         "Content-Type": "application/json",
         "Content-Disposition": "attachment; filename=user-data.json",

@@ -63,6 +63,12 @@ tests/*.db
 # Build artifacts
 /dist/
 
+# Playwright
+/playwright-report/
+/playwright/.cache/
+/playwright/.auth/
+/test-results/
+
 # Legacy eslint configs (using eslint.config.js only)
 .eslintrc.cjs
 .eslintrc.json

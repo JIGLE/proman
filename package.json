@@ -17,8 +17,11 @@
     "prisma:setup": "prisma db push && prisma generate",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "postinstall": "prisma generate",
-    "test": "vitest",
+    "test": "vitest run",
     "test:watch": "vitest --watch",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "user:delete": "node scripts/delete-user.js",
     "package:helm:verify": "bash scripts/package-helm-and-verify.sh release-charts-temp $(node -e 'console.log(require(\"./package.json\").version)')",
     "db:check": "node scripts/check-db.js"
@@ -58,6 +61,7 @@
   },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.1.5",
+    "@playwright/test": "^1.58.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -74,6 +78,7 @@
     "@types/react-dom": "^19",
     "@typescript-eslint/eslint-plugin": "^8",
     "@typescript-eslint/parser": "^8",
+    "@vitest/coverage-v8": "^4.0.18",
     "eslint": "^9",
     "eslint-config-next": "16.1.5",
     "jsdom": "^27.4.0",

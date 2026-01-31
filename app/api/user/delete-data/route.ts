@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { ApiError } from "@/lib/errors";
 import { getPrismaClient } from "@/lib/database";
 import { requireAuth } from "@/lib/auth-middleware";
+import { logAudit } from "@/lib/audit-log";
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,13 +11,27 @@ export async function POST(request: NextRequest) {
     const { session } = authResult;
     const prisma = getPrismaClient();
 
-    // GDPR: Delete user's data
-    await prisma.user.delete({
-      where: { id: session.user.id },
+    const userId = session.user.id;
+    const userEmail = session.user.email;
+
+    // Log deletion BEFORE deleting (so we have the userId reference)
+    await logAudit({
+      userId,
+      action: 'DELETE_PERSONAL_DATA',
+      details: { 
+        requestedAt: new Date().toISOString(),
+        email: userEmail,
+      },
     });
 
-    // Log deletion
-    // Note: Since user is deleted, we can't log to AuditLog, but we could log elsewhere
+    // GDPR: Delete user's data (cascade will delete audit logs too)
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    // Note: Audit log for this user is deleted due to cascade
+    // For compliance, you may want to keep anonymized deletion records separately
+    console.info(`[GDPR] User data deleted: ${userEmail} at ${new Date().toISOString()}`);
 
     return Response.json({ message: "Data deleted successfully" });
   } catch (error) {
