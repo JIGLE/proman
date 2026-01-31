@@ -26,6 +26,7 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MobileBottomNav, MobileHeader } from "@/components/ui/mobile-nav";
 import { useCurrency } from "@/lib/currency-context";
 import {
   User,
@@ -565,12 +566,23 @@ export default function Home(): React.ReactElement {
   return (
     <AppProvider>
       <div className="flex h-screen overflow-hidden bg-zinc-950">
-        <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
-        <main className="flex-1 overflow-y-auto">
-          <div className="container mx-auto p-6 md:p-8 lg:p-10">
+        {/* Desktop Sidebar - hidden on mobile */}
+        <div className="hidden md:block">
+          <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
+        </div>
+        
+        {/* Main content area */}
+        <main className="flex-1 overflow-y-auto pb-20 md:pb-0">
+          {/* Mobile Header */}
+          <MobileHeader title="Proman" />
+          
+          <div className="container mx-auto p-4 md:p-6 lg:p-8 xl:p-10">
             {renderContent()}
           </div>
         </main>
+        
+        {/* Mobile Bottom Navigation */}
+        <MobileBottomNav activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
     </AppProvider>
   );
