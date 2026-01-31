@@ -83,6 +83,9 @@ jobs:
           echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
           echo "tag=v${NEW_VERSION}" >> $GITHUB_OUTPUT
       
+      - name: Install dependencies
+        run: npm ci
+      
       - name: Update package.json version
         run: |
           npm version ${{ steps.version.outputs.new_version }} --no-git-tag-version

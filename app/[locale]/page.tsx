@@ -56,6 +56,12 @@ export default function Home(): React.ReactElement {
   const t = useTranslations();
   const router = useRouter();
 
+  // Keyboard shortcuts for navigation (Ctrl+1-9) - must be called before any early returns
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+  };
+  useNavigationShortcuts(handleTabChange);
+
   type Settings = {
     emailNotifications: boolean;
     pushNotifications: boolean;
@@ -520,13 +526,6 @@ export default function Home(): React.ReactElement {
       </div>
     );
   };
-
-  const handleTabChange = (tab: string) => {
-    setActiveTab(tab);
-  };
-
-  // Keyboard shortcuts for navigation (Ctrl+1-9)
-  useNavigationShortcuts(handleTabChange);
 
   const renderContent = () => {
     switch (activeTab) {
