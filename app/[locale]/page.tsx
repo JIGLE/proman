@@ -31,6 +31,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MobileBottomNav, MobileHeader } from "@/components/ui/mobile-nav";
 import { CommandPalette, useCommandPalette } from "@/components/ui/command-palette";
 import { useNavigationShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
+import { useNavigationPersistence } from "@/lib/hooks/use-navigation-persistence";
 import { useCurrency } from "@/lib/currency-context";
 import {
   User,
@@ -48,7 +49,7 @@ import { AppProvider } from "@/lib/app-context-db";
 export default function Home(): React.ReactElement {
   const { data: session, status } = useSession();
   const { currency, setCurrency, locale, setLocale } = useCurrency();
-  const [activeTab, setActiveTab] = useState("overview");
+  const { activeTab, setActiveTab, isInitialized } = useNavigationPersistence("overview");
   const commandPalette = useCommandPalette();
   const t = useTranslations();
   const router = useRouter();
