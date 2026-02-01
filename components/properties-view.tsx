@@ -36,7 +36,7 @@ import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { AddressVerificationService, AddressSuggestion } from "@/lib/address-verification";
 import PropertyMap from "./property-map";
-import { UnitsView } from "./units-view";
+import UnitsView from "./units-view";
 
 export type PropertiesViewProps = Record<string, never>
 
@@ -899,7 +899,7 @@ export function PropertiesView(): React.ReactElement {
 
             {/* Map View Tab */}
             <TabsContent value="map" className="space-y-6">
-              <PropertyMap properties={sortedProperties} />
+              <PropertyMap />
             </TabsContent>
 
             {/* Units View Tab */}
