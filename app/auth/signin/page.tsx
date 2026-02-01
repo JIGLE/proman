@@ -60,6 +60,42 @@ function SignInContent() {
               Sign in with Google
             </Button>
 
+            {process.env.NODE_ENV !== 'production' && (
+              <div className="mt-6 pt-6 border-t border-zinc-800">
+                <form 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    signIn('credentials', { 
+                      email: formData.get('email'), 
+                      password: formData.get('password'),
+                      callbackUrl: '/' 
+                    });
+                  }}
+                  className="space-y-3"
+                >
+                  <div className="text-xs text-zinc-500 uppercase font-semibold">Dev Login</div>
+                  <input 
+                    name="email" 
+                    type="email" 
+                    defaultValue="demo@proman.local" 
+                    className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none" 
+                    placeholder="Email" 
+                  />
+                  <input 
+                    name="password" 
+                    type="password" 
+                    defaultValue="demo123" 
+                    className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none" 
+                    placeholder="Password" 
+                  />
+                  <Button type="submit" variant="secondary" className="w-full h-10">
+                    Sign in with Credentials
+                  </Button>
+                </form>
+              </div>
+            )}
+
             <div className="mt-6 text-center">
               <p className="text-sm text-zinc-500">
                 Secure authentication powered by Google OAuth

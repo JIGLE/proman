@@ -1,27 +1,7 @@
 import { z } from 'zod';
 
-// Property validation schema
-export const propertySchema = z.object({
-  name: z.string().min(1, 'Property name is required').max(100, 'Name too long'),
-  address: z.string().min(1, 'Address is required').max(200, 'Address too long'),
-  // Enhanced address fields
-  streetAddress: z.string().max(200, 'Street address too long').optional(),
-  city: z.string().max(100, 'City name too long').optional(),
-  zipCode: z.string().regex(/^(?:[0-9]{4}-[0-9]{3}|[0-9]{5})$/, 'Invalid postal code format').optional(),
-  country: z.enum(['Portugal', 'Spain']).default('Portugal'),
-  latitude: z.number().min(-90).max(90).optional(),
-  longitude: z.number().min(-180).max(180).optional(),
-  addressVerified: z.boolean().default(false),
-  // Building grouping
-  buildingId: z.string().optional(),
-  buildingName: z.string().max(100, 'Building name too long').optional(),
-  type: z.enum(['apartment', 'house', 'condo', 'townhouse', 'other']),
-  bedrooms: z.number().min(0).max(20),
-  bathrooms: z.number().min(0).max(20),
-  rent: z.number().min(0, 'Rent must be positive'),
-  status: z.enum(['occupied', 'vacant', 'maintenance']),
-  description: z.string().max(500, 'Description too long').optional(),
-});
+// Property validation schema - Re-exported from shared schemas
+export { propertySchema, type PropertyFormData } from '@/lib/schemas/property.schema';
 
 // Tenant validation schema
 export const tenantSchema = z.object({
@@ -70,7 +50,6 @@ export const settingsSchema = z.object({
 });
 
 // Type exports for form data
-export type PropertyFormData = z.infer<typeof propertySchema>;
 export type TenantFormData = z.infer<typeof tenantSchema>;
 export type ReceiptFormData = z.infer<typeof receiptSchema>;
 export type TemplateFormData = z.infer<typeof templateSchema>;

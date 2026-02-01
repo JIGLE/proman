@@ -40,30 +40,49 @@ setup('authenticate', async ({ page }) => {
   const demoEmail = process.env.E2E_USER_EMAIL || 'demo@proman.local'
   const demoPassword = process.env.E2E_USER_PASSWORD || 'demo123'
   
-  // Look for email input
-  const emailInput = page.getByLabel(/email/i).or(page.locator('input[type="email"]'))
-  const passwordInput = page.getByLabel(/password/i).or(page.locator('input[type="password"]'))
+  // Try to find Dev Login form specifically first
+  const devLoginButton = page.getByRole('button', { name: 'Sign in with Credentials' })
   
-  // Fill credentials if inputs exist
-  if (await emailInput.isVisible()) {
-    await emailInput.fill(demoEmail)
-  }
-  
-  if (await passwordInput.isVisible()) {
-    await passwordInput.fill(demoPassword)
-  }
-  
-  // Look for sign-in button
-  const signInButton = page.getByRole('button', { name: /sign in|login/i })
-  if (await signInButton.isVisible()) {
-    await signInButton.click()
+  if (await devLoginButton.isVisible()) {
+    // We are in dev mode with credentials enabled
+    // Use specific locators for the dev form to avoid ambiguity
+    await page.locator('input[name="email"]').fill(demoEmail)
+    await page.locator('input[name="password"]').fill(demoPassword)
+    await devLoginButton.click()
     
-    // Wait for navigation to complete (with timeout)
+    // Wait for navigation
     try {
       await page.waitForURL(/\/(en|pt)/, { timeout: 10000 })
     } catch {
-      // Auth may have failed - continue anyway with empty state
-      console.log('Auth login did not redirect - continuing with unauthenticated state')
+      console.log('Dev Auth login did not redirect - continuing with unauthenticated state')
+    }
+  } else {
+    // Fallback to generic detection (original logic)
+    // Look for email input
+    const emailInput = page.getByLabel(/email/i).or(page.locator('input[type="email"]'))
+    const passwordInput = page.getByLabel(/password/i).or(page.locator('input[type="password"]'))
+    
+    // Fill credentials if inputs exist
+    if (await emailInput.isVisible()) {
+      await emailInput.fill(demoEmail)
+    }
+    
+    if (await passwordInput.isVisible()) {
+      await passwordInput.fill(demoPassword)
+    }
+    
+    // Look for sign-in button
+    const signInButton = page.getByRole('button', { name: /sign in|login/i })
+    if (await signInButton.isVisible()) {
+      await signInButton.click()
+      
+      // Wait for navigation to complete (with timeout)
+      try {
+        await page.waitForURL(/\/(en|pt)/, { timeout: 10000 })
+      } catch {
+        // Auth may have failed - continue anyway with empty state
+        console.log('Auth login did not redirect - continuing with unauthenticated state')
+      }
     }
   }
   

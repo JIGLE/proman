@@ -26,6 +26,7 @@ type Account = {
 };
 
 import GoogleProvider from 'next-auth/providers/google';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { getPrismaClient } from '@/lib/services/database/database';
 
@@ -46,9 +47,40 @@ function createBaseAuthOptions(): NextAuthOptions {
         clientSecret: googleClientSecret || '',
         allowDangerousEmailAccountLinking: true,
       }),
+      CredentialsProvider({
+        id: 'credentials',
+        name: 'Credentials',
+        credentials: {
+          email: { label: "Email", type: "email" },
+          password: { label: "Password", type: "password" }
+        },
+        async authorize(credentials) {
+           // Only allow in development/test or if explicitly enabled
+           const isDev = process.env.NODE_ENV !== 'production';
+           if (!isDev) return null;
+           
+           if (credentials?.email === 'demo@proman.local' && credentials?.password === 'demo123') {
+             const prisma = getPrismaClient();
+             // Upsert user to ensure it exists for the session strategy
+             const user = await prisma.user.upsert({
+               where: { email: credentials.email },
+               update: {},
+               create: {
+                 email: credentials.email,
+                 name: 'Demo User',
+                 role: 'ADMIN',
+                 imageConsent: true,
+               }
+             });
+             return user;
+           }
+           return null;
+        }
+      })
     ],
     session: {
-      strategy: 'database', // Use database sessions for better account linking
+      // Use JWT in development to support Credentials provider for testing
+      strategy: process.env.NODE_ENV !== 'production' ? 'jwt' : 'database',
       maxAge: 30 * 24 * 60 * 60, // 30 days
     },
     pages: {

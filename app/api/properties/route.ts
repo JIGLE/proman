@@ -4,19 +4,8 @@ import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/
 import { propertyService } from '@/lib/services/database/database';
 import { sanitizeForDatabase, sanitizeNumber } from '@/lib/utils/sanitize';
 import { withRateLimit } from '@/lib/utils/rate-limit';
-import { z } from 'zod';
-
-const createPropertySchema = z.object({
-  name: z.string().min(1).max(200),
-  address: z.string().min(1).max(500),
-  type: z.enum(['apartment', 'house', 'condo', 'townhouse', 'other']),
-  bedrooms: z.number().min(0).max(100),
-  bathrooms: z.number().min(0).max(100),
-  rent: z.number().min(0),
-  status: z.enum(['occupied', 'vacant', 'maintenance']).default('vacant'),
-  description: z.string().max(1000).optional(),
-  image: z.string().url().optional(),
-});
+import { propertySchema } from '@/lib/schemas/property.schema';
+import { ZodError } from 'zod';
 
 // GET /api/properties - Get all properties for the authenticated user
 async function handleGet(request: NextRequest): Promise<Response> {
@@ -43,25 +32,26 @@ async function handlePost(request: NextRequest): Promise<Response> {
   try {
     const body = await request.json();
 
+    // Validate with shared schema
+    const validatedData = propertySchema.parse(body);
+    
     // Sanitize input
-    const sanitizedBody = {
-      ...body,
-      name: sanitizeForDatabase(body.name),
-      address: sanitizeForDatabase(body.address),
-      description: body.description ? sanitizeForDatabase(body.description) : undefined,
-      image: body.image ? sanitizeForDatabase(body.image) : undefined,
-      bedrooms: sanitizeNumber(body.bedrooms, 0, 0, 100),
-      bathrooms: sanitizeNumber(body.bathrooms, 0, 0, 100),
-      rent: sanitizeNumber(body.rent, 0, 0),
+    const sanitizedData = {
+      ...validatedData,
+      name: sanitizeForDatabase(validatedData.name),
+      address: sanitizeForDatabase(validatedData.address),
+      description: validatedData.description ? sanitizeForDatabase(validatedData.description) : undefined,
+      streetAddress: validatedData.streetAddress ? sanitizeForDatabase(validatedData.streetAddress) : undefined,
+      city: validatedData.city ? sanitizeForDatabase(validatedData.city) : undefined,
+      bedrooms: sanitizeNumber(validatedData.bedrooms, 0, 0, 20),
+      bathrooms: sanitizeNumber(validatedData.bathrooms, 0, 0, 20),
+      rent: sanitizeNumber(validatedData.rent, 0, 0),
     };
 
-    // Validate input
-    const validatedData = createPropertySchema.parse(sanitizedBody);
-
-    const property = await propertyService.create(userId, validatedData);
+    const property = await propertyService.create(userId, sanitizedData);
     return createSuccessResponse(property, 201);
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (error instanceof ZodError) {
       return createErrorResponse(
         new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
         400,
