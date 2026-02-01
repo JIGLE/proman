@@ -63,7 +63,7 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
     { 
       group: "Overview", 
       items: [
-        { id: "overview", label: "Dashboard", icon: Home, href: "/dashboard" },
+        { id: "overview", label: "Dashboard", icon: Home, href: "/overview" },
       ]
     },
     { 
@@ -76,7 +76,8 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
     { 
       group: "Tenants", 
       items: [
-        { id: "tenants", label: "Tenants & Leases", icon: Users, href: "/tenants" },
+        { id: "tenants", label: "Tenants", icon: Users, href: "/tenants" },
+        { id: "leases", label: "Leases", icon: FileText, href: "/leases" },
       ]
     },
     { 
@@ -90,12 +91,14 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
       items: [
         { id: "maintenance", label: "Maintenance", icon: Hammer, href: "/maintenance" },
         { id: "correspondence", label: "Correspondence", icon: Mail, href: "/correspondence" },
+        { id: "documents", label: "Documents", icon: FileText, href: "/documents" },
       ]
     },
     { 
       group: "Insights", 
       items: [
         { id: "analytics", label: "Analytics", icon: BarChart3, href: "/analytics" },
+        { id: "reports", label: "Reports", icon: PieChart, href: "/reports" },
       ]
     }
   ];
