@@ -20,7 +20,17 @@
     ],
     "types": ["vitest/globals", "vite/client", "@testing-library/jest-dom"],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/ui/*": ["./components/ui/*"],
+      "@/features/*": ["./components/features/*"],
+      "@/shared/*": ["./components/shared/*"],
+      "@/layouts/*": ["./components/layouts/*"],
+      "@/services/*": ["./lib/services/*"],
+      "@/hooks/*": ["./lib/hooks/*"],
+      "@/utils/*": ["./lib/utils/*"],
+      "@/schemas/*": ["./lib/schemas/*"],
+      "@/types/*": ["./types/*"],
+      "@/api/*": ["./app/api/*"]
     },
     "forceConsistentCasingInFileNames": true
   },
