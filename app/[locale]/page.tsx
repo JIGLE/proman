@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSession, signIn, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import { Sidebar } from "@/components/sidebar";
 import { OverviewView } from "@/components/overview-view";
@@ -32,7 +32,7 @@ import { NavigationBreadcrumbs, CompactBreadcrumbs } from "@/components/ui/bread
 import { SkipLinks } from "@/components/ui/accessibility";
 import { useNavigationShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { useNavigationPersistence } from "@/lib/hooks/use-navigation-persistence";
-import { useCurrency } from "@/lib/currency-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import {
   User,
   LogOut,
@@ -44,11 +44,12 @@ import {
   Shield,
   Save
 } from "lucide-react";
-import { AppProvider } from "@/lib/app-context-db";
 
 export default function Home(): React.ReactElement {
   const { data: session, status } = useSession();
-  const { currency, setCurrency, locale, setLocale } = useCurrency();
+  const { currency, setCurrency } = useCurrency();
+  const params = useParams();
+  const locale = params.locale as string || 'en';
   const { activeTab, setActiveTab, isInitialized } = useNavigationPersistence("overview");
   const commandPalette = useCommandPalette();
   const t = useTranslations();
@@ -343,34 +344,25 @@ export default function Home(): React.ReactElement {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="en">English</SelectItem>
-                  <SelectItem value="es">Español</SelectItem>
-                  <SelectItem value="fr">Français</SelectItem>
-                  <SelectItem value="de">Deutsch</SelectItem>
-                  <SelectItem value="it">Italiano</SelectItem>
-                  <SelectItem value="pt">Português</SelectItem>
-                  <SelectItem value="nl">Nederlands</SelectItem>
-                  <SelectItem value="sv">Svenska</SelectItem>
-                  <SelectItem value="da">Dansk</SelectItem>
-                  <SelectItem value="no">Norsk</SelectItem>
-                  <SelectItem value="fi">Suomi</SelectItem>
-                  <SelectItem value="pl">Polski</SelectItem>
-                  <SelectItem value="cs">Čeština</SelectItem>
-                  <SelectItem value="hu">Magyar</SelectItem>
-                  <SelectItem value="sk">Slovenčina</SelectItem>
-                  <SelectItem value="sl">Slovenščina</SelectItem>
-                  <SelectItem value="hr">Hrvatski</SelectItem>
-                  <SelectItem value="sr">Srpski</SelectItem>
-                  <SelectItem value="bs">Bosanski</SelectItem>
-                  <SelectItem value="mk">Македонски</SelectItem>
-                  <SelectItem value="sq">Shqip</SelectItem>
-                  <SelectItem value="el">Ελληνικά</SelectItem>
-                  <SelectItem value="tr">Türkçe</SelectItem>
-                  <SelectItem value="ro">Română</SelectItem>
-                  <SelectItem value="bg">Български</SelectItem>
-                  <SelectItem value="uk">Українська</SelectItem>
+                  <SelectItem value="en">🇬🇧 English</SelectItem>
+                  <SelectItem value="pt">🇵🇹 Português</SelectItem>
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground border-t mt-1">
+                    Coming Soon
+                  </div>
+                  <SelectItem value="es" disabled>🇪🇸 Español</SelectItem>
+                  <SelectItem value="fr" disabled>🇫🇷 Français</SelectItem>
+                  <SelectItem value="de" disabled>🇩🇪 Deutsch</SelectItem>
+                  <SelectItem value="it" disabled>🇮🇹 Italiano</SelectItem>
+                  <SelectItem value="nl" disabled>🇳🇱 Nederlands</SelectItem>
+                  <SelectItem value="pl" disabled>🇵🇱 Polski</SelectItem>
+                  <SelectItem value="ru" disabled>🇷🇺 Русский</SelectItem>
+                  <SelectItem value="zh" disabled>🇨🇳 中文</SelectItem>
+                  <SelectItem value="ja" disabled>🇯🇵 日本語</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                Help us translate! Visit our GitHub to contribute.
+              </p>
             </div>
           </CardContent>
         </Card>
