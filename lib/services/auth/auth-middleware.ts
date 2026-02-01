@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { Session } from 'next-auth';
-import { getAuthOptions } from '@/lib/auth';
+import { getAuthOptions } from '@/lib/services/auth/auth';
 
 // Authentication middleware for API routes
 export async function requireAuth(_request: NextRequest): Promise<{

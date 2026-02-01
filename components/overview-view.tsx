@@ -14,7 +14,7 @@ import { BarChart, LineChart, DonutChart } from "./ui/charts";
 import { DashboardGrid, StatWidget, ChartWidget, ListWidget } from "./ui/dashboard-widgets";
 import { QuickActions, AttentionNeeded } from "./ui/quick-actions";
 import { useCurrency } from "@/lib/currency-context";
-import { useApp } from "@/lib/app-context-db";
+import { useApp } from "@/lib/contexts/app-context";
 import { ProgressRing } from "./ui/progress";
 import { AchievementGrid } from "./ui/achievements";
 import { motion } from "framer-motion";

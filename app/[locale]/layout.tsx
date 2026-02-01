@@ -3,7 +3,7 @@ import { Inter } from "next/font/google";
 import "../globals.css";
 import { ClientProviders } from "@/components/client-providers";
 import VersionBadge from '@/components/version-badge';
-import { CurrencyProvider } from '@/lib/currency-context';
+import { CurrencyProvider } from '@/lib/contexts/currency-context';
 import {NextIntlClientProvider, hasLocale} from 'next-intl';
 import {getMessages, setRequestLocale} from 'next-intl/server';
 import {locales, defaultLocale} from '@/lib/i18n/config';

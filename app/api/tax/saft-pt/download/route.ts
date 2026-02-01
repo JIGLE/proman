@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-middleware';
+import { requireAuth } from '@/lib/services/auth/auth-middleware';
 import { generateSAFTPT, validateSAFTData, validateNIF } from '@/lib/tax/saft-pt';
 
 export async function GET(request: NextRequest): Promise<Response | NextResponse> {

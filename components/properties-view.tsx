@@ -27,7 +27,7 @@ import { EditableCell } from "./ui/editable-cell";
 import { Checkbox } from "./ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
-import { useApp } from "@/lib/app-context-db";
+import { useApp } from "@/lib/contexts/app-context";
 import { Property } from "@/lib/types";
 import { propertySchema, PropertyFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";

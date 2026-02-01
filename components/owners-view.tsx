@@ -10,7 +10,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { LoadingState } from "./ui/loading-state";
-import { useApp } from "@/lib/app-context-db";
+import { useApp } from "@/lib/contexts/app-context";
 import { Owner } from "@/lib/types";
 import { ownerSchema, OwnerFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";

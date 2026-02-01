@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
+import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
 import { createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
 import { analyticsService } from '@/lib/analytics-service';
 import { z } from 'zod';

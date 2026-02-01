@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { LoadingState } from "./ui/loading-state";
 import { SearchFilter } from "./ui/search-filter";
 import { ExportButton } from "./ui/export-button";
-import { useApp } from "@/lib/app-context-db";
+import { useApp } from "@/lib/contexts/app-context";
 import { leaseSchema, LeaseFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";

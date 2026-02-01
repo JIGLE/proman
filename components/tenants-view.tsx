@@ -24,7 +24,7 @@ import { ExportButton } from "./ui/export-button";
 import { BulkActionBar, getDefaultBulkActions } from "./ui/bulk-action-bar";
 import { EditableCell } from "./ui/editable-cell";
 import { Checkbox } from "./ui/checkbox";
-import { useApp } from "@/lib/app-context-db";
+import { useApp } from "@/lib/contexts/app-context";
 import { Tenant } from "@/lib/types";
 import { tenantSchema, TenantFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";

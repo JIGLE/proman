@@ -1,6 +1,6 @@
 // Payment API - Create payment intents and manage payments
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-middleware';
+import { requireAuth } from '@/lib/services/auth/auth-middleware';
 import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/error-handling';
 import { paymentService } from '@/lib/payment';
 import { getPrismaClient } from '@/lib/database';

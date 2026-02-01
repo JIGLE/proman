@@ -8,7 +8,7 @@ import { FinancialsView } from "./financials-view";
 import { PaymentMatrixView } from "./payment-matrix-view";
 import { ReceiptsView } from "./receipts-view";
 import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
-import { useApp } from "@/lib/app-context-db";
+import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/currency-context";
 import { useMemo } from "react";
 

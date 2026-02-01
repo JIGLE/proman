@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
 import { CorrespondenceView } from '../../components/correspondence-view'
 
-vi.mock('@/lib/app-context-db', () => ({
+vi.mock('@/lib/contexts/app-context', () => ({
   useApp: () => ({
     state: { templates: [], correspondence: [], tenants: [], loading: false },
     addTemplate: vi.fn(),

@@ -17,7 +17,7 @@ import {
 } from "./ui/analytics-widgets";
 import { LeaseCalendar } from "./ui/lease-calendar";
 import { useCurrency } from "@/lib/currency-context";
-import { useApp } from "@/lib/app-context-db";
+import { useApp } from "@/lib/contexts/app-context";
 import { AchievementGrid } from "./ui/achievements";
 import { motion } from "framer-motion";
 import { useTranslations } from 'next-intl';

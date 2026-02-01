@@ -10,7 +10,7 @@ vi.mock('../../lib/currency-context', () => ({
   }),
 }));
 
-vi.mock('@/lib/app-context-db', () => ({
+vi.mock('@/lib/contexts/app-context', () => ({
   useApp: () => ({
     state: { 
       properties: [], 

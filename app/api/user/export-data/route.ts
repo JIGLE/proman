@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { ApiError } from "@/lib/errors";
 import { getPrismaClient } from "@/lib/database";
-import { requireAuth } from "@/lib/auth-middleware";
+import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import { logAudit, getAuditLogsForUser } from "@/lib/audit-log";
 
 export async function POST(request: NextRequest) {

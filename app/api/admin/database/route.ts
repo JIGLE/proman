@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { ApiError } from "@/lib/errors";
 import { getPrismaClient } from "@/lib/database";
-import { requireAdmin } from "@/lib/auth-middleware";
+import { requireAdmin } from "@/lib/services/auth/auth-middleware";
 
 export async function GET(request: NextRequest) {
   try {

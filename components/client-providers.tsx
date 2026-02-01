@@ -1,9 +1,9 @@
 "use client";
 
 import { SessionProvider } from "next-auth/react";
-import { ToastProvider } from "@/lib/toast-context";
-import { AppProvider } from "@/lib/app-context-db";
-import { ThemeProvider } from "@/lib/theme-context";
+import { ToastProvider } from "@/lib/contexts/toast-context";
+import { AppProvider } from "@/lib/contexts/app-context";
+import { ThemeProvider } from "@/lib/contexts/theme-context";
 
 export function ClientProviders({ children }: { children: React.ReactNode }): React.ReactElement {
   return (

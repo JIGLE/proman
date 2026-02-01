@@ -12,7 +12,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { useApp } from "@/lib/app-context-db";
+import { useApp } from "@/lib/contexts/app-context";
 import { expenseSchema, ExpenseFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";
 import { cn } from "@/lib/utils";

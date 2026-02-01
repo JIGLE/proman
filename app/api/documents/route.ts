@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
+import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
 import { documentService, type DocumentFilter, type DocumentType } from '@/lib/document-service';
 import { sanitizeForDatabase } from '@/lib/sanitize';

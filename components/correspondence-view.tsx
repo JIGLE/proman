@@ -13,7 +13,7 @@ import { EnhancedInput, EnhancedTextarea } from "./ui/enhanced-input";
 import { FormField, FormGrid, FormActions } from "./ui/form-components";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { LoadingState } from "./ui/loading-state";
-import { useApp } from "@/lib/app-context-db";
+import { useApp } from "@/lib/contexts/app-context";
 import { CorrespondenceTemplate, Tenant } from "@/lib/types";
 import { templateSchema, TemplateFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";

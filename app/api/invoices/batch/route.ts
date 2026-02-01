@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
+import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
 import { invoiceService } from '@/lib/invoice-service';
 import { z } from 'zod';

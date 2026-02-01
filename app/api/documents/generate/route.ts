@@ -1,5 +1,5 @@
 import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
+import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
 import { createErrorResponse, withErrorHandler } from '@/lib/error-handling';
 import { templateGenerator, type LeaseTemplateData, type RentReceiptTemplateData, type NoticeTemplateData } from '@/lib/document-service';
 import { pdfGenerator } from '@/lib/pdf-generator';
