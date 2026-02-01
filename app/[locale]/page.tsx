@@ -9,14 +9,11 @@ import { OverviewView } from "@/components/overview-view";
 import { PropertiesView } from "@/components/properties-view";
 import UnitsView from "@/components/units-view";
 import PropertyMap from "@/components/property-map";
-import { LeasesView } from "@/components/leases-view";
-import { PaymentMatrixView } from "@/components/payment-matrix-view";
 import { OwnersView } from "@/components/owners-view";
-import { TenantsView } from "@/components/tenants-view";
 import { MaintenanceView } from "@/components/maintenance-view";
-import { FinancialsView } from "@/components/financials-view";
-import { ReceiptsView } from "@/components/receipts-view";
 import { CorrespondenceView } from "@/components/correspondence-view";
+import { FinancialsContainer } from "@/components/financials-container";
+import { TenantsLeasesContainer } from "@/components/tenants-leases-container";
 import { AnalyticsDashboard } from "@/components/analytics-dashboard";
 import { ReportsView } from "@/components/reports-view";
 import { FormTestDialog } from "@/components/form-test-dialog";
@@ -529,29 +526,59 @@ export default function Home(): React.ReactElement {
   };
 
   const renderContent = () => {
+    // Quick action handlers
+    const handleAddProperty = () => {
+      setActiveTab('properties');
+      // TODO: Trigger dialog open after navigation
+    };
+
+    const handleAddTenant = () => {
+      setActiveTab('tenants');
+      // TODO: Trigger dialog open after navigation
+    };
+
+    const handleAddLease = () => {
+      setActiveTab('tenants'); // Leases tab within tenants container
+      // TODO: Trigger dialog open after navigation
+    };
+
+    const handleRecordPayment = () => {
+      setActiveTab('financials'); // Payments tab within financials container
+      // TODO: Trigger dialog open after navigation
+    };
+
+    const handleCreateTicket = () => {
+      setActiveTab('maintenance');
+      // TODO: Trigger dialog open after navigation
+    };
+
+    const handleSendCorrespondence = () => {
+      setActiveTab('correspondence');
+      // TODO: Trigger dialog open after navigation
+    };
+
     switch (activeTab) {
       case "overview":
-        return <OverviewView />;
+        return (
+          <OverviewView
+            onAddProperty={handleAddProperty}
+            onAddTenant={handleAddTenant}
+            onAddLease={handleAddLease}
+            onRecordPayment={handleRecordPayment}
+            onCreateTicket={handleCreateTicket}
+            onSendCorrespondence={handleSendCorrespondence}
+          />
+        );
       case "properties":
         return <PropertiesView />;
-      case "units":
-        return <UnitsView />;
-      case "map":
-        return <PropertyMap />;
-      case "leases":
-        return <LeasesView />;
-      case "payments":
-        return <PaymentMatrixView />;
       case "owners":
         return <OwnersView />;
       case "tenants":
-        return <TenantsView />;
+        return <TenantsLeasesContainer />;
+      case "financials":
+        return <FinancialsContainer />;
       case "maintenance":
         return <MaintenanceView />;
-      case "financials":
-        return <FinancialsView />;
-      case "receipts":
-        return <ReceiptsView />;
       case "correspondence":
         return (
           <div className="space-y-6">
@@ -574,7 +601,16 @@ export default function Home(): React.ReactElement {
       case "settings":
         return renderSettingsContent();
       default:
-        return <OverviewView />;
+        return (
+          <OverviewView
+            onAddProperty={handleAddProperty}
+            onAddTenant={handleAddTenant}
+            onAddLease={handleAddLease}
+            onRecordPayment={handleRecordPayment}
+            onCreateTicket={handleCreateTicket}
+            onSendCorrespondence={handleSendCorrespondence}
+          />
+        );
     }
   };
 

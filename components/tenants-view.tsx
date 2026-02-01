@@ -230,10 +230,10 @@ export function TenantsView(): React.ReactElement {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
+              <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
                 Tenant CRM
               </h2>
-              <p className="text-zinc-400">Manage tenant relationships and payments</p>
+              <p className="text-[var(--color-muted-foreground)]">Manage tenant relationships and payments</p>
             </div>
             <div className="flex items-center gap-2">
               <ExportButton
@@ -271,7 +271,7 @@ export function TenantsView(): React.ReactElement {
                 </DialogTrigger>
               <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle className="text-zinc-50">
+                  <DialogTitle className="text-[var(--color-foreground)]">
                     {dialog.editingItem ? 'Edit Tenant' : 'Add New Tenant'}
                   </DialogTitle>
                   <DialogDescription>
@@ -502,7 +502,7 @@ export function TenantsView(): React.ReactElement {
           <Card className="bg-zinc-900 border-zinc-800">
             <CardContent className="p-8 text-center">
               <User className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-zinc-50 mb-2">
+              <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
                 {tenants.length === 0 ? 'No tenants yet' : 'No tenants found'}
               </h3>
               <p className="text-zinc-400 mb-4">
@@ -544,7 +544,7 @@ export function TenantsView(): React.ReactElement {
                       </span>
                     </div>
                     <div>
-                      <CardTitle className="text-zinc-50 group-hover:text-accent-primary transition-colors">{tenant.name}</CardTitle>
+                      <CardTitle className="text-[var(--color-foreground)] group-hover:text-accent-primary transition-colors">{tenant.name}</CardTitle>
                       <CardDescription className="text-zinc-400">{tenant.propertyName || 'No property assigned'}</CardDescription>
                     </div>
                   </div>
@@ -555,7 +555,7 @@ export function TenantsView(): React.ReactElement {
                         variant="ghost"
                         size="sm"
                         onClick={() => dialog.openEditDialog(tenant)}
-                        className="h-8 w-8 p-0 text-zinc-400 hover:text-zinc-50"
+                        className="h-8 w-8 p-0 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -582,7 +582,7 @@ export function TenantsView(): React.ReactElement {
                       value={tenant.email}
                       type="email"
                       onSave={(val) => handleInlineEdit(tenant.id, 'email', val)}
-                      className="text-sm text-zinc-50"
+                      className="text-sm text-[var(--color-foreground)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -594,7 +594,7 @@ export function TenantsView(): React.ReactElement {
                       value={tenant.phone}
                       type="phone"
                       onSave={(val) => handleInlineEdit(tenant.id, 'phone', val)}
-                      className="text-sm text-zinc-50"
+                      className="text-sm text-[var(--color-foreground)]"
                     />
                   </div>
                   <div className="space-y-1">
@@ -602,7 +602,7 @@ export function TenantsView(): React.ReactElement {
                       <Calendar className="h-4 w-4" />
                       <span>Lease Period</span>
                     </div>
-                    <p className="text-sm text-zinc-50">
+                    <p className="text-sm text-[var(--color-foreground)]">
                       {new Date(tenant.leaseStart).toLocaleDateString()} -{" "}
                       {new Date(tenant.leaseEnd).toLocaleDateString()}
                     </p>
@@ -614,7 +614,7 @@ export function TenantsView(): React.ReactElement {
                       type="currency"
                       onSave={(val) => handleInlineEdit(tenant.id, 'rent', val)}
                       formatter={(val) => formatCurrency(Number(val))}
-                      className="text-lg font-semibold text-zinc-50"
+                      className="text-lg font-semibold text-[var(--color-foreground)]"
                     />
                   </div>
                 </div>

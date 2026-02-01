@@ -153,10 +153,10 @@ export function OwnersView(): React.ReactElement {
         <div className="space-y-6">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
+                    <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
                         Owners
                     </h2>
-                    <p className="text-zinc-400">Manage property owners and split ownership</p>
+                    <p className="text-[var(--color-muted-foreground)]">Manage property owners and split ownership</p>
                 </div>
                 <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
                     <DialogTrigger asChild>
@@ -167,7 +167,7 @@ export function OwnersView(): React.ReactElement {
                     </DialogTrigger>
                     <DialogContent className="bg-zinc-900 border-zinc-800 max-w-lg">
                         <DialogHeader>
-                            <DialogTitle className="text-zinc-50">
+                            <DialogTitle className="text-[var(--color-foreground)]">
                                 {dialog.editingItem ? 'Edit Owner' : 'Add New Owner'}
                             </DialogTitle>
                             <DialogDescription>
@@ -267,7 +267,7 @@ export function OwnersView(): React.ReactElement {
                         <Card className="bg-zinc-900 border-zinc-800">
                             <CardContent className="p-8 text-center">
                                 <Briefcase className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-                                <h3 className="text-lg font-semibold text-zinc-50 mb-2">No owners yet</h3>
+                                <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">No owners yet</h3>
                                 <p className="text-zinc-400 mb-4">Add owners to start tracking shared property ownership</p>
                                 <Button onClick={dialog.openDialog} className="flex items-center gap-2">
                                     <Plus className="w-4 h-4" />
@@ -280,7 +280,7 @@ export function OwnersView(): React.ReactElement {
                     owners.map((owner) => (
                         <Card key={owner.id} className="bg-zinc-900 border-zinc-800">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-xl font-bold text-zinc-50">{owner.name}</CardTitle>
+                                <CardTitle className="text-xl font-bold text-[var(--color-foreground)]">{owner.name}</CardTitle>
                                 <div className="flex gap-2">
                                     <Button variant="ghost" size="icon" onClick={() => handleEdit(owner)}>
                                         <Edit className="w-4 h-4 text-zinc-400" />

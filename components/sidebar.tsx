@@ -64,27 +64,22 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
       ]
     },
     { 
-      group: "Property Management", 
+      group: "Portfolio", 
       items: [
         { id: "properties", label: "Properties", icon: Building2 },
-        { id: "units", label: "Units", icon: Building2 },
-        { id: "map", label: "Map View", icon: MapPin },
-      ]
-    },
-    { 
-      group: "People & Leases", 
-      items: [
-        { id: "leases", label: "Leases", icon: FileText },
         { id: "owners", label: "Owners", icon: Briefcase },
-        { id: "tenants", label: "Tenants", icon: Users },
       ]
     },
     { 
-      group: "Financial Management", 
+      group: "Tenants", 
       items: [
-        { id: "payments", label: "Payment Matrix", icon: DollarSign },
+        { id: "tenants", label: "Tenants & Leases", icon: Users },
+      ]
+    },
+    { 
+      group: "Finance", 
+      items: [
         { id: "financials", label: "Financials", icon: DollarSign },
-        { id: "receipts", label: "Receipts", icon: FileText },
       ]
     },
     { 
@@ -98,7 +93,6 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
       group: "Insights", 
       items: [
         { id: "analytics", label: "Analytics", icon: BarChart3 },
-        { id: "reports", label: "Reports", icon: PieChart },
       ]
     }
   ];

@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell,
@@ -22,6 +22,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "./button";
 import { Badge } from "./badge";
 import { Separator } from "./separator";
+import * as Popover from "@radix-ui/react-popover";
 
 // Types
 export type NotificationType = 
@@ -236,173 +237,149 @@ export function NotificationCenter({
     return b.timestamp.getTime() - a.timestamp.getTime();
   });
 
-  // Close on escape
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && isOpen) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen]);
-
   return (
-    <div className={cn("relative", className)}>
-      {/* Bell button */}
-      <Button
-        variant="ghost"
-        size="sm"
-        className="relative h-9 w-9 p-0"
-        onClick={() => setIsOpen(!isOpen)}
-        aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
-      >
-        <Bell className="h-4 w-4" />
-        {unreadCount > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
-            {unreadCount > 99 ? "99+" : unreadCount}
-          </span>
-        )}
-      </Button>
+    <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
+      <Popover.Trigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="relative h-9 w-9 p-0"
+          aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
+        >
+          <Bell className="h-4 w-4" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
+        </Button>
+      </Popover.Trigger>
 
-      {/* Dropdown panel */}
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 z-[var(--z-dropdown)]"
-              onClick={() => setIsOpen(false)}
-              aria-hidden="true"
-            />
+      <Popover.Portal>
+        <Popover.Content
+          align="end"
+          sideOffset={8}
+          className="w-full max-w-md sm:w-96 max-h-[calc(100vh-5rem)] z-[var(--z-popover)] rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-xl overflow-hidden flex flex-col data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-3 border-b border-[var(--color-border)] flex-none">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-[var(--color-foreground)]">
+                Notifications
+              </h3>
+              {unreadCount > 0 && (
+                <Badge variant="secondary" className="text-xs">
+                  {unreadCount} new
+                </Badge>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              {unreadCount > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={onMarkAllAsRead}
+                  aria-label="Mark all as read"
+                >
+                  <CheckCheck className="h-3.5 w-3.5 mr-1" />
+                  Mark all read
+                </Button>
+              )}
+              <Popover.Close asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  aria-label="Close notifications"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </Popover.Close>
+            </div>
+          </div>
 
-            {/* Panel */}
-            <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
-              transition={{ duration: 0.15 }}
-              className="fixed top-14 right-4 w-full max-w-md mx-4 sm:mx-0 sm:w-96 max-h-[calc(100vh-5rem)] z-[var(--z-popover)] rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-xl overflow-hidden flex flex-col"
+          {/* Filter tabs */}
+          <div className="flex items-center gap-1 p-2 border-b border-[var(--color-border)] flex-none">
+            <Button
+              variant={filter === "all" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setFilter("all")}
             >
-              {/* Header */}
-              <div className="flex items-center justify-between p-3 border-b border-[var(--color-border)] flex-none">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-semibold text-[var(--color-foreground)]">
-                    Notifications
-                  </h3>
-                  {unreadCount > 0 && (
-                    <Badge variant="secondary" className="text-xs">
-                      {unreadCount} new
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex items-center gap-1">
-                  {unreadCount > 0 && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-7 text-xs"
-                      onClick={onMarkAllAsRead}
-                      aria-label="Mark all as read"
-                    >
-                      <CheckCheck className="h-3.5 w-3.5 mr-1" />
-                      Mark all read
-                    </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 w-7 p-0"
-                    onClick={() => setIsOpen(false)}
-                    aria-label="Close notifications"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              All ({notifications.length})
+            </Button>
+            <Button
+              variant={filter === "unread" ? "secondary" : "ghost"}
+              size="sm"
+              className="h-7 text-xs"
+              onClick={() => setFilter("unread")}
+            >
+              Unread ({unreadCount})
+            </Button>
+          </div>
 
-              {/* Filter tabs */}
-              <div className="flex items-center gap-1 p-2 border-b border-[var(--color-border)] flex-none">
-                <Button
-                  variant={filter === "all" ? "secondary" : "ghost"}
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => setFilter("all")}
-                >
-                  All ({notifications.length})
-                </Button>
-                <Button
-                  variant={filter === "unread" ? "secondary" : "ghost"}
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() => setFilter("unread")}
-                >
-                  Unread ({unreadCount})
-                </Button>
-              </div>
-
-              {/* Notification list */}
-              <div className="flex-1 overflow-hidden">
-                <div className="h-full overflow-y-auto scrollbar-thin">
-                  {sortedNotifications.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center py-8 text-center">
-                      <Bell className="h-10 w-10 text-[var(--color-muted-foreground)] mb-3" />
-                      <p className="text-sm font-medium text-[var(--color-foreground)]">
-                        {filter === "unread" ? "No unread notifications" : "No notifications"}
-                      </p>
-                      <p className="text-xs text-[var(--color-muted-foreground)]">
-                        {filter === "unread" 
-                          ? "You're all caught up!" 
-                          : "Notifications will appear here"}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="p-2 space-y-1">
-                      <AnimatePresence mode="popLayout">
-                        {sortedNotifications.map((notification) => (
-                          <NotificationItem
-                            key={notification.id}
-                            notification={notification}
-                            onMarkAsRead={onMarkAsRead}
-                            onDelete={onDelete}
-                            onClick={onNotificationClick}
-                          />
-                        ))}
-                      </AnimatePresence>
-                    </div>
-                  )}
+          {/* Notification list */}
+          <div className="flex-1 overflow-hidden">
+            <div className="h-full overflow-y-auto scrollbar-thin">
+              {sortedNotifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <Bell className="h-10 w-10 text-[var(--color-muted-foreground)] mb-3" />
+                  <p className="text-sm font-medium text-[var(--color-foreground)]">
+                    {filter === "unread" ? "No unread notifications" : "No notifications"}
+                  </p>
+                  <p className="text-xs text-[var(--color-muted-foreground)]">
+                    {filter === "unread" 
+                      ? "You're all caught up!" 
+                      : "Notifications will appear here"}
+                  </p>
                 </div>
-              </div>
-
-              {/* Footer */}
-              {notifications.length > 0 && (
-                <div className="flex items-center justify-between p-2 border-t border-[var(--color-border)] flex-none">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs text-destructive hover:text-destructive"
-                    onClick={onClearAll}
-                    aria-label="Clear all notifications"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 mr-1" />
-                    Clear all
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs"
-                    aria-label="Notification settings"
-                  >
-                    <Settings className="h-3.5 w-3.5 mr-1" />
-                    Settings
-                  </Button>
+              ) : (
+                <div className="p-2 space-y-1">
+                  <AnimatePresence mode="popLayout">
+                    {sortedNotifications.map((notification) => (
+                      <NotificationItem
+                        key={notification.id}
+                        notification={notification}
+                        onMarkAsRead={onMarkAsRead}
+                        onDelete={onDelete}
+                        onClick={onNotificationClick}
+                      />
+                    ))}
+                  </AnimatePresence>
                 </div>
               )}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          {notifications.length > 0 && (
+            <div className="flex items-center justify-between p-2 border-t border-[var(--color-border)] flex-none">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-destructive hover:text-destructive"
+                onClick={onClearAll}
+                aria-label="Clear all notifications"
+              >
+                <Trash2 className="h-3.5 w-3.5 mr-1" />
+                Clear all
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                aria-label="Notification settings"
+              >
+                <Settings className="h-3.5 w-3.5 mr-1" />
+                Settings
+              </Button>
+            </div>
+          )}
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
   );
 }
 

@@ -33,21 +33,19 @@ interface MobileNavProps {
 const primaryNavItems = [
   { id: "overview", label: "Home", icon: Home },
   { id: "properties", label: "Properties", icon: Building2 },
-  { id: "tenants", label: "People", icon: Users },
+  { id: "tenants", label: "Tenants", icon: Users },
   { id: "more", label: "More", icon: Menu },
 ];
 
 // Secondary items in the "More" menu
 const secondaryNavItems = [
-  { id: "units", label: "Units", icon: Building2 },
-  { id: "map", label: "Map View", icon: MapPin },
-  { id: "leases", label: "Leases", icon: FileText },
   { id: "owners", label: "Owners", icon: Briefcase },
-  { id: "financials", label: "Finance", icon: DollarSign },
-  { id: "payments", label: "Payments", icon: DollarSign },
-  { id: "receipts", label: "Receipts", icon: FileText },
+  { id: "financials", label: "Financials", icon: DollarSign },
   { id: "maintenance", label: "Maintenance", icon: Hammer },
-  { id: "correspondence", label: "Mail", icon: Mail },
+  { id: "correspondence", label: "Correspondence", icon: Mail },
+  { id: "analytics", label: "Analytics", icon: BarChart3 },
+  { id: "settings", label: "Settings", icon: Settings },
+];
   { id: "settings", label: "Settings", icon: Settings },
 ];
 

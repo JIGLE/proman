@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { BulkActionBar, getDefaultBulkActions } from "./ui/bulk-action-bar";
 import { EditableCell } from "./ui/editable-cell";
 import { Checkbox } from "./ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 import { useApp } from "@/lib/app-context-db";
 import { Property } from "@/lib/types";
@@ -32,7 +33,10 @@ import { propertySchema, PropertyFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
+import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { AddressVerificationService, AddressSuggestion } from "@/lib/address-verification";
+import PropertyMap from "./property-map";
+import { UnitsView } from "./units-view";
 
 export type PropertiesViewProps = Record<string, never>
 
@@ -71,6 +75,7 @@ export function PropertiesView(): React.ReactElement {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [activeTab, setActiveTab] = useTabPersistence('properties', 'list');
 
   // Form dialog hook
   const initialFormData: PropertyFormData = {
@@ -329,10 +334,10 @@ export function PropertiesView(): React.ReactElement {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
+              <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
                 Properties
               </h2>
-              <p className="text-zinc-400">Manage your property portfolio</p>
+              <p className="text-[var(--color-muted-foreground)]">Manage your property portfolio</p>
             </div>
             <div className="flex items-center gap-2">
               <ExportButton
@@ -362,7 +367,7 @@ export function PropertiesView(): React.ReactElement {
               </DialogTrigger>
           <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-zinc-50">
+              <DialogTitle className="text-[var(--color-foreground)]">
                 {dialog.editingItem ? 'Edit Property' : 'Add New Property'}
               </DialogTitle>
               <DialogDescription>
@@ -616,6 +621,16 @@ export function PropertiesView(): React.ReactElement {
             </div>
           </div>
 
+          {/* Tabs Navigation */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList>
+              <TabsTrigger value="list">List</TabsTrigger>
+              <TabsTrigger value="map">Map</TabsTrigger>
+              <TabsTrigger value="units">Units</TabsTrigger>
+            </TabsList>
+
+            {/* List View Tab */}
+            <TabsContent value="list" className="space-y-6">
           {/* Search and Filter */}
           <SearchFilter
             searchPlaceholder="Search properties by name or address..."
@@ -674,11 +689,11 @@ export function PropertiesView(): React.ReactElement {
             {filteredProperties.length === 0 ? (
               <Card className="bg-zinc-900 border-zinc-800 col-span-full">
                 <CardContent className="p-8 text-center">
-                  <Building2 className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-zinc-50 mb-2">
+                  <Building2 className="w-12 h-12 text-[var(--color-muted-foreground)] mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
                     {properties.length === 0 ? 'No properties yet' : 'No properties found'}
                   </h3>
-                  <p className="text-zinc-400 mb-4">
+                  <p className="text-[var(--color-muted-foreground)] mb-4">
                     {properties.length === 0 
                       ? 'Get started by adding your first property' 
                       : 'Try adjusting your search or filters'}
@@ -705,7 +720,7 @@ export function PropertiesView(): React.ReactElement {
                     <div className="flex items-center justify-between">
                       <div>
                         <motion.div
-                          className="text-zinc-50 flex items-center gap-2"
+                          className="text-[var(--color-foreground)] flex items-center gap-2"
                           initial={{ x: -20, opacity: 0 }}
                           animate={{ x: 0, opacity: 1 }}
                           transition={{ delay: 0.1 }}
@@ -784,7 +799,7 @@ export function PropertiesView(): React.ReactElement {
                               value={property.name}
                               type="text"
                               onSave={(val) => handleInlineEdit(property.id, 'name', val)}
-                              className="text-zinc-50 text-base"
+                              className="text-[var(--color-foreground)] text-base"
                             />
                             <CardDescription className="flex items-start gap-1">
                               <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
@@ -796,9 +811,9 @@ export function PropertiesView(): React.ReactElement {
                     </CardHeader>
                       <CardContent className="space-y-3">
                         <div className="flex items-center justify-between text-sm">
-                          <span className="text-zinc-400">{property.type}</span>
+                          <span className="text-[var(--color-muted-foreground)]">{property.type}</span>
                           <motion.span
-                            className="font-semibold text-zinc-50"
+                            className="font-semibold text-[var(--color-foreground)]"
                             initial={{ scale: 0.9 }}
                             animate={{ scale: 1 }}
                             transition={{ delay: 0.2 }}
@@ -812,7 +827,7 @@ export function PropertiesView(): React.ReactElement {
                             />
                           </motion.span>
                         </div>
-                        <div className="flex items-center gap-4 text-sm text-zinc-400">
+                        <div className="flex items-center gap-4 text-sm text-[var(--color-muted-foreground)]">
                           <motion.div
                             className="flex items-center gap-1"
                             initial={{ x: -10, opacity: 0 }}
@@ -880,6 +895,18 @@ export function PropertiesView(): React.ReactElement {
               selectedIds={Array.from(bulkSelection.selectedIds)}
             />
           </div>
+            </TabsContent>
+
+            {/* Map View Tab */}
+            <TabsContent value="map" className="space-y-6">
+              <PropertyMap properties={sortedProperties} />
+            </TabsContent>
+
+            {/* Units View Tab */}
+            <TabsContent value="units" className="space-y-6">
+              <UnitsView />
+            </TabsContent>
+          </Tabs>
         </div>
       )}
     </>

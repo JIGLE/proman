@@ -20,9 +20,23 @@ import { AchievementGrid } from "./ui/achievements";
 import { motion } from "framer-motion";
 import { useTranslations } from 'next-intl';
 
-export type OverviewViewProps = Record<string, never>
+export interface OverviewViewProps {
+  onAddProperty?: () => void;
+  onAddTenant?: () => void;
+  onAddLease?: () => void;
+  onRecordPayment?: () => void;
+  onCreateTicket?: () => void;
+  onSendCorrespondence?: () => void;
+}
 
-export function OverviewView(): React.ReactElement {
+export function OverviewView({
+  onAddProperty,
+  onAddTenant,
+  onAddLease,
+  onRecordPayment,
+  onCreateTicket,
+  onSendCorrespondence,
+}: OverviewViewProps = {}): React.ReactElement {
   const { state } = useApp();
   const { properties, tenants, receipts } = state;
   const { formatCurrency } = useCurrency();
@@ -146,12 +160,29 @@ export function OverviewView(): React.ReactElement {
         </div>
         
         {/* Quick Actions - Horizontal variant for header */}
-        <QuickActions variant="horizontal" className="hidden lg:flex" />
+        <QuickActions 
+          variant="horizontal" 
+          className="hidden lg:flex"
+          onAddProperty={onAddProperty}
+          onAddTenant={onAddTenant}
+          onAddLease={onAddLease}
+          onRecordPayment={onRecordPayment}
+          onCreateTicket={onCreateTicket}
+          onSendCorrespondence={onSendCorrespondence}
+        />
       </div>
 
       {/* Quick Actions panel for mobile/tablet */}
       <div className="lg:hidden">
-        <QuickActions variant="compact" />
+        <QuickActions 
+          variant="compact"
+          onAddProperty={onAddProperty}
+          onAddTenant={onAddTenant}
+          onAddLease={onAddLease}
+          onRecordPayment={onRecordPayment}
+          onCreateTicket={onCreateTicket}
+          onSendCorrespondence={onSendCorrespondence}
+        />
       </div>
 
       {/* Attention Needed Panel - only show if there are items */}

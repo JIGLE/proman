@@ -290,10 +290,10 @@ export function LeasesView(): React.ReactElement {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
+          <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
             Lease Management
           </h2>
-          <p className="text-zinc-400">Manage lease agreements and contract documents</p>
+          <p className="text-[var(--color-muted-foreground)]">Manage lease agreements and contract documents</p>
         </div>
         <div className="flex items-center gap-2">
           <ExportButton
@@ -352,7 +352,7 @@ export function LeasesView(): React.ReactElement {
             </DialogTrigger>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-zinc-900 border-zinc-800">
               <DialogHeader>
-                <DialogTitle className="text-zinc-50">
+                <DialogTitle className="text-[var(--color-foreground)]">
                   {editingLease ? 'Edit Lease' : 'Create New Lease'}
                 </DialogTitle>
                 <DialogDescription>
@@ -678,7 +678,7 @@ export function LeasesView(): React.ReactElement {
           <Card className="col-span-full bg-zinc-900 border-zinc-800">
             <CardContent className="flex flex-col items-center justify-center py-12">
               <FileText className="h-12 w-12 text-zinc-600 mb-4" />
-              <h3 className="text-lg font-semibold text-zinc-50 mb-2">
+              <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
                 {leases.length === 0 ? 'No Leases Yet' : 'No leases found'}
               </h3>
               <p className="text-zinc-400 text-center mb-4">
@@ -712,7 +712,7 @@ export function LeasesView(): React.ReactElement {
                 </div>
               </div>
               <CardHeader>
-                <CardTitle className="text-zinc-50 flex items-center gap-2">
+                <CardTitle className="text-[var(--color-foreground)] flex items-center gap-2">
                   <User className="h-4 w-4" />
                   {lease.tenant?.name}
                 </CardTitle>
@@ -724,7 +724,7 @@ export function LeasesView(): React.ReactElement {
               <CardContent className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-zinc-400">Rent</span>
-                  <span className="font-semibold text-zinc-50">
+                  <span className="font-semibold text-[var(--color-foreground)]">
                     {formatCurrency(lease.monthlyRent)}/mo
                   </span>
                 </div>

@@ -151,10 +151,10 @@ export function ReceiptsView(): React.ReactElement {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
+          <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
             Receipts
           </h2>
-          <p className="text-zinc-400">Manage payment receipts and generate PDFs</p>
+          <p className="text-[var(--color-muted-foreground)]">Manage payment receipts and generate PDFs</p>
         </div>
         <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
           <DialogTrigger asChild>
@@ -165,7 +165,7 @@ export function ReceiptsView(): React.ReactElement {
           </DialogTrigger>
           <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-zinc-50">
+              <DialogTitle className="text-[var(--color-foreground)]">
                 {dialog.editingItem ? 'Edit Receipt' : 'Add New Receipt'}
               </DialogTitle>
               <DialogDescription>
@@ -294,7 +294,7 @@ export function ReceiptsView(): React.ReactElement {
           <Card className="bg-zinc-900 border-zinc-800">
             <CardContent className="p-8 text-center">
               <FileText className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-zinc-50 mb-2">No receipts yet</h3>
+              <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">No receipts yet</h3>
               <p className="text-zinc-400 mb-4">Get started by creating your first payment receipt</p>
               <Button onClick={dialog.openDialog} className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
@@ -313,7 +313,7 @@ export function ReceiptsView(): React.ReactElement {
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="text-lg font-semibold text-zinc-50">
+                        <h3 className="text-lg font-semibold text-[var(--color-foreground)]">
                           Receipt #{receipt.id.split('-')[1]}
                         </h3>
                         {getTypeBadge(receipt.type)}

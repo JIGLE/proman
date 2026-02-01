@@ -228,8 +228,8 @@ export function FinancialsView(): React.ReactElement {
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-zinc-50">Financials</h2>
-          <p className="text-zinc-400">Track income, expenses, and cash flow</p>
+          <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">Financials</h2>
+          <p className="text-[var(--color-muted-foreground)]">Track income, expenses, and cash flow</p>
         </div>
         <div className="flex gap-2">
           <Select value={timeRange} onValueChange={setTimeRange}>
@@ -348,8 +348,8 @@ export function FinancialsView(): React.ReactElement {
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">{formatCurrency(metrics.totalIncome)}</div>
-            <p className="text-xs text-zinc-500">From rent and deposits</p>
+            <div className="text-2xl font-bold text-[var(--color-foreground)]">{formatCurrency(metrics.totalIncome)}</div>
+            <p className="text-xs text-[var(--color-muted-foreground)]">From rent and deposits</p>
           </CardContent>
         </Card>
         <Card className="bg-zinc-900 border-zinc-800">
@@ -358,8 +358,8 @@ export function FinancialsView(): React.ReactElement {
             <TrendingDown className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">{formatCurrency(metrics.totalExpenses)}</div>
-            <p className="text-xs text-zinc-500">Maintenance, repairs, etc.</p>
+            <div className="text-2xl font-bold text-[var(--color-foreground)]">{formatCurrency(metrics.totalExpenses)}</div>
+            <p className="text-xs text-[var(--color-muted-foreground)]">Maintenance, repairs, etc.</p>
           </CardContent>
         </Card>
         <Card className="bg-zinc-900 border-zinc-800">
@@ -382,7 +382,7 @@ export function FinancialsView(): React.ReactElement {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-zinc-50 flex items-center gap-2">
+                <CardTitle className="text-[var(--color-foreground)] flex items-center gap-2">
                   <Calculator className="h-5 w-5" />
                   Tax Calculation - {selectedCountry}
                 </CardTitle>
@@ -405,13 +405,13 @@ export function FinancialsView(): React.ReactElement {
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-zinc-400">Gross Income</Label>
-                <div className="text-lg font-semibold text-zinc-50">
+                <div className="text-lg font-semibold text-[var(--color-foreground)]">
                   {formatCurrency(taxCalculation.grossIncome)}
                 </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-sm font-medium text-zinc-400">Taxable Income</Label>
-                <div className="text-lg font-semibold text-zinc-50">
+                <div className="text-lg font-semibold text-[var(--color-foreground)]">
                   {formatCurrency(taxCalculation.taxableIncome)}
                 </div>
               </div>
