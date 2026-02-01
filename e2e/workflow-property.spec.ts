@@ -48,6 +48,21 @@ test('Critical Path: Create new property', async ({ page }) => {
   // 4. Submit
   // The submit button is inside the dialog
   const dialog = page.getByRole('dialog')
+  
+  // Listen for console messages to capture any errors
+  page.on('console', msg => {
+    if (msg.type() === 'error') {
+      console.log('Browser console error:', msg.text())
+    }
+  })
+  
+  // Listen for API responses
+  page.on('response', response => {
+    if (response.url().includes('/api/properties')) {
+      console.log('API Response:', response.status(), response.statusText())
+    }
+  })
+  
   await dialog.getByRole('button', { name: 'Add Property' }).click()
   
   // 5. Verify creation
@@ -56,9 +71,10 @@ test('Critical Path: Create new property', async ({ page }) => {
   
   // Check for validation errors first
   const errorElements = page.locator('.text-red-400')
-  if (await errorElements.count() > 0) {
+  const errorCount = await errorElements.count()
+  if (errorCount > 0) {
     const errors = await errorElements.allTextContents()
-    console.log('Validation errors:', errors)
+    console.log('Validation errors found:', errors)
     
     // Take a screenshot for debugging
     await page.screenshot({ path: 'test-results/validation-error.png' })
@@ -66,13 +82,24 @@ test('Critical Path: Create new property', async ({ page }) => {
   }
 
   // Check for server errors via toast or console
-  const errorToast = page.locator('text=/error|failed/i')
+  const errorToast = page.locator('text=/error|failed/i').first()
   if (await errorToast.isVisible()) {
     const errorText = await errorToast.textContent()
+    console.log('Toast error:', errorText)
     throw new Error(`Server error: ${errorText}`)
   }
 
   // Dialog should close if successful
+  const isDialogHidden = await dialog.isHidden().catch(() => false)
+  if (!isDialogHidden) {
+    // Take screenshot of still-open dialog
+    await page.screenshot({ path: 'test-results/dialog-still-open.png' })
+    
+    // Check what's in the dialog
+    const dialogContent = await dialog.textContent()
+    console.log('Dialog still open with content:', dialogContent)
+  }
+  
   await expect(dialog).toBeHidden({ timeout: 5000 })
   
   // Toast should appear (optional check)

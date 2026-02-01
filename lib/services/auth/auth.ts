@@ -60,19 +60,31 @@ function createBaseAuthOptions(): NextAuthOptions {
            if (!isDev) return null;
            
            if (credentials?.email === 'demo@proman.local' && credentials?.password === 'demo123') {
-             const prisma = getPrismaClient();
-             // Upsert user to ensure it exists for the session strategy
-             const user = await prisma.user.upsert({
-               where: { email: credentials.email },
-               update: {},
-               create: {
-                 email: credentials.email,
-                 name: 'Demo User',
-                 role: 'ADMIN',
-                 imageConsent: true,
+             try {
+               const prisma = getPrismaClient();
+               // Check if user exists first
+               let user = await prisma.user.findUnique({
+                 where: { email: credentials.email }
+               });
+               
+               // If not, create it
+               if (!user) {
+                 user = await prisma.user.create({
+                   data: {
+                     email: credentials.email,
+                     name: 'Demo User',
+                     role: 'ADMIN',
+                     imageConsent: true,
+                   }
+                 });
                }
-             });
-             return user;
+               
+               console.log('[auth.ts] Credentials authorize successful:', { id: user.id, email: user.email });
+               return user;
+             } catch (error) {
+               console.error('[auth.ts] Credentials authorize error:', error);
+               return null;
+             }
            }
            return null;
         }
@@ -89,23 +101,37 @@ function createBaseAuthOptions(): NextAuthOptions {
     },
     callbacks: {
       async jwt({ token, user, account: _account }: { token: JWT; user?: NextAuthUser | null; account?: unknown }): Promise<JWT> {
-        // Add user ID to token
-        if (user) {
-          (token as JWT & { id?: string }).id = user.id;
+        console.log('[auth.ts] JWT callback - user:', user ? {id: user.id, email: user.email} : 'null')
+        console.log('[auth.ts] JWT callback - token.sub before:', token.sub)
+        
+        // When user signs in, set both id and sub claims
+        if (user?.id) {
+          token.id = user.id;
+          token.sub = user.id; // Standard JWT subject claim - required for session to work
         }
+        
+        console.log('[auth.ts] JWT callback - token.sub after:', token.sub)
         return token;
       },
-      async session({ session, token }: { session: Session; token: JWT }): Promise<Session> {
+      async session({ session, token, user }: { session: Session; token: JWT; user?: NextAuthUser }): Promise<Session> {
         try {
-          // Add user ID to session, but ensure session.user exists
-          if (session?.user && token && (token as JWT & { id?: string }).id) {
-            const user = session.user as { id?: string };
-            user.id = (token as JWT & { id?: string }).id;
+          if (session?.user) {
+            const sessionUser = session.user as { id?: string };
+            
+            // Prefer token.sub (standard claim), fallback to token.id or user.id
+            sessionUser.id = token.sub || (token as any).id || user?.id;
+            
+            if (!sessionUser.id) {
+              console.error('[auth] No user ID found in session', { 
+                hasSub: !!token.sub, 
+                hasTokenId: !!(token as any).id,
+                hasUser: !!user 
+              });
+            }
           }
           return session;
         } catch (err: unknown) {
           console.error('NextAuth session callback error:', err);
-          // Return session unchanged on error
           return session;
         }
       },

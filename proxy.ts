@@ -103,8 +103,9 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   // Match all pathnames except for:
-  // - API routes
+  // - API routes (/api/*)
+  // - Auth routes (/auth/*) - NextAuth needs these without locale prefix
   // - _next (Next.js internals)
   // - Static files (images, fonts, etc.)
-  matcher: ['/((?!api|_next|.*\\..*).*)'],
+  matcher: ['/((?!api|auth|_next|.*\\..*).*)'],
 };

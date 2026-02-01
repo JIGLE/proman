@@ -43,18 +43,32 @@ setup('authenticate', async ({ page }) => {
   // Try to find Dev Login form specifically first
   const devLoginButton = page.getByRole('button', { name: 'Sign in with Credentials' })
   
-  if (await devLoginButton.isVisible()) {
+  const hasDevLogin = await devLoginButton.isVisible().catch(() => false)
+  console.log('[auth.setup] Dev login button visible:', hasDevLogin)
+  
+  if (hasDevLogin) {
     // We are in dev mode with credentials enabled
     // Use specific locators for the dev form to avoid ambiguity
+    console.log('[auth.setup] Filling credentials form...')
     await page.locator('input[name="email"]').fill(demoEmail)
     await page.locator('input[name="password"]').fill(demoPassword)
+    
+    // Wait a bit before clicking to ensure form is ready
+    await page.waitForTimeout(500)
+    
     await devLoginButton.click()
     
-    // Wait for navigation
+    console.log('[auth.setup] Clicked sign in button, waiting for navigation...')
+    
+    // Wait for successful navigation to authenticated route
     try {
       await page.waitForURL(/\/(en|pt)/, { timeout: 10000 })
-    } catch {
-      console.log('Dev Auth login did not redirect - continuing with unauthenticated state')
+      console.log('[auth.setup] Successfully authenticated:', page.url())
+    } catch (e) {
+      console.log('[auth.setup] Navigation failed:', e)
+      console.log('[auth.setup] Current URL:', page.url())
+      await page.screenshot({ path: 'test-results/auth-failed.png' })
+      throw e // Fail the test if navigation doesn't happen
     }
   } else {
     // Fallback to generic detection (original logic)
