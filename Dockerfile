@@ -33,7 +33,7 @@ COPY components ./components/
 COPY lib ./lib/
 COPY types ./types/
 COPY public ./public/
-COPY proxy.ts i18n.ts ./
+COPY middleware.ts ./
 COPY messages ./messages/
 COPY scripts ./scripts/
 

@@ -1,5 +1,5 @@
 /**
- * Proxy for Next.js 16+ locale routing and URL redirects
+ * Middleware for Next.js 16+ locale routing and URL redirects
  * Handles:
  * - Locale prefix enforcement (always use /en or /pt)
  * - Backward compatibility redirects from old tab-based URLs
@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { locales, defaultLocale } from './lib/i18n/config';
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl;
 
   // Handle old tab-based URL redirects (backward compatibility)

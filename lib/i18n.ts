@@ -1,5 +1,5 @@
 import {createNavigation} from 'next-intl/navigation';
-import {locales, defaultLocale} from '@/i18n';
+import {locales, defaultLocale} from './i18n/config';
 
 export type Locale = (typeof locales)[number];
 
