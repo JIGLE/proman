@@ -18,6 +18,7 @@ import {
   LogOut,
   ChevronRight,
   Search,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut, useSession } from "next-auth/react";
@@ -44,8 +45,6 @@ const secondaryNavItems = [
   { id: "maintenance", label: "Maintenance", icon: Hammer },
   { id: "correspondence", label: "Correspondence", icon: Mail },
   { id: "analytics", label: "Analytics", icon: BarChart3 },
-  { id: "settings", label: "Settings", icon: Settings },
-];
   { id: "settings", label: "Settings", icon: Settings },
 ];
 

@@ -14,23 +14,23 @@ import { useMemo } from "react";
 
 export function FinancialsContainer() {
   const [activeTab, setActiveTab] = useTabPersistence('financials', 'overview');
-  const { receipts } = useApp();
+  const { state } = useApp();
+  const { receipts, expenses } = state;
   const { formatCurrency } = useCurrency();
 
   // Calculate summary metrics for the financial summary bar
   const metrics = useMemo(() => {
     const totalRevenue = receipts
-      .filter(r => r.type === 'income')
+      .filter(r => r.type === 'rent' || r.type === 'deposit')
       .reduce((sum, r) => sum + r.amount, 0);
     
-    const totalExpenses = receipts
-      .filter(r => r.type === 'expense')
-      .reduce((sum, r) => sum + r.amount, 0);
+    const totalExpenses = expenses
+      .reduce((sum, e) => sum + e.amount, 0);
 
     const netIncome = totalRevenue - totalExpenses;
 
     return { totalRevenue, totalExpenses, netIncome };
-  }, [receipts]);
+  }, [receipts, expenses]);
 
   return (
     <div className="space-y-6">
