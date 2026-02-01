@@ -14,12 +14,37 @@ const MockCurrencyProvider = ({ children }: { children: React.ReactNode }) => {
 
 const MockToastProvider = ({ children }: { children: React.ReactNode }) => <>{children}</>;
 
+// Create a mock theme context
+const MockThemeContext = React.createContext({
+  theme: 'light' as const,
+  setTheme: () => {},
+  systemTheme: 'light' as const,
+});
+
+const MockThemeProvider = ({ children }: { children: React.ReactNode }) => {
+  const value = {
+    theme: 'light' as const,
+    setTheme: () => {},
+    systemTheme: 'light' as const,
+  };
+  
+  return (
+    <MockThemeContext.Provider value={value}>
+      <div data-testid="mock-theme-provider" data-theme="light">
+        {children}
+      </div>
+    </MockThemeContext.Provider>
+  );
+};
+
 export function renderWithProviders(ui: React.ReactElement, options?: any) {
   const wrapped = (
     <NextIntlClientProvider locale="en" messages={enMessages}>
-      <MockCurrencyProvider>
-        <MockToastProvider>{ui}</MockToastProvider>
-      </MockCurrencyProvider>
+      <MockThemeProvider>
+        <MockCurrencyProvider>
+          <MockToastProvider>{ui}</MockToastProvider>
+        </MockCurrencyProvider>
+      </MockThemeProvider>
     </NextIntlClientProvider>
   );
   return render(wrapped, options);

@@ -7,6 +7,14 @@ vi.mock('next-auth/react', () => ({
   signOut: vi.fn(),
 }))
 
+vi.mock('../lib/theme-context', () => ({
+  useTheme: () => ({
+    theme: 'light',
+    setTheme: vi.fn(),
+    systemTheme: 'light',
+  }),
+}))
+
 describe('Sidebar', () => {
   beforeEach(() => {
     vi.resetAllMocks()
