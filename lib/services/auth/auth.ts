@@ -102,15 +102,15 @@ function createBaseAuthOptions(): NextAuthOptions {
     callbacks: {
       async jwt({ token, user, account: _account }: { token: JWT; user?: NextAuthUser | null; account?: unknown }): Promise<JWT> {
         console.log('[auth.ts] JWT callback - user:', user ? {id: user.id, email: user.email} : 'null')
-        console.log('[auth.ts] JWT callback - token.sub before:', token.sub)
+        console.log('[auth.ts] JWT callback - token.sub before:', (token as any).sub)
         
         // When user signs in, set both id and sub claims
         if (user?.id) {
-          token.id = user.id;
-          token.sub = user.id; // Standard JWT subject claim - required for session to work
+          (token as any).id = user.id;
+          (token as any).sub = user.id; // Standard JWT subject claim - required for session to work
         }
         
-        console.log('[auth.ts] JWT callback - token.sub after:', token.sub)
+        console.log('[auth.ts] JWT callback - token.sub after:', (token as any).sub)
         return token;
       },
       async session({ session, token, user }: { session: Session; token: JWT; user?: NextAuthUser }): Promise<Session> {
@@ -119,11 +119,11 @@ function createBaseAuthOptions(): NextAuthOptions {
             const sessionUser = session.user as { id?: string };
             
             // Prefer token.sub (standard claim), fallback to token.id or user.id
-            sessionUser.id = token.sub || (token as any).id || user?.id;
+            sessionUser.id = (token as any).sub || (token as any).id || user?.id;
             
             if (!sessionUser.id) {
               console.error('[auth] No user ID found in session', { 
-                hasSub: !!token.sub, 
+                hasSub: !!(token as any).sub, 
                 hasTokenId: !!(token as any).id,
                 hasUser: !!user 
               });
