@@ -3,7 +3,6 @@ name: Deploy to GHCR
 on:
   push:
     tags: ['v*']
-    branches: [ main ]
   workflow_dispatch:
     inputs:
       version:

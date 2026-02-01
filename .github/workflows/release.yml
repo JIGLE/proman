@@ -154,7 +154,7 @@ jobs:
           echo "The deployment workflow will automatically build and push the Docker image." >> $GITHUB_STEP_SUMMARY
 
   deploy:
-    name: Deploy to GHCR
+    name: Build and Push Container
     needs: release
     uses: ./.github/workflows/deploy-ghcr.yml
     with:
