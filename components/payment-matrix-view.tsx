@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useApp } from "@/lib/contexts/app-context";
-import { useCurrency } from "@/lib/currency-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";

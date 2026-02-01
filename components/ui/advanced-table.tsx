@@ -1,6 +1,6 @@
 import * as React from "react"
 import { ChevronDown, ChevronUp, ChevronsUpDown, Filter, Download, Settings2, Eye, EyeOff } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/utils"
 import { Button } from "./button"
 import { Checkbox } from "./checkbox"
 import {

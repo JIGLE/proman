@@ -15,7 +15,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { Button } from "./button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 interface OnboardingStep {
   id: string;

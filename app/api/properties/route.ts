@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
-import { propertyService } from '@/lib/database';
-import { sanitizeForDatabase, sanitizeNumber } from '@/lib/sanitize';
-import { withRateLimit } from '@/lib/rate-limit';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
+import { propertyService } from '@/lib/services/database/database';
+import { sanitizeForDatabase, sanitizeNumber } from '@/lib/utils/sanitize';
+import { withRateLimit } from '@/lib/utils/rate-limit';
 import { z } from 'zod';
 
 const createPropertySchema = z.object({

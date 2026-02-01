@@ -5,7 +5,7 @@ import { ZodError } from "zod";
 import { DollarSign, TrendingUp, TrendingDown, Plus, Calendar as CalendarIcon, FileText, Calculator, BarChart3, PieChart } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "./ui/card";
 import { BarChart, LineChart, DonutChart, MetricCard } from "./ui/charts";
-import { useCurrency } from "@/lib/currency-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Input } from "./ui/input";
@@ -13,10 +13,10 @@ import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { useApp } from "@/lib/contexts/app-context";
-import { expenseSchema, ExpenseFormData } from "@/lib/validation";
-import { useToast } from "@/lib/toast-context";
-import { cn } from "@/lib/utils";
-import { TaxCalculator, TaxCalculationResult } from "@/lib/tax-calculator";
+import { expenseSchema, ExpenseFormData } from "@/lib/utils/validation";
+import { useToast } from "@/lib/contexts/toast-context";
+import { cn } from "@/lib/utils/utils";
+import { TaxCalculator, TaxCalculationResult } from "@/lib/services/tax-calculator";
 
 export function FinancialsView(): React.ReactElement {
   const { state, addExpense } = useApp();

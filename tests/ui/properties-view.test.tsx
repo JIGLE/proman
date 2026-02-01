@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
-import { PropertiesView } from '../../components/properties-view'
+import { PropertiesView } from '@/components/features/property/property-list'
 
 // Mock Next.js navigation
 vi.mock('next/navigation', () => ({
@@ -16,7 +16,7 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock the currency hook
-vi.mock('../../lib/currency-context', () => ({
+vi.mock('@/lib/contexts/currency-context', () => ({
   useCurrency: () => ({
     formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
   }),
@@ -31,7 +31,7 @@ vi.mock('@/lib/contexts/app-context', () => ({
   })
 }))
 
-vi.mock('@/lib/toast-context', () => ({
+vi.mock('@/lib/contexts/toast-context', () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }))
 

@@ -1,5 +1,5 @@
 import * as React from "react"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/utils"
 import { TrendingUp, TrendingDown, BarChart3, PieChart, Activity } from "lucide-react"
 
 interface ChartDataPoint {

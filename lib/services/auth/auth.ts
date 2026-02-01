@@ -27,7 +27,7 @@ type Account = {
 
 import GoogleProvider from 'next-auth/providers/google';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
-import { getPrismaClient } from '@/lib/database';
+import { getPrismaClient } from '@/lib/services/database/database';
 
 function createBaseAuthOptions(): NextAuthOptions {
   const secret = process.env.NEXTAUTH_SECRET;

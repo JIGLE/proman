@@ -4,10 +4,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getPrismaClient } from '@/lib/database';
-import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/error-handling';
-import { verifyPortalToken } from '@/lib/tenant-portal-auth';
-import { paymentService, portugalPaymentService, spainPaymentService } from '@/lib/payment';
+import { getPrismaClient } from '@/lib/services/database/database';
+import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/utils/error-handling';
+import { verifyPortalToken } from '@/lib/services/auth/tenant-portal-auth';
+import { paymentService } from '@/lib/payment/payment-service';
+import { portugalPaymentService } from '@/lib/payment/methods/portugal';
+import { spainPaymentService } from '@/lib/payment/methods/spain';
 import { z } from 'zod';
 
 const PaymentSchema = z.object({

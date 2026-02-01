@@ -13,7 +13,7 @@ import { Button } from "./ui/button";
 import { BarChart, LineChart, DonutChart } from "./ui/charts";
 import { DashboardGrid, StatWidget, ChartWidget, ListWidget } from "./ui/dashboard-widgets";
 import { QuickActions, AttentionNeeded } from "./ui/quick-actions";
-import { useCurrency } from "@/lib/currency-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import { useApp } from "@/lib/contexts/app-context";
 import { ProgressRing } from "./ui/progress";
 import { AchievementGrid } from "./ui/achievements";
@@ -75,7 +75,7 @@ export function OverviewView({
   }
 
   // Property type distribution
-  const propertyTypes = properties.reduce((acc, property) => {
+  const propertyTypes = properties.reduce<Record<string, number>>((acc, property) => {
     const type = property.type || 'other';
     acc[type] = (acc[type] || 0) + 1;
     return acc;
@@ -83,7 +83,7 @@ export function OverviewView({
 
   const propertyTypeData = Object.entries(propertyTypes).map(([type, count]) => ({
     label: type.charAt(0).toUpperCase() + type.slice(1),
-    value: count,
+    value: count as number,
     color: getPropertyTypeColor(type)
   }));
 

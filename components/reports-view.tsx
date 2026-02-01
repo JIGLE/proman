@@ -18,10 +18,10 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { useToast } from "@/lib/toast-context";
-import { useCurrency } from "@/lib/currency-context";
-import { cn } from "@/lib/utils";
-import type { FinancialReport } from "@/lib/financial-reports";
+import { useToast } from "@/lib/contexts/toast-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
+import { cn } from "@/lib/utils/utils";
+import type { FinancialReport } from "@/lib/services/financial-reports";
 
 // Type definitions for tax and rent roll reports
 interface TaxReportData {

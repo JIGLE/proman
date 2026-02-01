@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "./button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 export interface MultiStepFormStep {
   id: string;

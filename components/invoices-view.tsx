@@ -23,9 +23,9 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Textarea } from "./ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
-import { useToast } from "@/lib/toast-context";
-import { useCurrency } from "@/lib/currency-context";
-import { cn } from "@/lib/utils";
+import { useToast } from "@/lib/contexts/toast-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
+import { cn } from "@/lib/utils/utils";
 import { Badge } from "./ui/badge";
 import {
   DropdownMenu,
@@ -33,7 +33,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import type { Invoice, InvoiceLineItem, LateFeeConfig } from "@/lib/invoice-service";
+import type { Invoice, InvoiceLineItem, LateFeeConfig } from "@/lib/services/invoice-service";
 
 interface InvoicesViewProps {
   tenants: Array<{ id: string; name: string; rent: number }>;

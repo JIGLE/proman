@@ -3,6 +3,8 @@
 import * as React from "react";
 import { useState, useCallback } from "react";
 import { useSession, signOut } from "next-auth/react";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
 import {
   Building2,
   Users,
@@ -23,7 +25,7 @@ import {
   Search,
   Command,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
@@ -31,14 +33,15 @@ import { ThemeToggle } from "./ui/theme-toggle";
 import { NotificationCenter, useNotifications, getSampleNotifications } from "./ui/notification-center";
 
 interface SidebarProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  activeTab?: string; // Optional now, will use pathname
+  onTabChange?: (tab: string) => void; // Optional for backward compatibility
   onOpenCommandPalette?: () => void;
 }
 
 export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: SidebarProps): React.ReactElement {
   const [collapsed, setCollapsed] = useState(false);
   const { data: session } = useSession();
+  const pathname = usePathname();
   
   // Initialize notifications with sample data
   const {
@@ -60,39 +63,39 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
     { 
       group: "Overview", 
       items: [
-        { id: "overview", label: "Dashboard", icon: Home },
+        { id: "overview", label: "Dashboard", icon: Home, href: "/dashboard" },
       ]
     },
     { 
       group: "Portfolio", 
       items: [
-        { id: "properties", label: "Properties", icon: Building2 },
-        { id: "owners", label: "Owners", icon: Briefcase },
+        { id: "properties", label: "Properties", icon: Building2, href: "/properties" },
+        { id: "owners", label: "Owners", icon: Briefcase, href: "/owners" },
       ]
     },
     { 
       group: "Tenants", 
       items: [
-        { id: "tenants", label: "Tenants & Leases", icon: Users },
+        { id: "tenants", label: "Tenants & Leases", icon: Users, href: "/tenants" },
       ]
     },
     { 
       group: "Finance", 
       items: [
-        { id: "financials", label: "Financials", icon: DollarSign },
+        { id: "financials", label: "Financials", icon: DollarSign, href: "/financials" },
       ]
     },
     { 
       group: "Operations", 
       items: [
-        { id: "maintenance", label: "Maintenance", icon: Hammer },
-        { id: "correspondence", label: "Correspondence", icon: Mail },
+        { id: "maintenance", label: "Maintenance", icon: Hammer, href: "/maintenance" },
+        { id: "correspondence", label: "Correspondence", icon: Mail, href: "/correspondence" },
       ]
     },
     { 
       group: "Insights", 
       items: [
-        { id: "analytics", label: "Analytics", icon: BarChart3 },
+        { id: "analytics", label: "Analytics", icon: BarChart3, href: "/analytics" },
       ]
     }
   ];
@@ -124,7 +127,7 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => onTabChange('settings')}
+              onClick={() => onTabChange?.('settings')}
               className="h-8 w-8 p-0"
               title="Settings"
               aria-label="Settings"
@@ -146,7 +149,7 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onTabChange('settings')}
+            onClick={() => onTabChange?.('settings')}
             className="h-8 w-8 p-0"
             title="Settings"
             aria-label="Settings"
@@ -213,13 +216,17 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
             <div className="space-y-1" role="list">
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const isActive = activeTab === item.id;
+                // Extract locale from pathname (e.g., /en/properties -> en)
+                const currentLocale = pathname.split('/')[1];
+                // Check if current route matches this menu item
+                const isActive = pathname.includes(item.href);
                 
                 return (
-                  <button
+                  <Link
                     key={item.id}
+                    href={`/${currentLocale}${item.href}`}
                     role="listitem"
-                    onClick={() => onTabChange(item.id)}
+                    onClick={() => onTabChange?.(item.id)} // Support legacy callback if provided
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
                       "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 group",
@@ -243,7 +250,7 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
                     {!collapsed && isActive && (
                       <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" />
                     )}
-                  </button>
+                  </Link>
                 );
               })}
             </div>

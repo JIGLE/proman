@@ -3,7 +3,7 @@
  * Handles document storage, templates, PDF generation, and versioning
  */
 
-import { getPrismaClient } from './database';
+import { getPrismaClient } from './database/database';
 import { writeFile, readFile, mkdir, unlink, stat } from 'fs/promises';
 import { join, extname, dirname } from 'path';
 import { existsSync } from 'fs';

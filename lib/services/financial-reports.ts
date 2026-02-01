@@ -1,4 +1,4 @@
-import { getPrismaClient } from './database';
+import { getPrismaClient } from './database/database';
 import { invoiceService, type Invoice } from './invoice-service';
 
 export interface FinancialReport {

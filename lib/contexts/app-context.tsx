@@ -12,7 +12,7 @@ import {
   Expense,
   MaintenanceTicket,
   Lease,
-} from './types';
+} from '@/lib/types';
 // Import database helpers dynamically inside the client runtime to avoid bundling
 // server-only modules (Prisma, better-sqlite3) into client bundles.
 import { useToast } from './toast-context';

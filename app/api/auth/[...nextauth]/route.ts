@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth/next';
 import type { NextRequest } from 'next/server';
-import { getAuthOptions } from '@/lib/auth';
+import { getAuthOptions } from '@/lib/services/auth/auth';
 
 // Ensure this route executes in the Node.js runtime (Prisma client is not supported in Edge runtime)
 export const runtime = 'nodejs';

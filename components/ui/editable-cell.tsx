@@ -4,7 +4,7 @@ import * as React from "react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Check, X, Pencil } from "lucide-react";
 import { Input } from "./input";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 
 type EditableCellType = "text" | "number" | "email" | "phone" | "currency";
 

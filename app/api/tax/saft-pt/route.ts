@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/services/auth/auth-middleware';
 import { z } from 'zod';
 import { generateSAFTPT, validateSAFTData, validateNIF, SAFTExportResult } from '@/lib/tax/saft-pt';
-import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/error-handling';
+import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/utils/error-handling';
 
 const SAFTExportSchema = z.object({
   fiscalYear: z.number().int().min(2000).max(new Date().getFullYear() + 1),

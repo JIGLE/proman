@@ -1,9 +1,11 @@
 // Invoice Online Payment - Create payment intent for invoice
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-middleware';
-import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/error-handling';
-import { paymentService, portugalPaymentService, spainPaymentService } from '@/lib/payment';
-import { getPrismaClient } from '@/lib/database';
+import { requireAuth } from '@/lib/services/auth/auth-middleware';
+import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/utils/error-handling';
+import { paymentService } from '@/lib/payment/payment-service';
+import { portugalPaymentService } from '@/lib/payment/methods/portugal';
+import { spainPaymentService } from '@/lib/payment/methods/spain';
+import { getPrismaClient } from '@/lib/services/database/database';
 import { z } from 'zod';
 import type { PrismaClient, PaymentMethodType } from '@prisma/client';
 

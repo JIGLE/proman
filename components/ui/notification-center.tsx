@@ -18,7 +18,7 @@ import {
   Trash2,
   Settings,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { Button } from "./button";
 import { Badge } from "./badge";
 import { Separator } from "./separator";

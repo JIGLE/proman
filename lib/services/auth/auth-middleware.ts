@@ -31,7 +31,7 @@ export async function requireAuth(_request: NextRequest): Promise<{
     // available (real auth), but accept a session.user.id fallback used by tests/mocks.
     if (session.user?.email) {
       // Find or create user in database (database accessor is lazy as well)
-      const { getPrismaClient } = await import('@/lib/database');
+      const { getPrismaClient } = await import('@/lib/services/database/database');
       const prisma = getPrismaClient();
       let user = await prisma.user.findUnique({
         where: { email: session.user.email },

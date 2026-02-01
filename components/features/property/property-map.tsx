@@ -4,11 +4,11 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { MapPin, Building2, Users, Filter, Eye, EyeOff } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
-import { Button } from './ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
-import { SearchAndFilter } from './ui/search-and-filter';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { SearchAndFilter } from '@/components/ui/search-and-filter';
+import { cn } from '@/lib/utils/utils';
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(

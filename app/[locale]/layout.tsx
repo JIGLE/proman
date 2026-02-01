@@ -40,10 +40,17 @@ export default async function Layout({
   const messages = await getMessages();
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
-      <CurrencyProvider initialLocale={locale}>
-        {children}
-      </CurrencyProvider>
-    </NextIntlClientProvider>
+    <html lang={locale}>
+      <body className={inter.className}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <CurrencyProvider initialLocale={locale}>
+            <ClientProviders>
+              {children}
+              <VersionBadge />
+            </ClientProviders>
+          </CurrencyProvider>
+        </NextIntlClientProvider>
+      </body>
+    </html>
   );
 }

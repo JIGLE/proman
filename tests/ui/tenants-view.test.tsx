@@ -1,9 +1,9 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
-import { TenantsView } from '../../components/tenants-view'
+import { TenantsView } from '@/components/features/tenant/tenants-view'
 
 // Mock the currency hook
-vi.mock('../../lib/currency-context', () => ({
+vi.mock('@/lib/contexts/currency-context', () => ({
   useCurrency: () => ({
     formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
   }),
@@ -18,7 +18,7 @@ vi.mock('@/lib/contexts/app-context', () => ({
   })
 }))
 
-vi.mock('@/lib/toast-context', () => ({
+vi.mock('@/lib/contexts/toast-context', () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }))
 

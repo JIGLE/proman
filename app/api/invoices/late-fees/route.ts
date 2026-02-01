@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
-import { invoiceService, type LateFeeConfig } from '@/lib/invoice-service';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
+import { invoiceService, type LateFeeConfig } from '@/lib/services/invoice-service';
 import { z } from 'zod';
 
 // Validation schema for late fee configuration

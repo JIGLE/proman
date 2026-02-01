@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { FileText, Upload, Download, Plus, Edit, Trash2, Calendar, User, Building2, ArrowUpDown, ArrowUp, ArrowDown, Home, DollarSign, FileCheck } from "lucide-react";
-import { useCurrency } from "@/lib/currency-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import {
   Card,
   CardContent,
@@ -19,8 +19,8 @@ import { LoadingState } from "./ui/loading-state";
 import { SearchFilter } from "./ui/search-filter";
 import { ExportButton } from "./ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
-import { leaseSchema, LeaseFormData } from "@/lib/validation";
-import { useToast } from "@/lib/toast-context";
+import { leaseSchema, LeaseFormData } from "@/lib/utils/validation";
+import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { useMultiStepForm, StepConfig } from "@/lib/hooks/use-multi-step-form";
 import { MultiStepFormContainer, StepContent, DraftBanner, MultiStepFormStep } from "./ui/multi-step-form";

@@ -1,6 +1,6 @@
 // Stripe Webhook Handler - Process payment events
 import { NextRequest, NextResponse } from 'next/server';
-import { paymentService } from '@/lib/payment';
+import { paymentService } from '@/lib/payment/payment-service';
 import Stripe from 'stripe';
 
 // Lazy initialization of Stripe

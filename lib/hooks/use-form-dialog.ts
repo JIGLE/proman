@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { useState, useCallback, useRef } from 'react';
 import { ZodError, ZodSchema } from 'zod';
-import { useToast } from '@/lib/toast-context';
+import { useToast } from '@/lib/contexts/toast-context';
 
 export interface UseFormDialogOptions<T> {
   schema: ZodSchema<T>;

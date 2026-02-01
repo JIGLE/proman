@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import crypto from 'crypto'
-import { getPrismaClient } from '@/lib/database'
+import { getPrismaClient } from '@/lib/services/database/database'
 
 export const runtime = 'nodejs'
 

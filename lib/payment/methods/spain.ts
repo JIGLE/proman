@@ -3,7 +3,7 @@
 // Bizum integration placeholder for future implementation
 
 import { paymentService, PaymentIntentResult, CreatePaymentIntentParams } from '../payment-service';
-import { getPrismaClient } from '@/lib/database';
+import { getPrismaClient } from '@/lib/services/database/database';
 import type { PrismaClient, PaymentMethod } from '@prisma/client';
 
 export interface BizumRequest {

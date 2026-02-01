@@ -2,7 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
-import { TenantsView } from "./tenants-view";
+import { TenantsView } from "@/components/features/tenant/tenants-view";
 import { LeasesView } from "./leases-view";
 
 export function TenantsLeasesContainer() {

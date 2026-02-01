@@ -5,7 +5,7 @@
  * Uses signed JWTs for secure, stateless authentication.
  */
 
-import { getPrismaClient } from './database';
+import { getPrismaClient } from '../database/database';
 
 // Token expiration in seconds (default: 30 days)
 const TOKEN_EXPIRATION = 30 * 24 * 60 * 60;
@@ -144,7 +144,7 @@ export const tenantPortalService = {
       const portalLink = generatePortalLink(tenantId, userId);
       
       // Import email service dynamically to avoid circular deps
-      const { emailService } = await import('./email-service');
+      const { emailService } = await import('../email/email-service');
       
       const fromEmail = process.env.FROM_EMAIL || 'noreply@proman.app';
       const result = await emailService.sendEmail({

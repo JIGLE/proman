@@ -15,8 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { LoadingState } from "./ui/loading-state";
 import { useApp } from "@/lib/contexts/app-context";
 import { CorrespondenceTemplate, Tenant } from "@/lib/types";
-import { templateSchema, TemplateFormData } from "@/lib/validation";
-import { useToast } from "@/lib/toast-context";
+import { templateSchema, TemplateFormData } from "@/lib/utils/validation";
+import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import jsPDF from "jspdf";
 
@@ -372,7 +372,7 @@ export function CorrespondenceView(): React.ReactElement {
                     </p>
                     {template.variables.length > 0 && (
                       <div className="flex flex-wrap gap-1">
-                        {template.variables.map((variable) => (
+                        {template.variables.map((variable: string) => (
                           <Badge key={variable} variant="outline" className="text-xs">
                             {variable}
                           </Badge>

@@ -2,7 +2,7 @@
 // Supports: Stripe (card, SEPA), Multibanco, MB WAY, Bank Transfer
 
 import Stripe from 'stripe';
-import { getPrismaClient } from '@/lib/database';
+import { getPrismaClient } from '@/lib/services/database/database';
 import type { PrismaClient, PaymentTransaction, Tenant, TransactionStatus, PaymentMethodType } from '@prisma/client';
 
 // Initialize Stripe client lazily to avoid build-time errors

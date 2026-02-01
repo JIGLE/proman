@@ -1,9 +1,9 @@
 // Payment Methods API - Manage tenant payment methods
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/services/auth/auth-middleware';
-import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/error-handling';
-import { paymentService } from '@/lib/payment';
-import { getPrismaClient } from '@/lib/database';
+import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/utils/error-handling';
+import { paymentService } from '@/lib/payment/payment-service';
+import { getPrismaClient } from '@/lib/services/database/database';
 import { z } from 'zod';
 import type { PrismaClient, PaymentMethodType } from '@prisma/client';
 

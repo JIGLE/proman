@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse } from '@/lib/error-handling';
-import { emailService, EMAIL_TEMPLATES, EmailTemplate } from '@/lib/email-service';
+import { createErrorResponse, createSuccessResponse } from '@/lib/utils/error-handling';
+import { emailService, EMAIL_TEMPLATES, EmailTemplate } from '@/lib/services/email/email-service';
 import { z } from 'zod';
 
 const sendEmailSchema = z.object({

@@ -1,6 +1,6 @@
 import './helpers/globals';
 import { beforeEach, afterEach } from 'vitest';
-import { setPrismaClientForTests, resetPrismaClientForTests } from '../lib/database';
+import { setPrismaClientForTests, resetPrismaClientForTests } from '../lib/services/database/database';
 import prismaMock from './helpers/prisma-mock';
 import '@testing-library/jest-dom';
 

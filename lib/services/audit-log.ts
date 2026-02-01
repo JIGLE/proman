@@ -1,4 +1,4 @@
-import { getPrismaClient } from '@/lib/database'
+import { getPrismaClient } from '@/lib/services/database/database'
 
 /**
  * GDPR-compliant audit logging service

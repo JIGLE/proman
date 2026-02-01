@@ -1,8 +1,8 @@
 // Payment Transaction Detail API
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth-middleware';
-import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/error-handling';
-import { getPrismaClient } from '@/lib/database';
+import { requireAuth } from '@/lib/services/auth/auth-middleware';
+import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/utils/error-handling';
+import { getPrismaClient } from '@/lib/services/database/database';
 import type { PrismaClient } from '@prisma/client';
 
 interface RouteParams {

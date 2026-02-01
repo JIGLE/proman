@@ -1,9 +1,9 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, withErrorHandler } from '@/lib/error-handling';
-import { templateGenerator, type LeaseTemplateData, type RentReceiptTemplateData, type NoticeTemplateData } from '@/lib/document-service';
-import { pdfGenerator } from '@/lib/pdf-generator';
-import { sanitizeForDatabase, sanitizeNumber } from '@/lib/sanitize';
+import { createErrorResponse, withErrorHandler } from '@/lib/utils/error-handling';
+import { templateGenerator, type LeaseTemplateData, type RentReceiptTemplateData, type NoticeTemplateData } from '@/lib/services/document-service';
+import { pdfGenerator } from '@/lib/services/pdf-generator';
+import { sanitizeForDatabase, sanitizeNumber } from '@/lib/utils/sanitize';
 import { z } from 'zod';
 
 // Validation schemas

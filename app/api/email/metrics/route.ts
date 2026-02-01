@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAuth } from '@/lib/services/auth/auth-middleware';
-import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/error-handling';
-import { emailService } from '@/lib/email-service';
+import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/utils/error-handling';
+import { emailService } from '@/lib/services/email/email-service';
 import { z } from 'zod';
 
 const querySchema = z.object({

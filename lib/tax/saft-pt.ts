@@ -7,7 +7,7 @@
  * @see https://info.portaldasfinancas.gov.pt/pt/apoio_contribuinte/SAFT_PT/
  */
 
-import { getPrismaClient } from '../database';
+import { getPrismaClient } from '../services/database/database';
 
 // SAF-T PT Version
 const SAFT_VERSION = '1.04_01';

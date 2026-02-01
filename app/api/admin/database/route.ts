@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
-import { ApiError } from "@/lib/errors";
-import { getPrismaClient } from "@/lib/database";
+import { ApiError } from "@/lib/utils/errors";
+import { getPrismaClient } from "@/lib/services/database/database";
 import { requireAdmin } from "@/lib/services/auth/auth-middleware";
 
 export async function GET(request: NextRequest) {

@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { Hammer, Plus, AlertCircle, Clock, CheckCircle, XCircle, MoreVertical, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "./ui/card";
-import { useCurrency } from "@/lib/currency-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Input } from "./ui/input";
@@ -16,11 +16,11 @@ import { LoadingState } from "./ui/loading-state";
 import { SearchFilter } from "./ui/search-filter";
 import { ExportButton } from "./ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
-import { maintenanceSchema, MaintenanceFormData } from "@/lib/validation";
-import { useToast } from "@/lib/toast-context";
+import { maintenanceSchema, MaintenanceFormData } from "@/lib/utils/validation";
+import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import { MaintenanceStatus, MaintenancePriority } from "@/lib/types";
 
 interface SortableHeaderProps {

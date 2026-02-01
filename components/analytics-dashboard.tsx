@@ -16,7 +16,7 @@ import {
   QuickStatsRow
 } from "./ui/analytics-widgets";
 import { LeaseCalendar } from "./ui/lease-calendar";
-import { useCurrency } from "@/lib/currency-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import { useApp } from "@/lib/contexts/app-context";
 import { AchievementGrid } from "./ui/achievements";
 import { motion } from "framer-motion";
@@ -54,7 +54,7 @@ import type {
   MaintenanceStats,
   OccupancyTrend,
   Activity
-} from "@/lib/analytics-service";
+} from "@/lib/services/analytics-service";
 
 export type AnalyticsDashboardProps = Record<string, never>;
 
@@ -308,7 +308,7 @@ export function AnalyticsDashboard(): React.ReactElement {
     color: m.netIncome >= 0 ? '#22c55e' : '#ef4444'
   }));
 
-  const propertyTypeData = properties.reduce((acc, property) => {
+  const propertyTypeData = properties.reduce<Record<string, number>>((acc, property) => {
     const type = property.type || 'other';
     acc[type] = (acc[type] || 0) + 1;
     return acc;
@@ -316,7 +316,7 @@ export function AnalyticsDashboard(): React.ReactElement {
 
   const propertyTypeChartData = Object.entries(propertyTypeData).map(([type, count]) => ({
     label: type.charAt(0).toUpperCase() + type.slice(1),
-    value: count,
+    value: count as number,
     color: type === 'apartment' ? '#3b82f6' : 
            type === 'house' ? '#10b981' : 
            type === 'commercial' ? '#f59e0b' : '#6b7280'

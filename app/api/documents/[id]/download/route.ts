@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
-import { createErrorResponse, withErrorHandler } from '@/lib/error-handling';
-import { documentService } from '@/lib/document-service';
+import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
+import { createErrorResponse, withErrorHandler } from '@/lib/utils/error-handling';
+import { documentService } from '@/lib/services/document-service';
 
 // GET /api/documents/[id]/download - Download document file
 async function handleGet(

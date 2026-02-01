@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { FileText, Download, Calendar, Plus, Edit, Trash2, DollarSign } from "lucide-react";
 import { Card, CardContent } from "./ui/card";
-import { useCurrency } from "@/lib/currency-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
@@ -14,8 +14,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { LoadingState } from "./ui/loading-state";
 import { useApp } from "@/lib/contexts/app-context";
 import { Receipt } from "@/lib/types";
-import { receiptSchema, ReceiptFormData } from "@/lib/validation";
-import { useToast } from "@/lib/toast-context";
+import { receiptSchema, ReceiptFormData } from "@/lib/utils/validation";
+import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import jsPDF from "jspdf";
 

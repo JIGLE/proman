@@ -2,7 +2,7 @@
 // Supports: Multibanco, MB WAY, SEPA Direct Debit
 
 import { paymentService, PaymentIntentResult, CreatePaymentIntentParams } from '../payment-service';
-import { getPrismaClient } from '@/lib/database';
+import { getPrismaClient } from '@/lib/services/database/database';
 import type { PrismaClient } from '@prisma/client';
 
 export interface MultibancoDetails {

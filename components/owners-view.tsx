@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Briefcase, Download, Plus, Edit, Trash2, Phone, Mail, MapPin, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { useCurrency } from "@/lib/currency-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "./ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "./ui/dialog";
 import { Input } from "./ui/input";
@@ -12,8 +12,8 @@ import { Textarea } from "./ui/textarea";
 import { LoadingState } from "./ui/loading-state";
 import { useApp } from "@/lib/contexts/app-context";
 import { Owner } from "@/lib/types";
-import { ownerSchema, OwnerFormData } from "@/lib/validation";
-import { useToast } from "@/lib/toast-context";
+import { ownerSchema, OwnerFormData } from "@/lib/utils/validation";
+import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import jsPDF from "jspdf";
 
@@ -316,7 +316,7 @@ export function OwnersView(): React.ReactElement {
                                         </div>
                                         {owner.properties && owner.properties.length > 0 ? (
                                             <ul className="text-xs text-zinc-400 space-y-1">
-                                                {owner.properties.map(p => (
+                                                {owner.properties.map((p: any) => (
                                                     <li key={p.id}>
                                                         {/* We need propertyName here, likely need to populate it on fetch */}
                                                         {p.property?.name ?? 'Property'} - {p.ownershipPercentage}%

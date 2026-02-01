@@ -6,9 +6,9 @@ import { useRouter, useParams } from "next/navigation";
 import { useTranslations } from 'next-intl';
 import { Sidebar } from "@/components/sidebar";
 import { OverviewView } from "@/components/overview-view";
-import { PropertiesView } from "@/components/properties-view";
-import UnitsView from "@/components/units-view";
-import PropertyMap from "@/components/property-map";
+import { PropertiesView } from "@/components/features/property/property-list";
+import UnitsView from "@/components/features/property/units-view";
+import PropertyMap from "@/components/features/property/property-map";
 import { OwnersView } from "@/components/owners-view";
 import { MaintenanceView } from "@/components/maintenance-view";
 import { CorrespondenceView } from "@/components/correspondence-view";
@@ -607,7 +607,7 @@ export default function Home(): React.ReactElement {
   };
 
   return (
-    <AppProvider>
+    <>
       {/* Skip Links for keyboard navigation */}
       <SkipLinks
         links={[
@@ -674,7 +674,7 @@ export default function Home(): React.ReactElement {
         {/* Keyboard Shortcuts Help Overlay */}
         <KeyboardShortcutsOverlay />
       </div>
-    </AppProvider>
+    </>
   );
 }
 

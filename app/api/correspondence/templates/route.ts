@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
 import { handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
-import { templateService } from '@/lib/database';
-import { sanitizeForDatabase } from '@/lib/sanitize';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
+import { templateService } from '@/lib/services/database/database';
+import { sanitizeForDatabase } from '@/lib/utils/sanitize';
 import { z } from 'zod';
 
 // Validation schemas

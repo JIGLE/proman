@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
-import { correspondenceService } from '@/lib/database';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
+import { correspondenceService } from '@/lib/services/database/database';
 import { z } from 'zod';
 
 // Validation schema for updates

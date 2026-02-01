@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
-import { correspondenceService } from '@/lib/database';
+import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
+import { correspondenceService } from '@/lib/services/database/database';
 
 // GET /api/correspondence/[id] - Get a specific correspondence
 async function handleGet(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {

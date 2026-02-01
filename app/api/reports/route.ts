@@ -1,14 +1,14 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
 import { 
   generateFinancialReport, 
   generateTaxReport, 
   generateRentRoll,
   exportToCSV,
   exportToJSON 
-} from '@/lib/financial-reports';
-import { invoiceService } from '@/lib/invoice-service';
+} from '@/lib/services/financial-reports';
+import { invoiceService } from '@/lib/services/invoice-service';
 import { z } from 'zod';
 
 // Validation schema for report request

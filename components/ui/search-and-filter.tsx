@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Search, Filter, SlidersHorizontal, X } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/utils"
 import { Button } from "./button"
 import { Input } from "./input"
 import {

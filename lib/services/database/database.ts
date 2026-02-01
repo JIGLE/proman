@@ -6,7 +6,7 @@ import {
   Receipt,
   CorrespondenceTemplate,
   Correspondence,
-} from './types';
+} from '@/lib/types';
 
 declare global {
   var prisma: PrismaClient | undefined;

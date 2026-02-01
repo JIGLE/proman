@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import fs from 'fs'
 import path from 'path'
-import { getPrismaClient } from '@/lib/database'
+import { getPrismaClient } from '@/lib/services/database/database'
 
 // Ensure this runs in Node runtime so we can access filesystem and Prisma
 export const runtime = 'nodejs'

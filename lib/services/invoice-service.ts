@@ -1,4 +1,4 @@
-import { getPrismaClient } from './database';
+import { getPrismaClient } from './database/database';
 
 // Invoice number format: INV-{YEAR}-{SEQUENCE}
 // Example: INV-2026-00001

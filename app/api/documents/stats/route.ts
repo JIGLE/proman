@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
-import { documentService } from '@/lib/document-service';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
+import { documentService } from '@/lib/services/document-service';
 
 // GET /api/documents/stats - Get document statistics
 async function handleGet(request: NextRequest): Promise<Response> {

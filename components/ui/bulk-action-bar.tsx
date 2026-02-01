@@ -4,7 +4,7 @@ import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2, Download, CheckSquare, Square, MoreHorizontal } from "lucide-react";
 import { Button } from "./button";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,

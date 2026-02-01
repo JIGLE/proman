@@ -9,7 +9,7 @@ import { PaymentMatrixView } from "./payment-matrix-view";
 import { ReceiptsView } from "./receipts-view";
 import { TrendingUp, TrendingDown, DollarSign } from "lucide-react";
 import { useApp } from "@/lib/contexts/app-context";
-import { useCurrency } from "@/lib/currency-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import { useMemo } from "react";
 
 export function FinancialsContainer() {

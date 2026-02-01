@@ -19,7 +19,7 @@ vi.mock('@/lib/database', () => ({
   }),
 }))
 
-import { logAudit, getAuditLogsForUser, deleteAuditLogsForUser, createAuditMiddleware } from '@/lib/audit-log'
+import { logAudit, getAuditLogsForUser, deleteAuditLogsForUser, createAuditMiddleware } from '@/lib/services/audit-log'
 
 describe('Audit Log Service', () => {
   beforeEach(() => {

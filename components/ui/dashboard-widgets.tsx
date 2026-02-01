@@ -1,6 +1,6 @@
 import * as React from "react"
 import { LucideIcon, MoreVertical, Maximize2, Minimize2, RefreshCw, Download, TrendingUp, TrendingDown } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "./card"
 import { Button } from "./button"
 import {

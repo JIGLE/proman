@@ -1,8 +1,8 @@
 import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
-import { tenantService } from '@/lib/database';
-import { sanitizeForDatabase, sanitizeEmail, sanitizeNumber } from '@/lib/sanitize';
+import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
+import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
+import { tenantService } from '@/lib/services/database/database';
+import { sanitizeForDatabase, sanitizeEmail, sanitizeNumber } from '@/lib/utils/sanitize';
 import { z } from 'zod';
 
 // Validation schema for updates

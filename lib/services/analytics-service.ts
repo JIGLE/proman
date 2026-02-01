@@ -3,7 +3,7 @@
  * Phase 5: Dashboard & Analytics
  */
 
-import { getPrismaClient } from './database';
+import { getPrismaClient } from './database/database';
 
 // Helper to check if Prisma is available
 function isPrismaAvailable(): boolean {
