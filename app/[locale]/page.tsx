@@ -597,7 +597,11 @@ export default function Home(): React.ReactElement {
         
         {/* Desktop Sidebar - hidden on mobile */}
         <div className="hidden md:block">
-          <Sidebar activeTab={activeTab} onTabChange={handleTabChange} />
+          <Sidebar 
+            activeTab={activeTab} 
+            onTabChange={handleTabChange} 
+            onOpenCommandPalette={commandPalette.open}
+          />
         </div>
         
         {/* Main content area */}

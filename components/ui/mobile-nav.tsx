@@ -79,31 +79,31 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileNavProps): Rea
       {/* More Menu Slide-up Panel */}
       <div
         className={cn(
-          "fixed bottom-16 left-0 right-0 z-50 bg-zinc-900 border-t border-zinc-800 rounded-t-2xl transition-transform duration-300 ease-out md:hidden",
+          "fixed bottom-16 left-0 right-0 z-50 bg-[var(--color-card)] border-t border-[var(--color-border)] rounded-t-2xl transition-transform duration-300 ease-out md:hidden",
           "max-h-[70vh] overflow-y-auto",
           showMoreMenu ? "translate-y-0" : "translate-y-full pointer-events-none"
         )}
       >
         {/* Handle bar */}
         <div className="flex justify-center py-2">
-          <div className="w-10 h-1 bg-zinc-700 rounded-full" />
+          <div className="w-10 h-1 bg-[var(--color-border)] rounded-full" />
         </div>
 
         {/* User profile in more menu */}
         {session && (
-          <div className="px-4 py-3 border-b border-zinc-800">
+          <div className="px-4 py-3 border-b border-[var(--color-border)]">
             <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10 ring-2 ring-zinc-700">
+              <Avatar className="w-10 h-10 ring-2 ring-[var(--color-border)]">
                 <AvatarImage src={user?.image || ''} alt={user?.name || 'User'} />
                 <AvatarFallback className="bg-accent-primary text-white text-sm font-semibold">
                   {initials}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-zinc-50 truncate">
+                <p className="text-sm font-semibold text-[var(--color-foreground)] truncate">
                   {user?.name}
                 </p>
-                <p className="text-xs text-zinc-400 truncate">
+                <p className="text-xs text-[var(--color-muted-foreground)] truncate">
                   {user?.email}
                 </p>
               </div>
@@ -126,7 +126,7 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileNavProps): Rea
                   "active:scale-95 touch-manipulation",
                   isActive
                     ? "bg-accent-primary/20 text-accent-primary"
-                    : "text-zinc-400 hover:bg-zinc-800 hover:text-zinc-50"
+                    : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-hover)] hover:text-[var(--color-foreground)]"
                 )}
               >
                 <Icon className="h-5 w-5" />
@@ -137,10 +137,10 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileNavProps): Rea
         </div>
 
         {/* Sign out button */}
-        <div className="p-2 border-t border-zinc-800">
+        <div className="p-2 border-t border-[var(--color-border)]">
           <button
             onClick={() => signOut()}
-            className="flex w-full items-center justify-center gap-2 p-3 rounded-xl text-red-400 hover:bg-red-500/10 transition-colors active:scale-95 touch-manipulation"
+            className="flex w-full items-center justify-center gap-2 p-3 rounded-xl text-[var(--color-error)] hover:bg-[var(--color-error)]/10 transition-colors active:scale-95 touch-manipulation"
           >
             <LogOut className="h-5 w-5" />
             <span className="text-sm font-medium">Sign Out</span>
@@ -151,7 +151,7 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileNavProps): Rea
       {/* Bottom Navigation Bar */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
         {/* Safe area spacer for notched devices */}
-        <div className="bg-zinc-950 border-t border-zinc-800">
+        <div className="bg-[var(--color-background)] border-t border-[var(--color-border)]">
           <div className="flex items-center justify-around h-16 px-2">
             {primaryNavItems.map((item) => {
               const Icon = item.icon;
@@ -168,7 +168,7 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileNavProps): Rea
                     "active:scale-95 touch-manipulation",
                     isActive
                       ? "text-accent-primary"
-                      : "text-zinc-500 hover:text-zinc-300"
+                      : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
                   )}
                 >
                   <div className={cn(
@@ -183,7 +183,7 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileNavProps): Rea
                   </div>
                   <span className={cn(
                     "text-[10px] font-medium transition-colors",
-                    isActive ? "text-accent-primary" : "text-zinc-500"
+                    isActive ? "text-accent-primary" : "text-[var(--color-muted-foreground)]"
                   )}>
                     {item.label}
                   </span>
@@ -192,7 +192,7 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileNavProps): Rea
             })}
           </div>
           {/* iOS safe area padding */}
-          <div className="h-safe-area-inset-bottom bg-zinc-950" />
+          <div className="h-safe-area-inset-bottom bg-[var(--color-background)]" />
         </div>
       </nav>
     </>
@@ -210,15 +210,15 @@ interface MobileHeaderProps {
 
 export function MobileHeader({ title, onMenuClick, showMenu }: MobileHeaderProps): React.ReactElement {
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-zinc-950/95 backdrop-blur border-b border-zinc-800 md:hidden">
+    <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-[var(--color-background)]/95 backdrop-blur border-b border-[var(--color-border)] md:hidden">
       <div className="flex items-center gap-3">
         <Building2 className="h-6 w-6 text-accent-primary" />
-        <h1 className="text-lg font-semibold text-zinc-50">{title}</h1>
+        <h1 className="text-lg font-semibold text-[var(--color-foreground)]">{title}</h1>
       </div>
       {onMenuClick && (
         <button
           onClick={onMenuClick}
-          className="p-2 rounded-lg text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800 transition-colors active:scale-95 touch-manipulation"
+          className="p-2 rounded-lg text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-hover)] transition-colors active:scale-95 touch-manipulation"
         >
           {showMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Building2, MapPin, Bed, Bath, Plus, Edit, Trash2, CheckCircle, AlertTriangle, Wrench, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useCurrency } from "@/lib/currency-context";
 import { motion, AnimatePresence } from "framer-motion";
@@ -21,6 +21,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { LoadingState } from "./ui/loading-state";
 import { SearchFilter } from "./ui/search-filter";
 import { ExportButton } from "./ui/export-button";
+import { cn } from "@/lib/utils";
+import { BulkActionBar, getDefaultBulkActions } from "./ui/bulk-action-bar";
+import { EditableCell } from "./ui/editable-cell";
+import { Checkbox } from "./ui/checkbox";
+import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 import { useApp } from "@/lib/app-context-db";
 import { Property } from "@/lib/types";
 import { propertySchema, PropertyFormData } from "@/lib/validation";
@@ -124,6 +129,52 @@ export function PropertiesView(): React.ReactElement {
 
   // Sorting
   const { sortedData: sortedProperties, requestSort, getSortDirection } = useSortableData(filteredProperties);
+
+  // Bulk selection hook
+  const bulkSelection = useBulkSelection<Property>();
+
+  const handleBulkDelete = useCallback(async (ids: string[]) => {
+    if (!confirm(`Are you sure you want to delete ${ids.length} property(ies)?`)) return;
+    try {
+      for (const id of ids) {
+        await deleteProperty(id);
+      }
+      success(`Successfully deleted ${ids.length} property(ies)`);
+      bulkSelection.clearSelection();
+    } catch (err) {
+      console.error(err);
+    }
+  }, [deleteProperty, success, bulkSelection]);
+
+  const handleInlineEdit = useCallback(async (propertyId: string, field: keyof Property, value: string | number) => {
+    try {
+      await updateProperty(propertyId, { [field]: value } as any);
+      success(`${String(field)} updated`);
+    } catch (err) {
+      console.error(err);
+    }
+  }, [updateProperty, success]);
+
+  const handleExportSelected = useCallback((ids: string[]) => {
+    const selected = properties.filter(p => ids.includes(p.id));
+    const csvContent = [
+      ['Name','Type','Address','Bedrooms','Bathrooms','Rent','Status'].join(','),
+      ...selected.map(p => [p.name,p.type,p.address,p.bedrooms,p.bathrooms,p.rent,p.status].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `properties-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [properties]);
+
+  const bulkActions = useMemo(() => getDefaultBulkActions({
+    onDelete: handleBulkDelete,
+    onExport: handleExportSelected,
+  }), [handleBulkDelete, handleExportSelected]);
 
   // Group properties by building
   const groupedProperties = sortedProperties.reduce((acc, property) => {
@@ -619,30 +670,30 @@ export function PropertiesView(): React.ReactElement {
             </div>
           )}
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredProperties.length === 0 ? (
-          <Card className="bg-zinc-900 border-zinc-800 col-span-full">
-            <CardContent className="p-8 text-center">
-              <Building2 className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-zinc-50 mb-2">
-                {properties.length === 0 ? 'No properties yet' : 'No properties found'}
-              </h3>
-              <p className="text-zinc-400 mb-4">
-                {properties.length === 0 
-                  ? 'Get started by adding your first property' 
-                  : 'Try adjusting your search or filters'}
-              </p>
-              {properties.length === 0 && (
-                <Button onClick={dialog.openDialog} className="flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Your First Property
-                </Button>
-              )}
-            </CardContent>
-          </Card>
-        ) : (
-          buildingGroups.map((building) => (
-            <div key={building.buildingId} className="space-y-4">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredProperties.length === 0 ? (
+              <Card className="bg-zinc-900 border-zinc-800 col-span-full">
+                <CardContent className="p-8 text-center">
+                  <Building2 className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-zinc-50 mb-2">
+                    {properties.length === 0 ? 'No properties yet' : 'No properties found'}
+                  </h3>
+                  <p className="text-zinc-400 mb-4">
+                    {properties.length === 0 
+                      ? 'Get started by adding your first property' 
+                      : 'Try adjusting your search or filters'}
+                  </p>
+                  {properties.length === 0 && (
+                    <Button onClick={dialog.openDialog} className="flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      Add Your First Property
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            ) : (
+              buildingGroups.map((building) => (
+            <div key={building.buildingId} className="space-y-4 col-span-full">
               {/* Building Header */}
               <motion.div
                 initial={{ opacity: 0, y: -20 }}
@@ -687,14 +738,16 @@ export function PropertiesView(): React.ReactElement {
 
               {/* Properties in this building */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {building.properties.map((property, index) => (
+                {building.properties.map((property, index) => {
+                  const isSelected = bulkSelection.isSelected(property.id);
+                  return (
                   <motion.div
                     key={property.id}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1, duration: 0.3 }}
                     whileHover={{ y: -4 }}
-                    className="group"
+                    className={cn("group", isSelected && "ring-2 ring-accent-primary border-accent-primary/50")}
                   >
                     <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-accent-primary/10 border-border/50 group-hover:border-accent-primary/30">
                       <div className="aspect-video w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative overflow-hidden">
@@ -719,11 +772,27 @@ export function PropertiesView(): React.ReactElement {
                         )}
                       </div>
                     <CardHeader>
-                      <CardTitle className="text-zinc-50 text-base">{property.name}</CardTitle>
-                      <CardDescription className="flex items-start gap-1">
-                        <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
-                        <span className="text-xs">{property.streetAddress || 'Unit address'}</span>
-                      </CardDescription>
+                      <div className="flex items-start justify-between w-full">
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => bulkSelection.toggleSelection(property.id)}
+                            className="mt-2"
+                          />
+                          <div>
+                            <EditableCell
+                              value={property.name}
+                              type="text"
+                              onSave={(val) => handleInlineEdit(property.id, 'name', val)}
+                              className="text-zinc-50 text-base"
+                            />
+                            <CardDescription className="flex items-start gap-1">
+                              <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
+                              <span className="text-xs">{property.streetAddress || 'Unit address'}</span>
+                            </CardDescription>
+                          </div>
+                        </div>
+                      </div>
                     </CardHeader>
                       <CardContent className="space-y-3">
                         <div className="flex items-center justify-between text-sm">
@@ -734,7 +803,13 @@ export function PropertiesView(): React.ReactElement {
                             animate={{ scale: 1 }}
                             transition={{ delay: 0.2 }}
                           >
-                            {formatCurrency(property.rent)}/mo
+                            <EditableCell
+                              value={property.rent}
+                              type="currency"
+                              onSave={(val) => handleInlineEdit(property.id, 'rent', val)}
+                              formatter={(val) => formatCurrency(Number(val))}
+                              className="text-lg font-semibold"
+                            />
                           </motion.span>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-zinc-400">
@@ -785,12 +860,28 @@ export function PropertiesView(): React.ReactElement {
                       </CardContent>
                     </Card>
                   </motion.div>
-                ))}
+                  );
+                })}
               </div>
             </div>
-          ))
-        )}
-        </div>      </div>      )}
+              ))
+            )}
+
+            {/* Bulk Action Bar */}
+            <BulkActionBar
+              selectedCount={bulkSelection.selectedCount}
+              totalCount={sortedProperties.length}
+              itemLabel="properties"
+              actions={bulkActions}
+              onSelectAll={() => bulkSelection.selectAll(sortedProperties)}
+              onClearSelection={bulkSelection.clearSelection}
+              isAllSelected={bulkSelection.isAllSelected(sortedProperties)}
+              isPartiallySelected={bulkSelection.isPartiallySelected(sortedProperties)}
+              selectedIds={Array.from(bulkSelection.selectedIds)}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -26,10 +26,10 @@ export function MobileListCard({
     <div
       onClick={onClick}
       className={cn(
-        "relative flex items-center gap-3 p-4 bg-zinc-900 border border-zinc-800 rounded-xl",
-        "transition-all duration-150 active:scale-[0.98] active:bg-zinc-800",
+        "relative flex items-center gap-3 p-4 bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl",
+        "transition-all duration-150 active:scale-[0.98] active:bg-[var(--color-hover)]",
         "touch-manipulation cursor-pointer",
-        "hover:border-zinc-700 hover:bg-zinc-800/50",
+        "hover:border-[var(--color-border-hover)] hover:bg-[var(--color-hover)]",
         className
       )}
     >
@@ -37,7 +37,7 @@ export function MobileListCard({
         {children}
       </div>
       {showChevron && onClick && (
-        <ChevronRight className="h-5 w-5 text-zinc-500 flex-shrink-0" />
+        <ChevronRight className="h-5 w-5 text-[var(--color-muted-foreground)] flex-shrink-0" />
       )}
     </div>
   );
@@ -73,11 +73,11 @@ export function MobileListCardWithIcon({
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-medium text-zinc-50 truncate">{title}</h3>
+            <h3 className="text-sm font-medium text-[var(--color-foreground)] truncate">{title}</h3>
             {badge}
           </div>
           {subtitle && (
-            <p className="text-xs text-zinc-400 truncate mt-0.5">{subtitle}</p>
+            <p className="text-xs text-[var(--color-muted-foreground)] truncate mt-0.5">{subtitle}</p>
           )}
         </div>
         {rightContent && (
@@ -114,17 +114,17 @@ export function PropertyMobileCard({
     <MobileListCard onClick={onClick} className="flex-col items-stretch gap-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-semibold text-zinc-50 truncate">{name}</h3>
-          <p className="text-sm text-zinc-400 truncate mt-0.5">{address}</p>
+          <h3 className="text-base font-semibold text-[var(--color-foreground)] truncate">{name}</h3>
+          <p className="text-sm text-[var(--color-muted-foreground)] truncate mt-0.5">{address}</p>
         </div>
         {occupancy !== undefined && (
           <div className={cn(
             "px-2 py-1 rounded-full text-xs font-medium flex-shrink-0",
             occupancy >= 90 
-              ? "bg-green-500/20 text-green-400"
+              ? "bg-[var(--color-success)]/20 text-[var(--color-success)]"
               : occupancy >= 70
-              ? "bg-yellow-500/20 text-yellow-400"
-              : "bg-red-500/20 text-red-400"
+              ? "bg-[var(--color-warning)]/20 text-[var(--color-warning)]"
+              : "bg-[var(--color-error)]/20 text-[var(--color-error)]"
           )}>
             {occupancy}%
           </div>
@@ -132,17 +132,17 @@ export function PropertyMobileCard({
       </div>
       
       {(units !== undefined || revenue) && (
-        <div className="flex items-center gap-4 pt-2 border-t border-zinc-800">
+        <div className="flex items-center gap-4 pt-2 border-t border-[var(--color-border)]">
           {units !== undefined && (
             <div className="flex-1">
-              <p className="text-xs text-zinc-500">Units</p>
-              <p className="text-sm font-medium text-zinc-200">{units}</p>
+              <p className="text-xs text-[var(--color-muted-foreground)]">Units</p>
+              <p className="text-sm font-medium text-[var(--color-foreground)]">{units}</p>
             </div>
           )}
           {revenue && (
             <div className="flex-1 text-right">
-              <p className="text-xs text-zinc-500">Revenue</p>
-              <p className="text-sm font-medium text-green-400">{revenue}</p>
+              <p className="text-xs text-[var(--color-muted-foreground)]">Revenue</p>
+              <p className="text-sm font-medium text-[var(--color-success)]">{revenue}</p>
             </div>
           )}
         </div>
@@ -176,18 +176,18 @@ export function TenantMobileCard({
   onClick,
 }: TenantMobileCardProps): React.ReactElement {
   const statusColors = {
-    active: "bg-green-500/20 text-green-400",
-    pending: "bg-yellow-500/20 text-yellow-400",
-    inactive: "bg-zinc-500/20 text-zinc-400",
+    active: "bg-[var(--color-success)]/20 text-[var(--color-success)]",
+    pending: "bg-[var(--color-warning)]/20 text-[var(--color-warning)]",
+    inactive: "bg-[var(--color-muted)]/20 text-[var(--color-muted-foreground)]",
   };
 
   return (
     <MobileListCard onClick={onClick} className="flex-col items-stretch gap-2">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <h3 className="text-base font-semibold text-zinc-50 truncate">{name}</h3>
+          <h3 className="text-base font-semibold text-[var(--color-foreground)] truncate">{name}</h3>
           {(property || unit) && (
-            <p className="text-sm text-zinc-400 truncate mt-0.5">
+            <p className="text-sm text-[var(--color-muted-foreground)] truncate mt-0.5">
               {property}{unit ? ` • ${unit}` : ''}
             </p>
           )}
@@ -200,17 +200,17 @@ export function TenantMobileCard({
         </div>
       </div>
       
-      <div className="flex items-center gap-4 pt-2 border-t border-zinc-800 text-sm">
+      <div className="flex items-center gap-4 pt-2 border-t border-[var(--color-border)] text-sm">
         {(email || phone) && (
           <div className="flex-1 min-w-0">
-            <p className="text-zinc-400 truncate">{email || phone}</p>
+            <p className="text-[var(--color-muted-foreground)] truncate">{email || phone}</p>
           </div>
         )}
         {balance && (
           <div className="flex-shrink-0 text-right">
             <p className={cn(
               "font-medium",
-              balance.startsWith("-") ? "text-red-400" : "text-green-400"
+              balance.startsWith("-") ? "text-[var(--color-error)]" : "text-[var(--color-success)]"
             )}>
               {balance}
             </p>
@@ -238,9 +238,9 @@ export function MobileActionButton({
   variant = "default",
 }: MobileActionButtonProps): React.ReactElement {
   const variantStyles = {
-    default: "bg-zinc-800 text-zinc-200 active:bg-zinc-700",
+    default: "bg-[var(--color-hover)] text-[var(--color-foreground)] active:bg-[var(--color-muted)]",
     primary: "bg-accent-primary text-white active:bg-accent-primary/80",
-    danger: "bg-red-500/20 text-red-400 active:bg-red-500/30",
+    danger: "bg-[var(--color-error)]/20 text-[var(--color-error)] active:bg-[var(--color-error)]/30",
   };
 
   return (
@@ -299,7 +299,7 @@ export function MobileSectionHeader({
 }: MobileSectionHeaderProps): React.ReactElement {
   return (
     <div className={cn("flex items-center justify-between py-2", className)}>
-      <h2 className="text-lg font-semibold text-zinc-50">{title}</h2>
+      <h2 className="text-lg font-semibold text-[var(--color-foreground)]">{title}</h2>
       {action && (
         <button
           onClick={action.onClick}
@@ -333,12 +333,12 @@ export function MobileEmptyState({
 }: MobileEmptyStateProps): React.ReactElement {
   return (
     <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-      <div className="p-4 rounded-full bg-zinc-800 text-zinc-400 mb-4">
+      <div className="p-4 rounded-full bg-[var(--color-hover)] text-[var(--color-muted-foreground)] mb-4">
         {icon}
       </div>
-      <h3 className="text-lg font-semibold text-zinc-200 mb-1">{title}</h3>
+      <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-1">{title}</h3>
       {description && (
-        <p className="text-sm text-zinc-400 mb-4 max-w-xs">{description}</p>
+        <p className="text-sm text-[var(--color-muted-foreground)] mb-4 max-w-xs">{description}</p>
       )}
       {action && (
         <button

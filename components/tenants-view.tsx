@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { User, Mail, Phone, Calendar, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { useMemo, useState, useCallback } from "react";
+import { User, Mail, Phone, Calendar, Plus, Edit, Trash2, ArrowUpDown, ArrowUp, ArrowDown, Download, CheckSquare, Square } from "lucide-react";
 import { useCurrency } from "@/lib/currency-context";
 import { cn } from "@/lib/utils";
 import {
@@ -21,12 +21,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { LoadingState } from "./ui/loading-state";
 import { SearchFilter } from "./ui/search-filter";
 import { ExportButton } from "./ui/export-button";
+import { BulkActionBar, getDefaultBulkActions } from "./ui/bulk-action-bar";
+import { EditableCell } from "./ui/editable-cell";
+import { Checkbox } from "./ui/checkbox";
 import { useApp } from "@/lib/app-context-db";
 import { Tenant } from "@/lib/types";
 import { tenantSchema, TenantFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
+import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 
 export type TenantsViewProps = Record<string, never>
 
@@ -60,13 +64,16 @@ function SortableHeader({ column, label, sortDirection, onSort }: SortableHeader
 export function TenantsView(): React.ReactElement {
   const { state, addTenant, updateTenant, deleteTenant } = useApp();
   const { tenants, properties, loading } = state;
-  const { success } = useToast();
+  const { success, error: showError } = useToast();
   const { formatCurrency } = useCurrency();
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [propertyFilter, setPropertyFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  // Bulk selection
+  const bulkSelection = useBulkSelection<Tenant>();
 
   const initialFormData: TenantFormData = {
     name: '',
@@ -131,6 +138,67 @@ export function TenantsView(): React.ReactElement {
       }
     }
   };
+
+  // Bulk delete handler
+  const handleBulkDelete = useCallback(async (ids: string[]) => {
+    if (confirm(`Are you sure you want to delete ${ids.length} tenant(s)?`)) {
+      try {
+        // Delete tenants one by one (could be optimized with batch API)
+        for (const id of ids) {
+          await deleteTenant(id);
+        }
+        success(`Successfully deleted ${ids.length} tenant(s)`);
+        bulkSelection.clearSelection();
+      } catch (err) {
+        showError('Failed to delete some tenants');
+        console.error(err);
+      }
+    }
+  }, [deleteTenant, success, showError, bulkSelection]);
+
+  // Inline edit handler
+  const handleInlineEdit = useCallback(async (tenantId: string, field: keyof Tenant, value: string | number) => {
+    try {
+      const tenant = tenants.find(t => t.id === tenantId);
+      if (!tenant) return;
+      
+      await updateTenant(tenantId, { [field]: value });
+      success(`${field.charAt(0).toUpperCase() + field.slice(1)} updated`);
+    } catch (err) {
+      showError('Failed to update');
+      console.error(err);
+    }
+  }, [tenants, updateTenant, success, showError]);
+
+  // Export selected tenants
+  const handleExportSelected = useCallback((ids: string[]) => {
+    const selectedTenants = tenants.filter(t => ids.includes(t.id));
+    const csvContent = [
+      ['Name', 'Email', 'Phone', 'Property', 'Rent', 'Status'].join(','),
+      ...selectedTenants.map(t => [
+        t.name,
+        t.email,
+        t.phone,
+        t.propertyName || '',
+        t.rent,
+        t.paymentStatus
+      ].join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `tenants-export-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [tenants]);
+
+  // Bulk actions configuration
+  const bulkActions = useMemo(() => getDefaultBulkActions({
+    onDelete: handleBulkDelete,
+    onExport: handleExportSelected,
+  }), [handleBulkDelete, handleExportSelected]);
 
   // Filter and search tenants
   const filteredTenants = useMemo(() => {
@@ -401,6 +469,19 @@ export function TenantsView(): React.ReactElement {
       {/* Enhanced Sortable Column Headers */}
       {filteredTenants.length > 0 && (
         <div className="flex items-center gap-4 px-6 py-4 surface-elevated rounded-lg border border-[var(--color-border)]">
+          {/* Select all checkbox */}
+          <Checkbox
+            checked={bulkSelection.isAllSelected(sortedTenants)}
+            indeterminate={bulkSelection.isPartiallySelected(sortedTenants)}
+            onCheckedChange={(checked) => {
+              if (checked) {
+                bulkSelection.selectAll(sortedTenants);
+              } else {
+                bulkSelection.clearSelection();
+              }
+            }}
+            className="mr-2"
+          />
           <div className="flex-1">
             <SortableHeader column="name" label="Tenant" sortDirection={getSortDirection('name')} onSort={requestSort} />
           </div>
@@ -438,11 +519,25 @@ export function TenantsView(): React.ReactElement {
             </CardContent>
           </Card>
         ) : (
-          sortedTenants.map((tenant) => (
-            <Card key={tenant.id} className="transition-all duration-200 hover-lift surface-elevated group hover:border-accent-primary/30">
+          sortedTenants.map((tenant) => {
+            const isSelected = bulkSelection.isSelected(tenant.id);
+            return (
+            <Card 
+              key={tenant.id} 
+              className={cn(
+                "transition-all duration-200 hover-lift surface-elevated group hover:border-accent-primary/30",
+                isSelected && "ring-2 ring-accent-primary border-accent-primary/50"
+              )}
+            >
               <CardHeader className="pb-4">
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-4">
+                    {/* Selection checkbox */}
+                    <Checkbox
+                      checked={isSelected}
+                      onCheckedChange={() => bulkSelection.toggleSelection(tenant.id)}
+                      className="mt-3"
+                    />
                     <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30">
                       <span className="text-sm font-semibold text-accent-primary">
                         {tenant.name.split(' ').map(n => n[0]).join('').toUpperCase()}
@@ -483,14 +578,24 @@ export function TenantsView(): React.ReactElement {
                       <Mail className="h-4 w-4" />
                       <span>Email</span>
                     </div>
-                    <p className="text-sm text-zinc-50">{tenant.email}</p>
+                    <EditableCell
+                      value={tenant.email}
+                      type="email"
+                      onSave={(val) => handleInlineEdit(tenant.id, 'email', val)}
+                      className="text-sm text-zinc-50"
+                    />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm text-zinc-400">
                       <Phone className="h-4 w-4" />
                       <span>Phone</span>
                     </div>
-                    <p className="text-sm text-zinc-50">{tenant.phone}</p>
+                    <EditableCell
+                      value={tenant.phone}
+                      type="phone"
+                      onSave={(val) => handleInlineEdit(tenant.id, 'phone', val)}
+                      className="text-sm text-zinc-50"
+                    />
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2 text-sm text-zinc-400">
@@ -504,9 +609,13 @@ export function TenantsView(): React.ReactElement {
                   </div>
                   <div className="space-y-1">
                     <div className="text-sm text-zinc-400">Monthly Rent</div>
-                    <p className="text-lg font-semibold text-zinc-50">
-{formatCurrency(tenant.rent)}
-                    </p>
+                    <EditableCell
+                      value={tenant.rent}
+                      type="currency"
+                      onSave={(val) => handleInlineEdit(tenant.id, 'rent', val)}
+                      formatter={(val) => formatCurrency(Number(val))}
+                      className="text-lg font-semibold text-zinc-50"
+                    />
                   </div>
                 </div>
                 <div className="flex gap-2 mt-4">
@@ -531,9 +640,23 @@ export function TenantsView(): React.ReactElement {
                 </div>
               </CardContent>
             </Card>
-          ))
+            );
+          })
         )}
       </div>
+
+      {/* Bulk Action Bar */}
+      <BulkActionBar
+        selectedCount={bulkSelection.selectedCount}
+        totalCount={sortedTenants.length}
+        itemLabel="tenants"
+        actions={bulkActions}
+        onSelectAll={() => bulkSelection.selectAll(sortedTenants)}
+        onClearSelection={bulkSelection.clearSelection}
+        isAllSelected={bulkSelection.isAllSelected(sortedTenants)}
+        isPartiallySelected={bulkSelection.isPartiallySelected(sortedTenants)}
+        selectedIds={Array.from(bulkSelection.selectedIds)}
+      />
         </div>
       )}
     </>

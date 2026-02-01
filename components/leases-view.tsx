@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { FileText, Upload, Download, Plus, Edit, Trash2, Calendar, User, Building2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { FileText, Upload, Download, Plus, Edit, Trash2, Calendar, User, Building2, ArrowUpDown, ArrowUp, ArrowDown, Home, DollarSign, FileCheck } from "lucide-react";
 import { useCurrency } from "@/lib/currency-context";
 import {
   Card,
@@ -22,8 +22,11 @@ import { useApp } from "@/lib/app-context-db";
 import { leaseSchema, LeaseFormData } from "@/lib/validation";
 import { useToast } from "@/lib/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
+import { useMultiStepForm, StepConfig } from "@/lib/hooks/use-multi-step-form";
+import { MultiStepFormContainer, StepContent, DraftBanner, MultiStepFormStep } from "./ui/multi-step-form";
 import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
 import { LeaseStatus } from "@prisma/client";
+import { z } from "zod";
 
 export type LeasesViewProps = Record<string, never>
 
@@ -54,6 +57,8 @@ export function LeasesView(): React.ReactElement {
   const { success, error } = useToast();
   const { formatCurrency } = useCurrency();
   const [contractFile, setContractFile] = useState<File | null>(null);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [editingLease, setEditingLease] = useState<any>(null);
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -73,11 +78,84 @@ export function LeasesView(): React.ReactElement {
     notes: '',
   };
 
+  // Multi-step form configuration
+  const steps: StepConfig<LeaseFormData>[] = [
+    {
+      id: 'property',
+      title: 'Property Selection',
+      description: 'Choose the property for this lease',
+      fields: ['propertyId'],
+    },
+    {
+      id: 'tenant',
+      title: 'Tenant Details',
+      description: 'Select the tenant',
+      fields: ['tenantId'],
+    },
+    {
+      id: 'terms',
+      title: 'Lease Terms',
+      description: 'Set rental terms and conditions',
+      fields: ['startDate', 'endDate', 'monthlyRent', 'deposit', 'taxRegime', 'autoRenew', 'renewalNoticeDays'],
+    },
+    {
+      id: 'notes',
+      title: 'Additional Info',
+      description: 'Add notes and contract documents',
+      fields: ['notes'],
+    },
+  ];
+
+  const wizardSteps: MultiStepFormStep[] = [
+    { id: 'property', title: 'Property', icon: <Home className="h-4 w-4" /> },
+    { id: 'tenant', title: 'Tenant', icon: <User className="h-4 w-4" /> },
+    { id: 'terms', title: 'Terms', icon: <DollarSign className="h-4 w-4" /> },
+    { id: 'notes', title: 'Documents', icon: <FileCheck className="h-4 w-4" /> },
+  ];
+
+  const wizard = useMultiStepForm<LeaseFormData>({
+    steps,
+    schema: leaseSchema,
+    initialData: initialFormData,
+    onComplete: async (data) => {
+      // Convert file to buffer if present
+      let contractBuffer: Buffer | undefined;
+      if (contractFile) {
+        contractBuffer = Buffer.from(await contractFile.arrayBuffer());
+      }
+
+      const leaseData = {
+        ...data,
+        contractFile: contractBuffer,
+        contractFileName: contractFile?.name,
+        contractFileSize: contractFile?.size,
+        status: 'active' as const,
+      };
+
+      if (editingLease) {
+        await updateLease(editingLease.id, leaseData);
+        success('Lease updated successfully');
+      } else {
+        await addLease(leaseData);
+        success('Lease created successfully');
+      }
+      
+      setWizardOpen(false);
+      setEditingLease(null);
+      setContractFile(null);
+      wizard.resetForm();
+    },
+    persistence: {
+      key: 'lease-wizard-draft',
+      ttl: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  });
+
   const dialog = useFormDialog<LeaseFormData, any>({
     schema: leaseSchema,
     initialData: initialFormData,
     onSubmit: async (data, isEdit) => {
-      // Convert file to buffer if present
+      // This is kept for backward compatibility
       let contractBuffer: Buffer | undefined;
       if (contractFile) {
         contractBuffer = Buffer.from(await contractFile.arrayBuffer());
@@ -138,19 +216,21 @@ export function LeasesView(): React.ReactElement {
   };
 
   const handleEdit = (lease: any) => {
-    dialog.openEditDialog(lease, (l) => ({
-      propertyId: l.propertyId,
-      tenantId: l.tenantId,
-      startDate: l.startDate.split('T')[0],
-      endDate: l.endDate.split('T')[0],
-      monthlyRent: l.monthlyRent,
-      deposit: l.deposit,
-      taxRegime: l.taxRegime,
-      autoRenew: l.autoRenew,
-      renewalNoticeDays: l.renewalNoticeDays,
-      notes: l.notes || '',
-    }));
+    setEditingLease(lease);
+    wizard.updateFormData({
+      propertyId: lease.propertyId,
+      tenantId: lease.tenantId,
+      startDate: lease.startDate.split('T')[0],
+      endDate: lease.endDate.split('T')[0],
+      monthlyRent: lease.monthlyRent,
+      deposit: lease.deposit,
+      taxRegime: lease.taxRegime,
+      autoRenew: lease.autoRenew,
+      renewalNoticeDays: lease.renewalNoticeDays,
+      notes: lease.notes || '',
+    });
     setContractFile(null);
+    setWizardOpen(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -254,214 +334,292 @@ export function LeasesView(): React.ReactElement {
               { key: 'taxRegime', label: 'Tax Regime' },
             ]}
           />
-        <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
-          <DialogTrigger asChild>
-            <Button onClick={dialog.openDialog} className="flex items-center gap-2">
-              <Plus className="w-4 h-4" />
-              Add Lease
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto bg-zinc-900 border-zinc-800">
-            <DialogHeader>
-              <DialogTitle className="text-zinc-50">
-                {dialog.editingItem ? 'Edit Lease' : 'Add New Lease'}
-              </DialogTitle>
-              <DialogDescription>
-                {dialog.editingItem ? 'Update lease agreement details' : 'Create a new lease agreement'}
-              </DialogDescription>
-            </DialogHeader>
+          
+          {/* Multi-Step Wizard Dialog */}
+          <Dialog open={wizardOpen} onOpenChange={(open) => {
+            setWizardOpen(open);
+            if (!open) {
+              setEditingLease(null);
+              setContractFile(null);
+              wizard.resetForm();
+            }
+          }}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setWizardOpen(true)} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Add Lease
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-zinc-900 border-zinc-800">
+              <DialogHeader>
+                <DialogTitle className="text-zinc-50">
+                  {editingLease ? 'Edit Lease' : 'Create New Lease'}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingLease ? 'Update lease agreement details' : 'Follow the steps to create a comprehensive lease agreement'}
+                </DialogDescription>
+              </DialogHeader>
 
-            <form onSubmit={dialog.handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="propertyId">Property</Label>
-                <Select
-                  value={dialog.formData.propertyId}
-                  onValueChange={(value) => dialog.updateFormData({ propertyId: value })}
-                >
-                  <SelectTrigger className={dialog.formErrors.propertyId ? 'border-red-500' : ''}>
-                    <SelectValue placeholder="Select property" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {properties.map((property) => (
-                      <SelectItem key={property.id} value={property.id}>
-                        {property.name} - {property.address}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {dialog.formErrors.propertyId && (
-                  <p className="text-sm text-red-400">{dialog.formErrors.propertyId}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="tenantId">Tenant</Label>
-                <Select
-                  value={dialog.formData.tenantId}
-                  onValueChange={(value) => dialog.updateFormData({ tenantId: value })}
-                >
-                  <SelectTrigger className={dialog.formErrors.tenantId ? 'border-red-500' : ''}>
-                    <SelectValue placeholder="Select tenant" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {tenants.map((tenant) => (
-                      <SelectItem key={tenant.id} value={tenant.id}>
-                        {tenant.name} - {tenant.email}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {dialog.formErrors.tenantId && (
-                  <p className="text-sm text-red-400">{dialog.formErrors.tenantId}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="startDate">Start Date</Label>
-                <Input
-                  id="startDate"
-                  type="date"
-                  value={dialog.formData.startDate}
-                  onChange={(e) => dialog.updateFormData({ startDate: e.target.value })}
-                  className={dialog.formErrors.startDate ? 'border-red-500' : ''}
+              {/* Draft recovery banner */}
+              {wizard.hasDraft && !editingLease && (
+                <DraftBanner
+                  onRestore={() => {
+                    // Data is auto-loaded in hook
+                  }}
+                  onDiscard={() => {
+                    wizard.clearDraft();
+                    wizard.resetForm();
+                  }}
                 />
-                {dialog.formErrors.startDate && (
-                  <p className="text-sm text-red-400">{dialog.formErrors.startDate}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="endDate">End Date</Label>
-                <Input
-                  id="endDate"
-                  type="date"
-                  value={dialog.formData.endDate}
-                  onChange={(e) => dialog.updateFormData({ endDate: e.target.value })}
-                  className={dialog.formErrors.endDate ? 'border-red-500' : ''}
-                />
-                {dialog.formErrors.endDate && (
-                  <p className="text-sm text-red-400">{dialog.formErrors.endDate}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="monthlyRent">Monthly Rent (€)</Label>
-                <Input
-                  id="monthlyRent"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={dialog.formData.monthlyRent}
-                  onChange={(e) => dialog.updateFormData({ monthlyRent: parseFloat(e.target.value) || 0 })}
-                  className={dialog.formErrors.monthlyRent ? 'border-red-500' : ''}
-                />
-                {dialog.formErrors.monthlyRent && (
-                  <p className="text-sm text-red-400">{dialog.formErrors.monthlyRent}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="deposit">Deposit (€)</Label>
-                <Input
-                  id="deposit"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={dialog.formData.deposit}
-                  onChange={(e) => dialog.updateFormData({ deposit: parseFloat(e.target.value) || 0 })}
-                  className={dialog.formErrors.deposit ? 'border-red-500' : ''}
-                />
-                {dialog.formErrors.deposit && (
-                  <p className="text-sm text-red-400">{dialog.formErrors.deposit}</p>
-                )}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="taxRegime">Tax Regime</Label>
-                <Select
-                  value={dialog.formData.taxRegime || ''}
-                  onValueChange={(value) => dialog.updateFormData({ taxRegime: value as any })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select tax regime" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="portugal_rendimentos">Portugal - Rendimentos</SelectItem>
-                    <SelectItem value="spain_inmuebles">Spain - Inmuebles Urbanos</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="renewalNoticeDays">Renewal Notice (Days)</Label>
-                <Input
-                  id="renewalNoticeDays"
-                  type="number"
-                  min="0"
-                  value={dialog.formData.renewalNoticeDays}
-                  onChange={(e) => dialog.updateFormData({ renewalNoticeDays: parseInt(e.target.value) || 60 })}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="contractFile">Lease Contract (PDF)</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="contractFile"
-                  type="file"
-                  accept=".pdf"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                />
-                <Label
-                  htmlFor="contractFile"
-                  className="flex items-center gap-2 px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-md cursor-pointer hover:bg-zinc-700"
-                >
-                  <Upload className="w-4 h-4" />
-                  {contractFile ? contractFile.name : 'Choose PDF file'}
-                </Label>
-                {contractFile && (
-                  <span className="text-sm text-zinc-400">
-                    {(contractFile.size / 1024 / 1024).toFixed(2)} MB
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-zinc-500">Maximum file size: 5MB. PDF format only.</p>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
-              <Textarea
-                id="notes"
-                value={dialog.formData.notes}
-                onChange={(e) => dialog.updateFormData({ notes: e.target.value })}
-                placeholder="Additional lease terms or notes..."
-                className={dialog.formErrors.notes ? 'border-red-500' : ''}
-              />
-                {dialog.formErrors.notes && (
-                  <p className="text-sm text-red-400">{dialog.formErrors.notes}</p>
               )}
-            </div>
 
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={dialog.closeDialog}>
-                Cancel
-              </Button>
-                <Button type="submit" disabled={dialog.isSubmitting}>
-                  {dialog.isSubmitting ? 'Saving...' : (dialog.editingItem ? 'Update Lease' : 'Create Lease')}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+              {/* Multi-step form */}
+              <MultiStepFormContainer
+                steps={wizardSteps}
+                currentStep={wizard.currentStep}
+                completedSteps={wizard.visitedSteps}
+                visitedSteps={wizard.visitedSteps}
+                progress={wizard.progress}
+                isSubmitting={wizard.isSubmitting}
+                isFirstStep={wizard.isFirstStep}
+                isLastStep={wizard.isLastStep}
+                onPrevStep={wizard.prevStep}
+                onNextStep={wizard.nextStep}
+                onSubmit={wizard.handleSubmit}
+                onGoToStep={wizard.goToStep}
+                indicatorVariant="pills"
+                submitText={editingLease ? "Update Lease" : "Create Lease"}
+              >
+                {/* Step 1: Property Selection */}
+                {wizard.currentStep === 0 && (
+                  <StepContent 
+                    title="Select Property" 
+                    description="Choose the property for this lease agreement"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="propertyId">Property *</Label>
+                      <Select
+                        value={wizard.formData.propertyId}
+                        onValueChange={(value) => wizard.updateFormData({ propertyId: value })}
+                      >
+                        <SelectTrigger className={wizard.stepErrors.propertyId ? 'border-red-500' : ''}>
+                          <SelectValue placeholder="Select a property..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {properties.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-zinc-400">
+                              No properties available. Create a property first.
+                            </div>
+                          ) : (
+                            properties.map((property) => (
+                              <SelectItem key={property.id} value={property.id}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{property.name}</span>
+                                  <span className="text-xs text-zinc-400">{property.address}</span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      {wizard.stepErrors.propertyId && (
+                        <p className="text-sm text-red-400">{wizard.stepErrors.propertyId}</p>
+                      )}
+                    </div>
+                  </StepContent>
+                )}
+
+                {/* Step 2: Tenant Selection */}
+                {wizard.currentStep === 1 && (
+                  <StepContent 
+                    title="Select Tenant" 
+                    description="Choose the tenant for this lease"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="tenantId">Tenant *</Label>
+                      <Select
+                        value={wizard.formData.tenantId}
+                        onValueChange={(value) => wizard.updateFormData({ tenantId: value })}
+                      >
+                        <SelectTrigger className={wizard.stepErrors.tenantId ? 'border-red-500' : ''}>
+                          <SelectValue placeholder="Select a tenant..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {tenants.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-zinc-400">
+                              No tenants available. Create a tenant first.
+                            </div>
+                          ) : (
+                            tenants.map((tenant) => (
+                              <SelectItem key={tenant.id} value={tenant.id}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{tenant.name}</span>
+                                  <span className="text-xs text-zinc-400">{tenant.email}</span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      {wizard.stepErrors.tenantId && (
+                        <p className="text-sm text-red-400">{wizard.stepErrors.tenantId}</p>
+                      )}
+                    </div>
+                  </StepContent>
+                )}
+
+                {/* Step 3: Lease Terms */}
+                {wizard.currentStep === 2 && (
+                  <StepContent 
+                    title="Lease Terms" 
+                    description="Set rental amounts and lease duration"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="startDate">Start Date *</Label>
+                        <Input
+                          id="startDate"
+                          type="date"
+                          value={wizard.formData.startDate}
+                          onChange={(e) => wizard.updateFormData({ startDate: e.target.value })}
+                          className={wizard.stepErrors.startDate ? 'border-red-500' : ''}
+                        />
+                        {wizard.stepErrors.startDate && (
+                          <p className="text-sm text-red-400">{wizard.stepErrors.startDate}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="endDate">End Date *</Label>
+                        <Input
+                          id="endDate"
+                          type="date"
+                          value={wizard.formData.endDate}
+                          onChange={(e) => wizard.updateFormData({ endDate: e.target.value })}
+                          className={wizard.stepErrors.endDate ? 'border-red-500' : ''}
+                        />
+                        {wizard.stepErrors.endDate && (
+                          <p className="text-sm text-red-400">{wizard.stepErrors.endDate}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="monthlyRent">Monthly Rent (€) *</Label>
+                        <Input
+                          id="monthlyRent"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={wizard.formData.monthlyRent}
+                          onChange={(e) => wizard.updateFormData({ monthlyRent: parseFloat(e.target.value) || 0 })}
+                          className={wizard.stepErrors.monthlyRent ? 'border-red-500' : ''}
+                        />
+                        {wizard.stepErrors.monthlyRent && (
+                          <p className="text-sm text-red-400">{wizard.stepErrors.monthlyRent}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="deposit">Security Deposit (€) *</Label>
+                        <Input
+                          id="deposit"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={wizard.formData.deposit}
+                          onChange={(e) => wizard.updateFormData({ deposit: parseFloat(e.target.value) || 0 })}
+                          className={wizard.stepErrors.deposit ? 'border-red-500' : ''}
+                        />
+                        {wizard.stepErrors.deposit && (
+                          <p className="text-sm text-red-400">{wizard.stepErrors.deposit}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="taxRegime">Tax Regime</Label>
+                        <Select
+                          value={wizard.formData.taxRegime || ''}
+                          onValueChange={(value) => wizard.updateFormData({ taxRegime: value as any })}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select tax regime..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="portugal_rendimentos">Portugal - Rendimentos</SelectItem>
+                            <SelectItem value="spain_inmuebles">Spain - Inmuebles Urbanos</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="renewalNoticeDays">Renewal Notice (Days)</Label>
+                        <Input
+                          id="renewalNoticeDays"
+                          type="number"
+                          min="0"
+                          value={wizard.formData.renewalNoticeDays}
+                          onChange={(e) => wizard.updateFormData({ renewalNoticeDays: parseInt(e.target.value) || 60 })}
+                        />
+                      </div>
+                    </div>
+                  </StepContent>
+                )}
+
+                {/* Step 4: Documents & Notes */}
+                {wizard.currentStep === 3 && (
+                  <StepContent 
+                    title="Documents & Notes" 
+                    description="Upload contract and add additional information"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="contractFile">Lease Contract (PDF)</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="contractFile"
+                          type="file"
+                          accept=".pdf"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                        <Label
+                          htmlFor="contractFile"
+                          className="flex items-center gap-2 px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-md cursor-pointer hover:bg-zinc-700 transition-colors"
+                        >
+                          <Upload className="w-4 h-4" />
+                          {contractFile ? contractFile.name : 'Choose PDF file'}
+                        </Label>
+                        {contractFile && (
+                          <span className="text-sm text-zinc-400">
+                            {(contractFile.size / 1024 / 1024).toFixed(2)} MB
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-500">Maximum file size: 5MB. PDF format only.</p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="notes">Additional Notes</Label>
+                      <Textarea
+                        id="notes"
+                        value={wizard.formData.notes}
+                        onChange={(e) => wizard.updateFormData({ notes: e.target.value })}
+                        placeholder="Add any special terms, conditions, or notes about this lease..."
+                        rows={6}
+                        className={wizard.stepErrors.notes ? 'border-red-500' : ''}
+                      />
+                      {wizard.stepErrors.notes && (
+                        <p className="text-sm text-red-400">{wizard.stepErrors.notes}</p>
+                      )}
+                    </div>
+                  </StepContent>
+                )}
+              </MultiStepFormContainer>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

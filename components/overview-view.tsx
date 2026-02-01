@@ -12,6 +12,7 @@ import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { BarChart, LineChart, DonutChart } from "./ui/charts";
 import { DashboardGrid, StatWidget, ChartWidget, ListWidget } from "./ui/dashboard-widgets";
+import { QuickActions, AttentionNeeded } from "./ui/quick-actions";
 import { useCurrency } from "@/lib/currency-context";
 import { useApp } from "@/lib/app-context-db";
 import { ProgressRing } from "./ui/progress";
@@ -105,35 +106,58 @@ export function OverviewView(): React.ReactElement {
   // Property status summary
   const propertyStatus = properties.slice(0, 3);
 
+  // Attention needed items
+  const attentionItems = [
+    ...(overduePayments > 0 ? [{
+      id: "overdue-payments",
+      type: "overdue" as const,
+      title: "Overdue Payments",
+      description: `${overduePayments} tenant${overduePayments > 1 ? 's have' : ' has'} overdue payments`,
+      count: overduePayments,
+      urgency: overduePayments > 3 ? "high" as const : "medium" as const,
+      actionLabel: "View",
+    }] : []),
+    ...(vacantProperties > 0 ? [{
+      id: "vacant-properties",
+      type: "vacancy" as const,
+      title: "Vacant Properties",
+      description: `${vacantProperties} propert${vacantProperties > 1 ? 'ies are' : 'y is'} currently vacant`,
+      count: vacantProperties,
+      urgency: vacantProperties > 2 ? "medium" as const : "low" as const,
+      actionLabel: "View",
+    }] : []),
+  ];
+
   return (
     <div className="space-y-6">
       {/* Enhanced Header with Breadcrumb */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2 text-sm text-zinc-400 mb-1">
+          <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)] mb-1">
             <Home className="h-4 w-4" />
             <span>Proman</span>
             <span>/</span>
-            <span className="text-zinc-200">Dashboard</span>
+            <span className="text-[var(--color-foreground)]">Dashboard</span>
           </div>
-          <h2 className="text-display-small font-bold tracking-tight text-zinc-50">
+          <h2 className="text-display-small font-bold tracking-tight text-[var(--color-foreground)]">
             {t('navigation.dashboard')} Overview
           </h2>
-          <p className="text-body-medium text-zinc-400 mt-1">{t('dashboard.welcome')}</p>
+          <p className="text-body-medium text-[var(--color-muted-foreground)] mt-1">{t('dashboard.welcome')}</p>
         </div>
         
-        {/* Quick Actions */}
-        <div className="flex items-center gap-3">
-          <Button variant="outline" size="sm" className="text-zinc-400 hover:text-zinc-50">
-            <FileText className="h-4 w-4 mr-2" />
-            Generate Report
-          </Button>
-          <Button variant="primary" size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Quick Add
-          </Button>
-        </div>
+        {/* Quick Actions - Horizontal variant for header */}
+        <QuickActions variant="horizontal" className="hidden lg:flex" />
       </div>
+
+      {/* Quick Actions panel for mobile/tablet */}
+      <div className="lg:hidden">
+        <QuickActions variant="compact" />
+      </div>
+
+      {/* Attention Needed Panel - only show if there are items */}
+      {attentionItems.length > 0 && (
+        <AttentionNeeded items={attentionItems} />
+      )}
 
       {/* Enhanced Stats Grid with Widgets */}
       <DashboardGrid columns={4} gap={6}>
@@ -215,14 +239,14 @@ export function OverviewView(): React.ReactElement {
               <div className="flex items-center gap-3">
                 <span className="text-lg">{activity.icon}</span>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-zinc-300">{activity.message}</p>
-                  <div className="flex items-center gap-2 text-xs text-zinc-500">
+                  <p className="text-sm font-medium text-[var(--color-foreground)]">{activity.message}</p>
+                  <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
                     <span>{activity.type}</span>
                     {activity.amount && <span>• ${activity.amount.toLocaleString()}</span>}
                   </div>
                 </div>
               </div>
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-[var(--color-muted-foreground)]">
                 {new Date(activity.timestamp).toLocaleDateString()}
               </span>
             </div>
@@ -242,7 +266,7 @@ export function OverviewView(): React.ReactElement {
             >
               <Card className="hover:border-accent-primary/30 transition-colors duration-300 surface-elevated group">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
-                  <CardTitle className="text-heading-small font-medium text-zinc-400">
+                  <CardTitle className="text-heading-small font-medium text-[var(--color-muted-foreground)]">
                     Active Tenants
                   </CardTitle>
                   <div className="p-2 rounded-lg bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
@@ -251,7 +275,7 @@ export function OverviewView(): React.ReactElement {
                 </CardHeader>
                 <CardContent className="pt-0">
                   <motion.div
-                    className="text-display-medium font-bold text-zinc-50 mb-2"
+                    className="text-display-medium font-bold text-[var(--color-foreground)] mb-2"
                     initial={{ scale: 0.8 }}
                     animate={{ scale: 1 }}
                     transition={{ delay: 0.4, type: "spring" }}
@@ -284,14 +308,14 @@ export function OverviewView(): React.ReactElement {
         >
           <Card className="hover:border-success/30 transition-colors duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-zinc-400">
+              <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
                 {t('dashboard.monthlyRevenue')}
               </CardTitle>
               <DollarSign className="h-4 w-4 text-success" />
             </CardHeader>
             <CardContent>
               <motion.div
-                className="text-2xl font-bold text-zinc-50"
+                className="text-2xl font-bold text-[var(--color-foreground)]"
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.5, type: "spring" }}
@@ -299,7 +323,7 @@ export function OverviewView(): React.ReactElement {
                 {formatCurrency(monthlyRevenue)}
               </motion.div>
               <motion.p
-                className="text-xs text-zinc-400 flex items-center gap-1 mt-1"
+                className="text-xs text-[var(--color-muted-foreground)] flex items-center gap-1 mt-1"
                 initial={{ x: -10, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.7 }}
@@ -319,21 +343,21 @@ export function OverviewView(): React.ReactElement {
         >
           <Card className="hover:border-progress/30 transition-colors duration-300">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-zinc-400">
+              <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
                 Occupancy Rate
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-progress" />
             </CardHeader>
             <CardContent>
               <motion.div
-                className="text-2xl font-bold text-zinc-50"
+                className="text-2xl font-bold text-[var(--color-foreground)]"
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.6, type: "spring" }}
               >
                 {occupancyRate.toFixed(1)}%
               </motion.div>
-              <p className="text-xs text-zinc-400 mt-1">
+              <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
                 Properties occupied
               </p>
               <div className="mt-3">
@@ -354,9 +378,9 @@ export function OverviewView(): React.ReactElement {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.8, duration: 0.4 }}
       >
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
           <CardHeader>
-            <CardTitle className="text-zinc-50 flex items-center gap-2">
+            <CardTitle className="text-[var(--color-foreground)] flex items-center gap-2">
               <Trophy className="h-5 w-5 text-yellow-500" />
               Achievements
             </CardTitle>
@@ -379,7 +403,7 @@ export function OverviewView(): React.ReactElement {
       <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle className="text-zinc-50">Recent Payments</CardTitle>
+            <CardTitle className="text-[var(--color-foreground)]">Recent Payments</CardTitle>
             <CardDescription>Latest tenant payments</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -387,24 +411,24 @@ export function OverviewView(): React.ReactElement {
               recentPayments.map((payment) => (
                 <div key={payment.id} className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-zinc-50">{payment.tenantName}</p>
-                    <p className="text-xs text-zinc-400">{payment.propertyName}</p>
+                    <p className="text-sm font-medium text-[var(--color-foreground)]">{payment.tenantName}</p>
+                    <p className="text-xs text-[var(--color-muted-foreground)]">{payment.propertyName}</p>
                   </div>
                   <div className="text-right">
-                     <p className="text-sm font-semibold text-zinc-50">{formatCurrency(payment.amount)}</p>
+                     <p className="text-sm font-semibold text-[var(--color-foreground)]">{formatCurrency(payment.amount)}</p>
                     <Badge variant="success" className="text-xs">Paid</Badge>
                   </div>
                 </div>
               ))
             ) : (
-              <p className="text-zinc-400 text-sm">No recent payments</p>
+              <p className="text-[var(--color-muted-foreground)] text-sm">No recent payments</p>
             )}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-zinc-50">Property Status</CardTitle>
+            <CardTitle className="text-[var(--color-foreground)]">Property Status</CardTitle>
             <CardDescription>Current property conditions</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -412,8 +436,8 @@ export function OverviewView(): React.ReactElement {
               propertyStatus.map((property) => (
                 <div key={property.id} className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-zinc-50">{property.name}</p>
-                    <p className="text-xs text-zinc-400">{property.bedrooms} bed, {property.bathrooms} bath</p>
+                    <p className="text-sm font-medium text-[var(--color-foreground)]">{property.name}</p>
+                    <p className="text-xs text-[var(--color-muted-foreground)]">{property.bedrooms} bed, {property.bathrooms} bath</p>
                   </div>
                   <Badge
                     variant={
@@ -426,7 +450,7 @@ export function OverviewView(): React.ReactElement {
                 </div>
               ))
             ) : (
-              <p className="text-zinc-400 text-sm">No properties added yet</p>
+              <p className="text-[var(--color-muted-foreground)] text-sm">No properties added yet</p>
             )}
           </CardContent>
         </Card>

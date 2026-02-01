@@ -1,6 +1,17 @@
 @import "tailwindcss";
 
+/* ============================================
+   PROMAN DESIGN SYSTEM - CSS VARIABLES
+   ============================================
+   Using OKLCH color space for perceptually uniform colors
+   Supports both light and dark themes
+*/
+
 @theme {
+  /* ============================================
+     DARK THEME (Default)
+     ============================================ */
+  
   /* Base Colors */
   --color-background: oklch(0.09 0.02 264);
   --color-foreground: oklch(0.98 0 0);
@@ -17,6 +28,7 @@
   --color-destructive: oklch(0.62 0.24 27);
   --color-destructive-foreground: oklch(0.98 0 0);
   --color-border: oklch(0.18 0.02 264);
+  --color-border-hover: oklch(0.28 0.02 264);
   --color-input: oklch(0.14 0.02 264);
   --color-ring: oklch(0.68 0.19 262);
 
@@ -49,7 +61,77 @@
   --color-surface-elevated: oklch(0.13 0.02 264);
   --color-surface-overlay: oklch(0.15 0.02 264);
   --color-surface-pressed: oklch(0.08 0.02 264);
+  --color-surface-hover: oklch(0.16 0.02 264);
   --color-overlay: oklch(0.0 0.0 0 / 0.8);
+  
+  /* Sidebar specific */
+  --color-sidebar-bg: oklch(0.08 0.02 264);
+  --color-sidebar-border: oklch(0.15 0.02 264);
+  --color-sidebar-text: oklch(0.65 0.01 264);
+  --color-sidebar-text-active: oklch(0.98 0 0);
+}
+
+/* ============================================
+   LIGHT THEME
+   ============================================ */
+:root.light,
+[data-theme="light"] {
+  --color-background: oklch(0.98 0.005 264);
+  --color-foreground: oklch(0.15 0.02 264);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.15 0.02 264);
+  --color-primary: oklch(0.55 0.22 262);
+  --color-primary-foreground: oklch(0.98 0 0);
+  --color-secondary: oklch(0.95 0.01 264);
+  --color-secondary-foreground: oklch(0.25 0.02 264);
+  --color-muted: oklch(0.95 0.01 264);
+  --color-muted-foreground: oklch(0.45 0.01 264);
+  --color-accent: oklch(0.55 0.22 262);
+  --color-accent-foreground: oklch(0.98 0 0);
+  --color-destructive: oklch(0.55 0.24 27);
+  --color-destructive-foreground: oklch(0.98 0 0);
+  --color-border: oklch(0.88 0.01 264);
+  --color-border-hover: oklch(0.78 0.01 264);
+  --color-input: oklch(0.95 0.005 264);
+  --color-ring: oklch(0.55 0.22 262);
+
+  /* Semantic Colors - Light */
+  --color-success: oklch(0.55 0.17 160);
+  --color-success-foreground: oklch(0.98 0 0);
+  --color-success-muted: oklch(0.95 0.05 160);
+  --color-warning: oklch(0.70 0.18 85);
+  --color-warning-foreground: oklch(0.20 0.02 85);
+  --color-warning-muted: oklch(0.95 0.05 85);
+  --color-info: oklch(0.50 0.15 250);
+  --color-info-foreground: oklch(0.98 0 0);
+  --color-info-muted: oklch(0.95 0.04 250);
+  --color-error: oklch(0.55 0.24 27);
+  --color-error-foreground: oklch(0.98 0 0);
+  --color-error-muted: oklch(0.95 0.05 27);
+
+  /* Accent Colors - Light */
+  --color-accent-primary: oklch(0.55 0.22 262);
+  --color-accent-primary-foreground: oklch(0.98 0 0);
+  --color-accent-secondary: oklch(0.50 0.18 200);
+  --color-accent-secondary-foreground: oklch(0.98 0 0);
+
+  /* Interactive States - Light */
+  --color-hover: oklch(0.94 0.01 264);
+  --color-active: oklch(0.90 0.02 264);
+  --color-focus: oklch(0.55 0.22 262);
+  
+  /* Surface Colors - Light */
+  --color-surface-elevated: oklch(1 0 0);
+  --color-surface-overlay: oklch(0.98 0.005 264);
+  --color-surface-pressed: oklch(0.92 0.01 264);
+  --color-surface-hover: oklch(0.95 0.01 264);
+  --color-overlay: oklch(0.0 0.0 0 / 0.5);
+  
+  /* Sidebar specific - Light */
+  --color-sidebar-bg: oklch(0.97 0.005 264);
+  --color-sidebar-border: oklch(0.90 0.01 264);
+  --color-sidebar-text: oklch(0.45 0.01 264);
+  --color-sidebar-text-active: oklch(0.15 0.02 264);
 }
 
 body {
