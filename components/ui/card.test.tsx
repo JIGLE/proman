@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../../components/ui/card'
+import { renderWithProviders as render, screen } from '@/tests/helpers/render-with-providers'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './card'
 
 describe('Card component', () => {
   it('renders header, title, description, content and footer', () => {
@@ -21,3 +21,4 @@ describe('Card component', () => {
     expect(screen.getByText('Footer')).toBeDefined()
   })
 })
+

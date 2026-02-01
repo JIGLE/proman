@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
-import { Input } from '../../components/ui/input'
+import { renderWithProviders as render, screen } from '@/tests/helpers/render-with-providers'
+import { Input } from './input'
 
 describe('Input component', () => {
   it('renders with placeholder and value', () => {
@@ -16,3 +16,4 @@ describe('Input component', () => {
     expect(input.className).toContain('my-input')
   })
 })
+

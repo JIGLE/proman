@@ -4,8 +4,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ExportButton } from '../../components/ui/export-button';
-import { renderWithProviders } from '../helpers/render-with-providers';
+import { ExportButton } from './';
+import { renderWithProviders } from '@/tests/helpers/render-with-providers';
 
 // Mock currency context
 vi.mock('../../lib/currency-context', () => ({
@@ -101,3 +101,4 @@ describe('ExportButton', () => {
     expect(mockCreateObjectURL).toHaveBeenCalled();
   });
 });
+

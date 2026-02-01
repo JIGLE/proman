@@ -5,7 +5,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { waitFor } from '@testing-library/dom';
 import userEvent from '@testing-library/user-event';
-import { SearchFilter } from '../../components/ui/search-filter';
+import { SearchFilter } from './search-filter';
 
 describe('SearchFilter', () => {
   const mockOnSearchChange = vi.fn();
@@ -215,3 +215,4 @@ it.skip('should render clear button when showClearButton is true', () => {
     unmount();
   });
 });
+

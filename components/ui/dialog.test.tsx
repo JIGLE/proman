@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { renderWithProviders as render, screen, fireEvent } from '../helpers/render-with-providers'
+import { renderWithProviders as render, screen, fireEvent } from '@/tests/helpers/render-with-providers'
 import {
   Dialog,
   DialogTrigger,
   DialogContent,
   DialogTitle,
   DialogDescription,
-} from '../../components/ui/dialog'
+} from './dialog'
 
 describe('Dialog component', () => {
   it('opens when trigger is clicked and shows title/description', async () => {
@@ -29,3 +29,4 @@ describe('Dialog component', () => {
     expect(screen.getByText('Details')).toBeDefined()
   })
 })
+

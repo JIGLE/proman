@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
+import { renderWithProviders as render, screen } from '@/tests/helpers/render-with-providers'
 import { PropertiesView } from '@/components/features/property/property-list'
 
 // Mock Next.js navigation
@@ -41,3 +41,4 @@ describe('PropertiesView', () => {
     expect(screen.getByText(/No properties yet/)).toBeDefined()
   })
 })
+

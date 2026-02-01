@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
-import { Button } from '../../components/ui/button'
+import { renderWithProviders as render, screen } from '@/tests/helpers/render-with-providers'
+import { Button } from './button'
 
 describe('Button component', () => {
   it('renders children and applies variant classes', () => {
@@ -22,3 +22,4 @@ describe('Button component', () => {
     expect(btn.className).toMatch(/h-8/)
   })
 })
+

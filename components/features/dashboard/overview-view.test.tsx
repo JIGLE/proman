@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
+import { renderWithProviders as render, screen } from '@/tests/helpers/render-with-providers'
 import { OverviewView } from '../../components/overview-view'
 
 // Mock the currency hook
@@ -35,3 +35,4 @@ describe('OverviewView', () => {
     expect(amounts.length).toBeGreaterThan(0)
   })
 })
+

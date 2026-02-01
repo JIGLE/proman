@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
-import { Label } from '../../components/ui/label'
+import { renderWithProviders as render, screen } from '@/tests/helpers/render-with-providers'
+import { Label } from './label'
 
 describe('Label component', () => {
   it('renders children and applies className', () => {
@@ -10,3 +10,4 @@ describe('Label component', () => {
     expect(el).toBeDefined()
   })
 })
+

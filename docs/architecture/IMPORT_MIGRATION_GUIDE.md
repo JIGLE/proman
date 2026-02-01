@@ -36,21 +36,23 @@ import { locales, defaultLocale } from './lib/i18n/config'; // relative
 - `lib/i18n.ts` - Updated ✅
 - `middleware.ts` (formerly proxy.ts) - Already correct ✅
 
-### Middleware Rename
+### Proxy File Naming
 
-**OLD:**
+**Note**: Next.js 16 uses proxy.ts, not middleware.ts
+
+**CORRECT (Next.js 16):**
 ```typescript
 // proxy.ts
 export function proxy(request: NextRequest) { ... }
 ```
 
-**NEW:**
+**DEPRECATED:**
 ```typescript
-// middleware.ts
+// middleware.ts  
 export function middleware(request: NextRequest) { ... }
 ```
 
-**Note**: Next.js 16 auto-detects middleware.ts at project root
+**Note**: Next.js 16.1.6+ prefers proxy.ts convention. The middleware.ts naming is deprecated and will show warnings.
 
 ---
 

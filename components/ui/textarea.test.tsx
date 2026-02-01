@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
-import { Textarea } from '../../components/ui/textarea'
+import { renderWithProviders as render, screen } from '@/tests/helpers/render-with-providers'
+import { Textarea } from './textarea'
 
 describe('Textarea component', () => {
   it('renders with placeholder and value', () => {
@@ -15,3 +15,4 @@ describe('Textarea component', () => {
     expect(el).toBeDefined()
   })
 })
+

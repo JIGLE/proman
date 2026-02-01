@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
-import { Switch } from '../../components/ui/switch'
+import { renderWithProviders as render, screen } from '@/tests/helpers/render-with-providers'
+import { Switch } from './switch'
 
 describe('Switch component', () => {
   it('renders unchecked by default and toggles checked via props', () => {
@@ -10,3 +10,4 @@ describe('Switch component', () => {
     // role should exist; toggling UI state typically handled by user events in integration tests
   })
 })
+

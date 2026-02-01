@@ -11,7 +11,17 @@ export default defineConfig({
     environment: 'jsdom',
     globals: true,
     setupFiles: ['./tests/setup.ts'],
-    include: ['tests/**/*.test.{ts,tsx}','tests/**/*.spec.{ts,tsx}'],
-    exclude: ['**/.next/**']
+    include: [
+      '**/*.test.{ts,tsx}',
+      '**/*.spec.{ts,tsx}',
+      'tests/**/*.test.{ts,tsx}', // Keep existing tests/ directory for helpers
+      'tests/**/*.spec.{ts,tsx}'
+    ],
+    exclude: [
+      '**/node_modules/**',
+      '**/.next/**',
+      '**/dist/**',
+      '**/build/**'
+    ]
   },
 })

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { renderWithProviders as render } from '../helpers/render-with-providers'
-import { Separator } from '../../components/ui/separator'
+import { renderWithProviders as render } from '@/tests/helpers/render-with-providers'
+import { Separator } from './separator'
 
 describe('Separator component', () => {
   it('renders horizontal by default', () => {
@@ -13,3 +13,4 @@ describe('Separator component', () => {
     expect(container.firstChild).toBeDefined()
   })
 })
+

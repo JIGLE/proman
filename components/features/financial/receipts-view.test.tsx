@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
-import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
+import { renderWithProviders as render, screen } from '@/tests/helpers/render-with-providers'
 import { ReceiptsView } from '../../components/receipts-view'
 
 // Mock the currency hook
@@ -28,3 +28,4 @@ describe('ReceiptsView', () => {
     expect(screen.getByText(/No receipts yet/)).toBeDefined()
   })
 })
+

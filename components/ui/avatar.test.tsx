@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { renderWithProviders as render, screen } from '../helpers/render-with-providers'
-import { Avatar, AvatarFallback } from '../../components/ui/avatar'
+import { renderWithProviders as render, screen } from '@/tests/helpers/render-with-providers'
+import { Avatar, AvatarFallback } from './avatar'
 
 describe('Avatar component', () => {
   it('applies className to root Avatar', () => {
@@ -28,3 +28,4 @@ describe('Avatar component', () => {
     expect(img).toBeInTheDocument()
   })
 })
+
