@@ -6,7 +6,7 @@ import VersionBadge from '@/components/version-badge';
 import { CurrencyProvider } from '@/lib/currency-context';
 import {NextIntlClientProvider, hasLocale} from 'next-intl';
 import {getMessages, setRequestLocale} from 'next-intl/server';
-import {locales, defaultLocale} from '@/i18n';
+import {locales, defaultLocale} from '@/lib/i18n/config';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -41,7 +41,9 @@ export default async function Layout({
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
-      {children}
+      <CurrencyProvider initialLocale={locale}>
+        {children}
+      </CurrencyProvider>
     </NextIntlClientProvider>
   );
 }

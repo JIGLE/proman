@@ -6,8 +6,7 @@ interface CurrencyContextType {
   currency: string;
   setCurrency: (currency: string) => void;
   formatCurrency: (amount: number) => string;
-  locale: string;
-  setLocale: (locale: string) => void;
+  locale: string; // Now derived from URL, read-only for formatting
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -32,25 +31,19 @@ export function CurrencyProvider({
   initialLocale = 'en'
 }: CurrencyProviderProps) {
   const [currency, setCurrencyState] = useState(initialCurrency);
-  const [locale, setLocaleState] = useState(initialLocale);
+  // Locale now comes from URL via initialLocale prop (from useParams in layout)
+  // We don't manage it in localStorage anymore
+  const [locale] = useState(initialLocale);
 
-  // Load from localStorage on mount
+  // Load only currency from localStorage on mount
   useEffect(() => {
-    const savedCurrency = localStorage.getItem('currency');
-    const savedLocale = localStorage.getItem('locale');
-
+    const savedCurrency = localStorage.getItem('proman_currency');
     if (savedCurrency) setCurrencyState(savedCurrency);
-    if (savedLocale) setLocaleState(savedLocale);
   }, []);
 
   const setCurrency = (newCurrency: string) => {
     setCurrencyState(newCurrency);
-    localStorage.setItem('currency', newCurrency);
-  };
-
-  const setLocale = (newLocale: string) => {
-    setLocaleState(newLocale);
-    localStorage.setItem('locale', newLocale);
+    localStorage.setItem('proman_currency', newCurrency);
   };
 
   const formatCurrency = (amount: number): string => {
@@ -73,8 +66,7 @@ export function CurrencyProvider({
         currency,
         setCurrency,
         formatCurrency,
-        locale,
-        setLocale,
+        locale, // Read-only, derived from URL
       }}
     >
       {children}
