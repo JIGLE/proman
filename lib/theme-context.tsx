@@ -2,11 +2,11 @@
 
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
-type Theme = 'light' | 'dark' | 'system';
+type Theme = 'light' | 'dark' | 'dark-oled' | 'system';
 
 interface ThemeContextType {
   theme: Theme;
-  resolvedTheme: 'light' | 'dark';
+  resolvedTheme: 'light' | 'dark' | 'dark-oled';
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
 }
@@ -17,7 +17,7 @@ const THEME_STORAGE_KEY = 'proman-theme';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   const [theme, setThemeState] = useState<Theme>('dark');
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark' | 'dark-oled'>('dark');
   const [mounted, setMounted] = useState(false);
 
   // Get system preference
@@ -29,7 +29,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }): Reac
   }, []);
 
   // Resolve the actual theme based on preference
-  const resolveTheme = useCallback((themePreference: Theme): 'light' | 'dark' => {
+  const resolveTheme = useCallback((themePreference: Theme): 'light' | 'dark' | 'dark-oled' => {
     if (themePreference === 'system') {
       return getSystemTheme();
     }
@@ -37,9 +37,9 @@ export function ThemeProvider({ children }: { children: React.ReactNode }): Reac
   }, [getSystemTheme]);
 
   // Apply theme to document
-  const applyTheme = useCallback((resolved: 'light' | 'dark') => {
+  const applyTheme = useCallback((resolved: 'light' | 'dark' | 'dark-oled') => {
     const root = document.documentElement;
-    root.classList.remove('light', 'dark');
+    root.classList.remove('light', 'dark', 'dark-oled');
     root.classList.add(resolved);
     root.setAttribute('data-theme', resolved);
     setResolvedTheme(resolved);
@@ -74,8 +74,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }): Reac
   }, [applyTheme, resolveTheme]);
 
   const toggleTheme = useCallback(() => {
-    const newTheme = resolvedTheme === 'dark' ? 'light' : 'dark';
-    setTheme(newTheme);
+    // Cycle through: light → dark → dark-oled → light
+    const themeOrder: Array<'light' | 'dark' | 'dark-oled'> = ['light', 'dark', 'dark-oled'];
+    const currentIndex = themeOrder.indexOf(resolvedTheme);
+    const nextIndex = (currentIndex + 1) % themeOrder.length;
+    setTheme(themeOrder[nextIndex]);
   }, [resolvedTheme, setTheme]);
 
   // Prevent flash of wrong theme

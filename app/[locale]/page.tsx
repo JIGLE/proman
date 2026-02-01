@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MobileBottomNav, MobileHeader } from "@/components/ui/mobile-nav";
 import { CommandPalette, useCommandPalette } from "@/components/ui/command-palette";
+import { KeyboardShortcutsOverlay } from "@/components/ui/keyboard-shortcuts";
 import { NavigationBreadcrumbs, CompactBreadcrumbs } from "@/components/ui/breadcrumbs";
 import { SkipLinks } from "@/components/ui/accessibility";
 import { useNavigationShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
@@ -636,7 +637,14 @@ export default function Home(): React.ReactElement {
         </main>
         
         {/* Mobile Bottom Navigation */}
-        <MobileBottomNav activeTab={activeTab} onTabChange={handleTabChange} />
+        <MobileBottomNav 
+          activeTab={activeTab} 
+          onTabChange={handleTabChange}
+          onSearchClick={commandPalette.open}
+        />
+        
+        {/* Keyboard Shortcuts Help Overlay */}
+        <KeyboardShortcutsOverlay />
       </div>
     </AppProvider>
   );

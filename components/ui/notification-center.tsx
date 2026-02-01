@@ -271,8 +271,9 @@ export function NotificationCenter({
           <>
             {/* Backdrop */}
             <div
-              className="fixed inset-0 z-40"
+              className="fixed inset-0 z-[var(--z-dropdown)]"
               onClick={() => setIsOpen(false)}
+              aria-hidden="true"
             />
 
             {/* Panel */}
@@ -281,10 +282,10 @@ export function NotificationCenter({
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -10, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-full mt-2 w-80 sm:w-96 z-50 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-xl"
+              className="fixed top-14 right-4 w-full max-w-md mx-4 sm:mx-0 sm:w-96 max-h-[calc(100vh-5rem)] z-[var(--z-popover)] rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] shadow-xl overflow-hidden flex flex-col"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-3 border-b border-[var(--color-border)]">
+              <div className="flex items-center justify-between p-3 border-b border-[var(--color-border)] flex-none">
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-[var(--color-foreground)]">
                     Notifications
@@ -302,6 +303,7 @@ export function NotificationCenter({
                       size="sm"
                       className="h-7 text-xs"
                       onClick={onMarkAllAsRead}
+                      aria-label="Mark all as read"
                     >
                       <CheckCheck className="h-3.5 w-3.5 mr-1" />
                       Mark all read
@@ -312,6 +314,7 @@ export function NotificationCenter({
                     size="sm"
                     className="h-7 w-7 p-0"
                     onClick={() => setIsOpen(false)}
+                    aria-label="Close notifications"
                   >
                     <X className="h-4 w-4" />
                   </Button>
@@ -319,7 +322,7 @@ export function NotificationCenter({
               </div>
 
               {/* Filter tabs */}
-              <div className="flex items-center gap-1 p-2 border-b border-[var(--color-border)]">
+              <div className="flex items-center gap-1 p-2 border-b border-[var(--color-border)] flex-none">
                 <Button
                   variant={filter === "all" ? "secondary" : "ghost"}
                   size="sm"
@@ -339,44 +342,47 @@ export function NotificationCenter({
               </div>
 
               {/* Notification list */}
-              <div className="max-h-[400px] overflow-y-auto">
-                {sortedNotifications.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-8 text-center">
-                    <Bell className="h-10 w-10 text-[var(--color-muted-foreground)] mb-3" />
-                    <p className="text-sm font-medium text-[var(--color-foreground)]">
-                      {filter === "unread" ? "No unread notifications" : "No notifications"}
-                    </p>
-                    <p className="text-xs text-[var(--color-muted-foreground)]">
-                      {filter === "unread" 
-                        ? "You're all caught up!" 
-                        : "Notifications will appear here"}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="p-2 space-y-1">
-                    <AnimatePresence mode="popLayout">
-                      {sortedNotifications.map((notification) => (
-                        <NotificationItem
-                          key={notification.id}
-                          notification={notification}
-                          onMarkAsRead={onMarkAsRead}
-                          onDelete={onDelete}
-                          onClick={onNotificationClick}
-                        />
-                      ))}
-                    </AnimatePresence>
-                  </div>
-                )}
+              <div className="flex-1 overflow-hidden">
+                <div className="h-full overflow-y-auto scrollbar-thin">
+                  {sortedNotifications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-8 text-center">
+                      <Bell className="h-10 w-10 text-[var(--color-muted-foreground)] mb-3" />
+                      <p className="text-sm font-medium text-[var(--color-foreground)]">
+                        {filter === "unread" ? "No unread notifications" : "No notifications"}
+                      </p>
+                      <p className="text-xs text-[var(--color-muted-foreground)]">
+                        {filter === "unread" 
+                          ? "You're all caught up!" 
+                          : "Notifications will appear here"}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="p-2 space-y-1">
+                      <AnimatePresence mode="popLayout">
+                        {sortedNotifications.map((notification) => (
+                          <NotificationItem
+                            key={notification.id}
+                            notification={notification}
+                            onMarkAsRead={onMarkAsRead}
+                            onDelete={onDelete}
+                            onClick={onNotificationClick}
+                          />
+                        ))}
+                      </AnimatePresence>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Footer */}
               {notifications.length > 0 && (
-                <div className="flex items-center justify-between p-2 border-t border-[var(--color-border)]">
+                <div className="flex items-center justify-between p-2 border-t border-[var(--color-border)] flex-none">
                   <Button
                     variant="ghost"
                     size="sm"
                     className="h-7 text-xs text-destructive hover:text-destructive"
                     onClick={onClearAll}
+                    aria-label="Clear all notifications"
                   >
                     <Trash2 className="h-3.5 w-3.5 mr-1" />
                     Clear all
@@ -385,6 +391,7 @@ export function NotificationCenter({
                     variant="ghost"
                     size="sm"
                     className="h-7 text-xs"
+                    aria-label="Notification settings"
                   >
                     <Settings className="h-3.5 w-3.5 mr-1" />
                     Settings

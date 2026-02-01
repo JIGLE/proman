@@ -127,6 +127,16 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
         </div>
         {!collapsed && (
           <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onTabChange('settings')}
+              className="h-8 w-8 p-0"
+              title="Settings"
+              aria-label="Settings"
+            >
+              <Settings className="h-4 w-4" />
+            </Button>
             <ThemeToggle variant="button" size="sm" className="h-8 w-8" />
             <NotificationCenter
               notifications={notifications}
@@ -137,6 +147,18 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
               onNotificationClick={handleNotificationClick}
             />
           </div>
+        )}
+        {collapsed && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onTabChange('settings')}
+            className="h-8 w-8 p-0"
+            title="Settings"
+            aria-label="Settings"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
         )}
       </div>
 
@@ -174,7 +196,7 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
       <nav
         id="main-navigation"
         aria-label="Main navigation"
-        className="flex-1 space-y-1 p-2"
+        className="flex-1 overflow-y-auto scrollbar-thin space-y-1 p-2"
       >
         {menuItems.map((group, groupIndex) => (
           <div
@@ -238,130 +260,73 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
           </div>
         ))}
 
-        {/* Account Settings */}
-        <Separator className="my-4" />
-        
-        <div className="space-y-1">
-          {!collapsed && (
-            <div className="px-3 py-2">
-              <h3 className="text-xs font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
-                Account
-              </h3>
-            </div>
-          )}
-          
-          {accountItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
 
-            return (
-              <button
-                key={item.id}
-                onClick={() => onTabChange(item.id)}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 group",
-                  "hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)]",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]",
-                  collapsed && "justify-center px-2",
-                  isActive 
-                    ? "bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-r-2 border-[var(--color-accent)]" 
-                    : "text-[var(--color-sidebar-text)]"
-                )}
-                title={collapsed ? item.label : undefined}
-              >
-                <Icon className={cn(
-                  "h-4 w-4 shrink-0 transition-colors",
-                  isActive ? "text-[var(--color-accent)]" : "text-[var(--color-sidebar-text)] group-hover:text-[var(--color-foreground)]"
-                )} />
-                {!collapsed && <span>{item.label}</span>}
-              </button>
-            );
-          })}
-        </div>
       </nav>
 
-      <Separator className="my-2" />
-
-      {/* User Profile Section */}
-      {session && (
-        <div className="p-3">
-          {!collapsed && (
-            <div className="flex items-center gap-3 px-3 py-3 rounded-lg bg-[var(--color-surface-elevated)] border border-[var(--color-border)]">
-              <Avatar className="w-9 h-9 ring-2 ring-[var(--color-border)]">
-                <AvatarImage src={user?.image || ''} alt={user?.name || 'User'} />
-                <AvatarFallback className="bg-[var(--color-accent)] text-[var(--color-accent-foreground)] text-sm font-semibold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[var(--color-foreground)] truncate">
-                  {user?.name}
-                </p>
-                <p className="text-xs text-[var(--color-muted-foreground)] truncate">
-                  {user?.email}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Account Actions */}
-          <div className="mt-3 space-y-1">
-            {accountItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => onTabChange(item.id)}
-                  className={cn(
-                    "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
-                    "text-[var(--color-sidebar-text)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)]",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]",
-                    collapsed && "justify-center"
-                  )}
-                  title={collapsed ? item.label : undefined}
+      {/* Sticky Footer with User Profile */}
+      <div className="flex-none border-t border-[var(--color-sidebar-border)] bg-[var(--color-sidebar-bg)]">
+        {session && (
+          <div className="p-3">
+            {!collapsed ? (
+              <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors">
+                <Avatar className="w-8 h-8 ring-2 ring-[var(--color-border)]">
+                  <AvatarImage src={user?.image || ''} alt={user?.name || 'User'} />
+                  <AvatarFallback className="bg-[var(--color-accent)] text-[var(--color-accent-foreground)] text-xs font-semibold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
+                    {user?.name}
+                  </p>
+                  <p className="text-xs text-[var(--color-muted-foreground)] truncate">
+                    {user?.email}
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => signOut()}
+                  className="h-8 w-8 p-0 hover:bg-[var(--color-destructive)]/10 hover:text-[var(--color-destructive)]"
+                  title="Sign Out"
+                  aria-label="Sign Out"
                 >
-                  <Icon className="h-4 w-4 shrink-0" />
-                  {!collapsed && <span>{item.label}</span>}
-                </button>
-              );
-            })}
-            
-            <button
-              onClick={() => signOut()}
-              className={cn(
-                "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200",
-                "text-[var(--color-sidebar-text)] hover:bg-[var(--color-destructive)]/10 hover:text-[var(--color-destructive)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-destructive)]",
-                collapsed && "justify-center"
-              )}
-              title={collapsed ? "Sign Out" : undefined}
-            >
-              <LogOut className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>Sign Out</span>}
-            </button>
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => signOut()}
+                className="w-full h-9 p-0 hover:bg-[var(--color-destructive)]/10 hover:text-[var(--color-destructive)]"
+                title="Sign Out"
+                aria-label="Sign Out"
+              >
+                <LogOut className="h-4 w-4" />
+              </Button>
+            )}
           </div>
-        </div>
-      )}
-
-      <Separator className="my-2" />
+        )}
+      </div>
 
       {/* Collapse Toggle */}
-      <div className="p-3">
+      <div className="flex-none p-2 border-t border-[var(--color-sidebar-border)]">
         <Button
           variant="ghost"
           size="sm"
           onClick={() => setCollapsed(!collapsed)}
           className={cn(
-            "w-full justify-start text-[var(--color-sidebar-text)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-hover)] transition-all duration-200",
-            "border border-[var(--color-border)] focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
+            "w-full justify-center text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-hover)]",
+            "focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
           )}
+          title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+          aria-label={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         >
           {collapsed ? (
-            <ChevronRight className="h-4 w-4 mx-auto" />
+            <ChevronRight className="h-4 w-4" />
           ) : (
-            <>
-              <ChevronLeft className="h-4 w-4 mr-2" />
-              <span>Collapse Sidebar</span>
-            </>
+            <ChevronLeft className="h-4 w-4" />
           )}
         </Button>
       </div>

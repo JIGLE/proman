@@ -69,6 +69,18 @@
   --color-sidebar-border: oklch(0.15 0.02 264);
   --color-sidebar-text: oklch(0.65 0.01 264);
   --color-sidebar-text-active: oklch(0.98 0 0);
+
+  /* ============================================
+     Z-INDEX SYSTEM
+     ============================================
+     Standardized layering to prevent overlap issues
+   */
+  --z-base: 0;
+  --z-dropdown: 50;
+  --z-sticky: 100;
+  --z-modal: 150;
+  --z-popover: 200;
+  --z-toast: 250;
 }
 
 /* ============================================
@@ -132,6 +144,73 @@
   --color-sidebar-border: oklch(0.90 0.01 264);
   --color-sidebar-text: oklch(0.45 0.01 264);
   --color-sidebar-text-active: oklch(0.15 0.02 264);
+}
+
+/* ============================================
+   OLED DARK THEME (Pure Black for OLED screens)
+   ============================================
+   Optimized for OLED displays with pure black backgrounds
+   Reduces power consumption and provides maximum contrast
+*/
+:root.dark-oled,
+[data-theme="dark-oled"] {
+  /* Base Colors - OLED optimized with pure black */
+  --color-background: oklch(0 0 0);
+  --color-foreground: oklch(0.98 0 0);
+  --color-card: oklch(0.05 0.01 264);
+  --color-card-foreground: oklch(0.98 0 0);
+  --color-primary: oklch(0.68 0.19 262);
+  --color-primary-foreground: oklch(0.98 0 0);
+  --color-secondary: oklch(0.10 0.01 264);
+  --color-secondary-foreground: oklch(0.98 0 0);
+  --color-muted: oklch(0.10 0.01 264);
+  --color-muted-foreground: oklch(0.60 0.01 264);
+  --color-accent: oklch(0.68 0.19 262);
+  --color-accent-foreground: oklch(0.98 0 0);
+  --color-destructive: oklch(0.62 0.24 27);
+  --color-destructive-foreground: oklch(0.98 0 0);
+  --color-border: oklch(0.12 0.01 264);
+  --color-border-hover: oklch(0.22 0.01 264);
+  --color-input: oklch(0.08 0.01 264);
+  --color-ring: oklch(0.68 0.19 262);
+
+  /* Semantic Colors - OLED */
+  --color-success: oklch(0.65 0.17 160);
+  --color-success-foreground: oklch(0.98 0 0);
+  --color-success-muted: oklch(0.10 0.05 160);
+  --color-warning: oklch(0.76 0.18 85);
+  --color-warning-foreground: oklch(0.10 0.01 85);
+  --color-warning-muted: oklch(0.12 0.05 85);
+  --color-info: oklch(0.58 0.12 250);
+  --color-info-foreground: oklch(0.98 0 0);
+  --color-info-muted: oklch(0.10 0.04 250);
+  --color-error: oklch(0.62 0.24 27);
+  --color-error-foreground: oklch(0.98 0 0);
+  --color-error-muted: oklch(0.10 0.05 27);
+
+  /* Accent Colors - OLED */
+  --color-accent-primary: oklch(0.68 0.19 262);
+  --color-accent-primary-foreground: oklch(0.98 0 0);
+  --color-accent-secondary: oklch(0.62 0.15 200);
+  --color-accent-secondary-foreground: oklch(0.98 0 0);
+
+  /* Interactive States - OLED */
+  --color-hover: oklch(0.14 0.01 264);
+  --color-active: oklch(0.16 0.01 264);
+  --color-focus: oklch(0.68 0.19 262);
+  
+  /* Surface Colors - OLED */
+  --color-surface-elevated: oklch(0.08 0.01 264);
+  --color-surface-overlay: oklch(0.10 0.01 264);
+  --color-surface-pressed: oklch(0.03 0.01 264);
+  --color-surface-hover: oklch(0.12 0.01 264);
+  --color-overlay: oklch(0.0 0.0 0 / 0.9);
+  
+  /* Sidebar specific - OLED */
+  --color-sidebar-bg: oklch(0 0 0);
+  --color-sidebar-border: oklch(0.10 0.01 264);
+  --color-sidebar-text: oklch(0.60 0.01 264);
+  --color-sidebar-text-active: oklch(0.98 0 0);
 }
 
 body {
@@ -442,6 +521,64 @@ body {
 
 .h-safe-area-inset-bottom {
   height: env(safe-area-inset-bottom, 0px);
+}
+
+/* ============================================
+   Z-INDEX UTILITY CLASSES
+   ============================================ */
+.z-base { z-index: var(--z-base); }
+.z-dropdown { z-index: var(--z-dropdown); }
+.z-sticky { z-index: var(--z-sticky); }
+.z-modal { z-index: var(--z-modal); }
+.z-popover { z-index: var(--z-popover); }
+.z-toast { z-index: var(--z-toast); }
+
+/* ============================================
+   ANIMATION PERFORMANCE
+   ============================================ */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* Respect reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   CUSTOM SCROLLBAR STYLING
+   ============================================ */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-hover) transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: var(--color-border-hover);
+  border-radius: 3px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-primary);
 }
 
 /* Mobile-friendly tap targets (44px minimum) */

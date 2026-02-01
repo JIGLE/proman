@@ -313,7 +313,7 @@ export function CommandPalette({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.15 }}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[var(--z-modal)]"
             onClick={onClose}
           />
 
@@ -323,12 +323,12 @@ export function CommandPalette({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -20 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="fixed top-[20%] left-1/2 -translate-x-1/2 w-full max-w-xl z-50"
+            className="fixed top-[15vh] left-1/2 -translate-x-1/2 w-full max-w-xl max-h-[70vh] min-h-[200px] z-[var(--z-modal)]"
           >
-            <div className="mx-4 bg-zinc-900 border border-zinc-700 rounded-xl shadow-2xl overflow-hidden">
+            <div className="mx-4 bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[70vh]">
               {/* Search Input */}
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-800">
-                <Search className="h-5 w-5 text-zinc-500" />
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-[var(--color-border)] flex-none">
+                <Search className="h-5 w-5 text-[var(--color-muted-foreground)]" />
                 <input
                   ref={inputRef}
                   type="text"
@@ -336,20 +336,21 @@ export function CommandPalette({
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Search or type a command..."
-                  className="flex-1 bg-transparent text-zinc-100 placeholder-zinc-500 outline-none text-sm"
+                  className="flex-1 bg-transparent text-[var(--color-foreground)] placeholder-[var(--color-muted-foreground)] outline-none text-sm"
                 />
                 <button
                   onClick={onClose}
-                  className="p-1 text-zinc-500 hover:text-zinc-300 transition-colors"
+                  className="p-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors"
+                  aria-label="Close command palette"
                 >
                   <X className="h-4 w-4" />
                 </button>
               </div>
 
               {/* Results */}
-              <div ref={listRef} className="max-h-80 overflow-y-auto">
+              <div ref={listRef} className="flex-1 overflow-y-auto overflow-x-hidden relative">
                 {flatItems.length === 0 ? (
-                  <div className="px-4 py-8 text-center text-zinc-500">
+                  <div className="px-4 py-8 text-center text-[var(--color-muted-foreground)]">
                     No results found for &quot;{query}&quot;
                   </div>
                 ) : (
@@ -367,21 +368,23 @@ export function CommandPalette({
                     )}
                   </>
                 )}
+                {/* Fade gradient at bottom */}
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-[var(--color-card)] to-transparent pointer-events-none" />
               </div>
 
               {/* Footer */}
-              <div className="flex items-center justify-between px-4 py-2 border-t border-zinc-800 text-xs text-zinc-500">
+              <div className="flex items-center justify-between px-4 py-2 border-t border-[var(--color-border)] text-xs text-[var(--color-muted-foreground)] flex-none">
                 <div className="flex items-center gap-4">
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded">↑↓</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-[var(--color-hover)] rounded">↑↓</kbd>
                     navigate
                   </span>
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded">↵</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-[var(--color-hover)] rounded">↵</kbd>
                     select
                   </span>
                   <span className="flex items-center gap-1">
-                    <kbd className="px-1.5 py-0.5 bg-zinc-800 rounded">esc</kbd>
+                    <kbd className="px-1.5 py-0.5 bg-[var(--color-hover)] rounded">esc</kbd>
                     close
                   </span>
                 </div>

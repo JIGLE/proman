@@ -17,6 +17,7 @@ import {
   Settings,
   LogOut,
   ChevronRight,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut, useSession } from "next-auth/react";
@@ -25,14 +26,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 interface MobileNavProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
+  onSearchClick?: () => void;
 }
 
-// Primary navigation items for bottom bar (max 5 for usability)
+// Primary navigation items for bottom bar (4 items for optimal thumb reach)
 const primaryNavItems = [
   { id: "overview", label: "Home", icon: Home },
   { id: "properties", label: "Properties", icon: Building2 },
-  { id: "tenants", label: "Tenants", icon: Users },
-  { id: "financials", label: "Finance", icon: DollarSign },
+  { id: "tenants", label: "People", icon: Users },
   { id: "more", label: "More", icon: Menu },
 ];
 
@@ -42,6 +43,7 @@ const secondaryNavItems = [
   { id: "map", label: "Map View", icon: MapPin },
   { id: "leases", label: "Leases", icon: FileText },
   { id: "owners", label: "Owners", icon: Briefcase },
+  { id: "financials", label: "Finance", icon: DollarSign },
   { id: "payments", label: "Payments", icon: DollarSign },
   { id: "receipts", label: "Receipts", icon: FileText },
   { id: "maintenance", label: "Maintenance", icon: Hammer },
@@ -49,7 +51,7 @@ const secondaryNavItems = [
   { id: "settings", label: "Settings", icon: Settings },
 ];
 
-export function MobileBottomNav({ activeTab, onTabChange }: MobileNavProps): React.ReactElement {
+export function MobileBottomNav({ activeTab, onTabChange, onSearchClick }: MobileNavProps): React.ReactElement {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const { data: session } = useSession();
   const user = session?.user;
@@ -149,15 +151,22 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileNavProps): Rea
       </div>
 
       {/* Bottom Navigation Bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
+      <nav 
+        className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+        role="navigation"
+        aria-label="Mobile navigation"
+      >
         {/* Safe area spacer for notched devices */}
-        <div className="bg-[var(--color-background)] border-t border-[var(--color-border)]">
-          <div className="flex items-center justify-around h-16 px-2">
-            {primaryNavItems.map((item) => {
+        <div className="bg-[var(--color-background)]/95 backdrop-blur-sm border-t border-[var(--color-border)]">
+          <div className="relative flex items-center justify-around h-16 px-2">
+            {primaryNavItems.map((item, index) => {
               const Icon = item.icon;
               const isActive = item.id === "more" 
                 ? (showMoreMenu || isActiveInSecondary)
                 : activeTab === item.id;
+              
+              // Create gap for FAB button after second item (between Properties and People)
+              const marginClass = index === 2 ? "ml-16" : "";
               
               return (
                 <button
@@ -166,19 +175,23 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileNavProps): Rea
                   className={cn(
                     "flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-full px-2 py-1 rounded-lg transition-all duration-200",
                     "active:scale-95 touch-manipulation",
+                    "focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-1",
+                    marginClass,
                     isActive
                       ? "text-accent-primary"
                       : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
                   )}
+                  aria-label={item.label}
+                  aria-current={isActive && item.id !== "more" ? "page" : undefined}
                 >
                   <div className={cn(
                     "p-1.5 rounded-lg transition-colors",
                     isActive && "bg-accent-primary/20"
                   )}>
                     {item.id === "more" && showMoreMenu ? (
-                      <X className="h-5 w-5" />
+                      <X className="h-5 w-5" aria-hidden="true" />
                     ) : (
-                      <Icon className="h-5 w-5" />
+                      <Icon className="h-5 w-5" aria-hidden="true" />
                     )}
                   </div>
                   <span className={cn(
@@ -190,9 +203,34 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileNavProps): Rea
                 </button>
               );
             })}
+
+            {/* Floating Action Button (FAB) for Search - centered between Properties and People */}
+            {onSearchClick && (
+              <button
+                onClick={onSearchClick}
+                className={cn(
+                  "absolute left-1/2 -translate-x-1/2 -top-6",
+                  "w-14 h-14 rounded-full",
+                  "bg-gradient-to-br from-accent-primary to-accent-primary/80",
+                  "text-white shadow-lg shadow-accent-primary/50",
+                  "flex items-center justify-center",
+                  "transition-all duration-200 active:scale-90",
+                  "ring-4 ring-[var(--color-background)]",
+                  "focus-visible:ring-4 focus-visible:ring-accent-primary/50 focus-visible:outline-none",
+                  "hover:shadow-xl hover:shadow-accent-primary/60"
+                )}
+                aria-label="Open search"
+                title="Search (⌘K)"
+              >
+                <Search className="h-6 w-6" aria-hidden="true" />
+              </button>
+            )}
           </div>
           {/* iOS safe area padding */}
-          <div className="h-safe-area-inset-bottom bg-[var(--color-background)]" />
+          <div 
+            className="bg-[var(--color-background)]"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+          />
         </div>
       </nav>
     </>

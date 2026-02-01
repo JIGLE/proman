@@ -74,24 +74,31 @@ export function ThemeToggle({
           <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[140px]">
+      <DropdownMenuContent align="end" className="min-w-[160px]">
         <DropdownMenuItem 
           onClick={() => setTheme("light")}
-          className={cn(theme === "light" && "bg-accent")}
+          className={cn(theme === "light" && "bg-[var(--color-accent)]/20 text-accent-primary")}
         >
           <Sun className="mr-2 h-4 w-4" />
           <span>Light</span>
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => setTheme("dark")}
-          className={cn(theme === "dark" && "bg-accent")}
+          className={cn(theme === "dark" && "bg-[var(--color-accent)]/20 text-accent-primary")}
         >
           <Moon className="mr-2 h-4 w-4" />
           <span>Dark</span>
         </DropdownMenuItem>
         <DropdownMenuItem 
+          onClick={() => setTheme("dark-oled")}
+          className={cn(theme === "dark-oled" && "bg-[var(--color-accent)]/20 text-accent-primary")}
+        >
+          <Moon className="mr-2 h-4 w-4 fill-current" />
+          <span>OLED Black</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem 
           onClick={() => setTheme("system")}
-          className={cn(theme === "system" && "bg-accent")}
+          className={cn(theme === "system" && "bg-[var(--color-accent)]/20 text-accent-primary")}
         >
           <Monitor className="mr-2 h-4 w-4" />
           <span>System</span>
