@@ -4,7 +4,7 @@ import { Suspense } from 'react'
 import { signIn, useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import { ErrorBoundary } from '@/components/error-boundary'
+import { ErrorBoundary } from '@/components/shared/error-boundary'
 import { Button } from '@/components/ui/button'
 
 export const dynamic = 'force-dynamic'

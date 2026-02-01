@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense } from 'react'
-import { ErrorBoundary } from '@/components/error-boundary'
+import { ErrorBoundary } from '@/components/shared/error-boundary'
 
 export const dynamic = 'force-dynamic'
 
