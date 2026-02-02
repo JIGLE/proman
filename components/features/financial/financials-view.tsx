@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { ZodError } from "zod";
-import { DollarSign, TrendingUp, TrendingDown, Plus, Calendar as CalendarIcon, FileText, Calculator, BarChart3, PieChart } from "lucide-react";
+import { DollarSign, Plus, Calendar as CalendarIcon, FileText, Calculator, TrendingUp, TrendingDown, Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { BarChart, LineChart, DonutChart, MetricCard } from "@/components/ui/charts";
 import { useCurrency } from "@/lib/contexts/currency-context";

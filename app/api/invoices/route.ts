@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { invoiceService, batchReceiptService, type LateFeeConfig } from '@/lib/services/invoice-service';
+import { invoiceService, batchReceiptService } from '@/lib/services/invoice-service';
 import { sanitizeForDatabase, sanitizeNumber } from '@/lib/utils/sanitize';
 import { z } from 'zod';
 

@@ -1,31 +1,76 @@
-import React from 'react';
+import React, { createContext } from 'react';
 import { render } from '@testing-library/react';
 import { NextIntlClientProvider } from 'next-intl';
 import enMessages from '../../messages/en.json';
 
-// Mock providers for tests with proper context
+// Mock Currency Context - provides formatCurrency for tests
+interface MockCurrencyContextType {
+  currency: string;
+  setCurrency: (currency: string) => void;
+  formatCurrency: (amount: number) => string;
+  locale: string;
+}
+
+const MockCurrencyContext = createContext<MockCurrencyContextType | undefined>(undefined);
+
 const MockCurrencyProvider = ({ children }: { children: React.ReactNode }) => {
+  const value: MockCurrencyContextType = {
+    currency: 'USD',
+    setCurrency: () => {},
+    formatCurrency: (amount: number) => `$${amount.toFixed(2)}`,
+    locale: 'en',
+  };
+  
   return (
-    <div data-testid="mock-currency-provider">
+    <MockCurrencyContext.Provider value={value}>
       {children}
-    </div>
+    </MockCurrencyContext.Provider>
   );
 };
 
-const MockToastProvider = ({ children }: { children: React.ReactNode }) => <>{children}</>;
+// Mock Toast Context - provides toast functions for tests
+interface MockToastContextType {
+  success: (message: string) => void;
+  error: (message: string) => void;
+  info: (message: string) => void;
+  warning: (message: string) => void;
+}
 
-// Create a mock theme context
-const MockThemeContext = React.createContext({
-  theme: 'light' as const,
+const MockToastContext = createContext<MockToastContextType | undefined>(undefined);
+
+const MockToastProvider = ({ children }: { children: React.ReactNode }) => {
+  const value: MockToastContextType = {
+    success: () => {},
+    error: () => {},
+    info: () => {},
+    warning: () => {},
+  };
+  
+  return (
+    <MockToastContext.Provider value={value}>
+      {children}
+    </MockToastContext.Provider>
+  );
+};
+
+// Mock Theme Context
+interface MockThemeContextType {
+  theme: 'light' | 'dark' | 'system';
+  setTheme: (theme: 'light' | 'dark' | 'system') => void;
+  systemTheme: 'light' | 'dark';
+}
+
+const MockThemeContext = createContext<MockThemeContextType>({
+  theme: 'light',
   setTheme: () => {},
-  systemTheme: 'light' as const,
+  systemTheme: 'light',
 });
 
 const MockThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const value = {
-    theme: 'light' as const,
+  const value: MockThemeContextType = {
+    theme: 'light',
     setTheme: () => {},
-    systemTheme: 'light' as const,
+    systemTheme: 'light',
   };
   
   return (
@@ -37,9 +82,22 @@ const MockThemeProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
-export function renderWithProviders(ui: React.ReactElement, options?: any) {
+// Export contexts for tests that need direct access
+export { MockCurrencyContext, MockToastContext, MockThemeContext };
+
+interface CustomRenderOptions {
+  initialLocale?: string;
+  [key: string]: unknown;
+}
+
+export function renderWithProviders(
+  ui: React.ReactElement,
+  options?: CustomRenderOptions
+) {
+  const { initialLocale = 'en', ...renderOptions } = options ?? {};
+  
   const wrapped = (
-    <NextIntlClientProvider locale="en" messages={enMessages}>
+    <NextIntlClientProvider locale={initialLocale} messages={enMessages}>
       <MockThemeProvider>
         <MockCurrencyProvider>
           <MockToastProvider>{ui}</MockToastProvider>
@@ -47,7 +105,7 @@ export function renderWithProviders(ui: React.ReactElement, options?: any) {
       </MockThemeProvider>
     </NextIntlClientProvider>
   );
-  return render(wrapped, options);
+  return render(wrapped, renderOptions);
 }
 
 export * from '@testing-library/react';

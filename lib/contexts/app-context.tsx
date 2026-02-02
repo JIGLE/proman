@@ -512,14 +512,35 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     }
   };
 
-  const updateMaintenance = async (_id: string, _ticketData: Partial<MaintenanceTicket>) => {
-    // TODO: Implement update API
-    throw new Error('Update maintenance not implemented yet');
+  const updateMaintenance = async (id: string, ticketData: Partial<MaintenanceTicket>) => {
+    if (!userId) throw new Error('User not authenticated');
+    try {
+      const res = await apiFetch(`/api/maintenance/${id}`, 'PUT', ticketData);
+      const updatedTicket = res.data ?? res;
+      dispatch({ 
+        type: 'SET_MAINTENANCE', 
+        payload: state.maintenance.map(t => t.id === id ? updatedTicket : t) 
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update ticket';
+      showError(errorMessage);
+      throw err;
+    }
   };
 
-  const deleteMaintenance = async (_id: string) => {
-    // TODO: Implement delete API
-    throw new Error('Delete maintenance not implemented yet');
+  const deleteMaintenance = async (id: string) => {
+    if (!userId) throw new Error('User not authenticated');
+    try {
+      await apiFetch(`/api/maintenance/${id}`, 'DELETE');
+      dispatch({ 
+        type: 'SET_MAINTENANCE', 
+        payload: state.maintenance.filter(t => t.id !== id) 
+      });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete ticket';
+      showError(errorMessage);
+      throw err;
+    }
   };
 
   // Lease operations

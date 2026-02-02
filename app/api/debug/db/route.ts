@@ -20,8 +20,8 @@ export async function GET(): Promise<NextResponse> {
       exists: boolean | null;
       writable: boolean | null;
       userCount: number | null;
-      users?: any[];
-      accounts?: any[];
+      users?: unknown[];
+      accounts?: unknown[];
       sessionCount?: number;
       error: string | null;
     };

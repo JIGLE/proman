@@ -7,9 +7,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Building2, Users, DollarSign, TrendingUp, Trophy, Plus, Home, FileText, AlertTriangle, Calendar } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Building2, Users, DollarSign, TrendingUp, Home, AlertTriangle, Trophy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { BarChart, LineChart, DonutChart } from "@/components/ui/charts";
 import { DashboardGrid, StatWidget, ChartWidget, ListWidget } from "@/components/ui/dashboard-widgets";
 import { QuickActions, AttentionNeeded } from "@/components/ui/quick-actions";

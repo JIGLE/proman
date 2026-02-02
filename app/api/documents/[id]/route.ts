@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { documentService, type DocumentType } from '@/lib/services/document-service';
+import { documentService } from '@/lib/services/document-service';
 import { sanitizeForDatabase } from '@/lib/utils/sanitize';
 import { z } from 'zod';
 

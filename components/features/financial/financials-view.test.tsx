@@ -3,7 +3,7 @@ import { renderWithProviders as render, screen } from '@/tests/helpers/render-wi
 import { FinancialsView } from './financials-view'
 
 // Mock the currency hook
-vi.mock('@/lib/currency-context', () => ({
+vi.mock('@/lib/contexts/currency-context', () => ({
   useCurrency: () => ({
     formatCurrency: (amount: number | undefined) => 
       amount !== undefined ? `$${amount.toFixed(2)}` : '$0.00',
@@ -29,7 +29,7 @@ vi.mock('@/lib/contexts/app-context', () => ({
   })
 }))
 
-vi.mock('@/lib/toast-context', () => ({
+vi.mock('@/lib/contexts/toast-context', () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }))
 

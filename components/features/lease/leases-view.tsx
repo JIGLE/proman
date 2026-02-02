@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { FileText, Upload, Download, Plus, Edit, Trash2, Calendar, User, Building2, ArrowUpDown, ArrowUp, ArrowDown, Home, DollarSign, FileCheck } from "lucide-react";
+import { FileText, Plus, ArrowUp, ArrowDown, ArrowUpDown, Home, User, DollarSign, FileCheck, Upload, X, Calendar, ChevronDown, ChevronUp, Building2, Eye, Edit, Trash2, Download } from "lucide-react";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import {
   Card,

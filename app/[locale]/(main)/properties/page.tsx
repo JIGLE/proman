@@ -1,7 +1,8 @@
-"use client";
-
 import { Suspense } from "react";
 import { PropertiesView } from "@/components/features/property/property-list";
+
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 export default function PropertiesPage() {
   return (

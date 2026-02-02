@@ -2,13 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
-import { MapPin, Building2, Users, Filter, Eye, EyeOff } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { SearchAndFilter } from '@/components/ui/search-and-filter';
-import { cn } from '@/lib/utils/utils';
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(
@@ -41,12 +37,6 @@ interface PropertyMarker {
   units?: number;
 }
 
-interface MapFilters {
-  status: string[];
-  type: string[];
-  search: string;
-}
-
 interface MapViewState {
   showVacant: boolean;
   showOccupied: boolean;
@@ -56,75 +46,12 @@ interface MapViewState {
 
 export default function PropertyMap() {
   const [properties, setProperties] = useState<PropertyMarker[]>([]);
-  const [filteredProperties, setFilteredProperties] = useState<PropertyMarker[]>([]);
   const [loading, setLoading] = useState(true);
   const [mapCenter, setMapCenter] = useState<[number, number]>([38.7223, -9.1393]); // Lisbon default
-  const [selectedProperty, setSelectedProperty] = useState<PropertyMarker | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [viewState, setViewState] = useState<MapViewState>({
-    showVacant: true,
-    showOccupied: true,
-    showMaintenance: true,
-    clusterView: true
-  });
 
   useEffect(() => {
     fetchProperties();
   }, []);
-
-  useEffect(() => {
-    // Filter properties based on search and view state
-    let filtered = properties;
-    
-    if (searchQuery) {
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        p.address.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    
-    filtered = filtered.filter(p => {
-      if (p.status === 'vacant' && !viewState.showVacant) return false;
-      if (p.status === 'occupied' && !viewState.showOccupied) return false;
-      if (p.status === 'maintenance' && !viewState.showMaintenance) return false;
-      return true;
-    });
-    
-    setFilteredProperties(filtered);
-  }, [properties, searchQuery, viewState]);
-
-  const handleFiltersChange = (filters: Record<string, string | string[]>) => {
-    // Handle filter changes from SearchAndFilter component
-    const statusFilters = filters.status as string[] || [];
-    setViewState(prev => ({
-      ...prev,
-      showVacant: statusFilters.includes('vacant'),
-      showOccupied: statusFilters.includes('occupied'),
-      showMaintenance: statusFilters.includes('maintenance')
-    }));
-  };
-
-  const getMarkerColor = (status: string) => {
-    switch (status) {
-      case 'occupied': return '#10b981'; // green
-      case 'vacant': return '#f59e0b'; // yellow
-      case 'maintenance': return '#ef4444'; // red
-      default: return '#6b7280'; // gray
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'occupied':
-        return <Badge variant="success" size="sm">Occupied</Badge>;
-      case 'vacant':
-        return <Badge variant="warning" size="sm">Vacant</Badge>;
-      case 'maintenance':
-        return <Badge variant="destructive" size="sm">Maintenance</Badge>;
-      default:
-        return <Badge variant="outline" size="sm">Unknown</Badge>;
-    }
-  };
 
   const fetchProperties = async () => {
     try {
@@ -132,8 +59,8 @@ export default function PropertyMap() {
       if (res.ok) {
         const data = await res.json();
         const withCoords = data.filter(
-          (p: any) => p.latitude && p.longitude
-        ).map((p: any) => ({
+          (p: PropertyMarker) => p.latitude && p.longitude
+        ).map((p: PropertyMarker) => ({
           id: p.id,
           name: p.name,
           address: p.address,

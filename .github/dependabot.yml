@@ -45,10 +45,12 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    ignore:
-      # Ignore major version updates for stability (review manually)
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
+      # Group major version updates separately for careful review
+      major-updates:
+        patterns:
+          - "*"
+        update-types:
+          - "major"
 
   # GitHub Actions
   - package-ecosystem: "github-actions"

@@ -3,10 +3,9 @@
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, BarChart, DonutChart, AreaChart } from "@/components/ui/charts";
-import { DashboardGrid, StatWidget, ChartWidget, ListWidget } from "@/components/ui/dashboard-widgets";
+import { ChartWidget, ListWidget } from "@/components/ui/dashboard-widgets";
 import {
   KPICard,
   OccupancyGauge,
@@ -26,20 +25,14 @@ import {
   Users,
   DollarSign,
   TrendingUp,
-  TrendingDown,
   Trophy,
-  Plus,
   Home,
   FileText,
   AlertTriangle,
   Calendar,
-  Wrench,
   PieChart,
-  BarChart3,
   RefreshCw,
   Download,
-  Settings,
-  Bell,
   ArrowUpRight,
   ArrowDownRight,
   Wallet,
@@ -52,7 +45,6 @@ import type {
   PropertyPerformance,
   LeaseExpiration,
   MaintenanceStats,
-  OccupancyTrend,
   Activity
 } from "@/lib/services/analytics-service";
 
