@@ -1,13 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderWithProviders as render, screen, fireEvent } from './helpers/render-with-providers'
-import { Sidebar } from '../components/sidebar'
+import { renderWithProviders as render, screen, fireEvent } from '@/tests/helpers/render-with-providers'
+import { Sidebar } from './sidebar'
 
 vi.mock('next-auth/react', () => ({
   useSession: () => ({ data: { user: { name: 'Alice', email: 'a@example.com', image: '/a.png' } } }),
   signOut: vi.fn(),
 }))
 
-vi.mock('../lib/theme-context', () => ({
+vi.mock('@/lib/theme-context', () => ({
   useTheme: () => ({
     theme: 'light',
     setTheme: vi.fn(),

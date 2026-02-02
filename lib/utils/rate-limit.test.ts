@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 
-import { getClientIP, isRateLimited, withRateLimit, _resetRateLimitMap, _setRateLimitForIP } from '../lib/rate-limit'
+import { getClientIP, isRateLimited, withRateLimit, _resetRateLimitMap, _setRateLimitForIP } from '@/lib/utils/rate-limit'
 
 describe('rate-limit utilities', () => {
   beforeEach(() => {

@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { renderWithProviders as render, screen } from './helpers/render-with-providers'
+import { renderWithProviders as render, screen } from '@/tests/helpers/render-with-providers'
 import React from 'react'
-import { ErrorBoundary } from '../components/error-boundary'
+import { ErrorBoundary } from './error-boundary'
 
 function Bomb(): React.ReactElement {
   throw new Error('boom')

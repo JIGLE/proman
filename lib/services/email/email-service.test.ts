@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 
 vi.resetModules()
 
@@ -9,8 +9,8 @@ describe('EmailService', () => {
 
   it('isReady returns false when SENDGRID_API_KEY not set', async () => {
     delete process.env.SENDGRID_API_KEY
-    const mod = await import('../lib/email-service')
-    const { EmailService } = mod as { EmailService: typeof import('../lib/email-service').EmailService }
+    const mod = await import('@/lib/services/email/email-service')
+    const { EmailService } = mod as { EmailService: typeof import('@/lib/services/email/email-service').EmailService }
     // create a new instance directly to avoid singleton reuse
     const inst = EmailService.getInstance()
     expect(inst.isReady()).toBe(false)
@@ -27,8 +27,8 @@ describe('EmailService', () => {
     // Ensure we import module after mocking
     vi.resetModules()
     process.env.SENDGRID_API_KEY = 'fake-key'
-    const mod = await import('../lib/email-service')
-    const { emailService } = mod as { emailService: import('../lib/email-service').EmailService }
+    const mod = await import('@/lib/services/email/email-service')
+    const { emailService } = mod as { emailService: import('@/lib/services/email/email-service').EmailService }
 
     const res = await emailService.sendTemplatedEmail('rent_reminder', 'test@example.com', { tenantName: 'John', propertyAddress: '1 Main St', rentAmount: '100' }, 'user-1')
     expect(res.success).toBe(true)
@@ -45,8 +45,8 @@ describe('EmailService', () => {
 
     vi.resetModules()
     process.env.SENDGRID_API_KEY = 'fake-key'
-    const mod = await import('../lib/email-service')
-    const { emailService } = mod as { emailService: import('../lib/email-service').EmailService }
+    const mod = await import('@/lib/services/email/email-service')
+    const { emailService } = mod as { emailService: import('@/lib/services/email/email-service').EmailService }
 
     const res = await emailService.sendTemplatedEmail('maintenance_complete', 'test2@example.com', { tenantName: 'Sam', propertyAddress: '2 Elm St', workDescription: 'Fix sink', completionDate: '2025-12-01' }, 'user-2')
     expect(res.success).toBe(true)

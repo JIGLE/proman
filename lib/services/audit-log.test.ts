@@ -9,7 +9,7 @@ const mockFindMany = vi.fn().mockResolvedValue([
 const mockDeleteMany = vi.fn().mockResolvedValue({ count: 5 })
 
 // Mock the database module before imports
-vi.mock('@/lib/database', () => ({
+vi.mock('@/lib/services/database/database', () => ({
   getPrismaClient: () => ({
     auditLog: {
       create: mockCreate,

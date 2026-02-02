@@ -4,7 +4,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ExportButton } from './';
+import { ExportButton } from './export-button';
 import { renderWithProviders } from '@/tests/helpers/render-with-providers';
 
 // Mock currency context

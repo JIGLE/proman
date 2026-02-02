@@ -13,8 +13,8 @@ describe('auth options', () => {
   })
 
   it('returns base options when no DATABASE_URL is set', async () => {
-    const mod = await import('../lib/auth')
-    const { getAuthOptions } = mod as typeof import('../lib/auth')
+    const mod = await import('@/lib/auth')
+    const { getAuthOptions } = mod as typeof import('@/lib/auth')
 
     const opts = getAuthOptions()
     expect(opts.pages).toBeDefined()

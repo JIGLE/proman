@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 
-import { getPrismaClient } from '../lib/database'
+import { getPrismaClient } from '@/lib/services/database/database'
 
 describe('getPrismaClient', () => {
   it('returns a proxy with $connect when DATABASE_URL is not set', () => {

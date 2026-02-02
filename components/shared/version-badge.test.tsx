@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { renderWithProviders as render, screen } from './helpers/render-with-providers'
-import VersionBadge, { VersionInfo } from '../components/version-badge'
+import { renderWithProviders as render, screen } from '@/tests/helpers/render-with-providers'
+import VersionBadge, { VersionInfo } from './version-badge'
 
 describe('VersionBadge', () => {
   const fetchMock = vi.fn()

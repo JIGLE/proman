@@ -22,7 +22,7 @@ describe('env behavior', () => {
   });
 
   it('should not throw and provide defaults when NODE_ENV=test', async () => {
-    const mod = await import('../lib/env');
+    const mod = await import('@/lib/utils/env');
     const { env } = mod as { env: { NODE_ENV: 'development' | 'production' | 'test'; DATABASE_URL?: string; NEXTAUTH_SECRET?: string } };
     expect(env.NODE_ENV).toBe('test');
     expect(env.DATABASE_URL).toBeDefined();

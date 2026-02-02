@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { useFormDialog } from '../../lib/hooks/use-form-dialog';
+import { useFormDialog } from '@/lib/hooks/use-form-dialog';
 
 describe('useFormDialog', () => {
   it('should exist and be a function', () => {

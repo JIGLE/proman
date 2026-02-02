@@ -21,7 +21,9 @@ export default defineConfig({
       '**/node_modules/**',
       '**/.next/**',
       '**/dist/**',
-      '**/build/**'
+      '**/build/**',
+      '**/e2e/**', // Exclude Playwright e2e tests
+      '**/playwright/**'
     ]
   },
 })

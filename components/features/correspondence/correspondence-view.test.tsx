@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest'
 import { renderWithProviders as render, screen } from '@/tests/helpers/render-with-providers'
-import { CorrespondenceView } from '../../components/correspondence-view'
+import { CorrespondenceView } from './correspondence-view'
 
 vi.mock('@/lib/contexts/app-context', () => ({
   useApp: () => ({

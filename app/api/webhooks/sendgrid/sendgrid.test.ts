@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 
 // Mock dependencies
-vi.mock('@/lib/database', () => ({
+vi.mock('@/lib/services/database/database', () => ({
   getPrismaClient: vi.fn(() => ({
     emailLog: {
       upsert: vi.fn().mockResolvedValue({ id: 'log-123' }),

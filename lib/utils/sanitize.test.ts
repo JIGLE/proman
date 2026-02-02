@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { sanitizeHtml, sanitizeForDatabase, sanitizeFilename, sanitizeEmail, sanitizeNumber } from '../lib/sanitize'
+import { sanitizeHtml, sanitizeForDatabase, sanitizeFilename, sanitizeEmail, sanitizeNumber } from '@/lib/utils/sanitize'
 
 describe('sanitize utilities', () => {
   it('sanitizeHtml returns empty string for non-string or empty inputs', () => {

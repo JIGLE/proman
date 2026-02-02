@@ -1,6 +1,6 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, afterEach } from 'vitest'
 import type { Session } from 'next-auth'
-import { requireAuth, requireOwnership } from '../lib/auth-middleware'
+import { requireAuth, requireOwnership } from '@/lib/services/auth/auth-middleware'
 import { NextRequest } from 'next/server'
 
 vi.mock('next-auth/next', () => ({
@@ -11,7 +11,7 @@ vi.mock('next-auth', () => ({
   getServerSession: vi.fn()
 }))
 
-import { mockGetServerSession, resetGetServerSession } from './helpers/next-auth'
+import { mockGetServerSession, resetGetServerSession } from '@/tests/helpers/next-auth'
 
 describe('auth-middleware', () => {
   afterEach(async () => {
