@@ -110,6 +110,10 @@ jobs:
     timeout-minutes: 15
     needs: [lint-and-typecheck, test]
     if: always()
+    env:
+      DATABASE_URL: file:./ci-build.db
+      NEXTAUTH_SECRET: ci-build-secret-not-for-production
+      NEXTAUTH_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
       

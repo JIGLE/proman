@@ -5,6 +5,16 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./', import.meta.url)),
+      '@/ui': fileURLToPath(new URL('./components/ui', import.meta.url)),
+      '@/features': fileURLToPath(new URL('./components/features', import.meta.url)),
+      '@/services': fileURLToPath(new URL('./lib/services', import.meta.url)),
+      '@/hooks': fileURLToPath(new URL('./lib/hooks', import.meta.url)),
+      '@/utils': fileURLToPath(new URL('./lib/utils', import.meta.url)),
+      '@/schemas': fileURLToPath(new URL('./lib/schemas', import.meta.url)),
+      '@/shared': fileURLToPath(new URL('./components/shared', import.meta.url)),
+      '@/layouts': fileURLToPath(new URL('./components/layouts', import.meta.url)),
+      '@/types': fileURLToPath(new URL('./types', import.meta.url)),
+      '@/api': fileURLToPath(new URL('./app/api', import.meta.url)),
     },
   },
   test: {

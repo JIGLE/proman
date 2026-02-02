@@ -6,5 +6,5 @@
  */
 
 export { PropertiesView } from './property-list'
-export { PropertyMap } from './property-map'
-export { UnitsView } from './units-view'
+export { default as PropertyMap } from './property-map'
+export { default as UnitsView } from './units-view'
