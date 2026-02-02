@@ -13,8 +13,8 @@ describe('auth options', () => {
   })
 
   it('returns base options when no DATABASE_URL is set', async () => {
-    const mod = await import('@/lib/auth')
-    const { getAuthOptions } = mod as typeof import('@/lib/auth')
+    const mod = await import('@/lib/services/auth/auth')
+    const { getAuthOptions } = mod as typeof import('@/lib/services/auth/auth')
 
     const opts = getAuthOptions()
     expect(opts.pages).toBeDefined()
@@ -30,8 +30,8 @@ describe('auth options', () => {
     process.env.DATABASE_URL = 'file:./dev.db'
     const spy = vi.spyOn(console, 'warn').mockImplementation(() => {})
 
-    const mod = await import('../lib/auth')
-    const { getAuthOptions } = mod as typeof import('../lib/auth')
+    const mod = await import('@/lib/services/auth/auth')
+    const { getAuthOptions } = mod as typeof import('@/lib/services/auth/auth')
 
     const opts = getAuthOptions()
     expect(opts.pages).toBeDefined()
