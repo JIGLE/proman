@@ -13,17 +13,15 @@ import {
   ChevronLeft,
   ChevronRight,
   Home,
-  User,
   Settings,
   LogOut,
   Mail,
-  Briefcase,
   Hammer,
-  MapPin,
   BarChart3,
-  PieChart,
   Search,
   Command,
+  Wallet,
+  LightbulbIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
@@ -63,27 +61,14 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
     { 
       group: "Overview", 
       items: [
-        { id: "overview", label: "Dashboard", icon: Home, href: "/overview" },
+        { id: "home", label: "Home", icon: Home, href: "/overview" },
       ]
     },
     { 
-      group: "Portfolio", 
+      group: "Core", 
       items: [
-        { id: "properties", label: "Properties", icon: Building2, href: "/properties" },
-        { id: "owners", label: "Owners", icon: Briefcase, href: "/owners" },
-      ]
-    },
-    { 
-      group: "Tenants", 
-      items: [
-        { id: "tenants", label: "Tenants", icon: Users, href: "/tenants" },
-        { id: "leases", label: "Leases", icon: FileText, href: "/leases" },
-      ]
-    },
-    { 
-      group: "Finance", 
-      items: [
-        { id: "financials", label: "Financials", icon: DollarSign, href: "/financials" },
+        { id: "assets", label: "Assets", icon: Building2, href: "/properties" },
+        { id: "people", label: "People", icon: Users, href: "/tenants" },
       ]
     },
     { 
@@ -91,14 +76,13 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
       items: [
         { id: "maintenance", label: "Maintenance", icon: Hammer, href: "/maintenance" },
         { id: "correspondence", label: "Correspondence", icon: Mail, href: "/correspondence" },
-        { id: "documents", label: "Documents", icon: FileText, href: "/documents" },
       ]
     },
     { 
       group: "Insights", 
       items: [
-        { id: "analytics", label: "Analytics", icon: BarChart3, href: "/analytics" },
-        { id: "reports", label: "Reports", icon: PieChart, href: "/reports" },
+        { id: "finance", label: "Finance", icon: Wallet, href: "/financials" },
+        { id: "insights", label: "Insights", icon: LightbulbIcon, href: "/analytics" },
       ]
     }
   ];

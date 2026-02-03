@@ -1,14 +1,14 @@
 import { Suspense } from "react";
-import { PropertiesView } from "@/components/features/property/property-list";
+import { AssetsView } from "@/components/features/assets/assets-view";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export default function PropertiesPage() {
+export default function AssetsPage() {
   return (
-    <Suspense fallback={<div className="p-6">Loading properties…</div>}>
+    <Suspense fallback={<div className="p-6">Loading assets…</div>}>
       <div className="h-full">
-        <PropertiesView />
+        <AssetsView />
       </div>
     </Suspense>
   );

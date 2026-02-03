@@ -5,65 +5,73 @@ import { useState } from "react";
 import {
   Building2,
   Users,
-  DollarSign,
   Home,
   Menu,
   X,
-  FileText,
   Mail,
   Hammer,
-  MapPin,
-  Briefcase,
   Settings,
   LogOut,
-  ChevronRight,
   Search,
-  BarChart3,
+  Wallet,
+  LightbulbIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 interface MobileNavProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
   onSearchClick?: () => void;
 }
 
 // Primary navigation items for bottom bar (4 items for optimal thumb reach)
+// Aligned with new IA: Home, Assets, People, More
 const primaryNavItems = [
-  { id: "overview", label: "Home", icon: Home },
-  { id: "properties", label: "Properties", icon: Building2 },
-  { id: "tenants", label: "Tenants", icon: Users },
-  { id: "more", label: "More", icon: Menu },
+  { id: "home", label: "Home", icon: Home, href: "/overview" },
+  { id: "assets", label: "Assets", icon: Building2, href: "/properties" },
+  { id: "people", label: "People", icon: Users, href: "/tenants" },
+  { id: "more", label: "More", icon: Menu, href: null },
 ];
 
-// Secondary items in the "More" menu
+// Secondary items in the "More" menu - aligned with new IA
 const secondaryNavItems = [
-  { id: "owners", label: "Owners", icon: Briefcase },
-  { id: "financials", label: "Financials", icon: DollarSign },
-  { id: "maintenance", label: "Maintenance", icon: Hammer },
-  { id: "correspondence", label: "Correspondence", icon: Mail },
-  { id: "analytics", label: "Analytics", icon: BarChart3 },
-  { id: "settings", label: "Settings", icon: Settings },
+  { id: "maintenance", label: "Maintenance", icon: Hammer, href: "/maintenance" },
+  { id: "correspondence", label: "Correspondence", icon: Mail, href: "/correspondence" },
+  { id: "finance", label: "Finance", icon: Wallet, href: "/financials" },
+  { id: "insights", label: "Insights", icon: LightbulbIcon, href: "/analytics" },
+  { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
 ];
 
 export function MobileBottomNav({ activeTab, onTabChange, onSearchClick }: MobileNavProps): React.ReactElement {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const { data: session } = useSession();
+  const pathname = usePathname();
   const user = session?.user;
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
+  
+  // Extract locale from pathname
+  const currentLocale = pathname.split('/')[1] || 'en';
 
-  const handleNavClick = (id: string) => {
+  const handleNavClick = (id: string, href: string | null) => {
     if (id === "more") {
       setShowMoreMenu(!showMoreMenu);
     } else {
-      onTabChange(id);
+      onTabChange?.(id);
       setShowMoreMenu(false);
     }
   };
 
-  const isActiveInSecondary = secondaryNavItems.some(item => item.id === activeTab);
+  // Check if current path matches an item
+  const isItemActive = (href: string | null) => {
+    if (!href) return false;
+    return pathname.includes(href);
+  };
+
+  const isActiveInSecondary = secondaryNavItems.some(item => isItemActive(item.href));
 
   return (
     <>
@@ -114,12 +122,13 @@ export function MobileBottomNav({ activeTab, onTabChange, onSearchClick }: Mobil
         <div className="p-2 grid grid-cols-3 gap-1">
           {secondaryNavItems.map((item) => {
             const Icon = item.icon;
-            const isActive = activeTab === item.id;
+            const isActive = isItemActive(item.href);
             
             return (
-              <button
+              <Link
                 key={item.id}
-                onClick={() => handleNavClick(item.id)}
+                href={`/${currentLocale}${item.href}`}
+                onClick={() => setShowMoreMenu(false)}
                 className={cn(
                   "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-all duration-200",
                   "active:scale-95 touch-manipulation",
@@ -130,7 +139,7 @@ export function MobileBottomNav({ activeTab, onTabChange, onSearchClick }: Mobil
               >
                 <Icon className="h-5 w-5" />
                 <span className="text-xs font-medium">{item.label}</span>
-              </button>
+              </Link>
             );
           })}
         </div>
@@ -160,15 +169,53 @@ export function MobileBottomNav({ activeTab, onTabChange, onSearchClick }: Mobil
               const Icon = item.icon;
               const isActive = item.id === "more" 
                 ? (showMoreMenu || isActiveInSecondary)
-                : activeTab === item.id;
+                : isItemActive(item.href);
               
-              // Create gap for FAB button after second item (between Properties and People)
+              // Create gap for FAB button after second item (between Assets and People)
               const marginClass = index === 2 ? "ml-16" : "";
               
+              // For "more" button, use button element; for others use Link
+              if (item.id === "more") {
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavClick(item.id, null)}
+                    className={cn(
+                      "flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-full px-2 py-1 rounded-lg transition-all duration-200",
+                      "active:scale-95 touch-manipulation",
+                      "focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-1",
+                      marginClass,
+                      isActive
+                        ? "text-accent-primary"
+                        : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+                    )}
+                    aria-label={item.label}
+                  >
+                    <div className={cn(
+                      "p-1.5 rounded-lg transition-colors",
+                      isActive && "bg-accent-primary/20"
+                    )}>
+                      {showMoreMenu ? (
+                        <X className="h-5 w-5" aria-hidden="true" />
+                      ) : (
+                        <Icon className="h-5 w-5" aria-hidden="true" />
+                      )}
+                    </div>
+                    <span className={cn(
+                      "text-[10px] font-medium transition-colors",
+                      isActive ? "text-accent-primary" : "text-[var(--color-muted-foreground)]"
+                    )}>
+                      {item.label}
+                    </span>
+                  </button>
+                );
+              }
+              
               return (
-                <button
+                <Link
                   key={item.id}
-                  onClick={() => handleNavClick(item.id)}
+                  href={`/${currentLocale}${item.href}`}
+                  onClick={() => setShowMoreMenu(false)}
                   className={cn(
                     "flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-full px-2 py-1 rounded-lg transition-all duration-200",
                     "active:scale-95 touch-manipulation",
@@ -179,17 +226,13 @@ export function MobileBottomNav({ activeTab, onTabChange, onSearchClick }: Mobil
                       : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
                   )}
                   aria-label={item.label}
-                  aria-current={isActive && item.id !== "more" ? "page" : undefined}
+                  aria-current={isActive ? "page" : undefined}
                 >
                   <div className={cn(
                     "p-1.5 rounded-lg transition-colors",
                     isActive && "bg-accent-primary/20"
                   )}>
-                    {item.id === "more" && showMoreMenu ? (
-                      <X className="h-5 w-5" aria-hidden="true" />
-                    ) : (
-                      <Icon className="h-5 w-5" aria-hidden="true" />
-                    )}
+                    <Icon className="h-5 w-5" aria-hidden="true" />
                   </div>
                   <span className={cn(
                     "text-[10px] font-medium transition-colors",
@@ -197,7 +240,7 @@ export function MobileBottomNav({ activeTab, onTabChange, onSearchClick }: Mobil
                   )}>
                     {item.label}
                   </span>
-                </button>
+                </Link>
               );
             })}
 

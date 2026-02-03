@@ -82,24 +82,40 @@ export function Breadcrumbs({
   );
 }
 
-// Navigation tab to breadcrumb mapping
+// Navigation tab to breadcrumb mapping (aligned with new IA)
+// Groups: Home, Assets, People, Maintenance, Correspondence, Finance, Insights
 const tabLabels: Record<string, { label: string; group?: string }> = {
+  // Home
   overview: { label: "Dashboard" },
-  properties: { label: "Properties", group: "Property Management" },
-  units: { label: "Units", group: "Property Management" },
-  map: { label: "Map View", group: "Property Management" },
-  leases: { label: "Leases", group: "People & Leases" },
-  owners: { label: "Owners", group: "People & Leases" },
-  tenants: { label: "Tenants", group: "People & Leases" },
-  payments: { label: "Payment Matrix", group: "Financial" },
-  financials: { label: "Financials", group: "Financial" },
-  receipts: { label: "Receipts", group: "Financial" },
-  maintenance: { label: "Maintenance", group: "Operations" },
-  correspondence: { label: "Correspondence", group: "Operations" },
+  
+  // Assets section
+  properties: { label: "Properties", group: "Assets" },
+  units: { label: "Units", group: "Assets" },
+  map: { label: "Map View", group: "Assets" },
+  owners: { label: "Owners", group: "Assets" },
+  
+  // People section
+  tenants: { label: "Tenants", group: "People" },
+  leases: { label: "Leases", group: "People" },
+  
+  // Maintenance (standalone)
+  maintenance: { label: "Maintenance" },
+  
+  // Correspondence (standalone)
+  correspondence: { label: "Correspondence" },
+  
+  // Finance section (under Insights nav)
+  payments: { label: "Payment Matrix", group: "Finance" },
+  financials: { label: "Financials", group: "Finance" },
+  receipts: { label: "Receipts", group: "Finance" },
+  
+  // Insights section
   analytics: { label: "Analytics", group: "Insights" },
   reports: { label: "Reports", group: "Insights" },
-  profile: { label: "Profile", group: "Account" },
-  settings: { label: "Settings", group: "Account" },
+  
+  // Settings
+  profile: { label: "Profile", group: "Settings" },
+  settings: { label: "Settings" },
 };
 
 interface NavigationBreadcrumbsProps {

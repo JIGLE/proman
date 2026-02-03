@@ -1,14 +1,14 @@
 import { Suspense } from "react";
-import { TenantsView } from "@/components/features/tenant/tenants-view";
+import { PeopleView } from "@/components/features/people/people-view";
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
-export default function TenantsPage() {
+export default function PeoplePage() {
   return (
-    <Suspense fallback={<div className="p-6">Loading tenants…</div>}>
+    <Suspense fallback={<div className="p-6">Loading people…</div>}>
       <div className="h-full">
-        <TenantsView />
+        <PeopleView />
       </div>
     </Suspense>
   );
