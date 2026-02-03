@@ -1,12 +1,11 @@
 import * as React from "react"
-import { ChevronDown, ChevronUp, ChevronsUpDown, Filter, Download, Settings2, Eye, EyeOff } from "lucide-react"
+import { ChevronDown, ChevronUp, ChevronsUpDown, Filter, Download, Settings2 } from "lucide-react"
 import { cn } from "@/lib/utils/utils"
 import { Button } from "./button"
 import { Checkbox } from "./checkbox"
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuCheckboxItem,
   DropdownMenuSeparator,
@@ -60,7 +59,7 @@ interface AdvancedTableProps<T> {
   emptyMessage?: string
 }
 
-export function AdvancedTable<T extends Record<string, any>>({
+export function AdvancedTable<T extends Record<string, unknown>>({
   data,
   columns,
   className,

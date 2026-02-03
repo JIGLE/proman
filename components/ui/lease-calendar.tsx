@@ -73,10 +73,10 @@ export function LeaseCalendar({
   };
 
   // Get events for a specific date
-  const getEventsForDate = (day: number): LeaseEvent[] => {
+  const getEventsForDate = React.useCallback((day: number): LeaseEvent[] => {
     const dateStr = new Date(year, month, day).toISOString().split('T')[0];
     return events.filter(event => event.date.startsWith(dateStr));
-  };
+  }, [year, month, events]);
 
   // Get status color
   const getStatusColor = (status: LeaseEvent['status']) => {
@@ -130,7 +130,7 @@ export function LeaseCalendar({
     }
 
     return days;
-  }, [year, month, events, daysInMonth, firstDayOfMonth, prevMonthDays]);
+  }, [year, month, daysInMonth, firstDayOfMonth, prevMonthDays, getEventsForDate]);
 
   // Selected date events
   const selectedDateEvents = selectedDate 

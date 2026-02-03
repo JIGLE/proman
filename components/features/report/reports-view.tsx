@@ -1,18 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Download, 
-  Calendar,
-  TrendingUp,
-  TrendingDown,
   Building2,
-  FileText,
-  PieChart,
-  BarChart3,
   RefreshCw
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,7 +73,7 @@ export function ReportsView(): React.ReactElement {
   const [taxYear, setTaxYear] = useState(now.getFullYear());
 
   // Fetch report
-  const fetchReport = async () => {
+  const fetchReport = React.useCallback(async () => {
     setIsLoading(true);
     
     try {
@@ -122,7 +116,7 @@ export function ReportsView(): React.ReactElement {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [reportType, startDate, endDate, taxYear, error]);
 
   // Download CSV
   const downloadCSV = async () => {
@@ -152,7 +146,7 @@ export function ReportsView(): React.ReactElement {
 
   useEffect(() => {
     fetchReport();
-  }, [reportType]);
+  }, [fetchReport]);
 
   const handleGenerateReport = () => {
     fetchReport();

@@ -12,12 +12,9 @@ import {
   CheckCircle2,
   Clock,
   Calendar,
-  DollarSign,
   Building2,
-  Users,
   Home,
   Wrench,
-  FileText,
   ArrowRight
 } from "lucide-react";
 import { motion } from "framer-motion";

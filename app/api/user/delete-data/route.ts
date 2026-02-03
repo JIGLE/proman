@@ -1,5 +1,4 @@
 import { NextRequest } from "next/server";
-import { ApiError } from "@/lib/utils/errors";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import { logAudit } from "@/lib/services/audit-log";

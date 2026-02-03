@@ -29,11 +29,16 @@ interface Unit {
 }
 
 export default function UnitsView() {
-  const t = useTranslations('Units');
+  const _t = useTranslations('Units');
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
+  // TODO: Implement add/edit unit modal - states prepared but modal UI not yet built
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingUnit, setEditingUnit] = useState<Unit | null>(null);
+  
+  // Suppress unused warnings until modal is implemented
+  void showAddModal;
+  void editingUnit;
 
   useEffect(() => {
     fetchUnits();

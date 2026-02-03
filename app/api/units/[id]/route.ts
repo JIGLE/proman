@@ -68,6 +68,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const session = await getServerSession(getAuthOptions() as any) as Session | null;
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -120,10 +121,10 @@ export async function PUT(
     });
 
     return NextResponse.json(unit);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error updating unit:', error);
 
-    if (error.code === 'P2002') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       return NextResponse.json(
         { error: 'A unit with this number already exists for this property' },
         { status: 409 }
@@ -142,6 +143,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const session = await getServerSession(getAuthOptions() as any) as Session | null;
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

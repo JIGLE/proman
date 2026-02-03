@@ -12,9 +12,6 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
-  Download,
-  CheckSquare,
-  Square,
 } from "lucide-react";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { cn } from "@/lib/utils/utils";
@@ -285,17 +282,17 @@ export function TenantsView(): React.ReactElement {
                   {
                     key: "rent",
                     label: "Monthly Rent",
-                    format: (value) => formatCurrency(value),
+                    format: (value) => formatCurrency(value as number),
                   },
                   {
                     key: "leaseStart",
                     label: "Lease Start",
-                    format: (value) => new Date(value).toLocaleDateString(),
+                    format: (value) => new Date(value as string).toLocaleDateString(),
                   },
                   {
                     key: "leaseEnd",
                     label: "Lease End",
-                    format: (value) => new Date(value).toLocaleDateString(),
+                    format: (value) => new Date(value as string).toLocaleDateString(),
                   },
                   { key: "paymentStatus", label: "Payment Status" },
                 ]}

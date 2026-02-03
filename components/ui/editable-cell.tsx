@@ -79,7 +79,7 @@ export function EditableCell({
     }
   };
 
-  const validateValue = (val: string): string | null => {
+  const validateValue = useCallback((val: string): string | null => {
     // Built-in validation
     if (type === "email" && val) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -107,7 +107,7 @@ export function EditableCell({
     }
 
     return null;
-  };
+  }, [type, validate]);
 
   const handleStartEdit = () => {
     if (disabled) return;
@@ -147,7 +147,7 @@ export function EditableCell({
     } finally {
       setIsSaving(false);
     }
-  }, [editValue, value, type, onSave]);
+  }, [editValue, value, type, onSave, validateValue]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {

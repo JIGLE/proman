@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import {
   Property,
@@ -125,6 +125,8 @@ const AppContext = createContext<{
   addLease: (lease: Omit<Lease, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'contractFileName' | 'contractFileSize'>) => Promise<void>;
   updateLease: (id: string, lease: Partial<Lease>) => Promise<void>;
   deleteLease: (id: string) => Promise<void>;
+  // Refresh all data
+  refreshData: () => Promise<void>;
 } | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }): React.ReactElement {
@@ -149,62 +151,67 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     return data;
   }
 
+  // Reusable data loading function
+  const loadData = useCallback(async () => {
+    if (!userId) return;
+    try {
+      dispatch({ type: 'SET_LOADING', payload: true });
+      dispatch({ type: 'SET_ERROR', payload: null });
+
+      // Initialize database and seed if needed (server-side handler)
+      await apiFetch('/api/debug/db/init', 'POST');
+
+      // Load all data in parallel via server API endpoints
+      const [propertiesRes, tenantsRes, receiptsRes, templatesRes, correspondenceRes, ownersRes, expensesRes, maintenanceRes, leasesRes] = await Promise.all([
+        apiFetch('/api/properties'),
+        apiFetch('/api/tenants'),
+        apiFetch('/api/receipts'),
+        apiFetch('/api/correspondence/templates'),
+        apiFetch('/api/correspondence'),
+        apiFetch('/api/owners'),
+        apiFetch('/api/expenses'),
+        apiFetch('/api/maintenance'),
+        apiFetch('/api/leases'),
+      ]);
+
+      const properties = propertiesRes?.data ?? propertiesRes;
+      const tenants = tenantsRes?.data ?? tenantsRes;
+      const receipts = receiptsRes?.data ?? receiptsRes;
+      const templates = templatesRes?.data ?? templatesRes;
+      const correspondence = correspondenceRes?.data ?? correspondenceRes;
+      const owners = ownersRes?.data ?? ownersRes;
+      const expenses = expensesRes?.data ?? expensesRes;
+      const maintenance = maintenanceRes?.data ?? maintenanceRes;
+      const leases = leasesRes?.data ?? leasesRes;
+
+      dispatch({ type: 'SET_PROPERTIES', payload: properties });
+      dispatch({ type: 'SET_TENANTS', payload: tenants });
+      dispatch({ type: 'SET_RECEIPTS', payload: receipts });
+      dispatch({ type: 'SET_TEMPLATES', payload: templates });
+      dispatch({ type: 'SET_CORRESPONDENCE', payload: correspondence });
+      dispatch({ type: 'SET_OWNERS', payload: owners });
+      dispatch({ type: 'SET_EXPENSES', payload: expenses });
+      dispatch({ type: 'SET_MAINTENANCE', payload: maintenance });
+      dispatch({ type: 'SET_LEASES', payload: leases });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
+      dispatch({ type: 'SET_ERROR', payload: errorMessage });
+      showError(errorMessage);
+      console.error('Error loading data:', err);
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
+    }
+  }, [userId, showError]);
+
   // Load initial data
   useEffect(() => {
-    if (!userId) return;
-
-    const loadData = async () => {
-      try {
-        dispatch({ type: 'SET_LOADING', payload: true });
-        dispatch({ type: 'SET_ERROR', payload: null });
-
-        // Initialize database and seed if needed (server-side handler)
-        await apiFetch('/api/debug/db/init', 'POST');
-
-        // Load all data in parallel via server API endpoints
-        const [propertiesRes, tenantsRes, receiptsRes, templatesRes, correspondenceRes, ownersRes, expensesRes, maintenanceRes, leasesRes] = await Promise.all([
-          apiFetch('/api/properties'),
-          apiFetch('/api/tenants'),
-          apiFetch('/api/receipts'),
-          apiFetch('/api/correspondence/templates'),
-          apiFetch('/api/correspondence'),
-          apiFetch('/api/owners'),
-          apiFetch('/api/expenses'),
-          apiFetch('/api/maintenance'),
-          apiFetch('/api/leases'),
-        ]);
-
-        const properties = propertiesRes?.data ?? propertiesRes;
-        const tenants = tenantsRes?.data ?? tenantsRes;
-        const receipts = receiptsRes?.data ?? receiptsRes;
-        const templates = templatesRes?.data ?? templatesRes;
-        const correspondence = correspondenceRes?.data ?? correspondenceRes;
-        const owners = ownersRes?.data ?? ownersRes;
-        const expenses = expensesRes?.data ?? expensesRes;
-        const maintenance = maintenanceRes?.data ?? maintenanceRes;
-        const leases = leasesRes?.data ?? leasesRes;
-
-        dispatch({ type: 'SET_PROPERTIES', payload: properties });
-        dispatch({ type: 'SET_TENANTS', payload: tenants });
-        dispatch({ type: 'SET_RECEIPTS', payload: receipts });
-        dispatch({ type: 'SET_TEMPLATES', payload: templates });
-        dispatch({ type: 'SET_CORRESPONDENCE', payload: correspondence });
-        dispatch({ type: 'SET_OWNERS', payload: owners });
-        dispatch({ type: 'SET_EXPENSES', payload: expenses });
-        dispatch({ type: 'SET_MAINTENANCE', payload: maintenance });
-        dispatch({ type: 'SET_LEASES', payload: leases });
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
-        dispatch({ type: 'SET_ERROR', payload: errorMessage });
-        showError(errorMessage);
-        console.error('Error loading data:', err);
-      } finally {
-        dispatch({ type: 'SET_LOADING', payload: false });
-      }
-    };
-
     loadData();
-  }, [showError]);
+  }, [loadData]);
+
+  // Expose refresh function
+  const refreshData = useCallback(async () => {
+    await loadData();
+  }, [loadData]);
 
   // Property actions
   const addProperty = async (propertyData: Omit<Property, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
@@ -604,6 +611,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     addLease,
     updateLease,
     deleteLease,
+    refreshData,
   };
 
   return (

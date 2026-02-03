@@ -249,7 +249,7 @@ export class PaymentService {
    */
   private async createMBWayPayment(
     params: CreatePaymentIntentParams, 
-    tenant: Tenant
+    _tenant: Tenant
   ): Promise<PaymentIntentResult> {
     const prisma: PrismaClient = getPrismaClient();
 

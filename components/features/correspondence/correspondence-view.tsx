@@ -45,7 +45,7 @@ export function CorrespondenceView(): React.ReactElement {
     content: '',
   };
 
-  const dialog = useFormDialog<TemplateFormData>({
+  const dialog = useFormDialog<TemplateFormData, CorrespondenceTemplate>({
     schema: templateSchema,
     initialData: initialFormData,
     onSubmit: async (data, isEdit) => {
@@ -55,7 +55,7 @@ export function CorrespondenceView(): React.ReactElement {
       };
 
       if (isEdit && dialog.editingItem) {
-        await updateTemplate((dialog.editingItem as any).id, templateData);
+        await updateTemplate(dialog.editingItem.id, templateData);
         success('Template updated successfully');
       } else {
         await addTemplate(templateData);

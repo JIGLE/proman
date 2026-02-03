@@ -4,7 +4,7 @@
  */
 
 import { getPrismaClient } from './database/database';
-import { writeFile, readFile, mkdir, unlink, stat } from 'fs/promises';
+import { writeFile, readFile, mkdir, unlink, stat as _stat } from 'fs/promises';
 import { join, extname, dirname } from 'path';
 import { existsSync } from 'fs';
 
@@ -1005,7 +1005,7 @@ export const versionService = {
     userId: string, 
     documentId: string, 
     newContent: Buffer,
-    changeNote?: string
+    _changeNote?: string
   ): Promise<Document | null> {
     const prisma = getPrismaClient();
     

@@ -240,7 +240,7 @@ export function MultiStepFormContainer({
   currentStep,
   completedSteps,
   visitedSteps,
-  progress,
+  progress: _progress,
   isSubmitting,
   isFirstStep,
   isLastStep,

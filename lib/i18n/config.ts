@@ -3,7 +3,7 @@
  * Moved from root i18n.ts for better organization
  */
 
-import { notFound } from 'next/navigation';
+import { notFound as _notFound } from 'next/navigation';
 import { getRequestConfig } from 'next-intl/server';
 import { hasLocale } from 'next-intl';
 import enMessages from '@/messages/en.json';
@@ -34,11 +34,11 @@ export const upcomingLocaleNames: Record<string, string> = {
   ja: '日本語',
 };
 
-// Message bundles
-const messages: Record<string, any> = {
+// Message bundles - typed for next-intl compatibility
+const messages = {
   en: enMessages,
   pt: ptMessages,
-};
+} as const;
 
 // Next-intl configuration
 export default getRequestConfig(async ({ requestLocale }) => {

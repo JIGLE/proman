@@ -28,7 +28,7 @@ export function FormField({
   className 
 }: FormFieldProps) {
   const hasError = !!error;
-  const hasSuccess = success && !hasError;
+  const _hasSuccess = success && !hasError;
   
   return (
     <div className={cn("space-y-2", className)}>

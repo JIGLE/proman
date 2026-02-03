@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { MapPin } from 'lucide-react';
 import 'leaflet/dist/leaflet.css';
-import { Badge } from '@/components/ui/badge';
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(
@@ -37,7 +36,7 @@ interface PropertyMarker {
   units?: number;
 }
 
-interface MapViewState {
+interface _MapViewState {
   showVacant: boolean;
   showOccupied: boolean;
   showMaintenance: boolean;

@@ -19,12 +19,26 @@
   }
   ,
   "navigation": {
-    "dashboard": "Dashboard"
+    "dashboard": "Dashboard",
+    "home": "Home"
   },
   "dashboard": {
-    "welcome": "Welcome to your dashboard",
+    "welcome": "Welcome to your property management dashboard",
     "totalProperties": "Total Properties",
     "activeTenants": "Active Tenants",
     "monthlyRevenue": "Monthly Revenue"
+  },
+  "greeting": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening",
+    "night": "Good night"
+  },
+  "onboarding": {
+    "gettingStarted": "Getting Started",
+    "complete": "complete",
+    "addFirstProperty": "Add your first property",
+    "addTenant": "Add a tenant",
+    "recordPayment": "Record a payment"
   }
 }

@@ -1,27 +1,24 @@
 "use client";
 
 import * as React from "react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Bell,
   X,
   Check,
   CheckCheck,
-  AlertTriangle,
   DollarSign,
   Wrench,
   FileText,
   Calendar,
   Users,
-  Building2,
   Trash2,
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "./button";
 import { Badge } from "./badge";
-import { Separator } from "./separator";
 import * as Popover from "@radix-ui/react-popover";
 
 // Types
@@ -216,7 +213,7 @@ export function NotificationCenter({
   onDelete,
   onClearAll,
   onNotificationClick,
-  className,
+  className: _className,
 }: NotificationCenterProps): React.ReactElement {
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "unread">("all");

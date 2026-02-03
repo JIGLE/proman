@@ -4,7 +4,7 @@
 
 import { paymentService, PaymentIntentResult, CreatePaymentIntentParams } from '../payment-service';
 import { getPrismaClient } from '@/lib/services/database/database';
-import type { PrismaClient, PaymentMethod } from '@prisma/client';
+import type { PrismaClient, PaymentMethod as _PaymentMethod } from '@prisma/client';
 
 export interface BizumRequest {
   phoneNumber: string;  // Spanish phone number

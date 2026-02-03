@@ -12,10 +12,17 @@ import {
   Mail,
   ArrowRight,
   Sparkles,
+  MoreHorizontal,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "./button";
 import { Card, CardContent, CardHeader, CardTitle } from "./card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./dropdown-menu";
 
 interface QuickAction {
   id: string;
@@ -37,6 +44,7 @@ interface QuickActionsProps {
   onSendCorrespondence?: () => void;
   className?: string;
   variant?: "grid" | "horizontal" | "compact";
+  showOverflowOnly?: boolean;
 }
 
 export function QuickActions({
@@ -48,6 +56,7 @@ export function QuickActions({
   onSendCorrespondence,
   className,
   variant = "grid",
+  showOverflowOnly = false,
 }: QuickActionsProps): React.ReactElement {
   const actions: QuickAction[] = [
     {
@@ -111,6 +120,32 @@ export function QuickActions({
       shortcut: "⌘E",
     },
   ];
+
+  // Overflow-only mode: shows remaining actions (excluding first 2 which are shown as primary buttons)
+  if (showOverflowOnly) {
+    const overflowActions = actions.slice(2); // Skip first 2 (Add Property, Add Tenant)
+    return (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className={cn("h-9 w-9 p-0", className)}>
+            <MoreHorizontal className="h-4 w-4" />
+            <span className="sr-only">More actions</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          {overflowActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <DropdownMenuItem key={action.id} onClick={action.onClick}>
+                <Icon className={cn("h-4 w-4 mr-2", action.color)} />
+                {action.label}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    );
+  }
 
   if (variant === "horizontal") {
     return (

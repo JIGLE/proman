@@ -14,11 +14,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Clock,
-  Download,
-  ExternalLink,
   Building2,
   Calendar,
-  Euro,
   Loader2
 } from 'lucide-react';
 

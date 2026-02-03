@@ -1,11 +1,11 @@
 import { useState, useMemo } from "react";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
+import { Tenant } from "@/lib/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, DollarSign, CheckCircle, Clock, XCircle, ChevronDown, ChevronRight, Filter, Download } from "lucide-react";
+import { Calendar, DollarSign, CheckCircle, Clock, XCircle, Filter, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export type PaymentMatrixViewProps = Record<string, never>
@@ -19,7 +19,7 @@ interface PaymentCell {
 
 export function PaymentMatrixView(): React.ReactElement {
   const { state } = useApp();
-  const { tenants, receipts, properties } = state;
+  const { tenants, receipts, properties: _properties } = state;
   const { formatCurrency } = useCurrency();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [viewMode, setViewMode] = useState<'detailed' | 'heatmap'>('detailed');
@@ -119,7 +119,7 @@ export function PaymentMatrixView(): React.ReactElement {
   };
 
   // Group tenants by property
-  const tenantsByProperty = useMemo(() => {
+  const _tenantsByProperty = useMemo(() => {
     const grouped: Record<string, typeof tenants> = {};
     tenants.forEach(tenant => {
       const propId = tenant.propertyId || 'unassigned';
@@ -130,7 +130,7 @@ export function PaymentMatrixView(): React.ReactElement {
   }, [tenants]);
 
   // Toggle property expansion
-  const toggleProperty = (propertyId: string) => {
+  const _toggleProperty = (propertyId: string) => {
     const newExpanded = new Set(expandedProperties);
     if (newExpanded.has(propertyId)) {
       newExpanded.delete(propertyId);
@@ -155,7 +155,7 @@ export function PaymentMatrixView(): React.ReactElement {
     }, 0) || 0;
   };
 
-  const getTotalExpected = (tenant: any) => {
+  const getTotalExpected = (tenant: Tenant) => {
     // Calculate expected payments based on lease terms
     // This is a simplified calculation - in reality you'd check lease dates
     const paidMonths = paymentMatrix[tenant.id]?.filter(cell => cell.status === 'paid').length || 0;

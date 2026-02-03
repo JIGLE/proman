@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const STORAGE_KEY = "proman-navigation-state";
 const RECENT_ITEMS_KEY = "proman-recent-items";

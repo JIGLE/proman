@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { cn } from "@/lib/utils/utils";
-import { ChevronRight, MoreVertical } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 /**
  * Mobile-optimized card for list items (properties, tenants, etc.)

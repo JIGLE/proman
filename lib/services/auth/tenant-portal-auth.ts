@@ -181,7 +181,7 @@ export const tenantPortalService = {
    * Revoke portal access for a tenant by marking token as expired
    * In a production system, you might store active tokens in the database
    */
-  async revokeAccess(tenantId: string): Promise<{ success: boolean }> {
+  async revokeAccess(_tenantId: string): Promise<{ success: boolean }> {
     // In production, invalidate stored tokens or add to blacklist
     // For now, tokens are stateless and expire naturally
     return { success: true };

@@ -67,7 +67,7 @@ export interface UseFormDialogReturn<T, E = T> {
   updateFormData: (updates: Partial<T>) => void;
   setFormData: (data: T) => void;
   resetForm: () => void;
-  validateField: (field: keyof T, value: any) => Promise<string | null>;
+  validateField: (field: keyof T, value: unknown) => Promise<string | null>;
   validateForm: () => Promise<boolean>;
   
   // Persistence actions
@@ -76,15 +76,15 @@ export interface UseFormDialogReturn<T, E = T> {
   forceSave: () => Promise<void>;
 }
 
-export function useFormDialog<T extends Record<string, any>, E = T>({
+export function useFormDialog<T extends Record<string, unknown>, E = T>({
   schema,
   onSubmit,
   onError: onErrorCallback,
   successMessage = { create: 'Item created successfully!', update: 'Item updated successfully!' },
   errorMessage = 'Failed to save. Please try again.',
   initialData,
-  autoSave = { enabled: false, key: 'form-autosave' },
-  persistence = { enabled: false },
+  autoSave: _autoSave = { enabled: false, key: 'form-autosave' },
+  persistence: _persistence = { enabled: false },
   validation = { validateOnChange: false, debounceValidation: 500, showFieldErrors: true }
 }: UseFormDialogOptions<T>): UseFormDialogReturn<T, E> {
   const { success, error } = useToast();
@@ -103,14 +103,14 @@ export function useFormDialog<T extends Record<string, any>, E = T>({
   const isSaving = false;
   const lastSaved = null;
   const hasUnsavedChanges = false;
-  const clearSaved = useCallback(() => {}, []);
+  const _clearSaved = useCallback(() => {}, []);
   const clearFormData = useCallback(() => {}, []);
   const forceSave = useCallback(async () => {}, []);
   const hasPersistedData = useCallback(() => false, []);
   const restoreFormData = useCallback(() => false, []);
 
   // Field validation function
-  const validateField = useCallback(async (field: keyof T, value: any): Promise<string | null> => {
+  const validateField = useCallback(async (field: keyof T, value: unknown): Promise<string | null> => {
     try {
       // Validate the full form data with the updated field
       const testData = { ...formData, [field]: value };

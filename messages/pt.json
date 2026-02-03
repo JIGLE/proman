@@ -16,5 +16,28 @@
       "title": "Visualização de Banco de Dados do Admin",
       "description": "Visualização somente leitura das tabelas do banco de dados. Acesso registrado para conformidade com GDPR."
     }
+  },
+  "navigation": {
+    "dashboard": "Painel",
+    "home": "Início"
+  },
+  "dashboard": {
+    "welcome": "Bem-vindo ao seu painel de gestão de imóveis",
+    "totalProperties": "Total de Imóveis",
+    "activeTenants": "Inquilinos Ativos",
+    "monthlyRevenue": "Receita Mensal"
+  },
+  "greeting": {
+    "morning": "Bom dia",
+    "afternoon": "Boa tarde",
+    "evening": "Boa noite",
+    "night": "Boa noite"
+  },
+  "onboarding": {
+    "gettingStarted": "Primeiros Passos",
+    "complete": "concluído",
+    "addFirstProperty": "Adicione seu primeiro imóvel",
+    "addTenant": "Adicione um inquilino",
+    "recordPayment": "Registre um pagamento"
   }
 }

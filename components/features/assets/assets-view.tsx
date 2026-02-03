@@ -6,7 +6,7 @@ import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { PropertiesView } from "@/components/features/property/property-list";
 import UnitsView from "@/components/features/property/units-view";
 import { OwnersView } from "@/components/features/owner/owners-view";
-import { ExportButton } from "@/components/ui/export-button";
+import { ExportButton, ExportColumn } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 
 /**
@@ -43,7 +43,7 @@ export function AssetsView(): React.ReactElement {
   ];
 
   // Get export data based on active tab
-  const getExportData = () => {
+  const getExportData = (): { data: unknown[]; columns: ExportColumn[] } => {
     switch (activeTab) {
       case 'properties':
         return { data: properties, columns: propertyColumns };

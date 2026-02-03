@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
 import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { invoiceService, batchReceiptService } from '@/lib/services/invoice-service';
+import { invoiceService } from '@/lib/services/invoice-service';
 import { sanitizeForDatabase, sanitizeNumber } from '@/lib/utils/sanitize';
 import { z } from 'zod';
 
@@ -22,12 +22,12 @@ const createInvoiceSchema = z.object({
   notes: z.string().max(1000).optional(),
 });
 
-const batchInvoiceSchema = z.object({
+const _batchInvoiceSchema = z.object({
   dueDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
   month: z.string().optional(),
 });
 
-const applyLateFeesSchema = z.object({
+const _applyLateFeesSchema = z.object({
   enabled: z.boolean().default(true),
   gracePeriodDays: z.number().min(0).max(30).default(5),
   percentageRate: z.number().min(0).max(50).default(5),

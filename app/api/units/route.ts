@@ -60,6 +60,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const session = await getServerSession(getAuthOptions() as any) as Session | null;
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -116,11 +117,11 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json(unit, { status: 201 });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Error creating unit:', error);
     
     // Check for unique constraint violation
-    if (error.code === 'P2002') {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
       return NextResponse.json(
         { error: 'A unit with this number already exists for this property' },
         { status: 409 }

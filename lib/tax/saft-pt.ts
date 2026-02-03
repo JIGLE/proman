@@ -206,7 +206,7 @@ export function generateDocumentHash(
 ): string {
   // Simplified hash for demonstration
   // Production requires RSA-SHA1 signature with AT-certified key
-  const dataToHash = `${invoiceDate};${systemEntryDate};${invoiceNo};${grossTotal.toFixed(2)};${previousHash || ''}`;
+  const _dataToHash = `${invoiceDate};${systemEntryDate};${invoiceNo};${grossTotal.toFixed(2)};${previousHash || ''}`;
   
   // In production, sign with private key
   // const signature = crypto.sign('RSA-SHA1', Buffer.from(dataToHash), privateKey);

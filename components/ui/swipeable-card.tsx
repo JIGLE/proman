@@ -4,7 +4,7 @@ import * as React from "react";
 import { useState, useRef } from "react";
 import { cn } from "@/lib/utils/utils";
 import { useSwipe } from "@/lib/hooks/use-swipe";
-import { Trash2, Edit, MoreHorizontal } from "lucide-react";
+import { Trash2, Edit } from "lucide-react";
 
 interface SwipeAction {
   icon: React.ReactNode;

@@ -46,7 +46,7 @@ const secondaryNavItems = [
   { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
 ];
 
-export function MobileBottomNav({ activeTab, onTabChange, onSearchClick }: MobileNavProps): React.ReactElement {
+export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchClick }: MobileNavProps): React.ReactElement {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const { data: session } = useSession();
   const pathname = usePathname();
@@ -56,7 +56,7 @@ export function MobileBottomNav({ activeTab, onTabChange, onSearchClick }: Mobil
   // Extract locale from pathname
   const currentLocale = pathname.split('/')[1] || 'en';
 
-  const handleNavClick = (id: string, href: string | null) => {
+  const handleNavClick = (id: string, _href: string | null) => {
     if (id === "more") {
       setShowMoreMenu(!showMoreMenu);
     } else {

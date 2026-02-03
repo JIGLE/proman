@@ -8,8 +8,6 @@ import Link from "next/link";
 import {
   Building2,
   Users,
-  DollarSign,
-  FileText,
   ChevronLeft,
   ChevronRight,
   Home,
@@ -17,7 +15,6 @@ import {
   LogOut,
   Mail,
   Hammer,
-  BarChart3,
   Search,
   Command,
   Wallet,
@@ -36,7 +33,7 @@ interface SidebarProps {
   onOpenCommandPalette?: () => void;
 }
 
-export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: SidebarProps): React.ReactElement {
+export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalette }: SidebarProps): React.ReactElement {
   const [collapsed, setCollapsed] = useState(false);
   const { data: session } = useSession();
   const pathname = usePathname();
@@ -87,7 +84,7 @@ export function Sidebar({ activeTab, onTabChange, onOpenCommandPalette }: Sideba
     }
   ];
 
-  const accountItems = [
+  const _accountItems = [
     { id: "settings", label: "Settings", icon: Settings },
   ];
 

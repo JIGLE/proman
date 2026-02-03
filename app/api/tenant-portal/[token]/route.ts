@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getPrismaClient } from '@/lib/services/database/database';
 import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/utils/error-handling';
-import { verifyPortalToken, PortalTokenPayload } from '@/lib/services/auth/tenant-portal-auth';
+import { verifyPortalToken } from '@/lib/services/auth/tenant-portal-auth';
 
 interface RouteParams {
   params: Promise<{ token: string }>;

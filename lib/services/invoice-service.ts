@@ -79,7 +79,7 @@ const DEFAULT_LATE_FEE_CONFIG: LateFeeConfig = {
  * Generate the next invoice number in sequence
  * Format: INV-{YEAR}-{SEQUENCE} (5-digit padded)
  */
-async function generateInvoiceNumber(userId: string): Promise<string> {
+async function generateInvoiceNumber(_userId: string): Promise<string> {
   const prisma = getPrismaClient();
   const currentYear = new Date().getFullYear();
   const yearPrefix = `INV-${currentYear}-`;
@@ -377,7 +377,7 @@ export const invoiceService = {
       throw new Error('Invoice not found');
     }
     
-    const metadata: InvoiceMetadata = {
+    const _metadata: InvoiceMetadata = {
       ...existing.metadata,
       paymentMethod,
       referenceNumber,

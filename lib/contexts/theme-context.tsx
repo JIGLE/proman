@@ -18,7 +18,7 @@ const THEME_STORAGE_KEY = 'proman-theme';
 export function ThemeProvider({ children }: { children: React.ReactNode }): React.ReactElement {
   const [theme, setThemeState] = useState<Theme>('dark');
   const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark' | 'dark-oled'>('dark');
-  const [mounted, setMounted] = useState(false);
+  const [_mounted, setMounted] = useState(false);
 
   // Get system preference
   const getSystemTheme = useCallback((): 'light' | 'dark' => {

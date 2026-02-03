@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { renderWithProviders as render, screen, fireEvent } from '@/tests/helpers/render-with-providers'
+import { renderWithProviders as render } from '@/tests/helpers/render-with-providers'
 import { Sidebar } from './sidebar'
 
 vi.mock('next/navigation', () => ({

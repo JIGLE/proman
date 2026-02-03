@@ -1,5 +1,5 @@
 import * as React from "react"
-import { LucideIcon, MoreVertical, Maximize2, Minimize2, RefreshCw, Download, TrendingUp, TrendingDown } from "lucide-react"
+import { LucideIcon, MoreVertical, Maximize2, RefreshCw, Download, TrendingUp, TrendingDown } from "lucide-react"
 import { cn } from "@/lib/utils/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "./card"
 import { Button } from "./button"
@@ -10,7 +10,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger
 } from "./dropdown-menu"
-import { Badge } from "./badge"
 
 interface WidgetProps {
   title: string
@@ -201,7 +200,7 @@ export function StatWidget({
   changeLabel = "vs last period",
   icon: Icon,
   className,
-  color = "var(--color-accent-primary)"
+  color: _color = "var(--color-accent-primary)"
 }: StatWidgetProps) {
   return (
     <DashboardWidget
@@ -262,6 +261,7 @@ interface ListWidgetProps<T> {
   renderItem: (item: T, index: number) => React.ReactNode
   className?: string
   emptyMessage?: string
+  emptyState?: React.ReactNode
   showAll?: boolean
   onSeeMore?: () => void
   loading?: boolean
@@ -274,6 +274,7 @@ export function ListWidget<T>({
   renderItem,
   className,
   emptyMessage = "No items to display",
+  emptyState,
   showAll = false,
   onSeeMore,
   loading = false
@@ -290,9 +291,13 @@ export function ListWidget<T>({
       size="md"
     >
       {items.length === 0 ? (
-        <div className="text-center py-8">
-          <p className="text-sm text-zinc-400">{emptyMessage}</p>
-        </div>
+        emptyState ? (
+          emptyState
+        ) : (
+          <div className="text-center py-8">
+            <p className="text-sm text-zinc-400">{emptyMessage}</p>
+          </div>
+        )
       ) : (
         <div className="space-y-3">
           {displayItems.map((item, index) => (
@@ -330,27 +335,30 @@ export function DashboardGrid({
 }: DashboardGridProps) {
   const gridClasses = {
     1: 'grid-cols-1',
-    2: 'md:grid-cols-2',
-    3: 'md:grid-cols-2 lg:grid-cols-3',
-    4: 'md:grid-cols-2 lg:grid-cols-4',
-    6: 'md:grid-cols-3 lg:grid-cols-6'
+    2: 'grid-cols-1 sm:grid-cols-2',
+    3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
+    4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
+    6: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'
   }
 
   const gapClasses = {
     2: 'gap-2',
     3: 'gap-3', 
     4: 'gap-4',
-    6: 'gap-6',
-    8: 'gap-8'
+    6: 'gap-4 sm:gap-6',
+    8: 'gap-6 sm:gap-8'
   }
 
   return (
-    <div className={cn(
-      'grid',
-      gridClasses[columns],
-      gapClasses[gap],
-      className
-    )}>
+    <div 
+      className={cn(
+        'grid',
+        gridClasses[columns],
+        gapClasses[gap],
+        className
+      )}
+      role="region"
+    >
       {children}
     </div>
   )

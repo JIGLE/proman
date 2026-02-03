@@ -9,7 +9,6 @@ import { createSuccessResponse, createErrorResponse, ValidationError } from '@/l
 import { verifyPortalToken } from '@/lib/services/auth/tenant-portal-auth';
 import { paymentService } from '@/lib/payment/payment-service';
 import { portugalPaymentService } from '@/lib/payment/methods/portugal';
-import { spainPaymentService } from '@/lib/payment/methods/spain';
 import { z } from 'zod';
 
 const PaymentSchema = z.object({

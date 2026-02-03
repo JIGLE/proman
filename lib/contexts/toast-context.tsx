@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, ReactNode } from 'react';
-import toast, { Toaster } from 'react-hot-toast';
+import toast, { Toaster, Toast } from 'react-hot-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react';
 
@@ -15,7 +15,7 @@ interface ToastContextType {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 // Custom animated toast component
-const AnimatedToast = ({ t, message, type }: any) => {
+const AnimatedToast = ({ t, message, type }: { t: Toast; message: string; type: 'success' | 'error' | 'info' | 'warning' }) => {
   const getConfig = () => {
     switch (type) {
       case 'success':

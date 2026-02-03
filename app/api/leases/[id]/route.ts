@@ -3,7 +3,6 @@ import { getServerSession } from 'next-auth/next';
 import { Session } from 'next-auth';
 import { getPrismaClient } from '@/lib/services/database/database';
 import { getAuthOptions } from "@/lib/services/auth/auth";
-import { leaseSchema } from '@/lib/utils/validation';
 
 export async function PUT(
     req: Request,
@@ -37,14 +36,15 @@ export async function PUT(
         const json = await req.json();
 
         // Handle contract file update
-        let updateData: any = { ...json };
+        let updateData: Record<string, unknown> = { ...json };
 
         if (json.startDate) updateData.startDate = new Date(json.startDate);
         if (json.endDate) updateData.endDate = new Date(json.endDate);
 
         if (json.contractFile) {
-            updateData.contractFile = Buffer.from(json.contractFile, 'base64');
-            updateData.contractFileSize = updateData.contractFile.length;
+            const contractBuffer = Buffer.from(json.contractFile, 'base64');
+            updateData.contractFile = contractBuffer;
+            updateData.contractFileSize = contractBuffer.length;
             updateData.contractFileName = `lease-contract-${Date.now()}.pdf`;
         }
 

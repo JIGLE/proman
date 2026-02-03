@@ -14,11 +14,11 @@ import {
 export interface ExportColumn {
   key: string;
   label: string;
-  format?: (value: any) => string;
+  format?: (value: unknown) => string;
 }
 
 export interface ExportButtonProps {
-  data: any[];
+  data: unknown[];
   filename: string;
   columns: ExportColumn[];
   disabled?: boolean;
@@ -26,7 +26,7 @@ export interface ExportButtonProps {
   onExport?: () => void;
 }
 
-function formatValue(value: any, format?: (value: any) => string): string {
+function formatValue(value: unknown, format?: (value: unknown) => string): string {
   if (format) {
     return format(value);
   }
@@ -48,7 +48,7 @@ function escapeCSVValue(value: string): string {
   return value;
 }
 
-function generateCSV(data: any[], columns: ExportColumn[]): string {
+function generateCSV(data: unknown[], columns: ExportColumn[]): string {
   // Header row
   const headers = columns.map((col) => escapeCSVValue(col.label)).join(",");
 
@@ -56,7 +56,8 @@ function generateCSV(data: any[], columns: ExportColumn[]): string {
   const rows = data.map((item) => {
     return columns
       .map((col) => {
-        const value = item[col.key];
+        const record = item as Record<string, unknown>;
+        const value = record[col.key];
         const formattedValue = formatValue(value, col.format);
         return escapeCSVValue(formattedValue);
       })
@@ -95,9 +96,10 @@ export function ExportButton({
   const handleExportJSON = () => {
     // Create a simplified JSON with only the specified columns
     const exportData = data.map((item) => {
-      const row: Record<string, any> = {};
+      const record = item as Record<string, unknown>;
+      const row: Record<string, unknown> = {};
       columns.forEach((col) => {
-        const value = item[col.key];
+        const value = record[col.key];
         row[col.label] = col.format ? col.format(value) : value;
       });
       return row;

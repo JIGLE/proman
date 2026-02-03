@@ -4,19 +4,15 @@ import { useState, useEffect, useMemo } from "react";
 import { 
   FileText, 
   Plus, 
-  Calendar as CalendarIcon, 
-  DollarSign, 
   AlertTriangle,
   CheckCircle,
   Clock,
   Send,
-  Download,
   RefreshCw,
   MoreHorizontal,
   Trash2,
-  Eye
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -33,7 +29,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Invoice, InvoiceLineItem, LateFeeConfig } from "@/lib/services/invoice-service";
+import type { Invoice, LateFeeConfig } from "@/lib/services/invoice-service";
 
 interface InvoicesViewProps {
   tenants: Array<{ id: string; name: string; rent: number }>;

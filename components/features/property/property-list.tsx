@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import { Building2, MapPin, Bed, Bath, Plus, Edit, Trash2, CheckCircle, AlertTriangle, Wrench, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Building2, MapPin, Bed, Bath, Plus, Edit, Trash2, CheckCircle, Wrench, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useCurrency } from "@/lib/contexts/currency-context";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
   Card,
   CardContent,
@@ -11,7 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -153,7 +152,7 @@ export function PropertiesView(): React.ReactElement {
 
   const handleInlineEdit = useCallback(async (propertyId: string, field: keyof Property, value: string | number) => {
     try {
-      await updateProperty(propertyId, { [field]: value } as any);
+      await updateProperty(propertyId, { [field]: value } as Partial<Property>);
       success(`${String(field)} updated`);
     } catch (err) {
       console.error(err);
@@ -290,7 +289,7 @@ export function PropertiesView(): React.ReactElement {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const _handleSubmit = async (e: React.FormEvent) => {
     await dialog.handleSubmit(e);
   };
 
@@ -353,7 +352,7 @@ export function PropertiesView(): React.ReactElement {
                   { 
                     key: 'rent', 
                     label: 'Monthly Rent',
-                    format: (value) => formatCurrency(value)
+                    format: (value) => formatCurrency(value as number)
                   },
                   { key: 'status', label: 'Status' },
                   { key: 'buildingName', label: 'Building' },
@@ -435,7 +434,7 @@ export function PropertiesView(): React.ReactElement {
                     />
                     {showSuggestions && addressSuggestions.length > 0 && (
                       <div className="absolute z-10 w-full bg-zinc-800 border border-zinc-600 rounded-md mt-1 max-h-60 overflow-y-auto">
-                        {addressSuggestions.map((suggestion, index) => (
+                        {addressSuggestions.map((suggestion, _index) => (
                           <button
                             key={suggestion.place_id}
                             type="button"

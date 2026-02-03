@@ -32,12 +32,12 @@ export function OwnersView(): React.ReactElement {
         notes: '',
     };
 
-    const dialog = useFormDialog<OwnerFormData>({
+    const dialog = useFormDialog<OwnerFormData, Owner>({
         schema: ownerSchema,
         initialData: initialFormData,
         onSubmit: async (data, isEdit) => {
             if (isEdit && dialog.editingItem) {
-                await updateOwner((dialog.editingItem as any).id, data);
+                await updateOwner(dialog.editingItem.id, data);
                 success('Owner updated successfully');
             } else {
                 await addOwner(data);
@@ -316,7 +316,7 @@ export function OwnersView(): React.ReactElement {
                                         </div>
                                         {owner.properties && owner.properties.length > 0 ? (
                                             <ul className="text-xs text-zinc-400 space-y-1">
-                                                {owner.properties.map((p: any) => (
+                                                {owner.properties.map((p) => (
                                                     <li key={p.id}>
                                                         {/* We need propertyName here, likely need to populate it on fetch */}
                                                         {p.property?.name ?? 'Property'} - {p.ownershipPercentage}%

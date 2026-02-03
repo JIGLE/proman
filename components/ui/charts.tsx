@@ -25,7 +25,7 @@ export function BarChart({
   data, 
   title, 
   subtitle, 
-  height = 200, 
+  height: _height = 200, 
   className, 
   showTrend = false,
   showValues = true 
@@ -51,7 +51,7 @@ export function BarChart({
       )}
       
       <div className="space-y-3">
-        {data.map((item, index) => {
+        {data.map((item, _index) => {
           const percentage = range > 0 ? ((item.value - minValue) / range) * 100 : 0
           
           return (
@@ -113,10 +113,10 @@ export function LineChart({
   const minValue = Math.min(...data.map(d => d.value))
   const range = maxValue - minValue || 1
   const padding = height * 0.1
-  const chartHeight = height - padding * 2
+  const _chartHeight = height - padding * 2
 
-  const points = data.map((item, index) => {
-    const x = (index / (data.length - 1)) * 100
+  const points = data.map((item, _index) => {
+    const x = (_index / (data.length - 1)) * 100
     const y = ((maxValue - item.value) / range) * 100
     return { x, y, ...item }
   })

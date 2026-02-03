@@ -14,8 +14,7 @@ function normalizeArg(a: unknown): unknown {
   if (a === null) return null;
   if (a instanceof Date) return a.toISOString();
   // Buffer is accepted by better-sqlite3
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
+  // @ts-ignore - Buffer type compatibility
   if (typeof Buffer !== 'undefined' && Buffer.isBuffer && Buffer.isBuffer(a)) return a;
   if (typeof a === 'boolean') return a ? 1 : 0;
   if (typeof a === 'object') return JSON.stringify(a);

@@ -54,7 +54,7 @@ export function CurrencyProvider({
         minimumFractionDigits: 0,
         maximumFractionDigits: 2,
       }).format(amount);
-    } catch (error) {
+    } catch {
       // Fallback if currency/locale combination is invalid
       return `${currency} ${amount.toLocaleString()}`;
     }

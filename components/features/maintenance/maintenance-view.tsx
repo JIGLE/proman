@@ -17,6 +17,7 @@ import { SearchFilter } from "@/components/ui/search-filter";
 import { ExportButton } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 import { maintenanceSchema, MaintenanceFormData } from "@/lib/utils/validation";
+import { MaintenanceTicket } from "@/lib/types";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
@@ -24,10 +25,10 @@ import { cn } from "@/lib/utils/utils";
 import { MaintenanceStatus, MaintenancePriority } from "@/lib/types";
 
 interface SortableHeaderProps {
-  column: string;
+  column: keyof MaintenanceTicket;
   label: string;
   sortDirection: SortDirection;
-  onSort: (column: any) => void;
+  onSort: (column: keyof MaintenanceTicket) => void;
 }
 
 function SortableHeader({ column, label, sortDirection, onSort }: SortableHeaderProps) {
@@ -66,12 +67,12 @@ export function MaintenanceView(): React.ReactElement {
         assignedTo: undefined,
     };
 
-    const dialog = useFormDialog<MaintenanceFormData>({
+    const dialog = useFormDialog<MaintenanceFormData, MaintenanceTicket>({
         schema: maintenanceSchema,
         initialData: initialFormData,
         onSubmit: async (data, isEdit) => {
             if (isEdit && dialog.editingItem) {
-                await updateMaintenance((dialog.editingItem as any).id, data);
+                await updateMaintenance(dialog.editingItem.id, data);
                 success('Maintenance ticket updated successfully');
             } else {
                 await addMaintenance(data);
@@ -105,7 +106,7 @@ export function MaintenanceView(): React.ReactElement {
     // Sorting
     const { sortedData: sortedTickets, requestSort, getSortDirection } = useSortableData(filteredTickets);
 
-    const handleEdit = (ticket: any) => {
+    const handleEdit = (ticket: MaintenanceTicket) => {
         dialog.openEditDialog(ticket, (t) => ({
             propertyId: t.propertyId,
             tenantId: t.tenantId,
@@ -165,7 +166,7 @@ export function MaintenanceView(): React.ReactElement {
                             { 
                                 key: 'cost', 
                                 label: 'Cost',
-                                format: (value) => value ? formatCurrency(value) : 'Not set'
+                                format: (value) => value ? formatCurrency(value as number) : 'Not set'
                             },
                             { key: 'assignedTo', label: 'Assigned To' },
                         ]}

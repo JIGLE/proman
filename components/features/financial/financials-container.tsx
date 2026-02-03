@@ -10,7 +10,6 @@ import { ReceiptsView } from "./receipts-view";
 import { TrendingUp, TrendingDown, DollarSign, LayoutGrid, Receipt, Grid3X3 } from "lucide-react";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
-import { Button } from "@/components/ui/button";
 import { ExportButton } from "@/components/ui/export-button";
 
 /**

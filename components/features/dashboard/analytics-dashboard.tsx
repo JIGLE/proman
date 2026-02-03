@@ -288,7 +288,7 @@ export function AnalyticsDashboard(): React.ReactElement {
     value: m.revenue
   }));
 
-  const expenseChartData = revenueByMonth.map(m => ({
+  const _expenseChartData = revenueByMonth.map(m => ({
     label: m.month,
     value: m.expenses,
     color: '#ef4444'

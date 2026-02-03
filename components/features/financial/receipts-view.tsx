@@ -38,12 +38,12 @@ export function ReceiptsView(): React.ReactElement {
     description: '',
   };
 
-  const dialog = useFormDialog<ReceiptFormData>({
+  const dialog = useFormDialog<ReceiptFormData, Receipt>({
     schema: receiptSchema,
     initialData: initialFormData,
     onSubmit: async (data, isEdit) => {
       if (isEdit && dialog.editingItem) {
-        await updateReceipt((dialog.editingItem as any).id, data);
+        await updateReceipt(dialog.editingItem.id, data);
         success('Receipt updated successfully');
       } else {
         await addReceipt(data);

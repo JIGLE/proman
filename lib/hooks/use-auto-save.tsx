@@ -8,12 +8,12 @@ export interface UseAutoSaveOptions {
   key: string;
   delay?: number;
   enabled?: boolean;
-  onSave?: (data: any) => Promise<void>;
-  onRestore?: (data: any) => void;
+  onSave?: (data: unknown) => Promise<void>;
+  onRestore?: (data: unknown) => void;
   excludeFields?: string[];
 }
 
-export function useAutoSave<T extends Record<string, any>>(
+export function useAutoSave<T extends Record<string, unknown>>(
   data: T,
   options: UseAutoSaveOptions
 ) {
@@ -154,7 +154,7 @@ export interface UseFormPersistenceOptions {
   ttl?: number; // Time to live in milliseconds
 }
 
-export function useFormPersistence<T extends Record<string, any>>(
+export function useFormPersistence<T extends Record<string, unknown>>(
   formData: T,
   setFormData: (data: T | ((prev: T) => T)) => void,
   options: UseFormPersistenceOptions

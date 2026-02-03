@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { FileText, Plus, ArrowUp, ArrowDown, ArrowUpDown, Home, User, DollarSign, FileCheck, Upload, X, Calendar, ChevronDown, ChevronUp, Building2, Eye, Edit, Trash2, Download } from "lucide-react";
+import { FileText, Plus, ArrowUp, ArrowDown, ArrowUpDown, Home, User, DollarSign, FileCheck, Upload, Calendar, Building2, Edit, Trash2, Download } from "lucide-react";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import {
   Card,
@@ -19,6 +19,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { SearchFilter } from "@/components/ui/search-filter";
 import { ExportButton } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
+import { Lease } from "@/lib/types";
 import { leaseSchema, LeaseFormData } from "@/lib/utils/validation";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
@@ -26,15 +27,14 @@ import { useMultiStepForm, StepConfig } from "@/lib/hooks/use-multi-step-form";
 import { MultiStepFormContainer, StepContent, DraftBanner, MultiStepFormStep } from "@/components/ui/multi-step-form";
 import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
 import { LeaseStatus } from "@prisma/client";
-import { z } from "zod";
 
 export type LeasesViewProps = Record<string, never>
 
 interface SortableHeaderProps {
-  column: string;
+  column: keyof Lease;
   label: string;
   sortDirection: SortDirection;
-  onSort: (column: any) => void;
+  onSort: (column: keyof Lease) => void;
 }
 
 function SortableHeader({ column, label, sortDirection, onSort }: SortableHeaderProps) {
@@ -58,7 +58,7 @@ export function LeasesView(): React.ReactElement {
   const { formatCurrency } = useCurrency();
   const [contractFile, setContractFile] = useState<File | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
-  const [editingLease, setEditingLease] = useState<any>(null);
+  const [editingLease, setEditingLease] = useState<Lease | null>(null);
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState('');
@@ -151,7 +151,7 @@ export function LeasesView(): React.ReactElement {
     },
   });
 
-  const dialog = useFormDialog<LeaseFormData, any>({
+  const dialog = useFormDialog<LeaseFormData, Lease>({
     schema: leaseSchema,
     initialData: initialFormData,
     onSubmit: async (data, isEdit) => {
@@ -215,7 +215,7 @@ export function LeasesView(): React.ReactElement {
     }
   };
 
-  const handleEdit = (lease: any) => {
+  const handleEdit = (lease: Lease) => {
     setEditingLease(lease);
     wizard.updateFormData({
       propertyId: lease.propertyId,
@@ -224,7 +224,7 @@ export function LeasesView(): React.ReactElement {
       endDate: lease.endDate.split('T')[0],
       monthlyRent: lease.monthlyRent,
       deposit: lease.deposit,
-      taxRegime: lease.taxRegime,
+      taxRegime: lease.taxRegime as LeaseFormData['taxRegime'],
       autoRenew: lease.autoRenew,
       renewalNoticeDays: lease.renewalNoticeDays,
       notes: lease.notes || '',
@@ -238,15 +238,17 @@ export function LeasesView(): React.ReactElement {
       try {
         await deleteLease(id);
         success('Lease deleted successfully');
-      } catch (err) {
+      } catch {
         error('Failed to delete lease');
       }
     }
   };
 
-  const handleDownloadContract = (lease: any) => {
+  const handleDownloadContract = (lease: Lease) => {
     if (lease.contractFile) {
-      const blob = new Blob([lease.contractFile], { type: 'application/pdf' });
+      // Convert Buffer to Uint8Array for Blob compatibility
+      const uint8Array = new Uint8Array(lease.contractFile);
+      const blob = new Blob([uint8Array], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -313,22 +315,22 @@ export function LeasesView(): React.ReactElement {
               { 
                 key: 'startDate', 
                 label: 'Start Date',
-                format: (value) => new Date(value).toLocaleDateString()
+                format: (value) => new Date(value as string).toLocaleDateString()
               },
               { 
                 key: 'endDate', 
                 label: 'End Date',
-                format: (value) => new Date(value).toLocaleDateString()
+                format: (value) => new Date(value as string).toLocaleDateString()
               },
               { 
                 key: 'monthlyRent', 
                 label: 'Monthly Rent',
-                format: (value) => formatCurrency(value)
+                format: (value) => formatCurrency(value as number)
               },
               { 
                 key: 'deposit', 
                 label: 'Deposit',
-                format: (value) => formatCurrency(value)
+                format: (value) => formatCurrency(value as number)
               },
               { key: 'status', label: 'Status' },
               { key: 'taxRegime', label: 'Tax Regime' },
@@ -543,7 +545,7 @@ export function LeasesView(): React.ReactElement {
                         <Label htmlFor="taxRegime">Tax Regime</Label>
                         <Select
                           value={wizard.formData.taxRegime || ''}
-                          onValueChange={(value) => wizard.updateFormData({ taxRegime: value as any })}
+                          onValueChange={(value) => wizard.updateFormData({ taxRegime: value as LeaseFormData['taxRegime'] })}
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Select tax regime..." />
@@ -698,7 +700,7 @@ export function LeasesView(): React.ReactElement {
             </CardContent>
           </Card>
         ) : (
-          sortedLeases.map((lease: any) => (
+          sortedLeases.map((lease: Lease) => (
             <Card
               key={lease.id}
               className="overflow-hidden transition-all hover:shadow-lg hover:shadow-zinc-900/50"

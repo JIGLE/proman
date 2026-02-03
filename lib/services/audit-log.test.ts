@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 // Create mock functions
 const mockCreate = vi.fn().mockResolvedValue({ id: 'test-id' })
