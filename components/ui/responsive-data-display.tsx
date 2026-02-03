@@ -220,7 +220,7 @@ export function ResponsiveDataDisplay<T extends { id?: string }>({
                     >
                       {column.render
                         ? column.render(getValue(item, column.key), item)
-                        : getValue(item, column.key)}
+                        : String(getValue(item, column.key) ?? "-")}
                     </td>
                   ))}
                   {actions && actions.length > 0 && (
@@ -290,7 +290,7 @@ export function ResponsiveDataDisplay<T extends { id?: string }>({
                     <h3 className="font-semibold text-[var(--color-foreground)] truncate">
                       {primaryColumn.render
                         ? primaryColumn.render(getValue(item, primaryColumn.key), item)
-                        : getValue(item, primaryColumn.key)}
+                        : String(getValue(item, primaryColumn.key) ?? "-")}
                     </h3>
                     {onRowClick && (
                       <ChevronRight className="h-5 w-5 text-[var(--color-muted-foreground)] flex-shrink-0" />
@@ -307,7 +307,7 @@ export function ResponsiveDataDisplay<T extends { id?: string }>({
                         >
                           {column.render
                             ? column.render(getValue(item, column.key), item)
-                            : getValue(item, column.key)}
+                            : String(getValue(item, column.key) ?? "-")}
                         </p>
                       ))}
                     </div>
@@ -325,7 +325,7 @@ export function ResponsiveDataDisplay<T extends { id?: string }>({
                           <span>
                             {column.render
                               ? column.render(getValue(item, column.key), item)
-                              : getValue(item, column.key)}
+                              : String(getValue(item, column.key) ?? "-")}
                           </span>
                         </div>
                       ))}
