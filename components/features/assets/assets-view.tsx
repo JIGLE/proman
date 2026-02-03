@@ -1,6 +1,6 @@
 "use client";
 
-import { Building2, Users2, Briefcase, Download, MapPin } from "lucide-react";
+import { Building2, Users2, Briefcase, MapPin } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { PropertiesView } from "@/components/features/property/property-list";

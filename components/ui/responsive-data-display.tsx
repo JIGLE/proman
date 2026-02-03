@@ -43,7 +43,7 @@ export interface ResponsiveColumn<T> {
   /** Mark as secondary column (shown below primary on mobile) */
   secondary?: boolean;
   /** Custom render function */
-  render?: (value: any, item: T) => React.ReactNode;
+  render?: (value: unknown, item: T) => React.ReactNode;
   /** Hide on mobile cards (only show in table) */
   hideOnMobile?: boolean;
   /** Column width class */
@@ -85,17 +85,17 @@ export interface ResponsiveDataDisplayProps<T> {
   className?: string;
 }
 
-function getValue<T>(item: T, key: keyof T | string): any {
+function getValue<T>(item: T, key: keyof T | string): unknown {
   const keyStr = String(key);
   if (keyStr.includes('.')) {
     const parts = keyStr.split('.');
-    let value: any = item;
+    let value: unknown = item;
     for (const part of parts) {
-      value = value?.[part];
+      value = (value as Record<string, unknown>)?.[part];
     }
     return value;
   }
-  return (item as any)[keyStr];
+  return (item as Record<string, unknown>)[keyStr];
 }
 
 export function ResponsiveDataDisplay<T extends { id?: string }>({

@@ -83,7 +83,7 @@ export interface UseInlineCreateReturn<TEntity> {
   dialog: React.ReactNode;
 }
 
-export function useInlineCreate<TForm extends Record<string, any>, TEntity>({
+export function useInlineCreate<TForm extends Record<string, unknown>, TEntity>({
   schema,
   initialData,
   onSubmit,

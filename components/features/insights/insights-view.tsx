@@ -1,6 +1,6 @@
 "use client";
 
-import { BarChart3, FileBarChart, Download, RefreshCw } from "lucide-react";
+import { BarChart3, FileBarChart, RefreshCw } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { AnalyticsDashboard } from "@/components/features/dashboard/analytics-dashboard";
