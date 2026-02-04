@@ -83,9 +83,9 @@ export function PeopleView(): React.ReactElement {
             </div>
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">Active Tenants</div>
+            <div className="text-sm text-muted-foreground mb-1">Current Leases</div>
             <div className="text-2xl font-bold text-green-500">
-              {tenants.filter(t => t.status === 'active').length}
+              {tenants.filter(t => new Date(t.leaseEnd) > new Date()).length}
             </div>
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
@@ -97,7 +97,7 @@ export function PeopleView(): React.ReactElement {
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Active Owners</div>
             <div className="text-2xl font-bold text-blue-500">
-              {owners.filter(o => o.status === 'active').length}
+              {owners.length}
             </div>
           </div>
         </div>
@@ -143,11 +143,11 @@ export function PeopleView(): React.ReactElement {
         </div>
 
         <TabsContent value="tenants" className="mt-0">
-          <TenantsView ref={tenantsViewRef} />
+          <TenantsView ref={tenantsViewRef} density="compact" />
         </TabsContent>
 
         <TabsContent value="owners" className="mt-0">
-          <OwnersView ref={ownersViewRef} />
+          <OwnersView ref={ownersViewRef} density="compact" />
         </TabsContent>
       </Tabs>
     </div>

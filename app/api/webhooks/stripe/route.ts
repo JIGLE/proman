@@ -1,6 +1,7 @@
 // Stripe Webhook Handler - Process payment events
 import { NextRequest, NextResponse } from 'next/server';
 import { paymentService } from '@/lib/payment/payment-service';
+import { rateLimit, RateLimits } from '@/lib/middleware/rate-limit';
 import Stripe from 'stripe';
 
 // Lazy initialization of Stripe
@@ -23,6 +24,10 @@ function getStripe(): Stripe {
  * - charge.refunded
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Apply rate limiting for webhooks
+  const rateLimitResponse = await rateLimit(request, RateLimits.WEBHOOK);
+  if (rateLimitResponse) return rateLimitResponse as NextResponse;
+
   try {
     const body = await request.text();
     const signature = request.headers.get('stripe-signature');

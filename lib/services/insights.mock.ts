@@ -16,7 +16,7 @@ const MOCK_TOTALS: InsightTotals = Object.freeze({
   yoyGrowth: 12.4,
 });
 
-const MOCK_REVENUE_TREND: TimeSeriesPoint[] = Object.freeze([
+const MOCK_REVENUE_TREND: readonly TimeSeriesPoint[] = Object.freeze([
   { label: "Jan", value: 210000 },
   { label: "Feb", value: 215000 },
   { label: "Mar", value: 225000 },
@@ -25,7 +25,7 @@ const MOCK_REVENUE_TREND: TimeSeriesPoint[] = Object.freeze([
   { label: "Jun", value: 248000 },
 ]);
 
-const MOCK_OCCUPANCY_TREND: TimeSeriesPoint[] = Object.freeze([
+const MOCK_OCCUPANCY_TREND: readonly TimeSeriesPoint[] = Object.freeze([
   { label: "Jan", value: 0.91 },
   { label: "Feb", value: 0.92 },
   { label: "Mar", value: 0.91 },

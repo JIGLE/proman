@@ -8,7 +8,21 @@ import { buttonVariants } from "@/components/ui/button"
 
 const AlertDialog = AlertDialogPrimitive.Root
 
-const AlertDialogTrigger = AlertDialogPrimitive.Trigger
+const AlertDialogTrigger = React.forwardRef<
+  React.ElementRef<typeof AlertDialogPrimitive.Trigger>,
+  React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Trigger>
+>(({ children, ...props }, ref) => {
+  const asChild = (props as any).asChild;
+  const safeChild = React.Children.count(children) === 1 ? React.Children.only(children as any) : <div>{children}</div>;
+  const forwardProps = { ...(props as any) };
+  if ((forwardProps as any).asChild) delete (forwardProps as any).asChild;
+  return (
+    <AlertDialogPrimitive.Trigger ref={ref as any} {...(forwardProps as any)}>
+      {asChild ? safeChild : children}
+    </AlertDialogPrimitive.Trigger>
+  );
+})
+AlertDialogTrigger.displayName = "AlertDialogTrigger"
 
 const AlertDialogPortal = AlertDialogPrimitive.Portal
 

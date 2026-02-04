@@ -26,8 +26,8 @@ function getPrismaClient(): PrismaClient {
           const sqlitePath = dbUrl.replace(/^file:\/\//, '').replace(/^file:/, '');
           const resolvedPath = require('path').resolve(process.cwd(), sqlitePath);
           try {
-            // Use eval('require') to avoid bundlers trying to resolve server-only modules
-            const fs = eval("require")('fs');
+            // Use synchronous fs to avoid async/await in non-async function
+            const fs = require('fs');
             const exists = fs.existsSync(resolvedPath);
             const writable = exists ? (() => {
               try {

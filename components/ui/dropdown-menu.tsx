@@ -8,7 +8,22 @@ import { cn } from "@/lib/utils/utils"
 
 const DropdownMenu = DropdownMenuPrimitive.Root
 
-const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
+const DropdownMenuTrigger = React.forwardRef<
+    React.ElementRef<typeof DropdownMenuPrimitive.Trigger>,
+    React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Trigger>
+>(({ children, ...props }, ref) => {
+    const asChild = (props as any).asChild;
+    const safeChild = React.Children.count(children) === 1 ? React.Children.only(children as any) : <div>{children}</div>;
+    // Remove asChild before forwarding props so Radix doesn't perform its internal Children.only check
+    const forwardProps = { ...(props as any) };
+    if ((forwardProps as any).asChild) delete (forwardProps as any).asChild;
+    return (
+        <DropdownMenuPrimitive.Trigger ref={ref as any} {...(forwardProps as any)}>
+            {asChild ? safeChild : children}
+        </DropdownMenuPrimitive.Trigger>
+    );
+})
+DropdownMenuTrigger.displayName = "DropdownMenuTrigger"
 
 const DropdownMenuGroup = DropdownMenuPrimitive.Group
 

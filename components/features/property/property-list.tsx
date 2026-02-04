@@ -34,10 +34,12 @@ import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
 import { AddressVerificationService, AddressSuggestion } from "@/lib/services/address-verification";
 import PropertyMap from "./property-map";
 import UnitsView from "./units-view";
+import { PropertyDetailModal } from "./property-detail-modal";
 
 export type PropertiesViewProps = {
   viewMode?: 'list' | 'map';
   onPropertySelect?: (propertyId: string) => void;
+  density?: 'comfortable' | 'compact';
 }
 
 export type PropertiesViewRef = {
@@ -66,11 +68,16 @@ function SortableHeader({ column, label, sortDirection, onSort }: SortableHeader
 }
 
 export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>(
-  function PropertiesView({ viewMode = 'list', onPropertySelect }, ref): React.ReactElement {
+  function PropertiesView({ viewMode = 'list', onPropertySelect, density = 'compact' }: PropertiesViewProps, ref): React.ReactElement {
   const { state, addProperty, updateProperty, deleteProperty } = useApp();
   const { properties, loading } = state;
   const { success } = useToast();
   const { formatCurrency } = useCurrency();
+  const compact = true; // Always compact for denser lists
+
+  // Property detail modal state
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // Address verification state
   const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
@@ -659,7 +666,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
             </div>
           )}
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className={cn("grid", compact ? "gap-1 md:grid-cols-4 lg:grid-cols-6" : "gap-6 md:grid-cols-2 lg:grid-cols-3")}>
             {filteredProperties.length === 0 ? (
               <Card className="bg-zinc-900 border-zinc-800 col-span-full">
                 <CardContent className="p-8 text-center">
@@ -726,7 +733,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
               </motion.div>
 
               {/* Properties in this building */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className={cn("grid grid-cols-1", compact ? "md:grid-cols-4 lg:grid-cols-6 gap-1" : "md:grid-cols-2 lg:grid-cols-3 gap-4")}>
                 {building.properties.map((property, index) => {
                   const isSelected = bulkSelection.isSelected(property.id);
                   return (
@@ -737,10 +744,14 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     transition={{ delay: index * 0.1, duration: 0.3 }}
                     whileHover={{ y: -4 }}
                     className={cn("group cursor-pointer", isSelected && "ring-2 ring-accent-primary border-accent-primary/50")}
-                    onClick={() => onPropertySelect?.(property.id)}
+                    onClick={() => {
+                      setSelectedProperty(property);
+                      setIsDetailModalOpen(true);
+                      onPropertySelect?.(property.id);
+                    }}
                   >
                     <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-accent-primary/10 border-border/50 group-hover:border-accent-primary/30">
-                      <div className="aspect-video w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative overflow-hidden">
+                      <div className={cn(compact ? 'h-16' : 'aspect-video', 'w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative overflow-hidden')}>
                         <motion.div
                           className="absolute inset-0 flex items-center justify-center"
                           whileHover={{ scale: 1.1 }}
@@ -770,12 +781,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                             className="mt-2"
                           />
                           <div>
-                            <EditableCell
-                              value={property.name}
-                              type="text"
-                              onSave={(val) => handleInlineEdit(property.id, 'name', val)}
-                              className="text-[var(--color-foreground)] text-base"
-                            />
+                            <div className={cn('text-[var(--color-foreground)]', compact ? 'text-xs font-medium' : 'text-base font-semibold')}>
+                              {property.name}
+                            </div>
                             <CardDescription className="flex items-start gap-1">
                               <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
                               <span className="text-xs">{property.streetAddress || 'Unit address'}</span>
@@ -784,7 +792,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                         </div>
                       </div>
                     </CardHeader>
-                      <CardContent className="space-y-3">
+                      <CardContent className={compact ? 'space-y-1 p-2' : 'space-y-3'}>
                         <div className="flex items-center justify-between text-sm">
                           <span className="text-[var(--color-muted-foreground)]">{property.type}</span>
                           <motion.span
@@ -793,13 +801,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                             animate={{ scale: 1 }}
                             transition={{ delay: 0.2 }}
                           >
-                            <EditableCell
-                              value={property.rent}
-                              type="currency"
-                              onSave={(val) => handleInlineEdit(property.id, 'rent', val)}
-                              formatter={(val) => formatCurrency(Number(val))}
-                              className="text-lg font-semibold"
-                            />
+                            <span className="text-sm font-semibold">{formatCurrency(Number(property.rent))}</span>
                           </motion.span>
                         </div>
                         <div className="flex items-center gap-4 text-sm text-[var(--color-muted-foreground)]">
@@ -822,31 +824,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                             <span>{property.bathrooms} bath</span>
                           </motion.div>
                         </div>
-                        <motion.div
-                          className="flex gap-2 pt-2"
-                          initial={{ y: 10, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{ delay: 0.5 }}
-                        >
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(property)}
-                            className="flex-1 flex items-center gap-1 transition-all duration-200 hover:bg-accent-primary hover:text-accent-primary-foreground hover:border-accent-primary"
-                          >
-                            <Edit className="w-3 h-3" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(property.id)}
-                            className="flex items-center gap-1 transition-all duration-200 hover:bg-destructive/90"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            Delete
-                          </Button>
-                        </motion.div>
+                        {/* Card actions removed: editing and deleting moved to detail modal */}
                       </CardContent>
                     </Card>
                   </motion.div>
@@ -874,6 +852,24 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
           )}
         </div>
       )}
+
+      {/* Property Detail Modal */}
+      <PropertyDetailModal
+        property={selectedProperty}
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedProperty(null);
+        }}
+        onEdit={(updatedProperty) => {
+          // Property is already updated via useApp updateProperty
+          setSelectedProperty(updatedProperty);
+        }}
+        onDelete={() => {
+          setIsDetailModalOpen(false);
+          setSelectedProperty(null);
+        }}
+      />
     </>
   );
 });

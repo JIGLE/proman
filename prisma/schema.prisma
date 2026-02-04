@@ -199,6 +199,10 @@ model Property {
   invoices            Invoice[]
   incomeDistributions IncomeDistribution[]
 
+  // Performance indexes
+  @@index([userId])
+  @@index([status])
+  @@index([userId, status])  // Composite for property listing
   @@map("properties")
 }
 
@@ -230,6 +234,11 @@ model Tenant {
   paymentMethods PaymentMethod[]
   paymentTransactions PaymentTransaction[]
 
+  // Performance indexes
+  @@index([userId])
+  @@index([propertyId])
+  @@index([paymentStatus])
+  @@index([userId, paymentStatus])  // Composite for overdue tenants
   @@map("tenants")
 }
 
@@ -251,6 +260,13 @@ model Receipt {
   tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
+  // Performance indexes for common queries
+  @@index([userId])
+  @@index([propertyId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([date])
+  @@index([userId, status, date])  // Composite index for insights queries
   @@map("receipts")
 }
 
@@ -270,6 +286,11 @@ model Expense {
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
+  // Performance indexes
+  @@index([userId])
+  @@index([propertyId])
+  @@index([date])
+  @@index([category])
   @@map("expenses")
 }
 
@@ -296,6 +317,12 @@ model MaintenanceTicket {
   tenant          Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   assignedContact MaintenanceContact? @relation(fields: [assignedContactId], references: [id], onDelete: SetNull)
 
+  // Performance indexes
+  @@index([userId])
+  @@index([propertyId])
+  @@index([status])
+  @@index([priority])
+  @@index([userId, status])  // Composite for open tickets
   @@map("maintenance_tickets")
 }
 

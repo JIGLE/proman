@@ -26,7 +26,7 @@ describe('ExportButton', () => {
     { 
       key: 'age' as keyof typeof mockData[0], 
       label: 'Age',
-      format: (value: number) => `${value} years`
+      format: (value: unknown) => `${value} years`
     },
   ];
 
@@ -51,7 +51,8 @@ describe('ExportButton', () => {
   it('should render export button with data', () => {
     renderWithProviders(<ExportButton {...defaultProps} />);
     
-    const exportButton = screen.getByRole('button', { name: /export/i });
+    const buttons = screen.getAllByRole('button', { name: /export/i });
+    const exportButton = buttons[buttons.length - 1]; // Get inner button
     expect(exportButton).toBeInTheDocument();
     expect(exportButton).not.toBeDisabled();
   });
@@ -59,7 +60,8 @@ describe('ExportButton', () => {
   it('should render disabled button when no data', () => {
     renderWithProviders(<ExportButton {...defaultProps} data={[]} />);
     
-    const exportButton = screen.getByRole('button', { name: /export/i });
+    const buttons = screen.getAllByRole('button', { name: /export/i });
+    const exportButton = buttons[buttons.length - 1]; // Get inner button
     expect(exportButton).toBeInTheDocument();
     expect(exportButton).toBeDisabled();
   });
@@ -67,14 +69,16 @@ describe('ExportButton', () => {
   it('should be disabled when disabled prop is true', () => {
     renderWithProviders(<ExportButton {...defaultProps} disabled={true} />);
 
-    const exportButton = screen.getByRole('button', { name: /export/i });
+    const buttons = screen.getAllByRole('button', { name: /export/i });
+    const exportButton = buttons[buttons.length - 1]; // Get inner button
     expect(exportButton).toBeDisabled();
   });
 
   it('should apply custom className', () => {
     renderWithProviders(<ExportButton {...defaultProps} className="custom-export-class" />);
 
-    const exportButton = screen.getByRole('button', { name: /export/i });
+    const buttons = screen.getAllByRole('button', { name: /export/i });
+    const exportButton = buttons[buttons.length - 1]; // Get inner button
     expect(exportButton).toHaveClass('custom-export-class');
   });
 
@@ -82,7 +86,8 @@ describe('ExportButton', () => {
     const user = userEvent.setup();
     renderWithProviders(<ExportButton {...defaultProps} />);
     
-    const exportButton = screen.getByRole('button', { name: /export/i });
+    const buttons = screen.getAllByRole('button', { name: /export/i });
+    const exportButton = buttons[buttons.length - 1]; // Get inner button
     await user.click(exportButton);
     
     expect(screen.getByText('Export as CSV')).toBeInTheDocument();
@@ -92,7 +97,8 @@ describe('ExportButton', () => {
     const user = userEvent.setup();
     renderWithProviders(<ExportButton {...defaultProps} />);
     
-    const exportButton = screen.getByRole('button', { name: /export/i });
+    const buttons = screen.getAllByRole('button', { name: /export/i });
+    const exportButton = buttons[buttons.length - 1]; // Get inner button
     await user.click(exportButton);
     
     const csvOption = screen.getByText('Export as CSV');

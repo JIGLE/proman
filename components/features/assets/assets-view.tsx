@@ -129,11 +129,11 @@ export function AssetsView(): React.ReactElement {
         </div>
 
         <TabsContent value="map" className="mt-0">
-          <PropertiesView ref={propertiesViewRef} viewMode="map" />
+          <PropertiesView ref={propertiesViewRef} viewMode="map" density="compact" />
         </TabsContent>
 
         <TabsContent value="properties" className="mt-0">
-          <PropertiesView ref={propertiesViewRef} viewMode="list" />
+          <PropertiesView ref={propertiesViewRef} viewMode="list" density="compact" />
         </TabsContent>
       </Tabs>
     </div>

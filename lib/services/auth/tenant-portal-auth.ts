@@ -2,9 +2,10 @@
  * Tenant Portal Authentication
  * 
  * Handles token generation and verification for tenant self-service portal.
- * Uses signed JWTs for secure, stateless authentication.
+ * Uses signed JWTs with HMAC-SHA256 for secure, stateless authentication.
  */
 
+import crypto from 'crypto';
 import { getPrismaClient } from '../database/database';
 
 // Token expiration in seconds (default: 30 days)
@@ -18,10 +19,15 @@ export interface PortalTokenPayload {
 }
 
 /**
- * Generate a simple signed token for tenant portal access
- * In production, use proper JWT library with RS256
+ * Generate a cryptographically signed token for tenant portal access
+ * Uses HMAC-SHA256 for secure token signing
  */
 export function generatePortalToken(tenantId: string, userId: string): string {
+  const secret = process.env.NEXTAUTH_SECRET;
+  if (!secret) {
+    throw new Error('NEXTAUTH_SECRET is required for secure token generation');
+  }
+
   const payload: PortalTokenPayload = {
     tenantId,
     userId,
@@ -29,36 +35,41 @@ export function generatePortalToken(tenantId: string, userId: string): string {
     exp: Math.floor(Date.now() / 1000) + TOKEN_EXPIRATION,
   };
   
-  // Simple base64 encoding - in production use proper JWT signing
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
   const payloadStr = Buffer.from(JSON.stringify(payload)).toString('base64url');
   
-  // Create signature using secret (in production, use proper HMAC)
-  const secret = process.env.NEXTAUTH_SECRET || 'proman-tenant-portal-secret';
+  // Create HMAC-SHA256 signature
   const signatureData = `${header}.${payloadStr}`;
-  const signature = Buffer.from(
-    simpleHash(signatureData + secret)
-  ).toString('base64url');
+  const signature = crypto
+    .createHmac('sha256', secret)
+    .update(signatureData)
+    .digest('base64url');
   
   return `${header}.${payloadStr}.${signature}`;
 }
 
 /**
  * Verify a portal token and return payload if valid
+ * Uses HMAC-SHA256 for cryptographic verification
  */
 export async function verifyPortalToken(token: string): Promise<PortalTokenPayload | null> {
   try {
+    const secret = process.env.NEXTAUTH_SECRET;
+    if (!secret) {
+      throw new Error('NEXTAUTH_SECRET is required for token verification');
+    }
+
     const parts = token.split('.');
     if (parts.length !== 3) return null;
     
     const [header, payloadStr, signature] = parts;
     
-    // Verify signature
-    const secret = process.env.NEXTAUTH_SECRET || 'proman-tenant-portal-secret';
+    // Verify HMAC-SHA256 signature
     const signatureData = `${header}.${payloadStr}`;
-    const expectedSignature = Buffer.from(
-      simpleHash(signatureData + secret)
-    ).toString('base64url');
+    const expectedSignature = crypto
+      .createHmac('sha256', secret)
+      .update(signatureData)
+      .digest('base64url');
     
     if (signature !== expectedSignature) {
       return null;
@@ -89,21 +100,6 @@ export async function verifyPortalToken(token: string): Promise<PortalTokenPaylo
   } catch {
     return null;
   }
-}
-
-/**
- * Simple hash function for demonstration
- * In production, use crypto.createHmac('sha256', secret)
- */
-function simpleHash(data: string): string {
-  let hash = 0;
-  for (let i = 0; i < data.length; i++) {
-    const char = data.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-  // Convert to hex-like string
-  return Math.abs(hash).toString(16).padStart(16, '0');
 }
 
 /**

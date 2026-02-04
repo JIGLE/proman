@@ -1,12 +1,14 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { FinancialsView } from "./financials-view";
 import { PaymentMatrixView } from "./payment-matrix-view";
-import { ReceiptsView } from "./receipts-view";
+import { ReceiptsView, ReceiptsViewRef } from "./receipts-view";
 import { TrendingUp, TrendingDown, DollarSign, LayoutGrid, Receipt, Grid3X3 } from "lucide-react";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
@@ -26,6 +28,7 @@ export function FinancialsContainer() {
   const { state } = useApp();
   const { receipts, expenses } = state;
   const { formatCurrency } = useCurrency();
+  const receiptsViewRef = useRef<ReceiptsViewRef>(null);
 
   // Calculate summary metrics for the financial summary bar
   const metrics = useMemo(() => {
@@ -109,20 +112,31 @@ export function FinancialsContainer() {
 
       {/* Tabs Navigation - Aligned with Finance sub-sections per IA */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full max-w-lg grid-cols-3">
-          <TabsTrigger value="overview" className="flex items-center gap-2">
-            <LayoutGrid className="h-4 w-4" />
-            <span className="hidden sm:inline">Overview</span>
-          </TabsTrigger>
-          <TabsTrigger value="receipts" className="flex items-center gap-2">
-            <Receipt className="h-4 w-4" />
-            <span className="hidden sm:inline">Income</span>
-          </TabsTrigger>
-          <TabsTrigger value="payments" className="flex items-center gap-2">
-            <Grid3X3 className="h-4 w-4" />
-            <span className="hidden sm:inline">Matrix</span>
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex items-center gap-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
+            <TabsTrigger value="overview" className="flex items-center gap-2">
+              <LayoutGrid className="h-4 w-4" />
+              <span className="hidden sm:inline">Overview</span>
+            </TabsTrigger>
+            <TabsTrigger value="receipts" className="flex items-center gap-2">
+              <Receipt className="h-4 w-4" />
+              <span className="hidden sm:inline">Receipts</span>
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="flex items-center gap-2">
+              <Grid3X3 className="h-4 w-4" />
+              <span className="hidden sm:inline">Matrix</span>
+            </TabsTrigger>
+          </TabsList>
+          {activeTab === 'receipts' && (
+            <Button 
+              onClick={() => receiptsViewRef.current?.openDialog()}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Add Receipt</span>
+            </Button>
+          )}
+        </div>
 
         <TabsContent value="overview" className="mt-0">
           <FinancialsView />

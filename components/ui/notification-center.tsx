@@ -19,7 +19,7 @@ import {
 import { cn } from "@/lib/utils/utils";
 import { Button } from "./button";
 import { Badge } from "./badge";
-import * as Popover from "@radix-ui/react-popover";
+import * as Popover from "@/components/ui/popover";
 
 // Types
 export type NotificationType = 

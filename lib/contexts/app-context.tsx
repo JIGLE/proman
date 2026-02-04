@@ -16,6 +16,8 @@ import {
 // Import database helpers dynamically inside the client runtime to avoid bundling
 // server-only modules (Prisma, better-sqlite3) into client bundles.
 import { useToast } from './toast-context';
+import { useCsrf } from './csrf-context';
+import { apiFetch } from '@/lib/utils/api-client';
 
 interface AppState {
   properties: Property[];
@@ -133,23 +135,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const [state, dispatch] = React.useReducer(appReducer, initialState);
   const { data: session } = useSession();
   const { error: showError } = useToast();
+  const { token: csrfToken } = useCsrf();
   const userId = (session?.user as { id?: string } | undefined)?.id;
-  // Use the server API routes from client code to avoid bundling server-only modules
-  async function apiFetch(path: string, method = 'GET', body?: unknown) {
-    const opts: RequestInit = {
-      method,
-      credentials: 'include',
-      headers: {},
-    };
-    if (body !== undefined) {
-      (opts.headers as Record<string, string>)['Content-Type'] = 'application/json';
-      opts.body = JSON.stringify(body);
-    }
-    const res = await fetch(path, opts);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data?.error || `Request failed: ${res.status}`);
-    return data;
-  }
 
   // Reusable data loading function
   const loadData = useCallback(async () => {
@@ -161,7 +148,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
       // Initialize database and seed if needed (server-side handler)
       // In mock mode, this will return early without error
       try {
-        await apiFetch('/api/debug/db/init', 'POST');
+        await apiFetch('/api/debug/db/init', csrfToken, 'POST');
       } catch (initError) {
         // Ignore init errors - mock mode or DB already initialized
         console.debug('DB init skipped:', initError instanceof Error ? initError.message : String(initError));
@@ -169,36 +156,36 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
 
       // Load all data in parallel via server API endpoints
       const [propertiesRes, tenantsRes, receiptsRes, templatesRes, correspondenceRes, ownersRes, expensesRes, maintenanceRes, leasesRes] = await Promise.all([
-        apiFetch('/api/properties'),
-        apiFetch('/api/tenants'),
-        apiFetch('/api/receipts'),
-        apiFetch('/api/correspondence/templates'),
-        apiFetch('/api/correspondence'),
-        apiFetch('/api/owners'),
-        apiFetch('/api/expenses'),
-        apiFetch('/api/maintenance'),
-        apiFetch('/api/leases'),
+        apiFetch<{ data: Property[] }>('/api/properties', csrfToken),
+        apiFetch<{ data: Tenant[] }>('/api/tenants', csrfToken),
+        apiFetch<{ data: Receipt[] }>('/api/receipts', csrfToken),
+        apiFetch<{ data: CorrespondenceTemplate[] }>('/api/correspondence/templates', csrfToken),
+        apiFetch<{ data: Correspondence[] }>('/api/correspondence', csrfToken),
+        apiFetch<{ data: Owner[] }>('/api/owners', csrfToken),
+        apiFetch<{ data: Expense[] }>('/api/expenses', csrfToken),
+        apiFetch<{ data: MaintenanceTicket[] }>('/api/maintenance', csrfToken),
+        apiFetch<{ data: Lease[] }>('/api/leases', csrfToken),
       ]);
 
-      const properties = propertiesRes?.data ?? propertiesRes;
-      const tenants = tenantsRes?.data ?? tenantsRes;
-      const receipts = receiptsRes?.data ?? receiptsRes;
-      const templates = templatesRes?.data ?? templatesRes;
-      const correspondence = correspondenceRes?.data ?? correspondenceRes;
-      const owners = ownersRes?.data ?? ownersRes;
-      const expenses = expensesRes?.data ?? expensesRes;
-      const maintenance = maintenanceRes?.data ?? maintenanceRes;
-      const leases = leasesRes?.data ?? leasesRes;
+      const properties = propertiesRes.data ?? propertiesRes;
+      const tenants = tenantsRes.data ?? tenantsRes;
+      const receipts = receiptsRes.data ?? receiptsRes;
+      const templates = templatesRes.data ?? templatesRes;
+      const correspondence = correspondenceRes.data ?? correspondenceRes;
+      const owners = ownersRes.data ?? ownersRes;
+      const expenses = expensesRes.data ?? expensesRes;
+      const maintenance = maintenanceRes.data ?? maintenanceRes;
+      const leases = leasesRes.data ?? leasesRes;
 
-      dispatch({ type: 'SET_PROPERTIES', payload: properties });
-      dispatch({ type: 'SET_TENANTS', payload: tenants });
-      dispatch({ type: 'SET_RECEIPTS', payload: receipts });
-      dispatch({ type: 'SET_TEMPLATES', payload: templates });
-      dispatch({ type: 'SET_CORRESPONDENCE', payload: correspondence });
-      dispatch({ type: 'SET_OWNERS', payload: owners });
-      dispatch({ type: 'SET_EXPENSES', payload: expenses });
-      dispatch({ type: 'SET_MAINTENANCE', payload: maintenance });
-      dispatch({ type: 'SET_LEASES', payload: leases });
+      dispatch({ type: 'SET_PROPERTIES', payload: properties as Property[] });
+      dispatch({ type: 'SET_TENANTS', payload: tenants as Tenant[] });
+      dispatch({ type: 'SET_RECEIPTS', payload: receipts as Receipt[] });
+      dispatch({ type: 'SET_TEMPLATES', payload: templates as CorrespondenceTemplate[] });
+      dispatch({ type: 'SET_CORRESPONDENCE', payload: correspondence as Correspondence[] });
+      dispatch({ type: 'SET_OWNERS', payload: owners as Owner[] });
+      dispatch({ type: 'SET_EXPENSES', payload: expenses as Expense[] });
+      dispatch({ type: 'SET_MAINTENANCE', payload: maintenance as MaintenanceTicket[] });
+      dispatch({ type: 'SET_LEASES', payload: leases as Lease[] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load data';
       dispatch({ type: 'SET_ERROR', payload: errorMessage });
@@ -207,7 +194,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
     }
-  }, [userId, showError]);
+  }, [userId, csrfToken, showError]);
 
   // Load initial data
   useEffect(() => {
@@ -223,7 +210,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const addProperty = async (propertyData: Omit<Property, 'id' | 'userId' | 'createdAt' | 'updatedAt'>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const res = await apiFetch('/api/properties', 'POST', propertyData);
+      const res = await apiFetch<{ data: Property }>('/api/properties', csrfToken, 'POST', propertyData);
       const newProperty = res.data;
       dispatch({ type: 'SET_PROPERTIES', payload: [...state.properties, newProperty] });
     } catch (err) {
@@ -236,7 +223,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const updateProperty = async (id: string, propertyData: Partial<Omit<Property, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const res = await apiFetch(`/api/properties/${id}`, 'PUT', propertyData);
+      const res = await apiFetch<{ data: Property }>(`/api/properties/${id}`, csrfToken, 'PUT', propertyData);
       const updatedProperty = res.data;
       dispatch({
         type: 'SET_PROPERTIES',
@@ -252,7 +239,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const deleteProperty = async (id: string) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      await apiFetch(`/api/properties/${id}`, 'DELETE');
+      await apiFetch(`/api/properties/${id}`, csrfToken, 'DELETE');
       dispatch({
         type: 'SET_PROPERTIES',
         payload: state.properties.filter(p => p.id !== id)
@@ -268,7 +255,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const addTenant = async (tenantData: Omit<Tenant, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName'>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const res = await apiFetch('/api/tenants', 'POST', tenantData);
+      const res = await apiFetch<{ data: Tenant }>('/api/tenants', csrfToken, 'POST', tenantData);
       const newTenant = res.data;
       dispatch({ type: 'SET_TENANTS', payload: [...state.tenants, newTenant] });
     } catch (err) {
@@ -281,7 +268,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const updateTenant = async (id: string, tenantData: Partial<Omit<Tenant, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName'>>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const res = await apiFetch(`/api/tenants/${id}`, 'PUT', tenantData);
+      const res = await apiFetch<{ data: Tenant }>(`/api/tenants/${id}`, csrfToken, 'PUT', tenantData);
       const updatedTenant = res.data;
       dispatch({
         type: 'SET_TENANTS',
@@ -297,7 +284,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const deleteTenant = async (id: string) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      await apiFetch(`/api/tenants/${id}`, 'DELETE');
+      await apiFetch(`/api/tenants/${id}`, csrfToken, 'DELETE');
       dispatch({
         type: 'SET_TENANTS',
         payload: state.tenants.filter(t => t.id !== id)
@@ -313,7 +300,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const addReceipt = async (receiptData: Omit<Receipt, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const res = await apiFetch('/api/receipts', 'POST', receiptData);
+      const res = await apiFetch<{ data: Receipt }>('/api/receipts', csrfToken, 'POST', receiptData);
       const newReceipt = res.data;
       dispatch({ type: 'SET_RECEIPTS', payload: [...state.receipts, newReceipt] });
     } catch (err) {
@@ -326,7 +313,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const updateReceipt = async (id: string, receiptData: Partial<Omit<Receipt, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName' | 'propertyName'>>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const res = await apiFetch(`/api/receipts/${id}`, 'PUT', receiptData);
+      const res = await apiFetch<{ data: Receipt }>(`/api/receipts/${id}`, csrfToken, 'PUT', receiptData);
       const updatedReceipt = res.data;
       dispatch({
         type: 'SET_RECEIPTS',
@@ -342,7 +329,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const deleteReceipt = async (id: string) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      await apiFetch(`/api/receipts/${id}`, 'DELETE');
+      await apiFetch(`/api/receipts/${id}`, csrfToken, 'DELETE');
       dispatch({
         type: 'SET_RECEIPTS',
         payload: state.receipts.filter(r => r.id !== id)
@@ -357,7 +344,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   // Template actions
   const addTemplate = async (templateData: Omit<CorrespondenceTemplate, 'id' | 'createdAt' | 'updatedAt'>) => {
     try {
-      const res = await apiFetch('/api/correspondence/templates', 'POST', templateData);
+      const res = await apiFetch<{ data: CorrespondenceTemplate }>('/api/correspondence/templates', csrfToken, 'POST', templateData);
       const newTemplate = res.data;
       dispatch({ type: 'SET_TEMPLATES', payload: [...state.templates, newTemplate] });
     } catch (err) {
@@ -369,7 +356,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
 
   const updateTemplate = async (id: string, templateData: Partial<CorrespondenceTemplate>) => {
     try {
-      const res = await apiFetch(`/api/correspondence/templates/${id}`, 'PUT', templateData);
+      const res = await apiFetch<{ data: CorrespondenceTemplate }>(`/api/correspondence/templates/${id}`, csrfToken, 'PUT', templateData);
       const updatedTemplate = res.data;
       dispatch({
         type: 'SET_TEMPLATES',
@@ -384,7 +371,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
 
   const deleteTemplate = async (id: string) => {
     try {
-      await apiFetch(`/api/correspondence/templates/${id}`, 'DELETE');
+      await apiFetch(`/api/correspondence/templates/${id}`, csrfToken, 'DELETE');
       dispatch({
         type: 'SET_TEMPLATES',
         payload: state.templates.filter(t => t.id !== id)
@@ -400,7 +387,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const addCorrespondence = async (correspondenceData: Omit<Correspondence, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName'>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const res = await apiFetch('/api/correspondence', 'POST', correspondenceData);
+      const res = await apiFetch<{ data: Correspondence }>('/api/correspondence', csrfToken, 'POST', correspondenceData);
       const newCorrespondence = res.data;
       dispatch({ type: 'SET_CORRESPONDENCE', payload: [...state.correspondence, newCorrespondence] });
     } catch (err) {
@@ -413,7 +400,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const updateCorrespondence = async (id: string, correspondenceData: Partial<Omit<Correspondence, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'tenantName'>>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const res = await apiFetch(`/api/correspondence/${id}`, 'PUT', correspondenceData);
+      const res = await apiFetch<{ data: Correspondence }>(`/api/correspondence/${id}`, csrfToken, 'PUT', correspondenceData);
       const updatedCorrespondence = res.data;
       dispatch({
         type: 'SET_CORRESPONDENCE',
@@ -429,7 +416,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const deleteCorrespondence = async (id: string) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      await apiFetch(`/api/correspondence/${id}`, 'DELETE');
+      await apiFetch(`/api/correspondence/${id}`, csrfToken, 'DELETE');
       dispatch({
         type: 'SET_CORRESPONDENCE',
         payload: state.correspondence.filter(c => c.id !== id)
@@ -445,8 +432,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const addOwner = async (ownerData: Omit<Owner, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'properties'>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const res = await apiFetch('/api/owners', 'POST', ownerData);
-      const newOwner = res.data ?? res;
+      const res = await apiFetch<Owner | { data: Owner }>('/api/owners', csrfToken, 'POST', ownerData);
+      const newOwner = (res as { data: Owner }).data ?? res;
       dispatch({ type: 'SET_OWNERS', payload: [...state.owners, newOwner] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add owner';
@@ -458,8 +445,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const updateOwner = async (id: string, ownerData: Partial<Omit<Owner, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'properties'>>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const res = await apiFetch(`/api/owners/${id}`, 'PUT', ownerData);
-      const updatedOwner = res.data ?? res;
+      const res = await apiFetch<Owner | { data: Owner }>(`/api/owners/${id}`, csrfToken, 'PUT', ownerData);
+      const updatedOwner = (res as { data: Owner }).data ?? res;
       dispatch({
         type: 'SET_OWNERS',
         payload: state.owners.map(o => o.id === id ? updatedOwner : o)
@@ -474,7 +461,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const deleteOwner = async (id: string) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      await apiFetch(`/api/owners/${id}`, 'DELETE');
+      await apiFetch(`/api/owners/${id}`, csrfToken, 'DELETE');
       dispatch({
         type: 'SET_OWNERS',
         payload: state.owners.filter(o => o.id !== id)
@@ -490,8 +477,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const addExpense = async (expenseData: Omit<Expense, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName'>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const res = await apiFetch('/api/expenses', 'POST', expenseData);
-      const newExpense = res.data ?? res;
+      const res = await apiFetch<Expense | { data: Expense }>('/api/expenses', csrfToken, 'POST', expenseData);
+      const newExpense = (res as { data: Expense }).data ?? res;
       dispatch({ type: 'SET_EXPENSES', payload: [newExpense, ...state.expenses] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to add expense';
@@ -515,8 +502,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const addMaintenance = async (ticketData: Omit<MaintenanceTicket, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'propertyName' | 'tenantName' | 'resolvedAt' | 'images'>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const res = await apiFetch('/api/maintenance', 'POST', ticketData);
-      const newTicket = res.data ?? res;
+      const res = await apiFetch<MaintenanceTicket | { data: MaintenanceTicket }>('/api/maintenance', csrfToken, 'POST', ticketData);
+      const newTicket = (res as { data: MaintenanceTicket }).data ?? res;
       dispatch({ type: 'SET_MAINTENANCE', payload: [newTicket, ...state.maintenance] });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to create ticket';
@@ -528,8 +515,8 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const updateMaintenance = async (id: string, ticketData: Partial<MaintenanceTicket>) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      const res = await apiFetch(`/api/maintenance/${id}`, 'PUT', ticketData);
-      const updatedTicket = res.data ?? res;
+      const res = await apiFetch<MaintenanceTicket | { data: MaintenanceTicket }>(`/api/maintenance/${id}`, csrfToken, 'PUT', ticketData);
+      const updatedTicket = (res as { data: MaintenanceTicket }).data ?? res;
       dispatch({ 
         type: 'SET_MAINTENANCE', 
         payload: state.maintenance.map(t => t.id === id ? updatedTicket : t) 
@@ -544,7 +531,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const deleteMaintenance = async (id: string) => {
     if (!userId) throw new Error('User not authenticated');
     try {
-      await apiFetch(`/api/maintenance/${id}`, 'DELETE');
+      await apiFetch(`/api/maintenance/${id}`, csrfToken, 'DELETE');
       dispatch({ 
         type: 'SET_MAINTENANCE', 
         payload: state.maintenance.filter(t => t.id !== id) 
@@ -559,7 +546,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   // Lease operations
   const addLease = async (leaseData: Omit<Lease, 'id' | 'userId' | 'createdAt' | 'updatedAt' | 'contractFileName' | 'contractFileSize'>) => {
     try {
-      const newLease = await apiFetch('/api/leases', 'POST', leaseData);
+      const newLease = await apiFetch<Lease>('/api/leases', csrfToken, 'POST', leaseData);
       dispatch({ type: 'SET_LEASES', payload: [newLease, ...state.leases] });
     } catch (err) {
       console.error('Failed to add lease:', err);
@@ -569,7 +556,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
 
   const updateLease = async (id: string, leaseData: Partial<Lease>) => {
     try {
-      const updatedLease = await apiFetch(`/api/leases/${id}`, 'PUT', leaseData);
+      const updatedLease = await apiFetch<Lease>(`/api/leases/${id}`, csrfToken, 'PUT', leaseData);
       dispatch({ type: 'SET_LEASES', payload: state.leases.map(l => l.id === id ? updatedLease : l) });
     } catch (err) {
       console.error('Failed to update lease:', err);
@@ -579,7 +566,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
 
   const deleteLease = async (id: string) => {
     try {
-      await apiFetch(`/api/leases/${id}`, 'DELETE');
+      await apiFetch(`/api/leases/${id}`, csrfToken, 'DELETE');
       dispatch({ type: 'SET_LEASES', payload: state.leases.filter(l => l.id !== id) });
     } catch (err) {
       console.error('Failed to delete lease:', err);

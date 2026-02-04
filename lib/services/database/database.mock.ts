@@ -15,8 +15,27 @@ import type {
   MaintenanceTicket
 } from '@/lib/types';
 
+// Minimal MaintenanceContact type used by mock data (not exported from '@/lib/types')
+type MaintenanceContact = {
+  id: string;
+  userId: string;
+  name: string;
+  company?: string;
+  type: string;
+  specialties?: string[];
+  email?: string;
+  phone?: string;
+  address?: string;
+  hourlyRate?: number;
+  currency?: string;
+  rating?: number;
+  notes?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
 // Mock data stores - read-only
-const MOCK_PROPERTIES: Property[] = [
+const MOCK_PROPERTIES = [
   {
     id: 'prop-1',
     userId: 'mock-user',
@@ -28,12 +47,8 @@ const MOCK_PROPERTIES: Property[] = [
     country: 'United States',
     type: 'apartment',
     status: 'occupied',
-    purchasePrice: 450000,
-    currentValue: 520000,
-    size: 1200,
     bedrooms: 2,
     bathrooms: 2,
-    yearBuilt: 2015,
     createdAt: '2024-01-15T10:00:00Z',
     updatedAt: '2025-12-01T14:30:00Z',
   },
@@ -48,10 +63,6 @@ const MOCK_PROPERTIES: Property[] = [
     country: 'United States',
     type: 'commercial',
     status: 'occupied',
-    purchasePrice: 850000,
-    currentValue: 920000,
-    size: 2500,
-    yearBuilt: 2018,
     createdAt: '2024-03-20T09:00:00Z',
     updatedAt: '2025-11-15T16:45:00Z',
   },
@@ -66,12 +77,8 @@ const MOCK_PROPERTIES: Property[] = [
     country: 'United States',
     type: 'house',
     status: 'vacant',
-    purchasePrice: 380000,
-    currentValue: 425000,
-    size: 1800,
     bedrooms: 3,
     bathrooms: 2.5,
-    yearBuilt: 2012,
     createdAt: '2024-06-10T11:30:00Z',
     updatedAt: '2026-01-20T08:15:00Z',
   },
@@ -86,18 +93,14 @@ const MOCK_PROPERTIES: Property[] = [
     country: 'United States',
     type: 'apartment',
     status: 'occupied',
-    purchasePrice: 550000,
-    currentValue: 610000,
-    size: 1400,
     bedrooms: 2,
     bathrooms: 2,
-    yearBuilt: 2019,
     createdAt: '2024-08-05T13:20:00Z',
     updatedAt: '2025-12-28T10:00:00Z',
   },
 ];
 
-const MOCK_TENANTS: Tenant[] = [
+const MOCK_TENANTS = [
   {
     id: 'tenant-1',
     userId: 'mock-user',
@@ -145,7 +148,7 @@ const MOCK_TENANTS: Tenant[] = [
   },
 ];
 
-const MOCK_RECEIPTS: Receipt[] = [
+const MOCK_RECEIPTS = [
   {
     id: 'receipt-1',
     userId: 'mock-user',
@@ -226,7 +229,7 @@ const MOCK_RECEIPTS: Receipt[] = [
   },
 ];
 
-const MOCK_TEMPLATES: CorrespondenceTemplate[] = [
+const MOCK_TEMPLATES = [
   {
     id: 'template-1',
     userId: 'mock-user',
@@ -247,7 +250,7 @@ const MOCK_TEMPLATES: CorrespondenceTemplate[] = [
   },
 ];
 
-const MOCK_CORRESPONDENCE: Correspondence[] = [
+const MOCK_CORRESPONDENCE = [
   {
     id: 'corr-1',
     userId: 'mock-user',
@@ -262,7 +265,7 @@ const MOCK_CORRESPONDENCE: Correspondence[] = [
   },
 ];
 
-const MOCK_OWNERS: Owner[] = [
+const MOCK_OWNERS = [
   {
     id: 'owner-1',
     userId: 'mock-user',
@@ -287,7 +290,7 @@ const MOCK_OWNERS: Owner[] = [
   },
 ];
 
-const MOCK_LEASES: Lease[] = [
+const MOCK_LEASES = [
   {
     id: 'lease-1',
     userId: 'mock-user',
@@ -332,7 +335,7 @@ const MOCK_LEASES: Lease[] = [
   },
 ];
 
-const MOCK_EXPENSES: Expense[] = [
+const MOCK_EXPENSES = [
   {
     id: 'expense-1',
     userId: 'mock-user',
@@ -341,7 +344,6 @@ const MOCK_EXPENSES: Expense[] = [
     amount: 350,
     date: '2026-01-15',
     description: 'Plumbing repair - kitchen sink',
-    vendor: 'ABC Plumbing Services',
     status: 'paid',
     createdAt: '2026-01-15T14:00:00Z',
     updatedAt: '2026-01-16T10:00:00Z',
@@ -354,7 +356,6 @@ const MOCK_EXPENSES: Expense[] = [
     amount: 850,
     date: '2026-01-05',
     description: 'Electricity bill - December 2025',
-    vendor: 'City Power Company',
     status: 'paid',
     createdAt: '2026-01-05T09:00:00Z',
     updatedAt: '2026-01-06T08:00:00Z',
@@ -367,14 +368,13 @@ const MOCK_EXPENSES: Expense[] = [
     amount: 1200,
     date: '2025-12-01',
     description: 'Property insurance - Annual premium',
-    vendor: 'National Insurance Co.',
     status: 'paid',
     createdAt: '2025-12-01T10:00:00Z',
     updatedAt: '2025-12-01T10:30:00Z',
   },
 ];
 
-const MOCK_MAINTENANCE_TICKETS: MaintenanceTicket[] = [
+const MOCK_MAINTENANCE_TICKETS = [
   {
     id: 'maint-1',
     userId: 'mock-user',
@@ -384,7 +384,6 @@ const MOCK_MAINTENANCE_TICKETS: MaintenanceTicket[] = [
     description: 'The bathroom faucet has been dripping constantly for the past week.',
     status: 'in_progress',
     priority: 'medium',
-    category: 'plumbing',
     reportedDate: '2026-02-01',
     images: '[]',
     createdAt: '2026-02-01T10:00:00Z',
@@ -399,7 +398,6 @@ const MOCK_MAINTENANCE_TICKETS: MaintenanceTicket[] = [
     description: 'Air conditioning unit not producing cold air in office suite.',
     status: 'open',
     priority: 'high',
-    category: 'hvac',
     reportedDate: '2026-02-03',
     images: '[]',
     createdAt: '2026-02-03T09:00:00Z',
@@ -414,7 +412,6 @@ const MOCK_MAINTENANCE_TICKETS: MaintenanceTicket[] = [
     description: 'Window pane cracked, needs replacement.',
     status: 'resolved',
     priority: 'high',
-    category: 'general',
     reportedDate: '2026-01-20',
     completedDate: '2026-01-25',
     images: '[]',
@@ -423,10 +420,98 @@ const MOCK_MAINTENANCE_TICKETS: MaintenanceTicket[] = [
   },
 ];
 
+const MOCK_CONTACTS = [
+  {
+    id: 'contact-1',
+    userId: 'mock-user',
+    name: 'John\'s Plumbing Services',
+    company: 'John\'s Plumbing',
+    type: 'plumber',
+    specialties: ['Emergency repairs', 'Pipe installation', 'Water heaters'],
+    email: 'john@johnsplumbing.com',
+    phone: '+1 (555) 123-4567',
+    address: '789 Trade St, Los Angeles, CA 90001',
+    hourlyRate: 85,
+    currency: 'USD',
+    rating: 4.8,
+    notes: 'Reliable and quick response time. Available for emergencies.',
+    createdAt: '2025-06-15T10:00:00Z',
+    updatedAt: '2026-01-10T14:00:00Z',
+  },
+  {
+    id: 'contact-2',
+    userId: 'mock-user',
+    name: 'ABC Electric',
+    company: 'ABC Electric Solutions',
+    type: 'electrician',
+    specialties: ['Wiring', 'Circuit breakers', 'Lighting installation'],
+    email: 'contact@abcelectric.com',
+    phone: '+1 (555) 234-5678',
+    address: '456 Electric Ave, New York, NY 10001',
+    hourlyRate: 95,
+    currency: 'USD',
+    rating: 4.9,
+    notes: 'Licensed and insured. Excellent work quality.',
+    createdAt: '2025-07-20T09:00:00Z',
+    updatedAt: '2025-12-05T16:30:00Z',
+  },
+  {
+    id: 'contact-3',
+    userId: 'mock-user',
+    name: 'CoolAir HVAC',
+    company: 'CoolAir Systems Inc.',
+    type: 'hvac',
+    specialties: ['AC repair', 'Heating systems', 'Maintenance'],
+    email: 'service@coolair.com',
+    phone: '+1 (555) 345-6789',
+    address: '123 Climate Dr, Miami, FL 33101',
+    hourlyRate: 110,
+    currency: 'USD',
+    rating: 4.7,
+    notes: 'Specialized in commercial HVAC systems.',
+    createdAt: '2025-08-10T11:00:00Z',
+    updatedAt: '2026-01-15T10:00:00Z',
+  },
+  {
+    id: 'contact-4',
+    userId: 'mock-user',
+    name: 'HandyFix Services',
+    company: 'HandyFix LLC',
+    type: 'handyman',
+    specialties: ['General repairs', 'Carpentry', 'Painting', 'Door/window repair'],
+    email: 'info@handyfix.com',
+    phone: '+1 (555) 456-7890',
+    address: '321 Fix-It Lane, Chicago, IL 60601',
+    hourlyRate: 65,
+    currency: 'USD',
+    rating: 4.5,
+    notes: 'Good for small to medium repairs. Flexible scheduling.',
+    createdAt: '2025-09-01T08:00:00Z',
+    updatedAt: '2025-11-20T13:00:00Z',
+  },
+  {
+    id: 'contact-5',
+    userId: 'mock-user',
+    name: 'GreenScape Landscaping',
+    company: 'GreenScape Pro',
+    type: 'landscaper',
+    specialties: ['Lawn maintenance', 'Tree trimming', 'Irrigation'],
+    email: 'contact@greenscape.com',
+    phone: '+1 (555) 567-8901',
+    address: '555 Garden Rd, Portland, OR 97201',
+    hourlyRate: 55,
+    currency: 'USD',
+    rating: 4.6,
+    notes: 'Monthly maintenance contracts available.',
+    createdAt: '2025-05-15T07:00:00Z',
+    updatedAt: '2025-12-30T09:00:00Z',
+  },
+];
+
 // Property service
 export const propertyService = {
   async getAll(_userId: string): Promise<Property[]> {
-    return [...MOCK_PROPERTIES];
+    return [...MOCK_PROPERTIES] as unknown as Property[];
   },
 
   async getById(_userId: string, _id: string): Promise<Property | null> {
@@ -449,7 +534,7 @@ export const propertyService = {
 // Tenant service
 export const tenantService = {
   async getAll(_userId: string): Promise<Tenant[]> {
-    return [...MOCK_TENANTS];
+    return [...MOCK_TENANTS] as unknown as Tenant[];
   },
 
   async getById(_userId: string, _id: string): Promise<Tenant | null> {
@@ -476,7 +561,7 @@ export const tenantService = {
 // Receipt service
 export const receiptService = {
   async getAll(_userId: string): Promise<Receipt[]> {
-    return [...MOCK_RECEIPTS];
+    return [...MOCK_RECEIPTS] as unknown as Receipt[];
   },
 
   async getById(_userId: string, _id: string): Promise<Receipt | null> {
@@ -502,23 +587,23 @@ export const receiptService = {
 
 // Template service
 export const templateService = {
-  async getAll(_userId: string): Promise<CorrespondenceTemplate[]> {
-    return [...MOCK_TEMPLATES];
+  async getAll(): Promise<CorrespondenceTemplate[]> {
+    return [...MOCK_TEMPLATES] as unknown as CorrespondenceTemplate[];
   },
 
-  async getById(_userId: string, _id: string): Promise<CorrespondenceTemplate | null> {
+  async getById(_id: string): Promise<CorrespondenceTemplate | null> {
     return null;
   },
 
-  async create(_userId: string, _data: Partial<CorrespondenceTemplate>): Promise<CorrespondenceTemplate> {
+  async create(_data: Partial<CorrespondenceTemplate>): Promise<CorrespondenceTemplate> {
     throw new Error('Cannot create templates in mock mode. Set DATABASE_URL to enable writes.');
   },
 
-  async update(_userId: string, _id: string, _data: Partial<CorrespondenceTemplate>): Promise<CorrespondenceTemplate> {
+  async update(_id: string, _data: Partial<CorrespondenceTemplate>): Promise<CorrespondenceTemplate> {
     throw new Error('Cannot update templates in mock mode. Set DATABASE_URL to enable writes.');
   },
 
-  async delete(_userId: string, _id: string): Promise<void> {
+  async delete(_id: string): Promise<void> {
     throw new Error('Cannot delete templates in mock mode. Set DATABASE_URL to enable writes.');
   },
 };
@@ -526,7 +611,7 @@ export const templateService = {
 // Correspondence service
 export const correspondenceService = {
   async getAll(_userId: string): Promise<Correspondence[]> {
-    return [...MOCK_CORRESPONDENCE];
+    return [...MOCK_CORRESPONDENCE] as unknown as Correspondence[];
   },
 
   async getById(_userId: string, _id: string): Promise<Correspondence | null> {
@@ -553,27 +638,55 @@ export const correspondenceService = {
 // Owner service (for compatibility)
 export const ownerService = {
   async getAll(_userId: string): Promise<Owner[]> {
-    return [...MOCK_OWNERS];
+    return [...MOCK_OWNERS] as unknown as Owner[];
   },
 };
 
 // Lease service (for compatibility)
 export const leaseService = {
   async getAll(_userId: string): Promise<Lease[]> {
-    return [...MOCK_LEASES];
+    return [...MOCK_LEASES] as unknown as Lease[];
   },
 };
 
 // Expense service (for compatibility)
 export const expenseService = {
   async getAll(_userId: string): Promise<Expense[]> {
-    return [...MOCK_EXPENSES];
+    return [...MOCK_EXPENSES] as unknown as Expense[];
   },
 };
 
 // Maintenance service (for compatibility)
 export const maintenanceService = {
   async getAll(_userId: string): Promise<MaintenanceTicket[]> {
-    return [...MOCK_MAINTENANCE_TICKETS];
+    return [...MOCK_MAINTENANCE_TICKETS] as unknown as MaintenanceTicket[];
+  },
+};
+
+// Contact service
+export const contactService = {
+  async getAll(_userId: string, _type?: string): Promise<MaintenanceContact[]> {
+    let contacts = [...MOCK_CONTACTS];
+    if (_type) {
+      contacts = contacts.filter(c => c.type === _type);
+    }
+    return contacts;
+  },
+
+  async getById(_userId: string, _id: string): Promise<MaintenanceContact | null> {
+    const contact = MOCK_CONTACTS.find(c => c.id === _id);
+    return contact || null;
+  },
+
+  async create(_userId: string, _data: Partial<MaintenanceContact>): Promise<MaintenanceContact> {
+    throw new Error('Cannot create contacts in mock mode. Set DATABASE_URL to enable writes.');
+  },
+
+  async update(_userId: string, _id: string, _data: Partial<MaintenanceContact>): Promise<MaintenanceContact> {
+    throw new Error('Cannot update contacts in mock mode. Set DATABASE_URL to enable writes.');
+  },
+
+  async delete(_userId: string, _id: string): Promise<void> {
+    throw new Error('Cannot delete contacts in mock mode. Set DATABASE_URL to enable writes.');
   },
 };

@@ -17,7 +17,6 @@ import {
 import { LeaseCalendar } from "@/components/ui/lease-calendar";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { useApp } from "@/lib/contexts/app-context";
-import { AchievementGrid } from "@/components/ui/achievements";
 import { motion } from "framer-motion";
 import { useTranslations } from 'next-intl';
 import {
@@ -25,7 +24,6 @@ import {
   Users,
   DollarSign,
   TrendingUp,
-  Trophy,
   Home,
   FileText,
   AlertTriangle,
@@ -657,33 +655,6 @@ export function AnalyticsDashboard(): React.ReactElement {
           />
         </TabsContent>
       </Tabs>
-
-      {/* Achievements Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <Card className="bg-zinc-900 border-zinc-800">
-          <CardHeader>
-            <CardTitle className="text-zinc-50 flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-yellow-500" />
-              Achievements
-            </CardTitle>
-            <CardDescription>
-              Milestones and recognitions for your property management success
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <AchievementGrid
-              occupancyRate={kpis.occupancyRate}
-              totalPayments={receipts.length}
-              totalProperties={kpis.totalProperties}
-              overduePayments={kpis.overduePayments}
-            />
-          </CardContent>
-        </Card>
-      </motion.div>
     </div>
   );
 }

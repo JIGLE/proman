@@ -17,7 +17,7 @@ export async function GET(
     const contact = await prisma.maintenanceContact.findUnique({
       where: { id },
       include: {
-        assignedTickets: {
+        tickets: {
           take: 10,
           orderBy: { createdAt: "desc" },
         },
@@ -54,13 +54,12 @@ export async function PUT(
     const contact = await prisma.maintenanceContact.update({
       where: { id },
       data: {
-        name: data.name,
+        contactPerson: data.name,
         company: data.company || null,
         type: data.type,
-        specialties: data.specialties || [],
+        specialties: JSON.stringify(data.specialties || []),
         email: data.email || null,
         phone: data.phone || null,
-        address: data.address || null,
         hourlyRate: data.hourlyRate ? parseFloat(data.hourlyRate) : null,
         currency: data.currency || "EUR",
         rating: data.rating ? parseFloat(data.rating) : null,

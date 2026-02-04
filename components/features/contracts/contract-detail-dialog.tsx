@@ -64,8 +64,8 @@ export function ContractDetailDialog({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl">
         <DialogHeader>
-          <div className="flex items-start justify-between">
-            <div>
+          <div className="flex items-start justify-between pr-8">
+            <div className="flex-1">
               <DialogTitle className="text-2xl font-bold text-[var(--color-foreground)]">
                 Contract Details
               </DialogTitle>
@@ -73,7 +73,7 @@ export function ContractDetailDialog({
                 Lease ID: {lease.id}
               </p>
             </div>
-            <Badge variant="outline" className={statusColors[lease.status]}>
+            <Badge variant="outline" className={`${statusColors[lease.status]} shrink-0`}>
               {lease.status.charAt(0).toUpperCase() + lease.status.slice(1)}
             </Badge>
           </div>

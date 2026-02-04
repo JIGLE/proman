@@ -22,7 +22,9 @@ describe('Dialog component', () => {
       </Dialog>
     )
 
-    const btn = screen.getByRole('button', { name: /open/i })
+    // Get all buttons and select the first one (the trigger)
+    const buttons = screen.getAllByRole('button', { name: /open/i })
+    const btn = buttons[0]
     fireEvent.click(btn)
 
     expect(screen.getByText('My Dialog')).toBeDefined()

@@ -40,14 +40,19 @@ function createBaseAuthOptions(): NextAuthOptions {
     logger.debug('Google OAuth not configured: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing');
   }
 
-  const options: NextAuthOptions = {
-    secret,
-    providers: [
-      GoogleProvider({
-        clientId: googleClientId || '',
-        clientSecret: googleClientSecret || '',
-        allowDangerousEmailAccountLinking: true,
-      }),
+  const providers = [
+    GoogleProvider({
+      clientId: googleClientId || '',
+      clientSecret: googleClientSecret || '',
+      allowDangerousEmailAccountLinking: true,
+    }),
+  ];
+
+  // Only enable demo credentials in explicit development mode with environment flag
+  if (process.env.NODE_ENV === 'development' && process.env.ENABLE_DEMO_AUTH === 'true') {
+    logger.warn('Demo credentials enabled - DO NOT use in production!');
+    providers.push(
+      // @ts-expect-error - CredentialsProvider has different type than OAuthConfig
       CredentialsProvider({
         id: 'credentials',
         name: 'Credentials',
@@ -56,19 +61,13 @@ function createBaseAuthOptions(): NextAuthOptions {
           password: { label: "Password", type: "password" }
         },
         async authorize(credentials) {
-           // Only allow in development/test or if explicitly enabled
-           const isDev = process.env.NODE_ENV !== 'production';
-           if (!isDev) return null;
-           
            if (credentials?.email === 'demo@proman.local' && credentials?.password === 'demo123') {
              try {
                const prisma = getPrismaClient();
-               // Check if user exists first
                let user = await prisma.user.findUnique({
                  where: { email: credentials.email }
                });
                
-               // If not, create it
                if (!user) {
                  user = await prisma.user.create({
                    data: {
@@ -80,20 +79,24 @@ function createBaseAuthOptions(): NextAuthOptions {
                  });
                }
                
-               logger.debug('Credentials authorize successful', { id: user.id, email: user.email });
+               logger.debug('Demo auth successful', { id: user.id });
                return user;
              } catch (error) {
-               logger.error('Credentials authorize error', error instanceof Error ? error : new Error(String(error)));
+               logger.error('Demo auth error', error instanceof Error ? error : new Error(String(error)));
                return null;
              }
            }
            return null;
         }
       })
-    ],
+    );
+  }
+
+  const options: NextAuthOptions = {
+    secret,
+    providers,
     session: {
-      // Use JWT in development to support Credentials provider for testing
-      strategy: process.env.NODE_ENV !== 'production' ? 'jwt' : 'database',
+      strategy: 'database',
       maxAge: 30 * 24 * 60 * 60, // 30 days
     },
     pages: {

@@ -4,15 +4,18 @@ import React from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { trackError } from '@/lib/monitoring/error-tracker';
 
 interface ErrorBoundaryState {
   hasError: boolean;
   error?: Error;
+  errorId?: string;
 }
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
   fallback?: React.ComponentType<{ error?: Error; resetError: () => void }>;
+  component?: string;
 }
 
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
@@ -26,11 +29,20 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    console.error('Error caught by boundary:', error, errorInfo);
+    // Track error with context
+    const trackedError = trackError(error, {
+      component: this.props.component || 'ErrorBoundary',
+      metadata: {
+        componentStack: errorInfo.componentStack,
+        digest: (errorInfo as { digest?: string }).digest,
+      },
+    }, true);
+
+    this.setState({ errorId: trackedError.id });
   }
 
   resetError = (): void => {
-    this.setState({ hasError: false, error: undefined });
+    this.setState({ hasError: false, error: undefined, errorId: undefined });
   };
 
   render(): React.ReactNode {
@@ -40,14 +52,14 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
         return <FallbackComponent error={this.state.error} resetError={this.resetError} />;
       }
 
-      return <DefaultErrorFallback error={this.state.error} resetError={this.resetError} />;
+      return <DefaultErrorFallback error={this.state.error} errorId={this.state.errorId} resetError={this.resetError} />;
     }
 
     return this.props.children;
   }
 }
 
-function DefaultErrorFallback({ error, resetError }: { error?: Error; resetError: () => void }): React.ReactElement {
+function DefaultErrorFallback({ error, errorId, resetError }: { error?: Error; errorId?: string; resetError: () => void }): React.ReactElement {
   return (
     <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
       <Card className="w-full max-w-md bg-zinc-900 border-zinc-800">
@@ -62,10 +74,15 @@ function DefaultErrorFallback({ error, resetError }: { error?: Error; resetError
         </CardHeader>
         <CardContent className="space-y-4">
           {error && (
-            <div className="bg-zinc-800 rounded-lg p-3">
+            <div className="bg-zinc-800 rounded-lg p-3 space-y-2">
               <p className="text-sm text-zinc-300 font-mono break-all">
                 {error.message}
               </p>
+              {errorId && (
+                <p className="text-xs text-zinc-500">
+                  Error ID: {errorId}
+                </p>
+              )}
             </div>
           )}
           <div className="flex gap-2">
@@ -88,9 +105,14 @@ function DefaultErrorFallback({ error, resetError }: { error?: Error; resetError
 }
 
 // Hook for functional components to catch errors
-export function useErrorHandler(): (error: Error, errorInfo?: { componentStack?: string }) => void {
+export function useErrorHandler(component?: string): (error: Error, errorInfo?: { componentStack?: string }) => void {
   return (error: Error, errorInfo?: { componentStack?: string }) => {
-    console.error('Error handled by hook:', error, errorInfo);
-    // In a real app, you might want to send this to an error reporting service
+    trackError(error, {
+      component,
+      metadata: {
+        componentStack: errorInfo?.componentStack,
+      },
+    }, true);
   };
 }
+

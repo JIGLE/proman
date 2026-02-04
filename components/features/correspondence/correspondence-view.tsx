@@ -90,7 +90,10 @@ export function CorrespondenceView(): React.ReactElement {
   };
 
   const generateBatchPDF = async () => {
-    if (!selectedTemplate) return;
+    if (!selectedTemplate) {
+      error('Please select a template.');
+      return;
+    }
     if (selectedRecipientIds.length === 0) {
       error('Please select at least one recipient.');
       return;
@@ -104,11 +107,11 @@ export function CorrespondenceView(): React.ReactElement {
       recipients.forEach((tenant, index) => {
         if (index > 0) doc.addPage();
 
-        const content = replaceVariables(selectedTemplate.content, tenant);
+        const content = replaceVariables(selectedTemplate.content || '', tenant);
 
         // Header
         doc.setFontSize(20);
-        doc.text(selectedTemplate.subject, 105, 20, { align: "center" });
+        doc.text(selectedTemplate.subject || 'Correspondence', 105, 20, { align: "center" });
 
         // Content
         doc.setFontSize(12);
@@ -121,7 +124,8 @@ export function CorrespondenceView(): React.ReactElement {
         doc.text(`Page ${index + 1} of ${recipients.length}`, 180, 280);
       });
 
-      doc.save(`batch-correspondence-${selectedTemplate.name.replace(/\s+/g, '-')}.pdf`);
+      const fileName = selectedTemplate.name ? selectedTemplate.name.replace(/\s+/g, '-') : 'correspondence';
+      doc.save(`batch-${fileName}.pdf`);
       success(`Generated PDF for ${recipients.length} recipients.`);
       setIsBatchOpen(false);
     } catch (err) {
@@ -194,12 +198,13 @@ export function CorrespondenceView(): React.ReactElement {
   };
 
   const replaceVariables = (content: string, tenant: Tenant): string => {
+    if (!content) return '';
     return content
-      .replace(/\{\{tenant_name\}\}/g, tenant.name)
-      .replace(/\{\{property_name\}\}/g, tenant.propertyName || 'your property')
-      .replace(/\{\{rent_amount\}\}/g, tenant.rent.toString())
-      .replace(/\{\{lease_start\}\}/g, new Date(tenant.leaseStart).toLocaleDateString())
-      .replace(/\{\{lease_end\}\}/g, new Date(tenant.leaseEnd).toLocaleDateString())
+      .replace(/\{\{tenant_name\}\}/g, tenant?.name || 'Tenant')
+      .replace(/\{\{property_name\}\}/g, tenant?.propertyName || 'your property')
+      .replace(/\{\{rent_amount\}\}/g, tenant?.rent?.toString() || '0')
+      .replace(/\{\{lease_start\}\}/g, tenant?.leaseStart ? new Date(tenant.leaseStart).toLocaleDateString() : 'N/A')
+      .replace(/\{\{lease_end\}\}/g, tenant?.leaseEnd ? new Date(tenant.leaseEnd).toLocaleDateString() : 'N/A')
       .replace(/\{\{property_address\}\}/g, 'Property address') // Would need property data
       .replace(/\{\{bedrooms\}\}/g, 'bedrooms') // Would need property data
       .replace(/\{\{bathrooms\}\}/g, 'bathrooms') // Would need property data

@@ -5,9 +5,11 @@ import { propertyService } from '@/lib/services/database';
 import { sanitizeForDatabase, sanitizeNumber } from '@/lib/utils/sanitize';
 import { withRateLimit } from '@/lib/utils/rate-limit';
 import { propertySchema } from '@/lib/schemas/property.schema';
+import { getPaginationFromRequest, createPaginatedResponse } from '@/lib/utils/pagination';
+import { getPrismaClient } from '@/lib/services/database/database';
 import { ZodError } from 'zod';
 
-// GET /api/properties - Get all properties for the authenticated user
+// GET /api/properties - Get all properties for the authenticated user (with pagination)
 async function handleGet(request: NextRequest): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
@@ -15,8 +17,31 @@ async function handleGet(request: NextRequest): Promise<Response> {
   const { userId } = authResult;
 
   try {
-    const properties = await propertyService.getAll(userId);
-    return createSuccessResponse(properties);
+    // Check if pagination is requested
+    const url = new URL(request.url);
+    const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
+
+    if (usePagination) {
+      // Paginated response
+      const pagination = getPaginationFromRequest(request, 50, 100);
+      const prisma = getPrismaClient();
+
+      const [properties, total] = await Promise.all([
+        prisma.property.findMany({
+          where: { userId },
+          skip: pagination.skip,
+          take: pagination.limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.property.count({ where: { userId } }),
+      ]);
+
+      return createSuccessResponse(createPaginatedResponse(properties, total, pagination));
+    } else {
+      // Legacy: Return all properties (backward compatible)
+      const properties = await propertyService.getAll(userId);
+      return createSuccessResponse(properties);
+    }
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);
   }

@@ -38,8 +38,9 @@ export const dataMode: DataMode = (() => {
     return 'real';
   }
   
-  // Non-development requires DATABASE_URL
-  if (!isLocalDev && !hasDatabaseUrl) {
+  // Non-development requires DATABASE_URL (except test environment)
+  const isTestEnv = process.env.NODE_ENV === 'test';
+  if (!isLocalDev && !hasDatabaseUrl && !isTestEnv) {
     throw new Error(
       `DATABASE_URL is required in ${process.env.NODE_ENV} environment. ` +
       'Please set DATABASE_URL to a valid database connection string.'

@@ -210,16 +210,19 @@ export const logger = {
   /**
    * Create a child logger with preset context
    */
-  child: (baseContext: LogContext) => ({
-    debug: (message: string, context?: LogContext) => 
-      logger.debug(message, { ...baseContext, ...context }),
-    info: (message: string, context?: LogContext) => 
-      logger.info(message, { ...baseContext, ...context }),
-    warn: (message: string, context?: LogContext) => 
-      logger.warn(message, { ...baseContext, ...context }),
-    error: (message: string, error?: Error | unknown, context?: LogContext) => 
-      logger.error(message, error, { ...baseContext, ...context }),
-  }),
+  child: (baseContext: string | LogContext) => {
+    const ctx = typeof baseContext === 'string' ? { component: baseContext } : baseContext;
+    return {
+      debug: (message: string, context?: LogContext) => 
+        logger.debug(message, { ...ctx, ...context }),
+      info: (message: string, context?: LogContext) => 
+        logger.info(message, { ...ctx, ...context }),
+      warn: (message: string, context?: LogContext) => 
+        logger.warn(message, { ...ctx, ...context }),
+      error: (message: string, error?: Error | unknown, context?: LogContext) => 
+        logger.error(message, error, { ...ctx, ...context }),
+    };
+  },
 };
 
 // Export types for consumers

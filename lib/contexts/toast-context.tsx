@@ -55,6 +55,9 @@ const AnimatedToast = ({ t, message, type }: { t: Toast; message: string; type: 
   return (
     <AnimatePresence>
       <motion.div
+        role={type === 'error' ? 'alert' : 'status'}
+        aria-live={type === 'error' ? 'assertive' : 'polite'}
+        aria-atomic="true"
         initial={{ x: 400, opacity: 0, scale: 0.8 }}
         animate={{ x: 0, opacity: 1, scale: 1 }}
         exit={{ x: 400, opacity: 0, scale: 0.8, transition: { duration: 0.2 } }}
@@ -78,6 +81,7 @@ const AnimatedToast = ({ t, message, type }: { t: Toast; message: string; type: 
           initial={{ width: "100%" }}
           animate={{ width: "0%" }}
           transition={{ duration: config.duration / 1000, ease: "linear" }}
+          aria-hidden="true"
         />
 
         <div className="flex items-center gap-3 p-4">
@@ -85,6 +89,7 @@ const AnimatedToast = ({ t, message, type }: { t: Toast; message: string; type: 
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.1, type: "spring" }}
+            aria-hidden="true"
           >
             <Icon className="h-5 w-5 flex-shrink-0" />
           </motion.div>
@@ -98,6 +103,7 @@ const AnimatedToast = ({ t, message, type }: { t: Toast; message: string; type: 
             className="flex-shrink-0 text-current/60 hover:text-current transition-colors"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
+            aria-label="Close notification"
           >
             ×
           </motion.button>

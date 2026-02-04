@@ -57,33 +57,6 @@ export function InsightsView(): React.ReactElement {
             </Button>
           </div>
         </div>
-
-        {/* Quick Stats Banner */}
-        <Card className="bg-gradient-to-r from-blue-900/20 via-purple-900/20 to-pink-900/20 border-blue-800/30">
-          <CardContent className="pt-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-[var(--color-foreground)]">Live</div>
-                <div className="text-xs text-muted-foreground mt-1">Data Status</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-500">Active</div>
-                <div className="text-xs text-muted-foreground mt-1">Monitoring</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-500 flex items-center justify-center gap-1">
-                  <TrendingUp className="h-5 w-5" />
-                  Updated
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">Just Now</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-500">Full</div>
-                <div className="text-xs text-muted-foreground mt-1">Coverage</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Tab Navigation - Enhanced with descriptions */}

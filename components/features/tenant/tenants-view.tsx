@@ -49,6 +49,7 @@ import {
   BulkActionBar,
   getDefaultBulkActions,
 } from "@/components/ui/bulk-action-bar";
+import { TenantDetailModal } from "./tenant-detail-modal";
 import { EditableCell } from "@/components/ui/editable-cell";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useApp } from "@/lib/contexts/app-context";
@@ -59,7 +60,7 @@ import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
 import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 
-export type TenantsViewProps = Record<string, never>;
+export type TenantsViewProps = { density?: 'comfortable' | 'compact' };
 
 interface SortableHeaderProps {
   column: keyof Tenant;
@@ -92,12 +93,17 @@ export type TenantsViewRef = {
   openDialog: () => void;
 };
 
-export const TenantsView = forwardRef<TenantsViewRef, Record<string, never>>(
-  function TenantsView(_props, ref): React.ReactElement {
+export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
+  function TenantsView({ density = 'compact' }, ref): React.ReactElement {
   const { state, addTenant, updateTenant, deleteTenant } = useApp();
   const { tenants, properties, loading } = state;
   const { success, error: showError } = useToast();
   const { formatCurrency } = useCurrency();
+  const compact = true; // Always compact
+
+  // Tenant detail modal state
+  const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
@@ -560,17 +566,21 @@ export const TenantsView = forwardRef<TenantsViewRef, Record<string, never>>(
               </CardContent>
             </Card>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className={cn("grid", compact ? "gap-1 grid-cols-2 md:grid-cols-4 xl:grid-cols-6" : "gap-4 md:grid-cols-2 xl:grid-cols-3")}>
               {sortedTenants.map((tenant) => {
                 const isSelected = bulkSelection.isSelected(tenant.id);
                 return (
                   <Card
                     key={tenant.id}
                     className={cn(
-                      "relative bg-[var(--color-surface)] border border-[var(--color-border)] transition-all duration-200",
+                      "relative bg-[var(--color-surface)] border border-[var(--color-border)] transition-all duration-200 cursor-pointer",
                       "hover:border-[var(--color-accent-primary)]/40 hover:shadow-lg",
                       isSelected && "border-[var(--color-accent-primary)] shadow-lg"
                     )}
+                    onClick={() => {
+                      setSelectedTenant(tenant);
+                      setIsDetailModalOpen(true);
+                    }}
                   >
                     <CardHeader className="space-y-4">
                       <div className="flex items-start justify-between gap-3">
@@ -581,7 +591,7 @@ export const TenantsView = forwardRef<TenantsViewRef, Record<string, never>>(
                             className="mt-1"
                           />
                           <div className="flex items-center gap-3">
-                            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30">
+                            <div className={cn(compact ? 'flex h-8 w-8 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30 text-xs' : 'flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30')}>
                               <span className="text-sm font-semibold text-accent-primary">
                                 {tenant.name
                                   .split(" ")
@@ -591,7 +601,7 @@ export const TenantsView = forwardRef<TenantsViewRef, Record<string, never>>(
                               </span>
                             </div>
                             <div>
-                              <CardTitle className="text-xl font-semibold text-[var(--color-foreground)]">
+                              <CardTitle className={cn(compact ? 'text-xs font-semibold' : 'text-xl font-semibold', 'text-[var(--color-foreground)]')}>
                                 {tenant.name}
                               </CardTitle>
                               <CardDescription className="flex flex-col text-xs text-[var(--color-muted-foreground)]">
@@ -607,38 +617,15 @@ export const TenantsView = forwardRef<TenantsViewRef, Record<string, never>>(
                             </div>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleEdit(tenant)}
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 text-destructive"
-                            onClick={() => handleDelete(tenant.id)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
+                          {/* Actions removed from card; use tenant detail modal to edit/delete */}
                       </div>
 
-                      <div className="space-y-2 rounded-lg bg-[var(--color-surface-muted)] p-4">
+                      <div className={cn('space-y-2 rounded-lg bg-[var(--color-surface-muted)]', compact ? 'p-2' : 'p-4')}>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-[var(--color-muted-foreground)]">
                             Monthly Rent
                           </span>
-                          <EditableCell
-                            value={tenant.rent}
-                            type="currency"
-                            onSave={(value) => handleInlineEdit(tenant.id, "rent", value)}
-                            formatter={(value) => formatCurrency(Number(value))}
-                            className="text-lg font-semibold text-[var(--color-foreground)]"
-                          />
+                          <span className="text-sm font-semibold text-[var(--color-foreground)]">{formatCurrency(Number(tenant.rent))}</span>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-[var(--color-muted-foreground)]">
@@ -671,7 +658,7 @@ export const TenantsView = forwardRef<TenantsViewRef, Record<string, never>>(
                       </div>
                     </CardHeader>
 
-                    <CardContent className="space-y-4">
+                    <CardContent className={compact ? 'space-y-1 p-2' : 'space-y-4'}>
                       <div className="space-y-2">
                         <h4 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wide">
                           Notes
@@ -685,27 +672,10 @@ export const TenantsView = forwardRef<TenantsViewRef, Record<string, never>>(
                         />
                       </div>
 
-                      <div className="flex items-center justify-between text-xs text-[var(--color-muted-foreground)]">
-                        <span>{tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString() : ""}</span>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2 text-xs"
-                            onClick={() => handleInlineEdit(tenant.id, "paymentStatus", "paid")}
-                          >
-                            Mark Paid
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2 text-xs"
-                            onClick={() => handleInlineEdit(tenant.id, "paymentStatus", "overdue")}
-                          >
-                            Mark Overdue
-                          </Button>
+                        <div className="flex items-center justify-between text-xs text-[var(--color-muted-foreground)]">
+                          <span>{tenant.createdAt ? new Date(tenant.createdAt).toLocaleDateString() : ""}</span>
+                          <span className="text-xs text-[var(--color-muted-foreground)]">{tenant.paymentStatus ? tenant.paymentStatus.toUpperCase() : ''}</span>
                         </div>
-                      </div>
                     </CardContent>
                   </Card>
                 );
@@ -726,6 +696,23 @@ export const TenantsView = forwardRef<TenantsViewRef, Record<string, never>>(
           />
         </div>
       )}
+
+      {/* Tenant Detail Modal */}
+      <TenantDetailModal
+        tenant={selectedTenant}
+        isOpen={isDetailModalOpen}
+        onClose={() => {
+          setIsDetailModalOpen(false);
+          setSelectedTenant(null);
+        }}
+        onEdit={(updatedTenant) => {
+          setSelectedTenant(updatedTenant);
+        }}
+        onDelete={() => {
+          setIsDetailModalOpen(false);
+          setSelectedTenant(null);
+        }}
+      />
     </>
   );
 });

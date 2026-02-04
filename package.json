@@ -22,6 +22,14 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "security:scan": "node scripts/security-scan.js",
+    "security:audit": "npm audit --audit-level=moderate",
+    "security:audit:fix": "npm audit fix",
+    "security:zap": "node scripts/zap-scan.js",
+    "security:all": "npm run security:scan && npm run security:audit",
+    "load:smoke": "node scripts/load-test.js smoke",
+    "load:test": "node scripts/load-test.js full",
+    "load:stress": "node scripts/stress-test.js",
     "user:delete": "node scripts/delete-user.js",
     "package:helm:verify": "bash scripts/package-helm-and-verify.sh release-charts-temp $(node -e 'console.log(require(\"./package.json\").version)')",
     "db:check": "node scripts/check-db.js"
@@ -63,6 +71,9 @@
     "tailwind-merge": "^3.4.0",
     "zod": "^4.2.1"
   },
+  "optionalDependencies": {
+    "redis": "^4.7.1"
+  },
   "devDependencies": {
     "@next/bundle-analyzer": "^16.1.5",
     "@playwright/test": "^1.58.1",
@@ -83,9 +94,11 @@
     "@typescript-eslint/eslint-plugin": "^8",
     "@typescript-eslint/parser": "^8",
     "@vitest/coverage-v8": "^4.0.18",
+    "artillery": "^2.0.20",
     "eslint": "^9",
     "eslint-config-next": "16.1.5",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "js-yaml": "^4.1.0",
     "jsdom": "^27.4.0",
     "tailwindcss": "^4",
     "typescript": "^5",

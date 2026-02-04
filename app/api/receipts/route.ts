@@ -3,6 +3,8 @@ import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware'
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
 import { receiptService } from '@/lib/services/database';
 import { sanitizeForDatabase, sanitizeNumber } from '@/lib/utils/sanitize';
+import { getPaginationFromRequest, createPaginatedResponse } from '@/lib/utils/pagination';
+import { getPrismaClient } from '@/lib/services/database/database';
 import { z } from 'zod';
 
 // Validation schemas
@@ -18,7 +20,7 @@ const createReceiptSchema = z.object({
 
 const _updateReceiptSchema = createReceiptSchema.partial();
 
-// GET /api/receipts - Get all receipts for the authenticated user
+// GET /api/receipts - Get all receipts for the authenticated user (with pagination)
 async function handleGet(request: NextRequest): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
@@ -26,8 +28,31 @@ async function handleGet(request: NextRequest): Promise<Response> {
   const { userId } = authResult;
 
   try {
-    const receipts = await receiptService.getAll(userId);
-    return createSuccessResponse(receipts);
+    // Check if pagination is requested
+    const url = new URL(request.url);
+    const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
+
+    if (usePagination) {
+      // Paginated response
+      const pagination = getPaginationFromRequest(request, 50, 100);
+      const prisma = getPrismaClient();
+
+      const [receipts, total] = await Promise.all([
+        prisma.receipt.findMany({
+          where: { userId },
+          skip: pagination.skip,
+          take: pagination.limit,
+          orderBy: { date: 'desc' },
+        }),
+        prisma.receipt.count({ where: { userId } }),
+      ]);
+
+      return createSuccessResponse(createPaginatedResponse(receipts, total, pagination));
+    } else {
+      // Legacy: Return all receipts (backward compatible)
+      const receipts = await receiptService.getAll(userId);
+      return createSuccessResponse(receipts);
+    }
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);
   }

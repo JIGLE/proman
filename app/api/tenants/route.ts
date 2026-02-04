@@ -3,6 +3,8 @@ import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware'
 import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
 import { tenantService } from '@/lib/services/database';
 import { sanitizeForDatabase, sanitizeEmail, sanitizeNumber } from '@/lib/utils/sanitize';
+import { getPaginationFromRequest, createPaginatedResponse } from '@/lib/utils/pagination';
+import { getPrismaClient } from '@/lib/services/database/database';
 import { z } from 'zod';
 
 // Validation schemas
@@ -20,7 +22,7 @@ const createTenantSchema = z.object({
 
 const _updateTenantSchema = createTenantSchema.partial();
 
-// GET /api/tenants - Get all tenants for the authenticated user
+// GET /api/tenants - Get all tenants for the authenticated user (with pagination)
 async function handleGet(request: NextRequest): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
@@ -28,8 +30,31 @@ async function handleGet(request: NextRequest): Promise<Response> {
   const { userId } = authResult;
 
   try {
-    const tenants = await tenantService.getAll(userId);
-    return createSuccessResponse(tenants);
+    // Check if pagination is requested
+    const url = new URL(request.url);
+    const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
+
+    if (usePagination) {
+      // Paginated response
+      const pagination = getPaginationFromRequest(request, 50, 100);
+      const prisma = getPrismaClient();
+
+      const [tenants, total] = await Promise.all([
+        prisma.tenant.findMany({
+          where: { userId },
+          skip: pagination.skip,
+          take: pagination.limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+        prisma.tenant.count({ where: { userId } }),
+      ]);
+
+      return createSuccessResponse(createPaginatedResponse(tenants, total, pagination));
+    } else {
+      // Legacy: Return all tenants (backward compatible)
+      const tenants = await tenantService.getAll(userId);
+      return createSuccessResponse(tenants);
+    }
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);
   }

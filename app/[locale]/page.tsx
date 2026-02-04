@@ -25,10 +25,11 @@ export default function Home(): React.ReactElement {
 
   // Show loading state while redirecting
   return (
-    <div className="flex items-center justify-center min-h-screen bg-zinc-950">
+    <div className="flex items-center justify-center min-h-screen bg-zinc-950" role="status" aria-live="polite">
       <div className="text-center">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4" aria-hidden="true"></div>
         <p className="text-zinc-400">Loading...</p>
+        <span className="sr-only">Authenticating and redirecting to dashboard</span>
       </div>
     </div>
   );

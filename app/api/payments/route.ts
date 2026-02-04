@@ -5,6 +5,7 @@ import { createSuccessResponse, createErrorResponse, ValidationError } from '@/l
 import { paymentService } from '@/lib/payment/payment-service';
 import { getPrismaClient } from '@/lib/services/database/database';
 import { isMockMode } from '@/lib/config/data-mode';
+import { rateLimit, RateLimits } from '@/lib/middleware/rate-limit';
 import { z } from 'zod';
 import type { PrismaClient, PaymentMethodType } from '@prisma/client';
 
@@ -21,6 +22,10 @@ const createPaymentIntentSchema = z.object({
  * GET /api/payments - List payment transactions for current user
  */
 export async function GET(request: NextRequest): Promise<Response | NextResponse> {
+  // Apply rate limiting
+  const rateLimitResponse = await rateLimit(request, RateLimits.API);
+  if (rateLimitResponse) return rateLimitResponse;
+
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -99,6 +104,10 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
  * POST /api/payments - Create a new payment intent
  */
 export async function POST(request: NextRequest): Promise<Response | NextResponse> {
+  // Apply stricter rate limiting for payment creation
+  const rateLimitResponse = await rateLimit(request, RateLimits.PAYMENT);
+  if (rateLimitResponse) return rateLimitResponse;
+
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 

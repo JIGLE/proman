@@ -1,7 +1,12 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeAll } from 'vitest'
 import type { Session } from 'next-auth'
 import { requireAuth, requireOwnership } from '@/lib/services/auth/auth-middleware'
 import { NextRequest } from 'next/server'
+
+// Set DATABASE_URL before any imports that might check it
+beforeAll(() => {
+  process.env.DATABASE_URL = 'file:./test.db'
+})
 
 vi.mock('next-auth/next', () => ({
   getServerSession: vi.fn()

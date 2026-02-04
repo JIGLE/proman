@@ -3,6 +3,7 @@
 import { useState, useMemo, forwardRef, useImperativeHandle } from "react";
 import { Briefcase, Download, Plus, Edit, Trash2, Phone, Mail, MapPin, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils/utils";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -17,18 +18,24 @@ import { ownerSchema, OwnerFormData } from "@/lib/utils/validation";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import jsPDF from "jspdf";
+import { OwnerDetailModal } from "./owner-detail-modal";
 
 export type OwnersViewRef = {
   openDialog: () => void;
 };
 
-export const OwnersView = forwardRef<OwnersViewRef, Record<string, never>>(
-  function OwnersView(_props, ref): React.ReactElement {
-    const { state, addOwner, updateOwner, deleteOwner } = useApp();
-    const { owners, properties, loading } = state;
-    const { success, error } = useToast();
-    const { formatCurrency } = useCurrency();
+export const OwnersView = forwardRef<OwnersViewRef, { density?: 'comfortable' | 'compact' }>(
+    function OwnersView({ density = 'compact' }, ref): React.ReactElement {
+        const { state, addOwner, updateOwner, deleteOwner } = useApp();
+        const { owners, properties, receipts, expenses, loading } = state;
+        const { success, error } = useToast();
+        const { formatCurrency } = useCurrency();
+        const compact = true; // Always compact
     const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
+    
+    // Owner detail modal state
+    const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null);
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     
     // Search and filter state
     const [searchQuery, setSearchQuery] = useState('');
@@ -326,11 +333,11 @@ export const OwnersView = forwardRef<OwnersViewRef, Record<string, never>>(
                 ]}
             />
 
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div className={cn("grid", compact ? "gap-1 grid-cols-2 md:grid-cols-4 lg:grid-cols-6" : "gap-4 md:grid-cols-2 lg:grid-cols-3")}>
                 {filteredOwners.length === 0 ? (
                     <div className="col-span-full">
                         <Card className="bg-zinc-900 border-zinc-800">
-                            <CardContent className="p-8 text-center">
+                            <CardContent className={compact ? 'p-3 text-center' : 'p-8 text-center'}>
                                 <Briefcase className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
                                 <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
                                     {owners.length === 0 ? 'No owners yet' : 'No owners found'}
@@ -351,17 +358,17 @@ export const OwnersView = forwardRef<OwnersViewRef, Record<string, never>>(
                     </div>
                 ) : (
                     filteredOwners.map((owner) => (
-                        <Card key={owner.id} className="bg-zinc-900 border-zinc-800">
+                        <Card 
+                          key={owner.id} 
+                          className="bg-zinc-900 border-zinc-800 cursor-pointer hover:border-[var(--color-accent-primary)]/40 hover:shadow-lg transition-all duration-200"
+                          onClick={() => {
+                            setSelectedOwner(owner);
+                            setIsDetailModalOpen(true);
+                          }}
+                        >
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-xl font-bold text-[var(--color-foreground)]">{owner.name}</CardTitle>
-                                <div className="flex gap-2">
-                                    <Button variant="ghost" size="icon" onClick={() => handleEdit(owner)}>
-                                        <Edit className="w-4 h-4 text-zinc-400" />
-                                    </Button>
-                                    <Button variant="ghost" size="icon" className="hover:text-red-400" onClick={() => handleDelete(owner.id)}>
-                                        <Trash2 className="w-4 h-4 text-zinc-400" />
-                                    </Button>
-                                </div>
+                                <CardTitle className={cn(compact ? 'text-xs font-bold' : 'text-xl font-bold', 'text-[var(--color-foreground)]')}>{owner.name}</CardTitle>
+                                {/* Edit/Delete removed from card; use Owner detail modal for CRUD */}
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-3 mt-2">
@@ -419,6 +426,23 @@ export const OwnersView = forwardRef<OwnersViewRef, Record<string, never>>(
             </div>
         </div>
         )}
+
+        {/* Owner Detail Modal */}
+        <OwnerDetailModal
+          owner={selectedOwner}
+          isOpen={isDetailModalOpen}
+          onClose={() => {
+            setIsDetailModalOpen(false);
+            setSelectedOwner(null);
+          }}
+          onEdit={(updatedOwner) => {
+            setSelectedOwner(updatedOwner);
+          }}
+          onDelete={() => {
+            setIsDetailModalOpen(false);
+            setSelectedOwner(null);
+          }}
+        />
         </>
     );
 });

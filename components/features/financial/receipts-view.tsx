@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import { FileText, Download, Calendar, Plus, Edit, Trash2, DollarSign } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCurrency } from "@/lib/contexts/currency-context";
@@ -21,7 +21,11 @@ import jsPDF from "jspdf";
 
 export type ReceiptsViewProps = Record<string, never>
 
-export function ReceiptsView(): React.ReactElement {
+export interface ReceiptsViewRef {
+  openDialog: () => void;
+}
+
+export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(function ReceiptsView(props, ref) {
   const { state, addReceipt, updateReceipt, deleteReceipt } = useApp();
   const { receipts, tenants, properties, loading } = state;
   const { success, error } = useToast();
@@ -54,6 +58,10 @@ export function ReceiptsView(): React.ReactElement {
       error(errorMessage);
     },
   });
+
+  useImperativeHandle(ref, () => ({
+    openDialog: dialog.openDialog
+  }));
 
   const handleEdit = (receipt: Receipt) => {
     dialog.openEditDialog(receipt, (r) => ({
@@ -376,4 +384,6 @@ export function ReceiptsView(): React.ReactElement {
     )}
     </>
   );
-}
+});
+
+ReceiptsView.displayName = 'ReceiptsView';
