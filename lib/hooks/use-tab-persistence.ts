@@ -14,37 +14,57 @@ export function useTabPersistence(moduleId: string, defaultTab: string): [string
   const router = useRouter();
   const pathname = usePathname();
   
-  // Get initial tab from URL or localStorage or default
+  // Get initial tab from URL or default only. Avoid reading localStorage during initial render
+  // to prevent hydration mismatches between server and client. LocalStorage will be read
+  // on the client after mount and will override the active tab if needed.
   const getInitialTab = useCallback(() => {
-    // First check URL params
     const urlTab = searchParams.get('view');
     if (urlTab) return urlTab;
-    
-    // Then check localStorage
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem(`tab-${moduleId}`);
-      if (stored) return stored;
-    }
-    
     return defaultTab;
-  }, [searchParams, moduleId, defaultTab]);
+  }, [searchParams, defaultTab]);
 
   const [activeTab, setActiveTabState] = useState<string>(getInitialTab);
 
   // Update both URL and localStorage when tab changes
   const setActiveTab = useCallback((tab: string) => {
     setActiveTabState(tab);
-    
-    // Update localStorage
+
+    // Update localStorage (client only)
     if (typeof window !== 'undefined') {
-      localStorage.setItem(`tab-${moduleId}`, tab);
+      try {
+        localStorage.setItem(`tab-${moduleId}`, tab);
+      } catch (e) {
+        // ignore quota errors
+      }
     }
-    
+
     // Update URL without page reload
     const params = new URLSearchParams(searchParams.toString());
     params.set('view', tab);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }, [moduleId, searchParams, router, pathname]);
+
+  // On mount (client only) hydrate from localStorage if present (preference) or from URL
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    // Prefer URL param if present
+    const urlTab = searchParams.get('view');
+    if (urlTab && urlTab !== activeTab) {
+      setActiveTabState(urlTab);
+      return;
+    }
+
+    // Otherwise, try localStorage preference
+    try {
+      const stored = localStorage.getItem(`tab-${moduleId}`);
+      if (stored && stored !== activeTab) {
+        setActiveTabState(stored);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }, []);
 
   // Sync with URL changes (e.g., browser back/forward)
   useEffect(() => {

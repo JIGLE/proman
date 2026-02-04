@@ -309,15 +309,11 @@ export function OverviewView({
           <p className="text-body-medium text-[var(--color-muted-foreground)] mt-1">{t('dashboard.welcome')}</p>
         </div>
         
-        {/* Primary Quick Actions - Only 2 main actions + overflow */}
+        {/* Primary Quick Actions */}
         <div className="hidden lg:flex items-center gap-2">
-          <Button onClick={onAddProperty} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Property
-          </Button>
-          <Button onClick={onAddTenant} variant="outline" className="gap-2">
-            <Users className="h-4 w-4" />
-            Add Tenant
+          <Button onClick={onRecordPayment} className="gap-2">
+            <DollarSign className="h-4 w-4" />
+            Record Payment
           </Button>
           <QuickActions 
             variant="compact" 
@@ -353,19 +349,7 @@ export function OverviewView({
         </div>
       </div>
 
-      {/* Quick Actions panel for mobile/tablet */}
-      <div className="lg:hidden">
-        <div className="flex gap-2">
-          <Button onClick={onAddProperty} className="flex-1 gap-2">
-            <Plus className="h-4 w-4" />
-            Add Property
-          </Button>
-          <Button onClick={onAddTenant} variant="outline" className="flex-1 gap-2">
-            <Users className="h-4 w-4" />
-            Add Tenant
-          </Button>
-        </div>
-      </div>
+
 
       {/* Contextual Tip Banner */}
       {!isOnboardingComplete && (
@@ -386,62 +370,7 @@ export function OverviewView({
         <AttentionNeeded items={attentionItems} />
       )}
 
-      {/* Onboarding Progress - Show when not complete */}
-      {!isOnboardingComplete && (
-        <motion.div
-          role="region"
-          aria-label="Onboarding progress"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-        >
-          <Card className="bg-gradient-to-br from-[var(--color-card)] to-primary/5 border-primary/20">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Getting Started</CardTitle>
-                <Badge variant="outline" className="text-xs">
-                  {completedSteps}/{onboardingSteps.length} complete
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ProgressBar progress={onboardingProgress} height={8} />
-              <div className="grid gap-3 sm:grid-cols-3">
-                {onboardingSteps.map((step, index) => (
-                  <motion.div
-                    key={step.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className={`flex items-center gap-2 p-3 rounded-lg border transition-colors ${
-                      step.completed 
-                        ? 'bg-success/10 border-success/30' 
-                        : 'bg-[var(--color-background)] border-[var(--color-border)] hover:border-primary/50'
-                    }`}
-                  >
-                    {step.completed ? (
-                      <CheckCircle2 className="h-5 w-5 text-success flex-shrink-0" />
-                    ) : (
-                      <Circle className="h-5 w-5 text-[var(--color-muted-foreground)] flex-shrink-0" />
-                    )}
-                    <span className={`text-sm ${step.completed ? 'text-success line-through' : 'text-[var(--color-foreground)]'}`}>
-                      {step.label}
-                    </span>
-                  </motion.div>
-                ))}
-              </div>
-              {!hasProperties && (
-                <div className="flex justify-center pt-2">
-                  <Button onClick={onAddProperty} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Your First Property
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+
 
       {/* Enhanced Stats Grid with Widgets - Only show when there's data */}
       {hasProperties && (

@@ -213,13 +213,37 @@
   --color-sidebar-text-active: oklch(0.98 0 0);
 }
 
+/* ============================================
+   BROWSER RESETS & BASE STYLES
+   ============================================
+   Ensures consistent rendering across browsers
+*/
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  scroll-behavior: smooth;
+}
+
 body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
   background-color: var(--color-background);
   color: var(--color-foreground);
   font-feature-settings: "rlig" 1, "calt" 1;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Ensure proper full-height layouts */
+#__next {
+  min-height: 100vh;
 }
 
 /* Typography Scale */

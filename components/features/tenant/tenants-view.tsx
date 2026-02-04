@@ -245,7 +245,18 @@ export function TenantsView(): React.ReactElement {
 
       const matchesProperty = propertyFilter === "all" || tenant.propertyId === propertyFilter;
 
-      const matchesStatus = statusFilter === "all" || tenant.paymentStatus === statusFilter;
+      // Handle both active/inactive and payment status filters
+      let matchesStatus = true;
+      if (statusFilter === "active") {
+        // Active tenants have a property assigned
+        matchesStatus = !!tenant.propertyId;
+      } else if (statusFilter === "inactive") {
+        // Inactive tenants don't have a property assigned
+        matchesStatus = !tenant.propertyId;
+      } else if (statusFilter !== "all") {
+        // Payment status filters (paid, pending, overdue)
+        matchesStatus = tenant.paymentStatus === statusFilter;
+      }
 
       return matchesSearch && matchesProperty && matchesStatus;
     });
@@ -261,49 +272,13 @@ export function TenantsView(): React.ReactElement {
         <LoadingState variant="cards" count={6} />
       ) : (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
-                Tenant CRM
-              </h2>
-              <p className="text-[var(--color-muted-foreground)]">
-                Manage tenant relationships and payments
-              </p>
-            </div>
-            <div className="flex items-center gap-2">
-              <ExportButton
-                data={sortedTenants}
-                filename="tenants"
-                columns={[
-                  { key: "name", label: "Name" },
-                  { key: "email", label: "Email" },
-                  { key: "phone", label: "Phone" },
-                  { key: "propertyName", label: "Property" },
-                  {
-                    key: "rent",
-                    label: "Monthly Rent",
-                    format: (value) => formatCurrency(value as number),
-                  },
-                  {
-                    key: "leaseStart",
-                    label: "Lease Start",
-                    format: (value) => new Date(value as string).toLocaleDateString(),
-                  },
-                  {
-                    key: "leaseEnd",
-                    label: "Lease End",
-                    format: (value) => new Date(value as string).toLocaleDateString(),
-                  },
-                  { key: "paymentStatus", label: "Payment Status" },
-                ]}
-              />
-              <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
-                <DialogTrigger asChild>
-                  <Button onClick={dialog.openDialog} className="flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    Add Tenant
-                  </Button>
-                </DialogTrigger>
+          <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
+            <DialogTrigger asChild>
+              <Button onClick={dialog.openDialog} className="hidden">
+                <Plus className="w-4 h-4" />
+                Add Tenant
+              </Button>
+            </DialogTrigger>
                 <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
                   <DialogHeader>
                     <DialogTitle className="text-[var(--color-foreground)]">
@@ -482,8 +457,6 @@ export function TenantsView(): React.ReactElement {
                   </form>
                 </DialogContent>
               </Dialog>
-            </div>
-          </div>
 
           <SearchFilter
             searchPlaceholder="Search tenants..."
@@ -509,7 +482,9 @@ export function TenantsView(): React.ReactElement {
                 key: "status",
                 label: "Status",
                 options: [
-                  { label: "All Statuses", value: "all" },
+                  { label: "All", value: "all" },
+                  { label: "Active", value: "active" },
+                  { label: "Inactive", value: "inactive" },
                   { label: "Paid", value: "paid" },
                   { label: "Pending", value: "pending" },
                   { label: "Overdue", value: "overdue" },

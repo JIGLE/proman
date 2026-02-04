@@ -1,5 +1,6 @@
 import type { Session, User as NextAuthUser } from 'next-auth';
 import type { JWT } from 'next-auth/jwt';
+import { logger } from '@/lib/utils/logger';
 
 // Minimal local typing for NextAuth options we use to avoid fragile cross-package type imports
 type NextAuthOptions = {
@@ -36,7 +37,7 @@ function createBaseAuthOptions(): NextAuthOptions {
   const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
   if (!googleClientId || !googleClientSecret) {
-    console.debug('Google OAuth not configured: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing');
+    logger.debug('Google OAuth not configured: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing');
   }
 
   const options: NextAuthOptions = {
@@ -79,10 +80,10 @@ function createBaseAuthOptions(): NextAuthOptions {
                  });
                }
                
-               console.log('[auth.ts] Credentials authorize successful:', { id: user.id, email: user.email });
+               logger.debug('Credentials authorize successful', { id: user.id, email: user.email });
                return user;
              } catch (error) {
-               console.error('[auth.ts] Credentials authorize error:', error);
+               logger.error('Credentials authorize error', error instanceof Error ? error : new Error(String(error)));
                return null;
              }
            }
@@ -101,8 +102,7 @@ function createBaseAuthOptions(): NextAuthOptions {
     },
     callbacks: {
       async jwt({ token, user, account: _account }: { token: JWT; user?: NextAuthUser | null; account?: unknown }): Promise<JWT> {
-        console.log('[auth.ts] JWT callback - user:', user ? {id: user.id, email: user.email} : 'null')
-        console.log('[auth.ts] JWT callback - token.sub before:', (token as JWT & { id?: string; sub?: string }).sub)
+        logger.debug('JWT callback', { userId: user?.id, email: user?.email, hasSub: !!(token as JWT & { sub?: string }).sub });
         
         // When user signs in, set both id and sub claims
         if (user?.id) {
@@ -110,7 +110,6 @@ function createBaseAuthOptions(): NextAuthOptions {
           (token as JWT & { id?: string; sub?: string }).sub = user.id; // Standard JWT subject claim - required for session to work
         }
         
-        console.log('[auth.ts] JWT callback - token.sub after:', (token as JWT & { id?: string; sub?: string }).sub)
         return token;
       },
       async session({ session, token, user }: { session: Session; token: JWT; user?: NextAuthUser }): Promise<Session> {
@@ -122,7 +121,7 @@ function createBaseAuthOptions(): NextAuthOptions {
             sessionUser.id = (token as JWT & { sub?: string; id?: string }).sub || (token as JWT & { sub?: string; id?: string }).id || user?.id;
             
             if (!sessionUser.id) {
-              console.error('[auth] No user ID found in session', { 
+              logger.error('No user ID found in session', undefined, { 
                 hasSub: !!(token as JWT & { sub?: string; id?: string }).sub, 
                 hasTokenId: !!(token as JWT & { sub?: string; id?: string }).id,
                 hasUser: !!user 
@@ -131,12 +130,12 @@ function createBaseAuthOptions(): NextAuthOptions {
           }
           return session;
         } catch (err: unknown) {
-          console.error('NextAuth session callback error:', err);
+          logger.error('NextAuth session callback error', err instanceof Error ? err : new Error(String(err)));
           return session;
         }
       },
       async signIn({ user, account, profile: _profile }: { user?: NextAuthUser | null; account?: Account | undefined; profile?: unknown }): Promise<boolean> {
-        console.debug('signIn called:', {
+        logger.debug('signIn callback', {
           hasDatabase: !!(process.env.DATABASE_URL && process.env.DATABASE_URL.trim()),
           email: user?.email,
           provider: account?.provider,
@@ -156,7 +155,7 @@ function createBaseAuthOptions(): NextAuthOptions {
               },
             });
           } catch (error: unknown) {
-            console.warn('Failed to remove stale account before linking:', error);
+            logger.warn('Failed to remove stale account before linking', { error: error instanceof Error ? error.message : String(error) });
           }
         }
 
@@ -165,10 +164,10 @@ function createBaseAuthOptions(): NextAuthOptions {
     },
     events: {
       async signIn({ user, account, profile: _profile, isNewUser }: { user?: NextAuthUser | null; account?: { provider?: string } | undefined; profile?: unknown; isNewUser?: boolean }) {
-        console.debug('NextAuth event signIn:', { email: user?.email, provider: account?.provider, isNewUser });
+        logger.debug('NextAuth event: signIn', { email: user?.email, provider: account?.provider, isNewUser });
       },
       async createUser({ user }: { user: { id: string; email?: string } }) {
-        console.debug('NextAuth event createUser:', { id: user.id, email: user.email });
+        logger.debug('NextAuth event: createUser', { id: user.id, email: user.email });
       },
     },
   };
@@ -178,7 +177,7 @@ function createBaseAuthOptions(): NextAuthOptions {
 
 // Lazy adapter initialization to avoid build-time issues
 export function getAuthOptions(): NextAuthOptions {
-  console.debug('getAuthOptions called, DATABASE_URL:', !!process.env.DATABASE_URL);
+  logger.debug('getAuthOptions called', { hasDatabase: !!process.env.DATABASE_URL });
   // Only add adapter if we have database access and we're not in build time
   const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
   const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || !process.env.NODE_ENV;
@@ -186,20 +185,19 @@ export function getAuthOptions(): NextAuthOptions {
   const baseAuthOptions = createBaseAuthOptions();
 
   if (!hasDatabase || isBuildTime) {
-    console.debug('Using base auth options, hasDatabase:', hasDatabase, 'isBuildTime:', isBuildTime);
+    logger.debug('Using base auth options', { hasDatabase, isBuildTime });
     return baseAuthOptions;
   }
 
   try {
-    console.debug('Trying to initialize Prisma adapter');
+    logger.debug('Initializing Prisma adapter');
     return {
       ...baseAuthOptions,
       adapter: PrismaAdapter(getPrismaClient()),
     };
   } catch (error: unknown) {
     const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-    console.warn('Failed to initialize Prisma adapter, using base auth options:', message);
-    if (error instanceof Error) console.warn(error.stack);
+    logger.warn('Failed to initialize Prisma adapter, using base auth options', { error: message });
     return baseAuthOptions;
   }
 }

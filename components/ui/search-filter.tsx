@@ -101,7 +101,6 @@ export function SearchFilter({
             <SelectValue placeholder={filter.label} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All {filter.label}</SelectItem>
             {filter.options.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 {option.label}

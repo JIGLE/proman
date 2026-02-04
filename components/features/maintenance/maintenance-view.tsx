@@ -349,12 +349,7 @@ export function MaintenanceView(): React.ReactElement {
                                         ? 'Create a new ticket to track maintenance requests' 
                                         : 'Try adjusting your search or filters'}
                                 </p>
-                                {maintenance.length === 0 && (
-                                    <Button onClick={dialog.openDialog} className="flex items-center gap-2">
-                                        <Plus className="w-4 h-4" />
-                                        Create Ticket
-                                    </Button>
-                                )}
+
                             </CardContent>
                         </Card>
                     </div>

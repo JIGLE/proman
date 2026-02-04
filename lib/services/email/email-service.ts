@@ -3,6 +3,9 @@ import * as sgMail from '@sendgrid/mail';
 import type { MailDataRequired, ClientResponse } from '@sendgrid/mail';
 import { getPrismaClient } from '@/lib/services/database/database';
 import type { PrismaClient } from '@prisma/client';
+import { logger } from '@/lib/utils/logger';
+
+const log = logger.child('email-service');
 
 // Initialize SendGrid with API key
 const sendGridClient = sgMail as unknown as {
@@ -283,13 +286,13 @@ export class EmailService {
 
         if (isRetryable && hasMoreAttempts) {
           const delay = this.calculateBackoffDelay(attempt);
-          console.warn(`Email send failed (attempt ${attempt + 1}/${maxAttempts}), retrying in ${delay}ms:`, lastError);
+          log.warn(`Email send failed (attempt ${attempt + 1}/${maxAttempts}), retrying in ${delay}ms`, { error: lastError });
           await this.sleep(delay);
           continue;
         }
 
         // Final failure - log and return
-        console.error('Email send error (final):', lastError);
+        log.error('Email send failed after all retries', { error: lastError, attempts });
         break;
       }
     }
@@ -416,7 +419,7 @@ export class EmailService {
           return;
         }
         // Unexpected error while obtaining Prisma client — surface it for diagnostics
-        console.error('Failed to obtain PrismaClient for email logging:', getErr);
+        log.error('Failed to obtain PrismaClient for email logging', { error: getErr });
         return;
       }
 
@@ -437,7 +440,7 @@ export class EmailService {
     } catch (error: unknown) {
       // Keep this low-noise during tests; log at debug level
       // Keep as debug so test runs don't spam stderr
-      console.debug('Failed to log email:', error);
+      log.debug('Failed to log email', { error });
     }
   }
 
@@ -471,7 +474,7 @@ export class EmailService {
       if (msg.includes('PrismaClient not available during build time')) {
         return {};
       }
-      console.error('Failed to fetch email stats:', err);
+      log.error('Failed to fetch email stats', { error: err });
       return {};
     }
   }
@@ -531,7 +534,7 @@ export class EmailService {
           deliveryRate: 0, openRate: 0, bounceRate: 0, periodDays: days,
         };
       }
-      console.error('Failed to fetch email metrics:', err);
+      log.error('Failed to fetch email metrics', { error: err });
       return {
         totalSent: 0, totalDelivered: 0, totalFailed: 0, totalBounced: 0, totalOpened: 0,
         deliveryRate: 0, openRate: 0, bounceRate: 0, periodDays: days,
@@ -573,7 +576,7 @@ export class EmailService {
       if (msg.includes('PrismaClient not available during build time')) {
         return [];
       }
-      console.error('Failed to fetch recent emails:', err);
+      log.error('Failed to fetch recent emails', { error: err });
       return [];
     }
   }

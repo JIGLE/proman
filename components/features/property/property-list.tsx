@@ -24,7 +24,6 @@ import { cn } from "@/lib/utils/utils";
 import { BulkActionBar, getDefaultBulkActions } from "@/components/ui/bulk-action-bar";
 import { EditableCell } from "@/components/ui/editable-cell";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 import { useApp } from "@/lib/contexts/app-context";
 import { Property } from "@/lib/types";
@@ -32,12 +31,14 @@ import { propertySchema, PropertyFormData } from "@/lib/utils/validation";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
-import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { AddressVerificationService, AddressSuggestion } from "@/lib/services/address-verification";
 import PropertyMap from "./property-map";
 import UnitsView from "./units-view";
 
-export type PropertiesViewProps = Record<string, never>
+export type PropertiesViewProps = {
+  viewMode?: 'list' | 'map';
+  onPropertySelect?: (propertyId: string) => void;
+}
 
 interface SortableHeaderProps {
   column: keyof Property;
@@ -60,7 +61,7 @@ function SortableHeader({ column, label, sortDirection, onSort }: SortableHeader
   );
 }
 
-export function PropertiesView(): React.ReactElement {
+export function PropertiesView({ viewMode = 'list', onPropertySelect }: PropertiesViewProps): React.ReactElement {
   const { state, addProperty, updateProperty, deleteProperty } = useApp();
   const { properties, loading } = state;
   const { success } = useToast();
@@ -74,7 +75,6 @@ export function PropertiesView(): React.ReactElement {
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [activeTab, setActiveTab] = useTabPersistence('properties', 'list');
 
   // Form dialog hook
   const initialFormData: PropertyFormData = {
@@ -332,40 +332,9 @@ export function PropertiesView(): React.ReactElement {
         <LoadingState variant="cards" count={6} />
       ) : (
         <div className="space-y-6">
-          <div className="flex justify-between items-center">
-            <div>
-              <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
-                Properties
-              </h2>
-              <p className="text-[var(--color-muted-foreground)]">Manage your property portfolio</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <ExportButton
-                data={sortedProperties}
-                filename="properties"
-                columns={[
-                  { key: 'name', label: 'Property Name' },
-                  { key: 'type', label: 'Type' },
-                  { key: 'address', label: 'Address' },
-                  { key: 'bedrooms', label: 'Bedrooms' },
-                  { key: 'bathrooms', label: 'Bathrooms' },
-                  { 
-                    key: 'rent', 
-                    label: 'Monthly Rent',
-                    format: (value) => formatCurrency(value as number)
-                  },
-                  { key: 'status', label: 'Status' },
-                  { key: 'buildingName', label: 'Building' },
-                ]}
-              />
-            <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
-              <DialogTrigger asChild>
-                <Button onClick={dialog.openDialog} className="flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Property
-                </Button>
-              </DialogTrigger>
-          <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+          {/* Property Form Dialog */}
+          <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
+            <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-[var(--color-foreground)]">
                 {dialog.editingItem ? 'Edit Property' : 'Add New Property'}
@@ -617,20 +586,15 @@ export function PropertiesView(): React.ReactElement {
               </div>
             </form>
           </DialogContent>
-        </Dialog>
+          </Dialog>
+
+          {/* Conditional rendering based on viewMode prop */}
+          {viewMode === 'map' ? (
+            <div className="space-y-6">
+              <PropertyMap />
             </div>
-          </div>
-
-          {/* Tabs Navigation */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList>
-              <TabsTrigger value="list">List</TabsTrigger>
-              <TabsTrigger value="map">Map</TabsTrigger>
-              <TabsTrigger value="units">Units</TabsTrigger>
-            </TabsList>
-
-            {/* List View Tab */}
-            <TabsContent value="list" className="space-y-6">
+          ) : (
+            <div className="space-y-6">
           {/* Search and Filter */}
           <SearchFilter
             searchPlaceholder="Search properties by name or address..."
@@ -762,7 +726,8 @@ export function PropertiesView(): React.ReactElement {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1, duration: 0.3 }}
                     whileHover={{ y: -4 }}
-                    className={cn("group", isSelected && "ring-2 ring-accent-primary border-accent-primary/50")}
+                    className={cn("group cursor-pointer", isSelected && "ring-2 ring-accent-primary border-accent-primary/50")}
+                    onClick={() => onPropertySelect?.(property.id)}
                   >
                     <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-accent-primary/10 border-border/50 group-hover:border-accent-primary/30">
                       <div className="aspect-video w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative overflow-hidden">
@@ -895,18 +860,8 @@ export function PropertiesView(): React.ReactElement {
               selectedIds={Array.from(bulkSelection.selectedIds)}
             />
           </div>
-            </TabsContent>
-
-            {/* Map View Tab */}
-            <TabsContent value="map" className="space-y-6">
-              <PropertyMap />
-            </TabsContent>
-
-            {/* Units View Tab */}
-            <TabsContent value="units" className="space-y-6">
-              <UnitsView />
-            </TabsContent>
-          </Tabs>
+            </div>
+          )}
         </div>
       )}
     </>

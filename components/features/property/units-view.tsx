@@ -28,7 +28,11 @@ interface Unit {
   }>;
 }
 
-export default function UnitsView() {
+interface UnitsViewProps {
+  propertyId?: string;
+}
+
+export default function UnitsView({ propertyId }: UnitsViewProps) {
   const _t = useTranslations('Units');
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
@@ -58,6 +62,11 @@ export default function UnitsView() {
     }
   };
 
+  // Filter units by property if propertyId is provided
+  const filteredUnits = propertyId 
+    ? units.filter(unit => unit.property.id === propertyId)
+    : units;
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'vacant':
@@ -83,33 +92,14 @@ export default function UnitsView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <Building2 className="w-6 h-6" />
-            Units
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Manage individual units within your properties
-          </p>
-        </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Unit
-        </button>
-      </div>
-
-      {units.length === 0 ? (
+      {filteredUnits.length === 0 ? (
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            No units yet
+            {propertyId ? 'No units in this property' : 'No units yet'}
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-4">
-            Start by adding units to your properties
+            {propertyId ? 'This property has no units added yet.' : 'Start by adding units to your properties'}
           </p>
           <button
             onClick={() => setShowAddModal(true)}
@@ -121,7 +111,7 @@ export default function UnitsView() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {units.map((unit) => (
+          {filteredUnits.map((unit) => (
             <div
               key={unit.id}
               className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:shadow-lg transition-shadow"

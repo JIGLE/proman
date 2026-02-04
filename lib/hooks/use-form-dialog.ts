@@ -1,9 +1,14 @@
 "use client";
 
 import * as React from 'react';
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { ZodError, ZodSchema } from 'zod';
 import { useToast } from '@/lib/contexts/toast-context';
+import { logger } from '@/lib/utils/logger';
+
+// ============================================
+// Types & Interfaces
+// ============================================
 
 export interface UseFormDialogOptions<T> {
   schema: ZodSchema<T>;
@@ -28,7 +33,7 @@ export interface UseFormDialogOptions<T> {
     enabled?: boolean;
     key?: string;
     fields?: string[];
-    ttl?: number;
+    ttl?: number; // Time to live in milliseconds
   };
   // Validation options
   validation?: {
@@ -36,6 +41,12 @@ export interface UseFormDialogOptions<T> {
     debounceValidation?: number;
     showFieldErrors?: boolean;
   };
+}
+
+interface PersistedData<T> {
+  data: Partial<T>;
+  timestamp: number;
+  version: number;
 }
 
 export interface UseFormDialogReturn<T, E = T> {
@@ -83,12 +94,15 @@ export function useFormDialog<T extends Record<string, unknown>, E = T>({
   successMessage = { create: 'Item created successfully!', update: 'Item updated successfully!' },
   errorMessage = 'Failed to save. Please try again.',
   initialData,
-  autoSave: _autoSave = { enabled: false, key: 'form-autosave' },
-  persistence: _persistence = { enabled: false },
+  autoSave = { enabled: false, key: 'form-autosave' },
+  persistence = { enabled: false },
   validation = { validateOnChange: false, debounceValidation: 500, showFieldErrors: true }
 }: UseFormDialogOptions<T>): UseFormDialogReturn<T, E> {
   const { success, error } = useToast();
   
+  // ============================================
+  // Core State
+  // ============================================
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
@@ -96,18 +110,290 @@ export function useFormDialog<T extends Record<string, unknown>, E = T>({
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof T, string>>>({});
   const [editingItem, setEditingItem] = useState<E | null>(null);
   
-  // Debounce timer for validation
-  const validationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  // ============================================
+  // Persistence & Auto-save State
+  // ============================================
+  const [isSaving, setIsSaving] = useState(false);
+  const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [persistedDataExists, setPersistedDataExists] = useState(false);
   
-  // Temporary placeholders for auto-save features (will be implemented later)
-  const isSaving = false;
-  const lastSaved = null;
-  const hasUnsavedChanges = false;
-  const _clearSaved = useCallback(() => {}, []);
-  const clearFormData = useCallback(() => {}, []);
-  const forceSave = useCallback(async () => {}, []);
-  const hasPersistedData = useCallback(() => false, []);
-  const restoreFormData = useCallback(() => false, []);
+  // Refs for timers and tracking
+  const validationTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const lastSavedDataRef = useRef<string>(JSON.stringify(initialData));
+  
+  // Current persistence version (for cache invalidation)
+  const PERSISTENCE_VERSION = 1;
+  
+  // ============================================
+  // Persistence Key Generation
+  // ============================================
+  const persistenceKey = useMemo(() => {
+    if (persistence.enabled && persistence.key) {
+      return `proman-form-${persistence.key}`;
+    }
+    return null;
+  }, [persistence.enabled, persistence.key]);
+  
+  const autoSaveKey = useMemo(() => {
+    if (autoSave.enabled && autoSave.key) {
+      return `proman-autosave-${autoSave.key}`;
+    }
+    return null;
+  }, [autoSave.enabled, autoSave.key]);
+  
+  // ============================================
+  // Check for Unsaved Changes
+  // ============================================
+  const hasUnsavedChanges = useMemo(() => {
+    const currentData = JSON.stringify(formData);
+    return currentData !== lastSavedDataRef.current;
+  }, [formData]);
+  
+  // ============================================
+  // Persistence Helpers
+  // ============================================
+  
+  /**
+   * Filter form data based on configured fields or exclude fields
+   */
+  const filterDataForPersistence = useCallback((data: T, fields?: string[], excludeFields?: string[]): Partial<T> => {
+    if (fields && fields.length > 0) {
+      // Only include specified fields
+      const filtered: Partial<T> = {};
+      for (const field of fields) {
+        if (field in data) {
+          filtered[field as keyof T] = data[field as keyof T];
+        }
+      }
+      return filtered;
+    }
+    
+    if (excludeFields && excludeFields.length > 0) {
+      // Exclude specified fields
+      const filtered = { ...data };
+      for (const field of excludeFields) {
+        delete filtered[field as keyof T];
+      }
+      return filtered;
+    }
+    
+    return data;
+  }, []);
+  
+  /**
+   * Safely save data to localStorage
+   */
+  const saveToStorage = useCallback((key: string, data: PersistedData<T>): boolean => {
+    if (typeof window === 'undefined') return false;
+    
+    try {
+      const serialized = JSON.stringify(data);
+      localStorage.setItem(key, serialized);
+      return true;
+    } catch (err) {
+      if (err instanceof Error && err.name === 'QuotaExceededError') {
+        logger.warn('localStorage quota exceeded, clearing old form data', { key });
+        // Try to clear old form data and retry
+        try {
+          // Clear all proman form data
+          const keysToRemove: string[] = [];
+          for (let i = 0; i < localStorage.length; i++) {
+            const storageKey = localStorage.key(i);
+            if (storageKey?.startsWith('proman-form-') || storageKey?.startsWith('proman-autosave-')) {
+              keysToRemove.push(storageKey);
+            }
+          }
+          keysToRemove.forEach(k => localStorage.removeItem(k));
+          
+          // Retry save
+          localStorage.setItem(key, JSON.stringify(data));
+          return true;
+        } catch {
+          logger.error('Failed to save form data after clearing storage', err);
+        }
+      }
+      logger.error('Failed to save form data to localStorage', err);
+      return false;
+    }
+  }, []);
+  
+  /**
+   * Safely load data from localStorage
+   */
+  const loadFromStorage = useCallback((key: string): PersistedData<T> | null => {
+    if (typeof window === 'undefined') return null;
+    
+    try {
+      const serialized = localStorage.getItem(key);
+      if (!serialized) return null;
+      
+      const data = JSON.parse(serialized) as PersistedData<T>;
+      
+      // Check version compatibility
+      if (data.version !== PERSISTENCE_VERSION) {
+        logger.debug('Persisted data version mismatch, clearing', { 
+          expected: PERSISTENCE_VERSION, 
+          found: data.version 
+        });
+        localStorage.removeItem(key);
+        return null;
+      }
+      
+      // Check TTL if persistence config has it
+      if (persistence.ttl && data.timestamp) {
+        const age = Date.now() - data.timestamp;
+        if (age > persistence.ttl) {
+          logger.debug('Persisted data expired', { age, ttl: persistence.ttl });
+          localStorage.removeItem(key);
+          return null;
+        }
+      }
+      
+      return data;
+    } catch (err) {
+      logger.error('Failed to load form data from localStorage', err);
+      return null;
+    }
+  }, [persistence.ttl]);
+  
+  /**
+   * Clear persisted data from localStorage
+   */
+  const clearPersistedData = useCallback(() => {
+    if (typeof window === 'undefined') return;
+    
+    if (persistenceKey) {
+      localStorage.removeItem(persistenceKey);
+    }
+    if (autoSaveKey) {
+      localStorage.removeItem(autoSaveKey);
+    }
+    setPersistedDataExists(false);
+    logger.debug('Cleared persisted form data');
+  }, [persistenceKey, autoSaveKey]);
+  
+  /**
+   * Force save current form data
+   */
+  const forceSave = useCallback(async () => {
+    const key = autoSaveKey || persistenceKey;
+    if (!key) return;
+    
+    setIsSaving(true);
+    
+    try {
+      // Filter data based on configuration
+      const dataToSave = autoSave.enabled 
+        ? filterDataForPersistence(formData, undefined, autoSave.excludeFields)
+        : filterDataForPersistence(formData, persistence.fields);
+      
+      const persistedData: PersistedData<T> = {
+        data: dataToSave,
+        timestamp: Date.now(),
+        version: PERSISTENCE_VERSION,
+      };
+      
+      const saved = saveToStorage(key, persistedData);
+      
+      if (saved) {
+        setLastSaved(new Date());
+        lastSavedDataRef.current = JSON.stringify(formData);
+        
+        // Call custom onSave callback if provided
+        if (autoSave.enabled && autoSave.onSave) {
+          await autoSave.onSave(formData);
+        }
+        
+        logger.debug('Form data saved', { key });
+      }
+    } catch (err) {
+      logger.error('Failed to save form data', err);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [autoSaveKey, persistenceKey, autoSave, persistence.fields, formData, filterDataForPersistence, saveToStorage]);
+  
+  /**
+   * Restore form data from storage
+   */
+  const restoreForm = useCallback((): boolean => {
+    const key = persistenceKey || autoSaveKey;
+    if (!key) return false;
+    
+    const persisted = loadFromStorage(key);
+    if (!persisted || !persisted.data) return false;
+    
+    try {
+      // Merge persisted data with initial data (persisted takes precedence)
+      const restoredData = { ...initialData, ...persisted.data } as T;
+      
+      // Validate restored data against schema (soft validation - don't reject if invalid)
+      try {
+        schema.parse(restoredData);
+      } catch (validationErr) {
+        logger.warn('Restored form data failed validation, using partial data', { 
+          error: validationErr instanceof Error ? validationErr.message : String(validationErr)
+        });
+      }
+      
+      setFormData(restoredData);
+      lastSavedDataRef.current = JSON.stringify(restoredData);
+      setLastSaved(new Date(persisted.timestamp));
+      
+      logger.debug('Form data restored', { key, timestamp: persisted.timestamp });
+      return true;
+    } catch (err) {
+      logger.error('Failed to restore form data', err);
+      return false;
+    }
+  }, [persistenceKey, autoSaveKey, loadFromStorage, initialData, schema]);
+  
+  /**
+   * Check if persisted data exists
+   */
+  const checkPersistedData = useCallback((): boolean => {
+    const key = persistenceKey || autoSaveKey;
+    if (!key) return false;
+    
+    const persisted = loadFromStorage(key);
+    return persisted !== null && persisted.data !== undefined;
+  }, [persistenceKey, autoSaveKey, loadFromStorage]);
+  
+  // ============================================
+  // Auto-save Effect
+  // ============================================
+  useEffect(() => {
+    if (!autoSave.enabled || !autoSaveKey) return;
+    
+    // Clear existing timer
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+    
+    // Only auto-save if there are unsaved changes and dialog is open
+    if (!hasUnsavedChanges || !isOpen) return;
+    
+    // Set debounced auto-save
+    const delay = autoSave.delay ?? 3000;
+    autoSaveTimerRef.current = setTimeout(() => {
+      forceSave();
+    }, delay);
+    
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, [autoSave.enabled, autoSave.delay, autoSaveKey, hasUnsavedChanges, isOpen, forceSave]);
+  
+  // ============================================
+  // Initialize persistence state on mount
+  // ============================================
+  useEffect(() => {
+    const exists = checkPersistedData();
+    setPersistedDataExists(exists);
+  }, [checkPersistedData]);
 
   // Field validation function
   const validateField = useCallback(async (field: keyof T, value: unknown): Promise<string | null> => {
@@ -255,7 +541,7 @@ export function useFormDialog<T extends Record<string, unknown>, E = T>({
         } else {
           error(errorMsg);
         }
-        console.error('Form submission error:', err);
+        logger.error('Form submission error', err instanceof Error ? err : new Error(String(err)));
       }
     } finally {
       setIsSubmitting(false);
@@ -271,6 +557,17 @@ export function useFormDialog<T extends Record<string, unknown>, E = T>({
     };
   }, []);
 
+  // ============================================
+  // Cleanup timers on unmount
+  // ============================================
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+      }
+    };
+  }, []);
+
   return {
     isOpen,
     isSubmitting,
@@ -281,7 +578,7 @@ export function useFormDialog<T extends Record<string, unknown>, E = T>({
     hasUnsavedChanges,
     isSaving,
     lastSaved,
-    hasPersistedData: hasPersistedData(),
+    hasPersistedData: persistedDataExists,
     openDialog,
     closeDialog,
     openEditDialog,
@@ -291,8 +588,8 @@ export function useFormDialog<T extends Record<string, unknown>, E = T>({
     resetForm,
     validateField,
     validateForm,
-    restoreForm: restoreFormData,
-    clearPersistedData: clearFormData,
+    restoreForm,
+    clearPersistedData,
     forceSave,
   };
 }

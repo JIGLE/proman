@@ -1,12 +1,14 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { type Currency, formatCurrency as formatCurrencyUtil, CURRENCY_LOCALES } from '@/lib/utils/currency';
 
 interface CurrencyContextType {
-  currency: string;
-  setCurrency: (currency: string) => void;
-  formatCurrency: (amount: number) => string;
+  currency: Currency;
+  setCurrency: (currency: Currency) => void;
+  formatCurrency: (amount: number | null | undefined) => string;
   locale: string; // Now derived from URL, read-only for formatting
+  isLoading: boolean;
 }
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
@@ -21,43 +23,59 @@ export function useCurrency() {
 
 interface CurrencyProviderProps {
   children: React.ReactNode;
-  initialCurrency?: string;
+  initialCurrency?: Currency;
   initialLocale?: string;
 }
 
 export function CurrencyProvider({
   children,
-  initialCurrency = 'USD',
+  initialCurrency = 'EUR',
   initialLocale = 'en'
 }: CurrencyProviderProps) {
-  const [currency, setCurrencyState] = useState(initialCurrency);
+  const [currency, setCurrencyState] = useState<Currency>(initialCurrency);
+  const [isLoading, setIsLoading] = useState(true);
   // Locale now comes from URL via initialLocale prop (from useParams in layout)
-  // We don't manage it in localStorage anymore
   const [locale] = useState(initialLocale);
 
-  // Load only currency from localStorage on mount
+  // Load currency from UserSettings API on mount
   useEffect(() => {
-    const savedCurrency = localStorage.getItem('proman_currency');
-    if (savedCurrency) setCurrencyState(savedCurrency);
+    const fetchCurrency = async () => {
+      try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.defaultCurrency) {
+            setCurrencyState(data.defaultCurrency as Currency);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to fetch user currency:', error);
+        // Fall back to initialCurrency on error
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCurrency();
   }, []);
 
-  const setCurrency = (newCurrency: string) => {
+  const setCurrency = async (newCurrency: Currency) => {
     setCurrencyState(newCurrency);
-    localStorage.setItem('proman_currency', newCurrency);
+    
+    // Save to UserSettings via API
+    try {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ defaultCurrency: newCurrency }),
+      });
+    } catch (error) {
+      console.error('Failed to save currency:', error);
+    }
   };
 
-  const formatCurrency = (amount: number): string => {
-    try {
-      return new Intl.NumberFormat(locale, {
-        style: 'currency',
-        currency: currency,
-        minimumFractionDigits: 0,
-        maximumFractionDigits: 2,
-      }).format(amount);
-    } catch {
-      // Fallback if currency/locale combination is invalid
-      return `${currency} ${amount.toLocaleString()}`;
-    }
+  const formatCurrency = (amount: number | null | undefined): string => {
+    return formatCurrencyUtil(amount, { currency });
   };
 
   return (
@@ -67,6 +85,7 @@ export function CurrencyProvider({
         setCurrency,
         formatCurrency,
         locale, // Read-only, derived from URL
+        isLoading,
       }}
     >
       {children}

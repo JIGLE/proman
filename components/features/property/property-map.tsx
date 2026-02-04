@@ -56,7 +56,9 @@ export default function PropertyMap() {
     try {
       const res = await fetch('/api/properties');
       if (res.ok) {
-        const data = await res.json();
+        const response = await res.json();
+        // Handle both direct array and wrapped response
+        const data = Array.isArray(response) ? response : (response.data || []);
         const withCoords = data.filter(
           (p: PropertyMarker) => p.latitude && p.longitude
         ).map((p: PropertyMarker) => ({
@@ -92,18 +94,6 @@ export default function PropertyMap() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <MapPin className="w-6 h-6" />
-            Property Map
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400 mt-1">
-            View all your properties on the map
-          </p>
-        </div>
-      </div>
-
       {properties.length === 0 ? (
         <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
           <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />

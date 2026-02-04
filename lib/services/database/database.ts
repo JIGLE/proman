@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { createSqliteDriverAdapterFactory } from './sqlite-adapter';
+import { logger } from '@/lib/utils/logger';
 import {
   Property,
   Tenant,
@@ -36,7 +37,7 @@ function getPrismaClient(): PrismaClient {
                 return false;
               }
             })() : false;
-            console.debug('[database] Using SQLite at', resolvedPath, 'exists:', exists, 'writable:', writable);
+            logger.debug('Using SQLite database', { path: resolvedPath, exists, writable });
             if (!exists) {
               throw new Error(`SQLite DB file does not exist: ${resolvedPath}. Ensure a writable dataset is mounted at the path and create the file, or use POST /api/debug/db/init to create it.`);
             }
@@ -45,11 +46,11 @@ function getPrismaClient(): PrismaClient {
             }
           } catch (fsErr: unknown) {
             const message = fsErr instanceof Error ? fsErr.message : String(fsErr);
-            console.error('[database] Filesystem check failed:', message);
+            logger.error('Filesystem check failed', new Error(message));
             throw new Error(message);
           }
           } else {
-            console.debug('[database] Using non-sqlite datasource (url type):', dbUrl.startsWith('postgres') || dbUrl.startsWith('postgresql') ? 'postgres' : 'unknown');
+            logger.debug('Using non-sqlite datasource', { type: dbUrl.startsWith('postgres') || dbUrl.startsWith('postgresql') ? 'postgres' : 'unknown' });
           }
 
         // Construct PrismaClient using environment configuration (DATABASE_URL)
@@ -60,23 +61,16 @@ function getPrismaClient(): PrismaClient {
              try {
                const fs = require('fs');
                const path = require('path');
-               console.debug('[database] Constructing PrismaClient; diagnostics:', {
+               logger.debug('Constructing PrismaClient', {
                  cwd: process.cwd(),
                  nodeEnv: process.env.NODE_ENV,
-                 databaseUrl: process.env.DATABASE_URL ? process.env.DATABASE_URL : '(none)',
-                 prismaClientResolved: (() => {
-                   try {
-                     return require.resolve('@prisma/client');
-                   } catch {
-                     return undefined;
-                   }
-                 })(),
+                 databaseUrl: process.env.DATABASE_URL ? '[set]' : '(none)',
                  prismaClientExists: fs.existsSync(path.resolve(process.cwd(), 'node_modules', '@prisma', 'client')),
                  prismaGeneratedExists: fs.existsSync(path.resolve(process.cwd(), 'node_modules', '.prisma', 'client')),
                });
              } catch (diagErr: unknown) {
             // debug diagnostics only
-            console.debug('[database] Diagnostics failed:', diagErr instanceof Error ? diagErr.message : String(diagErr))
+            logger.debug('Diagnostics check failed', { error: diagErr instanceof Error ? diagErr.message : String(diagErr) });
              }
 
           try {
@@ -86,7 +80,7 @@ function getPrismaClient(): PrismaClient {
                   const adapterFactory = createSqliteDriverAdapterFactory(process.env.DATABASE_URL);
                   globalForPrisma.prisma = new PrismaClient({ adapter: adapterFactory });
                 } catch (adapterErr: unknown) {
-                   console.debug('[database] Failed to initialize sqlite adapter, falling back to default constructor:', adapterErr instanceof Error ? adapterErr.message : String(adapterErr));
+                   logger.debug('Failed to initialize sqlite adapter, falling back to default constructor', { error: adapterErr instanceof Error ? adapterErr.message : String(adapterErr) });
                   globalForPrisma.prisma = new PrismaClient();
                 }
             } else {
@@ -95,7 +89,7 @@ function getPrismaClient(): PrismaClient {
           } catch (pcInitErr: unknown) {
             const msg = pcInitErr instanceof Error ? pcInitErr.message : String(pcInitErr);
             if (msg.includes('needs to be constructed with a non-empty')) {
-              console.warn('[database] PrismaClient init requires options; retrying with {}');
+              logger.warn('PrismaClient init requires options, retrying');
               globalForPrisma.prisma = new PrismaClient({});
               } else if (msg.includes('requires either "adapter" or "accelerateUrl"')) {
               // Retry with explicit sqlite adapter if we failed to pick it up earlier
@@ -109,21 +103,17 @@ function getPrismaClient(): PrismaClient {
               throw pcInitErr;
             }
           }
-           console.debug('[database] PrismaClient constructed successfully');
+           logger.debug('PrismaClient constructed successfully');
         } catch (pcErr: unknown) {
           const message = pcErr instanceof Error ? pcErr.message : String(pcErr);
           const name = pcErr instanceof Error && (pcErr as Error).name ? (pcErr as Error).name : 'UnknownError';
-          const stack = pcErr instanceof Error ? (pcErr as Error).stack : undefined;
-           console.error('[database] Failed to construct PrismaClient:', name, message);
-          if (stack) console.error(stack);
+          logger.error('Failed to construct PrismaClient', pcErr instanceof Error ? pcErr : new Error(message), { name });
           throw new Error(`Prisma initialization failed: ${message}`);
         }
         } catch (err: unknown) {
           const message = err instanceof Error ? err.message : String(err);
           const name = err instanceof Error && (err as Error).name ? (err as Error).name : 'UnknownError';
-          const stack = err instanceof Error ? (err as Error).stack : undefined;
-          console.error('[database] Failed to construct PrismaClient:', name, message);
-          if (stack) console.error(stack);
+          logger.error('Failed to construct PrismaClient', err instanceof Error ? err : new Error(message), { name });
           throw new Error(`Prisma initialization failed: ${message}`);
         }
     } else {

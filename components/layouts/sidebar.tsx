@@ -19,6 +19,8 @@ import {
   Command,
   Wallet,
   LightbulbIcon,
+  FileText,
+  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
@@ -72,6 +74,8 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
       group: "Operations", 
       items: [
         { id: "maintenance", label: "Maintenance", icon: Hammer, href: "/maintenance" },
+        { id: "contacts", label: "Contacts", icon: Wrench, href: "/contacts" },
+        { id: "contracts", label: "Contracts", icon: FileText, href: "/contracts" },
         { id: "correspondence", label: "Correspondence", icon: Mail, href: "/correspondence" },
       ]
     },
@@ -90,11 +94,13 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
 
   const user = session?.user;
   const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
+  // Get current locale from pathname for settings link
+  const currentLocale = pathname.split('/')[1] || 'en';
 
   return (
     <div
       className={cn(
-        "relative flex h-screen flex-col border-r border-[var(--color-sidebar-border)] bg-[var(--color-sidebar-bg)] transition-all duration-300",
+        "relative flex h-screen flex-col border-r border-[var(--color-sidebar-border)] bg-gradient-to-b from-[var(--color-sidebar-bg)] to-[var(--color-sidebar-bg)]/95 transition-all duration-300 overflow-x-hidden",
         collapsed ? "w-16" : "w-64"
       )}
     >
@@ -106,41 +112,25 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
             <span className="text-lg font-semibold text-[var(--color-foreground)] truncate">Proman</span>
           )}
         </div>
-        {!collapsed && (
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => onTabChange?.('settings')}
-              className="h-8 w-8 p-0"
-              title="Settings"
-              aria-label="Settings"
-            >
-              <Settings className="h-4 w-4" />
-            </Button>
-            <ThemeToggle variant="button" size="sm" className="h-8 w-8" />
-            <NotificationCenter
-              notifications={notifications}
-              onMarkAsRead={markAsRead}
-              onMarkAllAsRead={markAllAsRead}
-              onDelete={deleteNotification}
-              onClearAll={clearAll}
-              onNotificationClick={handleNotificationClick}
-            />
-          </div>
-        )}
-        {collapsed && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onTabChange?.('settings')}
-            className="h-8 w-8 p-0"
+        <div className={cn("flex items-center", collapsed ? "flex-col gap-1" : "gap-1")}>
+          <Link
+            href={`/${currentLocale}/settings`}
+            className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent hover:text-accent-foreground"
             title="Settings"
             aria-label="Settings"
           >
             <Settings className="h-4 w-4" />
-          </Button>
-        )}
+          </Link>
+          <ThemeToggle variant="button" size="sm" className="h-8 w-8" />
+          <NotificationCenter
+            notifications={notifications}
+            onMarkAsRead={markAsRead}
+            onMarkAllAsRead={markAllAsRead}
+            onDelete={deleteNotification}
+            onClearAll={clearAll}
+            onNotificationClick={handleNotificationClick}
+          />
+        </div>
       </div>
 
       {/* Search / Command Palette Trigger */}
@@ -177,27 +167,27 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
       <nav
         id="main-navigation"
         aria-label="Main navigation"
-        className="flex-1 overflow-y-auto scrollbar-thin space-y-1 p-2"
+        className="flex-1 overflow-y-auto scrollbar-thin space-y-1 px-2 py-3"
       >
         {menuItems.map((group, groupIndex) => (
           <div
             key={group.group}
             role="group"
             aria-labelledby={`nav-group-${groupIndex}`}
-            className={cn("space-y-1", groupIndex > 0 && "mt-6")}
+            className={cn("space-y-1", groupIndex > 0 && "mt-4")}
           >
             {!collapsed && (
               <div className="px-3 py-2">
                 <h3
                   id={`nav-group-${groupIndex}`}
-                  className="text-xs font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider"
+                  className="text-[10px] font-semibold text-[var(--color-muted-foreground)] uppercase tracking-widest"
                 >
                   {group.group}
                 </h3>
               </div>
             )}
             
-            <div className="space-y-1" role="list">
+            <div className="space-y-0.5" role="list">
               {group.items.map((item) => {
                 const Icon = item.icon;
                 // Extract locale from pathname (e.g., /en/properties -> en)
@@ -213,26 +203,26 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
                     onClick={() => onTabChange?.(item.id)} // Support legacy callback if provided
                     aria-current={isActive ? "page" : undefined}
                     className={cn(
-                      "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 group",
-                      "hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)]",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-1",
-                      collapsed && "justify-center px-2",
+                      "relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out group",
+                      "hover:bg-gradient-to-r hover:from-[var(--color-surface-hover)] hover:to-transparent",
+                      "hover:translate-x-0.5",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-sidebar-bg)]",
+                      collapsed && "justify-center px-2 rounded-lg",
                       isActive 
-                        ? "bg-[var(--color-accent)]/20 text-[var(--color-accent)] border-r-2 border-[var(--color-accent)]" 
-                        : "text-[var(--color-sidebar-text)]"
+                        ? "text-[var(--color-accent)] drop-shadow-[0_0_8px_var(--color-accent)]"
+                        : "text-[var(--color-sidebar-text)] hover:text-[var(--color-foreground)]"
                     )}
                     title={collapsed ? item.label : undefined}
                     aria-label={collapsed ? item.label : undefined}
                   >
                     <Icon className={cn(
-                      "h-4 w-4 shrink-0 transition-colors",
-                      isActive ? "text-[var(--color-accent)]" : "text-[var(--color-sidebar-text)] group-hover:text-[var(--color-foreground)]"
+                      "h-[18px] w-[18px] shrink-0 transition-all duration-300",
+                      isActive 
+                        ? "text-[var(--color-accent)] drop-shadow-[0_0_4px_var(--color-accent)]" 
+                        : "text-[var(--color-sidebar-text)] group-hover:text-[var(--color-foreground)] group-hover:scale-110"
                     )} />
                     {!collapsed && (
                       <span className="truncate">{item.label}</span>
-                    )}
-                    {!collapsed && isActive && (
-                      <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" />
                     )}
                   </Link>
                 );
@@ -240,7 +230,7 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
             </div>
             
             {!collapsed && groupIndex < menuItems.length - 1 && (
-              <Separator className="mt-4 mx-3" />
+              <Separator className="mt-3 mx-3 opacity-50" />
             )}
           </div>
         ))}

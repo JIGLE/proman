@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Briefcase, Download, Plus, Edit, Trash2, Phone, Mail, MapPin, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrency } from "@/lib/contexts/currency-context";
@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { LoadingState } from "@/components/ui/loading-state";
+import { SearchFilter } from "@/components/ui/search-filter";
 import { useApp } from "@/lib/contexts/app-context";
 import { Owner } from "@/lib/types";
 import { ownerSchema, OwnerFormData } from "@/lib/utils/validation";
@@ -19,10 +20,15 @@ import jsPDF from "jspdf";
 
 export function OwnersView(): React.ReactElement {
     const { state, addOwner, updateOwner, deleteOwner } = useApp();
-    const { owners, receipts, expenses, loading } = state;
+    const { owners, properties, loading } = state;
     const { success, error } = useToast();
     const { formatCurrency } = useCurrency();
     const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
+    
+    // Search and filter state
+    const [searchQuery, setSearchQuery] = useState('');
+    const [propertyFilter, setPropertyFilter] = useState<string>('all');
+    const [statusFilter, setStatusFilter] = useState<string>('all');
 
     const initialFormData: OwnerFormData = {
         name: '',
@@ -145,26 +151,42 @@ export function OwnersView(): React.ReactElement {
         }
     };
 
+    // Filter owners based on search and filters
+    const filteredOwners = useMemo(() => {
+        return owners.filter((owner) => {
+            // Search filter
+            const matchesSearch = searchQuery === '' ||
+                owner.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                owner.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (owner.phone && owner.phone.toLowerCase().includes(searchQuery.toLowerCase()));
+
+            // Property filter
+            const matchesProperty = propertyFilter === 'all' ||
+                (owner.properties && owner.properties.some(p => p.propertyId === propertyFilter));
+
+            // Status filter (active/inactive based on whether they have properties)
+            const isActive = owner.properties && owner.properties.length > 0;
+            const matchesStatus = statusFilter === 'all' ||
+                (statusFilter === 'active' && isActive) ||
+                (statusFilter === 'inactive' && !isActive);
+
+            return matchesSearch && matchesProperty && matchesStatus;
+        });
+    }, [owners, searchQuery, propertyFilter, statusFilter]);
+
     return (
         <>
         {loading ? (
             <LoadingState variant="cards" count={6} />
         ) : (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
-                        Owners
-                    </h2>
-                    <p className="text-[var(--color-muted-foreground)]">Manage property owners and split ownership</p>
-                </div>
-                <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
-                    <DialogTrigger asChild>
-                        <Button onClick={dialog.openDialog} className="flex items-center gap-2">
-                            <Plus className="w-4 h-4" />
-                            Add Owner
-                        </Button>
-                    </DialogTrigger>
+            <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
+                <DialogTrigger asChild>
+                    <Button onClick={dialog.openDialog} className="hidden">
+                        <Plus className="w-4 h-4" />
+                        Add Owner
+                    </Button>
+                </DialogTrigger>
                     <DialogContent className="bg-zinc-900 border-zinc-800 max-w-lg">
                         <DialogHeader>
                             <DialogTitle className="text-[var(--color-foreground)]">
@@ -259,25 +281,66 @@ export function OwnersView(): React.ReactElement {
                         </form>
                     </DialogContent>
                 </Dialog>
-            </div>
+
+            {/* Search and Filter */}
+            <SearchFilter
+                searchPlaceholder="Search owners by name, email, or phone..."
+                onSearchChange={setSearchQuery}
+                onFilterChange={(key, value) => {
+                    if (key === 'property') setPropertyFilter(value);
+                    if (key === 'status') setStatusFilter(value);
+                }}
+                filters={[
+                    {
+                        key: 'property',
+                        label: 'Property',
+                        options: [
+                            { label: 'All Properties', value: 'all' },
+                            ...properties.map((property) => ({
+                                label: property.name,
+                                value: property.id,
+                            })),
+                        ],
+                        defaultValue: 'all',
+                    },
+                    {
+                        key: 'status',
+                        label: 'Status',
+                        options: [
+                            { label: 'All', value: 'all' },
+                            { label: 'Active', value: 'active' },
+                            { label: 'Inactive', value: 'inactive' },
+                        ],
+                        defaultValue: 'all',
+                    },
+                ]}
+            />
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {owners.length === 0 ? (
+                {filteredOwners.length === 0 ? (
                     <div className="col-span-full">
                         <Card className="bg-zinc-900 border-zinc-800">
                             <CardContent className="p-8 text-center">
                                 <Briefcase className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-                                <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">No owners yet</h3>
-                                <p className="text-zinc-400 mb-4">Add owners to start tracking shared property ownership</p>
-                                <Button onClick={dialog.openDialog} className="flex items-center gap-2">
-                                    <Plus className="w-4 h-4" />
-                                    Add First Owner
-                                </Button>
+                                <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
+                                    {owners.length === 0 ? 'No owners yet' : 'No owners found'}
+                                </h3>
+                                <p className="text-zinc-400 mb-4">
+                                    {owners.length === 0 
+                                        ? 'Add owners to start tracking shared property ownership'
+                                        : 'Try adjusting your search or filters'}
+                                </p>
+                                {owners.length === 0 && (
+                                    <Button onClick={dialog.openDialog} className="flex items-center gap-2">
+                                        <Plus className="w-4 h-4" />
+                                        Add First Owner
+                                    </Button>
+                                )}
                             </CardContent>
                         </Card>
                     </div>
                 ) : (
-                    owners.map((owner) => (
+                    filteredOwners.map((owner) => (
                         <Card key={owner.id} className="bg-zinc-900 border-zinc-800">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-xl font-bold text-[var(--color-foreground)]">{owner.name}</CardTitle>

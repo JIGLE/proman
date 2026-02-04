@@ -63,32 +63,40 @@ model EmailLog {
 }
 
 model Owner {
-  id        String   @id @default(cuid())
-  userId    String
-  name      String
-  email     String   @unique
-  phone     String?
-  address   String?
-  notes     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                    String      @id @default(cuid())
+  userId                String
+  name                  String
+  email                 String      @unique
+  phone                 String?
+  address               String?
+  notes                 String?
+  role                  OwnerRole   @default(REGULAR)  // Default role (can be overridden per property)
+  taxResidenceCountry   String?     // PT, ES, DK, etc.
+  taxIdentificationNumber String?   // NIF (PT), NIE/NIF (ES), CPR (DK)
+  taxRate               Float?      // Optional override for tax rate
+  portalAccess          Boolean     @default(true)  // Access to owner portal
+  emailNotifications    Boolean     @default(true)  // Receive email notifications
+  createdAt             DateTime    @default(now())
+  updatedAt             DateTime    @updatedAt
 
   // Relations
-  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  properties PropertyOwner[]
-  documents  Document[]
-  invoices   Invoice[]
+  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  properties            PropertyOwner[]
+  documents             Document[]
+  invoices              Invoice[]
+  incomeDistributions   IncomeDistributionShare[]
 
   @@map("owners")
 }
 
 model PropertyOwner {
-  id                  String   @id @default(cuid())
+  id                  String    @id @default(cuid())
   propertyId          String
   ownerId             String
   ownershipPercentage Float
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  role                OwnerRole @default(REGULAR)  // Property-specific role override
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   // Relations
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
@@ -168,20 +176,28 @@ model Property {
   status      PropertyStatus
   description String?
   image       String?
+  
+  // Multi-currency and income distribution
+  currency              Currency            @default(EUR)
+  incomeSplitMode       IncomeSplitMode     @default(POST_TAX)
+  distributionFrequency DistributionFrequency @default(MONTHLY)
+  createdByOwnerId      String?             // Owner who created this property (auto managing owner)
+  
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tenants     Tenant[]
-  receipts    Receipt[]
-  owners      PropertyOwner[]
-  expenses    Expense[]
-  maintenance MaintenanceTicket[]
-  leases      Lease[]
-  units       Unit[]
-  documents   Document[]
-  invoices    Invoice[]
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenants             Tenant[]
+  receipts            Receipt[]
+  owners              PropertyOwner[]
+  expenses            Expense[]
+  maintenance         MaintenanceTicket[]
+  leases              Lease[]
+  units               Unit[]
+  documents           Document[]
+  invoices            Invoice[]
+  incomeDistributions IncomeDistribution[]
 
   @@map("properties")
 }
@@ -258,25 +274,27 @@ model Expense {
 }
 
 model MaintenanceTicket {
-  id          String   @id @default(cuid())
-  userId      String
-  propertyId  String
-  tenantId    String?
-  title       String
-  description String
-  status      MaintenanceStatus @default(open)
-  priority    MaintenancePriority @default(medium)
-  images      String   // JSON string of image URLs
-  cost        Float?
-  assignedTo  String?
-  resolvedAt  DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                String   @id @default(cuid())
+  userId            String
+  propertyId        String
+  tenantId          String?
+  title             String
+  description       String
+  status            MaintenanceStatus @default(open)
+  priority          MaintenancePriority @default(medium)
+  images            String   // JSON string of image URLs
+  cost              Float?
+  assignedTo        String?  // Legacy field for text assignment
+  assignedContactId String?  // FK to MaintenanceContact
+  resolvedAt        DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   // Relations
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  tenant   Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property        Property           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenant          Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  assignedContact MaintenanceContact? @relation(fields: [assignedContactId], references: [id], onDelete: SetNull)
 
   @@map("maintenance_tickets")
 }
@@ -701,4 +719,129 @@ enum TransactionStatus {
   cancelled        // Cancelled by user/system
   refunded         // Fully refunded
   partially_refunded // Partially refunded
+}
+
+// ========================================
+// New Models for Navigation Restructuring
+// ========================================
+
+// Maintenance Contacts (Contractors, Vendors, Staff)
+model MaintenanceContact {
+  id            String   @id @default(cuid())
+  userId        String
+  type          MaintenanceContactType
+  company       String?
+  contactPerson String
+  email         String?
+  phone         String?
+  specialties   String   // JSON array: ["Plumber", "Electrician", "HVAC", etc.]
+  hourlyRate    Float?
+  currency      Currency @default(EUR)
+  rating        Float?   // 1-5 rating
+  notes         String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  // Relations
+  tickets MaintenanceTicket[]
+
+  @@map("maintenance_contacts")
+}
+
+// Income Distribution (with audit trail)
+model IncomeDistribution {
+  id                   String   @id @default(cuid())
+  propertyId           String
+  periodStart          DateTime
+  periodEnd            DateTime
+  taxMode              IncomeSplitMode
+  totalIncome          Float
+  totalExpenses        Float
+  netIncome            Float
+  currency             Currency @default(EUR)
+  version              Int      @default(1)  // Incremented on recalculation
+  calculatedByUserId   String
+  recalculatedByUserId String?
+  recalculatedAt       DateTime?
+  notes                String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  // Relations
+  property Property                   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  shares   IncomeDistributionShare[]
+
+  @@map("income_distributions")
+}
+
+// Individual owner shares from an income distribution
+model IncomeDistributionShare {
+  id                   String   @id @default(cuid())
+  distributionId       String
+  ownerId              String
+  ownershipPercentage  Float
+  grossShare           Float    // Before tax
+  taxAmount            Float    // Calculated tax
+  netShare             Float    // After tax
+  taxCountry           String?  // PT, ES, DK
+  taxRate              Float?   // Applied tax rate
+  notifiedAt           DateTime?
+  createdAt            DateTime @default(now())
+
+  // Relations
+  distribution IncomeDistribution @relation(fields: [distributionId], references: [id], onDelete: Cascade)
+  owner        Owner              @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@map("income_distribution_shares")
+}
+
+// User Settings (preferences)
+model UserSettings {
+  id                      String   @id @default(cuid())
+  userId                  String   @unique
+  theme                   String   @default("system")  // light, dark, system
+  language                String   @default("en")
+  defaultCurrency         Currency @default(EUR)
+  defaultTaxCountry       String?  // PT, ES, DK
+  emailNotifications      Boolean  @default(true)
+  taxReminderNotifications Boolean @default(true)
+  distributionNotifications Boolean @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@map("user_settings")
+}
+
+// ========================================
+// New Enums
+// ========================================
+
+enum OwnerRole {
+  MANAGING  // Full access to property management
+  REGULAR   // View-only access to income reports
+}
+
+enum Currency {
+  EUR  // Euro (Portugal, Spain)
+  DKK  // Danish Krone
+  USD  // US Dollar
+  GBP  // British Pound
+}
+
+enum IncomeSplitMode {
+  PRE_TAX   // Split before tax calculation
+  POST_TAX  // Split after tax deduction
+}
+
+enum DistributionFrequency {
+  MONTHLY
+  QUARTERLY
+  ANNUAL
+}
+
+enum MaintenanceContactType {
+  CONTRACTOR     // External contractor
+  VENDOR         // Supplier/vendor
+  INTERNAL_STAFF // In-house staff
 }
