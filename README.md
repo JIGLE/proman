@@ -50,6 +50,19 @@ Open [http://localhost:3000](http://localhost:3000) to start using ProMan.
 
 See [TRUENAS_DEPLOYMENT.md](TRUENAS_DEPLOYMENT.md) for step-by-step instructions.
 
+**Prerequisites:**
+- Helm 3.x (install via package manager)
+  ```bash
+  # macOS
+  brew install helm
+  
+  # Linux
+  curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+  
+  # Windows
+  choco install kubernetes-helm
+  ```
+
 ### Deploy with Docker
 
 ```bash
