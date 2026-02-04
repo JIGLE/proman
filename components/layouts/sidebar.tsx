@@ -161,11 +161,11 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
   return (
     <div
       className={cn(
-        "relative flex h-screen flex-col border-r border-[var(--color-sidebar-border)] bg-gradient-to-b from-[var(--color-sidebar-bg)] to-[var(--color-sidebar-bg)]/95 transition-all duration-300 overflow-x-hidden",
+        "relative flex h-screen flex-col border-r border-[var(--color-sidebar-border)] bg-gradient-to-b from-[var(--color-sidebar-bg)] to-[var(--color-sidebar-bg)]/95 transition-all duration-300 min-w-0 overflow-x-hidden",
         collapsed ? "w-16" : "w-64"
       )}
     >
-      {/* Header with Logo and Quick Actions */}
+      {/* Header with Logo and Notifications */}
       <div className="flex h-14 items-center justify-between border-b border-[var(--color-sidebar-border)] px-3">
         <div className="flex items-center gap-2 min-w-0">
           <Building2 className="h-6 w-6 text-[var(--color-foreground)] shrink-0" />
@@ -173,26 +173,41 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
             <span className="text-lg font-semibold text-[var(--color-foreground)] truncate">Proman</span>
           )}
         </div>
-        <div className={cn("flex items-center", collapsed ? "flex-col gap-1" : "gap-1")}>
-          <Link
-            href={`/${currentLocale}/settings`}
-            className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent hover:text-accent-foreground"
-            title="Settings"
-            aria-label="Settings"
+
+        {/* Right side: notifications (hidden when collapsed) and collapse toggle */}
+        <div className="flex items-center gap-2">
+          {!collapsed && (
+            <NotificationCenter
+              notifications={notifications}
+              onMarkAsRead={markAsRead}
+              onMarkAllAsRead={markAllAsRead}
+              onDelete={deleteNotification}
+              onClearAll={clearAll}
+              onNotificationClick={handleNotificationClick}
+            />
+          )}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleToggleCollapsed}
+            className={cn(
+              "h-9 w-9 p-0 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-hover)]",
+              "focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
+            )}
+            title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
+            aria-label={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
           >
-            <Settings className="h-4 w-4" />
-          </Link>
-          <ThemeToggle variant="button" size="sm" className="h-8 w-8" />
-          <NotificationCenter
-            notifications={notifications}
-            onMarkAsRead={markAsRead}
-            onMarkAllAsRead={markAllAsRead}
-            onDelete={deleteNotification}
-            onClearAll={clearAll}
-            onNotificationClick={handleNotificationClick}
-          />
+            {collapsed ? (
+              <ChevronRight className="h-4 w-4" />
+            ) : (
+              <ChevronLeft className="h-4 w-4" />
+            )}
+          </Button>
         </div>
       </div>
+
+
 
       {/* Search / Command Palette Trigger */}
       {!collapsed && onOpenCommandPalette && (
@@ -228,7 +243,7 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
       <nav
         id="main-navigation"
         aria-label="Main navigation"
-        className="flex-1 overflow-y-auto scrollbar-thin space-y-1 px-2 py-3"
+        className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden scrollbar-thin space-y-1 px-2 py-3 pr-2"
       >
         {menuItems.map((group, groupIndex) => (
           <div
@@ -263,28 +278,31 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
                     role="listitem"
                     onClick={() => onTabChange?.(item.id)} // Support legacy callback if provided
                     aria-current={isActive ? "page" : undefined}
-                    className={cn(
-                      "relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out group",
-                      "hover:bg-gradient-to-r hover:from-[var(--color-surface-hover)] hover:to-transparent",
-                      "hover:translate-x-0.5",
-                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-sidebar-bg)]",
-                      collapsed && "justify-center px-2 rounded-lg",
-                      isActive 
-                        ? "text-[var(--color-accent)] drop-shadow-[0_0_8px_var(--color-accent)]"
-                        : "text-[var(--color-sidebar-text)] hover:text-[var(--color-foreground)]"
-                    )}
                     title={collapsed ? item.label : undefined}
                     aria-label={collapsed ? item.label : undefined}
                   >
-                    <Icon className={cn(
-                      "h-[18px] w-[18px] shrink-0 transition-all duration-300",
-                      isActive 
-                        ? "text-[var(--color-accent)] drop-shadow-[0_0_4px_var(--color-accent)]" 
-                        : "text-[var(--color-sidebar-text)] group-hover:text-[var(--color-foreground)] group-hover:scale-110"
-                    )} />
-                    {!collapsed && (
-                      <span className="truncate">{item.label}</span>
-                    )}
+                    <div
+                      className={cn(
+                        "relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-out group",
+                        "hover:bg-gradient-to-r hover:from-[var(--color-surface-hover)] hover:to-transparent",
+                        "hover:translate-x-0.5",
+                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-sidebar-bg)]",
+                        collapsed && "justify-center px-2 rounded-lg",
+                        isActive 
+                          ? "text-[var(--color-accent)] drop-shadow-[0_0_8px_var(--color-accent)]"
+                          : "text-[var(--color-sidebar-text)] hover:text-[var(--color-foreground)]"
+                      )}
+                    >
+                      <Icon className={cn(
+                        "h-[18px] w-[18px] shrink-0 transition-all duration-300",
+                        isActive 
+                          ? "text-[var(--color-accent)] drop-shadow-[0_0_4px_var(--color-accent)]" 
+                          : "text-[var(--color-sidebar-text)] group-hover:text-[var(--color-foreground)] group-hover:scale-110"
+                      )} />
+                      {!collapsed && (
+                        <span className="truncate">{item.label}</span>
+                      )}
+                    </div>
                   </Link>
                 );
               })}
@@ -299,11 +317,11 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
 
       </nav>
 
-      {/* Sticky Footer with User Profile */}
-      <div className="flex-none border-t border-[var(--color-sidebar-border)] bg-[var(--color-sidebar-bg)]">
-        {session && (
-          <div className="p-3">
-            {!collapsed ? (
+      {/* User Profile (moved to bottom for better collapsed UX) and Collapse Toggle */}
+      {session && (
+        <div className="flex-none border-t border-[var(--color-sidebar-border)] p-2">
+          {!collapsed ? (
+            <div className="space-y-1">
               <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors">
                 <Avatar className="w-8 h-8 ring-2 ring-[var(--color-border)]">
                   <AvatarImage src={user?.image || ''} alt={user?.name || 'User'} />
@@ -312,60 +330,47 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
-                    {user?.name}
-                  </p>
-                  <p className="text-xs text-[var(--color-muted-foreground)] truncate">
-                    {user?.email}
-                  </p>
+                  <p className="text-sm font-medium text-[var(--color-foreground)] truncate">{user?.name}</p>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => signOut()}
-                  className="h-8 w-8 p-0 hover:bg-[var(--color-destructive)]/10 hover:text-[var(--color-destructive)]"
-                  title="Sign Out"
-                  aria-label="Sign Out"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
               </div>
-            ) : (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => signOut()}
-                className="w-full h-9 p-0 hover:bg-[var(--color-destructive)]/10 hover:text-[var(--color-destructive)]"
-                title="Sign Out"
-                aria-label="Sign Out"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
 
-      {/* Collapse Toggle */}
-      <div className="flex-none p-2 border-t border-[var(--color-sidebar-border)]">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleToggleCollapsed}
-          className={cn(
-            "w-full justify-center text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-hover)]",
-            "focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
-          )}
-          title={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-          aria-label={collapsed ? "Expand Sidebar" : "Collapse Sidebar"}
-        >
-          {collapsed ? (
-            <ChevronRight className="h-4 w-4" />
+              <div className="flex items-center justify-between gap-2 px-3">
+                <p className="text-xs text-[var(--color-muted-foreground)] truncate">{user?.email}</p>
+                <div className="flex items-center gap-1">
+                  <Link href={`/${currentLocale}/settings`} title="Settings">
+                    <div className="inline-flex items-center justify-center h-9 w-9 rounded-md text-sm hover:bg-accent hover:text-accent-foreground transition-colors" aria-hidden>
+                      <Settings className="h-4 w-4" />
+                    </div>
+                  </Link>
+                  <ThemeToggle variant="button" size="sm" className="h-9 w-9" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => signOut()}
+                    className="h-9 w-9 p-0 hover:bg-[var(--color-destructive)]/10 hover:text-[var(--color-destructive)]"
+                    title="Sign Out"
+                    aria-label="Sign Out"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </div>
           ) : (
-            <ChevronLeft className="h-4 w-4" />
+            <div className="flex items-center justify-center gap-2">
+              <Avatar className="w-8 h-8 ring-2 ring-[var(--color-border)]">
+                <AvatarImage src={user?.image || ''} alt={user?.name || 'User'} />
+                <AvatarFallback className="bg-[var(--color-accent)] text-[var(--color-accent-foreground)] text-xs font-semibold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+            </div>
           )}
-        </Button>
-      </div>
+
+
+        </div>
+      )}
+
     </div>
   );
 }
