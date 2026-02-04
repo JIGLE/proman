@@ -1,20 +1,28 @@
 "use client";
 
-import { SessionProvider } from "next-auth/react";
 import { ToastProvider } from "@/lib/contexts/toast-context";
 import { AppProvider } from "@/lib/contexts/app-context";
 import { ThemeProvider } from "@/lib/contexts/theme-context";
+import { CsrfProvider } from "@/lib/contexts/csrf-context";
+import { DevAuthProvider } from "@/components/shared/dev-auth";
 
-export function ClientProviders({ children }: { children: React.ReactNode }): React.ReactElement {
+interface ClientProvidersProps {
+  children: React.ReactNode;
+  nonce?: string;
+}
+
+export function ClientProviders({ children, nonce }: ClientProvidersProps): React.ReactElement {
   return (
-    <SessionProvider>
+    <DevAuthProvider>
       <ThemeProvider>
-        <ToastProvider>
-          <AppProvider>
-            {children}
-          </AppProvider>
-        </ToastProvider>
+        <CsrfProvider>
+          <ToastProvider>
+            <AppProvider>
+              {children}
+            </AppProvider>
+          </ToastProvider>
+        </CsrfProvider>
       </ThemeProvider>
-    </SessionProvider>
+    </DevAuthProvider>
   );
 }
