@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Slot } from "@radix-ui/react-slot"
+import SafeSlot from "./safe-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils/utils"
@@ -61,38 +61,56 @@ export interface ButtonProps
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, emphasis, asChild = false, loading = false, children, disabled, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, emphasis, className }))}
-        ref={ref}
-        disabled={disabled || loading}
-        {...props}
-      >
-        {loading && (
-          <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            />
-          </svg>
-        )}
-        {children}
-      </Comp>
-    )
+    const Comp = asChild ? SafeSlot : "button"
+        // Ensure a single React element is passed to Slot when `asChild` is used.
+        let childForSlot: React.ReactNode = children
+        if (asChild) {
+          try {
+            if (React.Children.count(children) === 1) {
+              childForSlot = React.Children.only(children as any)
+            } else {
+              childForSlot = <span>{children}</span>
+            }
+          } catch (err) {
+            // Defensive fallback: if React.Children.only throws (e.g., unexpected null),
+            // wrap children to avoid server render crashes in development.
+            // This prevents `React.Children.only` from bubbling up errors during SSR.
+            childForSlot = <span>{children}</span>
+          }
+        } else {
+          childForSlot = children
+        }
+      return (
+        <Comp
+          className={cn(buttonVariants({ variant, size, emphasis, className }))}
+          ref={ref}
+          disabled={disabled || loading}
+          {...props}
+        >
+          {loading && (
+            <svg
+              className="animate-spin -ml-1 mr-2 h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
+            </svg>
+          )}
+            {childForSlot}
+        </Comp>
+      )
   }
 )
 Button.displayName = "Button"
