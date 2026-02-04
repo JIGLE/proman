@@ -48,6 +48,9 @@ import type {
   Activity
 } from "@/lib/services/analytics-service";
 
+const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const getMonthLabel = (date: Date): string => MONTH_LABELS[date.getMonth()] || "";
+
 export type AnalyticsDashboardProps = Record<string, never>;
 
 // Transform lease expirations to calendar events
@@ -165,7 +168,7 @@ export function AnalyticsDashboard(): React.ReactElement {
       const expenses = revenue * 0.3; // Simplified expense calculation
       
       result.push({
-        month: targetDate.toLocaleString('default', { month: 'short' }),
+        month: getMonthLabel(targetDate),
         year: targetDate.getFullYear(),
         revenue,
         expenses,

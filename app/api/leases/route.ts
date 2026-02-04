@@ -4,9 +4,14 @@ import { Session } from 'next-auth';
 import { getPrismaClient } from '@/lib/services/database/database';
 import { getAuthOptions } from "@/lib/services/auth/auth";
 import { leaseSchema } from '@/lib/utils/validation';
+import { isMockMode } from '@/lib/config/data-mode';
 
 export async function GET(): Promise<NextResponse> {
     try {
+        // In mock mode, return empty array
+        if (isMockMode) {
+            return NextResponse.json([]);
+        }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const session = await getServerSession(getAuthOptions() as any) as Session | null;
         if (!session?.user?.email) {

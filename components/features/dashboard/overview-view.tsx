@@ -24,6 +24,9 @@ import { useSession } from "next-auth/react";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const getMonthLabel = (date: Date): string => MONTH_LABELS[date.getMonth()] || "";
+
 // Helper to get time-based greeting
 function getGreeting(): { text: string; icon: typeof Sun } {
   const hour = new Date().getHours();
@@ -114,7 +117,7 @@ export function OverviewView({
     });
     
     monthlyTrend.push({
-      label: targetDate.toLocaleString('default', { month: 'short' }),
+      label: getMonthLabel(targetDate),
       value: monthReceipts.reduce((sum, r) => sum + r.amount, 0)
     });
   }

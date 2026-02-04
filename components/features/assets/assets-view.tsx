@@ -1,37 +1,28 @@
 "use client";
 
-import { Building2, Users2, MapPin, Plus } from "lucide-react";
+import { Building2, MapPin, Plus } from "lucide-react";
+import { useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
-import { PropertiesView } from "@/components/features/property/property-list";
-import UnitsView from "@/components/features/property/units-view";
+import { PropertiesView, PropertiesViewRef } from "@/components/features/property/property-list";
 import { ExportButton, ExportColumn } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
 
 /**
  * Assets View - Unified view for managing physical properties
  * 
  * Information Architecture:
- * - Purpose: Manage physical properties (buildings and units)
- * - Belongs here: Properties list/details, Units
+ * - Purpose: Manage physical properties (buildings)
+ * - Belongs here: Properties list/details, Map view
  * - Forbidden: Tenant data (except occupancy status), financial transactions, maintenance tickets
- * - Moved to People: Owners (for better People consolidation)
  * - Links to: People (view tenants/owners), Maintenance (create ticket for property)
- * - Depth: 2 levels max (Assets → Property Detail → Unit Detail)
  */
 export function AssetsView(): React.ReactElement {
   const [activeTab, setActiveTab] = useTabPersistence('assets', 'map');
-  const [selectedPropertyId, setSelectedPropertyId] = useState<string | undefined>();
   const { state } = useApp();
   const { properties } = state;
-
-  // Handle property selection - navigate to Units tab and set filter
-  const handlePropertySelect = (propertyId: string) => {
-    setSelectedPropertyId(propertyId);
-    setActiveTab('units');
-  };
+  const propertiesViewRef = useRef<PropertiesViewRef>(null);
 
   // Export columns for properties
   const propertyColumns = [
@@ -110,10 +101,10 @@ export function AssetsView(): React.ReactElement {
         </div>
       </div>
 
-      {/* Tab Navigation - Map as default, then Properties and Units */}
-      <div className="flex items-center gap-2">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-          <TabsList className="grid w-full max-w-md grid-cols-3">
+      {/* Tab Navigation and Content */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <div className="flex items-center gap-2">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="map" className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
               <span className="hidden sm:inline">Map</span>
@@ -125,32 +116,24 @@ export function AssetsView(): React.ReactElement {
                 {properties.length}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="units" className="flex items-center gap-2">
-              <Users2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Units</span>
-            </TabsTrigger>
           </TabsList>
-        </Tabs>
-        {activeTab === 'units' && (
-          <Button className="flex items-center gap-2">
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add Unit</span>
-          </Button>
-        )}
-      </div>
+          {activeTab === 'properties' && (
+            <Button 
+              onClick={() => propertiesViewRef.current?.openDialog()}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Add Property</span>
+            </Button>
+          )}
+        </div>
 
-      {/* Tab Content */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsContent value="map" className="mt-0">
-          <PropertiesView viewMode="map" onPropertySelect={handlePropertySelect} />
+          <PropertiesView ref={propertiesViewRef} viewMode="map" />
         </TabsContent>
 
         <TabsContent value="properties" className="mt-0">
-          <PropertiesView viewMode="list" onPropertySelect={handlePropertySelect} />
-        </TabsContent>
-
-        <TabsContent value="units" className="mt-0">
-          <UnitsView propertyId={selectedPropertyId} />
+          <PropertiesView ref={propertiesViewRef} viewMode="list" />
         </TabsContent>
       </Tabs>
     </div>

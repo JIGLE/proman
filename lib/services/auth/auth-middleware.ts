@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import type { Session } from 'next-auth';
 import { getAuthOptions } from '@/lib/services/auth/auth';
+import { isMockMode } from '@/lib/config/data-mode';
 
 // Authentication middleware for API routes
 export async function requireAuth(_request: NextRequest): Promise<{
@@ -25,6 +26,13 @@ export async function requireAuth(_request: NextRequest): Promise<{
           headers: { 'Content-Type': 'application/json' },
         }
       );
+    }
+
+    // In mock mode, use session data directly without database lookup
+    if (isMockMode) {
+      // Use email hash or session.user.id as a stable userId in mock mode
+      const userId = session.user?.id || session.user?.email || 'mock-user';
+      return { session, userId };
     }
 
     // Support multiple session shapes in tests: prefer email-based lookup when

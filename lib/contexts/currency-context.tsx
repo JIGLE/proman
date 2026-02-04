@@ -1,12 +1,13 @@
 'use client';
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { type Currency, formatCurrency as formatCurrencyUtil, CURRENCY_LOCALES } from '@/lib/utils/currency';
+import { type Currency, formatCurrency as formatCurrencyUtil, CURRENCY_LOCALES, CURRENCY_SYMBOLS } from '@/lib/utils/currency';
 
 interface CurrencyContextType {
   currency: Currency;
   setCurrency: (currency: Currency) => void;
   formatCurrency: (amount: number | null | undefined) => string;
+  currencySymbol: string;
   locale: string; // Now derived from URL, read-only for formatting
   isLoading: boolean;
 }
@@ -84,6 +85,7 @@ export function CurrencyProvider({
         currency,
         setCurrency,
         formatCurrency,
+        currencySymbol: CURRENCY_SYMBOLS[currency],
         locale, // Read-only, derived from URL
         isLoading,
       }}

@@ -32,9 +32,17 @@ npm install
 cp .env.example .env
 # Edit .env with your Google OAuth credentials
 
-# Run development server
+# Run development server (uses mock data by default)
 npm run dev
+
+# To use real database in development, set DATABASE_URL in .env:
+# DATABASE_URL=file:./dev.db
 ```
+
+**Data Modes:**
+- **Mock Mode** (default in dev): No `DATABASE_URL` set - uses read-only fixtures
+- **Real Mode**: `DATABASE_URL` set - uses Prisma with SQLite/PostgreSQL
+- Production/TrueNAS always requires `DATABASE_URL`
 
 Open [http://localhost:3000](http://localhost:3000) to start using ProMan.
 
@@ -66,7 +74,8 @@ docker run -p 3000:3000 \
 See [.env.example](.env.example) for all available options. Key variables:
 
 ```bash
-# Database
+# Database (optional in dev, required in prod)
+# Leave unset to use mock data in development
 DATABASE_URL=file:./dev.db
 
 # Authentication

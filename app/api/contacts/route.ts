@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
+import { isMockMode } from "@/lib/config/data-mode";
 
 // GET /api/contacts - List all maintenance contacts
 export async function GET(request: NextRequest) {
   try {
     const authResult = await requireAuth(request);
     if (authResult instanceof Response) return authResult;
+
+    // In mock mode, return empty array (contacts not in mock data)
+    if (isMockMode) {
+      return NextResponse.json({ data: [] });
+    }
 
     const { searchParams } = new URL(request.url);
     const type = searchParams.get("type");
@@ -37,6 +43,14 @@ export async function POST(request: NextRequest) {
   try {
     const authResult = await requireAuth(request);
     if (authResult instanceof Response) return authResult;
+
+    // In mock mode, reject write operations
+    if (isMockMode) {
+      return NextResponse.json(
+        { error: 'Write operations not supported in mock mode' },
+        { status: 403 }
+      );
+    }
 
     const data = await request.json();
 

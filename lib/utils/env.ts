@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 // Environment variables schema
 const envSchema = z.object({
-  // Database
-  DATABASE_URL: z.string().url(),
+  // Database - optional in development (will use mock data)
+  DATABASE_URL: z.string().url().optional(),
 
   // NextAuth
   NEXTAUTH_URL: z.string().url(),
@@ -30,13 +30,19 @@ const parsed = envSchema.safeParse(process.env);
 
 if (parsed.success) {
   env = parsed.data;
+  
+  // Enforce DATABASE_URL in non-development environments
+  if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test' && !env.DATABASE_URL) {
+    console.error('❌ DATABASE_URL is required in production environments');
+    process.exit(1);
+  }
 } else {
   // If we're in test mode, tolerate missing environment variables and provide sensible defaults
   if (process.env.NODE_ENV === 'test') {
     console.debug('⚠️ Environment validation failed, but continuing because NODE_ENV=test:', parsed.error);
     const partialEnv = envSchema.partial().parse(process.env);
     env = {
-      DATABASE_URL: partialEnv.DATABASE_URL ?? 'file:./dev.db',
+      DATABASE_URL: partialEnv.DATABASE_URL,
       NEXTAUTH_URL: partialEnv.NEXTAUTH_URL ?? 'http://localhost:3000',
       NEXTAUTH_SECRET: partialEnv.NEXTAUTH_SECRET ?? 'test-secret-should-be-long-enough-for-dev',
       GOOGLE_CLIENT_ID: partialEnv.GOOGLE_CLIENT_ID ?? '',

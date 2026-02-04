@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, forwardRef, useImperativeHandle } from "react";
 import { Briefcase, Download, Plus, Edit, Trash2, Phone, Mail, MapPin, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCurrency } from "@/lib/contexts/currency-context";
@@ -18,7 +18,12 @@ import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import jsPDF from "jspdf";
 
-export function OwnersView(): React.ReactElement {
+export type OwnersViewRef = {
+  openDialog: () => void;
+};
+
+export const OwnersView = forwardRef<OwnersViewRef, Record<string, never>>(
+  function OwnersView(_props, ref): React.ReactElement {
     const { state, addOwner, updateOwner, deleteOwner } = useApp();
     const { owners, properties, loading } = state;
     const { success, error } = useToast();
@@ -54,6 +59,11 @@ export function OwnersView(): React.ReactElement {
             error(errorMessage);
         },
     });
+
+    // Expose dialog methods to parent via ref
+    useImperativeHandle(ref, () => ({
+        openDialog: dialog.openDialog,
+    }));
 
     const handleEdit = (owner: Owner) => {
         dialog.openEditDialog(owner, (o) => ({
@@ -411,4 +421,6 @@ export function OwnersView(): React.ReactElement {
         )}
         </>
     );
-}
+});
+
+OwnersView.displayName = "OwnersView";

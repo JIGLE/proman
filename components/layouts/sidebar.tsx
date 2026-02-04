@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Building2,
@@ -35,10 +35,27 @@ interface SidebarProps {
   onOpenCommandPalette?: () => void;
 }
 
+const SIDEBAR_COLLAPSE_KEY = "proman.sidebar.collapsed";
+
 export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalette }: SidebarProps): React.ReactElement {
   const [collapsed, setCollapsed] = useState(false);
   const { data: session } = useSession();
   const pathname = usePathname();
+  const router = useRouter();
+
+  useEffect(() => {
+    try {
+      const storedValue = window.localStorage.getItem(SIDEBAR_COLLAPSE_KEY);
+      if (storedValue !== null) {
+        setCollapsed(storedValue === "true");
+      }
+    } catch {
+      // Ignore storage access issues to avoid blocking render
+    }
+  }, []);
+
+  // Feature flag to allow safe rollout of the new Insights page
+  const insightsEnabled = process.env.NEXT_PUBLIC_ENABLE_INSIGHTS !== "false";
   
   // Initialize notifications with sample data
   const {
@@ -49,11 +66,55 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
     clearAll,
   } = useNotifications(getSampleNotifications());
 
-  const handleNotificationClick = useCallback((notification: { actionUrl?: string }) => {
-    // Navigate based on notification type
+  const handleNotificationClick = useCallback((notification: { id: string; type: string; actionUrl?: string; metadata?: Record<string, unknown> }) => {
+    // Mark as read
+    markAsRead(notification.id);
+    
+    // Navigate based on notification type and actionUrl
     if (notification.actionUrl) {
-      // Handle navigation
+      router.push(notification.actionUrl);
+    } else {
+      // Fallback navigation based on type
+      const locale = pathname?.split('/')[1] || 'en';
+      switch (notification.type) {
+        case 'payment_overdue':
+        case 'payment_received':
+          router.push(`/${locale}/financials?view=receipts`);
+          break;
+        case 'maintenance_request':
+        case 'maintenance_completed':
+          router.push(`/${locale}/maintenance`);
+          break;
+        case 'lease_expiring':
+        case 'lease_signed':
+          router.push(`/${locale}/contracts`);
+          break;
+        case 'new_message':
+          router.push(`/${locale}/correspondence`);
+          break;
+        case 'document_uploaded':
+          router.push(`/${locale}/documents`);
+          break;
+        case 'system_update':
+        case 'system_alert':
+          router.push(`/${locale}/settings`);
+          break;
+        default:
+          router.push(`/${locale}/overview`);
+      }
     }
+  }, [markAsRead, router, pathname]);
+
+  const handleToggleCollapsed = useCallback(() => {
+    setCollapsed((prev) => {
+      const next = !prev;
+      try {
+        window.localStorage.setItem(SIDEBAR_COLLAPSE_KEY, String(next));
+      } catch {
+        // Ignore storage access issues to avoid blocking render
+      }
+      return next;
+    });
   }, []);
 
   const menuItems = [
@@ -83,7 +144,7 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
       group: "Insights", 
       items: [
         { id: "finance", label: "Finance", icon: Wallet, href: "/financials" },
-        { id: "insights", label: "Insights", icon: LightbulbIcon, href: "/analytics" },
+        ...(insightsEnabled ? [{ id: "insights", label: "Insights", icon: LightbulbIcon, href: "/insights" }] : []),
       ]
     }
   ];
@@ -290,7 +351,7 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setCollapsed(!collapsed)}
+          onClick={handleToggleCollapsed}
           className={cn(
             "w-full justify-center text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-hover)]",
             "focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"

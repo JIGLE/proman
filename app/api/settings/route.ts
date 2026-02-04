@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
+import { isMockMode } from "@/lib/config/data-mode";
 
 export async function GET(request: NextRequest) {
   try {
@@ -8,6 +9,22 @@ export async function GET(request: NextRequest) {
     if (authResult instanceof Response) return authResult;
     
     const { userId } = authResult;
+
+    // In mock mode, return default settings
+    if (isMockMode) {
+      return NextResponse.json({ 
+        data: {
+          userId,
+          theme: "system",
+          language: "en",
+          defaultCurrency: "USD",
+          defaultTaxCountry: "US",
+          emailNotifications: true,
+          taxReminderNotifications: true,
+          distributionNotifications: true,
+        }
+      });
+    }
 
     const prisma = getPrismaClient();
     const settings = await prisma.userSettings.findUnique({
@@ -32,6 +49,22 @@ export async function POST(request: NextRequest) {
     const { userId } = authResult;
 
     const data = await request.json();
+
+    // In mock mode, just echo back the settings
+    if (isMockMode) {
+      return NextResponse.json({ 
+        data: {
+          userId,
+          theme: data.theme || "system",
+          language: data.language || "en",
+          defaultCurrency: data.defaultCurrency || "USD",
+          defaultTaxCountry: data.defaultTaxCountry || "US",
+          emailNotifications: data.emailNotifications ?? true,
+          taxReminderNotifications: data.taxReminderNotifications ?? true,
+          distributionNotifications: data.distributionNotifications ?? true,
+        }
+      });
+    }
 
     const prisma = getPrismaClient();
     const settings = await prisma.userSettings.upsert({

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import {
   User,
   Mail,
@@ -88,7 +88,12 @@ function SortableHeader({ column, label, sortDirection, onSort }: SortableHeader
   );
 }
 
-export function TenantsView(): React.ReactElement {
+export type TenantsViewRef = {
+  openDialog: () => void;
+};
+
+export const TenantsView = forwardRef<TenantsViewRef, Record<string, never>>(
+  function TenantsView(_props, ref): React.ReactElement {
   const { state, addTenant, updateTenant, deleteTenant } = useApp();
   const { tenants, properties, loading } = state;
   const { success, error: showError } = useToast();
@@ -129,6 +134,11 @@ export function TenantsView(): React.ReactElement {
       update: "Tenant updated successfully!",
     },
   });
+
+  // Expose dialog methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    openDialog: dialog.openDialog,
+  }));
 
   const getPaymentStatusBadge = (status: Tenant["paymentStatus"]) => {
     switch (status) {
@@ -718,4 +728,6 @@ export function TenantsView(): React.ReactElement {
       )}
     </>
   );
-}
+});
+
+TenantsView.displayName = "TenantsView";

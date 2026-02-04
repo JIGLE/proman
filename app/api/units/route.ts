@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth/next';
 import { Session } from 'next-auth';
 import { getAuthOptions } from '@/lib/services/auth/auth';
 import { getPrismaClient } from '@/lib/services/database/database';
+import { isMockMode } from '@/lib/config/data-mode';
 
 export async function GET() {
   try {
@@ -10,6 +11,11 @@ export async function GET() {
     const session = await getServerSession(getAuthOptions() as any) as Session | null;
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // In mock mode, return empty units array
+    if (isMockMode) {
+      return NextResponse.json([]);
     }
 
     const prisma = getPrismaClient();

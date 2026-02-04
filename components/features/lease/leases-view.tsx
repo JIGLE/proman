@@ -55,7 +55,7 @@ export function LeasesView(): React.ReactElement {
   const { state, addLease, updateLease, deleteLease } = useApp();
   const { properties, tenants, leases, loading } = state;
   const { success, error } = useToast();
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency, currencySymbol } = useCurrency();
   const [contractFile, setContractFile] = useState<File | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editingLease, setEditingLease] = useState<Lease | null>(null);
@@ -508,7 +508,7 @@ export function LeasesView(): React.ReactElement {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="monthlyRent">Monthly Rent (€) *</Label>
+                        <Label htmlFor="monthlyRent">Monthly Rent ({currencySymbol}) *</Label>
                         <Input
                           id="monthlyRent"
                           type="number"
@@ -524,7 +524,7 @@ export function LeasesView(): React.ReactElement {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="deposit">Security Deposit (€) *</Label>
+                        <Label htmlFor="deposit">Security Deposit ({currencySymbol}) *</Label>
                         <Input
                           id="deposit"
                           type="number"

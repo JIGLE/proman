@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
 import { Building2, MapPin, Bed, Bath, Plus, Edit, Trash2, CheckCircle, Wrench, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { motion } from "framer-motion";
@@ -40,6 +40,10 @@ export type PropertiesViewProps = {
   onPropertySelect?: (propertyId: string) => void;
 }
 
+export type PropertiesViewRef = {
+  openDialog: () => void;
+}
+
 interface SortableHeaderProps {
   column: keyof Property;
   label: string;
@@ -61,7 +65,8 @@ function SortableHeader({ column, label, sortDirection, onSort }: SortableHeader
   );
 }
 
-export function PropertiesView({ viewMode = 'list', onPropertySelect }: PropertiesViewProps): React.ReactElement {
+export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>(
+  function PropertiesView({ viewMode = 'list', onPropertySelect }, ref): React.ReactElement {
   const { state, addProperty, updateProperty, deleteProperty } = useApp();
   const { properties, loading } = state;
   const { success } = useToast();
@@ -112,6 +117,11 @@ export function PropertiesView({ viewMode = 'list', onPropertySelect }: Properti
       update: 'Property updated successfully!',
     },
   });
+
+  // Expose dialog methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    openDialog: dialog.openDialog,
+  }));
 
   // Filter and search properties
   const filteredProperties = useMemo(() => {
@@ -866,4 +876,6 @@ export function PropertiesView({ viewMode = 'list', onPropertySelect }: Properti
       )}
     </>
   );
-}
+});
+
+PropertiesView.displayName = "PropertiesView";

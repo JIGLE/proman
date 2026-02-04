@@ -3,6 +3,7 @@ import { execSync } from 'child_process'
 import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
+import { isMockMode } from '@/lib/config/data-mode'
 
 export const runtime = 'nodejs'
 
@@ -41,6 +42,15 @@ function verifyHmacSignature(payload: string, signature: string, secret: string)
 }
 
 export async function POST(request: Request): Promise<NextResponse> {
+  // In mock mode, database initialization is not needed
+  if (isMockMode) {
+    return NextResponse.json({ 
+      ok: true, 
+      message: 'Mock mode active - database initialization skipped',
+      mode: 'mock'
+    }, { status: 200 })
+  }
+
   // Security: INIT_SECRET is required for production
   const initSecret = process.env.INIT_SECRET
   const nodeEnv = process.env.NODE_ENV

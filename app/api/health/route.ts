@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getPrismaClient } from '@/lib/services/database/database'
+import { isMockMode } from '@/lib/config/data-mode'
 
 export const runtime = 'nodejs'
 
@@ -7,6 +8,36 @@ export async function GET(): Promise<NextResponse> {
   const startTime = Date.now()
   
   try {
+    // In mock mode, return minimal health check
+    if (isMockMode) {
+      return NextResponse.json(
+        {
+          status: 'ok',
+          timestamp: new Date().toISOString(),
+          uptime: process.uptime(),
+          environment: 'development (mock)',
+          checks: {
+            database: {
+              status: 'mock',
+              latency_ms: 0
+            },
+            email: {
+              status: 'mock',
+              provider: 'none'
+            }
+          },
+          response_time_ms: Date.now() - startTime
+        },
+        { 
+          status: 200,
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }
+      );
+    }
     // Test database connectivity
     const prisma = getPrismaClient()
     const dbStart = Date.now()

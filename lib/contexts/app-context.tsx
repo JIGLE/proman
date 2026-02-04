@@ -159,7 +159,13 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
       dispatch({ type: 'SET_ERROR', payload: null });
 
       // Initialize database and seed if needed (server-side handler)
-      await apiFetch('/api/debug/db/init', 'POST');
+      // In mock mode, this will return early without error
+      try {
+        await apiFetch('/api/debug/db/init', 'POST');
+      } catch (initError) {
+        // Ignore init errors - mock mode or DB already initialized
+        console.debug('DB init skipped:', initError instanceof Error ? initError.message : String(initError));
+      }
 
       // Load all data in parallel via server API endpoints
       const [propertiesRes, tenantsRes, receiptsRes, templatesRes, correspondenceRes, ownersRes, expensesRes, maintenanceRes, leasesRes] = await Promise.all([

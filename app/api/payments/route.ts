@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/services/auth/auth-middleware';
 import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/utils/error-handling';
 import { paymentService } from '@/lib/payment/payment-service';
 import { getPrismaClient } from '@/lib/services/database/database';
+import { isMockMode } from '@/lib/config/data-mode';
 import { z } from 'zod';
 import type { PrismaClient, PaymentMethodType } from '@prisma/client';
 
@@ -24,6 +25,10 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
   if (authResult instanceof Response) return authResult;
 
   try {
+    // In mock mode, return empty array
+    if (isMockMode) {
+      return createSuccessResponse({ transactions: [], total: 0 });
+    }
     const prisma: PrismaClient = getPrismaClient();
     const { searchParams } = new URL(request.url);
     
