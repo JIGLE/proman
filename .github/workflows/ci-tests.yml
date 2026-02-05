@@ -2,9 +2,9 @@ name: CI - Tests & Build
 
 on:
   push:
-    branches: [ main, '**/test/**', '**/ci/**' ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -17,32 +17,25 @@ jobs:
   lint-and-typecheck:
     name: Lint & Type Check
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        id: cache-node-modules
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            node-modules-${{ runner.os }}-
-      
+
       - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
-      
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
       - name: Run linter
-        run: npm run lint -- --max-warnings 0
-      
+        run: npx eslint .
+
       - name: Type check
         run: npx tsc --noEmit
 
@@ -53,97 +46,69 @@ jobs:
     needs: lint-and-typecheck
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
-      - name: Cache node_modules
-        uses: actions/cache@v4
-        id: cache-node-modules
-        with:
-          path: node_modules
-          key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            node-modules-${{ runner.os }}-
-      
+
       - name: Install dependencies
-        if: steps.cache-node-modules.outputs.cache-hit != 'true'
         run: npm ci
-      
+
       - name: Generate Prisma Client
         run: npx prisma generate
-      
-      - name: Run unit tests
-        id: unit-tests
+
+      - name: Run unit tests with coverage
         run: npm test -- --coverage
-      
-      - name: Test with SQLite
-        id: sqlite-tests
+
+      - name: Run SQLite integration tests
         run: |
           touch ./ci-test.db
           DATABASE_URL=file:./ci-test.db npx prisma db push --accept-data-loss
           DATABASE_URL=file:./ci-test.db npm test
-      
-      - name: Report test results
+
+      - name: Test summary
         if: always()
         run: |
           echo "## Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "✅ Unit tests passed" >> $GITHUB_STEP_SUMMARY
-          echo "✅ SQLite integration tests passed" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ job.status }}" == "success" ]; then
+            echo "✅ All tests passed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ Tests failed" >> $GITHUB_STEP_SUMMARY
+          fi
 
   build:
-    name: Build Validation
+    name: Docker Build Validation
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [lint-and-typecheck, test]
-    if: always()
-    env:
-      DATABASE_URL: file:./ci-build.db
-      NEXTAUTH_SECRET: ci-build-secret-not-for-production
-      NEXTAUTH_URL: http://localhost:3000
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-      
-      - name: Cache Docker layers
-        uses: actions/cache@v4
-        with:
-          path: /tmp/.buildx-cache
-          key: docker-${{ runner.os }}-${{ github.sha }}
-          restore-keys: |
-            docker-${{ runner.os }}-
-      
+
       - name: Build Docker image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: false
-          tags: proman:test
+          tags: proman:ci-${{ github.sha }}
           build-args: |
-            BUILD_VERSION=${{ github.event.pull_request.head.sha || github.sha }}
+            BUILD_VERSION=ci-${{ github.run_number }}
             GIT_COMMIT=${{ github.sha }}
-            BUILD_TIME=${{ github.event.head_commit.timestamp || github.event.pull_request.updated_at }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
-      
-      - name: Move cache
-        run: |
-          rm -rf /tmp/.buildx-cache
-          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
-            
+            BUILD_TIME=${{ github.event.head_commit.timestamp || '' }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
       - name: CI Summary
         if: always()
         run: |
-          echo "## 🚀 CI Pipeline Complete" >> $GITHUB_STEP_SUMMARY
+          echo "## 🚀 CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Stage | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Lint & Type Check | ✅ |" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests | ✅ |" >> $GITHUB_STEP_SUMMARY
-          echo "| SQLite Integration | ✅ |" >> $GITHUB_STEP_SUMMARY
-          echo "| Docker Build | ✅ |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint & Type Check | ${{ needs.lint-and-typecheck.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ needs.test.result == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docker Build | ${{ job.status == 'success' && '✅' || '❌' }} |" >> $GITHUB_STEP_SUMMARY

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version tag (e.g., 0.7.0) - defaults to package.json version'
+        description: 'Version tag (e.g., 1.0.0) - defaults to package.json version'
         required: false
         default: ''
       platforms:
@@ -22,12 +22,6 @@ on:
         required: false
         default: false
         type: boolean
-  workflow_call:
-    inputs:
-      version:
-        description: 'Version to deploy'
-        required: true
-        type: string
 
 permissions:
   contents: read
@@ -44,7 +38,7 @@ jobs:
     env:
       REGISTRY: ghcr.io
       IMAGE_NAME: ${{ github.repository }}
-    
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -96,7 +90,6 @@ jobs:
           echo "build_time=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
 
       - name: Log in to Container Registry
-
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}

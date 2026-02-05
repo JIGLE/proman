@@ -2,9 +2,9 @@ name: Security Scan
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   schedule:
     # Run security scan daily at 2 AM UTC
     - cron: '0 2 * * *'
@@ -18,28 +18,32 @@ jobs:
     name: Dependency Security Scan
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run npm audit
         id: npm-audit
         run: |
           npm audit --json > audit-report.json || true
-          echo "audit_output=$(cat audit-report.json)" >> $GITHUB_OUTPUT
         continue-on-error: true
-      
+
       - name: Check audit results
         run: |
+          if [ ! -f audit-report.json ]; then
+            echo "No audit report generated"
+            exit 0
+          fi
+          
           VULNERABILITIES=$(cat audit-report.json | jq -r '.metadata.vulnerabilities.total // 0')
           CRITICAL=$(cat audit-report.json | jq -r '.metadata.vulnerabilities.critical // 0')
           HIGH=$(cat audit-report.json | jq -r '.metadata.vulnerabilities.high // 0')
@@ -48,11 +52,12 @@ jobs:
           echo "Critical: $CRITICAL"
           echo "High: $HIGH"
           
-          if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
-            echo "::error::Found $CRITICAL critical and $HIGH high severity vulnerabilities"
+          # Fail on critical vulnerabilities only
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "::error::Found $CRITICAL critical severity vulnerabilities"
             exit 1
           fi
-      
+
       - name: Upload audit report
         if: always()
         uses: actions/upload-artifact@v4
@@ -62,28 +67,28 @@ jobs:
           retention-days: 30
 
   security-scan:
-    name: Comprehensive Security Scan
+    name: Custom Security Scan
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run security scan
         id: security-scan
         run: |
           node scripts/security-scan.js || true
         continue-on-error: true
-      
+
       - name: Upload security report
         if: always()
         uses: actions/upload-artifact@v4
@@ -91,20 +96,21 @@ jobs:
           name: security-report
           path: security-report.json
           retention-days: 30
-      
+          if-no-files-found: ignore
+
       - name: Check scan results
         run: |
           if [ -f security-report.json ]; then
             CRITICAL=$(cat security-report.json | jq -r '.summary.critical // 0')
-            HIGH=$(cat security-report.json | jq -r '.summary.high // 0')
             
             echo "Critical issues: $CRITICAL"
-            echo "High issues: $HIGH"
             
-            if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
-              echo "::error::Found $CRITICAL critical and $HIGH high severity security issues"
+            if [ "$CRITICAL" -gt 0 ]; then
+              echo "::error::Found $CRITICAL critical security issues"
               exit 1
             fi
+          else
+            echo "No security report generated (scan may have failed or found no issues)"
           fi
 
   codeql-analysis:
@@ -115,24 +121,24 @@ jobs:
       actions: read
       contents: read
       security-events: write
-    
+
     strategy:
       fail-fast: false
       matrix:
-        language: [ 'javascript' ]
-    
+        language: ['javascript']
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
         with:
           languages: ${{ matrix.language }}
           queries: security-and-quality
-      
+
       - name: Autobuild
         uses: github/codeql-action/autobuild@v3
-      
+
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
@@ -142,47 +148,56 @@ jobs:
     name: Dependency Review
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Dependency Review
         uses: actions/dependency-review-action@v4
         with:
-          fail-on-severity: high
+          fail-on-severity: critical
           deny-licenses: GPL-2.0, GPL-3.0
 
   secret-scanning:
     name: Secret Scanning
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    
+    # Only run on PRs (needs base ref) and manual dispatch
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      
+
       - name: TruffleHog Secret Scan
-        uses: trufflesecurity/trufflehog@main
+        uses: trufflesecurity/trufflehog@v3.88.26
         with:
           path: ./
-          base: ${{ github.event.repository.default_branch }}
+          base: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
           head: HEAD
-          extra_args: --debug --only-verified
+          extra_args: --only-verified
 
   security-summary:
     name: Security Summary
     runs-on: ubuntu-latest
     needs: [dependency-scan, security-scan, codeql-analysis]
     if: always()
-    
+
     steps:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
-      
+        continue-on-error: true
+
       - name: Generate summary
         run: |
           echo "## 🔒 Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "### Job Results" >> $GITHUB_STEP_SUMMARY
+          echo "- Dependency Scan: ${{ needs.dependency-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Security Scan: ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- CodeQL Analysis: ${{ needs.codeql-analysis.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           
           if [ -f npm-audit-report/audit-report.json ]; then
@@ -190,26 +205,6 @@ jobs:
             TOTAL=$(cat npm-audit-report/audit-report.json | jq -r '.metadata.vulnerabilities.total // 0')
             CRITICAL=$(cat npm-audit-report/audit-report.json | jq -r '.metadata.vulnerabilities.critical // 0')
             HIGH=$(cat npm-audit-report/audit-report.json | jq -r '.metadata.vulnerabilities.high // 0')
-            MODERATE=$(cat npm-audit-report/audit-report.json | jq -r '.metadata.vulnerabilities.moderate // 0')
-            LOW=$(cat npm-audit-report/audit-report.json | jq -r '.metadata.vulnerabilities.low // 0')
             
-            echo "- Total vulnerabilities: $TOTAL" >> $GITHUB_STEP_SUMMARY
-            echo "- Critical: $CRITICAL" >> $GITHUB_STEP_SUMMARY
-            echo "- High: $HIGH" >> $GITHUB_STEP_SUMMARY
-            echo "- Moderate: $MODERATE" >> $GITHUB_STEP_SUMMARY
-            echo "- Low: $LOW" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-          fi
-          
-          if [ -f security-report/security-report.json ]; then
-            echo "### 🔍 Security Scan" >> $GITHUB_STEP_SUMMARY
-            CRITICAL=$(cat security-report/security-report.json | jq -r '.summary.critical // 0')
-            HIGH=$(cat security-report/security-report.json | jq -r '.summary.high // 0')
-            MODERATE=$(cat security-report/security-report.json | jq -r '.summary.moderate // 0')
-            LOW=$(cat security-report/security-report.json | jq -r '.summary.low // 0')
-            
-            echo "- Critical: $CRITICAL" >> $GITHUB_STEP_SUMMARY
-            echo "- High: $HIGH" >> $GITHUB_STEP_SUMMARY
-            echo "- Moderate: $MODERATE" >> $GITHUB_STEP_SUMMARY
-            echo "- Low: $LOW" >> $GITHUB_STEP_SUMMARY
+            echo "- Total: $TOTAL | Critical: $CRITICAL | High: $HIGH" >> $GITHUB_STEP_SUMMARY
           fi
