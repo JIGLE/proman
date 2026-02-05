@@ -12,10 +12,8 @@ const PopoverTrigger = React.forwardRef<
 >(({ children, ...props }, ref) => {
   const asChild = (props as any).asChild;
   const safeChild = React.Children.count(children) === 1 ? React.Children.only(children as any) : <div>{children}</div>;
-  const forwardProps = { ...(props as any) };
-  if ((forwardProps as any).asChild) delete (forwardProps as any).asChild;
   return (
-    <PopoverPrimitive.Trigger ref={ref as any} {...(forwardProps as any)}>
+    <PopoverPrimitive.Trigger ref={ref as any} asChild={!!asChild} {...(Object.fromEntries(Object.entries(props).filter(([k]) => k !== 'asChild')) as any)}>
       {asChild ? safeChild : children}
     </PopoverPrimitive.Trigger>
   );

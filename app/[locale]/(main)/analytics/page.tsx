@@ -1,12 +1,13 @@
 import { Suspense } from "react";
-import { InsightsView } from "@/components/features/insights/insights-view";
+import { AnalyticsDashboard } from "@/components/features/dashboard/analytics-dashboard";
+import { GenericPageSkeleton } from "@/components/ui/page-skeletons";
 
 export const dynamic = 'force-dynamic';
 
-export default function InsightsPage() {
+export default function AnalyticsPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <InsightsView />
+    <Suspense fallback={<GenericPageSkeleton />}>
+      <AnalyticsDashboard />
     </Suspense>
   );
 }

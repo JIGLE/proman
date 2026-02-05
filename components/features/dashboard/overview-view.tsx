@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Building2, Users, DollarSign, TrendingUp, Trophy, Plus, CheckCircle2, Circle, Lightbulb, Sun, Sunset, Moon, Keyboard, X, RefreshCw } from "lucide-react";
+import { Building2, Users, DollarSign, TrendingUp, Trophy, Plus, Lightbulb, Sun, Sunset, Moon, Keyboard, X, RefreshCw, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LineChart, DonutChart } from "@/components/ui/charts";
@@ -16,8 +16,10 @@ import { DashboardGrid, StatWidget, ChartWidget, ListWidget } from "@/components
 import { QuickActions, AttentionNeeded } from "@/components/ui/quick-actions";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { useApp } from "@/lib/contexts/app-context";
-import { ProgressBar } from "@/components/ui/progress";
 import { AchievementGrid } from "@/components/ui/achievements";
+import { OnboardingChecklist, getDefaultOnboardingSteps } from "@/components/ui/onboarding-checklist";
+import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
+import { DashboardSkeleton } from "@/components/ui/page-skeletons";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from 'next-intl';
 import { useSession } from "next-auth/react";
@@ -219,36 +221,7 @@ export function OverviewView({
 
   // Loading skeleton
   if (isLoading) {
-    return (
-      <div className="space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <Skeleton className="h-4 w-32 mb-2" />
-            <Skeleton className="h-8 w-24 mb-2" />
-            <Skeleton className="h-4 w-48" />
-          </div>
-          <div className="hidden lg:flex gap-2">
-            <Skeleton className="h-10 w-32" />
-            <Skeleton className="h-10 w-32" />
-          </div>
-        </div>
-        <DashboardGrid columns={4} gap={6}>
-          {[1, 2, 3, 4].map((i) => (
-            <Card key={i}>
-              <CardContent className="p-6">
-                <Skeleton className="h-4 w-24 mb-4" />
-                <Skeleton className="h-8 w-16 mb-2" />
-                <Skeleton className="h-3 w-20" />
-              </CardContent>
-            </Card>
-          ))}
-        </DashboardGrid>
-        <DashboardGrid columns={2} gap={6}>
-          <Card><CardContent className="p-6"><Skeleton className="h-48 w-full" /></CardContent></Card>
-          <Card><CardContent className="p-6"><Skeleton className="h-48 w-full" /></CardContent></Card>
-        </DashboardGrid>
-      </div>
-    );
+    return <DashboardSkeleton />;
   }
 
   return (
@@ -314,9 +287,20 @@ export function OverviewView({
         
         {/* Primary Quick Actions */}
         <div className="hidden lg:flex items-center gap-2">
-          <Button onClick={onRecordPayment} className="gap-2">
+          <Button onClick={onRecordPayment} className="gap-2" data-testid="record-payment-btn">
             <DollarSign className="h-4 w-4" />
             Record Payment
+          </Button>
+          <Button onClick={onAddLease} className="gap-2" data-testid="add-lease-btn">
+            <FileText className="h-4 w-4" />
+            Add Lease
+          </Button>
+          <Button className="h-9 w-9 p-0" onClick={() => setShowShortcuts(prev => !prev)} title="Keyboard shortcuts (/)">
+            <Keyboard className="h-4 w-4" />
+          </Button>
+          <Button onClick={onAddProperty} className="gap-2" data-testid="add-property-btn">
+            <Plus className="h-4 w-4" />
+            Add Property
           </Button>
           <QuickActions 
             variant="compact" 
@@ -340,32 +324,21 @@ export function OverviewView({
           >
             <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-9 w-9 p-0"
-            onClick={() => setShowShortcuts(prev => !prev)}
-            title="Keyboard shortcuts (/)"
-          >
-            <Keyboard className="h-4 w-4" />
-          </Button>
         </div>
       </div>
 
-
-
-      {/* Contextual Tip Banner */}
+      {/* Onboarding Checklist */}
       {!isOnboardingComplete && (
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-3 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20"
-          role="alert"
-          aria-live="polite"
-        >
-          <Lightbulb className="h-5 w-5 text-amber-500 flex-shrink-0" aria-hidden="true" />
-          <p className="text-sm text-[var(--color-foreground)]">{contextualTip}</p>
-        </motion.div>
+        <OnboardingChecklist
+          steps={getDefaultOnboardingSteps({
+            hasProperties,
+            hasTenants,
+            hasPayments,
+            onAddProperty,
+            onAddTenant,
+            onRecordPayment,
+          })}
+        />
       )}
 
       {/* Attention Needed Panel - only show if there are items */}
@@ -376,7 +349,7 @@ export function OverviewView({
 
 
       {/* Enhanced Stats Grid with Widgets - Only show when there's data */}
-      {hasProperties && (
+      {hasProperties ? (
         <DashboardGrid columns={4} gap={6}>
           <StatWidget
             title="Total Properties"
@@ -410,6 +383,14 @@ export function OverviewView({
             changeLabel={occupancyRate > 0 ? "vs last month" : undefined}
           />
         </DashboardGrid>
+      ) : (
+        <EmptyStateIllustration
+          type="properties"
+          title="Start managing your portfolio"
+          description="Add your first property to unlock stats, analytics, and financial tracking across your entire portfolio."
+          onAction={onAddProperty}
+          actionLabel="Add Your First Property"
+        />
       )}
       
       {/* Charts and Analytics - Only show when there's meaningful data */}
@@ -540,7 +521,12 @@ export function OverviewView({
                 </div>
               ))
             ) : (
-              <p className="text-[var(--color-muted-foreground)] text-sm">No recent payments</p>
+              <EmptyStateIllustration
+                type="payments"
+                compact
+                onAction={onRecordPayment}
+                actionLabel="Record Payment"
+              />
             )}
           </CardContent>
         </Card>
@@ -569,11 +555,17 @@ export function OverviewView({
                 </div>
               ))
             ) : (
-              <p className="text-[var(--color-muted-foreground)] text-sm">No properties added yet</p>
+              <EmptyStateIllustration
+                type="properties"
+                compact
+                onAction={onAddProperty}
+                actionLabel="Add Property"
+              />
             )}
           </CardContent>
         </Card>
       </div>
     </div>
   );
+
 }

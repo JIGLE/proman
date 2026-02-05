@@ -21,11 +21,15 @@ describe('DevAuthProvider', () => {
 
     // Stub global fetch to prevent next-auth client logs or attempts to call relative URLs
     _oldFetch = globalThis.fetch
-    globalThis.fetch = (input: RequestInfo, init?: RequestInit) => Promise.resolve(new Response('{}'))
+    globalThis.fetch = ((...args: any[]) => Promise.resolve(new Response('{}'))) as unknown as typeof globalThis.fetch
   })
 
   afterEach(() => {
-    process.env.NODE_ENV = OLD_NODE_ENV
+    if (OLD_NODE_ENV === undefined) {
+      delete (process.env as any).NODE_ENV
+    } else {
+      ;(process.env as any).NODE_ENV = OLD_NODE_ENV
+    }
     delete process.env.NEXT_PUBLIC_DEV_AUTH
     process.env.NEXTAUTH_URL = OLD_NEXTAUTH_URL
 
@@ -33,7 +37,7 @@ describe('DevAuthProvider', () => {
   })
 
   it('provides a dev session when enabled in development', () => {
-    process.env.NODE_ENV = 'development'
+    ;(process.env as any).NODE_ENV = 'development'
     process.env.NEXT_PUBLIC_DEV_AUTH = 'true'
 
     render(
@@ -46,7 +50,7 @@ describe('DevAuthProvider', () => {
   })
 
   it('does not inject dev session when not enabled', () => {
-    process.env.NODE_ENV = 'production'
+    ;(process.env as any).NODE_ENV = 'production'
     delete process.env.NEXT_PUBLIC_DEV_AUTH
 
     render(

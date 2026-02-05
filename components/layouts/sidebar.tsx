@@ -21,7 +21,9 @@ import {
   LightbulbIcon,
   FileText,
   Wrench,
+  Clock,
 } from "lucide-react";
+import { useRecentItems } from "@/lib/hooks/use-recent-items";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -65,6 +67,8 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
     deleteNotification,
     clearAll,
   } = useNotifications(getSampleNotifications());
+
+  const { recentItems } = useRecentItems();
 
   const handleNotificationClick = useCallback((notification: { id: string; type: string; actionUrl?: string; metadata?: Record<string, unknown> }) => {
     // Mark as read
@@ -316,6 +320,28 @@ export function Sidebar({ activeTab: _activeTab, onTabChange, onOpenCommandPalet
 
 
       </nav>
+
+      {/* Recent Items */}
+      {!collapsed && recentItems.length > 0 && (
+        <div className="flex-none border-t border-[var(--color-sidebar-border)] px-2 py-2">
+          <div className="px-3 py-1.5">
+            <h3 className="text-[10px] font-semibold text-[var(--color-muted-foreground)] uppercase tracking-widest flex items-center gap-1.5">
+              <Clock className="h-3 w-3" />
+              Recent
+            </h3>
+          </div>
+          <div className="space-y-0.5" role="list">
+            {recentItems.slice(0, 3).map((item) => (
+              <Link key={item.id} href={item.href} role="listitem">
+                <div className="flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-xs text-[var(--color-sidebar-text)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-hover)] transition-colors truncate">
+                  <span className="text-sm">{item.icon || '📄'}</span>
+                  <span className="truncate">{item.label}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* User Profile (moved to bottom for better collapsed UX) and Collapse Toggle */}
       {session && (

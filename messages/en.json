@@ -16,17 +16,32 @@
       "title": "Admin Database View",
       "description": "Read-only view of database tables. Access logged for GDPR compliance."
     }
-  }
-  ,
+  },
   "navigation": {
     "dashboard": "Dashboard",
-    "home": "Home"
+    "home": "Home",
+    "properties": "Properties",
+    "tenants": "Tenants",
+    "leases": "Leases",
+    "payments": "Payments",
+    "maintenance": "Maintenance",
+    "settings": "Settings",
+    "correspondence": "Correspondence",
+    "insights": "Insights",
+    "finance": "Finance"
   },
   "dashboard": {
     "welcome": "Welcome to your property management dashboard",
     "totalProperties": "Total Properties",
     "activeTenants": "Active Tenants",
-    "monthlyRevenue": "Monthly Revenue"
+    "monthlyRevenue": "Monthly Revenue",
+    "occupancyRate": "Occupancy Rate",
+    "recentPayments": "Recent Payments",
+    "propertyStatus": "Property Status",
+    "recentActivities": "Recent Activities",
+    "noActivity": "No activity yet",
+    "addPropertiesToStart": "Add your first property to get started",
+    "addTenantsToSeeActivity": "Add tenants and record payments to see activity here"
   },
   "greeting": {
     "morning": "Good morning",
@@ -37,8 +52,43 @@
   "onboarding": {
     "gettingStarted": "Getting Started",
     "complete": "complete",
+    "setupComplete": "Setup Complete!",
+    "allSet": "You're all set to manage your properties",
     "addFirstProperty": "Add your first property",
+    "addFirstPropertyDesc": "Start by adding a property — apartment, house, or commercial building.",
     "addTenant": "Add a tenant",
-    "recordPayment": "Record a payment"
+    "addTenantDesc": "Add tenant details and assign them to a property.",
+    "recordPayment": "Record a payment",
+    "recordPaymentDesc": "Log your first rent payment to unlock revenue analytics."
+  },
+  "emptyState": {
+    "properties": {
+      "title": "No properties yet",
+      "description": "Add your first property to start managing your portfolio."
+    },
+    "tenants": {
+      "title": "No tenants yet",
+      "description": "Once you have properties, add tenants to track leases and payments."
+    },
+    "payments": {
+      "title": "No payments recorded",
+      "description": "Start recording rent payments to track revenue."
+    },
+    "generic": {
+      "title": "Nothing here yet",
+      "description": "Get started by adding your first item."
+    }
+  },
+  "actions": {
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save",
+    "cancel": "Cancel",
+    "export": "Export",
+    "refresh": "Refresh",
+    "search": "Search",
+    "filter": "Filter",
+    "viewAll": "View All"
   }
 }

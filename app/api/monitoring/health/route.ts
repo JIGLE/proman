@@ -6,9 +6,8 @@
  */
 
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { getPrismaClient } from '@/lib/services/database/database';
+import { logger } from '@/lib/utils/logger';
 
 export async function GET(): Promise<NextResponse> {
   const checks = {
@@ -18,16 +17,20 @@ export async function GET(): Promise<NextResponse> {
     checks: {
       database: 'unknown',
       memory: 'unknown',
+      dbError: undefined as string | undefined,
     },
   };
 
+
   try {
     // Database check
-    await prisma.$queryRaw`SELECT 1`;
+    await getPrismaClient().$queryRaw`SELECT 1`;
     checks.checks.database = 'healthy';
   } catch (error) {
+    logger.error('Health check database error', error instanceof Error ? error : new Error(String(error)));
     checks.checks.database = 'unhealthy';
     checks.status = 'unhealthy';
+    checks.checks.dbError = error instanceof Error ? error.message : String(error);
   }
 
   // Memory check

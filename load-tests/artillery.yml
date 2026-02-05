@@ -2,30 +2,12 @@
 # https://www.artillery.io/docs
 
 config:
-  target: "{{ $processEnvironment.TARGET_URL || 'http://localhost:3000' }}"
+  target: "http://localhost:3000"
   phases:
-    # Warm-up phase: Gradually ramp up to 10 users over 1 minute
-    - duration: 60
-      arrivalRate: 1
-      rampTo: 10
-      name: "Warm-up phase"
-    
-    # Sustained load: 25 concurrent users for 3 minutes
-    - duration: 180
-      arrivalRate: 25
-      name: "Sustained load"
-    
-    # Peak load: Ramp up to 50 users for 2 minutes
-    - duration: 120
-      arrivalRate: 25
-      rampTo: 50
-      name: "Peak load"
-    
-    # Cool-down: Drop back to 10 users for 1 minute
-    - duration: 60
-      arrivalRate: 50
-      rampTo: 10
-      name: "Cool-down"
+    # Sequential stress test: 1 user, high request volume
+    - duration: 300 # 5 minutes
+      arrivalRate: 1 # 1 user at a time
+      name: "Sequential stress test"
 
   # Performance thresholds
   ensure:

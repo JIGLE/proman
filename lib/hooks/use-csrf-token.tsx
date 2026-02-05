@@ -54,11 +54,13 @@ export function useCsrfToken(): UseCsrfTokenReturn {
 
       const data = await response.json();
       
-      if (!data.token) {
+      // API returns { csrfToken: '...' }
+      const csrfToken = data.csrfToken || data.token;
+      if (!csrfToken) {
         throw new Error('CSRF token not found in response');
       }
 
-      setToken(data.token);
+      setToken(csrfToken);
       logger.debug('CSRF token fetched successfully');
     } catch (err) {
       const errorObj = err instanceof Error ? err : new Error(String(err));

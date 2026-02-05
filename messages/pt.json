@@ -19,13 +19,29 @@
   },
   "navigation": {
     "dashboard": "Painel",
-    "home": "Início"
+    "home": "Início",
+    "properties": "Imóveis",
+    "tenants": "Inquilinos",
+    "leases": "Contratos",
+    "payments": "Pagamentos",
+    "maintenance": "Manutenção",
+    "settings": "Configurações",
+    "correspondence": "Correspondência",
+    "insights": "Relatórios",
+    "finance": "Finanças"
   },
   "dashboard": {
     "welcome": "Bem-vindo ao seu painel de gestão de imóveis",
     "totalProperties": "Total de Imóveis",
     "activeTenants": "Inquilinos Ativos",
-    "monthlyRevenue": "Receita Mensal"
+    "monthlyRevenue": "Receita Mensal",
+    "occupancyRate": "Taxa de Ocupação",
+    "recentPayments": "Pagamentos Recentes",
+    "propertyStatus": "Estado dos Imóveis",
+    "recentActivities": "Atividades Recentes",
+    "noActivity": "Nenhuma atividade ainda",
+    "addPropertiesToStart": "Adicione seu primeiro imóvel para começar",
+    "addTenantsToSeeActivity": "Adicione inquilinos e registre pagamentos para ver atividade aqui"
   },
   "greeting": {
     "morning": "Bom dia",
@@ -36,8 +52,43 @@
   "onboarding": {
     "gettingStarted": "Primeiros Passos",
     "complete": "concluído",
+    "setupComplete": "Configuração Concluída!",
+    "allSet": "Está tudo pronto para gerir os seus imóveis",
     "addFirstProperty": "Adicione seu primeiro imóvel",
+    "addFirstPropertyDesc": "Comece adicionando um imóvel — apartamento, casa ou edifício comercial.",
     "addTenant": "Adicione um inquilino",
-    "recordPayment": "Registre um pagamento"
+    "addTenantDesc": "Adicione os dados do inquilino e associe-o a um imóvel.",
+    "recordPayment": "Registre um pagamento",
+    "recordPaymentDesc": "Registe o seu primeiro pagamento de renda para desbloquear análises de receita."
+  },
+  "emptyState": {
+    "properties": {
+      "title": "Nenhum imóvel ainda",
+      "description": "Adicione o seu primeiro imóvel para começar a gerir o seu portfólio."
+    },
+    "tenants": {
+      "title": "Nenhum inquilino ainda",
+      "description": "Depois de ter imóveis, adicione inquilinos para acompanhar contratos e pagamentos."
+    },
+    "payments": {
+      "title": "Nenhum pagamento registado",
+      "description": "Comece a registar pagamentos de renda para acompanhar a receita."
+    },
+    "generic": {
+      "title": "Nada aqui ainda",
+      "description": "Comece por adicionar o seu primeiro item."
+    }
+  },
+  "actions": {
+    "add": "Adicionar",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "export": "Exportar",
+    "refresh": "Atualizar",
+    "search": "Pesquisar",
+    "filter": "Filtrar",
+    "viewAll": "Ver Tudo"
   }
 }

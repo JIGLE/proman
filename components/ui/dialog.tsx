@@ -11,20 +11,11 @@ const Dialog = DialogPrimitive.Root
 const DialogTrigger = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Trigger>
->(({ children, ...props }, ref) => {
-  // If consumers pass multiple children while using `asChild`, wrap them
-  // in a single container so Radix's internal `Children.only` check doesn't fail.
-  const asChild = (props as any).asChild;
-  const safeChild = React.Children.count(children) === 1 ? React.Children.only(children as any) : <div>{children}</div>;
-  // Remove `asChild` before forwarding props so Radix does not do its internal Children.only check
-  const forwardProps = { ...(props as any) };
-  if ((forwardProps as any).asChild) delete (forwardProps as any).asChild;
-  return (
-    <DialogPrimitive.Trigger ref={ref as any} {...(forwardProps as any)}>
-      {asChild ? safeChild : children}
-    </DialogPrimitive.Trigger>
-  );
-})
+>(({ children, ...props }, ref) => (
+  <DialogPrimitive.Trigger ref={ref} {...props}>
+    {children}
+  </DialogPrimitive.Trigger>
+))
 DialogTrigger.displayName = "DialogTrigger"
 
 const DialogPortal = DialogPrimitive.Portal

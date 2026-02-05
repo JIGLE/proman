@@ -28,9 +28,9 @@ export default function VersionBadge(): React.ReactElement | null {
   if (!v) return null;
 
   return (
-    <div style={{ fontSize: 11, opacity: 0.9 }}>
-      <span style={{ fontWeight: 700 }}>v{v.version}</span>
-      {v.git_commit ? <span style={{ marginLeft: 6, fontFamily: 'monospace' }}>{v.git_commit.slice(0,7)}</span> : null}
+    <div className="text-[11px] opacity-90">
+      <span className="font-bold">v{v.version}</span>
+      {v.git_commit ? <span className="ml-1.5 font-mono">{v.git_commit.slice(0,7)}</span> : null}
     </div>
   );
 }

@@ -58,11 +58,11 @@ function applySecurityHeaders(response: NextResponse, nonce: string): void {
     "default-src 'self'",
     // Script sources - nonce-based for inline scripts, eval only in dev
     `script-src 'self' 'nonce-${nonce}' https://accounts.google.com https://apis.google.com${isDev ? " 'unsafe-eval'" : ''}`,
-    // Style sources - nonce-based for inline styles
-    `style-src 'self' 'nonce-${nonce}' https://fonts.googleapis.com`,
+    // Style sources - unsafe-inline required for React DOM, Framer Motion, and CSS-in-JS libs
+    `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
     "img-src 'self' data: blob: https:",
     "font-src 'self' data: https://fonts.gstatic.com",
-    "connect-src 'self' https://accounts.google.com https://api.stripe.com",
+    `connect-src 'self' https://accounts.google.com https://api.stripe.com${isDev ? ' http://localhost:*' : ''}`,
     "frame-src 'self' https://accounts.google.com https://js.stripe.com",
     "object-src 'none'",
     "media-src 'self'",
@@ -70,7 +70,8 @@ function applySecurityHeaders(response: NextResponse, nonce: string): void {
     "form-action 'self'",
     "frame-ancestors 'self'",
     "base-uri 'self'",
-    "upgrade-insecure-requests",
+    // Only upgrade insecure requests in production (avoids https://localhost errors in dev)
+    ...(isDev ? [] : ["upgrade-insecure-requests"]),
   ].join('; ');
 
   headers.set('Content-Security-Policy', cspDirectives);
@@ -188,6 +189,6 @@ export const config = {
   // - _next (Next.js internals)
   // - Static files (images, fonts, etc.)
   matcher: [
-    '/((?!api|auth|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|auth|_next/static|_next/image|favicon.ico|version\.json|.*\.(?:svg|png|jpg|jpeg|gif|webp|json)$).*)',
   ],
 };
