@@ -1,5 +1,10 @@
 # Releases
 
+- Date: 2026-02-05
+  - Version: v1.1.0
+  - Image: `ghcr.io/jigle/proman:1.1.0`
+  - Notes: Bug fixes and improvements to auth, i18n, landing page, and mobile navigation. See GitHub Release for details.
+
 - Date: TBD
   - Version: v0.9.0
   - Image: `ghcr.io/jigle/proman:0.9.0`
