@@ -14,11 +14,12 @@ import {
   LogOut,
   Search,
   Wallet,
-  LightbulbIcon,
+  BarChart3,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
+import { LanguageSelector } from "@/components/shared/language-selector";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -42,7 +43,7 @@ const secondaryNavItems = [
   { id: "maintenance", label: "Maintenance", icon: Hammer, href: "/maintenance" },
   { id: "correspondence", label: "Correspondence", icon: Mail, href: "/correspondence" },
   { id: "finance", label: "Finance", icon: Wallet, href: "/financials" },
-  { id: "insights", label: "Insights", icon: LightbulbIcon, href: "/analytics" },
+  { id: "analytics", label: "Analytics", icon: BarChart3, href: "/analytics" },
   { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
 ];
 
@@ -114,6 +115,7 @@ export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchCl
                   {user?.email}
                 </p>
               </div>
+              <LanguageSelector compact />
             </div>
           </div>
         )}
@@ -147,7 +149,7 @@ export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchCl
         {/* Sign out button */}
         <div className="p-2 border-t border-[var(--color-border)]">
           <button
-            onClick={() => signOut()}
+            onClick={() => signOut({ callbackUrl: `/${currentLocale}` })}
             className="flex w-full items-center justify-center gap-2 p-3 rounded-xl text-[var(--color-error)] hover:bg-[var(--color-error)]/10 transition-colors active:scale-95 touch-manipulation"
           >
             <LogOut className="h-5 w-5" />

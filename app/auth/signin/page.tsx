@@ -44,12 +44,54 @@ function SignInContent() {
 
             <h1 className="text-2xl font-bold text-zinc-50 mb-2">Welcome to ProMan</h1>
             <p className="text-zinc-400 mb-8">
-              Sign in with Google to access your property management dashboard
+              Sign in to access your property management dashboard
             </p>
+
+            {/* Demo credentials login */}
+            <form 
+              onSubmit={(e) => {
+                e.preventDefault();
+                const formData = new FormData(e.currentTarget);
+                signIn('credentials', { 
+                  email: formData.get('email'), 
+                  password: formData.get('password'),
+                  callbackUrl: '/' 
+                });
+              }}
+              className="space-y-3"
+            >
+              <input 
+                name="email" 
+                type="email" 
+                defaultValue="demo@proman.local" 
+                className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none" 
+                placeholder="Email" 
+              />
+              <input 
+                name="password" 
+                type="password" 
+                defaultValue="demo123" 
+                className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none" 
+                placeholder="Password" 
+              />
+              <Button type="submit" className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white">
+                Sign In
+              </Button>
+            </form>
+
+            <div className="relative my-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-zinc-800" />
+              </div>
+              <div className="relative flex justify-center text-xs">
+                <span className="bg-zinc-900 px-2 text-zinc-500">or</span>
+              </div>
+            </div>
 
             <Button
               onClick={() => signIn('google', { callbackUrl: '/' })}
-              className="w-full bg-white hover:bg-zinc-100 text-zinc-900 font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-3"
+              variant="outline"
+              className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700 font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-3"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -60,45 +102,9 @@ function SignInContent() {
               Sign in with Google
             </Button>
 
-            {process.env.NODE_ENV !== 'production' && (
-              <div className="mt-6 pt-6 border-t border-zinc-800">
-                <form 
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
-                    signIn('credentials', { 
-                      email: formData.get('email'), 
-                      password: formData.get('password'),
-                      callbackUrl: '/' 
-                    });
-                  }}
-                  className="space-y-3"
-                >
-                  <div className="text-xs text-zinc-500 uppercase font-semibold">Dev Login</div>
-                  <input 
-                    name="email" 
-                    type="email" 
-                    defaultValue="demo@proman.local" 
-                    className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none" 
-                    placeholder="Email" 
-                  />
-                  <input 
-                    name="password" 
-                    type="password" 
-                    defaultValue="demo123" 
-                    className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none" 
-                    placeholder="Password" 
-                  />
-                  <Button type="submit" variant="secondary" className="w-full h-10">
-                    Sign in with Credentials
-                  </Button>
-                </form>
-              </div>
-            )}
-
             <div className="mt-6 text-center">
-              <p className="text-sm text-zinc-500">
-                Secure authentication powered by Google OAuth
+              <p className="text-xs text-zinc-500">
+                Demo: demo@proman.local / demo123
               </p>
             </div>
           </div>

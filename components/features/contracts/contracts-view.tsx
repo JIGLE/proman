@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { FileText, Plus, Search, Filter, Calendar, Building2, User } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect, useCallback } from "react";
+import { FileText, Plus, Search, Calendar, Building2, User, Loader2 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -15,7 +15,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useCurrency } from "@/lib/contexts/currency-context";
 import { formatCurrency as formatCurrencyUtil } from "@/lib/utils/currency";
 import { Currency } from "@prisma/client";
 import { ContractDetailDialog } from "./contract-detail-dialog";
@@ -32,43 +31,6 @@ interface Lease {
   status: "active" | "expiring" | "expired" | "terminated";
 }
 
-// Mock data for now - will be replaced with API calls
-const mockLeases: Lease[] = [
-  {
-    id: "1",
-    propertyName: "Ocean View Apartments",
-    unitName: "Unit 101",
-    tenantName: "João Silva",
-    startDate: "2024-01-01",
-    endDate: "2024-12-31",
-    monthlyRent: 850,
-    currency: "EUR",
-    status: "active",
-  },
-  {
-    id: "2",
-    propertyName: "Downtown Loft",
-    unitName: null,
-    tenantName: "Maria García",
-    startDate: "2023-06-15",
-    endDate: "2024-06-14",
-    monthlyRent: 1200,
-    currency: "EUR",
-    status: "expiring",
-  },
-  {
-    id: "3",
-    propertyName: "Suburban House",
-    unitName: null,
-    tenantName: "Peter Hansen",
-    startDate: "2023-01-01",
-    endDate: "2023-12-31",
-    monthlyRent: 15000,
-    currency: "DKK",
-    status: "expired",
-  },
-];
-
 const statusColors: Record<string, string> = {
   active: "bg-green-500/10 text-green-600 border-green-500/20",
   expiring: "bg-amber-500/10 text-amber-600 border-amber-500/20",
@@ -77,11 +39,31 @@ const statusColors: Record<string, string> = {
 };
 
 export function ContractsView(): React.ReactElement {
-  const [leases, setLeases] = useState<Lease[]>(mockLeases);
+  const [leases, setLeases] = useState<Lease[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [selectedLease, setSelectedLease] = useState<Lease | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  const fetchContracts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/contracts");
+      if (res.ok) {
+        const json = await res.json();
+        setLeases(json.data || []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch contracts:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchContracts();
+  }, [fetchContracts]);
 
   const filteredLeases = leases.filter((lease) => {
     const matchesSearch =
@@ -148,6 +130,14 @@ export function ContractsView(): React.ReactElement {
     // TODO: Implement delete functionality
     setLeases(leases.filter((l) => l.id !== leaseId));
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -1,14 +1,15 @@
 "use client";
 
-import { useState } from "react";
-import { Wrench, Plus, Search, Star, Phone, Mail, Building2, Tag } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Wrench, Plus, Search, Star, Phone, Mail, Building2, Tag, Loader2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";import { useCurrency } from "@/lib/contexts/currency-context";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatCurrency as formatCurrencyUtil, type Currency } from "@/lib/utils/currency";
+
 interface MaintenanceContact {
   id: string;
   name: string;
@@ -23,62 +24,6 @@ interface MaintenanceContact {
   notes: string | null;
 }
 
-// Mock data for now - will be replaced with API calls
-const mockContacts: MaintenanceContact[] = [
-  {
-    id: "1",
-    name: "Miguel Ferreira",
-    company: "Ferreira Plumbing",
-    type: "contractor",
-    specialties: ["plumbing", "heating"],
-    email: "miguel@ferreiraplumbing.pt",
-    phone: "+351 912 345 678",
-    hourlyRate: 35,
-    currency: "EUR",
-    rating: 4.8,
-    notes: "Reliable, quick response times",
-  },
-  {
-    id: "2",
-    name: "ElectriPro Services",
-    company: "ElectriPro",
-    type: "vendor",
-    specialties: ["electrical", "lighting"],
-    email: "info@electripro.es",
-    phone: "+34 612 345 678",
-    hourlyRate: 45,
-    currency: "EUR",
-    rating: 4.5,
-    notes: null,
-  },
-  {
-    id: "3",
-    name: "Carlos Silva",
-    company: null,
-    type: "internal",
-    specialties: ["general", "cleaning", "keys"],
-    email: "carlos@proman.app",
-    phone: "+351 923 456 789",
-    hourlyRate: null,
-    currency: "EUR",
-    rating: null,
-    notes: "Building superintendent",
-  },
-  {
-    id: "4",
-    name: "Nordic HVAC",
-    company: "Nordic HVAC ApS",
-    type: "vendor",
-    specialties: ["hvac", "ventilation"],
-    email: "service@nordichvac.dk",
-    phone: "+45 12 34 56 78",
-    hourlyRate: 450,
-    currency: "DKK",
-    rating: 4.2,
-    notes: "Denmark-based, covers Copenhagen area",
-  },
-];
-
 const typeLabels: Record<string, string> = {
   contractor: "Contractor",
   vendor: "Vendor",
@@ -92,9 +37,43 @@ const typeColors: Record<string, string> = {
 };
 
 export function ContactsView(): React.ReactElement {
-  const [contacts, setContacts] = useState<MaintenanceContact[]>(mockContacts);
+  const [contacts, setContacts] = useState<MaintenanceContact[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+
+  const fetchContacts = useCallback(async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("/api/contacts");
+      if (res.ok) {
+        const json = await res.json();
+        // Transform API response to match component interface
+        const data = (json.data || []).map((c: Record<string, unknown>) => ({
+          id: c.id,
+          name: c.contactPerson || c.name || "Unknown",
+          company: c.company || null,
+          type: c.type || "contractor",
+          specialties: typeof c.specialties === "string" ? JSON.parse(c.specialties) : c.specialties || [],
+          email: c.email || null,
+          phone: c.phone || null,
+          hourlyRate: c.hourlyRate ?? null,
+          currency: c.currency || "EUR",
+          rating: c.rating ?? null,
+          notes: c.notes || null,
+        }));
+        setContacts(data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch contacts:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchContacts();
+  }, [fetchContacts]);
 
   const filteredContacts = contacts.filter((contact) => {
     const matchesSearch =
@@ -116,6 +95,14 @@ export function ContactsView(): React.ReactElement {
   const getInitials = (name: string) => {
     return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

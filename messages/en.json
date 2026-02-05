@@ -28,7 +28,9 @@
     "settings": "Settings",
     "correspondence": "Correspondence",
     "insights": "Insights",
-    "finance": "Finance"
+    "finance": "Finance",
+    "contacts": "Contacts",
+    "contracts": "Contracts"
   },
   "dashboard": {
     "welcome": "Welcome to your property management dashboard",
@@ -90,5 +92,24 @@
     "search": "Search",
     "filter": "Filter",
     "viewAll": "View All"
+  },
+  "landing": {
+    "hero": "Property Management Simplified",
+    "subtitle": "Manage properties, tenants, contracts, and finances in one place.",
+    "cta": "Get Started",
+    "features": {
+      "properties": {
+        "title": "Property Management",
+        "description": "Organize and track all your properties, units, and documents."
+      },
+      "tenants": {
+        "title": "Tenant Management",
+        "description": "Manage tenants, leases, and payment history."
+      },
+      "finance": {
+        "title": "Financial Reports",
+        "description": "Track revenue, expenses, and generate tax reports."
+      }
+    }
   }
 }

@@ -1,0 +1,115 @@
+{
+  "settings": {
+    "title": "Configuración",
+    "description": "Gestiona la configuración de tu cuenta y preferencias",
+    "imageConsent": "Mostrar Imagen de Perfil",
+    "imageConsentDesc": "Permitir mostrar tu imagen de perfil de Google en la app (compatible con RGPD)."
+  },
+  "gdpr": {
+    "title": "Tus Derechos de Datos (RGPD)",
+    "description": "Bajo el RGPD, tienes derecho a acceder, exportar o eliminar tus datos personales.",
+    "export": "Exportar Mis Datos",
+    "delete": "Eliminar Mis Datos"
+  },
+  "admin": {
+    "database": {
+      "title": "Vista de Base de Datos del Admin",
+      "description": "Vista de solo lectura de las tablas de la base de datos. Acceso registrado para cumplimiento con RGPD."
+    }
+  },
+  "navigation": {
+    "dashboard": "Panel",
+    "home": "Inicio",
+    "properties": "Inmuebles",
+    "tenants": "Inquilinos",
+    "leases": "Contratos",
+    "payments": "Pagos",
+    "maintenance": "Mantenimiento",
+    "settings": "Configuración",
+    "correspondence": "Correspondencia",
+    "insights": "Informes",
+    "finance": "Finanzas",
+    "contacts": "Contactos",
+    "contracts": "Contratos"
+  },
+  "dashboard": {
+    "welcome": "Bienvenido a tu panel de gestión inmobiliaria",
+    "totalProperties": "Total de Inmuebles",
+    "activeTenants": "Inquilinos Activos",
+    "monthlyRevenue": "Ingresos Mensuales",
+    "occupancyRate": "Tasa de Ocupación",
+    "recentPayments": "Pagos Recientes",
+    "propertyStatus": "Estado de Inmuebles",
+    "recentActivities": "Actividades Recientes",
+    "noActivity": "Sin actividad aún",
+    "addPropertiesToStart": "Añade tu primer inmueble para comenzar",
+    "addTenantsToSeeActivity": "Añade inquilinos y registra pagos para ver actividad aquí"
+  },
+  "greeting": {
+    "morning": "Buenos días",
+    "afternoon": "Buenas tardes",
+    "evening": "Buenas tardes",
+    "night": "Buenas noches"
+  },
+  "onboarding": {
+    "gettingStarted": "Primeros Pasos",
+    "complete": "completado",
+    "setupComplete": "¡Configuración Completa!",
+    "allSet": "Todo listo para gestionar tus inmuebles",
+    "addFirstProperty": "Añade tu primer inmueble",
+    "addFirstPropertyDesc": "Empieza añadiendo un inmueble — apartamento, casa o edificio comercial.",
+    "addTenant": "Añade un inquilino",
+    "addTenantDesc": "Añade los datos del inquilino y asígnalo a un inmueble.",
+    "recordPayment": "Registra un pago",
+    "recordPaymentDesc": "Registra tu primer pago de alquiler para desbloquear análisis de ingresos."
+  },
+  "emptyState": {
+    "properties": {
+      "title": "Sin inmuebles aún",
+      "description": "Añade tu primer inmueble para empezar a gestionar tu cartera."
+    },
+    "tenants": {
+      "title": "Sin inquilinos aún",
+      "description": "Una vez tengas inmuebles, añade inquilinos para gestionar contratos y pagos."
+    },
+    "payments": {
+      "title": "Sin pagos registrados",
+      "description": "Empieza a registrar pagos de alquiler para seguir los ingresos."
+    },
+    "generic": {
+      "title": "Nada aquí aún",
+      "description": "Empieza añadiendo tu primer elemento."
+    }
+  },
+  "actions": {
+    "add": "Añadir",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "export": "Exportar",
+    "refresh": "Actualizar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "viewAll": "Ver Todo"
+  },
+  "landing": {
+    "hero": "Gestión Inmobiliaria Simplificada",
+    "subtitle": "Gestiona inmuebles, inquilinos, contratos y finanzas en un solo lugar.",
+    "cta": "Empezar",
+    "features": {
+      "properties": {
+        "title": "Gestión de Inmuebles",
+        "description": "Organiza y sigue todos tus inmuebles, unidades y documentos."
+      },
+      "tenants": {
+        "title": "Gestión de Inquilinos",
+        "description": "Gestiona inquilinos, contratos e historial de pagos."
+      },
+      "finance": {
+        "title": "Informes Financieros",
+        "description": "Sigue ingresos, gastos y genera informes fiscales."
+      }
+    }
+  }
+}

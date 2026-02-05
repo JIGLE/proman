@@ -28,7 +28,6 @@ type Account = {
 
 import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import { getPrismaClient } from '@/lib/services/database/database';
 
 function createBaseAuthOptions(): NextAuthOptions {
@@ -36,67 +35,81 @@ function createBaseAuthOptions(): NextAuthOptions {
   const googleClientId = process.env.GOOGLE_CLIENT_ID;
   const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
-  if (!googleClientId || !googleClientSecret) {
-    logger.debug('Google OAuth not configured: GOOGLE_CLIENT_ID or GOOGLE_CLIENT_SECRET is missing');
-  }
+  // Only add Google OAuth when real credentials are configured
+  const hasRealGoogle = googleClientId
+    && googleClientId !== 'dummy-client-id'
+    && googleClientSecret
+    && googleClientSecret !== 'dummy-client-secret';
 
-  const providers = [
-    GoogleProvider({
-      clientId: googleClientId || '',
-      clientSecret: googleClientSecret || '',
-      allowDangerousEmailAccountLinking: true,
-    }),
-  ];
+  const providers: unknown[] = [];
 
-  // Only enable demo credentials in explicit development mode with environment flag
-  if (process.env.NODE_ENV === 'development' && process.env.ENABLE_DEMO_AUTH === 'true') {
-    logger.warn('Demo credentials enabled - DO NOT use in production!');
+  if (hasRealGoogle) {
     providers.push(
-      // @ts-expect-error - CredentialsProvider has different type than OAuthConfig
-      CredentialsProvider({
-        id: 'credentials',
-        name: 'Credentials',
-        credentials: {
-          email: { label: "Email", type: "email" },
-          password: { label: "Password", type: "password" }
-        },
-        async authorize(credentials) {
-           if (credentials?.email === 'demo@proman.local' && credentials?.password === 'demo123') {
-             try {
-               const prisma = getPrismaClient();
-               let user = await prisma.user.findUnique({
-                 where: { email: credentials.email }
-               });
-               
-               if (!user) {
-                 user = await prisma.user.create({
-                   data: {
-                     email: credentials.email,
-                     name: 'Demo User',
-                     role: 'ADMIN',
-                     imageConsent: true,
-                   }
-                 });
-               }
-               
-               logger.debug('Demo auth successful', { id: user.id });
-               return user;
-             } catch (error) {
-               logger.error('Demo auth error', error instanceof Error ? error : new Error(String(error)));
-               return null;
-             }
-           }
-           return null;
-        }
-      })
+      GoogleProvider({
+        clientId: googleClientId,
+        clientSecret: googleClientSecret,
+        allowDangerousEmailAccountLinking: true,
+      }),
     );
   }
 
+  // Credentials provider is always available for demo / self-hosted auth
+  providers.push(
+    CredentialsProvider({
+      id: 'credentials',
+      name: 'Credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (
+          credentials?.email === 'demo@proman.local' &&
+          credentials?.password === 'demo123'
+        ) {
+          try {
+            const prisma = getPrismaClient();
+            let user = await prisma.user.findUnique({
+              where: { email: credentials.email },
+            });
+
+            if (!user) {
+              user = await prisma.user.create({
+                data: {
+                  email: credentials.email,
+                  name: 'Demo User',
+                  role: 'ADMIN',
+                  imageConsent: true,
+                },
+              });
+            }
+
+            logger.debug('Demo auth successful', { id: user.id });
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              image: user.image,
+            };
+          } catch (error) {
+            logger.error(
+              'Demo auth error',
+              error instanceof Error ? error : new Error(String(error)),
+            );
+            return null;
+          }
+        }
+        return null;
+      },
+    }),
+  );
+
+  // JWT strategy works with both OAuth and CredentialsProvider
   const options: NextAuthOptions = {
     secret,
     providers,
     session: {
-      strategy: 'database',
+      strategy: 'jwt',
       maxAge: 30 * 24 * 60 * 60, // 30 days
     },
     pages: {
@@ -104,61 +117,94 @@ function createBaseAuthOptions(): NextAuthOptions {
       error: '/auth/error',
     },
     callbacks: {
-      async jwt({ token, user, account: _account }: { token: JWT; user?: NextAuthUser | null; account?: unknown }): Promise<JWT> {
-        logger.debug('JWT callback', { userId: user?.id, email: user?.email, hasSub: !!(token as JWT & { sub?: string }).sub });
-        
-        // When user signs in, set both id and sub claims
-        if (user?.id) {
-          (token as JWT & { id?: string; sub?: string }).id = user.id;
-          (token as JWT & { id?: string; sub?: string }).sub = user.id; // Standard JWT subject claim - required for session to work
+      async jwt({
+        token,
+        user,
+      }: {
+        token: JWT;
+        user?: NextAuthUser | null;
+        account?: unknown;
+      }): Promise<JWT> {
+        if (user) {
+          const t = token as JWT & {
+            id?: string;
+            sub?: string;
+            email?: string;
+            name?: string;
+            picture?: string;
+          };
+          t.id = user.id;
+          t.sub = user.id;
+          t.email = user.email ?? undefined;
+          t.name = user.name ?? undefined;
+          t.picture = user.image ?? undefined;
         }
-        
         return token;
       },
-      async session({ session, token, user }: { session: Session; token: JWT; user?: NextAuthUser }): Promise<Session> {
+      async session({
+        session,
+        token,
+      }: {
+        session: Session;
+        token: JWT;
+        user?: NextAuthUser;
+      }): Promise<Session> {
         try {
           if (session?.user) {
-            const sessionUser = session.user as { id?: string };
-            
-            // Prefer token.sub (standard claim), fallback to token.id or user.id
-            sessionUser.id = (token as JWT & { sub?: string; id?: string }).sub || (token as JWT & { sub?: string; id?: string }).id || user?.id;
-            
-            if (!sessionUser.id) {
-              logger.error('No user ID found in session', undefined, { 
-                hasSub: !!(token as JWT & { sub?: string; id?: string }).sub, 
-                hasTokenId: !!(token as JWT & { sub?: string; id?: string }).id,
-                hasUser: !!user 
-              });
-            }
+            const sessionUser = session.user as {
+              id?: string;
+              email?: string | null;
+              name?: string | null;
+              image?: string | null;
+            };
+            const t = token as JWT & {
+              sub?: string;
+              id?: string;
+              email?: string;
+              name?: string;
+              picture?: string;
+            };
+            sessionUser.id = t.sub || t.id;
+            if (t.email) sessionUser.email = t.email;
+            if (t.name) sessionUser.name = t.name;
+            if (t.picture) sessionUser.image = t.picture;
           }
           return session;
         } catch (err: unknown) {
-          logger.error('NextAuth session callback error', err instanceof Error ? err : new Error(String(err)));
+          logger.error(
+            'NextAuth session callback error',
+            err instanceof Error ? err : new Error(String(err)),
+          );
           return session;
         }
       },
-      async signIn({ user, account, profile: _profile }: { user?: NextAuthUser | null; account?: Account | undefined; profile?: unknown }): Promise<boolean> {
-        logger.debug('signIn callback', {
-          hasDatabase: !!(process.env.DATABASE_URL && process.env.DATABASE_URL.trim()),
-          email: user?.email,
-          provider: account?.provider,
-          userId: user?.id
-        });
+      async signIn({
+        user,
+        account,
+      }: {
+        user?: NextAuthUser | null;
+        account?: Account | undefined;
+        profile?: unknown;
+      }): Promise<boolean> {
+        // Credentials provider — user already validated inside authorize()
+        if (account?.provider === 'credentials') return true;
 
-        if (user && account && account.provider && account.providerAccountId) {
+        // For OAuth providers, clean up stale account links
+        if (user && account?.provider && account?.providerAccountId) {
           try {
             const prisma = getPrismaClient();
             await prisma.account.deleteMany({
               where: {
                 provider: account.provider,
                 providerAccountId: account.providerAccountId,
-                userId: {
-                  not: user.id,
-                },
+                userId: { not: user.id },
               },
             });
           } catch (error: unknown) {
-            logger.warn('Failed to remove stale account before linking', { error: error instanceof Error ? error.message : String(error) });
+            logger.warn('Failed to remove stale account before linking', {
+              error:
+                error instanceof Error ? error.message : String(error),
+            });
           }
         }
 
@@ -166,11 +212,27 @@ function createBaseAuthOptions(): NextAuthOptions {
       },
     },
     events: {
-      async signIn({ user, account, profile: _profile, isNewUser }: { user?: NextAuthUser | null; account?: { provider?: string } | undefined; profile?: unknown; isNewUser?: boolean }) {
-        logger.debug('NextAuth event: signIn', { email: user?.email, provider: account?.provider, isNewUser });
+      async signIn({
+        user,
+        account,
+        isNewUser,
+      }: {
+        user?: NextAuthUser | null;
+        account?: { provider?: string } | undefined;
+        profile?: unknown;
+        isNewUser?: boolean;
+      }) {
+        logger.debug('NextAuth event: signIn', {
+          email: user?.email,
+          provider: account?.provider,
+          isNewUser,
+        });
       },
       async createUser({ user }: { user: { id: string; email?: string } }) {
-        logger.debug('NextAuth event: createUser', { id: user.id, email: user.email });
+        logger.debug('NextAuth event: createUser', {
+          id: user.id,
+          email: user.email,
+        });
       },
     },
   };
@@ -178,29 +240,7 @@ function createBaseAuthOptions(): NextAuthOptions {
   return options;
 }
 
-// Lazy adapter initialization to avoid build-time issues
+// JWT strategy doesn't need PrismaAdapter at all
 export function getAuthOptions(): NextAuthOptions {
-  logger.debug('getAuthOptions called', { hasDatabase: !!process.env.DATABASE_URL });
-  // Only add adapter if we have database access and we're not in build time
-  const hasDatabase = process.env.DATABASE_URL && process.env.DATABASE_URL.trim() !== '';
-  const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || !process.env.NODE_ENV;
-
-  const baseAuthOptions = createBaseAuthOptions();
-
-  if (!hasDatabase || isBuildTime) {
-    logger.debug('Using base auth options', { hasDatabase, isBuildTime });
-    return baseAuthOptions;
-  }
-
-  try {
-    logger.debug('Initializing Prisma adapter');
-    return {
-      ...baseAuthOptions,
-      adapter: PrismaAdapter(getPrismaClient()),
-    };
-  } catch (error: unknown) {
-    const message = error instanceof Error ? `${error.name}: ${error.message}` : String(error);
-    logger.warn('Failed to initialize Prisma adapter, using base auth options', { error: message });
-    return baseAuthOptions;
-  }
+  return createBaseAuthOptions();
 }

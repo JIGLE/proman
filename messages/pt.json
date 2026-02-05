@@ -28,7 +28,9 @@
     "settings": "Configurações",
     "correspondence": "Correspondência",
     "insights": "Relatórios",
-    "finance": "Finanças"
+    "finance": "Finanças",
+    "contacts": "Contactos",
+    "contracts": "Contratos"
   },
   "dashboard": {
     "welcome": "Bem-vindo ao seu painel de gestão de imóveis",
@@ -90,5 +92,24 @@
     "search": "Pesquisar",
     "filter": "Filtrar",
     "viewAll": "Ver Tudo"
+  },
+  "landing": {
+    "hero": "Gestão Imobiliária Simplificada",
+    "subtitle": "Gerencie imóveis, inquilinos, contratos e finanças num só lugar.",
+    "cta": "Começar",
+    "features": {
+      "properties": {
+        "title": "Gestão de Imóveis",
+        "description": "Organize e acompanhe todos os seus imóveis, unidades e documentos."
+      },
+      "tenants": {
+        "title": "Gestão de Inquilinos",
+        "description": "Gerencie inquilinos, contratos e histórico de pagamentos."
+      },
+      "finance": {
+        "title": "Relatórios Financeiros",
+        "description": "Acompanhe receitas, despesas e gere relatórios fiscais."
+      }
+    }
   }
 }

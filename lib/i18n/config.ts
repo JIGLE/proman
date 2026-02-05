@@ -8,20 +8,22 @@ import { getRequestConfig } from 'next-intl/server';
 import { hasLocale } from 'next-intl';
 import enMessages from '@/messages/en.json';
 import ptMessages from '@/messages/pt.json';
+import esMessages from '@/messages/es.json';
 
 // Supported locales
-export const locales = ['en', 'pt'] as const;
+export const locales = ['pt', 'en', 'es'] as const;
 export type Locale = (typeof locales)[number];
-export const defaultLocale: Locale = 'en';
+export const defaultLocale: Locale = 'pt';
 
 // Language display names
 export const localeNames: Record<Locale, string> = {
-  en: 'English',
   pt: 'Português',
+  en: 'English',
+  es: 'Español',
 };
 
 // Coming soon languages (for display in selector)
-export const upcomingLocales = ['es', 'fr', 'de', 'it', 'nl', 'pl', 'ru', 'zh', 'ja'] as const;
+export const upcomingLocales = ['fr', 'de', 'it', 'nl', 'pl', 'ru', 'zh', 'ja'] as const;
 export const upcomingLocaleNames: Record<string, string> = {
   es: 'Español',
   fr: 'Français',
@@ -36,8 +38,9 @@ export const upcomingLocaleNames: Record<string, string> = {
 
 // Message bundles - typed for next-intl compatibility
 const messages = {
-  en: enMessages,
   pt: ptMessages,
+  en: enMessages,
+  es: esMessages,
 } as const;
 
 // Next-intl configuration
