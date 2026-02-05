@@ -37,7 +37,14 @@ COPY proxy.ts ./
 COPY messages ./messages/
 COPY scripts ./scripts/
 
-RUN npm run build
+# Provide dummy env vars required by the Zod env schema during build.
+# These are NOT used at runtime — the real values come from the deployment environment.
+RUN DATABASE_URL="file:./build.db" \
+    NEXTAUTH_URL="http://localhost:3000" \
+    NEXTAUTH_SECRET="build-time-placeholder-secret-minimum-32-chars" \
+    GOOGLE_CLIENT_ID="build-placeholder" \
+    GOOGLE_CLIENT_SECRET="build-placeholder" \
+    npm run build
 
 # Generate version.json
 RUN echo "{\"version\":\"${BUILD_VERSION}\",\"git_commit\":\"${GIT_COMMIT}\",\"build_time\":\"${BUILD_TIME}\",\"node_env\":\"production\"}" > public/version.json
