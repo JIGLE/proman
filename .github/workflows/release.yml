@@ -48,7 +48,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: '20'
           cache: 'npm'
 
       - name: Configure Git
@@ -76,6 +76,24 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Package Helm chart
+        run: |
+          mkdir -p release-charts
+          helm package helm/proman -d release-charts
+
+      - name: Upload Helm chart artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-charts
+          path: release-charts
+
+      - name: Verify project before release
+        run: |
+          npm ci
+          npm run type-check
+          npm run lint
+          npm test -- --coverage
 
       - name: Update package.json version
         run: npm version ${{ steps.version.outputs.new_version }} --no-git-tag-version

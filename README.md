@@ -1,211 +1,60 @@
-[![CI Tests](https://github.com/JIGLE/proman/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/JIGLE/proman/actions/workflows/ci-tests.yml)
-[![Release - Publish to GHCR](https://github.com/JIGLE/proman/actions/workflows/release-publish.yml/badge.svg)](https://github.com/JIGLE/proman/actions/workflows/release-publish.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Node.js 20+](https://img.shields.io/badge/Node.js-20+-green)](https://nodejs.org/)
 
-# 🏠 ProMan — Property Management Dashboard
+# ProMan — Property Management Dashboard
 
-A modern, self-hosted property management system for property owners and managers. Built with Next.js, Prisma, and SQLite for easy deployment on TrueNAS SCALE or any Kubernetes cluster.
+Lightweight, self-hosted property management built with Next.js and Prisma. This README is a concise deployment and quick-start guide focused on running ProMan on TrueNAS SCALE or similar platforms.
 
-## ✨ Features
-
-- 📋 **Property Management** - Manage properties, units, and tenants
-- 💰 **Financial Tracking** - Receipts, expenses, and lease payments
-- � **Advanced Search & Filtering** - Debounced search with multi-filter support
-- 📊 **Data Export** - CSV export functionality across all views
-- 📧 **Email Integration** - SendGrid webhooks for delivery tracking
-- 🔐 **Secure Authentication** - Google OAuth with session management
-- 🌍 **Multi-language** - English and Portuguese support
-- 📱 **Responsive UI** - Modern interface with Tailwind CSS and shadcn/ui
-- ⚡ **Enhanced UX** - Sortable columns, loading states, and consistent interactions
-- 🚀 **Production Ready** - Container-based deployment with health checks
-
-## 🚀 Quick Start
-
-### Local Development
+Quick commands
 
 ```bash
-# Install dependencies
+# Install deps
 npm install
 
-# Set up environment
+# Development (mock data by default)
 cp .env.example .env
-# Edit .env with your Google OAuth credentials
-
-# Run development server (uses mock data by default)
 npm run dev
 
-# To use real database in development, set DATABASE_URL in .env:
-# DATABASE_URL=file:./dev.db
+# Build for production
+npm run build
+npm run start
 ```
 
-**Data Modes:**
-- **Mock Mode** (default in dev): No `DATABASE_URL` set - uses read-only fixtures
-- **Real Mode**: `DATABASE_URL` set - uses Prisma with SQLite/PostgreSQL
-- Production/TrueNAS always requires `DATABASE_URL`
+Minimal environment variables for a TrueNAS Scale app
 
-Open [http://localhost:3000](http://localhost:3000) to start using ProMan.
+- `DATABASE_URL` (recommended): `file:/data/proman.sqlite` (for SQLite-backed installs)
+- `NEXTAUTH_URL` (if using authentication): `https://your.domain`
+- `NEXTAUTH_SECRET` (if using authentication): strong secret (min 32 chars)
+- `INIT_SECRET` (recommended): secret to protect DB init endpoint
 
-### Deploy to TrueNAS SCALE
+Optional feature flags (reduce env surface)
 
-See [TRUENAS_DEPLOYMENT.md](TRUENAS_DEPLOYMENT.md) for step-by-step instructions.
+- `ENABLE_STRIPE` (default false) — set to `true` and provide `STRIPE_SECRET_KEY` to enable payments
+- `ENABLE_SENDGRID` (default false) — set to `true` and provide `SENDGRID_API_KEY` to enable email delivery
+- `ENABLE_OAUTH` (default false) — set to `true` and provide `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` to enable Google login
 
-**Prerequisites:**
-- Helm 3.x (install via package manager)
-  ```bash
-  # macOS
-  brew install helm
-  
-  # Linux
-  curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-  
-  # Windows
-  choco install kubernetes-helm
-  ```
+Prestart controls (useful on TrueNAS)
 
-### Deploy with Docker
+- `SKIP_PRESTART=true` — skip prestart checks entirely (platform-managed lifecycle)
+- `PRESTART_CHECK_HOSTPORT=true` — enforce HOSTNAME/PORT checks
+ - `PRESTART_FAIL_ON_SQLITE=true` — when enabled, prestart will fail (non-zero exit) if sqlite preparation/validation fails; keep `false` for TrueNAS deployments to allow operator remediation.
 
-```bash
-docker run -p 3000:3000 \
-  -e NEXTAUTH_SECRET=your-secret \
-  -e NEXTAUTH_URL=http://localhost:3000 \
-  -v proman-data:/app/data \
-  ghcr.io/JIGLE/proman:latest
-```
+Deploy notes (TrueNAS SCALE)
 
-## 📚 Documentation
+- Use the TrueNAS App UI to set environment variables (or Helm `values-truenas.yaml` / k8s Secret references).
+- For secrets, prefer Kubernetes `Secret` or TrueNAS secret fields rather than embedding values in `values.yaml`.
+- Start with a minimal set: `DATABASE_URL`, `NEXTAUTH_URL`, `NEXTAUTH_SECRET`. Enable optional integrations only when needed.
 
-- **[TrueNAS Deployment](TRUENAS_DEPLOYMENT.md)** - Complete TrueNAS SCALE setup guide
-- **[SendGrid Webhooks](SENDGRID_WEBHOOKS.md)** - Email delivery tracking configuration
-- **[Docker & Optimization](OPTIMIZATION.md)** - Image size optimization and monitoring
-- **[Release Notes](RELEASES.md)** - Version history and changes
+Where to look next
 
-## 🔧 Configuration
+- Full list of env vars and examples: [.env.example](.env.example)
+- Helm / TrueNAS packaging: `helm/proman/*` and `helm/proman/values-truenas.yaml`
 
-### Environment Variables
+Support
 
-See [.env.example](.env.example) for all available options. Key variables:
+- Issues & discussions: https://github.com/JIGLE/proman
 
-```bash
-# Database (optional in dev, required in prod)
-# Leave unset to use mock data in development
-DATABASE_URL=file:./dev.db
+License: MIT
 
-# Authentication
-NEXTAUTH_URL=https://yourdomain.com
-NEXTAUTH_SECRET=your-random-secret
-
-# Google OAuth
-GOOGLE_ID=your-google-id
-GOOGLE_SECRET=your-google-secret
-
-# Email (SendGrid)
-SENDGRID_API_KEY=your-api-key
-SENDGRID_FROM_EMAIL=noreply@yourdomain.com
-SENDGRID_WEBHOOK_PUBLIC_KEY=your-public-key
-```
-
-## 🛠️ Development
-
-### Available Scripts
-
-```bash
-npm run dev           # Start development server
-npm run build         # Build for production
-npm run start         # Start production server
-npm run lint          # Run ESLint
-npm test              # Run tests
-npm run prisma:setup  # Initialize database
-```
-
-### Tech Stack
-
-- **Framework**: [Next.js 16](https://nextjs.org/) with TypeScript
-- **Database**: SQLite with [Prisma ORM](https://prisma.io/)
-- **Authentication**: [NextAuth.js v5](https://authjs.dev/)
-- **UI**: [Tailwind CSS](https://tailwindcss.com/) + [shadcn/ui](https://ui.shadcn.com/)
-- **Email**: [SendGrid API](https://sendgrid.com/)
-- **Testing**: [Vitest](https://vitest.dev/) + [Testing Library](https://testing-library.com/)
-
-## 🚢 Deployment & Releases
-
-Releases are published to [GitHub Container Registry (GHCR)](https://ghcr.io/JIGLE/proman).
-
-**To create a release:**
-
-```bash
-# 1. Update version in package.json
-npm version X.Y.Z --no-git-tag-version
-
-# 2. Commit changes
-git add package.json package-lock.json
-git commit -m "chore(release): X.Y.Z"
-
-# 3. Create and push tag
-git tag -a vX.Y.Z -m "Release vX.Y.Z"
-git push origin vX.Y.Z
-```
-
-GitHub Actions will automatically:
-- Build multi-architecture Docker images (amd64 + arm64)
-- Publish to GHCR
-- Package Helm charts
-- Create a GitHub Release
-
-### Image Tags
-
-- `ghcr.io/JIGLE/proman:X.Y.Z` - Specific version
-- `ghcr.io/JIGLE/proman:latest` - Latest release
-- `ghcr.io/JIGLE/proman:SHA` - Git commit SHA
-
-## 🔐 Security
-
-- ✅ Non-root container user
-- ✅ Security headers (CSP, HSTS, X-Frame-Options)
-- ✅ SendGrid webhook signature verification
-- ✅ Rate limiting on initialization endpoints
-- ✅ Environment variable isolation (no hardcoded secrets)
-- ✅ Input validation and sanitization
-
-## 📊 Performance
-
-- **Image size**: ~140-150 MB compressed (optimized Alpine base)
-- **Startup time**: ~60 seconds (with database initialization)
-- **Memory**: 256 MB base request
-- **CPU**: 100m base request, 500m limit
-
-See [OPTIMIZATION.md](OPTIMIZATION.md) for detailed performance metrics and tuning.
-
-## 🤝 Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
-
-## 🆘 Support
-
-- **Issues**: [GitHub Issues](https://github.com/JIGLE/proman/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/JIGLE/proman/discussions)
-- **Documentation**: See docs/ directory
-
-## 🙏 Acknowledgments
-
-- [Next.js](https://nextjs.org/) - React framework
-- [Prisma](https://prisma.io/) - Database ORM
-- [shadcn/ui](https://ui.shadcn.com/) - UI components
-- [TrueNAS](https://www.truenas.com/) - NAS platform
-  - Set `dry_run=true` and optionally `version=X.Y.Z` to override.
-  - The workflow uploads `release-charts` as an artifact and shows a release-note preview for inspection.
-
-- Notes & safeguards:
   - Tag-triggered runs assert that the tag version (without `v`) matches `package.json` — if they differ the run will fail and prompt you to resolve the mismatch.
   - Use the `version` workflow input when using manual dispatch to override version detection.
 

@@ -21,6 +21,10 @@ const envSchema = z.object({
   SMTP_PORT: z.string().optional(),
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
+  // Feature flags (use 'true' to enable)
+  ENABLE_STRIPE: z.string().optional(),
+  ENABLE_SENDGRID: z.string().optional(),
+  ENABLE_OAUTH: z.string().optional(),
 });
 
 // Validate environment variables
@@ -60,6 +64,45 @@ if (parsed.success) {
 }
 
 export { env as env };
+
+/**
+ * Helper: read a secret from env or from mounted secret files (if present).
+ * Looks up process.env first, then common secret file mounts.
+ */
+import fs from 'fs';
+import path from 'path';
+
+export function getSecret(name: string): string | undefined {
+  const envVal = process.env[name];
+  if (envVal && envVal.length > 0) return envVal;
+
+  const candidatePaths = [
+    `/run/secrets/${name}`,
+    `/var/run/secrets/${name}`,
+    path.join(process.cwd(), 'secrets', name),
+  ];
+
+  for (const p of candidatePaths) {
+    try {
+      if (fs.existsSync(p)) {
+        const val = fs.readFileSync(p, 'utf8').trim();
+        if (val.length > 0) return val;
+      }
+    } catch {
+      // ignore
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Helper: feature flag parsing. Returns true when env value is 'true' or '1'.
+ */
+export function isEnabled(envName: string): boolean {
+  const v = process.env[envName] || undefined;
+  if (!v) return false;
+  return v.toLowerCase() === 'true' || v === '1';
+}
 
 // Type-safe environment variables
 export type Env = z.infer<typeof envSchema>;

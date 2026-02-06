@@ -177,39 +177,50 @@ export const pdfGenerator = {
   ): Promise<PDFResult> {
     // Try to use puppeteer if available (optional dependency)
     try {
-      // @ts-expect-error puppeteer is an optional dependency
-      const puppeteer = await import('puppeteer');
+        // Try to import puppeteer at runtime without static analysis so the bundler
+        // does not require it during build when it's not installed.
+        let puppeteer: any | undefined;
+        try {
+          // @ts-ignore
+          puppeteer = await eval("import('puppeteer')");
+        } catch (e) {
+          puppeteer = undefined;
+        }
+
+        if (puppeteer && puppeteer.default) {
+          const browser = await puppeteer.default.launch({
+            headless: true,
+            args: ['--no-sandbox', '--disable-setuid-sandbox'],
+          });
+        
+          const page = await browser.newPage();
+          await page.setContent(html, { waitUntil: 'networkidle0' });
+        
+          const pdfBuffer = await page.pdf({
+            format: options?.format || 'A4',
+            landscape: options?.landscape || false,
+            margin: options?.margin || {
+              top: '20mm',
+              right: '20mm',
+              bottom: '20mm',
+              left: '20mm',
+            },
+            displayHeaderFooter: options?.displayHeaderFooter || false,
+            headerTemplate: options?.headerTemplate,
+            footerTemplate: options?.footerTemplate,
+            printBackground: true,
+          });
+        
+          await browser.close();
+        
+          return {
+            buffer: Buffer.from(pdfBuffer),
+            mimeType: 'application/pdf',
+            fileName: fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`,
+          };
+        }
       
-      const browser = await puppeteer.default.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      });
       
-      const page = await browser.newPage();
-      await page.setContent(html, { waitUntil: 'networkidle0' });
-      
-      const pdfBuffer = await page.pdf({
-        format: options?.format || 'A4',
-        landscape: options?.landscape || false,
-        margin: options?.margin || {
-          top: '20mm',
-          right: '20mm',
-          bottom: '20mm',
-          left: '20mm',
-        },
-        displayHeaderFooter: options?.displayHeaderFooter || false,
-        headerTemplate: options?.headerTemplate,
-        footerTemplate: options?.footerTemplate,
-        printBackground: true,
-      });
-      
-      await browser.close();
-      
-      return {
-        buffer: Buffer.from(pdfBuffer),
-        mimeType: 'application/pdf',
-        fileName: fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`,
-      };
     } catch {
       // Puppeteer not available, use simple fallback
       console.log('Puppeteer not available, using simple PDF generation');

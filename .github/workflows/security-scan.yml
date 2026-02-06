@@ -157,6 +157,10 @@ jobs:
         with:
           fail-on-severity: critical
           deny-licenses: GPL-2.0, GPL-3.0
+        # Some repositories (e.g., forks or when dependency graph is disabled)
+        # cannot run dependency review; allow this step to fail without
+        # failing the entire workflow so other scans can continue.
+        continue-on-error: true
 
   secret-scanning:
     name: Secret Scanning

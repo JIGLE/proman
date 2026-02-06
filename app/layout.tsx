@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import '@/lib/dev/patch-react-children-only';
 import "./globals.css";
 import { getNonce } from '@/lib/utils/csp-nonce';
+import UpdateBannerClient from '@/components/shared/update-banner-client';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -33,6 +34,8 @@ export default async function RootLayout({
             }}
           />
         )}
+        {/* Update banner (admin-only) */}
+        <UpdateBannerClient />
         {children}
       </body>
     </html>
