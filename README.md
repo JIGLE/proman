@@ -21,16 +21,18 @@ npm run start
 
 Minimal environment variables for a TrueNAS Scale app
 
-- `DATABASE_URL` (recommended): `file:/data/proman.sqlite` (for SQLite-backed installs)
-- `NEXTAUTH_URL` (if using authentication): `https://your.domain`
-- `NEXTAUTH_SECRET` (if using authentication): strong secret (min 32 chars)
-- `INIT_SECRET` (recommended): secret to protect DB init endpoint
+- `DATABASE_URL` (recommended): `file:/data/proman.sqlite` — required for a real SQLite-backed install
+- `INIT_SECRET` (recommended): secret to protect DB init endpoint (see Database initialization below)
 
-Optional feature flags (reduce env surface)
+Auth and optional integrations
 
-- `ENABLE_STRIPE` (default false) — set to `true` and provide `STRIPE_SECRET_KEY` to enable payments
-- `ENABLE_SENDGRID` (default false) — set to `true` and provide `SENDGRID_API_KEY` to enable email delivery
-- `ENABLE_OAUTH` (default false) — set to `true` and provide `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` to enable Google login
+- `NEXTAUTH_URL` / `NEXTAUTH_SECRET` are only required when authentication is enabled. To keep the deployment surface minimal, you can start with authentication disabled and set these later.
+- Feature flags (opt-in):
+  - `ENABLE_STRIPE=false` — set to `true` and provide `STRIPE_SECRET_KEY` to enable payments
+  - `ENABLE_SENDGRID=false` — set to `true` and provide `SENDGRID_API_KEY` to enable email delivery
+  - `ENABLE_OAUTH=false` — set to `true` and provide `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` to enable Google login
+
+Start with the minimal set above and enable optional services only when needed — this avoids requiring secrets at build-time and keeps TrueNAS app manifests small.
 
 Prestart controls (useful on TrueNAS)
 

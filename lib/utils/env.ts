@@ -6,12 +6,12 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url().optional(),
 
   // NextAuth
-  NEXTAUTH_URL: z.string().url(),
-  NEXTAUTH_SECRET: z.string().min(32),
+  NEXTAUTH_URL: z.string().url().optional(),
+  NEXTAUTH_SECRET: z.string().min(32).optional(),
 
-  // Google OAuth
-  GOOGLE_CLIENT_ID: z.string().min(1),
-  GOOGLE_CLIENT_SECRET: z.string().min(1),
+  // Google OAuth (optional at build-time; enforced at runtime when OAuth is enabled)
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
 
   // Node environment
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
@@ -39,6 +39,22 @@ if (parsed.success) {
   if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test' && !env.DATABASE_URL) {
     console.error('❌ DATABASE_URL is required in production environments');
     process.exit(1);
+  }
+
+  // If OAuth is enabled and we're running a real production server (not CI/build), enforce auth envs
+  const oauthEnabled = (process.env.ENABLE_OAUTH === 'true') || !!process.env.GOOGLE_CLIENT_ID || !!process.env.GOOGLE_CLIENT_SECRET;
+  const isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS;
+  const isBuildTime = isCI || process.env.NEXT_BUILD === 'true';
+
+  if (process.env.NODE_ENV === 'production' && oauthEnabled && !isBuildTime) {
+    if (!env.NEXTAUTH_SECRET || env.NEXTAUTH_SECRET.length < 32) {
+      console.error('❌ NEXTAUTH_SECRET must be set and at least 32 characters when OAuth is enabled in production');
+      process.exit(1);
+    }
+    if (!env.GOOGLE_CLIENT_ID || !env.GOOGLE_CLIENT_SECRET) {
+      console.error('❌ GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET must be set when OAuth is enabled in production');
+      process.exit(1);
+    }
   }
 } else {
   // If we're in test mode, tolerate missing environment variables and provide sensible defaults

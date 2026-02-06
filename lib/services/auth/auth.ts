@@ -26,7 +26,6 @@ type Account = {
   session_state?: string;
 };
 
-import GoogleProvider from 'next-auth/providers/google';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { getPrismaClient } from '@/lib/services/database/database';
 
@@ -44,13 +43,22 @@ function createBaseAuthOptions(): NextAuthOptions {
   const providers: unknown[] = [];
 
   if (hasRealGoogle) {
-    providers.push(
-      GoogleProvider({
-        clientId: googleClientId,
-        clientSecret: googleClientSecret,
-        allowDangerousEmailAccountLinking: true,
-      }),
-    );
+    try {
+      // Require here to avoid importing optional OAuth providers at module-import time
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const GoogleProvider = require('next-auth/providers/google').default;
+      providers.push(
+        GoogleProvider({
+          clientId: googleClientId,
+          clientSecret: googleClientSecret,
+          allowDangerousEmailAccountLinking: true,
+        }),
+      );
+    } catch (err: unknown) {
+      logger.warn('Failed to load GoogleProvider dynamically', {
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
   }
 
   // Credentials provider is always available for demo / self-hosted auth
