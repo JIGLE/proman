@@ -112,6 +112,10 @@ jobs:
     needs: [lint-and-typecheck, test]
     env:
       DATABASE_URL: file:./ci-build.db
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: test-secret-for-ci-min-32-chars
+      GOOGLE_CLIENT_ID: test-placeholder
+      GOOGLE_CLIENT_SECRET: test-placeholder
     steps:
       - uses: actions/checkout@v4
       - name: Create build database
