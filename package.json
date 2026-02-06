@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "prestart": "node scripts/check-hostport.js && node scripts/ensure-sqlite.js",
+    "prestart": "node scripts/prestart.js",
     "start": "next start",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",

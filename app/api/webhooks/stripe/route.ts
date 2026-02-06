@@ -1,15 +1,17 @@
 // Stripe Webhook Handler - Process payment events
 import { NextRequest, NextResponse } from 'next/server';
 import { paymentService } from '@/lib/payment/payment-service';
+import { getSecret, isEnabled } from '@/lib/utils/env';
 import { rateLimit, RateLimits } from '@/lib/middleware/rate-limit';
 import Stripe from 'stripe';
 
 // Lazy initialization of Stripe
 function getStripe(): Stripe {
-  if (!process.env.STRIPE_SECRET_KEY) {
+  const key = getSecret('STRIPE_SECRET_KEY');
+  if (!key) {
     throw new Error('STRIPE_SECRET_KEY not configured');
   }
-  return new Stripe(process.env.STRIPE_SECRET_KEY, {
+  return new Stripe(key, {
     apiVersion: '2025-02-24.acacia',
   });
 }
@@ -24,6 +26,13 @@ function getStripe(): Stripe {
  * - charge.refunded
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Respect feature flag: if Stripe is not enabled, return 404 to indicate webhook is disabled
+  const stripeKey = getSecret('STRIPE_SECRET_KEY');
+  const stripeEnabled = isEnabled('ENABLE_STRIPE') || !!stripeKey;
+  if (!stripeEnabled) {
+    return NextResponse.json({ error: 'Stripe integration disabled' }, { status: 404 });
+  }
+
   // Apply rate limiting for webhooks
   const rateLimitResponse = await rateLimit(request, RateLimits.WEBHOOK);
   if (rateLimitResponse) return rateLimitResponse as NextResponse;
@@ -38,10 +47,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     // Verify webhook signature
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    const webhookSecret = getSecret('STRIPE_WEBHOOK_SECRET');
     if (!webhookSecret) {
       console.error('[Stripe webhook] STRIPE_WEBHOOK_SECRET not configured');
-      return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 });
+      return NextResponse.json({ error: 'Webhook not configured' }, { status: 404 });
     }
 
     let event: Stripe.Event;
@@ -87,8 +96,4 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 }
 
 // Stripe webhooks should not be rate-limited
-export const config = {
-  api: {
-    bodyParser: false, // Required for webhook signature verification
-  },
-};
+// Note: `config` export is deprecated for App Routes; keep handler as-is.

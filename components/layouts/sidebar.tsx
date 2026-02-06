@@ -26,6 +26,11 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSelector } from "@/components/shared/language-selector";
+import {
+  NotificationCenter,
+  useNotifications,
+  getSampleNotifications,
+} from "@/components/ui/notification-center";
 
 interface SidebarProps {
   activeTab?: string;
@@ -51,6 +56,9 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   }, []);
 
   const insightsEnabled = process.env.NEXT_PUBLIC_ENABLE_INSIGHTS !== "false";
+
+  const { notifications, markAsRead, markAllAsRead, deleteNotification, clearAll } =
+    useNotifications(getSampleNotifications());
 
   const handleToggleCollapsed = useCallback(() => {
     setCollapsed((prev) => {
@@ -113,11 +121,11 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
       <div className="flex h-14 items-center border-b border-[var(--color-sidebar-border)] px-3">
         {collapsed ? (
           // Collapsed: centered logo that expands on click
-          <button
+            <button
             onClick={handleToggleCollapsed}
             className="w-full flex items-center justify-center h-full"
-            title="Expand sidebar"
-            aria-label="Expand sidebar"
+              title="Expand Sidebar"
+              aria-label="Expand Sidebar"
           >
             <Building2 className="h-6 w-6 text-blue-500" />
           </button>
@@ -130,13 +138,24 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                 Proman
               </span>
             </div>
-            <Button
+                {/* Notifications (only shown when expanded) */}
+                <div className="mr-2">
+                  <NotificationCenter
+                    notifications={notifications}
+                    onMarkAsRead={markAsRead}
+                    onMarkAllAsRead={markAllAsRead}
+                    onDelete={deleteNotification}
+                    onClearAll={clearAll}
+                    onNotificationClick={() => {}}
+                  />
+                </div>
+                <Button
               variant="ghost"
               size="sm"
               onClick={handleToggleCollapsed}
               className="h-8 w-8 p-0 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
-              title="Collapse sidebar"
-              aria-label="Collapse sidebar"
+              title="Collapse Sidebar"
+              aria-label="Collapse Sidebar"
             >
               <ChevronLeft className="h-4 w-4" />
             </Button>
@@ -257,7 +276,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                 size="sm"
                 onClick={handleToggleCollapsed}
                 className="h-8 w-8 p-0 text-[var(--color-muted-foreground)]"
-                title="Expand sidebar"
+                title="Expand Sidebar"
               >
                 <ChevronRight className="h-4 w-4" />
               </Button>

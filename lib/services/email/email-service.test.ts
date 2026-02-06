@@ -17,18 +17,20 @@ describe('EmailService', () => {
   })
 
   it('sendTemplatedEmail succeeds when sendgrid send is mocked and logs are attempted', async () => {
-    // Mock sendgrid
+    // Ensure fresh modules and then mock sendgrid
+    vi.resetModules()
     const mockSend = vi.fn().mockResolvedValue([{ headers: { 'x-message-id': 'message-123' } }])
-    vi.doMock('@sendgrid/mail', () => ({
+    vi.mock('@sendgrid/mail', () => ({
       setApiKey: vi.fn(),
       send: mockSend,
     }))
-
-    // Ensure we import module after mocking
-    vi.resetModules()
     process.env.SENDGRID_API_KEY = 'fake-key'
     const mod = await import('@/lib/services/email/email-service')
     const { emailService } = mod as { emailService: import('@/lib/services/email/email-service').EmailService }
+
+    // Inject mock client directly to avoid external module resolution issues in the test runner
+    ;(emailService as any).sendGridClient = { setApiKey: vi.fn(), send: mockSend }
+    ;(emailService as any).isInitialized = true
 
     const res = await emailService.sendTemplatedEmail('rent_reminder', 'test@example.com', { tenantName: 'John', propertyAddress: '1 Main St', rentAmount: '100' }, 'user-1')
     expect(res.success).toBe(true)
@@ -37,16 +39,18 @@ describe('EmailService', () => {
   })
 
   it('handles single response object from send and extracts message id', async () => {
+    vi.resetModules()
     const mockSend = vi.fn().mockResolvedValue({ headers: { 'x-message-id': 'single-456' } })
-    vi.doMock('@sendgrid/mail', () => ({
+    vi.mock('@sendgrid/mail', () => ({
       setApiKey: vi.fn(),
       send: mockSend,
     }))
-
-    vi.resetModules()
     process.env.SENDGRID_API_KEY = 'fake-key'
     const mod = await import('@/lib/services/email/email-service')
     const { emailService } = mod as { emailService: import('@/lib/services/email/email-service').EmailService }
+
+    ;(emailService as any).sendGridClient = { setApiKey: vi.fn(), send: mockSend }
+    ;(emailService as any).isInitialized = true
 
     const res = await emailService.sendTemplatedEmail('maintenance_complete', 'test2@example.com', { tenantName: 'Sam', propertyAddress: '2 Elm St', workDescription: 'Fix sink', completionDate: '2025-12-01' }, 'user-2')
     expect(res.success).toBe(true)

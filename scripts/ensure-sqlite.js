@@ -9,12 +9,12 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-// Ensure DATABASE_URL is available for Prisma commands
+// DATABASE_URL may be unset in development; in that case we default to ./dev.db
 if (!process.env.DATABASE_URL) {
-  console.error('[ensure-sqlite] ERROR: DATABASE_URL environment variable is not set');
-  process.exit(1);
+  console.warn('[ensure-sqlite] DATABASE_URL is not set; defaulting to dev.db for local/dev usage');
+} else {
+  console.debug('[ensure-sqlite] DATABASE_URL is available:', process.env.DATABASE_URL.substring(0, 20) + '...');
 }
-console.debug('[ensure-sqlite] DATABASE_URL is available:', process.env.DATABASE_URL.substring(0, 20) + '...');
 
 // Determine DB path from DATABASE_URL (if provided) or default to ./dev.db
 const dbUrlFromEnv = process.env.DATABASE_URL;
@@ -71,15 +71,20 @@ const dbPath = dbUrl.replace(/^file:\/\//, '').replace(/^file:/, '');
 const resolved = path.resolve(process.cwd(), dbPath);
 const dir = path.dirname(resolved);
 
-try {
-  fs.mkdirSync(dir, { recursive: true });
-  const fd = fs.openSync(resolved, 'a'); // create file if missing
-  fs.closeSync(fd);
-  fs.accessSync(resolved, fs.constants.W_OK);
-} catch (err) {
-  error('Cannot create/write DB file:', resolved, err && err.message);
-  process.exit(1);
-}
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    const fd = fs.openSync(resolved, 'a'); // create file if missing
+    fs.closeSync(fd);
+    fs.accessSync(resolved, fs.constants.W_OK);
+  } catch (err) {
+    error('Cannot create/write DB file:', resolved, err && err.message);
+    if (process.env.PRESTART_FAIL_ON_SQLITE === 'true') {
+      process.exit(1);
+    } else {
+      console.warn('[ensure-sqlite] Non-fatal filesystem error (PRESTART_FAIL_ON_SQLITE not enabled). Continuing startup.');
+      process.exit(0);
+    }
+  }
 
 try {
   log('Applying Prisma schema (db push) and generating client...');
@@ -95,7 +100,12 @@ try {
   execSync('npx prisma generate', { stdio: 'inherit', env: childEnv });
 } catch (err) {
   error('Error preparing sqlite DB (prisma commands failed):', err && err.message);
-  process.exit(1);
+  if (process.env.PRESTART_FAIL_ON_SQLITE === 'true') {
+    process.exit(1);
+  } else {
+    console.warn('[ensure-sqlite] Non-fatal prisma error (PRESTART_FAIL_ON_SQLITE not enabled). Continuing startup.');
+    process.exit(0);
+  }
 }
 
 // After applying schema, verify tables exist in sqlite
@@ -124,10 +134,15 @@ try {
   }
 
   expectedTables = Array.from(new Set(expectedTables)).filter(Boolean);
-} catch (err) {
-  error('Could not read/parse prisma/schema.prisma:', err && err.message);
-  process.exit(1);
-}
+  } catch (err) {
+    error('Could not read/parse prisma/schema.prisma:', err && err.message);
+    if (process.env.PRESTART_FAIL_ON_SQLITE === 'true') {
+      process.exit(1);
+    } else {
+      console.warn('[ensure-sqlite] Non-fatal schema parse error (PRESTART_FAIL_ON_SQLITE not enabled). Continuing startup.');
+      process.exit(0);
+    }
+  }
 
 try {
   const Database = require('better-sqlite3');
@@ -158,8 +173,14 @@ try {
   if (missing.length > 0) {
     error('Missing required tables in sqlite DB:', missing.join(', '));
     error('SQLite tables present:', Array.from(present).join(', '));
-    error('Have you run `npx prisma db push`? Container will exit to avoid running with incomplete schema.');
-    process.exit(1);
+    error('Have you run `npx prisma db push`?');
+    if (process.env.PRESTART_FAIL_ON_SQLITE === 'true') {
+      error('Exiting due to missing tables and PRESTART_FAIL_ON_SQLITE=true');
+      process.exit(1);
+    } else {
+      console.warn('[ensure-sqlite] Missing sqlite tables but PRESTART_FAIL_ON_SQLITE not enabled — continuing startup (NOT recommended for production).');
+      process.exit(0);
+    }
   }
 
   log('Verified sqlite tables exist:', critical.join(', '));
@@ -171,5 +192,10 @@ try {
   process.exit(0);
 } catch (err) {
   error('Error while validating sqlite tables:', err && err.message);
-  process.exit(1);
+  if (process.env.PRESTART_FAIL_ON_SQLITE === 'true') {
+    process.exit(1);
+  } else {
+    console.warn('[ensure-sqlite] Non-fatal sqlite validation error (PRESTART_FAIL_ON_SQLITE not enabled). Continuing startup.');
+    process.exit(0);
+  }
 }

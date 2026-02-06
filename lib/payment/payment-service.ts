@@ -2,6 +2,7 @@
 // Supports: Stripe (card, SEPA), Multibanco, MB WAY, Bank Transfer
 
 import Stripe from 'stripe';
+import { getSecret, isEnabled } from '@/lib/utils/env';
 import { getPrismaClient } from '@/lib/services/database/database';
 import type { PrismaClient, PaymentTransaction, Tenant, TransactionStatus, PaymentMethodType } from '@prisma/client';
 
@@ -10,10 +11,15 @@ let stripeInstance: Stripe | null = null;
 
 function getStripeInstance(): Stripe {
   if (!stripeInstance) {
-    if (!process.env.STRIPE_SECRET_KEY) {
-      throw new Error('STRIPE_SECRET_KEY environment variable is not set');
+    const stripeKey = getSecret('STRIPE_SECRET_KEY');
+    const enabled = isEnabled('ENABLE_STRIPE') || !!stripeKey;
+    if (!enabled) {
+      throw new Error('Stripe is not enabled. Set ENABLE_STRIPE=true or provide STRIPE_SECRET_KEY to enable payments');
     }
-    stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    if (!stripeKey) {
+      throw new Error('STRIPE_SECRET_KEY is not set');
+    }
+    stripeInstance = new Stripe(stripeKey, {
       apiVersion: '2025-02-24.acacia',
     });
   }
@@ -68,13 +74,13 @@ export class PaymentService {
   }
 
   private initialize() {
-    if (process.env.STRIPE_SECRET_KEY) {
-      this.isInitialized = true;
-    }
+    const stripeKey = getSecret('STRIPE_SECRET_KEY');
+    const enabled = isEnabled('ENABLE_STRIPE') || !!stripeKey;
+    this.isInitialized = enabled && !!stripeKey;
   }
 
   public isReady(): boolean {
-    return this.isInitialized && !!process.env.STRIPE_SECRET_KEY;
+    return this.isInitialized && !!getSecret('STRIPE_SECRET_KEY');
   }
 
   /**
