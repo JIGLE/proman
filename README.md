@@ -332,6 +332,34 @@ Automation (GitHub Actions example)
     curl -sS -X POST -H "Authorization: Bearer $INIT_SECRET" https://your-host.example.com/api/debug/db/init | jq
 ```
 
+In-app release notifications
+- ProMan supports in-app update notifications for administrators and an optional webhook to notify the running instance when a new release is published.
+
+Enable webhook notifications (recommended)
+1. Create an `UPDATE_WEBHOOK_SECRET` repository secret with a strong random value.
+2. Add the secret as an environment variable to your production app (e.g. TrueNAS Custom App env or k8s Secret `UPDATE_WEBHOOK_SECRET`).
+3. Update your release workflow to POST to the running instance after the GitHub Release is created (example below).
+
+GitHub Actions snippet (add to `release.yml` after Create GitHub Release step):
+```yaml
+- name: Notify running instance of new release
+  if: env.UPDATE_WEBHOOK_URL != '' && secrets.UPDATE_WEBHOOK_SECRET
+  env:
+    UPDATE_WEBHOOK_SECRET: ${{ secrets.UPDATE_WEBHOOK_SECRET }}
+    UPDATE_WEBHOOK_URL: ${{ secrets.UPDATE_WEBHOOK_URL }}
+  run: |
+    echo "Notifying running instance: $UPDATE_WEBHOOK_URL"
+    curl -sS -X POST -H "Authorization: Bearer $UPDATE_WEBHOOK_SECRET" -H "Content-Type: application/json" \
+      -d '{"tag_name": "v${{ steps.version.outputs.new_version }}", "name":"v${{ steps.version.outputs.new_version }}", "html_url": "https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.new_version }}" }' \
+      "$UPDATE_WEBHOOK_URL/api/updates" || true
+```
+
+Poll for updates (fallback)
+- The app also exposes `GET /api/updates` to return cached/latest release info; the UI checks this endpoint periodically when admins are signed in.
+
+Summary
+- Create `UPDATE_WEBHOOK_SECRET` and `UPDATE_WEBHOOK_URL` (as a repo secret and as an app environment variable respectively) to enable immediate, secure notification of new releases. The app will then show a dismissible banner to users with `ADMIN` role when a newer version is available.
+
 Summary
 - For production installs on TrueNAS Scale: set `INIT_SECRET` (either via App UI env, Helm values, or a Kubernetes Secret), then initialize the DB from a trusted admin machine or CI/CD pipeline using that secret.
 
