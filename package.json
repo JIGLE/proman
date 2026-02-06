@@ -104,4 +104,8 @@
     "typescript": "^5",
     "vitest": "^4.0.16"
   }
+  ,
+  "overrides": {
+    "@opentelemetry/api": "1.4.1"
+  }
 }
