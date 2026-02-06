@@ -33,11 +33,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate Prisma client
-        run: npx prisma generate
+      - name: Generate Prisma client (pinned)
+        run: npx prisma@7.3.0 generate
 
-      - name: Setup test database
-        run: npx prisma db push
+      - name: Setup test database (pinned)
+        run: npx prisma@7.3.0 db push
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
