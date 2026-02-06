@@ -110,8 +110,15 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: [lint-and-typecheck, test]
+    env:
+      DATABASE_URL: file:./ci-build.db
     steps:
       - uses: actions/checkout@v4
+      - name: Create build database
+        run: |
+          touch ./ci-build.db
+        env:
+          DATABASE_URL: file:./ci-build.db
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -132,11 +139,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Prepare build database (pinned)
+        run: |
+          DATABASE_URL=file:./ci-build.db npx prisma@7.3.0 db push --accept-data-loss
+        env:
+          DATABASE_URL: file:./ci-build.db
+
       - name: Build (Next.js)
         run: |
           npm run build
         env:
           NODE_ENV: production
+          DATABASE_URL: file:./ci-build.db
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3

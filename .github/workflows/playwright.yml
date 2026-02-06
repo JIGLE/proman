@@ -36,14 +36,21 @@ jobs:
       - name: Generate Prisma client (pinned)
         run: npx prisma@7.3.0 generate
 
-      - name: Setup test database (pinned)
-        run: npx prisma@7.3.0 db push
+      - name: Prepare test database (pinned)
+        run: |
+          touch ./test.db
+          DATABASE_URL=file:./test.db npx prisma@7.3.0 db push --accept-data-loss
+        env:
+          DATABASE_URL: file:./test.db
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
       - name: Build application
         run: npm run build
+        env:
+          NODE_ENV: production
+          DATABASE_URL: file:./test.db
 
       - name: Run Playwright tests
         run: npx playwright test --project=chromium
