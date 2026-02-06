@@ -215,6 +215,13 @@ When restarting or updating the app in TrueNAS SCALE:
   - GET `/version.json` (returns `{"version","git_commit","build_time"}`).
   - `kubectl get deployment proman -o yaml` and inspect `metadata.annotations` for `app.kubernetes.io/version` or `proman.image`.
 
+Showing the app icon, version and source in TrueNAS App Info
+- TrueNAS reads chart/package metadata (Chart.yaml) and the packaged chart when rendering the App Info panel. To make the **Version**, **Source** and **Logo** visible in the TrueNAS UI:
+  1. Ensure `Chart.yaml` contains `version`, `appVersion`, `home`, `sources` and `icon` (already present in this repo). We updated `version` and `appVersion` to `1.1.0`.
+  2. Repackage the Helm chart and upload the chart to your TrueNAS catalog or install/upgrade the Custom App using the packaged chart file (`.tgz`).
+  3. In the TrueNAS Apps UI, use the uploaded chart or catalog entry when installing — the App Info panel will show Version, Source and Logo from the chart metadata.
+
+If you'd like, I can also: (a) create the packaged chart artifact (`helm package`) and add it to `release-charts/` for you, or (b) add a small helper script in `scripts/` to repackage and upload the chart to your TrueNAS catalog. Which do you prefer?
 ### Post-install checks and troubleshooting
 - Check pod status and logs:
   ```bash
@@ -272,9 +279,63 @@ Temporary emergency fallback
 
 - You can allow sign-ins while DB is broken (not recommended long-term) by setting the environment variable `NEXTAUTH_ALLOW_DB_FAILURE=true` in your App/Helm values. This bypasses DB-dependent creation and lets sign-in proceed.
 
-Notes
-- The `POST /api/debug/db/init` route will create the DB file (if missing), run `npx prisma db push` and `npx prisma generate` (skipped in `NODE_ENV=test`). Protect it with `INIT_SECRET` in production to avoid unauthorized schema changes.
-- After successful init, retry the sign-in flow — the `signIn` callback will create the user record on first login if needed.
+Notes & `INIT_SECRET` (security & deployment)
+- The `POST /api/debug/db/init` route will create the DB file (if missing), run `npx prisma db push` and `npx prisma generate` (skipped in `NODE_ENV=test`). In production **protect this endpoint** by setting a strong `INIT_SECRET` to avoid unauthorized schema changes.
+
+What `INIT_SECRET` does
+- `INIT_SECRET` is a shared secret the server expects for one of two verification methods when initializing the DB in production:
+  - Bearer token: `Authorization: Bearer <INIT_SECRET>` (simple and common), or
+  - HMAC: `X-Signature` header containing HMAC-SHA256 of the payload (method+url+secret) for environments that prefer signatures.
+- The endpoint only accepts POST for initialization; GET will return 405.
+
+Generate a secret (example)
+```bash
+# 32 bytes hex (recommended)
+openssl rand -hex 32
+# or
+head -c 32 /dev/urandom | base64
+```
+
+Calling the endpoint
+- Bearer (recommended and simple):
+```bash
+curl -sS -X POST -H "Authorization: Bearer $INIT_SECRET" https://your-host.example.com/api/debug/db/init | jq
+```
+
+- HMAC (alternative):
+```bash
+SIGNATURE=$(printf '%s%s%s' "POST" "https://your-host.example.com/api/debug/db/init" "$INIT_SECRET" | openssl dgst -sha256 -hex | sed 's/^.* //')
+curl -sS -X POST -H "X-Signature: $SIGNATURE" https://your-host.example.com/api/debug/db/init | jq
+```
+
+TrueNAS Scale / Helm / Kubernetes guidance
+- TrueNAS Scale (Custom App UI): add `INIT_SECRET` in the **Environment Variables** section when installing or editing the app. This is the simplest and safest option in the SCALE UI.
+- Helm (values file): you can add an `env` entry in `helm/proman/values-truenas.yaml`:
+```yaml
+env:
+  - name: INIT_SECRET
+    value: "<your-secret>"
+```
+- Kubernetes secret (preferred for production): create a k8s Secret and reference it in your deployment (the repo's `k8s/deployment.yaml` demonstrates using `valueFrom.secretKeyRef`):
+```bash
+kubectl create secret generic proman-secrets --from-literal=INIT_SECRET="$(openssl rand -hex 32)" -n <namespace>
+```
+- Important: do not expose `INIT_SECRET` to the browser or commit it to source control. The app's client-side code intentionally does not include the secret — calls from the browser will fail with 401/403 if the secret is required.
+
+Automation (GitHub Actions example)
+- To run initialization as part of CI/CD (after the app is deployed) put a step in your workflow that uses the repository secret `INIT_SECRET`:
+```yaml
+- name: Initialize DB
+  env:
+    INIT_SECRET: ${{ secrets.INIT_SECRET }}
+  run: |
+    curl -sS -X POST -H "Authorization: Bearer $INIT_SECRET" https://your-host.example.com/api/debug/db/init | jq
+```
+
+Summary
+- For production installs on TrueNAS Scale: set `INIT_SECRET` (either via App UI env, Helm values, or a Kubernetes Secret), then initialize the DB from a trusted admin machine or CI/CD pipeline using that secret.
+
+After successful init, retry the sign-in flow — the `signIn` callback will create the user record on first login if needed.
 
 
 ### Security & registry notes
