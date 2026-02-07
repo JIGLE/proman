@@ -56,6 +56,16 @@ Set required env vars in your Docker/Helm manifests or CI secrets.
 - E2E tests: `npm run test:e2e` (Playwright)
 - Coverage: `npm run test:coverage`
 
+E2E in CI
+-------
+
+- The Playwright workflow (`.github/workflows/playwright.yml`) is manual-only (`workflow_dispatch`) to avoid noisy automatic runs.
+- The consolidated CI (`.github/workflows/ci.yml`) includes a conditional E2E job that runs only when explicitly requested:
+  - Manually dispatch the CI workflow and set `run_e2e` = `true`, or
+  - Add the `run-e2e` label to a Pull Request to trigger E2E during PR validation.
+
+This keeps E2E tests available in CI while preventing them from running on every push.
+
 ## Deployment notes
 
 - Containers: `Dockerfile` and `docker-compose.yml` are provided for local/container deployments.
