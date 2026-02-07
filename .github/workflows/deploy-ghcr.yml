@@ -25,7 +25,6 @@ on:
 
 permissions:
   contents: read
-  packages: write
 
 concurrency:
   group: deploy-${{ github.ref }}
@@ -34,6 +33,9 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     timeout-minutes: 30
     env:
       REGISTRY: ghcr.io
@@ -95,6 +97,10 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+        # Note: For stronger security you can use OIDC to avoid long-lived tokens.
+        # Example (non-breaking guidance):
+        # - Use `docker/login-action` with `use-oidc: true` (check action docs) to authenticate via OIDC.
+        # - Alternatively set `secrets.GHCR_PAT` and use that here instead of GITHUB_TOKEN.
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v6

@@ -24,6 +24,14 @@ docker-compose build
 docker-compose up -d
 ```
 
+## Webhook & Release Notifications
+--------------------------------
+
+- The in-app webhook endpoint for automatic release notifications is currently disabled. To re-enable the webhook endpoint set the environment variable `UPDATE_WEBHOOK_ENABLED=true` in your deployment.
+- The GitHub Actions release workflow will only notify a running instance when `ENABLE_RELEASE_NOTIFY` is set to `true` in the workflow environment and the secrets `UPDATE_WEBHOOK_URL` and `UPDATE_WEBHOOK_SECRET` are configured. This is gated by default to prevent accidental notifications.
+- To re-enable release notifications in CI, edit `.github/workflows/release.yml` or set `ENABLE_RELEASE_NOTIFY` to `true` in a protected environment and ensure `secrets.UPDATE_WEBHOOK_URL` and `secrets.UPDATE_WEBHOOK_SECRET` are present.
+
+Security note: avoid printing or logging secrets and webhook URLs in CI logs; review workflows for any `echo` statements that reveal sensitive data.
 Or build a container image and run with Docker:
 
 ```bash

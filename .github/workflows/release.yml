@@ -22,8 +22,8 @@ on:
         default: false
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
+  packages: read
 
 concurrency:
   group: release
@@ -32,8 +32,13 @@ concurrency:
 jobs:
   release:
     name: Create Release
+    permissions:
+      contents: write
+      packages: write
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      ENABLE_RELEASE_NOTIFY: 'false'
     outputs:
       version: ${{ steps.version.outputs.new_version }}
       tag: ${{ steps.version.outputs.tag }}
@@ -158,7 +163,7 @@ EOF
           echo "The tag push will trigger the Deploy to GHCR workflow automatically." >> $GITHUB_STEP_SUMMARY
 
       - name: Notify running instance of new release (optional)
-        if: secrets.UPDATE_WEBHOOK_URL && secrets.UPDATE_WEBHOOK_SECRET
+        if: env.ENABLE_RELEASE_NOTIFY == 'true' && secrets.UPDATE_WEBHOOK_URL && secrets.UPDATE_WEBHOOK_SECRET
         env:
           UPDATE_WEBHOOK_SECRET: ${{ secrets.UPDATE_WEBHOOK_SECRET }}
           UPDATE_WEBHOOK_URL: ${{ secrets.UPDATE_WEBHOOK_URL }}
@@ -168,7 +173,7 @@ EOF
           # Compute HMAC-SHA256 signature (hex) and send as X-Hub-Signature-256 header
           SIG_HEX=$(printf '%s' "$PAYLOAD" | openssl dgst -sha256 -hmac "$UPDATE_WEBHOOK_SECRET" -hex | sed 's/^.* //') || true
           SIG_HEADER="sha256=${SIG_HEX}"
-          echo "Signature: $SIG_HEADER"
+          # Send the notification with HMAC header. Do not print secrets or URLs to logs.
           curl -sS -X POST \
             -H "Authorization: Bearer $UPDATE_WEBHOOK_SECRET" \
             -H "X-Hub-Signature-256: $SIG_HEADER" \
