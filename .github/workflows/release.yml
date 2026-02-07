@@ -164,6 +164,14 @@ EOF
           UPDATE_WEBHOOK_URL: ${{ secrets.UPDATE_WEBHOOK_URL }}
         run: |
           echo "Notifying running instance: $UPDATE_WEBHOOK_URL"
-          curl -sS -X POST -H "Authorization: Bearer $UPDATE_WEBHOOK_SECRET" -H "Content-Type: application/json" \
-            -d '{"tag_name": "v${{ steps.version.outputs.new_version }}", "name":"v${{ steps.version.outputs.new_version }}", "html_url": "https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.new_version }}" }' \
+          PAYLOAD='{"tag_name": "v${{ steps.version.outputs.new_version }}", "name":"v${{ steps.version.outputs.new_version }}", "html_url": "https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.new_version }}" }'
+          # Compute HMAC-SHA256 signature (hex) and send as X-Hub-Signature-256 header
+          SIG_HEX=$(printf '%s' "$PAYLOAD" | openssl dgst -sha256 -hmac "$UPDATE_WEBHOOK_SECRET" -hex | sed 's/^.* //') || true
+          SIG_HEADER="sha256=${SIG_HEX}"
+          echo "Signature: $SIG_HEADER"
+          curl -sS -X POST \
+            -H "Authorization: Bearer $UPDATE_WEBHOOK_SECRET" \
+            -H "X-Hub-Signature-256: $SIG_HEADER" \
+            -H "Content-Type: application/json" \
+            -d "$PAYLOAD" \
             "$UPDATE_WEBHOOK_URL/api/updates" || true
