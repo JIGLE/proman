@@ -1,4 +1,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![CI](https://github.com/JIGLE/ProMan/actions/workflows/ci.yml/badge.svg)](https://github.com/JIGLE/ProMan/actions/workflows/ci.yml)
+[![Security Scan](https://github.com/JIGLE/ProMan/actions/workflows/security-scan.yml/badge.svg)](https://github.com/JIGLE/ProMan/actions/workflows/security-scan.yml)
+[![Deploy to GHCR](https://github.com/JIGLE/ProMan/actions/workflows/deploy-ghcr.yml/badge.svg)](https://github.com/JIGLE/ProMan/actions/workflows/deploy-ghcr.yml)
 
 # ProMan — Property Management Dashboard
 
@@ -38,22 +41,22 @@ npm run type-check      # TypeScript check
 
 ## Key Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes (prod) | SQLite path, e.g. `file:/data/proman.sqlite` |
-| `NEXTAUTH_URL` | Yes (prod) | Public URL of the application |
-| `NEXTAUTH_SECRET` | Yes (prod) | Session signing secret (min 32 chars) |
-| `INIT_SECRET` | Recommended | Protects the DB init endpoint |
+| Variable          | Required    | Description                                  |
+| ----------------- | ----------- | -------------------------------------------- |
+| `DATABASE_URL`    | Yes (prod)  | SQLite path, e.g. `file:/data/proman.sqlite` |
+| `NEXTAUTH_URL`    | Yes (prod)  | Public URL of the application                |
+| `NEXTAUTH_SECRET` | Yes (prod)  | Session signing secret (min 32 chars)        |
+| `INIT_SECRET`     | Recommended | Protects the DB init endpoint                |
 
 See [.env.example](.env.example) for the complete list with defaults and documentation.
 
 ### Feature Flags (opt-in)
 
-| Flag | Default | Enables |
-|------|---------|---------|
-| `ENABLE_STRIPE` | `false` | Stripe payments |
+| Flag              | Default | Enables                 |
+| ----------------- | ------- | ----------------------- |
+| `ENABLE_STRIPE`   | `false` | Stripe payments         |
 | `ENABLE_SENDGRID` | `false` | SendGrid email delivery |
-| `ENABLE_OAUTH` | `false` | Google OAuth login |
+| `ENABLE_OAUTH`    | `false` | Google OAuth login      |
 
 ## Deployment
 
@@ -77,12 +80,12 @@ See [Database Strategy](docs/DATABASE_STRATEGY.md) for migrations, backups, and 
 
 ## Helper Scripts
 
-| Script | Description |
-|--------|-------------|
-| `scripts/build-image.sh` | Build Docker image with build args |
-| `scripts/helm-package.sh` | Package Helm chart |
-| `scripts/init-db.sh` | Initialize database via API |
-| `scripts/db-backup.sh` | Backup SQLite database |
+| Script                    | Description                        |
+| ------------------------- | ---------------------------------- |
+| `scripts/build-image.sh`  | Build Docker image with build args |
+| `scripts/helm-package.sh` | Package Helm chart                 |
+| `scripts/init-db.sh`      | Initialize database via API        |
+| `scripts/db-backup.sh`    | Backup SQLite database             |
 
 ## Documentation
 
@@ -116,7 +119,9 @@ Issues & discussions: https://github.com/JIGLE/proman
 ## License
 
 [MIT](LICENSE)
+
 ```
 
 
 
+```
