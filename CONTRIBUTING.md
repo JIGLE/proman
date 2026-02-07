@@ -1,3 +1,43 @@
+# Contributing
+
+This repository follows simple branch and PR conventions to keep CI fast, reviews clear, and releases reliable.
+
+Branch naming
+- `main` — protected, release-ready.
+- `develop` — integration branch (optional).
+- `feature/<short-description>` — new features.
+- `bugfix/<short-description>` — bug fixes targeting `develop` or `main`.
+- `hotfix/<short-description>` — urgent fixes for `main`.
+- `chore/<short-description>` — non-functional changes (CI, docs, deps).
+
+PR workflow
+- Open PRs against `main` (or `develop` if used).
+- Require at least one approving review before merge.
+- Ensure CI checks pass: `Lint & Type Check`, `Unit Tests`, and `Build` must be green.
+- Use clear titles and a short description; reference related issue numbers when available.
+
+Branch protection & automated rules (recommended)
+- Require status checks: `Lint & Type Check`, `Unit Tests`, `Build`.
+- Require pull request reviews before merging.
+- Disable force-push to protected branches.
+- Enable `Automatically delete head branches` (this repo has it enabled) to keep remotes tidy.
+
+E2E / Playwright guidance
+- Long-running E2E tests are opt-in to avoid noisy runs:
+  - Run Playwright manually via the `Playwright E2E Tests` workflow (`workflow_dispatch`).
+  - Or trigger E2E in the consolidated CI by either:
+    - Manually dispatching the `CI - Consolidated` workflow with `run_e2e=true`, or
+    - Adding the `run-e2e` label to a Pull Request.
+
+Security & secrets
+- Never commit secrets into the repo or workflow logs.
+- Use repository `Secrets` or protected environments for tokens and webhook URLs.
+
+Release and webhook notes
+- Releases are managed via the `release.yml` workflow. CI can notify a running instance when `ENABLE_RELEASE_NOTIFY=true` and secrets are configured.
+- The in-app update webhook is disabled by default; to re-enable set `UPDATE_WEBHOOK_ENABLED=true` in your deployment.
+
+Thanks for contributing — open an issue or a PR if you need help with the process.
 # Contributing to Proman
 
 ## Development Workflow
