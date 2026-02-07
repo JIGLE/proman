@@ -34,6 +34,15 @@ const parsed = envSchema.safeParse(process.env);
 
 if (parsed.success) {
   env = parsed.data;
+  // In test mode, ensure some runtime secrets/urls are present for tests
+  if (process.env.NODE_ENV === 'test') {
+    env = {
+      ...env,
+      NEXTAUTH_URL: env.NEXTAUTH_URL ?? 'http://localhost:3000',
+      NEXTAUTH_SECRET: env.NEXTAUTH_SECRET ?? 'test-secret-should-be-long-enough-for-dev',
+      NODE_ENV: 'test',
+    } as z.infer<typeof envSchema>;
+  }
   
   // Enforce DATABASE_URL in non-development environments
   if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test' && !env.DATABASE_URL) {
