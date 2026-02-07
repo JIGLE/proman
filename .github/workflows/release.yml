@@ -22,8 +22,8 @@ on:
         default: false
 
 permissions:
-  contents: write
-  packages: write
+  contents: read
+  packages: read
 
 concurrency:
   group: release
@@ -32,6 +32,9 @@ concurrency:
 jobs:
   release:
     name: Create Release
+    permissions:
+      contents: write
+      packages: write
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
