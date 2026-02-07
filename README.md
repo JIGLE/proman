@@ -36,6 +36,10 @@ docker run --rm -p 3000:3000 -e NODE_ENV=production proman:local
 - `PERSISTENCE_MOUNT_PATH` — optional. Directory used to persist `latest-release.json`. Defaults to `/app/data`, `/data` or `process.cwd()`.
 - `UPDATE_WEBHOOK_SECRET` — secret used to verify incoming update webhook requests. When configured the service verifies `X-Hub-Signature-256` HMAC; a legacy `Authorization: Bearer <secret>` header is accepted as a fallback.
 
+- `UPDATE_WEBHOOK_HMAC_ONLY` — optional; set to `true` to reject Bearer fallback and require `X-Hub-Signature-256` only (recommended after CI rollout).
+- `UPDATE_WEBHOOK_RATE_LIMIT` — optional integer, maximum requests per `UPDATE_WEBHOOK_RATE_WINDOW_MS` (default 60 per minute).
+- `UPDATE_WEBHOOK_RATE_WINDOW_MS` — optional integer, rate-limit window in milliseconds (default 60000).
+
 Set required env vars in your Docker/Helm manifests or CI secrets.
 
 ## Testing

@@ -94,6 +94,8 @@ Security checklist for `app/api/updates/route.ts`
 - Path & permissions: PASS/FAIL — Ensure `PERSISTENCE_MOUNT_PATH` points to a writable directory with limited permissions.
 - Input validation: PASS/FAIL — Validate that payload contains at least `tag_name`.
 - DoS / rate limiting: NOTE — Endpoint publicly reachable; consider rate-limiting or IP allowlist if needed.
+- HMAC-only rollout: set `UPDATE_WEBHOOK_HMAC_ONLY=true` in running instances to require HMAC signatures only (remove Bearer fallback).
+- Rate limiting: basic in-process defaults are available via `UPDATE_WEBHOOK_RATE_LIMIT` and `UPDATE_WEBHOOK_RATE_WINDOW_MS`; prefer infra-level rate limiting in production.
 - Logging: PASS/FAIL — Do not log secrets or full payloads; log only metadata and errors.
 
 ---

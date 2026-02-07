@@ -75,6 +75,31 @@ function writeCachedRelease(info: ReleaseInfo): void {
 
 let inMemoryCache: ReleaseInfo | null = null;
 
+// Rate limiting (simple in-memory per-IP counter). Not suitable for multi-instance
+// deployments; consider infra-level rate limiting for production.
+const RATE_LIMIT_WINDOW_MS = Number(process.env.UPDATE_WEBHOOK_RATE_WINDOW_MS || 60_000);
+const RATE_LIMIT_MAX = Number(process.env.UPDATE_WEBHOOK_RATE_LIMIT || 60);
+const rateMap: Map<string, { count: number; resetAt: number }> = new Map();
+
+function getClientId(request: Request): string {
+  const xf = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '';
+  if (xf) return xf.split(',')[0].trim();
+  return 'unknown';
+}
+
+function isRateLimited(request: Request): boolean {
+  const id = getClientId(request);
+  const now = Date.now();
+  const entry = rateMap.get(id);
+  if (!entry || now > entry.resetAt) {
+    rateMap.set(id, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return false;
+  }
+  entry.count += 1;
+  rateMap.set(id, entry);
+  return entry.count > RATE_LIMIT_MAX;
+}
+
 function computeSignature(secret: string, body: string): string {
   return `sha256=${crypto.createHmac('sha256', secret).update(body, 'utf8').digest('hex')}`;
 }
@@ -149,6 +174,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: 'invalid body' }, { status: 400 });
   }
 
+  // Rate limit requests
+  if (isRateLimited(request)) {
+    return NextResponse.json({ ok: false, error: 'rate_limited' }, { status: 429 });
+  }
+
   // Verify HMAC signature if secret is configured
   const sigHeader = request.headers.get('x-hub-signature-256') || '';
   let authorized = false;
@@ -157,8 +187,10 @@ export async function POST(request: Request) {
     if (safeCompare(computed, sigHeader)) authorized = true;
   }
 
-  // Backwards-compatible: allow Bearer token matching secret
-  if (!authorized && secret) {
+  // Optionally require HMAC-only mode (no Bearer fallback)
+  const hmacOnly = process.env.UPDATE_WEBHOOK_HMAC_ONLY === 'true';
+  if (!authorized && secret && !hmacOnly) {
+    // Backwards-compatible: allow Bearer token matching secret
     const auth = request.headers.get('authorization') || '';
     const isBearer = auth.startsWith('Bearer ') && auth.slice(7) === secret;
     if (isBearer) authorized = true;
