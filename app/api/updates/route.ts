@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 export const runtime = 'nodejs';
 
@@ -53,13 +54,41 @@ function readCachedRelease(): ReleaseInfo | null {
 function writeCachedRelease(info: ReleaseInfo): void {
   try {
     const fp = cacheFilePath();
-    fs.writeFileSync(fp, JSON.stringify({ ...info, fetchedAt: Date.now() }), { encoding: 'utf8' });
+    const tmp = `${fp}.tmp.${Date.now()}`;
+    const payload = JSON.stringify({ ...info, fetchedAt: Date.now() });
+    fs.writeFileSync(tmp, payload, { encoding: 'utf8' });
+    try {
+      fs.renameSync(tmp, fp);
+    } catch (err) {
+      // Best effort: attempt to remove tmp and write directly as fallback
+      try {
+        fs.unlinkSync(tmp);
+      } catch {
+        // ignore
+      }
+      fs.writeFileSync(fp, payload, { encoding: 'utf8' });
+    }
   } catch (err) {
     console.warn('Failed to write release cache:', err instanceof Error ? err.message : String(err));
   }
 }
 
 let inMemoryCache: ReleaseInfo | null = null;
+
+function computeSignature(secret: string, body: string): string {
+  return `sha256=${crypto.createHmac('sha256', secret).update(body, 'utf8').digest('hex')}`;
+}
+
+function safeCompare(a: string, b: string): boolean {
+  try {
+    const ab = Buffer.from(a);
+    const bb = Buffer.from(b);
+    if (ab.length !== bb.length) return false;
+    return crypto.timingSafeEqual(ab, bb);
+  } catch {
+    return false;
+  }
+}
 
 async function fetchLatestFromGitHub(): Promise<ReleaseInfo | null> {
   try {
@@ -111,21 +140,55 @@ export async function GET() {
 export async function POST(request: Request) {
   const secret = process.env.UPDATE_WEBHOOK_SECRET;
 
-  if (secret) {
+  // Read raw body for HMAC verification and safe parsing
+  let rawBody = '';
+  try {
+    rawBody = await request.text();
+  } catch (err) {
+    console.error('Failed to read raw request body:', err);
+    return NextResponse.json({ ok: false, error: 'invalid body' }, { status: 400 });
+  }
+
+  // Verify HMAC signature if secret is configured
+  const sigHeader = request.headers.get('x-hub-signature-256') || '';
+  let authorized = false;
+  if (secret && sigHeader) {
+    const computed = computeSignature(secret, rawBody);
+    if (safeCompare(computed, sigHeader)) authorized = true;
+  }
+
+  // Backwards-compatible: allow Bearer token matching secret
+  if (!authorized && secret) {
     const auth = request.headers.get('authorization') || '';
     const isBearer = auth.startsWith('Bearer ') && auth.slice(7) === secret;
-    if (!isBearer) {
-      return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
-    }
+    if (isBearer) authorized = true;
+  }
+
+  if (secret && !authorized) {
+    return NextResponse.json({ ok: false, error: 'unauthorized' }, { status: 401 });
+  }
+
+  // Parse payload from raw body and validate minimal fields
+  let payload: any = {};
+  try {
+    payload = rawBody ? JSON.parse(rawBody) : {};
+  } catch (err) {
+    console.error('Failed to parse JSON payload:', err instanceof Error ? err.message : String(err));
+    return NextResponse.json({ ok: false, error: 'bad payload' }, { status: 400 });
+  }
+
+  const tag = payload.tag_name || payload.tag || payload.release?.tag_name || payload.release?.tag;
+  if (!tag) {
+    // Accepting some webhook formats but require at least tag name
+    return NextResponse.json({ ok: false, error: 'missing tag_name' }, { status: 400 });
   }
 
   try {
-    const payload = await request.json();
     const info: ReleaseInfo = {
-      tag_name: payload.tag_name || payload.tag || payload.release?.tag_name,
+      tag_name: tag,
       name: payload.name || payload.release?.name,
-      html_url: payload.html_url || payload.release?.html_url || payload.release?.html_url,
-      body: payload.body || payload.release?.body || payload.release?.body,
+      html_url: payload.html_url || payload.release?.html_url,
+      body: payload.body || payload.release?.body,
       published_at: payload.published_at || payload.release?.published_at,
       fetchedAt: Date.now(),
     };

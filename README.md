@@ -1,5 +1,71 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+# ProMan
+
+ProMan is a Next.js-based property management backend and UI with Prisma, Playwright testing, and containerized deployment support (Docker / Helm / Kubernetes).
+
+## Quick start (development)
+
+Install dependencies and run the dev server:
+
+```bash
+npm install
+npm run dev
+```
+
+Open http://localhost:3000
+
+## Quick start (Docker)
+
+Build and run with Docker Compose:
+
+```bash
+docker-compose build
+docker-compose up -d
+```
+
+Or build a container image and run with Docker:
+
+```bash
+docker build -t proman:local .
+docker run --rm -p 3000:3000 -e NODE_ENV=production proman:local
+```
+
+## Environment variables
+
+- `PERSISTENCE_MOUNT_PATH` — optional. Directory used to persist `latest-release.json`. Defaults to `/app/data`, `/data` or `process.cwd()`.
+- `UPDATE_WEBHOOK_SECRET` — secret used to verify incoming update webhook requests. When configured the service verifies `X-Hub-Signature-256` HMAC; a legacy `Authorization: Bearer <secret>` header is accepted as a fallback.
+
+Set required env vars in your Docker/Helm manifests or CI secrets.
+
+## Testing
+
+- Unit tests: `npm test` (Vitest)
+- E2E tests: `npm run test:e2e` (Playwright)
+- Coverage: `npm run test:coverage`
+
+## Deployment notes
+
+- Containers: `Dockerfile` and `docker-compose.yml` are provided for local/container deployments.
+- Kubernetes / Helm: `k8s/` and `helm/proman/` contain manifests and templates for production deployments including PersistentVolumeClaim templates.
+- Ensure `PERSISTENCE_MOUNT_PATH` points to a writable persistent volume in containers or pods. The updates endpoint writes a small JSON cache file; it requires a writable filesystem in the configured mount.
+
+## Webhook (update) endpoint
+
+The update webhook endpoint is available at `/api/updates`. It accepts POSTs from CI/CD to update the cached "latest release" information. When `UPDATE_WEBHOOK_SECRET` is set the endpoint expects a valid HMAC in the `X-Hub-Signature-256` header; the legacy `Authorization: Bearer <secret>` header is also accepted for compatibility.
+
+## Where to find more docs
+
+- Full architecture, monitoring, and deployment docs: `docs/`
+- API routes: `app/api/`
+- Tests: `tests/`, `e2e/`, and `playwright/`
+
+## Contributing
+
+See `CONTRIBUTING.md` for contribution guidelines.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 # ProMan — Property Management Dashboard
 
 Lightweight, self-hosted property management built with Next.js and Prisma. This README is a concise deployment and quick-start guide focused on running ProMan on TrueNAS SCALE or similar platforms.
