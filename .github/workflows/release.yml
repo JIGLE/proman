@@ -124,13 +124,13 @@ jobs:
             NOTES="$COMMITS"
           fi
           
-cat > release_notes.md << 'EOF'
-## What's Changed in v${{ steps.version.outputs.new_version }}
-
-EOF
-          echo "$NOTES" >> release_notes.md
-          echo "" >> release_notes.md
-          echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG:-HEAD~10}...v${{ steps.version.outputs.new_version }}" >> release_notes.md
+          cat > release_notes.md << EOF
+          ## What's Changed in v${{ steps.version.outputs.new_version }}
+          
+          $NOTES
+          
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG:-HEAD~10}...v${{ steps.version.outputs.new_version }}
+          EOF
           
           cat release_notes.md
 
