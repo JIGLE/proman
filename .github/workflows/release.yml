@@ -169,7 +169,7 @@ jobs:
           echo "The tag push will trigger the Deploy to GHCR workflow automatically." >> $GITHUB_STEP_SUMMARY
 
       - name: Notify running instance of new release (optional)
-        if: env.ENABLE_RELEASE_NOTIFY == 'true' && secrets.UPDATE_WEBHOOK_URL && secrets.UPDATE_WEBHOOK_SECRET
+        if: vars.ENABLE_RELEASE_NOTIFY == 'true' && secrets.UPDATE_WEBHOOK_URL != '' && secrets.UPDATE_WEBHOOK_SECRET != ''
         env:
           UPDATE_WEBHOOK_SECRET: ${{ secrets.UPDATE_WEBHOOK_SECRET }}
           UPDATE_WEBHOOK_URL: ${{ secrets.UPDATE_WEBHOOK_URL }}
