@@ -6,9 +6,12 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    # Run security scan daily at 2 AM UTC
     - cron: '0 2 * * *'
   workflow_dispatch:
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
   NODE_VERSION: '22'
@@ -64,7 +67,8 @@ jobs:
         with:
           name: npm-audit-report
           path: audit-report.json
-          retention-days: 30
+          retention-days: 14
+          if-no-files-found: ignore
 
   security-scan:
     name: Custom Security Scan
@@ -95,7 +99,7 @@ jobs:
         with:
           name: security-report
           path: security-report.json
-          retention-days: 30
+          retention-days: 14
           if-no-files-found: ignore
 
       - name: Check scan results
@@ -157,16 +161,12 @@ jobs:
         with:
           fail-on-severity: critical
           deny-licenses: GPL-2.0, GPL-3.0
-        # Some repositories (e.g., forks or when dependency graph is disabled)
-        # cannot run dependency review; allow this step to fail without
-        # failing the entire workflow so other scans can continue.
         continue-on-error: true
 
   secret-scanning:
     name: Secret Scanning
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    # Only run on PRs (needs base ref) and manual dispatch
     if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
     steps:

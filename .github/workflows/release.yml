@@ -52,7 +52,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
 
       - name: Configure Git
@@ -94,10 +94,15 @@ jobs:
 
       - name: Verify project before release
         run: |
-          npm ci
           npm run type-check
           npm run lint
-          npm test -- --coverage
+          npm run test:coverage
+        env:
+          DATABASE_URL: file:./release-test.db
+          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_SECRET: release-test-secret-minimum-32-characters
+          GOOGLE_CLIENT_ID: release-placeholder
+          GOOGLE_CLIENT_SECRET: release-placeholder
 
       - name: Update package.json version
         run: npm version ${{ steps.version.outputs.new_version }} --no-git-tag-version
@@ -144,11 +149,12 @@ EOF
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.new_version }}
-          name: v${{ steps.version.outputs.new_version }}
+          name: Release v${{ steps.version.outputs.new_version }}
           body_path: release_notes.md
           draft: false
           prerelease: ${{ github.event.inputs.prerelease }}
           generate_release_notes: true
+          files: release-charts/*.tgz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

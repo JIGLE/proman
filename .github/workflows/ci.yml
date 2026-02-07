@@ -15,6 +15,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 env:
   NODE_VERSION: '22'
 
@@ -44,9 +48,6 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Generate Prisma Client
-        run: npx prisma generate
 
       - name: Run linter
         run: npm run lint
@@ -81,11 +82,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate Prisma Client
-        run: npx prisma generate
-
       - name: Run unit tests with coverage
-        run: npm test -- --coverage
+        run: npm run test:coverage
 
       - name: Upload coverage artifact
         if: always()
@@ -111,18 +109,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Prepare build database
-        run: |
-          touch ./ci-build.db
-          DATABASE_URL=file:./ci-build.db npx prisma db push --accept-data-loss
-        env:
-          DATABASE_URL: file:./ci-build.db
-
       - name: Build (Next.js)
         run: npm run build
         env:
           NODE_ENV: production
           DATABASE_URL: file:./ci-build.db
+          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_SECRET: ci-test-secret-minimum-32-characters
+          GOOGLE_CLIENT_ID: ci-placeholder
+          GOOGLE_CLIENT_SECRET: ci-placeholder
 
   smoke:
     name: Smoke test (start built app)
@@ -173,9 +168,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate Prisma Client
-        run: npx prisma generate
-
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
@@ -183,6 +175,11 @@ jobs:
         run: npm run build
         env:
           NODE_ENV: production
+          DATABASE_URL: file:./e2e-test.db
+          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
+          GOOGLE_CLIENT_ID: e2e-placeholder
+          GOOGLE_CLIENT_SECRET: e2e-placeholder
 
       - name: Start built application in background
         run: |
@@ -194,6 +191,10 @@ jobs:
 
       - name: Run Playwright tests
         run: npx playwright test --project=chromium
+        env:
+          DATABASE_URL: file:./e2e-test.db
+          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4

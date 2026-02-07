@@ -36,6 +36,8 @@ jobs:
     permissions:
       contents: read
       packages: write
+      id-token: write
+      attestations: write
     timeout-minutes: 30
     env:
       REGISTRY: ghcr.io
@@ -97,12 +99,9 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-        # Note: For stronger security you can use OIDC to avoid long-lived tokens.
-        # Example (non-breaking guidance):
-        # - Use `docker/login-action` with `use-oidc: true` (check action docs) to authenticate via OIDC.
-        # - Alternatively set `secrets.GHCR_PAT` and use that here instead of GITHUB_TOKEN.
 
       - name: Build and push Docker image
+        id: build-push
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -123,6 +122,18 @@ jobs:
             BUILD_TIME=${{ steps.vars.outputs.build_time }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          sbom: true
+          provenance: mode=max
+
+      - name: Generate SBOM attestation
+        if: github.event.inputs.dry_run != 'true' && steps.build-push.outputs.digest
+        uses: actions/attest-sbom@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name_lower }}
+          subject-digest: ${{ steps.build-push.outputs.digest }}
+          sbom-path: ${{ steps.build-push.outputs.metadata }}
+          push-to-registry: true
+        continue-on-error: true
 
       - name: Deployment summary
         run: |
