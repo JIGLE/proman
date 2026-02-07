@@ -34,6 +34,20 @@ export default defineConfig({
       '**/build/**',
       '**/e2e/**', // Exclude Playwright e2e tests
       '**/playwright/**'
-    ]
+    ],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'clover'],
+      reportsDirectory: './coverage',
+      thresholds: {
+        // Fail CI if global coverage drops below these baselines
+        global: {
+          statements: 70,
+          branches: 60,
+          functions: 60,
+          lines: 70,
+        },
+      },
+    },
   },
 })

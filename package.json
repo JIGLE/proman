@@ -32,7 +32,18 @@
     "load:stress": "node scripts/stress-test.js",
     "user:delete": "node scripts/delete-user.js",
     "package:helm:verify": "bash scripts/package-helm-and-verify.sh release-charts-temp $(node -e 'console.log(require(\"./package.json\").version)')",
-    "db:check": "node scripts/check-db.js"
+    "db:check": "node scripts/check-db.js",
+    "i18n:check": "node scripts/check-translations.js",
+    "i18n:check:strict": "node scripts/check-translations.js --strict",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix"
+    ],
+    "*.{json,md,yml,yaml,css}": [
+      "prettier --write --ignore-unknown"
+    ]
   },
   "dependencies": {
     "@next-auth/prisma-adapter": "^1.0.7",
@@ -74,6 +85,7 @@
     "redis": "^4.7.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.1",
     "@next/bundle-analyzer": "^16.1.5",
     "@playwright/test": "^1.58.1",
     "@tailwindcss/postcss": "^4",
@@ -97,8 +109,10 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.5",
     "eslint-plugin-react-hooks": "^5.2.0",
+    "husky": "^9.1.7",
     "js-yaml": "^4.1.0",
     "jsdom": "^27.4.0",
+    "prettier": "^3.8.1",
     "prisma": "^7.3.0",
     "tailwindcss": "^4",
     "typescript": "^5",

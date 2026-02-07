@@ -1,0 +1,25 @@
+# CODEOWNERS — GitHub will automatically request reviews from these owners
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default owners for everything
+*                       @JIGLE
+
+# CI/CD and workflows
+.github/                @JIGLE
+Dockerfile              @JIGLE
+docker-compose.yml      @JIGLE
+
+# Helm / Kubernetes
+helm/                   @JIGLE
+k8s/                    @JIGLE
+
+# Database / Prisma
+prisma/                 @JIGLE
+
+# Documentation
+docs/                   @JIGLE
+README.md               @JIGLE
+
+# Security-sensitive files
+lib/middleware/          @JIGLE
+app/api/debug/          @JIGLE
