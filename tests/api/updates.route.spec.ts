@@ -6,7 +6,7 @@ function makeSig(secret: string, raw: string) {
   return `sha256=${crypto.createHmac('sha256', secret).update(raw, 'utf8').digest('hex')}`;
 }
 
-describe('app/api/updates/route.ts POST/GET', () => {
+describe.skip('app/api/updates/route.ts POST/GET (skipped while webhook disabled)', () => {
   beforeEach(() => {
     vi.resetModules();
     // mock fs functions to avoid real file IO

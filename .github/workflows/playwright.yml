@@ -52,6 +52,16 @@ jobs:
           NODE_ENV: production
           DATABASE_URL: file:./test.db
 
+      - name: Start built application in background
+        run: |
+          # Start the Next.js production server in background and wait for it to be ready
+          nohup npm run start -- -p 3000 > app.log 2>&1 &
+          echo $! > .app.pid
+
+      - name: Wait for app to become healthy
+        run: |
+          npx wait-on http://localhost:3000 --timeout 120000
+
       - name: Run Playwright tests
         run: npx playwright test --project=chromium
         env:
