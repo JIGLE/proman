@@ -169,11 +169,17 @@ jobs:
           echo "The tag push will trigger the Deploy to GHCR workflow automatically." >> $GITHUB_STEP_SUMMARY
 
       - name: Notify running instance of new release (optional)
-        if: vars.ENABLE_RELEASE_NOTIFY == 'true' && secrets.UPDATE_WEBHOOK_URL != '' && secrets.UPDATE_WEBHOOK_SECRET != ''
+        if: vars.ENABLE_RELEASE_NOTIFY == 'true'
         env:
           UPDATE_WEBHOOK_SECRET: ${{ secrets.UPDATE_WEBHOOK_SECRET }}
           UPDATE_WEBHOOK_URL: ${{ secrets.UPDATE_WEBHOOK_URL }}
         run: |
+          # Only run if both webhook secrets are provided
+          if [ -z "$UPDATE_WEBHOOK_URL" ] || [ -z "$UPDATE_WEBHOOK_SECRET" ]; then
+            echo "Webhook secrets not configured, skipping notification"
+            exit 0
+          fi
+          
           PAYLOAD='{"tag_name": "v${{ steps.version.outputs.new_version }}", "name":"v${{ steps.version.outputs.new_version }}", "html_url": "https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.new_version }}" }'
           # Compute HMAC-SHA256 signature (hex) and send as X-Hub-Signature-256 header
           SIG_HEX=$(printf '%s' "$PAYLOAD" | openssl dgst -sha256 -hmac "$UPDATE_WEBHOOK_SECRET" -hex | sed 's/^.* //') || true
