@@ -21,7 +21,7 @@ describe.skip('app/api/updates/route.ts POST/GET (skipped while webhook disabled
     const raw = JSON.stringify(payload);
     const sig = makeSig(process.env.UPDATE_WEBHOOK_SECRET!, raw);
 
-    const { POST, GET } = await import('../../app/api/updates/route.ts');
+    const { POST, GET } = await import('../../app/api/updates/route');
 
     const req = {
       text: async () => raw,
@@ -43,7 +43,7 @@ describe.skip('app/api/updates/route.ts POST/GET (skipped while webhook disabled
     const payload = { tag_name: 'v9.9.9' };
     const raw = JSON.stringify(payload);
 
-    const { POST } = await import('../../app/api/updates/route.ts');
+    const { POST } = await import('../../app/api/updates/route');
 
     const req = {
       text: async () => raw,
@@ -61,7 +61,7 @@ describe.skip('app/api/updates/route.ts POST/GET (skipped while webhook disabled
     const payload = { tag_name: 'v2.0.0' };
     const raw = JSON.stringify(payload);
 
-    const { POST, GET } = await import('../../app/api/updates/route.ts');
+    const { POST, GET } = await import('../../app/api/updates/route');
 
     const req = {
       text: async () => raw,
@@ -84,7 +84,7 @@ describe.skip('app/api/updates/route.ts POST/GET (skipped while webhook disabled
     const raw = JSON.stringify(payload);
     const sig = makeSig(process.env.UPDATE_WEBHOOK_SECRET!, raw);
 
-    const { POST } = await import('../../app/api/updates/route.ts');
+    const { POST } = await import('../../app/api/updates/route');
 
     const req = {
       text: async () => raw,
