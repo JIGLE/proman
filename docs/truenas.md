@@ -33,6 +33,7 @@ Set these in the TrueNAS Custom App UI or via Helm values:
 | `ENABLE_OAUTH` | `false` | Enable Google OAuth |
 | `SKIP_PRESTART` | `true` | Recommended for TrueNAS (platform-managed lifecycle) |
 | `PRESTART_FAIL_ON_SQLITE` | `false` | Keep false to allow operator remediation |
+| `NEXT_PUBLIC_DISABLE_AUTO_DB_INIT` | `false` | Set to `true` after initial DB setup to avoid rate limit errors |
 
 ## Helm Installation
 

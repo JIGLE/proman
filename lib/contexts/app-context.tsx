@@ -147,11 +147,16 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
 
       // Initialize database and seed if needed (server-side handler)
       // In mock mode, this will return early without error
-      try {
-        await apiFetch('/api/debug/db/init', csrfToken, 'POST');
-      } catch (initError) {
-        // Ignore init errors - mock mode or DB already initialized
-        console.debug('DB init skipped:', initError instanceof Error ? initError.message : String(initError));
+      // Can be disabled via NEXT_PUBLIC_DISABLE_AUTO_DB_INIT to avoid rate limits after initial setup
+      if (process.env.NEXT_PUBLIC_DISABLE_AUTO_DB_INIT !== 'true') {
+        try {
+          await apiFetch('/api/debug/db/init', csrfToken, 'POST');
+        } catch (initError) {
+          // Ignore init errors - mock mode or DB already initialized
+          console.debug('DB init skipped:', initError instanceof Error ? initError.message : String(initError));
+        }
+      } else {
+        console.debug('Auto DB init disabled via NEXT_PUBLIC_DISABLE_AUTO_DB_INIT');
       }
 
       // Load all data in parallel via server API endpoints

@@ -47,6 +47,8 @@ npm run type-check      # TypeScript check
 | `NEXTAUTH_URL`    | Yes (prod)  | Public URL of the application                |
 | `NEXTAUTH_SECRET` | Yes (prod)  | Session signing secret (min 32 chars)        |
 | `INIT_SECRET`     | Recommended | Protects the DB init endpoint                |
+| `ALLOW_DB_STARTUP_FAILURE` | Optional | When `true`, health checks report `starting` while database initialization issues persist (useful when running an out-of-band DB init job). |
+| `NEXT_PUBLIC_DISABLE_AUTO_DB_INIT` | Optional | When `true`, skips automatic database initialization on app load (recommended after initial setup to avoid rate limits). |
 
 See [.env.example](.env.example) for the complete list with defaults and documentation.
 
