@@ -109,6 +109,10 @@ env:
     value: "false"
   # Add other env vars as needed (or set literals for NEXTAUTH_URL)
 
+# Control whether a Helm Job is run to initialize Prisma (recommended)
+initJob:
+  enabled: true
+
 # Persistent volume for SQLite database
 persistence:
   enabled: true
