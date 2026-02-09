@@ -75,7 +75,32 @@ export async function GET(): Promise<NextResponse> {
       }
     )
   } catch (error) {
-    console.error('Health check failed:', error instanceof Error ? error.message : String(error))
+    const errMsg = error instanceof Error ? error.message : String(error)
+    console.error('Health check failed:', errMsg)
+
+    // Allow the process to report a non-failing health while DB is being initialized
+    // This is useful for environments where an out-of-band job initializes the DB
+    // and the runtime should not be permanently marked unhealthy while the file is created.
+    const allowStartup = process.env.ALLOW_DB_STARTUP_FAILURE === 'true'
+    if (allowStartup) {
+      return NextResponse.json(
+        {
+          status: 'starting',
+          timestamp: new Date().toISOString(),
+          uptime: process.uptime(),
+          environment: process.env.NODE_ENV || 'development',
+          checks: {
+            database: {
+              status: 'initializing',
+              error: errMsg
+            }
+          },
+          response_time_ms: Date.now() - startTime
+        },
+        { status: 200 }
+      )
+    }
+
     return NextResponse.json(
       {
         status: 'error',
@@ -83,7 +108,7 @@ export async function GET(): Promise<NextResponse> {
         checks: {
           database: {
             status: 'unhealthy',
-            error: error instanceof Error ? error.message : 'Unknown error'
+            error: errMsg
           }
         },
         response_time_ms: Date.now() - startTime
