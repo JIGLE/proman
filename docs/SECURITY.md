@@ -2,33 +2,11 @@
 
 This document covers security best practices for deploying and operating ProMan.
 
-## Webhook HMAC Enforcement
+## Update webhook
 
-ProMan supports two authentication methods for the update webhook (`/api/updates`):
+The `/api/updates` webhook and related HMAC/bearer flows have been removed from ProMan.
 
-1. **HMAC (`X-Hub-Signature-256`)** — recommended and default
-2. **Bearer token (`Authorization: Bearer <secret>`)** — legacy fallback
-
-### Recommended: HMAC-only mode
-
-Set `UPDATE_WEBHOOK_HMAC_ONLY=true` in your deployment environment to reject Bearer tokens and require HMAC signatures on all webhook requests:
-
-```bash
-UPDATE_WEBHOOK_HMAC_ONLY=true
-UPDATE_WEBHOOK_SECRET=<your-strong-secret>
-```
-
-If you still need Bearer fallback during migration, explicitly set:
-
-```bash
-ALLOW_BEARER_FALLBACK=true   # opt-in, not recommended for production
-```
-
-### How HMAC verification works
-
-1. The sender computes `HMAC-SHA256(payload, secret)` and sends it as `X-Hub-Signature-256: sha256=<hex>`.
-2. The server recomputes the HMAC using the stored `UPDATE_WEBHOOK_SECRET` and compares.
-3. If they match, the request is authenticated.
+Releases should be handled via your CI/CD or operator processes. To integrate release notifications in future, implement a protected endpoint (HMAC or bearer) and update the deployment documentation and CI workflows to send authenticated POSTs to that endpoint.
 
 ## Init Endpoint Hardening (`/api/debug/db/init`)
 
@@ -38,10 +16,10 @@ This endpoint runs `prisma db push` and `prisma generate` — it **must** be pro
 
 When `NODE_ENV=production`, the endpoint requires one of:
 
-| Method | Header | Example |
-|--------|--------|---------|
+| Method | Header                                | Example                                                                      |
+| ------ | ------------------------------------- | ---------------------------------------------------------------------------- |
 | Bearer | `Authorization: Bearer <INIT_SECRET>` | `curl -H "Authorization: Bearer $INIT_SECRET" -X POST .../api/debug/db/init` |
-| HMAC | `X-Signature: <hmac-sha256-hex>` | See README for computation |
+| HMAC   | `X-Signature: <hmac-sha256-hex>`      | See README for computation                                                   |
 
 **Generate a strong secret:**
 
@@ -103,10 +81,10 @@ env:
 
 The webhook endpoint supports configurable rate limiting:
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `UPDATE_WEBHOOK_RATE_LIMIT` | `60` | Max requests per window |
-| `UPDATE_WEBHOOK_RATE_WINDOW_MS` | `60000` | Window duration in ms |
+| Variable                        | Default | Description             |
+| ------------------------------- | ------- | ----------------------- |
+| `UPDATE_WEBHOOK_RATE_LIMIT`     | `60`    | Max requests per window |
+| `UPDATE_WEBHOOK_RATE_WINDOW_MS` | `60000` | Window duration in ms   |
 
 ## Security Headers
 
