@@ -127,7 +127,7 @@ jobs:
 
       - name: Generate SBOM attestation
         if: github.event.inputs.dry_run != 'true' && steps.build-push.outputs.digest
-        uses: actions/attest-sbom@v1
+        uses: actions/attest-sbom@v3
         with:
           subject-name: ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name_lower }}
           subject-digest: ${{ steps.build-push.outputs.digest }}
