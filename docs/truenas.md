@@ -7,7 +7,7 @@ This guide covers deploying ProMan specifically on TrueNAS SCALE.
 1. In TrueNAS Apps UI, select **Custom App** (or install from a catalog if available).
 2. Set the container image: `ghcr.io/jigle/proman:<version>` (use a fixed tag, not `latest`).
 3. Configure environment variables (see below).
-4. Mount a host path dataset for persistent storage at `/data`.
+4. Mount a host path dataset for persistent storage at `/app/data`.
 5. Set the network port (default: `30080` NodePort).
 
 ## Required Environment Variables
@@ -16,7 +16,7 @@ Set these in the TrueNAS Custom App UI or via Helm values:
 
 | Variable          | Value                       | Notes                                   |
 | ----------------- | --------------------------- | --------------------------------------- |
-| `DATABASE_URL`    | `file:/data/proman.sqlite`  | Points to persistent volume             |
+| `DATABASE_URL`    | `file:/app/data/proman.db`  | Points to persistent volume             |
 | `NEXTAUTH_URL`    | `http://<TRUENAS_IP>:30080` | Must match external URL                 |
 | `NEXTAUTH_SECRET` | `<random-32-char-string>`   | Generate with `openssl rand -base64 32` |
 | `NODE_ENV`        | `production`                |                                         |
@@ -73,7 +73,7 @@ In TrueNAS:
 ### Verify mount
 
 ```bash
-kubectl exec -it <pod> -- ls -la /data
+kubectl exec -it <pod> -- ls -la /app/data
 ```
 
 ## Database Initialization
@@ -91,7 +91,7 @@ Expected response:
 ```json
 {
   "ok": true,
-  "dbPath": "/data/proman.sqlite",
+  "dbPath": "/app/data/proman.db",
   "pushOut": "...",
   "genOut": "..."
 }

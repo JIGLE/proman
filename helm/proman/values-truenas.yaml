@@ -38,7 +38,7 @@ persistence:
   enabled: true
   # Use a hostPath on the TrueNAS SCALE pool (edit <POOL_NAME> to your pool)
   hostPath: /mnt/pools/<POOL_NAME>/apps/proman/data
-  mountPath: /data
+  mountPath: /app/data
   accessMode: ReadWriteOnce
   size: 1Gi
   # storageClass: ""  # leave empty to use hostPath (no dynamic provisioning)
