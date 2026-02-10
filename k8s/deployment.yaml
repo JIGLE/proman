@@ -47,8 +47,6 @@ spec:
                 secretKeyRef:
                   name: proman-secrets
                   key: INIT_SECRET
-            - name: NEXTAUTH_ALLOW_DB_FAILURE
-              value: "false"
           ports:
             - containerPort: 3000
           livenessProbe:

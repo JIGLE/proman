@@ -25,12 +25,13 @@ kubectl exec -it <pod> -- npx prisma generate
 The container user doesn't have write permissions to the data directory.
 
 **Solution:**
+
 - Ensure the volume is writable: `chmod 777 /data` on the host (or use `fsGroup` in k8s)
 - Check `fsGroup` in your deployment spec matches the container user's group
 
 ```yaml
 securityContext:
-  fsGroup: 1001  # matches nextjs group in Dockerfile
+  fsGroup: 1001 # matches nextjs group in Dockerfile
 ```
 
 ### App starts but returns 500 errors
@@ -44,11 +45,13 @@ securityContext:
 ### App running but unreachable externally
 
 1. **NodePort:** Verify the node port is open:
+
    ```bash
    curl -v http://<node-ip>:<node-port>
    ```
 
 2. **Port-forward** to test locally:
+
    ```bash
    kubectl port-forward svc/proman 3000:80 -n <namespace>
    curl http://localhost:3000
@@ -93,6 +96,7 @@ docker logs <container-id>
 ```
 
 Common causes:
+
 - Missing required environment variables
 - Database path not writable
 - Port already in use
@@ -110,7 +114,10 @@ Common causes:
 **Not recommended for production.** Set temporarily to debug:
 
 ```bash
-NEXTAUTH_ALLOW_DB_FAILURE=true
+# The 'allow DB failure' bypass was removed. Instead, initialize the DB using the Helm init Job or the protected init endpoint:
+
+curl -sS -X POST -H "Authorization: Bearer $INIT_SECRET" \
+   http://localhost:3000/api/debug/db/init | jq
 ```
 
 ## Database
