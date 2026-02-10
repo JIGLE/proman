@@ -82,7 +82,7 @@
     "zod": "^4.2.1"
   },
   "optionalDependencies": {
-    "redis": "^4.7.1"
+    "redis": "^5.10.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.1",
