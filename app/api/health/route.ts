@@ -80,33 +80,8 @@ export async function GET(): Promise<NextResponse> {
     const errMsg = error instanceof Error ? error.message : String(error);
     console.error("Health check failed:", errMsg);
 
-    // Allow the process to report a non-failing health while DB is being initialized
-    // This is useful for environments where an out-of-band job initializes the DB
-    // and the runtime should not be permanently marked unhealthy while the file is created.
-    // Support either the legacy `ALLOW_DB_STARTUP_FAILURE` or the chart/env
-    // variable `NEXTAUTH_ALLOW_DB_FAILURE` for backwards compatibility.
-    const allowStartup =
-      process.env.ALLOW_DB_STARTUP_FAILURE === "true" ||
-      process.env.NEXTAUTH_ALLOW_DB_FAILURE === "true";
-    if (allowStartup) {
-      return NextResponse.json(
-        {
-          status: "starting",
-          timestamp: new Date().toISOString(),
-          uptime: process.uptime(),
-          environment: process.env.NODE_ENV || "development",
-          checks: {
-            database: {
-              status: "initializing",
-              error: errMsg,
-            },
-          },
-          response_time_ms: Date.now() - startTime,
-        },
-        { status: 200 },
-      );
-    }
-
+    // Database connectivity failed — report unhealthy. Operators should run
+    // the init Job or POST /api/debug/db/init to initialize the schema.
     return NextResponse.json(
       {
         status: "error",

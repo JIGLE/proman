@@ -90,58 +90,17 @@ try {
   fs.accessSync(resolved, fs.constants.W_OK);
 } catch (err) {
   error("Cannot create/write DB file:", resolved, err && err.message);
-  if (process.env.PRESTART_FAIL_ON_SQLITE === "true") {
-    process.exit(1);
-  } else {
-    console.warn(
-      "[ensure-sqlite] Non-fatal filesystem error (PRESTART_FAIL_ON_SQLITE not enabled). Continuing startup.",
-    );
-    process.exit(0);
-  }
-}
-
-try {
-  // Optionally run Prisma schema push and generate at startup.
-  // Disable by default in production; prefer a one-shot init Job or manual init.
-  const runPrismaAtStartup =
-    process.env.RUN_PRISMA_DB_PUSH_AT_STARTUP === "true";
-
-  if (!runPrismaAtStartup) {
-    log(
-      "Skipping Prisma DB push/generate at startup (RUN_PRISMA_DB_PUSH_AT_STARTUP not enabled).",
-    );
-  } else {
-    log("Applying Prisma schema (db push) and generating client...");
-    // Ensure DATABASE_URL is in the environment for Prisma CLI
-    const childEnv = { ...process.env };
-    if (!childEnv.DATABASE_URL && dbUrl && dbUrl.startsWith("file:")) {
-      childEnv.DATABASE_URL = dbUrl;
-      log(
-        "Set DATABASE_URL from detection logic:",
-        dbUrl.substring(0, 20) + "...",
-      );
-    }
-    // Run db push and generate. Let the outputs stream to stdout/stderr so containers show logs.
-    const pushCommand = resetDb
-      ? "npx prisma db push --accept-data-loss"
-      : "npx prisma db push";
-    execSync(pushCommand, { stdio: "inherit", env: childEnv });
-    execSync("npx prisma generate", { stdio: "inherit", env: childEnv });
-  }
-} catch (err) {
-  error(
-    "Error preparing sqlite DB (prisma commands failed):",
-    err && err.message,
+  console.warn(
+    "[ensure-sqlite] Non-fatal filesystem error. Continuing startup; operator should perform explicit DB init.",
   );
-  if (process.env.PRESTART_FAIL_ON_SQLITE === "true") {
-    process.exit(1);
-  } else {
-    console.warn(
-      "[ensure-sqlite] Non-fatal prisma error (PRESTART_FAIL_ON_SQLITE not enabled). Continuing startup.",
-    );
-    process.exit(0);
-  }
+  process.exit(0);
 }
+
+// Runtime schema pushes are disabled by default. Prefer a one-shot init Job
+// or manual initialization via the protected init endpoint.
+log(
+  "Skipping Prisma DB push/generate at startup (runtime schema push removed).",
+);
 // After applying schema, verify tables exist in sqlite
 let expectedTables = [];
 
@@ -175,14 +134,10 @@ try {
   expectedTables = Array.from(new Set(expectedTables)).filter(Boolean);
 } catch (err) {
   error("Could not read/parse prisma/schema.prisma:", err && err.message);
-  if (process.env.PRESTART_FAIL_ON_SQLITE === "true") {
-    process.exit(1);
-  } else {
-    console.warn(
-      "[ensure-sqlite] Non-fatal schema parse error (PRESTART_FAIL_ON_SQLITE not enabled). Continuing startup.",
-    );
-    process.exit(0);
-  }
+  console.warn(
+    "[ensure-sqlite] Non-fatal schema parse error. Continuing startup; operator should perform explicit DB init.",
+  );
+  process.exit(0);
 }
 
 try {
@@ -241,12 +196,8 @@ try {
   process.exit(0);
 } catch (err) {
   error("Error while validating sqlite tables:", err && err.message);
-  if (process.env.PRESTART_FAIL_ON_SQLITE === "true") {
-    process.exit(1);
-  } else {
-    console.warn(
-      "[ensure-sqlite] Non-fatal sqlite validation error (PRESTART_FAIL_ON_SQLITE not enabled). Continuing startup.",
-    );
-    process.exit(0);
-  }
+  console.warn(
+    "[ensure-sqlite] Non-fatal sqlite validation error. Continuing startup; operator should perform explicit DB init.",
+  );
+  process.exit(0);
 }

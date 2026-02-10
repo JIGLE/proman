@@ -6,35 +6,36 @@
  * - If DATABASE_URL indicates sqlite (file:) then run ensure-sqlite, otherwise skip sqlite ensure step
  */
 
-const path = require('path');
-const fs = require('fs');
+const path = require("path");
+const fs = require("fs");
 
-if (process.env.SKIP_PRESTART === 'true') {
-  console.log('[prestart] SKIP_PRESTART=true; skipping prestart checks.');
+if (process.env.SKIP_PRESTART === "true") {
+  console.log("[prestart] SKIP_PRESTART=true; skipping prestart checks.");
   process.exit(0);
 }
 
 // Optionally run host/port check (will be non-fatal unless PRESTART_CHECK_HOSTPORT=true)
 try {
-  require('./check-hostport');
+  require("./check-hostport");
 } catch (err) {
-  console.warn('[prestart] check-hostport failed:', err && err.message);
+  console.warn("[prestart] check-hostport failed:", err && err.message);
 }
 
 // Only run sqlite ensure when DATABASE_URL suggests sqlite
-const dbUrl = process.env.DATABASE_URL || '';
-if (dbUrl.startsWith('file:')) {
+const dbUrl = process.env.DATABASE_URL || "";
+if (dbUrl.startsWith("file:")) {
   try {
-    require('./ensure-sqlite');
+    require("./ensure-sqlite");
   } catch (err) {
-    console.error('[prestart] ensure-sqlite failed:', err && err.message);
-    // If ensure-sqlite fails, preserve exit to avoid starting with invalid DB only if forced by env
-    if (process.env.PRESTART_FAIL_ON_SQLITE === 'true') {
-      process.exit(1);
-    }
+    console.error("[prestart] ensure-sqlite failed:", err && err.message);
+    console.warn(
+      "[prestart] Continuing startup despite sqlite prestart failure; operator should run one-shot DB init.",
+    );
   }
 } else {
-  console.log('[prestart] DATABASE_URL does not indicate sqlite; skipping sqlite ensure step.');
+  console.log(
+    "[prestart] DATABASE_URL does not indicate sqlite; skipping sqlite ensure step.",
+  );
 }
 
 process.exit(0);
