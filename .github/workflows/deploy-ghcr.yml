@@ -22,6 +22,23 @@ on:
         required: false
         default: false
         type: boolean
+      deploy_k8s:
+        description: 'Also update a Kubernetes deployment with the new image (requires secret KUBECONFIG)'
+        required: false
+        default: false
+        type: boolean
+      kube_namespace:
+        description: 'Kubernetes namespace to update'
+        required: false
+        default: 'ix-app'
+      kube_deployment:
+        description: 'Kubernetes deployment name to update'
+        required: false
+        default: 'proman'
+      kube_container:
+        description: 'Container name inside the deployment to update'
+        required: false
+        default: 'proman'
 
 permissions:
   contents: read
@@ -154,3 +171,34 @@ jobs:
           echo "\`\`\`bash" >> $GITHUB_STEP_SUMMARY
           echo "docker pull ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name_lower }}:${{ steps.vars.outputs.version }}" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: Set up kubectl (optional)
+        if: ${{ github.event.inputs.deploy_k8s == 'true' && github.event.inputs.dry_run != 'true' }}
+        uses: azure/setup-kubectl@v3
+
+      - name: Deploy to Kubernetes (optional)
+        if: ${{ github.event.inputs.deploy_k8s == 'true' && github.event.inputs.dry_run != 'true' }}
+        env:
+          KUBECONFIG: ${{ secrets.KUBECONFIG }}
+          IMAGE: ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name_lower }}:${{ steps.vars.outputs.version }}
+          NAMESPACE: ${{ github.event.inputs.kube_namespace }}
+          DEPLOYMENT: ${{ github.event.inputs.kube_deployment }}
+          CONTAINER: ${{ github.event.inputs.kube_container }}
+        run: |
+          if [ -z "$KUBECONFIG" ]; then
+            echo "KUBECONFIG secret is not set. Set secret 'KUBECONFIG' containing kubeconfig content to enable cluster deploy." >&2
+            exit 1
+          fi
+          echo "$KUBECONFIG" > kubeconfig
+          chmod 600 kubeconfig
+          echo "Updating deployment $DEPLOYMENT in namespace $NAMESPACE to image $IMAGE (container: $CONTAINER)"
+          kubectl --kubeconfig=kubeconfig -n "$NAMESPACE" set image deployment/$DEPLOYMENT $CONTAINER="$IMAGE" --record
+          kubectl --kubeconfig=kubeconfig -n "$NAMESPACE" annotate deployment/$DEPLOYMENT proman.image="$IMAGE" proman.digest="${{ steps.build-push.outputs.digest }}" --overwrite || true
+
+          # Wait for rollout to finish
+          echo "Waiting for rollout to complete..."
+          kubectl --kubeconfig=kubeconfig -n "$NAMESPACE" rollout status deployment/$DEPLOYMENT --timeout=180s
+
+          # Check pods are ready
+          echo "Checking pod readiness..."
+          kubectl --kubeconfig=kubeconfig -n "$NAMESPACE" get pods -l app=$DEPLOYMENT -o wide || kubectl --kubeconfig=kubeconfig -n "$NAMESPACE" get pods -o wide

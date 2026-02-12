@@ -35,6 +35,7 @@ jobs:
     permissions:
       contents: write
       packages: write
+      actions: write
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -86,11 +87,32 @@ jobs:
           mkdir -p release-charts
           helm package helm/proman -d release-charts
 
+      - name: Setup Helm (needed for repo index)
+        uses: azure/setup-helm@v1
+
+
       - name: Upload Helm chart artifact
         uses: actions/upload-artifact@v4
         with:
           name: release-charts
           path: release-charts
+
+      - name: Create Helm repo index
+        run: |
+          OWNER=${GITHUB_REPOSITORY%%/*}
+          REPO=${GITHUB_REPOSITORY##*/}
+          URL="https://${OWNER}.github.io/${REPO}/release-charts"
+          echo "Generating Helm repo index with URL: $URL"
+          helm repo index release-charts --url "$URL"
+
+      - name: Publish Helm charts to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./release-charts
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
 
       - name: Verify project before release
         run: |
@@ -157,6 +179,30 @@ jobs:
           files: release-charts/*.tgz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger Deploy to GHCR workflow (with cluster update)
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const workflow_id = 'deploy-ghcr.yml'
+            const ref = 'refs/tags/v' + process.env.NEW_VERSION
+            const inputs = {
+              version: process.env.NEW_VERSION,
+              deploy_k8s: 'true',
+              kube_namespace: 'ix-app',
+              kube_deployment: 'proman',
+              kube_container: 'proman'
+            }
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id,
+              ref,
+              inputs
+            })
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
 
       - name: Release Summary
         run: |
