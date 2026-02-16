@@ -174,7 +174,7 @@ jobs:
 
       - name: Set up kubectl (optional)
         if: ${{ github.event.inputs.deploy_k8s == 'true' && github.event.inputs.dry_run != 'true' }}
-        uses: azure/setup-kubectl@v3
+        uses: azure/setup-kubectl@v4
 
       - name: Deploy to Kubernetes (optional)
         if: ${{ github.event.inputs.deploy_k8s == 'true' && github.event.inputs.dry_run != 'true' }}
