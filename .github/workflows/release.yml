@@ -88,7 +88,7 @@ jobs:
           helm package helm/proman -d release-charts
 
       - name: Setup Helm (needed for repo index)
-        uses: azure/setup-helm@v1
+        uses: azure/setup-helm@v4
 
 
       - name: Upload Helm chart artifact
