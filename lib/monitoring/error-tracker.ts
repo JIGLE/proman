@@ -1,15 +1,15 @@
 /**
  * Error Tracking and Monitoring
- * 
+ *
  * Centralized error tracking with integration points for:
  * - Sentry
  * - LogRocket
  * - Custom error monitoring services
- * 
+ *
  * Provides error aggregation, context enrichment, and filtering.
  */
 
-import { logger } from '@/lib/utils/logger';
+import { logger } from "@/lib/utils/logger";
 
 export interface ErrorContext {
   user?: {
@@ -33,7 +33,7 @@ export interface TrackedError {
   timestamp: number;
   error: Error;
   context?: ErrorContext;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   handled: boolean;
 }
 
@@ -62,7 +62,7 @@ class ErrorStore {
   }
 
   getByComponent(component: string): TrackedError[] {
-    return this.errors.filter(e => e.context?.component === component);
+    return this.errors.filter((e) => e.context?.component === component);
   }
 }
 
@@ -71,43 +71,50 @@ const errorStore = new ErrorStore();
 /**
  * Determine error severity based on error type and context
  */
-function determineSeverity(error: Error, context?: ErrorContext): TrackedError['severity'] {
+function determineSeverity(
+  error: Error,
+  context?: ErrorContext,
+): TrackedError["severity"] {
   // Critical: Authentication, authorization, database errors
   if (
-    error.name === 'AuthenticationError' ||
-    error.name === 'DatabaseError' ||
-    error.message.toLowerCase().includes('database') ||
-    error.message.toLowerCase().includes('prisma')
+    error.name === "AuthenticationError" ||
+    error.name === "DatabaseError" ||
+    error.message.toLowerCase().includes("database") ||
+    error.message.toLowerCase().includes("prisma")
   ) {
-    return 'critical';
+    return "critical";
   }
 
   // High: API errors, validation failures in critical flows
   if (
-    error.name === 'AuthorizationError' ||
-    (error.name === 'ValidationError' && context?.action?.includes('payment'))
+    error.name === "AuthorizationError" ||
+    (error.name === "ValidationError" && context?.action?.includes("payment"))
   ) {
-    return 'high';
+    return "high";
   }
 
   // Medium: General validation errors, network issues
   if (
-    error.name === 'ValidationError' ||
-    error.message.toLowerCase().includes('network') ||
-    error.message.toLowerCase().includes('fetch')
+    error.name === "ValidationError" ||
+    error.message.toLowerCase().includes("network") ||
+    error.message.toLowerCase().includes("fetch")
   ) {
-    return 'medium';
+    return "medium";
   }
 
   // Low: Everything else
-  return 'low';
+  return "low";
 }
 
 /**
  * Generate unique error ID
  */
 function generateErrorId(): string {
-  return `err_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const bytes =
+    typeof globalThis.crypto !== "undefined" && globalThis.crypto.randomUUID
+      ? globalThis.crypto.randomUUID().replace(/-/g, "").substring(0, 9)
+      : require("crypto").randomBytes(5).toString("hex");
+  return `err_${Date.now()}_${bytes}`;
 }
 
 /**
@@ -116,10 +123,10 @@ function generateErrorId(): string {
 export function trackError(
   error: Error,
   context?: ErrorContext,
-  handled: boolean = false
+  handled: boolean = false,
 ): TrackedError {
   const severity = determineSeverity(error, context);
-  
+
   const trackedError: TrackedError = {
     id: generateErrorId(),
     timestamp: Date.now(),
@@ -133,23 +140,19 @@ export function trackError(
   errorStore.add(trackedError);
 
   // Log error
-  logger.error(
-    `[${severity.toUpperCase()}] ${error.message}`,
-    error,
-    {
-      errorId: trackedError.id,
-      severity,
-      handled,
-      component: context?.component,
-      action: context?.action,
-      userId: context?.user?.id,
-      url: context?.request?.url,
-      ...context?.metadata,
-    }
-  );
+  logger.error(`[${severity.toUpperCase()}] ${error.message}`, error, {
+    errorId: trackedError.id,
+    severity,
+    handled,
+    component: context?.component,
+    action: context?.action,
+    userId: context?.user?.id,
+    url: context?.request?.url,
+    ...context?.metadata,
+  });
 
   // Send to monitoring service in production
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     sendToMonitoringService(trackedError);
   }
 
@@ -161,11 +164,32 @@ export function trackError(
  */
 function sendToMonitoringService(trackedError: TrackedError): void {
   // Integration point for external services
-  
+
   // Example: Sentry
-  if (typeof window !== 'undefined' && (window as unknown as { Sentry?: { captureException: (error: Error, context?: Record<string, unknown>) => void } }).Sentry) {
+  if (
+    typeof window !== "undefined" &&
+    (
+      window as unknown as {
+        Sentry?: {
+          captureException: (
+            error: Error,
+            context?: Record<string, unknown>,
+          ) => void;
+        };
+      }
+    ).Sentry
+  ) {
     try {
-      (window as unknown as { Sentry: { captureException: (error: Error, context?: Record<string, unknown>) => void } }).Sentry.captureException(trackedError.error, {
+      (
+        window as unknown as {
+          Sentry: {
+            captureException: (
+              error: Error,
+              context?: Record<string, unknown>,
+            ) => void;
+          };
+        }
+      ).Sentry.captureException(trackedError.error, {
         level: trackedError.severity,
         tags: {
           component: trackedError.context?.component,
@@ -179,14 +203,35 @@ function sendToMonitoringService(trackedError: TrackedError): void {
         },
       });
     } catch (e) {
-      console.error('Failed to send error to Sentry:', e);
+      console.error("Failed to send error to Sentry:", e);
     }
   }
 
   // Example: LogRocket
-  if (typeof window !== 'undefined' && (window as unknown as { LogRocket?: { captureException: (error: Error, context?: Record<string, unknown>) => void } }).LogRocket) {
+  if (
+    typeof window !== "undefined" &&
+    (
+      window as unknown as {
+        LogRocket?: {
+          captureException: (
+            error: Error,
+            context?: Record<string, unknown>,
+          ) => void;
+        };
+      }
+    ).LogRocket
+  ) {
     try {
-      (window as unknown as { LogRocket: { captureException: (error: Error, context?: Record<string, unknown>) => void } }).LogRocket.captureException(trackedError.error, {
+      (
+        window as unknown as {
+          LogRocket: {
+            captureException: (
+              error: Error,
+              context?: Record<string, unknown>,
+            ) => void;
+          };
+        }
+      ).LogRocket.captureException(trackedError.error, {
         tags: {
           severity: trackedError.severity,
           component: trackedError.context?.component,
@@ -197,15 +242,15 @@ function sendToMonitoringService(trackedError: TrackedError): void {
         },
       });
     } catch (e) {
-      console.error('Failed to send error to LogRocket:', e);
+      console.error("Failed to send error to LogRocket:", e);
     }
   }
 
   // Custom monitoring endpoint
   if (process.env.NEXT_PUBLIC_MONITORING_ENDPOINT) {
     fetch(process.env.NEXT_PUBLIC_MONITORING_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         id: trackedError.id,
         timestamp: trackedError.timestamp,
@@ -216,7 +261,7 @@ function sendToMonitoringService(trackedError: TrackedError): void {
         handled: trackedError.handled,
       }),
     }).catch((e) => {
-      console.error('Failed to send error to monitoring endpoint:', e);
+      console.error("Failed to send error to monitoring endpoint:", e);
     });
   }
 }
@@ -234,7 +279,7 @@ export function createErrorHandler(baseContext: ErrorContext) {
         ...additionalContext?.metadata,
       },
     };
-    
+
     trackError(error, context, true);
   };
 }
@@ -244,7 +289,7 @@ export function createErrorHandler(baseContext: ErrorContext) {
  */
 export async function withErrorTracking<T>(
   fn: () => Promise<T>,
-  context?: ErrorContext
+  context?: ErrorContext,
 ): Promise<T> {
   try {
     return await fn();
@@ -295,7 +340,7 @@ export function getErrorStats(): {
   unhandled: number;
 } {
   const errors = errorStore.getAll();
-  
+
   const stats = {
     total: errors.length,
     bySeverity: {} as Record<string, number>,
@@ -307,11 +352,11 @@ export function getErrorStats(): {
   errors.forEach((err) => {
     // By severity
     stats.bySeverity[err.severity] = (stats.bySeverity[err.severity] || 0) + 1;
-    
+
     // By component
-    const component = err.context?.component || 'unknown';
+    const component = err.context?.component || "unknown";
     stats.byComponent[component] = (stats.byComponent[component] || 0) + 1;
-    
+
     // Handled vs unhandled
     if (err.handled) {
       stats.handled++;

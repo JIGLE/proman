@@ -3,7 +3,7 @@
  * Phase 5: Dashboard & Analytics
  */
 
-import { getPrismaClient } from './database/database';
+import { getPrismaClient } from "./database/database";
 
 // Helper to check if Prisma is available
 function isPrismaAvailable(): boolean {
@@ -11,7 +11,7 @@ function isPrismaAvailable(): boolean {
     // During build time or when DATABASE_URL is not set, getPrismaClient returns a proxy
     const client = getPrismaClient();
     // If it's a proxy, accessing any model will throw
-    return client && typeof client.property?.findMany === 'function';
+    return client && typeof client.property?.findMany === "function";
   } catch {
     return false;
   }
@@ -75,7 +75,7 @@ export interface LeaseExpiration {
   endDate: string;
   daysUntilExpiration: number;
   monthlyRent: number;
-  status: 'expired' | 'critical' | 'warning' | 'healthy';
+  status: "expired" | "critical" | "warning" | "healthy";
 }
 
 export interface MaintenanceStats {
@@ -107,7 +107,7 @@ export interface DashboardAnalytics {
 
 export interface Activity {
   id: string;
-  type: 'payment' | 'lease' | 'maintenance' | 'tenant' | 'property';
+  type: "payment" | "lease" | "maintenance" | "tenant" | "property";
   message: string;
   timestamp: string;
   amount?: number;
@@ -126,7 +126,7 @@ class AnalyticsService {
       leaseExpirations,
       maintenanceStats,
       occupancyTrend,
-      recentActivities
+      recentActivities,
     ] = await Promise.all([
       this.getKPIMetrics(userId),
       this.getRevenueByMonth(userId, 12),
@@ -134,7 +134,7 @@ class AnalyticsService {
       this.getLeaseExpirations(userId),
       this.getMaintenanceStats(userId),
       this.getOccupancyTrend(userId, 12),
-      this.getRecentActivities(userId, 10)
+      this.getRecentActivities(userId, 10),
     ]);
 
     return {
@@ -144,7 +144,7 @@ class AnalyticsService {
       leaseExpirations,
       maintenanceStats,
       occupancyTrend,
-      recentActivities
+      recentActivities,
     };
   }
 
@@ -165,52 +165,62 @@ class AnalyticsService {
       // Get property and unit counts
       const properties = await prisma.property.findMany({
         where: { userId },
-        include: { units: true }
+        include: { units: true },
       });
 
       const totalProperties = properties.length;
-      const totalUnits = properties.reduce((sum, p) => sum + (p.units?.length || 0), 0);
+      const totalUnits = properties.reduce(
+        (sum, p) => sum + (p.units?.length || 0),
+        0,
+      );
       const occupiedUnits = properties.reduce(
-        (sum, p) => sum + (p.units?.filter(u => u.status === 'occupied').length || 0),
-        0
+        (sum, p) =>
+          sum + (p.units?.filter((u) => u.status === "occupied").length || 0),
+        0,
       );
       const vacantUnits = totalUnits - occupiedUnits;
-      const occupancyRate = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
+      const occupancyRate =
+        totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
 
       // Get tenant counts
       const tenants = await prisma.tenant.findMany({
-        where: { userId }
+        where: { userId },
       });
       const totalTenants = tenants.length;
       // Active tenants are those whose lease hasn't ended yet
-      const activeTenants = tenants.filter(t => new Date(t.leaseEnd) >= now).length;
+      const activeTenants = tenants.filter(
+        (t) => new Date(t.leaseEnd) >= now,
+      ).length;
 
       // Get receipt/invoice data for revenue
       const receipts = await prisma.receipt.findMany({
         where: {
           userId,
-          status: 'paid',
-          date: { gte: startOfMonth }
-        }
+          status: "paid",
+          date: { gte: startOfMonth },
+        },
       });
 
       const yearlyReceipts = await prisma.receipt.findMany({
         where: {
           userId,
-          status: 'paid',
-          date: { gte: startOfYear }
-        }
+          status: "paid",
+          date: { gte: startOfYear },
+        },
       });
 
       const monthlyRevenue = receipts.reduce((sum, r) => sum + r.amount, 0);
-      const yearlyRevenue = yearlyReceipts.reduce((sum, r) => sum + r.amount, 0);
+      const yearlyRevenue = yearlyReceipts.reduce(
+        (sum, r) => sum + r.amount,
+        0,
+      );
 
       // Get expenses
       const expenses = await prisma.expense.findMany({
         where: {
           userId,
-          date: { gte: startOfYear }
-        }
+          date: { gte: startOfYear },
+        },
       });
       const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
       const netIncome = yearlyRevenue - totalExpenses;
@@ -221,35 +231,43 @@ class AnalyticsService {
       const overdueReceipts = await prisma.receipt.findMany({
         where: {
           userId,
-          status: 'pending',
-          date: { lt: thirtyDaysAgo }
-        }
+          status: "pending",
+          date: { lt: thirtyDaysAgo },
+        },
       });
       const overduePayments = overdueReceipts.length;
-      const overdueAmount = overdueReceipts.reduce((sum, r) => sum + r.amount, 0);
+      const overdueAmount = overdueReceipts.reduce(
+        (sum, r) => sum + r.amount,
+        0,
+      );
 
       // Calculate average rent
       const activeLeases = await prisma.lease.findMany({
         where: {
           userId,
-          endDate: { gte: now }
-        }
+          endDate: { gte: now },
+        },
       });
-      const averageRent = activeLeases.length > 0
-        ? activeLeases.reduce((sum, l) => sum + l.monthlyRent, 0) / activeLeases.length
-        : 0;
+      const averageRent =
+        activeLeases.length > 0
+          ? activeLeases.reduce((sum, l) => sum + l.monthlyRent, 0) /
+            activeLeases.length
+          : 0;
 
       // Calculate collection rate
       const allMonthlyReceipts = await prisma.receipt.findMany({
         where: {
           userId,
-          date: { gte: startOfMonth }
-        }
+          date: { gte: startOfMonth },
+        },
       });
-      const paidReceipts = allMonthlyReceipts.filter(r => r.status === 'paid');
-      const collectionRate = allMonthlyReceipts.length > 0
-        ? (paidReceipts.length / allMonthlyReceipts.length) * 100
-        : 100;
+      const paidReceipts = allMonthlyReceipts.filter(
+        (r) => r.status === "paid",
+      );
+      const collectionRate =
+        allMonthlyReceipts.length > 0
+          ? (paidReceipts.length / allMonthlyReceipts.length) * 100
+          : 100;
 
       return {
         totalProperties,
@@ -266,10 +284,10 @@ class AnalyticsService {
         overduePayments,
         overdueAmount,
         averageRent,
-        collectionRate
+        collectionRate,
       };
     } catch (error) {
-      console.error('Error calculating KPI metrics:', error);
+      console.error("Error calculating KPI metrics:", error);
       return this.getEmptyKPIMetrics();
     }
   }
@@ -277,7 +295,10 @@ class AnalyticsService {
   /**
    * Get revenue by month for the specified number of months
    */
-  async getRevenueByMonth(userId: string, months: number = 12): Promise<RevenueByMonth[]> {
+  async getRevenueByMonth(
+    userId: string,
+    months: number = 12,
+  ): Promise<RevenueByMonth[]> {
     const prisma = getPrisma();
     if (!isPrismaAvailable() || !prisma) {
       return this.getMockRevenueByMonth(months);
@@ -289,17 +310,21 @@ class AnalyticsService {
     try {
       for (let i = months - 1; i >= 0; i--) {
         const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
+        const endDate = new Date(
+          targetDate.getFullYear(),
+          targetDate.getMonth() + 1,
+          0,
+        );
 
         const receipts = await prisma.receipt.findMany({
           where: {
             userId,
-            status: 'paid',
+            status: "paid",
             date: {
               gte: targetDate,
-              lte: endDate
-            }
-          }
+              lte: endDate,
+            },
+          },
         });
 
         const expenses = await prisma.expense.findMany({
@@ -307,26 +332,26 @@ class AnalyticsService {
             userId,
             date: {
               gte: targetDate,
-              lte: endDate
-            }
-          }
+              lte: endDate,
+            },
+          },
         });
 
         const revenue = receipts.reduce((sum, r) => sum + r.amount, 0);
         const expense = expenses.reduce((sum, e) => sum + e.amount, 0);
 
         result.push({
-          month: targetDate.toLocaleString('default', { month: 'short' }),
+          month: targetDate.toLocaleString("default", { month: "short" }),
           year: targetDate.getFullYear(),
           revenue,
           expenses: expense,
-          netIncome: revenue - expense
+          netIncome: revenue - expense,
         });
       }
 
       return result;
     } catch (error) {
-      console.error('Error fetching revenue by month:', error);
+      console.error("Error fetching revenue by month:", error);
       return this.getMockRevenueByMonth(months);
     }
   }
@@ -347,34 +372,40 @@ class AnalyticsService {
           units: true,
           receipts: {
             where: {
-              status: 'paid',
+              status: "paid",
               date: {
-                gte: new Date(new Date().getFullYear(), 0, 1)
-              }
-            }
+                gte: new Date(new Date().getFullYear(), 0, 1),
+              },
+            },
           },
           expenses: {
             where: {
               date: {
-                gte: new Date(new Date().getFullYear(), 0, 1)
-              }
-            }
-          }
-        }
+                gte: new Date(new Date().getFullYear(), 0, 1),
+              },
+            },
+          },
+        },
       });
 
-      return properties.map(property => {
+      return properties.map((property) => {
         const totalUnits = property.units?.length || 0;
-        const occupiedUnits = property.units?.filter(u => u.status === 'occupied').length || 0;
-        const occupancyRate = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
-        
-        const yearlyRevenue = property.receipts?.reduce((sum, r) => sum + r.amount, 0) || 0;
+        const occupiedUnits =
+          property.units?.filter((u) => u.status === "occupied").length || 0;
+        const occupancyRate =
+          totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
+
+        const yearlyRevenue =
+          property.receipts?.reduce((sum, r) => sum + r.amount, 0) || 0;
         const monthlyRevenue = yearlyRevenue / 12;
-        const expenses = property.expenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
+        const expenses =
+          property.expenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
         const netIncome = yearlyRevenue - expenses;
-        
+
         // ROI calculation (simplified - assumes property value from purchase price or estimated value)
-        const propertyValue = (property as { purchasePrice?: number }).purchasePrice || yearlyRevenue * 10;
+        const propertyValue =
+          (property as { purchasePrice?: number }).purchasePrice ||
+          yearlyRevenue * 10;
         const roi = propertyValue > 0 ? (netIncome / propertyValue) * 100 : 0;
 
         return {
@@ -388,11 +419,11 @@ class AnalyticsService {
           yearlyRevenue,
           expenses,
           netIncome,
-          roi
+          roi,
         };
       });
     } catch (error) {
-      console.error('Error fetching property performance:', error);
+      console.error("Error fetching property performance:", error);
       return [];
     }
   }
@@ -400,7 +431,10 @@ class AnalyticsService {
   /**
    * Get upcoming lease expirations
    */
-  async getLeaseExpirations(userId: string, daysAhead: number = 90): Promise<LeaseExpiration[]> {
+  async getLeaseExpirations(
+    userId: string,
+    daysAhead: number = 90,
+  ): Promise<LeaseExpiration[]> {
     const prisma = getPrisma();
     if (!isPrismaAvailable() || !prisma) {
       return [];
@@ -414,43 +448,45 @@ class AnalyticsService {
       const leases = await prisma.lease.findMany({
         where: {
           userId,
-          status: 'active',
+          status: "active",
           endDate: {
-            lte: futureDate
-          }
+            lte: futureDate,
+          },
         },
         include: {
           tenant: true,
           property: true,
-          unit: true
+          unit: true,
         },
         orderBy: {
-          endDate: 'asc'
-        }
+          endDate: "asc",
+        },
       });
 
-      return leases.map(lease => {
+      return leases.map((lease) => {
         const endDate = new Date(lease.endDate);
-        const daysUntilExpiration = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        
-        let status: LeaseExpiration['status'] = 'healthy';
-        if (daysUntilExpiration < 0) status = 'expired';
-        else if (daysUntilExpiration <= 30) status = 'critical';
-        else if (daysUntilExpiration <= 60) status = 'warning';
+        const daysUntilExpiration = Math.ceil(
+          (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+        );
+
+        let status: LeaseExpiration["status"] = "healthy";
+        if (daysUntilExpiration < 0) status = "expired";
+        else if (daysUntilExpiration <= 30) status = "critical";
+        else if (daysUntilExpiration <= 60) status = "warning";
 
         return {
           leaseId: lease.id,
-          tenantName: lease.tenant?.name || 'Unknown',
-          propertyName: lease.property?.name || 'Unknown',
-          unitNumber: lease.unit?.number || 'N/A',
+          tenantName: lease.tenant?.name || "Unknown",
+          propertyName: lease.property?.name || "Unknown",
+          unitNumber: lease.unit?.number || "N/A",
           endDate: lease.endDate.toISOString(),
           daysUntilExpiration,
           monthlyRent: lease.monthlyRent,
-          status
+          status,
         };
       });
     } catch (error) {
-      console.error('Error fetching lease expirations:', error);
+      console.error("Error fetching lease expirations:", error);
       return [];
     }
   }
@@ -467,30 +503,42 @@ class AnalyticsService {
         inProgress: 0,
         completed: 0,
         urgent: 0,
-        averageResolutionDays: 0
+        averageResolutionDays: 0,
       };
     }
 
     try {
       const requests = await prisma.maintenanceTicket.findMany({
-        where: { userId }
+        where: { userId },
       });
 
       const total = requests.length;
-      const pending = requests.filter(r => r.status === 'open').length;
-      const inProgress = requests.filter(r => r.status === 'in_progress').length;
-      const completed = requests.filter(r => r.status === 'resolved' || r.status === 'closed').length;
-      const urgent = requests.filter(r => r.priority === 'high').length;
+      const pending = requests.filter((r) => r.status === "open").length;
+      const inProgress = requests.filter(
+        (r) => r.status === "in_progress",
+      ).length;
+      const completed = requests.filter(
+        (r) => r.status === "resolved" || r.status === "closed",
+      ).length;
+      const urgent = requests.filter((r) => r.priority === "high").length;
 
       // Calculate average resolution time for completed requests
-      const completedRequests = requests.filter(r => (r.status === 'resolved' || r.status === 'closed') && r.resolvedAt);
+      const completedRequests = requests.filter(
+        (r) =>
+          (r.status === "resolved" || r.status === "closed") && r.resolvedAt,
+      );
       let averageResolutionDays = 0;
-      
+
       if (completedRequests.length > 0) {
         const totalDays = completedRequests.reduce((sum, r) => {
           const created = new Date(r.createdAt);
           const resolved = new Date(r.resolvedAt!);
-          return sum + Math.ceil((resolved.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
+          return (
+            sum +
+            Math.ceil(
+              (resolved.getTime() - created.getTime()) / (1000 * 60 * 60 * 24),
+            )
+          );
         }, 0);
         averageResolutionDays = totalDays / completedRequests.length;
       }
@@ -501,17 +549,17 @@ class AnalyticsService {
         inProgress,
         completed,
         urgent,
-        averageResolutionDays
+        averageResolutionDays,
       };
     } catch (error) {
-      console.error('Error fetching maintenance stats:', error);
+      console.error("Error fetching maintenance stats:", error);
       return {
         total: 0,
         pending: 0,
         inProgress: 0,
         completed: 0,
         urgent: 0,
-        averageResolutionDays: 0
+        averageResolutionDays: 0,
       };
     }
   }
@@ -519,7 +567,10 @@ class AnalyticsService {
   /**
    * Get occupancy trend over time
    */
-  async getOccupancyTrend(userId: string, months: number = 12): Promise<OccupancyTrend[]> {
+  async getOccupancyTrend(
+    userId: string,
+    months: number = 12,
+  ): Promise<OccupancyTrend[]> {
     const prisma = getPrisma();
     if (!isPrismaAvailable() || !prisma) {
       return this.getMockOccupancyTrend(months);
@@ -530,15 +581,20 @@ class AnalyticsService {
     try {
       const properties = await prisma.property.findMany({
         where: { userId },
-        include: { units: true }
+        include: { units: true },
       });
 
-      const totalUnits = properties.reduce((sum, p) => sum + (p.units?.length || 0), 0);
-      const occupiedUnits = properties.reduce(
-        (sum, p) => sum + (p.units?.filter(u => u.status === 'occupied').length || 0),
-        0
+      const totalUnits = properties.reduce(
+        (sum, p) => sum + (p.units?.length || 0),
+        0,
       );
-      const currentOccupancy = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
+      const occupiedUnits = properties.reduce(
+        (sum, p) =>
+          sum + (p.units?.filter((u) => u.status === "occupied").length || 0),
+        0,
+      );
+      const currentOccupancy =
+        totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
 
       const result: OccupancyTrend[] = [];
       const now = new Date();
@@ -546,14 +602,19 @@ class AnalyticsService {
       // Generate trend with slight variations (mock historical data)
       for (let i = months - 1; i >= 0; i--) {
         const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const variation = Math.random() * 10 - 5; // ±5% variation for demo
-        
+        const variation = ((Date.now() + i * 7919) % 1000) / 100 - 5; // ±5% deterministic variation for demo
+
         result.push({
-          month: targetDate.toLocaleString('default', { month: 'short' }),
+          month: targetDate.toLocaleString("default", { month: "short" }),
           year: targetDate.getFullYear(),
-          occupancyRate: Math.min(100, Math.max(0, currentOccupancy + variation)),
+          occupancyRate: Math.min(
+            100,
+            Math.max(0, currentOccupancy + variation),
+          ),
           totalUnits,
-          occupiedUnits: Math.round(totalUnits * (currentOccupancy + variation) / 100)
+          occupiedUnits: Math.round(
+            (totalUnits * (currentOccupancy + variation)) / 100,
+          ),
         });
       }
 
@@ -562,13 +623,13 @@ class AnalyticsService {
         result[result.length - 1] = {
           ...result[result.length - 1],
           occupancyRate: currentOccupancy,
-          occupiedUnits
+          occupiedUnits,
         };
       }
 
       return result;
     } catch (error) {
-      console.error('Error fetching occupancy trend:', error);
+      console.error("Error fetching occupancy trend:", error);
       return this.getMockOccupancyTrend(months);
     }
   }
@@ -576,7 +637,10 @@ class AnalyticsService {
   /**
    * Get recent activities
    */
-  async getRecentActivities(userId: string, limit: number = 10): Promise<Activity[]> {
+  async getRecentActivities(
+    userId: string,
+    limit: number = 10,
+  ): Promise<Activity[]> {
     const prisma = getPrisma();
     if (!isPrismaAvailable() || !prisma) {
       return [];
@@ -588,66 +652,69 @@ class AnalyticsService {
 
       // Get recent receipts
       const recentReceipts = await prisma.receipt.findMany({
-        where: { userId, status: 'paid' },
-        orderBy: { date: 'desc' },
+        where: { userId, status: "paid" },
+        orderBy: { date: "desc" },
         take: 5,
-        include: { property: true, tenant: true }
+        include: { property: true, tenant: true },
       });
 
-      recentReceipts.forEach(receipt => {
+      recentReceipts.forEach((receipt) => {
         activities.push({
           id: receipt.id,
-          type: 'payment',
-          message: `Payment received from ${receipt.tenant?.name || receipt.property?.name || 'Unknown'}`,
+          type: "payment",
+          message: `Payment received from ${receipt.tenant?.name || receipt.property?.name || "Unknown"}`,
           timestamp: receipt.date.toISOString(),
           amount: receipt.amount,
-          icon: '💰'
+          icon: "💰",
         });
       });
 
       // Get recent leases
       const recentLeases = await prisma.lease.findMany({
         where: { userId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: 3,
-        include: { tenant: true, property: true }
+        include: { tenant: true, property: true },
       });
 
-      recentLeases.forEach(lease => {
+      recentLeases.forEach((lease) => {
         activities.push({
           id: lease.id,
-          type: 'lease',
-          message: `Lease ${new Date(lease.endDate) >= now ? 'signed' : 'updated'} - ${lease.tenant?.name || 'Unknown'}`,
+          type: "lease",
+          message: `Lease ${new Date(lease.endDate) >= now ? "signed" : "updated"} - ${lease.tenant?.name || "Unknown"}`,
           timestamp: lease.createdAt.toISOString(),
           amount: lease.monthlyRent,
-          icon: '📝'
+          icon: "📝",
         });
       });
 
       // Get recent maintenance requests
       const recentMaintenance = await prisma.maintenanceTicket.findMany({
         where: { userId },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: 3,
-        include: { property: true }
+        include: { property: true },
       });
 
-      recentMaintenance.forEach(request => {
+      recentMaintenance.forEach((request) => {
         activities.push({
           id: request.id,
-          type: 'maintenance',
+          type: "maintenance",
           message: `Maintenance request: ${request.title}`,
           timestamp: request.createdAt.toISOString(),
-          icon: request.priority === 'high' ? '🔧' : '🛠️'
+          icon: request.priority === "high" ? "🔧" : "🛠️",
         });
       });
 
       // Sort by timestamp and limit
       return activities
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
+        .sort(
+          (a, b) =>
+            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
+        )
         .slice(0, limit);
     } catch (error) {
-      console.error('Error fetching recent activities:', error);
+      console.error("Error fetching recent activities:", error);
       return [];
     }
   }
@@ -669,43 +736,43 @@ class AnalyticsService {
       overduePayments: 0,
       overdueAmount: 0,
       averageRent: 0,
-      collectionRate: 100
+      collectionRate: 100,
     };
   }
 
   private getMockRevenueByMonth(months: number): RevenueByMonth[] {
     const result: RevenueByMonth[] = [];
     const now = new Date();
-    
+
     for (let i = months - 1; i >= 0; i--) {
       const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
       result.push({
-        month: targetDate.toLocaleString('default', { month: 'short' }),
+        month: targetDate.toLocaleString("default", { month: "short" }),
         year: targetDate.getFullYear(),
         revenue: 0,
         expenses: 0,
-        netIncome: 0
+        netIncome: 0,
       });
     }
-    
+
     return result;
   }
 
   private getMockOccupancyTrend(months: number): OccupancyTrend[] {
     const result: OccupancyTrend[] = [];
     const now = new Date();
-    
+
     for (let i = months - 1; i >= 0; i--) {
       const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
       result.push({
-        month: targetDate.toLocaleString('default', { month: 'short' }),
+        month: targetDate.toLocaleString("default", { month: "short" }),
         year: targetDate.getFullYear(),
         occupancyRate: 0,
         totalUnits: 0,
-        occupiedUnits: 0
+        occupiedUnits: 0,
       });
     }
-    
+
     return result;
   }
 }

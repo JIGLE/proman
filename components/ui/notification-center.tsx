@@ -22,9 +22,9 @@ import { Badge } from "./badge";
 import * as Popover from "@/components/ui/popover";
 
 // Types
-export type NotificationType = 
-  | "payment_overdue" 
-  | "payment_received" 
+export type NotificationType =
+  | "payment_overdue"
+  | "payment_received"
   | "maintenance_new"
   | "maintenance_update"
   | "lease_expiring"
@@ -128,9 +128,9 @@ function NotificationItem({
       exit={{ opacity: 0, x: -100 }}
       className={cn(
         "group relative flex items-start gap-3 p-3 rounded-lg cursor-pointer transition-colors",
-        notification.read 
-          ? "bg-transparent hover:bg-[var(--color-hover)]" 
-          : "bg-[var(--color-surface-elevated)] hover:bg-[var(--color-hover)]"
+        notification.read
+          ? "bg-transparent hover:bg-[var(--color-hover)]"
+          : "bg-[var(--color-surface-elevated)] hover:bg-[var(--color-hover)]",
       )}
       onClick={() => {
         if (!notification.read) {
@@ -152,14 +152,23 @@ function NotificationItem({
       {/* Content */}
       <div className="flex-1 min-w-0 space-y-1">
         <div className="flex items-center gap-2">
-          <p className={cn(
-            "text-sm font-medium truncate",
-            notification.read ? "text-[var(--color-muted-foreground)]" : "text-[var(--color-foreground)]"
-          )}>
+          <p
+            className={cn(
+              "text-sm font-medium truncate",
+              notification.read
+                ? "text-[var(--color-muted-foreground)]"
+                : "text-[var(--color-foreground)]",
+            )}
+          >
             {notification.title}
           </p>
           {notification.priority !== "low" && (
-            <Badge className={cn("text-[10px] px-1.5 py-0", priorityColors[notification.priority])}>
+            <Badge
+              className={cn(
+                "text-[10px] px-1.5 py-0",
+                priorityColors[notification.priority],
+              )}
+            >
               {notification.priority}
             </Badge>
           )}
@@ -219,13 +228,17 @@ export function NotificationCenter({
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
   const unreadCount = notifications.filter((n) => !n.read).length;
-  const filteredNotifications = filter === "unread" 
-    ? notifications.filter((n) => !n.read)
-    : notifications;
+  const filteredNotifications =
+    filter === "unread" ? notifications.filter((n) => !n.read) : notifications;
 
   // Sort by timestamp (newest first) and then by priority
   const sortedNotifications = [...filteredNotifications].sort((a, b) => {
-    const priorityOrder: Record<NotificationPriority, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
+    const priorityOrder: Record<NotificationPriority, number> = {
+      urgent: 0,
+      high: 1,
+      medium: 2,
+      low: 3,
+    };
     if (!a.read && b.read) return -1;
     if (a.read && !b.read) return 1;
     if (priorityOrder[a.priority] !== priorityOrder[b.priority]) {
@@ -324,11 +337,13 @@ export function NotificationCenter({
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <Bell className="h-10 w-10 text-[var(--color-muted-foreground)] mb-3" />
                   <p className="text-sm font-medium text-[var(--color-foreground)]">
-                    {filter === "unread" ? "No unread notifications" : "No notifications"}
+                    {filter === "unread"
+                      ? "No unread notifications"
+                      : "No notifications"}
                   </p>
                   <p className="text-xs text-[var(--color-muted-foreground)]">
-                    {filter === "unread" 
-                      ? "You're all caught up!" 
+                    {filter === "unread"
+                      ? "You're all caught up!"
                       : "Notifications will appear here"}
                   </p>
                 </div>
@@ -382,22 +397,26 @@ export function NotificationCenter({
 
 // Hook to manage notifications state
 export function useNotifications(initialNotifications: Notification[] = []) {
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const [notifications, setNotifications] =
+    useState<Notification[]>(initialNotifications);
 
-  const addNotification = useCallback((notification: Omit<Notification, "id" | "timestamp" | "read">) => {
-    const newNotification: Notification = {
-      ...notification,
-      id: `notif-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      timestamp: new Date(),
-      read: false,
-    };
-    setNotifications((prev) => [newNotification, ...prev]);
-    return newNotification.id;
-  }, []);
+  const addNotification = useCallback(
+    (notification: Omit<Notification, "id" | "timestamp" | "read">) => {
+      const newNotification: Notification = {
+        ...notification,
+        id: `notif-${Date.now()}-${crypto.randomUUID().replace(/-/g, "").substring(0, 9)}`,
+        timestamp: new Date(),
+        read: false,
+      };
+      setNotifications((prev) => [newNotification, ...prev]);
+      return newNotification.id;
+    },
+    [],
+  );
 
   const markAsRead = useCallback((id: string) => {
     setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
     );
   }, []);
 
@@ -442,7 +461,8 @@ export function getSampleNotifications(): Notification[] {
       type: "maintenance_new",
       priority: "high",
       title: "New Maintenance Request",
-      message: "Water leak reported in Unit 2B kitchen. Tenant marked as urgent.",
+      message:
+        "Water leak reported in Unit 2B kitchen. Tenant marked as urgent.",
       timestamp: new Date(now.getTime() - 1000 * 60 * 60 * 2), // 2 hours ago
       read: false,
     },

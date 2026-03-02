@@ -3,23 +3,24 @@
  * Handles document storage, templates, PDF generation, and versioning
  */
 
-import { getPrismaClient } from './database/database';
-import { writeFile, readFile, mkdir, unlink, stat as _stat } from 'fs/promises';
-import { join, extname, dirname } from 'path';
-import { existsSync } from 'fs';
+import { getPrismaClient } from "./database/database";
+import { writeFile, readFile, mkdir, unlink, stat as _stat } from "fs/promises";
+import { join, extname, dirname } from "path";
+import { existsSync } from "fs";
+import { randomBytes } from "crypto";
 
 // ============================================================================
 // Types
 // ============================================================================
 
-export type DocumentType = 
-  | 'contract' 
-  | 'invoice' 
-  | 'receipt' 
-  | 'photo' 
-  | 'floor_plan' 
-  | 'certificate' 
-  | 'other';
+export type DocumentType =
+  | "contract"
+  | "invoice"
+  | "receipt"
+  | "photo"
+  | "floor_plan"
+  | "certificate"
+  | "other";
 
 export interface Document {
   id: string;
@@ -94,26 +95,26 @@ export interface LeaseTemplateData {
   propertyName: string;
   propertyAddress: string;
   unitNumber?: string;
-  
+
   // Tenant Info
   tenantName: string;
   tenantEmail: string;
   tenantPhone?: string;
   tenantAddress?: string;
-  
+
   // Owner/Landlord Info
   ownerName: string;
   ownerEmail?: string;
   ownerPhone?: string;
   ownerAddress?: string;
-  
+
   // Lease Terms
   startDate: string;
   endDate: string;
   monthlyRent: number;
   securityDeposit: number;
   currency: string;
-  
+
   // Additional Terms
   paymentDueDay?: number;
   lateFeePercentage?: number;
@@ -122,7 +123,7 @@ export interface LeaseTemplateData {
   utilities?: string[];
   parkingSpaces?: number;
   specialTerms?: string[];
-  
+
   // Signatures
   signatureDate?: string;
 }
@@ -131,22 +132,22 @@ export interface RentReceiptTemplateData {
   // Receipt Info
   receiptNumber: string;
   receiptDate: string;
-  
+
   // Payment Info
   paymentAmount: number;
   paymentMethod?: string;
   paymentPeriod: string;
   currency: string;
-  
+
   // Tenant Info
   tenantName: string;
   tenantAddress?: string;
-  
+
   // Property Info
   propertyName: string;
   propertyAddress: string;
   unitNumber?: string;
-  
+
   // Landlord Info
   landlordName: string;
   landlordAddress?: string;
@@ -154,7 +155,13 @@ export interface RentReceiptTemplateData {
 }
 
 export interface NoticeTemplateData {
-  noticeType: 'late_payment' | 'lease_violation' | 'eviction' | 'rent_increase' | 'lease_renewal' | 'general';
+  noticeType:
+    | "late_payment"
+    | "lease_violation"
+    | "eviction"
+    | "rent_increase"
+    | "lease_renewal"
+    | "general";
   recipientName: string;
   recipientAddress: string;
   propertyAddress: string;
@@ -172,17 +179,18 @@ export interface NoticeTemplateData {
 // Storage Configuration
 // ============================================================================
 
-const STORAGE_BASE_PATH = process.env.DOCUMENT_STORAGE_PATH || './uploads/documents';
-const MAX_FILE_SIZE = parseInt(process.env.MAX_DOCUMENT_SIZE || '10485760', 10); // 10MB default
+const STORAGE_BASE_PATH =
+  process.env.DOCUMENT_STORAGE_PATH || "./uploads/documents";
+const MAX_FILE_SIZE = parseInt(process.env.MAX_DOCUMENT_SIZE || "10485760", 10); // 10MB default
 const ALLOWED_MIME_TYPES = [
-  'application/pdf',
-  'application/msword',
-  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-  'image/jpeg',
-  'image/png',
-  'image/gif',
-  'text/plain',
-  'application/json',
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "image/jpeg",
+  "image/png",
+  "image/gif",
+  "text/plain",
+  "application/json",
 ];
 
 // ============================================================================
@@ -203,16 +211,23 @@ async function ensureDirectory(dirPath: string): Promise<void> {
  */
 function generateFileName(originalName: string, userId: string): string {
   const timestamp = Date.now();
-  const randomStr = Math.random().toString(36).substring(2, 8);
+  const randomStr = randomBytes(6).toString("hex");
   const ext = extname(originalName);
-  const baseName = originalName.replace(ext, '').substring(0, 50).replace(/[^a-zA-Z0-9-_]/g, '_');
+  const baseName = originalName
+    .replace(ext, "")
+    .substring(0, 50)
+    .replace(/[^a-zA-Z0-9-_]/g, "_");
   return `${userId}_${timestamp}_${randomStr}_${baseName}${ext}`;
 }
 
 /**
  * Get storage path for a document
  */
-function getStoragePath(userId: string, fileName: string, type: DocumentType): string {
+function getStoragePath(
+  userId: string,
+  fileName: string,
+  type: DocumentType,
+): string {
   const yearMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
   return join(STORAGE_BASE_PATH, userId, type, yearMonth, fileName);
 }
@@ -225,7 +240,9 @@ function validateFile(mimeType: string, fileSize: number): void {
     throw new Error(`File type not allowed: ${mimeType}`);
   }
   if (fileSize > MAX_FILE_SIZE) {
-    throw new Error(`File size exceeds maximum allowed: ${fileSize} > ${MAX_FILE_SIZE}`);
+    throw new Error(
+      `File size exceeds maximum allowed: ${fileSize} > ${MAX_FILE_SIZE}`,
+    );
   }
 }
 
@@ -239,9 +256,9 @@ export const documentService = {
    */
   async getAll(userId: string, filters?: DocumentFilter): Promise<Document[]> {
     const prisma = getPrismaClient();
-    
+
     const where: Record<string, unknown> = { userId };
-    
+
     if (filters?.type) where.type = filters.type;
     if (filters?.propertyId) where.propertyId = filters.propertyId;
     if (filters?.unitId) where.unitId = filters.unitId;
@@ -253,7 +270,7 @@ export const documentService = {
         { description: { contains: filters.search } },
       ];
     }
-    
+
     const documents = await prisma.document.findMany({
       where,
       include: {
@@ -262,10 +279,10 @@ export const documentService = {
         owner: { select: { name: true } },
         tenant: { select: { name: true } },
       },
-      orderBy: { uploadedAt: 'desc' },
+      orderBy: { uploadedAt: "desc" },
     });
-    
-    return documents.map(doc => ({
+
+    return documents.map((doc) => ({
       id: doc.id,
       userId: doc.userId,
       name: doc.name,
@@ -293,7 +310,7 @@ export const documentService = {
    */
   async getById(userId: string, id: string): Promise<Document | null> {
     const prisma = getPrismaClient();
-    
+
     const doc = await prisma.document.findFirst({
       where: { id, userId },
       include: {
@@ -303,9 +320,9 @@ export const documentService = {
         tenant: { select: { name: true } },
       },
     });
-    
+
     if (!doc) return null;
-    
+
     return {
       id: doc.id,
       userId: doc.userId,
@@ -334,25 +351,26 @@ export const documentService = {
    */
   async create(userId: string, data: CreateDocumentData): Promise<Document> {
     const prisma = getPrismaClient();
-    
+
     // Convert string content to buffer if needed
-    const content = typeof data.fileContent === 'string' 
-      ? Buffer.from(data.fileContent, 'base64')
-      : data.fileContent;
-    
+    const content =
+      typeof data.fileContent === "string"
+        ? Buffer.from(data.fileContent, "base64")
+        : data.fileContent;
+
     const fileSize = content.length;
-    
+
     // Validate file
     validateFile(data.mimeType, fileSize);
-    
+
     // Generate storage path
     const fileName = generateFileName(data.name, userId);
     const storagePath = getStoragePath(userId, fileName, data.type);
-    
+
     // Ensure directory exists and write file
     await ensureDirectory(dirname(storagePath));
     await writeFile(storagePath, content);
-    
+
     // Create database record
     const doc = await prisma.document.create({
       data: {
@@ -375,7 +393,7 @@ export const documentService = {
         tenant: { select: { name: true } },
       },
     });
-    
+
     return {
       id: doc.id,
       userId: doc.userId,
@@ -402,16 +420,20 @@ export const documentService = {
   /**
    * Update document metadata
    */
-  async update(userId: string, id: string, data: UpdateDocumentData): Promise<Document | null> {
+  async update(
+    userId: string,
+    id: string,
+    data: UpdateDocumentData,
+  ): Promise<Document | null> {
     const prisma = getPrismaClient();
-    
+
     // Check if document exists and belongs to user
     const existing = await prisma.document.findFirst({
       where: { id, userId },
     });
-    
+
     if (!existing) return null;
-    
+
     const doc = await prisma.document.update({
       where: { id },
       data: {
@@ -430,7 +452,7 @@ export const documentService = {
         tenant: { select: { name: true } },
       },
     });
-    
+
     return {
       id: doc.id,
       userId: doc.userId,
@@ -459,37 +481,40 @@ export const documentService = {
    */
   async delete(userId: string, id: string): Promise<boolean> {
     const prisma = getPrismaClient();
-    
+
     const doc = await prisma.document.findFirst({
       where: { id, userId },
     });
-    
+
     if (!doc) return false;
-    
+
     // Delete file from storage
     try {
       await unlink(doc.storagePath);
     } catch {
       // File might not exist, continue with DB deletion
     }
-    
+
     await prisma.document.delete({ where: { id } });
-    
+
     return true;
   },
 
   /**
    * Get document file content
    */
-  async getFileContent(userId: string, id: string): Promise<{ content: Buffer; mimeType: string; fileName: string } | null> {
+  async getFileContent(
+    userId: string,
+    id: string,
+  ): Promise<{ content: Buffer; mimeType: string; fileName: string } | null> {
     const prisma = getPrismaClient();
-    
+
     const doc = await prisma.document.findFirst({
       where: { id, userId },
     });
-    
+
     if (!doc) return null;
-    
+
     try {
       const content = await readFile(doc.storagePath);
       return {
@@ -511,20 +536,20 @@ export const documentService = {
     byType: Record<string, number>;
   }> {
     const prisma = getPrismaClient();
-    
+
     const documents = await prisma.document.findMany({
       where: { userId },
       select: { type: true, fileSize: true },
     });
-    
+
     const byType: Record<string, number> = {};
     let totalSize = 0;
-    
+
     for (const doc of documents) {
       byType[doc.type] = (byType[doc.type] || 0) + 1;
       totalSize += doc.fileSize;
     }
-    
+
     return {
       totalDocuments: documents.length,
       totalSize,
@@ -542,16 +567,16 @@ export const templateGenerator = {
    * Generate a lease agreement document (HTML format)
    */
   generateLeaseAgreement(data: LeaseTemplateData): string {
-    const currencyFormatter = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: data.currency || 'USD',
+    const currencyFormatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: data.currency || "USD",
     });
 
     const formatDate = (dateStr: string) => {
-      return new Date(dateStr).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+      return new Date(dateStr).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
       });
     };
 
@@ -618,24 +643,24 @@ export const templateGenerator = {
 
   <div class="parties">
     <p>This Residential Lease Agreement ("Agreement") is entered into as of 
-    <span class="highlight">${data.signatureDate ? formatDate(data.signatureDate) : '_______________'}</span>, 
+    <span class="highlight">${data.signatureDate ? formatDate(data.signatureDate) : "_______________"}</span>, 
     by and between:</p>
     
     <p><strong>LANDLORD:</strong> ${data.ownerName}<br>
-    ${data.ownerAddress ? `Address: ${data.ownerAddress}<br>` : ''}
-    ${data.ownerEmail ? `Email: ${data.ownerEmail}<br>` : ''}
-    ${data.ownerPhone ? `Phone: ${data.ownerPhone}` : ''}</p>
+    ${data.ownerAddress ? `Address: ${data.ownerAddress}<br>` : ""}
+    ${data.ownerEmail ? `Email: ${data.ownerEmail}<br>` : ""}
+    ${data.ownerPhone ? `Phone: ${data.ownerPhone}` : ""}</p>
     
     <p><strong>TENANT:</strong> ${data.tenantName}<br>
-    ${data.tenantAddress ? `Current Address: ${data.tenantAddress}<br>` : ''}
+    ${data.tenantAddress ? `Current Address: ${data.tenantAddress}<br>` : ""}
     Email: ${data.tenantEmail}<br>
-    ${data.tenantPhone ? `Phone: ${data.tenantPhone}` : ''}</p>
+    ${data.tenantPhone ? `Phone: ${data.tenantPhone}` : ""}</p>
   </div>
 
   <h2>1. Property</h2>
   <div class="section">
     <p>The Landlord agrees to rent to the Tenant the property located at:</p>
-    <p class="highlight">${data.propertyAddress}${data.unitNumber ? `, Unit ${data.unitNumber}` : ''}</p>
+    <p class="highlight">${data.propertyAddress}${data.unitNumber ? `, Unit ${data.unitNumber}` : ""}</p>
     <p>(hereinafter referred to as the "Premises")</p>
   </div>
 
@@ -650,7 +675,7 @@ export const templateGenerator = {
     <p>The Tenant agrees to pay rent in the amount of 
     <span class="highlight">${currencyFormatter.format(data.monthlyRent)}</span> per month.</p>
     <p>Rent is due on the <span class="highlight">${data.paymentDueDay || 1}${getOrdinalSuffix(data.paymentDueDay || 1)}</span> day of each month.</p>
-    ${data.lateFeePercentage ? `<p>A late fee of ${data.lateFeePercentage}% will be charged if rent is not received within ${data.lateFeeGracePeriod || 5} days of the due date.</p>` : ''}
+    ${data.lateFeePercentage ? `<p>A late fee of ${data.lateFeePercentage}% will be charged if rent is not received within ${data.lateFeeGracePeriod || 5} days of the due date.</p>` : ""}
   </div>
 
   <h2>4. Security Deposit</h2>
@@ -662,39 +687,55 @@ export const templateGenerator = {
     minus any deductions for damages beyond normal wear and tear.</p>
   </div>
 
-  ${data.utilities && data.utilities.length > 0 ? `
+  ${
+    data.utilities && data.utilities.length > 0
+      ? `
   <h2>5. Utilities</h2>
   <div class="section">
     <p>The following utilities are included in the rent:</p>
     <ul>
-      ${data.utilities.map(u => `<li>${u}</li>`).join('\n      ')}
+      ${data.utilities.map((u) => `<li>${u}</li>`).join("\n      ")}
     </ul>
     <p>All other utilities shall be the responsibility of the Tenant.</p>
   </div>
-  ` : ''}
+  `
+      : ""
+  }
 
-  ${data.petPolicy ? `
-  <h2>${data.utilities ? '6' : '5'}. Pet Policy</h2>
+  ${
+    data.petPolicy
+      ? `
+  <h2>${data.utilities ? "6" : "5"}. Pet Policy</h2>
   <div class="section">
     <p>${data.petPolicy}</p>
   </div>
-  ` : ''}
+  `
+      : ""
+  }
 
-  ${data.parkingSpaces !== undefined ? `
+  ${
+    data.parkingSpaces !== undefined
+      ? `
   <h2>Parking</h2>
   <div class="section">
     <p>The Tenant is entitled to <span class="highlight">${data.parkingSpaces}</span> parking space(s).</p>
   </div>
-  ` : ''}
+  `
+      : ""
+  }
 
-  ${data.specialTerms && data.specialTerms.length > 0 ? `
+  ${
+    data.specialTerms && data.specialTerms.length > 0
+      ? `
   <h2>Additional Terms</h2>
   <div class="section">
     <ul>
-      ${data.specialTerms.map(t => `<li>${t}</li>`).join('\n      ')}
+      ${data.specialTerms.map((t) => `<li>${t}</li>`).join("\n      ")}
     </ul>
   </div>
-  ` : ''}
+  `
+      : ""
+  }
 
   <h2>General Provisions</h2>
   <div class="section">
@@ -726,9 +767,9 @@ export const templateGenerator = {
    * Generate a rent receipt document (HTML format)
    */
   generateRentReceipt(data: RentReceiptTemplateData): string {
-    const currencyFormatter = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: data.currency || 'USD',
+    const currencyFormatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: data.currency || "USD",
     });
 
     return `<!DOCTYPE html>
@@ -824,38 +865,46 @@ export const templateGenerator = {
   <div class="details">
     <div class="row">
       <span class="label">Date Received:</span>
-      <span>${new Date(data.receiptDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+      <span>${new Date(data.receiptDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
     </div>
     <div class="row">
       <span class="label">Payment Period:</span>
       <span>${data.paymentPeriod}</span>
     </div>
-    ${data.paymentMethod ? `
+    ${
+      data.paymentMethod
+        ? `
     <div class="row">
       <span class="label">Payment Method:</span>
       <span>${data.paymentMethod}</span>
     </div>
-    ` : ''}
+    `
+        : ""
+    }
     <div class="row">
       <span class="label">Received From:</span>
       <span>${data.tenantName}</span>
     </div>
-    ${data.tenantAddress ? `
+    ${
+      data.tenantAddress
+        ? `
     <div class="row">
       <span class="label">Tenant Address:</span>
       <span>${data.tenantAddress}</span>
     </div>
-    ` : ''}
+    `
+        : ""
+    }
     <div class="row">
       <span class="label">Property:</span>
-      <span>${data.propertyAddress}${data.unitNumber ? `, Unit ${data.unitNumber}` : ''}</span>
+      <span>${data.propertyAddress}${data.unitNumber ? `, Unit ${data.unitNumber}` : ""}</span>
     </div>
   </div>
 
   <div class="footer">
     <p><strong>Received by:</strong> ${data.landlordName}</p>
-    ${data.landlordAddress ? `<p>${data.landlordAddress}</p>` : ''}
-    ${data.landlordPhone ? `<p>Phone: ${data.landlordPhone}</p>` : ''}
+    ${data.landlordAddress ? `<p>${data.landlordAddress}</p>` : ""}
+    ${data.landlordPhone ? `<p>Phone: ${data.landlordPhone}</p>` : ""}
     
     <div class="signature-line">
       Authorized Signature
@@ -870,16 +919,19 @@ export const templateGenerator = {
    */
   generateNotice(data: NoticeTemplateData): string {
     const noticeTitle = {
-      late_payment: 'NOTICE OF LATE PAYMENT',
-      lease_violation: 'NOTICE OF LEASE VIOLATION',
-      eviction: 'NOTICE TO VACATE',
-      rent_increase: 'NOTICE OF RENT INCREASE',
-      lease_renewal: 'NOTICE OF LEASE RENEWAL',
-      general: 'NOTICE TO TENANT',
+      late_payment: "NOTICE OF LATE PAYMENT",
+      lease_violation: "NOTICE OF LEASE VIOLATION",
+      eviction: "NOTICE TO VACATE",
+      rent_increase: "NOTICE OF RENT INCREASE",
+      lease_renewal: "NOTICE OF LEASE RENEWAL",
+      general: "NOTICE TO TENANT",
     };
 
-    const currencyFormatter = data.currency 
-      ? new Intl.NumberFormat('en-US', { style: 'currency', currency: data.currency })
+    const currencyFormatter = data.currency
+      ? new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: data.currency,
+        })
       : null;
 
     return `<!DOCTYPE html>
@@ -944,13 +996,13 @@ export const templateGenerator = {
   </div>
 
   <div class="date">
-    <p><strong>Date:</strong> ${new Date(data.issueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+    <p><strong>Date:</strong> ${new Date(data.issueDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
   </div>
 
   <div class="recipient">
     <p><strong>To:</strong> ${data.recipientName}</p>
     <p>${data.recipientAddress}</p>
-    <p><strong>Property:</strong> ${data.propertyAddress}${data.unitNumber ? `, Unit ${data.unitNumber}` : ''}</p>
+    <p><strong>Property:</strong> ${data.propertyAddress}${data.unitNumber ? `, Unit ${data.unitNumber}` : ""}</p>
   </div>
 
   <div class="content">
@@ -958,16 +1010,24 @@ export const templateGenerator = {
     
     <p>${data.description}</p>
 
-    ${data.amount && currencyFormatter ? `
+    ${
+      data.amount && currencyFormatter
+        ? `
     <div class="important">
       <p><strong>Amount Due:</strong> ${currencyFormatter.format(data.amount)}</p>
-      ${data.dueDate ? `<p><strong>Due By:</strong> ${new Date(data.dueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>` : ''}
+      ${data.dueDate ? `<p><strong>Due By:</strong> ${new Date(data.dueDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>` : ""}
     </div>
-    ` : ''}
+    `
+        : ""
+    }
 
-    ${data.dueDate && !data.amount ? `
-    <p class="highlight">Please respond by: ${new Date(data.dueDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
-    ` : ''}
+    ${
+      data.dueDate && !data.amount
+        ? `
+    <p class="highlight">Please respond by: ${new Date(data.dueDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
+    `
+        : ""
+    }
 
     <p>If you have any questions regarding this notice, please contact us immediately.</p>
   </div>
@@ -976,7 +1036,7 @@ export const templateGenerator = {
     <p>Sincerely,</p>
     <div class="signature-line">
       <p>${data.senderName}</p>
-      ${data.senderTitle ? `<p>${data.senderTitle}</p>` : ''}
+      ${data.senderTitle ? `<p>${data.senderTitle}</p>` : ""}
     </div>
   </div>
 </body>
@@ -986,7 +1046,7 @@ export const templateGenerator = {
 
 // Helper function for ordinal suffixes
 function getOrdinalSuffix(n: number): string {
-  const s = ['th', 'st', 'nd', 'rd'];
+  const s = ["th", "st", "nd", "rd"];
   const v = n % 100;
   return s[(v - 20) % 10] || s[v] || s[0];
 }
@@ -1002,34 +1062,34 @@ export const versionService = {
    * a separate DocumentVersion table to track all versions.
    */
   async createVersion(
-    userId: string, 
-    documentId: string, 
+    userId: string,
+    documentId: string,
     newContent: Buffer,
-    _changeNote?: string
+    _changeNote?: string,
   ): Promise<Document | null> {
     const prisma = getPrismaClient();
-    
+
     // Get existing document
     const existing = await prisma.document.findFirst({
       where: { id: documentId, userId },
     });
-    
+
     if (!existing) return null;
-    
+
     // Archive old version by renaming
     const timestamp = Date.now();
     const oldPath = existing.storagePath;
     const archivedPath = oldPath.replace(/(\.[^.]+)$/, `.v${timestamp}$1`);
-    
+
     try {
       // Copy old file to archive location
       const oldContent = await readFile(oldPath);
       await ensureDirectory(dirname(archivedPath));
       await writeFile(archivedPath, oldContent);
-      
+
       // Write new content
       await writeFile(oldPath, newContent);
-      
+
       // Update database record
       const doc = await prisma.document.update({
         where: { id: documentId },
@@ -1043,7 +1103,7 @@ export const versionService = {
           tenant: { select: { name: true } },
         },
       });
-      
+
       return {
         id: doc.id,
         userId: doc.userId,

@@ -2,8 +2,8 @@ apiVersion: v2
 name: proman
 description: A Helm chart for deploying the Proman property management platform
 type: application
-version: 1.1.6
-appVersion: "1.1.6"
+version: 1.1.7
+appVersion: "1.1.7"
 home: https://github.com/JIGLE/proman
 sources:
   - https://github.com/JIGLE/proman

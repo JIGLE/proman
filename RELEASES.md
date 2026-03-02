@@ -1,5 +1,25 @@
 # Releases
 
+- Date: 2026-03-02
+  - Version: v1.1.7
+  - Image: `ghcr.io/jigle/proman:1.1.7`
+  - Notes: Security hardening and maintenance
+    - **CodeQL Fixes**: Replaced all `Math.random()` with `crypto.randomBytes`/`crypto.randomUUID` in security-relevant contexts
+    - **Regex Injection Fix**: Escaped user-provided template keys in email variable substitution
+    - **Dependency Updates**: Merged 8 Dependabot PRs (production + dev deps + CI actions)
+    - **Workflow Improvements**: Updated `actions/github-script` v6→v8, `azure/setup-helm` v1→v4, `azure/setup-kubectl` v3→v4, `peaceiris/actions-gh-pages` v3→v4, `trufflehog` v3.93.1→v3.93.3
+    - **README**: Updated with auto DB init documentation and corrected env var table
+
+- Date: 2026-03-02
+  - Version: v1.1.6
+  - Image: `ghcr.io/jigle/proman:1.1.6`
+  - Notes: Fix TrueNAS deployment 500 errors
+    - **Root Cause Fix**: Database auto-initialization on first startup (`AUTO_DB_INIT`)
+    - **Dockerfile Fix**: Corrected `--chown` group from non-existent `nodejs` to `nextjs`
+    - **Helm Values**: Added `INIT_SECRET`, `fsGroup:1001`, `initJob.enabled:true` to TrueNAS values
+    - **Fail-Fast**: Container exits on missing DB tables in production instead of silently serving 500s
+    - **Error Logging**: Auth middleware now logs actionable hints for "no such table" errors
+
 - Date: 2026-02-05
   - Version: v1.1.0
   - Image: `ghcr.io/jigle/proman:1.1.0`

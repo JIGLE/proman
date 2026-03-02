@@ -41,13 +41,13 @@ npm run type-check      # TypeScript check
 
 ## Key Environment Variables
 
-| Variable          | Required    | Description                                                                                                                                                                           |
-| ----------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATABASE_URL`    | Yes (prod)  | SQLite path, e.g. `file:/data/proman.sqlite`                                                                                                                                          |
-| `NEXTAUTH_URL`    | Yes (prod)  | Public URL of the application                                                                                                                                                         |
-| `NEXTAUTH_SECRET` | Yes (prod)  | Session signing secret (min 32 chars)                                                                                                                                                 |
-| `INIT_SECRET`     | Recommended | Protects the DB init endpoint                                                                                                                                                         |
-| (Removed flags)   | See docs    | Runtime schema pushes and client-side auto-init flags have been removed. Use the Helm `initJob` or the protected init endpoint (`INIT_SECRET`) to initialize the database explicitly. |
+| Variable          | Required    | Description                                         |
+| ----------------- | ----------- | --------------------------------------------------- |
+| `DATABASE_URL`    | Yes (prod)  | SQLite path, e.g. `file:/app/data/proman.db`        |
+| `NEXTAUTH_URL`    | Yes (prod)  | Public URL of the application                       |
+| `NEXTAUTH_SECRET` | Yes (prod)  | Session signing secret (min 32 chars)               |
+| `INIT_SECRET`     | Recommended | Protects the DB init endpoint                       |
+| `AUTO_DB_INIT`    | No          | Auto-create tables on first start (default: `true`) |
 
 See [.env.example](.env.example) for the complete list with defaults and documentation.
 
@@ -70,7 +70,11 @@ Full deployment instructions: [docs/deployment.md](docs/deployment.md)
 
 ## Database Initialization
 
-After first deploy, initialize the schema:
+The database schema is **automatically created on first startup** when the
+container detects an empty SQLite database (controlled by `AUTO_DB_INIT`,
+default: `true`). No manual steps are needed for new deployments.
+
+For manual initialization or re-initialization:
 
 ```bash
 curl -sS -X POST -H "Authorization: Bearer $INIT_SECRET" \

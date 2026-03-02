@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import React, { useEffect } from "react";
 
@@ -11,11 +11,12 @@ export default function DevDebug(): null {
         return original(child);
       } catch (err) {
         try {
-          // eslint-disable-next-line no-console
           console.error("React.Children.only error — child: ", child);
-          // eslint-disable-next-line no-console
+
           console.error(new Error("React.Children.only stack").stack);
-        } catch (e) {}
+        } catch (_ignored) {
+          /* intentionally swallowed — debug logging only */
+        }
         throw err;
       }
     };
