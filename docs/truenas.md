@@ -14,15 +14,17 @@ This guide covers deploying ProMan specifically on TrueNAS SCALE.
 
 Set these in the TrueNAS Custom App UI or via Helm values:
 
-| Variable          | Value                       | Notes                                   |
-| ----------------- | --------------------------- | --------------------------------------- |
-| `DATABASE_URL`    | `file:/app/data/proman.db`  | Points to persistent volume             |
-| `NEXTAUTH_URL`    | `http://<TRUENAS_IP>:30080` | Must match external URL                 |
-| `NEXTAUTH_SECRET` | `<random-32-char-string>`   | Generate with `openssl rand -base64 32` |
-| `NODE_ENV`        | `production`                |                                         |
-| `HOSTNAME`        | `0.0.0.0`                   | Bind to all interfaces                  |
-| `PORT`            | `3000`                      | Internal container port                 |
-| `INIT_SECRET`     | `<random-hex-string>`       | Protects DB init endpoint               |
+| Variable              | Value                          | Notes                                   |
+| --------------------- | ------------------------------ | --------------------------------------- |
+| `DATABASE_URL`        | `file:/app/data/proman.db`     | Points to persistent volume             |
+| `NEXTAUTH_URL`        | `https://proman.example.com`   | Must match the URL you access the app at (protocol + domain/IP + port) |
+| `NEXTAUTH_SECRET`     | `<random-32-char-string>`      | Generate with `openssl rand -base64 32` |
+| `NODE_ENV`            | `production`                   |                                         |
+| `HOSTNAME`            | `0.0.0.0`                      | Bind to all interfaces                  |
+| `PORT`                | `3000`                         | Internal container port                 |
+| `INIT_SECRET`         | `<random-hex-string>`          | Protects DB init endpoint               |
+| `GOOGLE_CLIENT_ID`    | *(from Google Cloud Console)*  | Optional — enables Google sign-in       |
+| `GOOGLE_CLIENT_SECRET`| *(from Google Cloud Console)*  | Required if `GOOGLE_CLIENT_ID` is set   |
 
 ## Optional Environment Variables
 
@@ -31,7 +33,7 @@ Set these in the TrueNAS Custom App UI or via Helm values:
 | `ENABLE_STRIPE`                    | `false` | Enable Stripe payments                                                                                                                                                                  |
 | `ENABLE_SENDGRID`                  | `false` | Enable email delivery                                                                                                                                                                   |
 | `ENABLE_OAUTH`                     | `false` | Enable Google OAuth                                                                                                                                                                     |
-| `SKIP_PRESTART`                    | `true`  | Recommended for TrueNAS (platform-managed lifecycle)                                                                                                                                    |
+| `SKIP_PRESTART`                    | `false` | Keep `false` (default) so the container auto-initializes the DB on first start                                                                                                          |
 | `PRESTART_FAIL_ON_SQLITE`          | `false` | Keep false to allow operator remediation                                                                                                                                                |
 | `RUN_PRISMA_DB_PUSH_AT_STARTUP`    | `false` | When `true`, run `npx prisma db push` and `npx prisma generate` on container start (not recommended for production). Prefer using the Helm init Job when `persistence.enabled` is true. |
 | `NEXT_PUBLIC_DISABLE_AUTO_DB_INIT` | `false` | Set to `true` after initial DB setup to avoid rate limit errors                                                                                                                         |
@@ -192,6 +194,25 @@ exists but has no tables (the schema was never applied).
 
 - Re-run database init (see above)
 - Check dataset permissions haven't changed
+
+## Google OAuth Setup
+
+To enable Google sign-in:
+
+1. Go to [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
+2. Create an **OAuth 2.0 Client ID** (Web application type)
+3. Set **Authorized JavaScript origins**: `https://proman.example.com`
+4. Set **Authorized redirect URIs**: `https://proman.example.com/api/auth/callback/google`
+5. Copy the Client ID and Client Secret
+6. Add these environment variables to your TrueNAS app configuration:
+   ```
+   GOOGLE_CLIENT_ID=<your-client-id>.apps.googleusercontent.com
+   GOOGLE_CLIENT_SECRET=<your-client-secret>
+   ```
+7. Restart the app — the Google sign-in button will appear on the login page
+
+> **Note:** `NEXTAUTH_URL` must exactly match the origin you configured in
+> Google Cloud Console (including `https://` and port if non-standard).
 
 ## Removing the App
 

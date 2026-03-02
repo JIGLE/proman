@@ -32,8 +32,9 @@ env:
   - name: DATABASE_URL
     value: "file:/app/data/proman.db"
   - name: NEXTAUTH_URL
-    # IMPORTANT: Replace with your TrueNAS IP/hostname
-    value: "http://<TRUENAS_IP_OR_HOSTNAME>:30080"
+    # IMPORTANT: Must match the URL you access the app at (including protocol).
+    # Examples: https://proman.example.com  or  http://192.168.1.50:30080
+    value: "https://<YOUR_DOMAIN_OR_IP>:30080"
   - name: NEXTAUTH_SECRET
     # IMPORTANT: Must be at least 32 characters. Generate with: openssl rand -base64 32
     value: "REPLACE-ME-with-at-least-32-characters-secret"
@@ -47,6 +48,14 @@ env:
     # IMPORTANT: Replace with a random secret. Generate with: openssl rand -hex 32
     # Required for the /api/debug/db/init endpoint (manual DB initialization)
     value: "REPLACE-ME-with-random-hex-secret"
+  # --- Google OAuth (optional) ---
+  # To enable Google sign-in, create OAuth 2.0 credentials at
+  # https://console.cloud.google.com/apis/credentials
+  # Authorized redirect URI: https://<YOUR_DOMAIN>/api/auth/callback/google
+  # - name: GOOGLE_CLIENT_ID
+  #   value: "<your-google-client-id>.apps.googleusercontent.com"
+  # - name: GOOGLE_CLIENT_SECRET
+  #   value: "<your-google-client-secret>"
 
 # Run prisma db push as a post-install/post-upgrade Job
 initJob:
@@ -64,10 +73,10 @@ persistence:
 resources:
   requests:
     cpu: 100m
-    memory: 128Mi
-  limits:
-    cpu: 250m
     memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
 
 # Notes:
 # - hostPath is not HA/resilient across node failures. Prefer a proper PVC backed by TrueNAS CSI if available.
