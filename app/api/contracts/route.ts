@@ -51,7 +51,8 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform to frontend contract shape
-    const contracts = leases.map((lease) => ({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const contracts = leases.map((lease: any) => ({
       id: lease.id,
       propertyName: lease.property?.name || "Unknown Property",
       unitName: lease.unit?.number || null,

@@ -1,4 +1,5 @@
 ﻿import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Building2, Users, Wallet, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/shared/language-selector";
@@ -10,6 +11,20 @@ interface Props {
 
 export default async function LandingPage({ params }: Props) {
   const { locale } = await params;
+
+  // If user is authenticated, redirect to dashboard instead of landing page
+  try {
+    const { getServerSession } = await import('next-auth/next');
+    const { getAuthOptions } = await import('@/lib/services/auth/auth');
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const session: any = await getServerSession(getAuthOptions() as any);
+    if (session?.user) {
+      redirect(`/${locale}/overview`);
+    }
+  } catch {
+    // If session check fails, show landing page normally
+  }
+
   const t = await getTranslations("landing");
 
   const features = [

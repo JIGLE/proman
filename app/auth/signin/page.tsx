@@ -15,7 +15,7 @@ function SignInContent() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      router.push('/')
+      router.push('/pt/overview')
     }
   }, [status, router])
 
@@ -55,7 +55,7 @@ function SignInContent() {
                 signIn('credentials', { 
                   email: formData.get('email'), 
                   password: formData.get('password'),
-                  callbackUrl: '/' 
+                  callbackUrl: '/pt/overview' 
                 });
               }}
               className="space-y-3"
@@ -89,7 +89,7 @@ function SignInContent() {
             </div>
 
             <Button
-              onClick={() => signIn('google', { callbackUrl: '/' })}
+              onClick={() => signIn('google', { callbackUrl: '/pt/overview' })}
               variant="outline"
               className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700 font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-3"
             >

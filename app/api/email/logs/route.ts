@@ -3,7 +3,6 @@ import { requireAuth } from '@/lib/services/auth/auth-middleware';
 import { createErrorResponse, createSuccessResponse } from '@/lib/utils/error-handling';
 import { getPrismaClient } from '@/lib/services/database/database';
 import { z } from 'zod';
-import type { PrismaClient, Prisma } from '@prisma/client';
 
 const querySchema = z.object({
   page: z.string().optional().transform(val => val ? parseInt(val) : 1),
@@ -18,13 +17,15 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
-  const prisma: PrismaClient = getPrismaClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const prisma: any = getPrismaClient();
 
   try {
     const { searchParams } = new URL(request.url);
     const query = querySchema.parse(Object.fromEntries(searchParams));
 
-    const where: Prisma.EmailLogWhereInput = {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const where: any = {
       userId: authResult.userId,
     };
 
