@@ -96,11 +96,12 @@ try {
   process.exit(0);
 }
 
-// Runtime schema pushes are disabled by default. Prefer a one-shot init Job
-// or manual initialization via the protected init endpoint.
-log(
-  "Skipping Prisma DB push/generate at startup (runtime schema push removed).",
-);
+// Check if auto DB initialization is enabled.
+// AUTO_DB_INIT (default: "true") will run `prisma db push` when the DB has no tables.
+// Operators can disable this by setting AUTO_DB_INIT=false.
+const autoDbInit =
+  process.env.AUTO_DB_INIT !== "false" && process.env.AUTO_DB_INIT !== "0";
+
 // After applying schema, verify tables exist in sqlite
 let expectedTables = [];
 
@@ -142,12 +143,12 @@ try {
 
 try {
   const Database = require("better-sqlite3");
-  const db = new Database(resolved, { readonly: true, fileMustExist: true });
+  let db = new Database(resolved, { readonly: true, fileMustExist: true });
 
-  const rows = db
+  let rows = db
     .prepare("SELECT name FROM sqlite_master WHERE type='table'")
     .all();
-  const present = new Set(rows.map((r) => String(r.name)));
+  let present = new Set(rows.map((r) => String(r.name)));
 
   const critical = [
     "users",
@@ -159,7 +160,7 @@ try {
     "email_logs",
   ];
 
-  const missing = [];
+  let missing = [];
   for (const req of critical) {
     if (present.has(req)) continue;
     const hasAny = expectedTables.some(
@@ -170,16 +171,84 @@ try {
     }
   }
 
+  db.close();
+
+  // If tables are missing, attempt automatic initialization
+  if (missing.length > 0 && autoDbInit) {
+    log(
+      "Missing required tables:",
+      missing.join(", "),
+      "— running automatic DB initialization (AUTO_DB_INIT is enabled).",
+    );
+    try {
+      log(
+        "Running: npx prisma db push --schema=prisma/schema.prisma --accept-data-loss",
+      );
+      execSync(
+        "npx prisma db push --schema=prisma/schema.prisma --accept-data-loss",
+        {
+          stdio: "inherit",
+          env: { ...process.env, DATABASE_URL: dbUrl },
+          timeout: 60000,
+        },
+      );
+      log("Prisma DB push completed successfully.");
+
+      // Re-verify tables after push
+      db = new Database(resolved, { readonly: true, fileMustExist: true });
+      rows = db
+        .prepare("SELECT name FROM sqlite_master WHERE type='table'")
+        .all();
+      present = new Set(rows.map((r) => String(r.name)));
+
+      missing = [];
+      for (const req of critical) {
+        if (present.has(req)) continue;
+        const hasAny = expectedTables.some(
+          (candidate) => candidate && present.has(String(candidate)),
+        );
+        if (!hasAny && !present.has(req)) {
+          missing.push(req);
+        }
+      }
+      db.close();
+
+      if (missing.length === 0) {
+        log("Auto DB initialization succeeded. All critical tables present.");
+      } else {
+        error(
+          "Auto DB initialization completed but tables still missing:",
+          missing.join(", "),
+        );
+      }
+    } catch (pushErr) {
+      error("Auto DB initialization failed:", pushErr && pushErr.message);
+      error(
+        "The app will not function correctly. Please run 'npx prisma db push --schema=prisma/schema.prisma' manually or use the /api/debug/db/init endpoint.",
+      );
+    }
+  } else if (missing.length > 0) {
+    log("AUTO_DB_INIT is disabled; skipping automatic schema push.");
+  }
+
   if (missing.length > 0) {
     error("Missing required tables in sqlite DB:", missing.join(", "));
     error("SQLite tables present:", Array.from(present).join(", "));
     error("Have you run `npx prisma db push`?");
-    if (process.env.PRESTART_FAIL_ON_SQLITE === "true") {
-      error("Exiting due to missing tables and PRESTART_FAIL_ON_SQLITE=true");
+    // In production, fail fast to prevent silent 500 errors.
+    // Operators can set PRESTART_FAIL_ON_SQLITE=false to override.
+    const isProduction = process.env.NODE_ENV === "production";
+    const failOnMissing =
+      process.env.PRESTART_FAIL_ON_SQLITE === "true" ||
+      (isProduction && process.env.PRESTART_FAIL_ON_SQLITE !== "false");
+    if (failOnMissing) {
+      error(
+        "Exiting due to missing tables (production mode). Set PRESTART_FAIL_ON_SQLITE=false to override.",
+      );
       process.exit(1);
     } else {
       console.warn(
-        "[ensure-sqlite] Missing sqlite tables but PRESTART_FAIL_ON_SQLITE not enabled — continuing startup (NOT recommended for production).",
+        "[ensure-sqlite] Missing sqlite tables — continuing startup (NOT recommended for production).",
       );
       process.exit(0);
     }
@@ -187,15 +256,21 @@ try {
 
   log("Verified sqlite tables exist:", critical.join(", "));
   // Also log all tables for debugging
+  db = new Database(resolved, { readonly: true, fileMustExist: true });
   const allRows = db
     .prepare("SELECT name FROM sqlite_master WHERE type='table'")
     .all();
   const allTables = allRows.map((r) => String(r.name)).join(", ");
   log("All sqlite tables present:", allTables);
+  log("Table count:", allRows.length);
   db.close();
   process.exit(0);
 } catch (err) {
   error("Error while validating sqlite tables:", err && err.message);
+  if (process.env.NODE_ENV === "production") {
+    error("Fatal: Cannot validate database in production. Exiting.");
+    process.exit(1);
+  }
   console.warn(
     "[ensure-sqlite] Non-fatal sqlite validation error. Continuing startup; operator should perform explicit DB init.",
   );

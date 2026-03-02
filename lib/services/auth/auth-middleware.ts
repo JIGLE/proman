@@ -1,17 +1,22 @@
-import { NextRequest, NextResponse } from 'next/server';
-import type { Session } from 'next-auth';
-import { getAuthOptions } from '@/lib/services/auth/auth';
-import { isMockMode } from '@/lib/config/data-mode';
+import { NextRequest, NextResponse } from "next/server";
+import type { Session } from "next-auth";
+import { getAuthOptions } from "@/lib/services/auth/auth";
+import { isMockMode } from "@/lib/config/data-mode";
 
 // Authentication middleware for API routes
-export async function requireAuth(_request: NextRequest): Promise<{
-  session: Session;
-  userId: string;
-} | NextResponse> {
+export async function requireAuth(_request: NextRequest): Promise<
+  | {
+      session: Session;
+      userId: string;
+    }
+  | NextResponse
+> {
   try {
     // Import next-auth lazily so tests can mock getServerSession before we call it
-    const mod = await import('next-auth/next').catch(() => import('next-auth'));
-    type GetServerSession = (opts?: ReturnType<typeof getAuthOptions>) => Promise<Session | null>;
+    const mod = await import("next-auth/next").catch(() => import("next-auth"));
+    type GetServerSession = (
+      opts?: ReturnType<typeof getAuthOptions>,
+    ) => Promise<Session | null>;
     const maybe = mod as { getServerSession?: GetServerSession };
     const getServerSession = maybe.getServerSession;
 
@@ -20,18 +25,18 @@ export async function requireAuth(_request: NextRequest): Promise<{
 
     if (!session) {
       return new NextResponse(
-        JSON.stringify({ error: 'Authentication required' }),
+        JSON.stringify({ error: "Authentication required" }),
         {
           status: 401,
-          headers: { 'Content-Type': 'application/json' },
-        }
+          headers: { "Content-Type": "application/json" },
+        },
       );
     }
 
     // In mock mode, use session data directly without database lookup
     if (isMockMode) {
       // Use email hash or session.user.id as a stable userId in mock mode
-      const userId = session.user?.id || session.user?.email || 'mock-user';
+      const userId = session.user?.id || session.user?.email || "mock-user";
       return { session, userId };
     }
 
@@ -39,7 +44,8 @@ export async function requireAuth(_request: NextRequest): Promise<{
     // available (real auth), but accept a session.user.id fallback used by tests/mocks.
     if (session.user?.email) {
       // Find or create user in database (database accessor is lazy as well)
-      const { getPrismaClient } = await import('@/lib/services/database/database');
+      const { getPrismaClient } =
+        await import("@/lib/services/database/database");
       const prisma = getPrismaClient();
       let user = await prisma.user.findUnique({
         where: { email: session.user.email },
@@ -50,10 +56,10 @@ export async function requireAuth(_request: NextRequest): Promise<{
         user = await prisma.user.create({
           data: {
             email: session.user.email,
-            name: session.user.name || '',
+            name: session.user.name || "",
           },
         });
-        console.debug('Created missing user:', user.id);
+        console.debug("Created missing user:", user.id);
       }
 
       return { session, userId: user.id };
@@ -65,20 +71,35 @@ export async function requireAuth(_request: NextRequest): Promise<{
     }
 
     return new NextResponse(
-      JSON.stringify({ error: 'Authentication required' }),
+      JSON.stringify({ error: "Authentication required" }),
       {
         status: 401,
-        headers: { 'Content-Type': 'application/json' },
-      }
+        headers: { "Content-Type": "application/json" },
+      },
     );
   } catch (error: unknown) {
-    console.error('requireAuth error:', error);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const errName = error instanceof Error ? error.name : "UnknownError";
+    console.error("requireAuth error:", errName, errMsg);
+
+    // Provide actionable hints in logs for common root causes
+    if (errMsg.includes("no such table") || errMsg.includes("SQLITE_ERROR")) {
+      console.error(
+        "HINT: The database exists but has no tables. " +
+          "Run database initialization: POST /api/debug/db/init " +
+          "or exec into the container and run: npx prisma db push --schema=prisma/schema.prisma",
+      );
+    }
+
     return new NextResponse(
-      JSON.stringify({ error: 'Authentication failed' }),
+      JSON.stringify({
+        error: "Authentication failed",
+        detail: process.env.NODE_ENV !== "production" ? errMsg : undefined,
+      }),
       {
         status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      }
+        headers: { "Content-Type": "application/json" },
+      },
     );
   }
 }
@@ -86,7 +107,7 @@ export async function requireAuth(_request: NextRequest): Promise<{
 // Authorization middleware for resource ownership
 export async function requireOwnership(
   request: NextRequest,
-  resourceUserId: string
+  resourceUserId: string,
 ): Promise<void | NextResponse> {
   const authResult = await requireAuth(request);
 
@@ -97,23 +118,21 @@ export async function requireOwnership(
   const { userId } = authResult;
 
   if (userId !== resourceUserId) {
-    return new NextResponse(
-      JSON.stringify({ error: 'Access denied' }),
-      {
-        status: 403,
-        headers: { 'Content-Type': 'application/json' },
-      }
-    );
+    return new NextResponse(JSON.stringify({ error: "Access denied" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }
 
 // CORS headers for API responses
 export function corsHeaders(): Record<string, string> {
   return {
-    'Access-Control-Allow-Origin': process.env.NEXTAUTH_URL || 'http://localhost:3000',
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Credentials': 'true',
+    "Access-Control-Allow-Origin":
+      process.env.NEXTAUTH_URL || "http://localhost:3000",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Credentials": "true",
   };
 }
 
@@ -131,13 +150,13 @@ export async function requireAdmin(request: NextRequest) {
     return authResult;
   }
   const { session } = authResult;
-  if (session.user.role !== 'ADMIN') {
+  if (session.user.role !== "ADMIN") {
     return new NextResponse(
-      JSON.stringify({ error: 'Forbidden: Admin access required' }),
+      JSON.stringify({ error: "Forbidden: Admin access required" }),
       {
         status: 403,
-        headers: { 'Content-Type': 'application/json' },
-      }
+        headers: { "Content-Type": "application/json" },
+      },
     );
   }
   return authResult;

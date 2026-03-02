@@ -78,7 +78,14 @@ kubectl exec -it <pod> -- ls -la /app/data
 
 ## Database Initialization
 
-After first install, initialize the database schema:
+On first deploy the database schema is created **automatically** at startup
+(the container runs `prisma db push` when it detects an empty database).
+If automatic initialization is disabled (`AUTO_DB_INIT=false`), you can
+initialize the database manually:
+
+### Option A: Use the init API endpoint
+
+Requires `INIT_SECRET` to be set in environment variables.
 
 ```bash
 curl -sS -X POST \
@@ -95,6 +102,29 @@ Expected response:
   "pushOut": "...",
   "genOut": "..."
 }
+```
+
+### Option B: Exec into the container
+
+```bash
+# Find the pod name
+kubectl get pods -n ix-proman
+
+# Run prisma db push
+kubectl exec -it <pod-name> -n ix-proman -- npx prisma db push --schema=prisma/schema.prisma
+```
+
+### Option C: Helm init Job (automatic)
+
+If `initJob.enabled: true` is set in your Helm values (default in
+`values-truenas.yaml`), a Kubernetes Job runs `prisma db push` automatically
+after `helm install` or `helm upgrade`.
+
+Verify the job succeeded:
+
+```bash
+kubectl get jobs -n ix-proman
+kubectl logs job/proman-prisma-init -n ix-proman
 ```
 
 ## Updating the App
@@ -118,8 +148,32 @@ See [Troubleshooting Guide](troubleshooting.md) for common issues.
 
 ### TrueNAS-specific issues
 
+**All API routes return 500 "Authentication failed":**
+
+This is the most common issue on first deploy. It means the database file
+exists but has no tables (the schema was never applied).
+
+1. Check pod logs for `"no such table"` errors:
+   ```bash
+   kubectl logs -l app=proman -n ix-proman --tail=100
+   ```
+2. Initialize the database (see [Database Initialization](#database-initialization) above).
+3. If using Helm, check if the init Job failed:
+   ```bash
+   kubectl get jobs -n ix-proman
+   kubectl logs job/proman-prisma-init -n ix-proman
+   ```
+4. Verify the data directory is writable by UID 1001:
+   ```bash
+   kubectl exec -it <pod> -n ix-proman -- ls -la /app/data
+   ```
+   Expected: file owned by `nextjs` (UID 1001, GID 1001).
+
 **App shows "Deploying" indefinitely:**
 
+- The health check (`/api/health`) returns 503 when the database is not
+  initialized. Kubernetes will never mark the pod as ready, causing a
+  deploy loop. Fix by initializing the database.
 - Check pod logs: `kubectl logs -l app=proman -n ix-proman --tail=100`
 - Verify the dataset path is correct and writable
 
@@ -127,6 +181,12 @@ See [Troubleshooting Guide](troubleshooting.md) for common issues.
 
 - Check NodePort: `kubectl get svc -n ix-proman`
 - Try port-forward: `kubectl port-forward svc/proman 3000:80 -n ix-proman`
+
+**Permission denied / SQLite not writable:**
+
+- Ensure the TrueNAS dataset permissions are set to UID `1001`, GID `1001`.
+- In Helm values, set `podSecurityContext.fsGroup: 1001`.
+- Verify: `kubectl exec -it <pod> -- stat /app/data/proman.db`
 
 **Database errors after TrueNAS update:**
 

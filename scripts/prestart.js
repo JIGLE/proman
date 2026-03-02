@@ -24,10 +24,19 @@ try {
 // Only run sqlite ensure when DATABASE_URL suggests sqlite
 const dbUrl = process.env.DATABASE_URL || "";
 if (dbUrl.startsWith("file:")) {
+  console.log("[prestart] SQLite mode detected. Running database checks...");
   try {
     require("./ensure-sqlite");
   } catch (err) {
     console.error("[prestart] ensure-sqlite failed:", err && err.message);
+    if (process.env.NODE_ENV === "production") {
+      console.error(
+        "[prestart] FATAL: Database initialization failed in production. " +
+          "The app will NOT start correctly. Check permissions on the data directory " +
+          "and ensure DATABASE_URL points to a writable path.",
+      );
+      process.exit(1);
+    }
     console.warn(
       "[prestart] Continuing startup despite sqlite prestart failure; operator should run one-shot DB init.",
     );
@@ -38,4 +47,5 @@ if (dbUrl.startsWith("file:")) {
   );
 }
 
+console.log("[prestart] Prestart checks complete.");
 process.exit(0);

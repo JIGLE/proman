@@ -19,20 +19,38 @@ service:
 ingress:
   enabled: false
 
+# Security context — must match the container user (UID/GID 1001)
+podSecurityContext:
+  fsGroup: 1001
+
+securityContext:
+  runAsUser: 1001
+  runAsGroup: 1001
+  runAsNonRoot: true
+
 env:
   - name: DATABASE_URL
     value: "file:/app/data/proman.db"
   - name: NEXTAUTH_URL
+    # IMPORTANT: Replace with your TrueNAS IP/hostname
     value: "http://<TRUENAS_IP_OR_HOSTNAME>:30080"
   - name: NEXTAUTH_SECRET
-    value: "replace-with-secure-secret"
+    # IMPORTANT: Must be at least 32 characters. Generate with: openssl rand -base64 32
+    value: "REPLACE-ME-with-at-least-32-characters-secret"
   - name: NODE_ENV
     value: "production"
   - name: HOSTNAME
     value: "0.0.0.0"
   - name: PORT
     value: "3000"
+  - name: INIT_SECRET
+    # IMPORTANT: Replace with a random secret. Generate with: openssl rand -hex 32
+    # Required for the /api/debug/db/init endpoint (manual DB initialization)
+    value: "REPLACE-ME-with-random-hex-secret"
 
+# Run prisma db push as a post-install/post-upgrade Job
+initJob:
+  enabled: true
 
 persistence:
   enabled: true
