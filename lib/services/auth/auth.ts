@@ -69,7 +69,7 @@ function createBaseAuthOptions(): NextAuthOptions {
   if (enableDemoLogin) {
     providers.push(
       CredentialsProvider({
-        // @ts-expect-error — next-auth v4 CredentialsProvider type doesn't include 'id' in its config but accepts it at runtime
+        // @ts-ignore — 'id' may not exist in CredentialsProvider type depending on resolution mode
         id: "credentials",
         name: "Credentials",
         credentials: {
