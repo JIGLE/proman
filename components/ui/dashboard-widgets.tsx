@@ -1,36 +1,44 @@
-import * as React from "react"
-import { LucideIcon, MoreVertical, Maximize2, RefreshCw, Download, TrendingUp, TrendingDown } from "lucide-react"
-import { cn } from "@/lib/utils/utils"
-import { Card, CardContent, CardHeader, CardTitle } from "./card"
-import { Button } from "./button"
+import * as React from "react";
+import {
+  LucideIcon,
+  MoreVertical,
+  Maximize2,
+  RefreshCw,
+  Download,
+  TrendingUp,
+  TrendingDown,
+} from "lucide-react";
+import { cn } from "@/lib/utils/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "./card";
+import { Button } from "./button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuTrigger
-} from "./dropdown-menu"
+  DropdownMenuTrigger,
+} from "./dropdown-menu";
 
 interface WidgetProps {
-  title: string
-  subtitle?: string
-  icon?: LucideIcon
-  value?: string | number
+  title: string;
+  subtitle?: string;
+  icon?: LucideIcon;
+  value?: string | number;
   change?: {
-    value: number
-    label?: string
-    period?: string
-  }
-  className?: string
-  loading?: boolean
-  error?: string
-  onRefresh?: () => void
-  onExport?: () => void
-  onExpand?: () => void
-  children?: React.ReactNode
-  size?: 'sm' | 'md' | 'lg' | 'xl'
-  variant?: 'default' | 'outlined' | 'elevated'
-  actions?: React.ReactNode
+    value: number;
+    label?: string;
+    period?: string;
+  };
+  className?: string;
+  loading?: boolean;
+  error?: string;
+  onRefresh?: () => void;
+  onExport?: () => void;
+  onExpand?: () => void;
+  children?: React.ReactNode;
+  size?: "sm" | "md" | "lg" | "xl";
+  variant?: "default" | "outlined" | "elevated";
+  actions?: React.ReactNode;
 }
 
 export function DashboardWidget({
@@ -46,33 +54,37 @@ export function DashboardWidget({
   onExport,
   onExpand,
   children,
-  size = 'md',
-  variant = 'elevated',
-  actions
+  size = "md",
+  variant = "elevated",
+  actions,
 }: WidgetProps) {
   const sizeClasses = {
-    sm: 'p-4',
-    md: 'p-6',
-    lg: 'p-8',
-    xl: 'p-10'
-  }
+    sm: "p-4",
+    md: "p-6",
+    lg: "p-8",
+    xl: "p-10",
+  };
 
   const variantClasses = {
-    default: '',
-    outlined: 'border-2',
-    elevated: 'surface-elevated shadow-lg'
-  }
+    default: "",
+    outlined: "border-2",
+    elevated: "surface-elevated shadow-lg",
+  };
 
   return (
-    <Card className={cn(
-      'transition-all duration-200 hover-lift group',
-      variantClasses[variant],
-      className
-    )}>
-      <CardHeader className={cn(
-        'flex flex-row items-start justify-between space-y-0',
-        sizeClasses[size]
-      )}>
+    <Card
+      className={cn(
+        "transition-all duration-200 hover-lift group",
+        variantClasses[variant],
+        className,
+      )}
+    >
+      <CardHeader
+        className={cn(
+          "flex flex-row items-start justify-between space-y-0",
+          sizeClasses[size],
+        )}
+      >
         <div className="space-y-1 flex-1">
           <div className="flex items-center gap-2">
             {Icon && (
@@ -84,29 +96,34 @@ export function DashboardWidget({
               {title}
             </CardTitle>
           </div>
-          
+
           {subtitle && (
             <p className="text-body-small text-zinc-400">{subtitle}</p>
           )}
-          
+
           {value && (
             <div className="space-y-2">
               <p className="text-display-medium font-bold text-zinc-50">
-                {typeof value === 'number' ? value.toLocaleString() : value}
+                {typeof value === "number" ? value.toLocaleString() : value}
               </p>
-              
+
               {change && (
                 <div className="flex items-center gap-2">
-                  <div className={cn(
-                    "flex items-center gap-1 text-sm font-medium",
-                    change.value > 0 ? "text-green-400" : 
-                    change.value < 0 ? "text-red-400" : "text-zinc-400"
-                  )}>
+                  <div
+                    className={cn(
+                      "flex items-center gap-1 text-sm font-medium",
+                      change.value > 0
+                        ? "text-green-400"
+                        : change.value < 0
+                          ? "text-red-400"
+                          : "text-zinc-400",
+                    )}
+                  >
                     {change.value > 0 && <TrendingUp className="h-3 w-3" />}
                     {change.value < 0 && <TrendingDown className="h-3 w-3" />}
                     {Math.abs(change.value).toFixed(1)}%
                   </div>
-                  
+
                   <span className="text-xs text-zinc-500">
                     {change.label} {change.period && `vs ${change.period}`}
                   </span>
@@ -115,11 +132,11 @@ export function DashboardWidget({
             </div>
           )}
         </div>
-        
+
         {/* Widget Actions */}
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
           {actions}
-          
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
@@ -152,80 +169,51 @@ export function DashboardWidget({
           </DropdownMenu>
         </div>
       </CardHeader>
-      
+
       {(children || loading || error) && (
-        <CardContent className={cn('pt-0', sizeClasses[size])}>
+        <CardContent className={cn("pt-0", sizeClasses[size])}>
           {loading && (
             <div className="flex items-center justify-center h-32">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-accent-primary" />
             </div>
           )}
-          
+
           {error && (
             <div className="flex items-center justify-center h-32">
               <div className="text-center">
                 <p className="text-sm text-red-400 mb-2">Error loading data</p>
                 <p className="text-xs text-zinc-500">{error}</p>
                 {onRefresh && (
-                  <Button variant="outline" size="sm" onClick={onRefresh} className="mt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onRefresh}
+                    className="mt-2"
+                  >
                     Try Again
                   </Button>
                 )}
               </div>
             </div>
           )}
-          
+
           {!loading && !error && children}
         </CardContent>
       )}
     </Card>
-  )
+  );
 }
 
 // Pre-built widget variants
-interface StatWidgetProps {
-  title: string
-  value: string | number
-  change?: number
-  changeLabel?: string
-  icon: LucideIcon
-  className?: string
-  color?: string
-}
-
-export function StatWidget({
-  title,
-  value,
-  change,
-  changeLabel = "vs last period",
-  icon: Icon,
-  className,
-  color: _color = "var(--color-accent-primary)"
-}: StatWidgetProps) {
-  return (
-    <DashboardWidget
-      title={title}
-      value={value}
-      change={change ? {
-        value: change,
-        label: changeLabel
-      } : undefined}
-      icon={Icon}
-      className={className}
-      size="sm"
-    />
-  )
-}
-
 interface ChartWidgetProps {
-  title: string
-  subtitle?: string
-  chart: React.ReactNode
-  className?: string
-  onRefresh?: () => void
-  onExport?: () => void
-  loading?: boolean
-  error?: string
+  title: string;
+  subtitle?: string;
+  chart: React.ReactNode;
+  className?: string;
+  onRefresh?: () => void;
+  onExport?: () => void;
+  loading?: boolean;
+  error?: string;
 }
 
 export function ChartWidget({
@@ -236,7 +224,7 @@ export function ChartWidget({
   onRefresh,
   onExport,
   loading,
-  error
+  error,
 }: ChartWidgetProps) {
   return (
     <DashboardWidget
@@ -251,20 +239,20 @@ export function ChartWidget({
     >
       {chart}
     </DashboardWidget>
-  )
+  );
 }
 
 interface ListWidgetProps<T> {
-  title: string
-  subtitle?: string
-  items: T[]
-  renderItem: (item: T, index: number) => React.ReactNode
-  className?: string
-  emptyMessage?: string
-  emptyState?: React.ReactNode
-  showAll?: boolean
-  onSeeMore?: () => void
-  loading?: boolean
+  title: string;
+  subtitle?: string;
+  items: T[];
+  renderItem: (item: T, index: number) => React.ReactNode;
+  className?: string;
+  emptyMessage?: string;
+  emptyState?: React.ReactNode;
+  showAll?: boolean;
+  onSeeMore?: () => void;
+  loading?: boolean;
 }
 
 export function ListWidget<T>({
@@ -277,10 +265,10 @@ export function ListWidget<T>({
   emptyState,
   showAll = false,
   onSeeMore,
-  loading = false
+  loading = false,
 }: ListWidgetProps<T>) {
-  const displayItems = showAll ? items : items.slice(0, 5)
-  const hasMore = items.length > 5 && !showAll
+  const displayItems = showAll ? items : items.slice(0, 5);
+  const hasMore = items.length > 5 && !showAll;
 
   return (
     <DashboardWidget
@@ -301,65 +289,66 @@ export function ListWidget<T>({
       ) : (
         <div className="space-y-3">
           {displayItems.map((item, index) => (
-            <div key={index} className="border-l-2 border-transparent hover:border-accent-primary transition-colors">
-              <div className="pl-3">
-                {renderItem(item, index)}
-              </div>
+            <div
+              key={index}
+              className="border-l-2 border-transparent hover:border-accent-primary transition-colors"
+            >
+              <div className="pl-3">{renderItem(item, index)}</div>
             </div>
           ))}
-          
+
           {hasMore && onSeeMore && (
-            <Button variant="ghost" size="sm" onClick={onSeeMore} className="w-full mt-4">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onSeeMore}
+              className="w-full mt-4"
+            >
               Show {items.length - 5} more items
             </Button>
           )}
         </div>
       )}
     </DashboardWidget>
-  )
+  );
 }
 
 // Widget Grid Layout
 interface DashboardGridProps {
-  children: React.ReactNode
-  columns?: 1 | 2 | 3 | 4 | 6
-  gap?: 2 | 3 | 4 | 6 | 8
-  className?: string
+  children: React.ReactNode;
+  columns?: 1 | 2 | 3 | 4 | 6;
+  gap?: 2 | 3 | 4 | 6 | 8;
+  className?: string;
 }
 
 export function DashboardGrid({
   children,
   columns = 3,
   gap = 6,
-  className
+  className,
 }: DashboardGridProps) {
   const gridClasses = {
-    1: 'grid-cols-1',
-    2: 'grid-cols-1 sm:grid-cols-2',
-    3: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3',
-    4: 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4',
-    6: 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'
-  }
+    1: "grid-cols-1",
+    2: "grid-cols-1 sm:grid-cols-2",
+    3: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+    4: "grid-cols-1 sm:grid-cols-2 lg:grid-cols-4",
+    6: "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6",
+  };
 
   const gapClasses = {
-    2: 'gap-2',
-    3: 'gap-3', 
-    4: 'gap-4',
-    6: 'gap-4 sm:gap-6',
-    8: 'gap-6 sm:gap-8'
-  }
+    2: "gap-2",
+    3: "gap-3",
+    4: "gap-4",
+    6: "gap-4 sm:gap-6",
+    8: "gap-6 sm:gap-8",
+  };
 
   return (
-    <div 
-      className={cn(
-        'grid',
-        gridClasses[columns],
-        gapClasses[gap],
-        className
-      )}
+    <div
+      className={cn("grid", gridClasses[columns], gapClasses[gap], className)}
       role="region"
     >
       {children}
     </div>
-  )
+  );
 }

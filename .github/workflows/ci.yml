@@ -23,10 +23,11 @@ env:
   NODE_VERSION: '22'
 
 jobs:
+  # ── Parallel gate: lint + test run simultaneously ──
   lint-type:
     name: Lint & Type Check
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -35,16 +36,6 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-
-      - name: Cache node and Next.js
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            .next/cache
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: npm ci
@@ -58,8 +49,7 @@ jobs:
   test:
     name: Unit Tests
     runs-on: ubuntu-latest
-    needs: lint-type
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
@@ -69,16 +59,6 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
-      - name: Restore cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            .next/cache
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
       - name: Install dependencies
         run: npm ci
 
@@ -87,15 +67,16 @@ jobs:
 
       - name: Upload coverage artifact
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage
 
+  # ── Build waits for both lint + test to pass ──
   build:
     name: Build validation
     runs-on: ubuntu-latest
-    needs: test
+    needs: [lint-type, test]
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -208,20 +189,27 @@ jobs:
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
 
-      - name: Build application
-        run: npm run build
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: nextjs-build
+          path: .next/
+
+      - name: Start built application in background
+        run: |
+          cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
+          cp -r public .next/standalone/public 2>/dev/null || true
+          nohup node .next/standalone/server.js > app.log 2>&1 &
+          echo $! > .app.pid
         env:
-          NODE_ENV: production
           DATABASE_URL: file:./e2e-test.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
           GOOGLE_CLIENT_ID: e2e-placeholder
           GOOGLE_CLIENT_SECRET: e2e-placeholder
-
-      - name: Start built application in background
-        run: |
-          nohup npm run start -- -p 3000 > app.log 2>&1 &
-          echo $! > .app.pid
+          NODE_ENV: production
+          PORT: 3000
+          HOSTNAME: 0.0.0.0
 
       - name: Wait for app to become healthy
         run: npx wait-on http://localhost:3000 --timeout 120000
@@ -234,9 +222,13 @@ jobs:
           NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
 
       - name: Upload Playwright report
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         if: ${{ !cancelled() }}
         with:
           name: playwright-report
           path: playwright-report/
           retention-days: 14
+
+      - name: Dump app log on failure
+        if: failure()
+        run: cat app.log 2>/dev/null || echo 'No app log found'

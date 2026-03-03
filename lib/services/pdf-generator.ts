@@ -225,7 +225,7 @@ export const pdfGenerator = {
       }
     } catch {
       // Puppeteer not available, use simple fallback
-      console.log("Puppeteer not available, using simple PDF generation");
+      // Puppeteer not available – fall through to simple PDF generation
     }
 
     // Fallback: Create simple PDF from text
