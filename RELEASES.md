@@ -1,5 +1,14 @@
 # Releases
 
+- Date: 2026-03-03
+  - Version: v1.2.2
+  - Image: `ghcr.io/jigle/proman:1.2.2`
+  - Notes: Gold Standard audit — bug fixes, features, code quality & infrastructure
+    - **Bug Fixes**: deleteExpense API call, contracts edit/delete with CSRF, units CRUD modal, analytics actual expenses, contacts API field names
+    - **Features**: Expenses [id] route, Notifications API (CRUD + mark-all-read), live NotificationCenter, income-distribution stubs, version display in settings, env validation script
+    - **Code Quality**: Auth pattern unification (8 routes → requireAuth), 24 `any` types eliminated, ambient module declarations, 0 tsc errors
+    - **Infrastructure**: 15 database indexes (Lease, Document, Invoice, Notification), prestart env validation, unused SVG asset cleanup
+
 - Date: 2026-03-02
   - Version: v1.1.7
   - Image: `ghcr.io/jigle/proman:1.1.7`
