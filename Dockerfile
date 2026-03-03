@@ -97,7 +97,9 @@ ENV HOSTNAME=0.0.0.0
 # Health check — lightweight /api/ready avoids DB dependency so
 # TrueNAS SCALE (ix-app) and Docker Compose mark the container as
 # "Running" even while the database is still being initialised.
-HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/ready || exit 1
+# NOTE: Use GET (-O /dev/null) not --spider (HEAD) — Next.js auto-generated
+# HEAD responses may not satisfy wget --spider's expectations.
+HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=3 \
+  CMD wget -q -O /dev/null http://localhost:3000/api/ready || exit 1
 
 CMD ["sh", "-c", "npm run prestart && node server.js"]

@@ -2,6 +2,12 @@ import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 
+const HEADERS = {
+  "Cache-Control": "no-cache, no-store, must-revalidate",
+  Pragma: "no-cache",
+  Expires: "0",
+};
+
 /**
  * Lightweight readiness/startup probe endpoint.
  *
@@ -20,13 +26,11 @@ export async function GET(): Promise<NextResponse> {
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
     },
-    {
-      status: 200,
-      headers: {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
-      },
-    },
+    { status: 200, headers: HEADERS },
   );
+}
+
+/** HEAD handler — needed for wget --spider and some K8s probes. */
+export async function HEAD(): Promise<NextResponse> {
+  return new NextResponse(null, { status: 200, headers: HEADERS });
 }
