@@ -111,5 +111,18 @@
         "description": "Track revenue, expenses, and generate tax reports."
       }
     }
+  },
+  "errors": {
+    "notFound": {
+      "title": "Page not found",
+      "description": "The page you are looking for does not exist or has been moved.",
+      "returnHome": "Return to Dashboard"
+    },
+    "generic": {
+      "title": "Something went wrong",
+      "description": "An unexpected error occurred while loading this page.",
+      "fallbackMessage": "Please try refreshing the page or contact support if the problem persists.",
+      "tryAgain": "Try again"
+    }
   }
 }

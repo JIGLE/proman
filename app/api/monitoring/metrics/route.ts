@@ -1,25 +1,37 @@
 /**
  * Metrics and Monitoring API Endpoint
- * 
+ *
  * GET /api/monitoring/metrics - Get current metrics
  * GET /api/monitoring/health - Health check
  * GET /api/monitoring/errors - Get recent errors (development only)
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { metrics } from '@/lib/monitoring/metrics';
-import { getMetrics } from '@/lib/monitoring/performance';
-import { getRecentErrors, getErrorStats } from '@/lib/monitoring/error-tracker';
-import { logger } from '@/lib/utils/logger';
+import { NextRequest, NextResponse } from "next/server";
+import { metrics } from "@/lib/monitoring/metrics";
+import { getMetrics } from "@/lib/monitoring/performance";
+import { getRecentErrors, getErrorStats } from "@/lib/monitoring/error-tracker";
+import { logger } from "@/lib/utils/logger";
 
 /**
  * GET /api/monitoring/metrics
  * Returns application metrics in JSON format
  */
 export async function GET(request: NextRequest): Promise<NextResponse> {
+  // Require INIT_SECRET or non-production environment to access detailed metrics
+  if (process.env.NODE_ENV === "production") {
+    const authHeader = request.headers.get("authorization") || "";
+    const initSecret = process.env.INIT_SECRET;
+    if (!initSecret || authHeader !== `Bearer ${initSecret}`) {
+      return NextResponse.json(
+        { error: "Authentication required for metrics in production" },
+        { status: 403 },
+      );
+    }
+  }
+
   try {
     const url = new URL(request.url);
-    const format = url.searchParams.get('format') || 'json';
+    const format = url.searchParams.get("format") || "json";
 
     // Get all metrics
     const appMetrics = metrics.getMetrics();
@@ -28,11 +40,11 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const performance = getMetrics();
 
     // Prometheus format
-    if (format === 'prometheus') {
+    if (format === "prometheus") {
       const prometheusData = metrics.exportPrometheus();
       return new NextResponse(prometheusData, {
         headers: {
-          'Content-Type': 'text/plain; version=0.0.4',
+          "Content-Type": "text/plain; version=0.0.4",
         },
       });
     }
@@ -54,10 +66,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json(data);
   } catch (error) {
-    logger.error('Failed to retrieve metrics', error instanceof Error ? error : undefined);
+    logger.error(
+      "Failed to retrieve metrics",
+      error instanceof Error ? error : undefined,
+    );
     return NextResponse.json(
-      { error: 'Failed to retrieve metrics' },
-      { status: 500 }
+      { error: "Failed to retrieve metrics" },
+      { status: 500 },
     );
   }
 }

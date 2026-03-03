@@ -50,7 +50,7 @@ spec:
             {{- toYaml .Values.env | nindent 12 }}
           startupProbe:
             httpGet:
-              path: /api/health
+              path: /api/ready
               port: http
             initialDelaySeconds: 10
             periodSeconds: 5
@@ -65,7 +65,7 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /api/health
+              path: /api/ready
               port: http
             periodSeconds: 5
             timeoutSeconds: 5

@@ -1,6 +1,6 @@
-import type { Session, User as NextAuthUser } from 'next-auth';
-import type { JWT } from 'next-auth/jwt';
-import { logger } from '@/lib/utils/logger';
+import type { Session, User as NextAuthUser } from "next-auth";
+import type { JWT } from "next-auth/jwt";
+import { logger } from "@/lib/utils/logger";
 
 // Minimal local typing for NextAuth options we use to avoid fragile cross-package type imports
 type NextAuthOptions = {
@@ -26,8 +26,8 @@ type Account = {
   session_state?: string;
 };
 
-import CredentialsProvider from 'next-auth/providers/credentials';
-import { getPrismaClient } from '@/lib/services/database/database';
+import CredentialsProvider from "next-auth/providers/credentials";
+import { getPrismaClient } from "@/lib/services/database/database";
 
 function createBaseAuthOptions(): NextAuthOptions {
   const secret = process.env.NEXTAUTH_SECRET;
@@ -35,18 +35,19 @@ function createBaseAuthOptions(): NextAuthOptions {
   const googleClientSecret = process.env.GOOGLE_CLIENT_SECRET;
 
   // Only add Google OAuth when real credentials are configured
-  const hasRealGoogle = googleClientId
-    && googleClientId !== 'dummy-client-id'
-    && googleClientSecret
-    && googleClientSecret !== 'dummy-client-secret';
+  const hasRealGoogle =
+    googleClientId &&
+    googleClientId !== "dummy-client-id" &&
+    googleClientSecret &&
+    googleClientSecret !== "dummy-client-secret";
 
   const providers: unknown[] = [];
 
   if (hasRealGoogle) {
     try {
       // Require here to avoid importing optional OAuth providers at module-import time
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const GoogleProvider = require('next-auth/providers/google').default;
+
+      const GoogleProvider = require("next-auth/providers/google").default;
       providers.push(
         GoogleProvider({
           clientId: googleClientId,
@@ -55,74 +56,79 @@ function createBaseAuthOptions(): NextAuthOptions {
         }),
       );
     } catch (err: unknown) {
-      logger.warn('Failed to load GoogleProvider dynamically', {
+      logger.warn("Failed to load GoogleProvider dynamically", {
         error: err instanceof Error ? err.message : String(err),
       });
     }
   }
 
-  // Credentials provider is always available for demo / self-hosted auth
-  providers.push(
-    CredentialsProvider({
-      id: 'credentials',
-      name: 'Credentials',
-      credentials: {
-        email: { label: 'Email', type: 'email' },
-        password: { label: 'Password', type: 'password' },
-      },
-      async authorize(credentials) {
-        if (
-          credentials?.email === 'demo@proman.local' &&
-          credentials?.password === 'demo123'
-        ) {
-          try {
-            const prisma = getPrismaClient();
-            let user = await prisma.user.findUnique({
-              where: { email: credentials.email },
-            });
-
-            if (!user) {
-              user = await prisma.user.create({
-                data: {
-                  email: credentials.email,
-                  name: 'Demo User',
-                  role: 'ADMIN',
-                  imageConsent: true,
-                },
+  // Credentials provider for demo / self-hosted auth — disabled in production unless ENABLE_DEMO_LOGIN=true
+  const enableDemoLogin =
+    process.env.ENABLE_DEMO_LOGIN === "true" ||
+    process.env.NODE_ENV !== "production";
+  if (enableDemoLogin) {
+    providers.push(
+      CredentialsProvider({
+        id: "credentials",
+        name: "Credentials",
+        credentials: {
+          email: { label: "Email", type: "email" },
+          password: { label: "Password", type: "password" },
+        },
+        async authorize(credentials) {
+          if (
+            credentials?.email === "demo@proman.local" &&
+            credentials?.password === "demo123"
+          ) {
+            try {
+              const prisma = getPrismaClient();
+              let user = await prisma.user.findUnique({
+                where: { email: credentials.email },
               });
-            }
 
-            logger.debug('Demo auth successful', { id: user.id });
-            return {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              image: user.image,
-            };
-          } catch (error) {
-            logger.error(
-              'Demo auth error',
-              error instanceof Error ? error : new Error(String(error)),
-            );
-            return null;
+              if (!user) {
+                user = await prisma.user.create({
+                  data: {
+                    email: credentials.email,
+                    name: "Demo User",
+                    role: "ADMIN",
+                    imageConsent: true,
+                  },
+                });
+              }
+
+              logger.debug("Demo auth successful", { id: user.id });
+              return {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                image: user.image,
+              };
+            } catch (error) {
+              logger.error(
+                "Demo auth error",
+                error instanceof Error ? error : new Error(String(error)),
+              );
+              return null;
+            }
           }
-        }
-        return null;
-      },
-    }),
-  );
+          return null;
+        },
+      }),
+    );
+  }
 
   // JWT strategy works with both OAuth and CredentialsProvider
   const options: NextAuthOptions = {
     secret,
     providers,
     session: {
-      strategy: 'jwt',
-      maxAge: 30 * 24 * 60 * 60, // 30 days
+      strategy: "jwt",
+      maxAge: 7 * 24 * 60 * 60, // 7 days (reduced from 30 for security)
     },
     pages: {
-      signIn: '/auth/signin',
-      error: '/auth/error',
+      signIn: "/auth/signin",
+      error: "/auth/error",
     },
     callbacks: {
       async jwt({
@@ -180,7 +186,7 @@ function createBaseAuthOptions(): NextAuthOptions {
           return session;
         } catch (err: unknown) {
           logger.error(
-            'NextAuth session callback error',
+            "NextAuth session callback error",
             err instanceof Error ? err : new Error(String(err)),
           );
           return session;
@@ -195,7 +201,7 @@ function createBaseAuthOptions(): NextAuthOptions {
         profile?: unknown;
       }): Promise<boolean> {
         // Credentials provider — user already validated inside authorize()
-        if (account?.provider === 'credentials') return true;
+        if (account?.provider === "credentials") return true;
 
         // For OAuth providers, clean up stale account links
         if (user && account?.provider && account?.providerAccountId) {
@@ -209,9 +215,8 @@ function createBaseAuthOptions(): NextAuthOptions {
               },
             });
           } catch (error: unknown) {
-            logger.warn('Failed to remove stale account before linking', {
-              error:
-                error instanceof Error ? error.message : String(error),
+            logger.warn("Failed to remove stale account before linking", {
+              error: error instanceof Error ? error.message : String(error),
             });
           }
         }
@@ -230,14 +235,14 @@ function createBaseAuthOptions(): NextAuthOptions {
         profile?: unknown;
         isNewUser?: boolean;
       }) {
-        logger.debug('NextAuth event: signIn', {
+        logger.debug("NextAuth event: signIn", {
           email: user?.email,
           provider: account?.provider,
           isNewUser,
         });
       },
       async createUser({ user }: { user: { id: string; email?: string } }) {
-        logger.debug('NextAuth event: createUser', {
+        logger.debug("NextAuth event: createUser", {
           id: user.id,
           email: user.email,
         });

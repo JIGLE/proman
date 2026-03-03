@@ -111,5 +111,18 @@
         "description": "Sigue ingresos, gastos y genera informes fiscales."
       }
     }
+  },
+  "errors": {
+    "notFound": {
+      "title": "Página no encontrada",
+      "description": "La página que buscas no existe o ha sido movida.",
+      "returnHome": "Volver al Panel"
+    },
+    "generic": {
+      "title": "Algo salió mal",
+      "description": "Ocurrió un error inesperado al cargar esta página.",
+      "fallbackMessage": "Intenta actualizar la página o contacta al soporte si el problema persiste.",
+      "tryAgain": "Intentar de nuevo"
+    }
   }
 }

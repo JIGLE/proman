@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 // Development-only server patch to help locate React.Children.only failures
-import '@/lib/dev/patch-react-children-only';
+import "@/lib/dev/patch-react-children-only";
 import "./globals.css";
-import { getNonce } from '@/lib/utils/csp-nonce';
-import UpdateBannerClient from '@/components/shared/update-banner-client';
+import { getNonce } from "@/lib/utils/csp-nonce";
+import UpdateBannerClient from "@/components/shared/update-banner-client";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -20,20 +20,12 @@ export default async function RootLayout({
 }): Promise<React.ReactElement> {
   // Get CSP nonce for inline scripts/styles
   const nonce = await getNonce();
-  
+
   return (
     <html lang="en" data-scroll-behavior="smooth">
       <body className={inter.className}>
-        {/* Pass nonce to Next.js for inline scripts */}
-        {nonce && (
-          <script
-            nonce={nonce}
-            suppressHydrationWarning
-            dangerouslySetInnerHTML={{
-              __html: `window.__CSP_NONCE__ = "${nonce}";`,
-            }}
-          />
-        )}
+        {/* CSP nonce available via meta tag for scripts that need it */}
+        {nonce && <meta name="csp-nonce" content={nonce} />}
         {/* Update banner (admin-only) */}
         <UpdateBannerClient />
         {children}

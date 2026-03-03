@@ -1,7 +1,7 @@
-import { NextResponse } from 'next/server'
-import { getPrismaClient } from '@/lib/services/database/database'
+import { NextResponse } from "next/server";
+import { getPrismaClient } from "@/lib/services/database/database";
 
-export const runtime = 'nodejs'
+export const runtime = "nodejs";
 
 type DebugAuthInfo = {
   ok: boolean;
@@ -12,6 +12,14 @@ type DebugAuthInfo = {
 };
 
 export async function GET(): Promise<NextResponse> {
+  // Block access in production to prevent information leakage
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Debug endpoints are disabled in production" },
+      { status: 403 },
+    );
+  }
+
   const info: DebugAuthInfo = {
     ok: false,
     nextauthUrlOk: false,
@@ -22,28 +30,29 @@ export async function GET(): Promise<NextResponse> {
       error: null,
     },
     timestamp: new Date().toISOString(),
-  }
+  };
 
   try {
-    const nextauthUrl = process.env.NEXTAUTH_URL
-    info.nextauthUrlOk = !!nextauthUrl && nextauthUrl.startsWith('http')
-    info.googleConfigured = !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET
+    const nextauthUrl = process.env.NEXTAUTH_URL;
+    info.nextauthUrlOk = !!nextauthUrl && nextauthUrl.startsWith("http");
+    info.googleConfigured =
+      !!process.env.GOOGLE_CLIENT_ID && !!process.env.GOOGLE_CLIENT_SECRET;
 
     // DB check via Prisma
     try {
-      const prisma = getPrismaClient()
-      const count = await prisma.user.count()
-      info.db.ok = true
-      info.db.userCount = count
+      const prisma = getPrismaClient();
+      const count = await prisma.user.count();
+      info.db.ok = true;
+      info.db.userCount = count;
     } catch (err: unknown) {
-      info.db.ok = false
-      info.db.error = err instanceof Error ? err.message : String(err)
+      info.db.ok = false;
+      info.db.error = err instanceof Error ? err.message : String(err);
     }
 
-    info.ok = info.nextauthUrlOk && info.googleConfigured && info.db.ok
-    return NextResponse.json(info)
+    info.ok = info.nextauthUrlOk && info.googleConfigured && info.db.ok;
+    return NextResponse.json(info);
   } catch (err: unknown) {
-    const message = err instanceof Error ? err.message : String(err)
-    return NextResponse.json({ ok: false, error: message }, { status: 500 })
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ ok: false, error: message }, { status: 500 });
   }
 }

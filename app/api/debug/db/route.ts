@@ -1,15 +1,26 @@
-import { NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
-import { getPrismaClient } from '@/lib/services/database/database'
+import { NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
+import { getPrismaClient } from "@/lib/services/database/database";
 
 // Ensure this runs in Node runtime so we can access filesystem and Prisma
-export const runtime = 'nodejs'
+export const runtime = "nodejs";
 
 export async function GET(): Promise<NextResponse> {
-  const dbUrl = process.env.DATABASE_URL || ''
+  // Block access in production to prevent information leakage
+  if (process.env.NODE_ENV === "production") {
+    return NextResponse.json(
+      { error: "Debug endpoints are disabled in production" },
+      { status: 403 },
+    );
+  }
+
+  const dbUrl = process.env.DATABASE_URL || "";
   if (!dbUrl) {
-    return NextResponse.json({ ok: false, error: 'DATABASE_URL not set' }, { status: 400 })
+    return NextResponse.json(
+      { ok: false, error: "DATABASE_URL not set" },
+      { status: 400 },
+    );
   }
 
   type DebugDBInfo = {
@@ -31,45 +42,49 @@ export async function GET(): Promise<NextResponse> {
   const info: DebugDBInfo = {
     ok: false,
     database: {
-      url: dbUrl.startsWith('file:') ? 'sqlite' : dbUrl.startsWith('postgres') || dbUrl.startsWith('postgresql') ? 'postgres' : 'unknown',
+      url: dbUrl.startsWith("file:")
+        ? "sqlite"
+        : dbUrl.startsWith("postgres") || dbUrl.startsWith("postgresql")
+          ? "postgres"
+          : "unknown",
       exists: null,
       writable: null,
       userCount: null,
       error: null,
     },
     timestamp: new Date().toISOString(),
-  }
+  };
 
   // If SQLite, check file existence and writability
-  if (dbUrl.startsWith('file:')) {
+  if (dbUrl.startsWith("file:")) {
     try {
-      let dbPath = dbUrl.replace(/^file:\/\//, '').replace(/^file:/, '')
-      const resolved = path.resolve(process.cwd(), dbPath)
-      info.database.path = resolved
+      let dbPath = dbUrl.replace(/^file:\/\//, "").replace(/^file:/, "");
+      const resolved = path.resolve(process.cwd(), dbPath);
+      info.database.path = resolved;
 
       try {
-        await fs.promises.access(resolved, fs.constants.F_OK)
-        info.database.exists = true
+        await fs.promises.access(resolved, fs.constants.F_OK);
+        info.database.exists = true;
       } catch {
-        info.database.exists = false
+        info.database.exists = false;
       }
 
       try {
-        await fs.promises.access(resolved, fs.constants.W_OK)
-        info.database.writable = true
+        await fs.promises.access(resolved, fs.constants.W_OK);
+        info.database.writable = true;
       } catch {
-        info.database.writable = false
+        info.database.writable = false;
       }
     } catch (err: unknown) {
-      info.database.error = `Filesystem check failed: ${err instanceof Error ? err.message : String(err)}`
+      info.database.error = `Filesystem check failed: ${err instanceof Error ? err.message : String(err)}`;
     }
   }
 
   // Try to contact database via Prisma to get detailed user/account info
   try {
-    const prisma = getPrismaClient()
-    const userCount = await prisma.user.count()
-    info.database.userCount = userCount
+    const prisma = getPrismaClient();
+    const userCount = await prisma.user.count();
+    info.database.userCount = userCount;
 
     // Get detailed user and account information for OAuth debugging
     const users = await prisma.user.findMany({
@@ -83,10 +98,10 @@ export async function GET(): Promise<NextResponse> {
             accounts: true,
             properties: true,
             leases: true,
-          }
-        }
-      }
-    })
+          },
+        },
+      },
+    });
 
     const accounts = await prisma.account.findMany({
       select: {
@@ -95,19 +110,21 @@ export async function GET(): Promise<NextResponse> {
         type: true,
         provider: true,
         providerAccountId: true,
-      }
-    })
+      },
+    });
 
-    const sessions = await prisma.session.count()
+    const sessions = await prisma.session.count();
 
-    info.database.users = users
-    info.database.accounts = accounts
-    info.database.sessionCount = sessions
-    info.ok = true
+    info.database.users = users;
+    info.database.accounts = accounts;
+    info.database.sessionCount = sessions;
+    info.ok = true;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    info.database.error = info.database.error ? `${info.database.error}; ${message}` : message;
+    info.database.error = info.database.error
+      ? `${info.database.error}; ${message}`
+      : message;
   }
 
-  return NextResponse.json(info)
+  return NextResponse.json(info);
 }

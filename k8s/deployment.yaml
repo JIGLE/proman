@@ -13,7 +13,7 @@ spec:
         app: proman
     spec:
       securityContext:
-        fsGroup: 1000
+        fsGroup: 1001
       containers:
         - name: proman
           image: ghcr.io/jigle/proman:<version>  # use a specific tag (avoid latest)
@@ -59,12 +59,20 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /api/health
+              path: /api/ready
               port: 3000
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /api/ready
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 30
           resources:
             requests:
               cpu: 100m

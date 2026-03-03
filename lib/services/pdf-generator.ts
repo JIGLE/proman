@@ -9,7 +9,7 @@
 // ============================================================================
 
 export interface PDFGenerationOptions {
-  format?: 'A4' | 'Letter' | 'Legal';
+  format?: "A4" | "Letter" | "Legal";
   landscape?: boolean;
   margin?: {
     top?: string;
@@ -39,31 +39,31 @@ export interface PDFResult {
  */
 function htmlToText(html: string): string {
   // Remove style and script tags
-  let text = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
-  text = text.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '');
-  
+  let text = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "");
+  text = text.replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "");
+
   // Replace common HTML entities
-  text = text.replace(/&nbsp;/g, ' ');
-  text = text.replace(/&amp;/g, '&');
-  text = text.replace(/&lt;/g, '<');
-  text = text.replace(/&gt;/g, '>');
+  text = text.replace(/&nbsp;/g, " ");
+  text = text.replace(/&amp;/g, "&");
+  text = text.replace(/&lt;/g, "<");
+  text = text.replace(/&gt;/g, ">");
   text = text.replace(/&quot;/g, '"');
-  
+
   // Replace line breaks
-  text = text.replace(/<br\s*\/?>/gi, '\n');
-  text = text.replace(/<\/p>/gi, '\n\n');
-  text = text.replace(/<\/div>/gi, '\n');
-  text = text.replace(/<\/h[1-6]>/gi, '\n\n');
-  text = text.replace(/<li>/gi, '• ');
-  text = text.replace(/<\/li>/gi, '\n');
-  
+  text = text.replace(/<br\s*\/?>/gi, "\n");
+  text = text.replace(/<\/p>/gi, "\n\n");
+  text = text.replace(/<\/div>/gi, "\n");
+  text = text.replace(/<\/h[1-6]>/gi, "\n\n");
+  text = text.replace(/<li>/gi, "• ");
+  text = text.replace(/<\/li>/gi, "\n");
+
   // Remove remaining HTML tags
-  text = text.replace(/<[^>]+>/g, '');
-  
+  text = text.replace(/<[^>]+>/g, "");
+
   // Clean up whitespace
-  text = text.replace(/\n\s*\n\s*\n/g, '\n\n');
+  text = text.replace(/\n\s*\n\s*\n/g, "\n\n");
   text = text.trim();
-  
+
   return text;
 }
 
@@ -73,35 +73,36 @@ function htmlToText(html: string): string {
  */
 function createSimplePDF(content: string, title: string): Buffer {
   // PDF header
-  const header = '%PDF-1.4\n';
-  
+  const header = "%PDF-1.4\n";
+
   // Object 1: Catalog
-  const catalog = '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n';
-  
+  const catalog = "1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n";
+
   // Object 2: Pages
-  const pages = '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n';
-  
+  const pages = "2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n";
+
   // Prepare content for PDF (escape special characters)
   const escapedContent = content
-    .replace(/\\/g, '\\\\')
-    .replace(/\(/g, '\\(')
-    .replace(/\)/g, '\\)')
-    .split('\n');
-  
+    .replace(/\\/g, "\\\\")
+    .replace(/\(/g, "\\(")
+    .replace(/\)/g, "\\)")
+    .split("\n");
+
   // Build text content stream
-  let streamContent = 'BT\n/F1 12 Tf\n50 750 Td\n14 TL\n';
-  
+  let streamContent = "BT\n/F1 12 Tf\n50 750 Td\n14 TL\n";
+
   // Add title
-  streamContent += `(${title.replace(/[()\\]/g, '\\$&')}) Tj\nT*\nT*\n`;
-  
+  streamContent += `(${title.replace(/[()\\]/g, "\\$&")}) Tj\nT*\nT*\n`;
+
   // Add content lines
-  for (const line of escapedContent.slice(0, 50)) { // Limit to 50 lines per page
+  for (const line of escapedContent.slice(0, 50)) {
+    // Limit to 50 lines per page
     const safeLine = line.substring(0, 80); // Limit line length
     streamContent += `(${safeLine}) Tj\nT*\n`;
   }
-  
-  streamContent += 'ET';
-  
+
+  streamContent += "ET";
+
   // Object 3: Page
   const page = `3 0 obj
 << /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] 
@@ -109,12 +110,13 @@ function createSimplePDF(content: string, title: string): Buffer {
    /Contents 5 0 R >>
 endobj
 `;
-  
+
   // Object 4: Font
-  const font = '4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n';
-  
+  const font =
+    "4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n";
+
   // Object 5: Content Stream
-  const streamLength = Buffer.byteLength(streamContent, 'utf8');
+  const streamLength = Buffer.byteLength(streamContent, "utf8");
   const stream = `5 0 obj
 << /Length ${streamLength} >>
 stream
@@ -122,43 +124,44 @@ ${streamContent}
 endstream
 endobj
 `;
-  
+
   // Calculate cross-reference table offsets
   let offset = header.length;
   const offsets = [0]; // Unused first entry
-  
+
   offsets.push(offset); // Object 1
   offset += catalog.length;
-  
+
   offsets.push(offset); // Object 2
   offset += pages.length;
-  
+
   offsets.push(offset); // Object 3
   offset += page.length;
-  
+
   offsets.push(offset); // Object 4
   offset += font.length;
-  
+
   offsets.push(offset); // Object 5
   offset += stream.length;
-  
+
   // Cross-reference table
   let xref = `xref\n0 6\n`;
-  xref += '0000000000 65535 f \n';
+  xref += "0000000000 65535 f \n";
   for (let i = 1; i < offsets.length; i++) {
-    xref += `${offsets[i].toString().padStart(10, '0')} 00000 n \n`;
+    xref += `${offsets[i].toString().padStart(10, "0")} 00000 n \n`;
   }
-  
+
   // Trailer
   const trailer = `trailer
 << /Size 6 /Root 1 0 R >>
 startxref
 ${offset}
 %%EOF`;
-  
-  const pdfContent = header + catalog + pages + page + font + stream + xref + trailer;
-  
-  return Buffer.from(pdfContent, 'utf8');
+
+  const pdfContent =
+    header + catalog + pages + page + font + stream + xref + trailer;
+
+  return Buffer.from(pdfContent, "utf8");
 }
 
 // ============================================================================
@@ -171,70 +174,69 @@ export const pdfGenerator = {
    * Falls back to simple PDF if dependencies not available
    */
   async generateFromHTML(
-    html: string, 
+    html: string,
     fileName: string,
-    options?: PDFGenerationOptions
+    options?: PDFGenerationOptions,
   ): Promise<PDFResult> {
     // Try to use puppeteer if available (optional dependency)
     try {
-        // Try to import puppeteer at runtime without static analysis so the bundler
-        // does not require it during build when it's not installed.
-        let puppeteer: any | undefined;
-        try {
-          // @ts-ignore
-          puppeteer = await eval("import('puppeteer')");
-        } catch (e) {
-          puppeteer = undefined;
-        }
+      // Try to import puppeteer at runtime without static analysis so the bundler
+      // does not require it during build when it's not installed.
+      let puppeteer: any | undefined;
+      try {
+        // Dynamic import of optional puppeteer dependency
+        // @ts-expect-error puppeteer is an optional peer dependency
+        puppeteer = await import("puppeteer").catch(() => undefined);
+      } catch (e) {
+        puppeteer = undefined;
+      }
 
-        if (puppeteer && puppeteer.default) {
-          const browser = await puppeteer.default.launch({
-            headless: true,
-            args: ['--no-sandbox', '--disable-setuid-sandbox'],
-          });
-        
-          const page = await browser.newPage();
-          await page.setContent(html, { waitUntil: 'networkidle0' });
-        
-          const pdfBuffer = await page.pdf({
-            format: options?.format || 'A4',
-            landscape: options?.landscape || false,
-            margin: options?.margin || {
-              top: '20mm',
-              right: '20mm',
-              bottom: '20mm',
-              left: '20mm',
-            },
-            displayHeaderFooter: options?.displayHeaderFooter || false,
-            headerTemplate: options?.headerTemplate,
-            footerTemplate: options?.footerTemplate,
-            printBackground: true,
-          });
-        
-          await browser.close();
-        
-          return {
-            buffer: Buffer.from(pdfBuffer),
-            mimeType: 'application/pdf',
-            fileName: fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`,
-          };
-        }
-      
-      
+      if (puppeteer && puppeteer.default) {
+        const browser = await puppeteer.default.launch({
+          headless: true,
+          args: ["--no-sandbox", "--disable-setuid-sandbox"],
+        });
+
+        const page = await browser.newPage();
+        await page.setContent(html, { waitUntil: "networkidle0" });
+
+        const pdfBuffer = await page.pdf({
+          format: options?.format || "A4",
+          landscape: options?.landscape || false,
+          margin: options?.margin || {
+            top: "20mm",
+            right: "20mm",
+            bottom: "20mm",
+            left: "20mm",
+          },
+          displayHeaderFooter: options?.displayHeaderFooter || false,
+          headerTemplate: options?.headerTemplate,
+          footerTemplate: options?.footerTemplate,
+          printBackground: true,
+        });
+
+        await browser.close();
+
+        return {
+          buffer: Buffer.from(pdfBuffer),
+          mimeType: "application/pdf",
+          fileName: fileName.endsWith(".pdf") ? fileName : `${fileName}.pdf`,
+        };
+      }
     } catch {
       // Puppeteer not available, use simple fallback
-      console.log('Puppeteer not available, using simple PDF generation');
+      console.log("Puppeteer not available, using simple PDF generation");
     }
-    
+
     // Fallback: Create simple PDF from text
     const textContent = htmlToText(html);
-    const title = fileName.replace(/\.[^.]+$/, '');
+    const title = fileName.replace(/\.[^.]+$/, "");
     const pdfBuffer = createSimplePDF(textContent, title);
-    
+
     return {
       buffer: pdfBuffer,
-      mimeType: 'application/pdf',
-      fileName: fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`,
+      mimeType: "application/pdf",
+      fileName: fileName.endsWith(".pdf") ? fileName : `${fileName}.pdf`,
     };
   },
 
@@ -244,14 +246,14 @@ export const pdfGenerator = {
   async generateFromText(
     text: string,
     fileName: string,
-    title?: string
+    title?: string,
   ): Promise<PDFResult> {
     const pdfBuffer = createSimplePDF(text, title || fileName);
-    
+
     return {
       buffer: pdfBuffer,
-      mimeType: 'application/pdf',
-      fileName: fileName.endsWith('.pdf') ? fileName : `${fileName}.pdf`,
+      mimeType: "application/pdf",
+      fileName: fileName.endsWith(".pdf") ? fileName : `${fileName}.pdf`,
     };
   },
 
@@ -260,9 +262,9 @@ export const pdfGenerator = {
    */
   getHTML(html: string, fileName: string): PDFResult {
     return {
-      buffer: Buffer.from(html, 'utf8'),
-      mimeType: 'text/html',
-      fileName: fileName.endsWith('.html') ? fileName : `${fileName}.html`,
+      buffer: Buffer.from(html, "utf8"),
+      mimeType: "text/html",
+      fileName: fileName.endsWith(".html") ? fileName : `${fileName}.html`,
     };
   },
 };
@@ -276,13 +278,13 @@ export const documentExport = {
    * Generate a lease agreement PDF
    */
   async generateLeaseAgreementPDF(
-    leaseData: import('./document-service').LeaseTemplateData,
-    options?: PDFGenerationOptions
+    leaseData: import("./document-service").LeaseTemplateData,
+    options?: PDFGenerationOptions,
   ): Promise<PDFResult> {
-    const { templateGenerator } = await import('./document-service');
+    const { templateGenerator } = await import("./document-service");
     const html = templateGenerator.generateLeaseAgreement(leaseData);
-    const fileName = `Lease_Agreement_${leaseData.tenantName.replace(/\s+/g, '_')}_${leaseData.startDate}`;
-    
+    const fileName = `Lease_Agreement_${leaseData.tenantName.replace(/\s+/g, "_")}_${leaseData.startDate}`;
+
     return pdfGenerator.generateFromHTML(html, fileName, options);
   },
 
@@ -290,13 +292,13 @@ export const documentExport = {
    * Generate a rent receipt PDF
    */
   async generateRentReceiptPDF(
-    receiptData: import('./document-service').RentReceiptTemplateData,
-    options?: PDFGenerationOptions
+    receiptData: import("./document-service").RentReceiptTemplateData,
+    options?: PDFGenerationOptions,
   ): Promise<PDFResult> {
-    const { templateGenerator } = await import('./document-service');
+    const { templateGenerator } = await import("./document-service");
     const html = templateGenerator.generateRentReceipt(receiptData);
     const fileName = `Rent_Receipt_${receiptData.receiptNumber}`;
-    
+
     return pdfGenerator.generateFromHTML(html, fileName, options);
   },
 
@@ -304,13 +306,13 @@ export const documentExport = {
    * Generate a notice PDF
    */
   async generateNoticePDF(
-    noticeData: import('./document-service').NoticeTemplateData,
-    options?: PDFGenerationOptions
+    noticeData: import("./document-service").NoticeTemplateData,
+    options?: PDFGenerationOptions,
   ): Promise<PDFResult> {
-    const { templateGenerator } = await import('./document-service');
+    const { templateGenerator } = await import("./document-service");
     const html = templateGenerator.generateNotice(noticeData);
     const fileName = `Notice_${noticeData.noticeType}_${noticeData.issueDate}`;
-    
+
     return pdfGenerator.generateFromHTML(html, fileName, options);
   },
 };

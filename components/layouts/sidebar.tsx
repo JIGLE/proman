@@ -57,8 +57,13 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
 
   const insightsEnabled = process.env.NEXT_PUBLIC_ENABLE_INSIGHTS !== "false";
 
-  const { notifications, markAsRead, markAllAsRead, deleteNotification, clearAll } =
-    useNotifications(getSampleNotifications());
+  const {
+    notifications,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    clearAll,
+  } = useNotifications(getSampleNotifications());
 
   const handleToggleCollapsed = useCallback(() => {
     setCollapsed((prev) => {
@@ -77,17 +82,42 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
       group: "Main",
       items: [
         { id: "home", label: "Home", icon: Home, href: "/overview" },
-        { id: "assets", label: "Properties", icon: Building2, href: "/properties" },
+        {
+          id: "assets",
+          label: "Properties",
+          icon: Building2,
+          href: "/properties",
+        },
         { id: "people", label: "Tenants", icon: Users, href: "/tenants" },
-        { id: "contracts", label: "Contracts", icon: FileText, href: "/contracts" },
+        {
+          id: "contracts",
+          label: "Contracts",
+          icon: FileText,
+          href: "/contracts",
+        },
       ],
     },
     {
       group: "Operations",
       items: [
-        { id: "maintenance", label: "Maintenance", icon: Hammer, href: "/maintenance" },
-        { id: "contacts", label: "Contacts", icon: UserCircle, href: "/contacts" },
-        { id: "correspondence", label: "Messages", icon: Mail, href: "/correspondence" },
+        {
+          id: "maintenance",
+          label: "Maintenance",
+          icon: Hammer,
+          href: "/maintenance",
+        },
+        {
+          id: "contacts",
+          label: "Contacts",
+          icon: UserCircle,
+          href: "/contacts",
+        },
+        {
+          id: "correspondence",
+          label: "Messages",
+          icon: Mail,
+          href: "/correspondence",
+        },
       ],
     },
     {
@@ -95,7 +125,14 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
       items: [
         { id: "finance", label: "Finance", icon: Wallet, href: "/financials" },
         ...(insightsEnabled
-          ? [{ id: "insights", label: "Insights", icon: LightbulbIcon, href: "/insights" }]
+          ? [
+              {
+                id: "insights",
+                label: "Insights",
+                icon: LightbulbIcon,
+                href: "/insights",
+              },
+            ]
           : []),
       ],
     },
@@ -121,11 +158,11 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
       <div className="flex h-14 items-center border-b border-[var(--color-sidebar-border)] px-3">
         {collapsed ? (
           // Collapsed: centered logo that expands on click
-            <button
+          <button
             onClick={handleToggleCollapsed}
             className="w-full flex items-center justify-center h-full"
-              title="Expand Sidebar"
-              aria-label="Expand Sidebar"
+            title="Expand Sidebar"
+            aria-label="Expand Sidebar"
           >
             <Building2 className="h-6 w-6 text-blue-500" />
           </button>
@@ -138,18 +175,18 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                 Proman
               </span>
             </div>
-                {/* Notifications (only shown when expanded) */}
-                <div className="mr-2">
-                  <NotificationCenter
-                    notifications={notifications}
-                    onMarkAsRead={markAsRead}
-                    onMarkAllAsRead={markAllAsRead}
-                    onDelete={deleteNotification}
-                    onClearAll={clearAll}
-                    onNotificationClick={() => {}}
-                  />
-                </div>
-                <Button
+            {/* Notifications (only shown when expanded) */}
+            <div className="mr-2">
+              <NotificationCenter
+                notifications={notifications}
+                onMarkAsRead={markAsRead}
+                onMarkAllAsRead={markAllAsRead}
+                onDelete={deleteNotification}
+                onClearAll={clearAll}
+                onNotificationClick={() => {}}
+              />
+            </div>
+            <Button
               variant="ghost"
               size="sm"
               onClick={handleToggleCollapsed}
@@ -186,7 +223,10 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
             <div className="space-y-0.5" role="list">
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname.includes(item.href);
+                const isActive =
+                  pathname === `/${currentLocale}${item.href}` ||
+                  (item.href !== "/overview" &&
+                    pathname.startsWith(`/${currentLocale}${item.href}/`));
 
                 return (
                   <Link
@@ -207,7 +247,9 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                       )}
                     >
                       <Icon className="h-[18px] w-[18px] shrink-0" />
-                      {!collapsed && <span className="truncate">{item.label}</span>}
+                      {!collapsed && (
+                        <span className="truncate">{item.label}</span>
+                      )}
                     </div>
                   </Link>
                 );
@@ -228,7 +270,10 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
             <div className="space-y-2">
               <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
                 <Avatar className="w-8 h-8 ring-2 ring-[var(--color-border)]">
-                  <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+                  <AvatarImage
+                    src={user?.image || ""}
+                    alt={user?.name || "User"}
+                  />
                   <AvatarFallback className="bg-blue-600 text-white text-xs font-semibold">
                     {initials}
                   </AvatarFallback>
@@ -266,7 +311,10 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
           ) : (
             <div className="flex flex-col items-center gap-2">
               <Avatar className="w-8 h-8 ring-2 ring-[var(--color-border)]">
-                <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+                <AvatarImage
+                  src={user?.image || ""}
+                  alt={user?.name || "User"}
+                />
                 <AvatarFallback className="bg-blue-600 text-white text-xs font-semibold">
                   {initials}
                 </AvatarFallback>
