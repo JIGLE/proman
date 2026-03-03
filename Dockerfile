@@ -51,6 +51,19 @@ RUN echo "{\"version\":\"${BUILD_VERSION}\",\"git_commit\":\"${GIT_COMMIT}\",\"b
 
 FROM node:22-alpine AS runner
 
+# OCI image labels — TrueNAS SCALE reads these for "App Version" / "Version" display
+ARG BUILD_VERSION
+ARG GIT_COMMIT
+ARG BUILD_TIME
+LABEL org.opencontainers.image.title="Proman" \
+      org.opencontainers.image.description="Property Management System" \
+      org.opencontainers.image.version="${BUILD_VERSION}" \
+      org.opencontainers.image.source="https://github.com/JIGLE/proman" \
+      org.opencontainers.image.revision="${GIT_COMMIT}" \
+      org.opencontainers.image.created="${BUILD_TIME}" \
+      org.opencontainers.image.vendor="JIGLE" \
+      org.opencontainers.image.licenses="MIT"
+
 WORKDIR /app
 
 VOLUME /app/data
@@ -81,8 +94,10 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME=0.0.0.0
 
-# Health check — requires curl (available in alpine)
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+# Health check — lightweight /api/ready avoids DB dependency so
+# TrueNAS SCALE (ix-app) and Docker Compose mark the container as
+# "Running" even while the database is still being initialised.
+HEALTHCHECK --interval=15s --timeout=5s --start-period=30s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:3000/api/ready || exit 1
 
 CMD ["sh", "-c", "npm run prestart && node server.js"]
