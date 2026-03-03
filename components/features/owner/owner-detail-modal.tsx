@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { User, Mail, Phone, MapPin, Building2, Edit, Trash2 } from "lucide-react";
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Building2,
+  Edit,
+  Trash2,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -18,6 +26,8 @@ import { Owner } from "@/lib/types";
 import { useApp } from "@/lib/contexts/app-context";
 import { useToast } from "@/lib/contexts/toast-context";
 import { ownerSchema, OwnerFormData } from "@/lib/utils/validation";
+import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 
 interface OwnerDetailModalProps {
   owner: Owner | null;
@@ -36,13 +46,14 @@ export function OwnerDetailModal({
 }: OwnerDetailModalProps) {
   const { updateOwner, deleteOwner } = useApp();
   const { success, error } = useToast();
+  const confirmDialog = useConfirmDialog();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<OwnerFormData>({
-    name: '',
-    email: '',
-    phone: '',
-    address: '',
-    notes: '',
+    name: "",
+    email: "",
+    phone: "",
+    address: "",
+    notes: "",
   });
 
   // Initialize form data when owner changes
@@ -51,9 +62,9 @@ export function OwnerDetailModal({
       setFormData({
         name: owner.name,
         email: owner.email,
-        phone: owner.phone || '',
-        address: owner.address || '',
-        notes: owner.notes || '',
+        phone: owner.phone || "",
+        address: owner.address || "",
+        notes: owner.notes || "",
       });
     }
   });
@@ -64,7 +75,7 @@ export function OwnerDetailModal({
     try {
       const validated = ownerSchema.parse(formData);
       await updateOwner(owner.id, validated);
-      success('Owner updated successfully');
+      success("Owner updated successfully");
       setIsEditing(false);
       if (onEdit) {
         onEdit({ ...owner, ...validated });
@@ -73,37 +84,38 @@ export function OwnerDetailModal({
       if (err instanceof Error) {
         error(err.message);
       } else {
-        error('Failed to update owner');
+        error("Failed to update owner");
       }
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this owner?')) return;
-    
-    try {
-      await deleteOwner(owner.id);
-      success('Owner deleted successfully');
-      onClose();
-      if (onDelete) {
-        onDelete(owner.id);
-      }
-    } catch (err) {
-      if (err instanceof Error) {
-        error(err.message);
-      } else {
-        error('Failed to delete owner');
-      }
-    }
+  const handleDelete = () => {
+    confirmDialog.confirm(
+      {
+        title: "Delete Owner",
+        description:
+          "This owner will be permanently removed. This action cannot be undone.",
+        confirmLabel: "Delete Owner",
+        variant: "destructive",
+      },
+      async () => {
+        await deleteOwner(owner.id);
+        success("Owner deleted successfully");
+        onClose();
+        if (onDelete) {
+          onDelete(owner.id);
+        }
+      },
+    );
   };
 
   const handleCancel = () => {
     setFormData({
       name: owner.name,
       email: owner.email,
-      phone: owner.phone || '',
-      address: owner.address || '',
-      notes: owner.notes || '',
+      phone: owner.phone || "",
+      address: owner.address || "",
+      notes: owner.notes || "",
     });
     setIsEditing(false);
   };
@@ -126,7 +138,7 @@ export function OwnerDetailModal({
                 </div>
                 <div>
                   <DialogTitle className="text-2xl text-[var(--color-foreground)]">
-                    {isEditing ? 'Edit Owner' : owner.name}
+                    {isEditing ? "Edit Owner" : owner.name}
                   </DialogTitle>
                   <DialogDescription className="flex flex-col gap-1">
                     <span className="flex items-center gap-1">
@@ -153,14 +165,18 @@ export function OwnerDetailModal({
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Owner Info</CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">
+                      Owner Info
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -169,7 +185,9 @@ export function OwnerDetailModal({
                         id="email"
                         type="email"
                         value={formData.email}
-                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, email: e.target.value })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
@@ -177,7 +195,9 @@ export function OwnerDetailModal({
                       <Input
                         id="phone"
                         value={formData.phone}
-                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, phone: e.target.value })
+                        }
                       />
                     </div>
                   </CardContent>
@@ -185,7 +205,9 @@ export function OwnerDetailModal({
 
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Address</CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">
+                      Address
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -193,7 +215,9 @@ export function OwnerDetailModal({
                       <Input
                         id="address"
                         value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, address: e.target.value })
+                        }
                       />
                     </div>
                   </CardContent>
@@ -203,14 +227,18 @@ export function OwnerDetailModal({
               <div className="space-y-2">
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Notes</CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">
+                      Notes
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Textarea
                       id="notes"
                       rows={3}
                       value={formData.notes}
-                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, notes: e.target.value })
+                      }
                     />
                   </CardContent>
                 </Card>
@@ -220,9 +248,7 @@ export function OwnerDetailModal({
                 <Button variant="outline" onClick={handleCancel}>
                   Cancel
                 </Button>
-                <Button onClick={handleSave}>
-                  Save Changes
-                </Button>
+                <Button onClick={handleSave}>Save Changes</Button>
               </div>
             </div>
           ) : (
@@ -230,13 +256,17 @@ export function OwnerDetailModal({
               {owner.address && (
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Address</CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">
+                      Address
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 text-zinc-500 mt-1" />
                       <div className="text-sm">
-                        <p className="text-[var(--color-foreground)]">{owner.address}</p>
+                        <p className="text-[var(--color-foreground)]">
+                          {owner.address}
+                        </p>
                       </div>
                     </div>
                   </CardContent>
@@ -255,9 +285,12 @@ export function OwnerDetailModal({
                   <CardContent>
                     <div className="space-y-2">
                       {owner.properties.map((po) => (
-                        <div key={po.id} className="flex items-center justify-between p-2 bg-zinc-900 rounded">
+                        <div
+                          key={po.id}
+                          className="flex items-center justify-between p-2 bg-zinc-900 rounded"
+                        >
                           <span className="text-sm text-[var(--color-foreground)]">
-                            {po.property?.name || 'Unknown Property'}
+                            {po.property?.name || "Unknown Property"}
                           </span>
                           <span className="text-xs text-zinc-400">
                             {po.ownershipPercentage}% ownership
@@ -273,10 +306,14 @@ export function OwnerDetailModal({
               {owner.notes && (
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Notes</CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">
+                      Notes
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-[var(--color-foreground)]">{owner.notes}</p>
+                    <p className="text-sm text-[var(--color-foreground)]">
+                      {owner.notes}
+                    </p>
                   </CardContent>
                 </Card>
               )}
@@ -303,6 +340,7 @@ export function OwnerDetailModal({
           )}
         </DialogContent>
       </Dialog>
+      <ConfirmationDialog dialog={confirmDialog} />
     </>
   );
 }

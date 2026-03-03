@@ -390,13 +390,15 @@ export function AppProvider({
 
   const deleteProperty = async (id: string) => {
     if (!userId) throw new Error("User not authenticated");
+    const previous = state.properties;
+    dispatch({
+      type: "SET_PROPERTIES",
+      payload: previous.filter((p) => p.id !== id),
+    });
     try {
       await apiFetch(`/api/properties/${id}`, csrfToken, "DELETE");
-      dispatch({
-        type: "SET_PROPERTIES",
-        payload: state.properties.filter((p) => p.id !== id),
-      });
     } catch (err) {
+      dispatch({ type: "SET_PROPERTIES", payload: previous });
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete property";
       showError(errorMessage);
@@ -458,13 +460,15 @@ export function AppProvider({
 
   const deleteTenant = async (id: string) => {
     if (!userId) throw new Error("User not authenticated");
+    const previous = state.tenants;
+    dispatch({
+      type: "SET_TENANTS",
+      payload: previous.filter((t) => t.id !== id),
+    });
     try {
       await apiFetch(`/api/tenants/${id}`, csrfToken, "DELETE");
-      dispatch({
-        type: "SET_TENANTS",
-        payload: state.tenants.filter((t) => t.id !== id),
-      });
     } catch (err) {
+      dispatch({ type: "SET_TENANTS", payload: previous });
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete tenant";
       showError(errorMessage);
@@ -542,13 +546,15 @@ export function AppProvider({
 
   const deleteReceipt = async (id: string) => {
     if (!userId) throw new Error("User not authenticated");
+    const previous = state.receipts;
+    dispatch({
+      type: "SET_RECEIPTS",
+      payload: previous.filter((r) => r.id !== id),
+    });
     try {
       await apiFetch(`/api/receipts/${id}`, csrfToken, "DELETE");
-      dispatch({
-        type: "SET_RECEIPTS",
-        payload: state.receipts.filter((r) => r.id !== id),
-      });
     } catch (err) {
+      dispatch({ type: "SET_RECEIPTS", payload: previous });
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete receipt";
       showError(errorMessage);
@@ -610,17 +616,19 @@ export function AppProvider({
   };
 
   const deleteTemplate = async (id: string) => {
+    const previous = state.templates;
+    dispatch({
+      type: "SET_TEMPLATES",
+      payload: previous.filter((t) => t.id !== id),
+    });
     try {
       await apiFetch(
         `/api/correspondence/templates/${id}`,
         csrfToken,
         "DELETE",
       );
-      dispatch({
-        type: "SET_TEMPLATES",
-        payload: state.templates.filter((t) => t.id !== id),
-      });
     } catch (err) {
+      dispatch({ type: "SET_TEMPLATES", payload: previous });
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete template";
       showError(errorMessage);
@@ -690,13 +698,15 @@ export function AppProvider({
 
   const deleteCorrespondence = async (id: string) => {
     if (!userId) throw new Error("User not authenticated");
+    const previous = state.correspondence;
+    dispatch({
+      type: "SET_CORRESPONDENCE",
+      payload: previous.filter((c) => c.id !== id),
+    });
     try {
       await apiFetch(`/api/correspondence/${id}`, csrfToken, "DELETE");
-      dispatch({
-        type: "SET_CORRESPONDENCE",
-        payload: state.correspondence.filter((c) => c.id !== id),
-      });
     } catch (err) {
+      dispatch({ type: "SET_CORRESPONDENCE", payload: previous });
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete correspondence";
       showError(errorMessage);
@@ -758,13 +768,15 @@ export function AppProvider({
 
   const deleteOwner = async (id: string) => {
     if (!userId) throw new Error("User not authenticated");
+    const previous = state.owners;
+    dispatch({
+      type: "SET_OWNERS",
+      payload: previous.filter((o) => o.id !== id),
+    });
     try {
       await apiFetch(`/api/owners/${id}`, csrfToken, "DELETE");
-      dispatch({
-        type: "SET_OWNERS",
-        payload: state.owners.filter((o) => o.id !== id),
-      });
     } catch (err) {
+      dispatch({ type: "SET_OWNERS", payload: previous });
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete owner";
       showError(errorMessage);
@@ -802,13 +814,15 @@ export function AppProvider({
 
   const deleteExpense = async (id: string) => {
     if (!userId) throw new Error("User not authenticated");
+    const previous = state.expenses;
+    dispatch({
+      type: "SET_EXPENSES",
+      payload: previous.filter((e) => e.id !== id),
+    });
     try {
       await apiFetch(`/api/expenses/${id}`, csrfToken, "DELETE");
-      dispatch({
-        type: "SET_EXPENSES",
-        payload: state.expenses.filter((e) => e.id !== id),
-      });
     } catch (err) {
+      dispatch({ type: "SET_EXPENSES", payload: previous });
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete expense";
       showError(errorMessage);
@@ -874,13 +888,15 @@ export function AppProvider({
 
   const deleteMaintenance = async (id: string) => {
     if (!userId) throw new Error("User not authenticated");
+    const previous = state.maintenance;
+    dispatch({
+      type: "SET_MAINTENANCE",
+      payload: previous.filter((t) => t.id !== id),
+    });
     try {
       await apiFetch(`/api/maintenance/${id}`, csrfToken, "DELETE");
-      dispatch({
-        type: "SET_MAINTENANCE",
-        payload: state.maintenance.filter((t) => t.id !== id),
-      });
     } catch (err) {
+      dispatch({ type: "SET_MAINTENANCE", payload: previous });
       const errorMessage =
         err instanceof Error ? err.message : "Failed to delete ticket";
       showError(errorMessage);
@@ -933,13 +949,15 @@ export function AppProvider({
   };
 
   const deleteLease = async (id: string) => {
+    const previous = state.leases;
+    dispatch({
+      type: "SET_LEASES",
+      payload: previous.filter((l) => l.id !== id),
+    });
     try {
       await apiFetch(`/api/leases/${id}`, csrfToken, "DELETE");
-      dispatch({
-        type: "SET_LEASES",
-        payload: state.leases.filter((l) => l.id !== id),
-      });
     } catch (err) {
+      dispatch({ type: "SET_LEASES", payload: previous });
       console.error("Failed to delete lease:", err);
       throw err;
     }

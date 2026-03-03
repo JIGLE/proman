@@ -1,7 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, MapPin, Bed, Bath, Edit, Trash2, Plus, CheckCircle, X } from "lucide-react";
+import {
+  Building2,
+  MapPin,
+  Bed,
+  Bath,
+  Edit,
+  Trash2,
+  Plus,
+  CheckCircle,
+  X,
+} from "lucide-react";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import {
   Dialog,
@@ -16,12 +26,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Property } from "@/lib/types";
 import { useApp } from "@/lib/contexts/app-context";
 import { useToast } from "@/lib/contexts/toast-context";
 import { propertySchema, PropertyFormData } from "@/lib/utils/validation";
 import UnitsView from "./units-view";
+import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 
 interface PropertyDetailModalProps {
   property: Property | null;
@@ -41,26 +59,27 @@ export function PropertyDetailModal({
   const { formatCurrency } = useCurrency();
   const { updateProperty, deleteProperty } = useApp();
   const { success, error } = useToast();
+  const confirmDialog = useConfirmDialog();
   const [isEditing, setIsEditing] = useState(false);
   const [showUnits, setShowUnits] = useState(false);
   const [formData, setFormData] = useState<PropertyFormData>({
-    name: '',
-    address: '',
-    streetAddress: '',
-    city: '',
-    zipCode: '',
-    country: 'Portugal',
+    name: "",
+    address: "",
+    streetAddress: "",
+    city: "",
+    zipCode: "",
+    country: "Portugal",
     latitude: undefined,
     longitude: undefined,
     addressVerified: false,
     buildingId: undefined,
-    buildingName: '',
-    type: 'apartment',
+    buildingName: "",
+    type: "apartment",
     bedrooms: 1,
     bathrooms: 1,
     rent: 0,
-    status: 'vacant',
-    description: '',
+    status: "vacant",
+    description: "",
   });
 
   // Initialize form data when property changes
@@ -69,21 +88,21 @@ export function PropertyDetailModal({
       setFormData({
         name: property.name,
         address: property.address,
-        streetAddress: property.streetAddress || '',
-        city: property.city || '',
-        zipCode: property.zipCode || '',
-        country: (property.country as 'Portugal' | 'Spain') || 'Portugal',
+        streetAddress: property.streetAddress || "",
+        city: property.city || "",
+        zipCode: property.zipCode || "",
+        country: (property.country as "Portugal" | "Spain") || "Portugal",
         latitude: property.latitude,
         longitude: property.longitude,
         addressVerified: property.addressVerified || false,
         buildingId: property.buildingId,
-        buildingName: property.buildingName || '',
+        buildingName: property.buildingName || "",
         type: property.type,
         bedrooms: property.bedrooms,
         bathrooms: property.bathrooms,
         rent: property.rent,
         status: property.status,
-        description: property.description || '',
+        description: property.description || "",
       });
     }
   });
@@ -107,7 +126,7 @@ export function PropertyDetailModal({
     try {
       const validated = propertySchema.parse(formData);
       await updateProperty(property.id, validated);
-      success('Property updated successfully');
+      success("Property updated successfully");
       setIsEditing(false);
       if (onEdit) {
         onEdit({ ...property, ...validated });
@@ -116,49 +135,50 @@ export function PropertyDetailModal({
       if (err instanceof Error) {
         error(err.message);
       } else {
-        error('Failed to update property');
+        error("Failed to update property");
       }
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this property?')) return;
-    
-    try {
-      await deleteProperty(property.id);
-      success('Property deleted successfully');
-      onClose();
-      if (onDelete) {
-        onDelete(property.id);
-      }
-    } catch (err) {
-      if (err instanceof Error) {
-        error(err.message);
-      } else {
-        error('Failed to delete property');
-      }
-    }
+  const handleDelete = () => {
+    confirmDialog.confirm(
+      {
+        title: "Delete Property",
+        description:
+          "This property and all associated units, leases, and data will be permanently removed. This action cannot be undone.",
+        confirmLabel: "Delete Property",
+        variant: "destructive",
+      },
+      async () => {
+        await deleteProperty(property.id);
+        success("Property deleted successfully");
+        onClose();
+        if (onDelete) {
+          onDelete(property.id);
+        }
+      },
+    );
   };
 
   const handleCancel = () => {
     setFormData({
       name: property.name,
       address: property.address,
-      streetAddress: property.streetAddress || '',
-      city: property.city || '',
-      zipCode: property.zipCode || '',
-      country: (property.country as 'Portugal' | 'Spain') || 'Portugal',
+      streetAddress: property.streetAddress || "",
+      city: property.city || "",
+      zipCode: property.zipCode || "",
+      country: (property.country as "Portugal" | "Spain") || "Portugal",
       latitude: property.latitude,
       longitude: property.longitude,
       addressVerified: property.addressVerified || false,
       buildingId: property.buildingId,
-      buildingName: property.buildingName || '',
+      buildingName: property.buildingName || "",
       type: property.type,
       bedrooms: property.bedrooms,
       bathrooms: property.bathrooms,
       rent: property.rent,
       status: property.status,
-      description: property.description || '',
+      description: property.description || "",
     });
     setIsEditing(false);
   };
@@ -172,10 +192,10 @@ export function PropertyDetailModal({
               <div className="flex-1">
                 <DialogTitle className="text-2xl text-[var(--color-foreground)] flex items-center gap-2">
                   <Building2 className="h-6 w-6" />
-                  {isEditing ? 'Edit Property' : property.name}
+                  {isEditing ? "Edit Property" : property.name}
                 </DialogTitle>
                 <DialogDescription>
-                  {isEditing ? 'Update property information' : property.address}
+                  {isEditing ? "Update property information" : property.address}
                 </DialogDescription>
               </div>
               {!isEditing && (
@@ -198,7 +218,9 @@ export function PropertyDetailModal({
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Basic Info</CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">
+                      Basic Info
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -206,7 +228,9 @@ export function PropertyDetailModal({
                       <Input
                         id="name"
                         value={formData.name}
-                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, name: e.target.value })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
@@ -215,7 +239,12 @@ export function PropertyDetailModal({
                         id="description"
                         rows={2}
                         value={formData.description}
-                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            description: e.target.value,
+                          })
+                        }
                       />
                     </div>
                   </CardContent>
@@ -223,7 +252,9 @@ export function PropertyDetailModal({
 
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Financial</CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">
+                      Financial
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -234,14 +265,24 @@ export function PropertyDetailModal({
                         min="0"
                         step="0.01"
                         value={formData.rent}
-                        onChange={(e) => setFormData({ ...formData, rent: parseFloat(e.target.value) || 0 })}
+                        onChange={(e) =>
+                          setFormData({
+                            ...formData,
+                            rent: parseFloat(e.target.value) || 0,
+                          })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="status">Status</Label>
                       <Select
                         value={formData.status}
-                        onValueChange={(value) => setFormData({ ...formData, status: value as Property['status'] })}
+                        onValueChange={(value) =>
+                          setFormData({
+                            ...formData,
+                            status: value as Property["status"],
+                          })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -249,7 +290,9 @@ export function PropertyDetailModal({
                         <SelectContent>
                           <SelectItem value="vacant">Vacant</SelectItem>
                           <SelectItem value="occupied">Occupied</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
+                          <SelectItem value="maintenance">
+                            Maintenance
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -260,7 +303,9 @@ export function PropertyDetailModal({
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Address</CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">
+                      Address
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -268,7 +313,9 @@ export function PropertyDetailModal({
                       <Input
                         id="address"
                         value={formData.address}
-                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, address: e.target.value })
+                        }
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -277,7 +324,12 @@ export function PropertyDetailModal({
                         <Input
                           id="streetAddress"
                           value={formData.streetAddress}
-                          onChange={(e) => setFormData({ ...formData, streetAddress: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              streetAddress: e.target.value,
+                            })
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -285,7 +337,9 @@ export function PropertyDetailModal({
                         <Input
                           id="city"
                           value={formData.city}
-                          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({ ...formData, city: e.target.value })
+                          }
                         />
                       </div>
                     </div>
@@ -295,14 +349,24 @@ export function PropertyDetailModal({
                         <Input
                           id="zipCode"
                           value={formData.zipCode}
-                          onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              zipCode: e.target.value,
+                            })
+                          }
                         />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="country">Country</Label>
                         <Select
                           value={formData.country}
-                          onValueChange={(value) => setFormData({ ...formData, country: value as 'Portugal' | 'Spain' })}
+                          onValueChange={(value) =>
+                            setFormData({
+                              ...formData,
+                              country: value as "Portugal" | "Spain",
+                            })
+                          }
                         >
                           <SelectTrigger>
                             <SelectValue />
@@ -319,14 +383,21 @@ export function PropertyDetailModal({
 
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Physical Details</CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">
+                      Physical Details
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
                       <Label htmlFor="type">Type</Label>
                       <Select
                         value={formData.type}
-                        onValueChange={(value) => setFormData({ ...formData, type: value as Property['type'] })}
+                        onValueChange={(value) =>
+                          setFormData({
+                            ...formData,
+                            type: value as Property["type"],
+                          })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -347,7 +418,12 @@ export function PropertyDetailModal({
                           type="number"
                           min="0"
                           value={formData.bedrooms}
-                          onChange={(e) => setFormData({ ...formData, bedrooms: parseInt(e.target.value) || 0 })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              bedrooms: parseInt(e.target.value) || 0,
+                            })
+                          }
                         />
                       </div>
                       <div className="space-y-2">
@@ -357,7 +433,12 @@ export function PropertyDetailModal({
                           type="number"
                           min="0"
                           value={formData.bathrooms}
-                          onChange={(e) => setFormData({ ...formData, bathrooms: parseInt(e.target.value) || 0 })}
+                          onChange={(e) =>
+                            setFormData({
+                              ...formData,
+                              bathrooms: parseInt(e.target.value) || 0,
+                            })
+                          }
                         />
                       </div>
                     </div>
@@ -369,9 +450,7 @@ export function PropertyDetailModal({
                 <Button variant="outline" onClick={handleCancel}>
                   Cancel
                 </Button>
-                <Button onClick={handleSave}>
-                  Save Changes
-                </Button>
+                <Button onClick={handleSave}>Save Changes</Button>
               </div>
             </div>
           ) : (
@@ -381,14 +460,20 @@ export function PropertyDetailModal({
               <div className="grid grid-cols-2 gap-6">
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Location</CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">
+                      Location
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 text-zinc-500 mt-1" />
                       <div className="text-sm">
-                        <p className="text-[var(--color-foreground)]">{property.streetAddress || property.address}</p>
-                        <p className="text-zinc-400">{property.city}, {property.zipCode}</p>
+                        <p className="text-[var(--color-foreground)]">
+                          {property.streetAddress || property.address}
+                        </p>
+                        <p className="text-zinc-400">
+                          {property.city}, {property.zipCode}
+                        </p>
                         <p className="text-zinc-400">{property.country}</p>
                       </div>
                     </div>
@@ -397,24 +482,32 @@ export function PropertyDetailModal({
 
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Property Details</CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">
+                      Property Details
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-zinc-400">Type</span>
-                      <span className="text-[var(--color-foreground)] capitalize">{property.type}</span>
+                      <span className="text-[var(--color-foreground)] capitalize">
+                        {property.type}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-zinc-400 flex items-center gap-1">
                         <Bed className="h-4 w-4" /> Bedrooms
                       </span>
-                      <span className="text-[var(--color-foreground)]">{property.bedrooms}</span>
+                      <span className="text-[var(--color-foreground)]">
+                        {property.bedrooms}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-zinc-400 flex items-center gap-1">
                         <Bath className="h-4 w-4" /> Bathrooms
                       </span>
-                      <span className="text-[var(--color-foreground)]">{property.bathrooms}</span>
+                      <span className="text-[var(--color-foreground)]">
+                        {property.bathrooms}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm pt-2 border-t border-zinc-700">
                       <span className="text-zinc-400">Monthly Rent</span>
@@ -430,10 +523,14 @@ export function PropertyDetailModal({
               {property.description && (
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Description</CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">
+                      Description
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-[var(--color-foreground)]">{property.description}</p>
+                    <p className="text-sm text-[var(--color-foreground)]">
+                      {property.description}
+                    </p>
                   </CardContent>
                 </Card>
               )}
@@ -443,15 +540,21 @@ export function PropertyDetailModal({
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm text-zinc-400">Building Units</CardTitle>
+                      <CardTitle className="text-sm text-zinc-400">
+                        Building Units
+                      </CardTitle>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setShowUnits(!showUnits)}
                         className="flex items-center gap-1"
                       >
-                        {showUnits ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
-                        {showUnits ? 'Hide' : 'Show'} Units
+                        {showUnits ? (
+                          <X className="h-3 w-3" />
+                        ) : (
+                          <Plus className="h-3 w-3" />
+                        )}
+                        {showUnits ? "Hide" : "Show"} Units
                       </Button>
                     </div>
                   </CardHeader>
@@ -485,6 +588,7 @@ export function PropertyDetailModal({
           )}
         </DialogContent>
       </Dialog>
+      <ConfirmationDialog dialog={confirmDialog} />
     </>
   );
 }

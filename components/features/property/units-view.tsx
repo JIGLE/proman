@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import { Building2, Plus, Edit2, Trash2, Home, X, Loader2 } from "lucide-react";
 import { useCsrf } from "@/lib/contexts/csrf-context";
 import { useToast } from "@/lib/contexts/toast-context";
+import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 
 interface Unit {
   id: string;
@@ -66,6 +68,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
   const [saving, setSaving] = useState(false);
   const { token: csrfToken } = useCsrf();
   const toast = useToast();
+  const confirmDialog = useConfirmDialog();
 
   const fetchUnits = useCallback(async () => {
     try {
@@ -431,9 +434,18 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                 </button>
                 <button
                   onClick={() => {
-                    if (confirm("Are you sure you want to delete this unit?")) {
-                      handleDelete(unit.id);
-                    }
+                    confirmDialog.confirm(
+                      {
+                        title: "Delete Unit",
+                        description:
+                          "This unit will be permanently removed. This action cannot be undone.",
+                        confirmLabel: "Delete Unit",
+                        variant: "destructive",
+                      },
+                      async () => {
+                        handleDelete(unit.id);
+                      },
+                    );
                   }}
                   className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                 >
@@ -445,6 +457,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
           ))}
         </div>
       )}
+      <ConfirmationDialog dialog={confirmDialog} />
     </div>
   );
 }
