@@ -149,12 +149,12 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   return (
     <div
       className={cn(
-        "relative flex h-screen flex-col border-r border-[var(--color-sidebar-border)] bg-gradient-to-b from-[var(--color-sidebar-bg)] to-[var(--color-sidebar-bg)]/95 transition-all duration-300 min-w-0 overflow-x-hidden",
+        "glass-sidebar relative flex h-screen flex-col transition-all duration-300 min-w-0 overflow-x-hidden",
         collapsed ? "w-16" : "w-60",
       )}
     >
       {/* Header */}
-      <div className="flex h-14 items-center border-b border-[var(--color-sidebar-border)] px-3">
+      <div className="flex h-14 items-center border-b border-[var(--color-inner-border)] px-3">
         {collapsed ? (
           // Collapsed: centered logo that expands on click
           <button
@@ -163,13 +163,13 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
             title="Expand Sidebar"
             aria-label="Expand Sidebar"
           >
-            <Building2 className="h-6 w-6 text-blue-500" />
+            <Building2 className="h-6 w-6 text-[var(--color-primary)]" />
           </button>
         ) : (
           // Expanded: logo + collapse button
           <>
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <Building2 className="h-6 w-6 text-blue-500 shrink-0" />
+              <Building2 className="h-6 w-6 text-[var(--color-primary)] shrink-0" />
               <span className="text-lg font-semibold text-[var(--color-foreground)] truncate">
                 Proman
               </span>
@@ -241,7 +241,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                         "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                         collapsed && "justify-center px-2",
                         isActive
-                          ? "bg-blue-600/10 text-blue-600"
+                          ? "bg-[var(--color-sidebar-active)] text-[var(--color-primary)]"
                           : "text-[var(--color-sidebar-text)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)]",
                       )}
                     >
@@ -264,16 +264,16 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
 
       {/* User Profile */}
       {session && (
-        <div className="flex-none border-t border-[var(--color-sidebar-border)] p-2">
+        <div className="flex-none border-t border-[var(--color-inner-border)] p-2">
           {!collapsed ? (
             <div className="space-y-2">
               <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
-                <Avatar className="w-8 h-8 ring-2 ring-[var(--color-border)]">
+                <Avatar className="w-8 h-8 ring-2 ring-[var(--color-inner-border)]">
                   <AvatarImage
                     src={user?.image || ""}
                     alt={user?.name || "User"}
                   />
-                  <AvatarFallback className="bg-blue-600 text-white text-xs font-semibold">
+                  <AvatarFallback className="bg-[var(--color-primary)] text-white text-xs font-semibold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>
@@ -309,12 +309,12 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-2">
-              <Avatar className="w-8 h-8 ring-2 ring-[var(--color-border)]">
+              <Avatar className="w-8 h-8 ring-2 ring-[var(--color-inner-border)]">
                 <AvatarImage
                   src={user?.image || ""}
                   alt={user?.name || "User"}
                 />
-                <AvatarFallback className="bg-blue-600 text-white text-xs font-semibold">
+                <AvatarFallback className="bg-[var(--color-primary)] text-white text-xs font-semibold">
                   {initials}
                 </AvatarFallback>
               </Avatar>
