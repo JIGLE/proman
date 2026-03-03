@@ -23,6 +23,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "security:scan": "node scripts/security-scan.js",
+    "validate-env": "node scripts/validate-env.js",
     "security:audit": "npm audit --audit-level=moderate",
     "security:audit:fix": "npm audit fix",
     "security:zap": "node scripts/zap-scan.js",

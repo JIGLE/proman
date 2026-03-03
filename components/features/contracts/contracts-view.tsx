@@ -1,7 +1,17 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { FileText, Plus, Search, Calendar, Building2, User, Loader2 } from "lucide-react";
+import {
+  FileText,
+  Plus,
+  Search,
+  Calendar,
+  Building2,
+  User,
+  Loader2,
+} from "lucide-react";
+import { useCsrf } from "@/lib/contexts/csrf-context";
+import { useToast } from "@/lib/contexts/toast-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -45,6 +55,8 @@ export function ContractsView(): React.ReactElement {
   const [activeTab, setActiveTab] = useState("all");
   const [selectedLease, setSelectedLease] = useState<Lease | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const { token: csrfToken } = useCsrf();
+  const toast = useToast();
 
   const fetchContracts = useCallback(async () => {
     try {
@@ -69,7 +81,7 @@ export function ContractsView(): React.ReactElement {
     const matchesSearch =
       lease.propertyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       lease.tenantName.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     if (activeTab === "all") return matchesSearch;
     return matchesSearch && lease.status === activeTab;
   });
@@ -122,13 +134,34 @@ export function ContractsView(): React.ReactElement {
   };
 
   const handleEdit = (lease: Lease) => {
-    // TODO: Implement edit functionality
-    console.log("Edit lease:", lease);
+    setSelectedLease(lease);
+    setIsDetailOpen(true);
   };
 
-  const handleDelete = (leaseId: string) => {
-    // TODO: Implement delete functionality
+  const handleDelete = async (leaseId: string) => {
+    // Optimistically remove from UI
+    const previousLeases = leases;
     setLeases(leases.filter((l) => l.id !== leaseId));
+    setIsDetailOpen(false);
+
+    try {
+      const res = await fetch(`/api/leases/${leaseId}`, {
+        method: "DELETE",
+        headers: {
+          ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+        },
+      });
+      if (!res.ok) {
+        throw new Error("Failed to delete contract");
+      }
+      toast.success("Contract deleted successfully");
+    } catch (err) {
+      // Revert on failure
+      setLeases(previousLeases);
+      const message =
+        err instanceof Error ? err.message : "Failed to delete contract";
+      toast.error(message);
+    }
   };
 
   if (loading) {
@@ -171,7 +204,9 @@ export function ContractsView(): React.ReactElement {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Contracts</CardTitle>
+            <CardTitle className="text-sm font-medium">
+              Total Contracts
+            </CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -184,7 +219,9 @@ export function ContractsView(): React.ReactElement {
             <div className="h-2 w-2 rounded-full bg-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+            <div className="text-2xl font-bold text-green-600">
+              {stats.active}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -193,7 +230,9 @@ export function ContractsView(): React.ReactElement {
             <div className="h-2 w-2 rounded-full bg-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600">{stats.expiring}</div>
+            <div className="text-2xl font-bold text-amber-600">
+              {stats.expiring}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -202,7 +241,9 @@ export function ContractsView(): React.ReactElement {
             <div className="h-2 w-2 rounded-full bg-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.expired}</div>
+            <div className="text-2xl font-bold text-red-600">
+              {stats.expired}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -245,13 +286,16 @@ export function ContractsView(): React.ReactElement {
             <TableBody>
               {sortedLeases.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <TableCell
+                    colSpan={6}
+                    className="text-center py-8 text-muted-foreground"
+                  >
                     No contracts found
                   </TableCell>
                 </TableRow>
               ) : (
                 sortedLeases.map((lease) => (
-                  <TableRow 
+                  <TableRow
                     key={lease.id}
                     className="cursor-pointer hover:bg-zinc-800/50 transition-colors"
                     onClick={() => handleViewDetails(lease)}
@@ -260,9 +304,13 @@ export function ContractsView(): React.ReactElement {
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <div className="font-medium">{lease.propertyName}</div>
+                          <div className="font-medium">
+                            {lease.propertyName}
+                          </div>
                           {lease.unitName && (
-                            <div className="text-xs text-muted-foreground">{lease.unitName}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {lease.unitName}
+                            </div>
                           )}
                         </div>
                       </div>
@@ -286,14 +334,17 @@ export function ContractsView(): React.ReactElement {
                       </div>
                     </TableCell>
                     <TableCell className="font-medium">
-                      {formatCurrencyUtil(lease.monthlyRent, { currency: lease.currency as Currency })}
+                      {formatCurrencyUtil(lease.monthlyRent, {
+                        currency: lease.currency as Currency,
+                      })}
                     </TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"
                         className={statusColors[lease.status]}
                       >
-                        {lease.status.charAt(0).toUpperCase() + lease.status.slice(1)}
+                        {lease.status.charAt(0).toUpperCase() +
+                          lease.status.slice(1)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

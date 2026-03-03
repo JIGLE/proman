@@ -1,31 +1,40 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse } from '@/lib/utils/error-handling';
-import { getPrismaClient } from '@/lib/services/database/database';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+} from "@/lib/utils/error-handling";
+import { getPrismaClient } from "@/lib/services/database/database";
+import { z } from "zod";
 
 const querySchema = z.object({
-  page: z.string().optional().transform(val => val ? parseInt(val) : 1),
-  limit: z.string().optional().transform(val => val ? parseInt(val) : 20),
-  status: z.enum(['sent', 'delivered', 'failed', 'bounced']).optional(),
+  page: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val) : 1)),
+  limit: z
+    .string()
+    .optional()
+    .transform((val) => (val ? parseInt(val) : 20)),
+  status: z.enum(["sent", "delivered", "failed", "bounced"]).optional(),
   templateId: z.string().optional(),
   recipientEmail: z.string().optional(),
 });
 
 // GET /api/email/logs - Get email logs with pagination and filtering
-export async function GET(request: NextRequest): Promise<Response | NextResponse> {
+export async function GET(
+  request: NextRequest,
+): Promise<Response | NextResponse> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const prisma: any = getPrismaClient();
+  const prisma = getPrismaClient();
 
   try {
     const { searchParams } = new URL(request.url);
     const query = querySchema.parse(Object.fromEntries(searchParams));
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const where: any = {
+    const where: Record<string, unknown> = {
       userId: authResult.userId,
     };
 
@@ -44,7 +53,7 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
     const [logs, total] = await Promise.all([
       prisma.emailLog.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         skip: (query.page - 1) * query.limit,
         take: query.limit,
         select: {
@@ -72,7 +81,11 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return createErrorResponse(new Error('Invalid query parameters'), 400, request);
+      return createErrorResponse(
+        new Error("Invalid query parameters"),
+        400,
+        request,
+      );
     }
     return createErrorResponse(error as Error, 500, request);
   }

@@ -2,13 +2,36 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Settings, Moon, Sun, Monitor, Bell, Globe, Wallet, Shield, Save } from "lucide-react";
+import {
+  Settings,
+  Moon,
+  Sun,
+  Monitor,
+  Bell,
+  Globe,
+  Wallet,
+  Shield,
+  Save,
+  Info,
+} from "lucide-react";
 import { useSession } from "next-auth/react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/lib/contexts/toast-context";
 
 interface UserSettings {
@@ -59,12 +82,17 @@ export function SettingsView(): React.ReactElement {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [appVersion, setAppVersion] = useState<string>("");
 
   // Extract current locale from pathname
-  const currentLocale = pathname.split('/')[1] || 'en';
+  const currentLocale = pathname.split("/")[1] || "en";
 
   useEffect(() => {
     loadSettings();
+    fetch("/version.json")
+      .then((r) => r.json())
+      .then((d) => setAppVersion(d.version || ""))
+      .catch(() => {});
   }, []);
 
   const loadSettings = async () => {
@@ -83,12 +111,15 @@ export function SettingsView(): React.ReactElement {
     }
   };
 
-  const updateSetting = <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => {
+  const updateSetting = <K extends keyof UserSettings>(
+    key: K,
+    value: UserSettings[K],
+  ) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
     setHasChanges(true);
-    
+
     // If language changed, navigate to new locale immediately
-    if (key === 'language' && value !== currentLocale) {
+    if (key === "language" && value !== currentLocale) {
       const newPath = pathname.replace(`/${currentLocale}`, `/${value}`);
       router.push(newPath);
     }
@@ -106,7 +137,7 @@ export function SettingsView(): React.ReactElement {
       if (response.ok) {
         success("Settings saved successfully");
         setHasChanges(false);
-        
+
         // Apply theme immediately
         applyTheme(settings.theme);
       } else {
@@ -166,9 +197,7 @@ export function SettingsView(): React.ReactElement {
               <Sun className="h-5 w-5" />
               Appearance
             </CardTitle>
-            <CardDescription>
-              Customize how the app looks
-            </CardDescription>
+            <CardDescription>Customize how the app looks</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -181,9 +210,16 @@ export function SettingsView(): React.ReactElement {
                 ].map((option) => (
                   <Button
                     key={option.value}
-                    variant={settings.theme === option.value ? "default" : "outline"}
+                    variant={
+                      settings.theme === option.value ? "default" : "outline"
+                    }
                     size="sm"
-                    onClick={() => updateSetting("theme", option.value as UserSettings["theme"])}
+                    onClick={() =>
+                      updateSetting(
+                        "theme",
+                        option.value as UserSettings["theme"],
+                      )
+                    }
                     className="flex-1"
                   >
                     <option.icon className="h-4 w-4 mr-1" />
@@ -221,16 +257,19 @@ export function SettingsView(): React.ReactElement {
               <Globe className="h-5 w-5" />
               Regional
             </CardTitle>
-            <CardDescription>
-              Currency and tax settings
-            </CardDescription>
+            <CardDescription>Currency and tax settings</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Default Currency</Label>
               <Select
                 value={settings.defaultCurrency}
-                onValueChange={(value) => updateSetting("defaultCurrency", value as UserSettings["defaultCurrency"])}
+                onValueChange={(value) =>
+                  updateSetting(
+                    "defaultCurrency",
+                    value as UserSettings["defaultCurrency"],
+                  )
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select currency" />
@@ -249,7 +288,9 @@ export function SettingsView(): React.ReactElement {
               <Label>Default Tax Country</Label>
               <Select
                 value={settings.defaultTaxCountry || ""}
-                onValueChange={(value) => updateSetting("defaultTaxCountry", value || null)}
+                onValueChange={(value) =>
+                  updateSetting("defaultTaxCountry", value || null)
+                }
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select country" />
@@ -276,9 +317,7 @@ export function SettingsView(): React.ReactElement {
               <Bell className="h-5 w-5" />
               Notifications
             </CardTitle>
-            <CardDescription>
-              Configure email notifications
-            </CardDescription>
+            <CardDescription>Configure email notifications</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
@@ -290,7 +329,9 @@ export function SettingsView(): React.ReactElement {
               </div>
               <Switch
                 checked={settings.emailNotifications}
-                onCheckedChange={(checked) => updateSetting("emailNotifications", checked)}
+                onCheckedChange={(checked) =>
+                  updateSetting("emailNotifications", checked)
+                }
               />
             </div>
 
@@ -303,7 +344,9 @@ export function SettingsView(): React.ReactElement {
               </div>
               <Switch
                 checked={settings.taxReminderNotifications}
-                onCheckedChange={(checked) => updateSetting("taxReminderNotifications", checked)}
+                onCheckedChange={(checked) =>
+                  updateSetting("taxReminderNotifications", checked)
+                }
               />
             </div>
 
@@ -316,7 +359,9 @@ export function SettingsView(): React.ReactElement {
               </div>
               <Switch
                 checked={settings.distributionNotifications}
-                onCheckedChange={(checked) => updateSetting("distributionNotifications", checked)}
+                onCheckedChange={(checked) =>
+                  updateSetting("distributionNotifications", checked)
+                }
               />
             </div>
           </CardContent>
@@ -329,9 +374,7 @@ export function SettingsView(): React.ReactElement {
               <Shield className="h-5 w-5" />
               Account
             </CardTitle>
-            <CardDescription>
-              Your account information
-            </CardDescription>
+            <CardDescription>Your account information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -352,6 +395,14 @@ export function SettingsView(): React.ReactElement {
                 Manage Subscription
               </Button>
             </div>
+            {appVersion && (
+              <div className="pt-4 border-t border-border">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Info className="h-3.5 w-3.5" />
+                  <span>ProMan v{appVersion}</span>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

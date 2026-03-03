@@ -14,6 +14,18 @@ if (process.env.SKIP_PRESTART === "true") {
   process.exit(0);
 }
 
+// Run environment variable validation
+try {
+  require("./validate-env");
+} catch (err) {
+  // validate-env calls process.exit(1) on failure, so this catch
+  // only fires for unexpected errors (syntax, missing file, etc.)
+  console.error("[prestart] validate-env error:", err && err.message);
+  if (process.env.NODE_ENV === "production") {
+    process.exit(1);
+  }
+}
+
 // Optionally run host/port check (will be non-fatal unless PRESTART_CHECK_HOSTPORT=true)
 try {
   require("./check-hostport");

@@ -1,17 +1,17 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { Session } from 'next-auth';
-import { getAuthOptions } from '@/lib/services/auth/auth';
-import { getPrismaClient } from '@/lib/services/database/database';
-import { isMockMode } from '@/lib/config/data-mode';
+import { NextRequest, NextResponse } from "next/server";
+import {
+  requireAuth,
+  handleOptions,
+} from "@/lib/services/auth/auth-middleware";
+import { getPrismaClient } from "@/lib/services/database/database";
+import { isMockMode } from "@/lib/config/data-mode";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(getAuthOptions() as any) as Session | null;
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult instanceof Response) return authResult;
+
+    const { userId } = authResult;
 
     // In mock mode, return empty units array
     if (isMockMode) {
@@ -22,7 +22,7 @@ export async function GET() {
     const units = await prisma.unit.findMany({
       where: {
         property: {
-          userId: session.user.id,
+          userId,
         },
       },
       include: {
@@ -44,41 +44,48 @@ export async function GET() {
             },
           },
           orderBy: {
-            createdAt: 'desc',
+            createdAt: "desc",
           },
           take: 1,
         },
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
     return NextResponse.json(units);
   } catch (error) {
-    console.error('Error fetching units:', error);
+    console.error("Error fetching units:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(getAuthOptions() as any) as Session | null;
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult instanceof Response) return authResult;
 
+    const { userId } = authResult;
     const body = await request.json();
-    const { propertyId, number, floor, sizeSqM, bedrooms, bathrooms, status, notes } = body;
+    const {
+      propertyId,
+      number,
+      floor,
+      sizeSqM,
+      bedrooms,
+      bathrooms,
+      status,
+      notes,
+    } = body;
 
     if (!propertyId || !number) {
       return NextResponse.json(
-        { error: 'Property ID and unit number are required' },
-        { status: 400 }
+        { error: "Property ID and unit number are required" },
+        { status: 400 },
       );
     }
 
@@ -88,14 +95,14 @@ export async function POST(request: Request) {
     const property = await prisma.property.findFirst({
       where: {
         id: propertyId,
-        userId: session.user.id,
+        userId,
       },
     });
 
     if (!property) {
       return NextResponse.json(
-        { error: 'Property not found or access denied' },
-        { status: 404 }
+        { error: "Property not found or access denied" },
+        { status: 404 },
       );
     }
 
@@ -108,7 +115,7 @@ export async function POST(request: Request) {
         sizeSqM: sizeSqM ? parseFloat(sizeSqM) : null,
         bedrooms: bedrooms ? parseInt(bedrooms) : null,
         bathrooms: bathrooms ? parseInt(bathrooms) : null,
-        status: status || 'vacant',
+        status: status || "vacant",
         notes,
       },
       include: {
@@ -124,19 +131,24 @@ export async function POST(request: Request) {
 
     return NextResponse.json(unit, { status: 201 });
   } catch (error: unknown) {
-    console.error('Error creating unit:', error);
-    
+    console.error("Error creating unit:", error);
+
     // Check for unique constraint violation
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
       return NextResponse.json(
-        { error: 'A unit with this number already exists for this property' },
-        { status: 409 }
+        { error: "A unit with this number already exists for this property" },
+        { status: 409 },
       );
     }
 
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }

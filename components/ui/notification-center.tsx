@@ -395,21 +395,131 @@ export function NotificationCenter({
   );
 }
 
-// Hook to manage notifications state
-export function useNotifications(initialNotifications: Notification[] = []) {
-  const [notifications, setNotifications] =
-    useState<Notification[]>(initialNotifications);
+// Map DB notification type to UI type
+const dbTypeToUiType: Record<string, NotificationType> = {
+  lease_expiring: "lease_expiring",
+  payment_due: "payment_overdue",
+  payment_received: "payment_received",
+  maintenance_created: "maintenance_new",
+  maintenance_completed: "maintenance_update",
+  document_uploaded: "document_uploaded",
+  system: "system",
+  other: "system",
+};
+
+// Derive priority from notification type
+function derivePriority(type: string): NotificationPriority {
+  switch (type) {
+    case "payment_due":
+    case "payment_overdue":
+      return "urgent";
+    case "maintenance_created":
+    case "maintenance_new":
+      return "high";
+    case "lease_expiring":
+      return "medium";
+    default:
+      return "low";
+  }
+}
+
+interface DbNotification {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  entityType?: string | null;
+  entityId?: string | null;
+  payload?: string | null;
+  createdAt: string;
+}
+
+function mapDbToUi(n: DbNotification): Notification {
+  return {
+    id: n.id,
+    type: dbTypeToUiType[n.type] ?? "system",
+    priority: derivePriority(n.type),
+    title: n.title,
+    message: n.message,
+    read: n.read,
+    timestamp: new Date(n.createdAt),
+    actionUrl:
+      n.entityType && n.entityId
+        ? `/${n.entityType.toLowerCase()}s/${n.entityId}`
+        : undefined,
+    metadata: n.payload ? JSON.parse(n.payload) : undefined,
+  };
+}
+
+// Hook to manage notifications state with API integration
+export function useNotifications() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch notifications from API on mount
+  React.useEffect(() => {
+    let cancelled = false;
+    async function fetchNotifications() {
+      try {
+        const res = await fetch("/api/notifications?limit=50");
+        if (!res.ok) {
+          setLoading(false);
+          return;
+        }
+        const data = await res.json();
+        if (!cancelled) {
+          const mapped = (data.notifications ?? []).map(mapDbToUi);
+          setNotifications(mapped);
+        }
+      } catch {
+        // Silently fail — notifications are non-critical
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    fetchNotifications();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const addNotification = useCallback(
-    (notification: Omit<Notification, "id" | "timestamp" | "read">) => {
-      const newNotification: Notification = {
+    async (notification: Omit<Notification, "id" | "timestamp" | "read">) => {
+      // Optimistic local add
+      const tempId = `temp-${Date.now()}`;
+      const optimistic: Notification = {
         ...notification,
-        id: `notif-${Date.now()}-${crypto.randomUUID().replace(/-/g, "").substring(0, 9)}`,
+        id: tempId,
         timestamp: new Date(),
         read: false,
       };
-      setNotifications((prev) => [newNotification, ...prev]);
-      return newNotification.id;
+      setNotifications((prev) => [optimistic, ...prev]);
+
+      try {
+        const res = await fetch("/api/notifications", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type:
+              Object.entries(dbTypeToUiType).find(
+                ([, v]) => v === notification.type,
+              )?.[0] ?? "other",
+            title: notification.title,
+            message: notification.message,
+          }),
+        });
+        if (res.ok) {
+          const created = await res.json();
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === tempId ? mapDbToUi(created) : n)),
+          );
+          return created.id;
+        }
+      } catch {
+        // Keep optimistic entry
+      }
+      return tempId;
     },
     [],
   );
@@ -418,22 +528,38 @@ export function useNotifications(initialNotifications: Notification[] = []) {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
     );
+    // Fire and forget API call
+    fetch(`/api/notifications/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ read: true }),
+    }).catch(() => {});
   }, []);
 
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    fetch("/api/notifications/mark-all-read", { method: "PUT" }).catch(
+      () => {},
+    );
   }, []);
 
   const deleteNotification = useCallback((id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
+    fetch(`/api/notifications/${id}`, { method: "DELETE" }).catch(() => {});
   }, []);
 
   const clearAll = useCallback(() => {
+    const ids = notifications.map((n) => n.id);
     setNotifications([]);
-  }, []);
+    // Delete all in background
+    Promise.allSettled(
+      ids.map((id) => fetch(`/api/notifications/${id}`, { method: "DELETE" })),
+    ).catch(() => {});
+  }, [notifications]);
 
   return {
     notifications,
+    loading,
     addNotification,
     markAsRead,
     markAllAsRead,
@@ -441,57 +567,4 @@ export function useNotifications(initialNotifications: Notification[] = []) {
     clearAll,
     unreadCount: notifications.filter((n) => !n.read).length,
   };
-}
-
-// Sample notifications for demo
-export function getSampleNotifications(): Notification[] {
-  const now = new Date();
-  return [
-    {
-      id: "1",
-      type: "payment_overdue",
-      priority: "urgent",
-      title: "Payment Overdue",
-      message: "Unit 3A rent payment is 15 days overdue. Amount: €850.00",
-      timestamp: new Date(now.getTime() - 1000 * 60 * 30), // 30 mins ago
-      read: false,
-    },
-    {
-      id: "2",
-      type: "maintenance_new",
-      priority: "high",
-      title: "New Maintenance Request",
-      message:
-        "Water leak reported in Unit 2B kitchen. Tenant marked as urgent.",
-      timestamp: new Date(now.getTime() - 1000 * 60 * 60 * 2), // 2 hours ago
-      read: false,
-    },
-    {
-      id: "3",
-      type: "lease_expiring",
-      priority: "medium",
-      title: "Lease Expiring Soon",
-      message: "Lease for Maria Santos (Unit 1A) expires in 30 days.",
-      timestamp: new Date(now.getTime() - 1000 * 60 * 60 * 24), // 1 day ago
-      read: false,
-    },
-    {
-      id: "4",
-      type: "payment_received",
-      priority: "low",
-      title: "Payment Received",
-      message: "€750.00 received from João Silva for Unit 4B",
-      timestamp: new Date(now.getTime() - 1000 * 60 * 60 * 48), // 2 days ago
-      read: true,
-    },
-    {
-      id: "5",
-      type: "tenant_added",
-      priority: "low",
-      title: "New Tenant Added",
-      message: "Ana Ferreira added as tenant for Unit 5C",
-      timestamp: new Date(now.getTime() - 1000 * 60 * 60 * 72), // 3 days ago
-      read: true,
-    },
-  ];
 }

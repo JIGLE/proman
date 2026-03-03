@@ -1,10 +1,21 @@
 "use client";
 
 import * as React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LineChart, BarChart, DonutChart, AreaChart } from "@/components/ui/charts";
+import {
+  LineChart,
+  BarChart,
+  DonutChart,
+  AreaChart,
+} from "@/components/ui/charts";
 import { ChartWidget, ListWidget } from "@/components/ui/dashboard-widgets";
 import {
   KPICard,
@@ -12,13 +23,13 @@ import {
   LeaseExpirationTimeline,
   MaintenanceStatusCard,
   PropertyPerformanceTable,
-  QuickStatsRow
+  QuickStatsRow,
 } from "@/components/ui/analytics-widgets";
 import { LeaseCalendar } from "@/components/ui/lease-calendar";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { useApp } from "@/lib/contexts/app-context";
 import { motion } from "framer-motion";
-import { useTranslations } from 'next-intl';
+import { useTranslations } from "next-intl";
 import {
   Building2,
   Users,
@@ -35,7 +46,7 @@ import {
   ArrowDownRight,
   Wallet,
   Receipt,
-  Clock
+  Clock,
 } from "lucide-react";
 import type {
   KPIMetrics,
@@ -43,31 +54,45 @@ import type {
   PropertyPerformance,
   LeaseExpiration,
   MaintenanceStats,
-  Activity
+  Activity,
 } from "@/lib/services/analytics-service";
 
-const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const getMonthLabel = (date: Date): string => MONTH_LABELS[date.getMonth()] || "";
+const MONTH_LABELS = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+const getMonthLabel = (date: Date): string =>
+  MONTH_LABELS[date.getMonth()] || "";
 
 export type AnalyticsDashboardProps = Record<string, never>;
 
 // Transform lease expirations to calendar events
 function transformToCalendarEvents(leases: LeaseExpiration[]) {
-  return leases.map(lease => ({
+  return leases.map((lease) => ({
     id: lease.leaseId,
     tenantName: lease.tenantName,
     propertyName: lease.propertyName,
     unitNumber: lease.unitNumber,
     date: lease.endDate,
-    type: 'expiration' as const,
+    type: "expiration" as const,
     status: lease.status,
-    monthlyRent: lease.monthlyRent
+    monthlyRent: lease.monthlyRent,
   }));
 }
 
 export function AnalyticsDashboard(): React.ReactElement {
   const { state } = useApp();
-  const { properties, tenants, receipts, leases } = state;
+  const { properties, tenants, receipts, leases, expenses } = state;
   const { formatCurrency } = useCurrency();
   const t = useTranslations();
 
@@ -84,50 +109,64 @@ export function AnalyticsDashboard(): React.ReactElement {
     const totalProperties = properties.length;
     // Each property counts as 1 unit (simplification for now)
     const totalUnits = totalProperties;
-    const occupiedUnits = properties.filter(p => p.status === 'occupied').length;
+    const occupiedUnits = properties.filter(
+      (p) => p.status === "occupied",
+    ).length;
     const vacantUnits = totalUnits - occupiedUnits;
-    const occupancyRate = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
+    const occupancyRate =
+      totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
 
     const totalTenants = tenants.length;
     // Consider tenants with current or future lease end date as active
-    const activeTenants = tenants.filter(t => {
+    const activeTenants = tenants.filter((t) => {
       const leaseEnd = new Date(t.leaseEnd);
       return leaseEnd >= now;
     }).length;
 
-    const monthlyReceipts = receipts.filter(r => 
-      r.status === 'paid' && new Date(r.date) >= startOfMonth
+    const monthlyReceipts = receipts.filter(
+      (r) => r.status === "paid" && new Date(r.date) >= startOfMonth,
     );
-    const monthlyRevenue = monthlyReceipts.reduce((sum, r) => sum + r.amount, 0);
+    const monthlyRevenue = monthlyReceipts.reduce(
+      (sum, r) => sum + r.amount,
+      0,
+    );
 
-    const yearlyReceipts = receipts.filter(r => 
-      r.status === 'paid' && new Date(r.date) >= startOfYear
+    const yearlyReceipts = receipts.filter(
+      (r) => r.status === "paid" && new Date(r.date) >= startOfYear,
     );
     const yearlyRevenue = yearlyReceipts.reduce((sum, r) => sum + r.amount, 0);
 
-    // Calculate expenses (simplified - using 30% of revenue as placeholder)
-    const totalExpenses = yearlyRevenue * 0.3;
+    // Calculate expenses from actual data
+    const yearlyExpenses = expenses.filter(
+      (e) => new Date(e.date) >= startOfYear,
+    );
+    const totalExpenses = yearlyExpenses.reduce((sum, e) => sum + e.amount, 0);
     const netIncome = yearlyRevenue - totalExpenses;
 
-// For overdue, we check pending receipts older than 30 days
+    // For overdue, we check pending receipts older than 30 days
     const thirtyDaysAgo = new Date(now);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    
-    const overdueReceipts = receipts.filter(r =>
-      r.status === 'pending' && new Date(r.date) < thirtyDaysAgo
+
+    const overdueReceipts = receipts.filter(
+      (r) => r.status === "pending" && new Date(r.date) < thirtyDaysAgo,
     );
     const overduePayments = overdueReceipts.length;
     const overdueAmount = overdueReceipts.reduce((sum, r) => sum + r.amount, 0);
 
-    const activeLeases = leases?.filter(l => l.status === 'active') || [];
-    const averageRent = activeLeases.length > 0
-      ? activeLeases.reduce((sum, l) => sum + (l.monthlyRent || 0), 0) / activeLeases.length
-      : 0;
+    const activeLeases = leases?.filter((l) => l.status === "active") || [];
+    const averageRent =
+      activeLeases.length > 0
+        ? activeLeases.reduce((sum, l) => sum + (l.monthlyRent || 0), 0) /
+          activeLeases.length
+        : 0;
 
-    const allMonthlyReceipts = receipts.filter(r => new Date(r.date) >= startOfMonth);
-    const collectionRate = allMonthlyReceipts.length > 0
-      ? (monthlyReceipts.length / allMonthlyReceipts.length) * 100
-      : 100;
+    const allMonthlyReceipts = receipts.filter(
+      (r) => new Date(r.date) >= startOfMonth,
+    );
+    const collectionRate =
+      allMonthlyReceipts.length > 0
+        ? (monthlyReceipts.length / allMonthlyReceipts.length) * 100
+        : 100;
 
     return {
       totalProperties,
@@ -144,73 +183,87 @@ export function AnalyticsDashboard(): React.ReactElement {
       overduePayments,
       overdueAmount,
       averageRent,
-      collectionRate
+      collectionRate,
     };
-  }, [properties, tenants, receipts, leases]);
+  }, [properties, tenants, receipts, leases, expenses]);
 
   // Calculate revenue trend (last 6 months)
   const revenueByMonth = React.useMemo((): RevenueByMonth[] => {
     const result: RevenueByMonth[] = [];
     const now = new Date();
-    
+
     for (let i = 5; i >= 0; i--) {
       const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
-      
-      const monthReceipts = receipts.filter(r => {
+      const endDate = new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth() + 1,
+        0,
+      );
+
+      const monthReceipts = receipts.filter((r) => {
         const date = new Date(r.date);
-        return date >= targetDate && date <= endDate && r.status === 'paid';
+        return date >= targetDate && date <= endDate && r.status === "paid";
       });
-      
+
+      const monthExpenses = expenses.filter((e) => {
+        const date = new Date(e.date);
+        return date >= targetDate && date <= endDate;
+      });
+
       const revenue = monthReceipts.reduce((sum, r) => sum + r.amount, 0);
-      const expenses = revenue * 0.3; // Simplified expense calculation
-      
+      const monthExpenseTotal = monthExpenses.reduce(
+        (sum, e) => sum + e.amount,
+        0,
+      );
+
       result.push({
         month: getMonthLabel(targetDate),
         year: targetDate.getFullYear(),
         revenue,
-        expenses,
-        netIncome: revenue - expenses
+        expenses: monthExpenseTotal,
+        netIncome: revenue - monthExpenseTotal,
       });
     }
-    
+
     return result;
-  }, [receipts]);
+  }, [receipts, expenses]);
 
   // Calculate lease expirations
   const leaseExpirations = React.useMemo((): LeaseExpiration[] => {
     if (!leases) return [];
-    
+
     const now = new Date();
     const futureDate = new Date();
     futureDate.setDate(futureDate.getDate() + 90);
 
     return leases
-      .filter(lease => {
+      .filter((lease) => {
         const endDate = new Date(lease.endDate);
-        return lease.status === 'active' && endDate <= futureDate;
+        return lease.status === "active" && endDate <= futureDate;
       })
-      .map(lease => {
+      .map((lease) => {
         const endDate = new Date(lease.endDate);
-        const daysUntilExpiration = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        
-        let status: LeaseExpiration['status'] = 'healthy';
-        if (daysUntilExpiration < 0) status = 'expired';
-        else if (daysUntilExpiration <= 30) status = 'critical';
-        else if (daysUntilExpiration <= 60) status = 'warning';
+        const daysUntilExpiration = Math.ceil(
+          (endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+        );
 
-        const tenant = tenants.find(t => t.id === lease.tenantId);
-        const property = properties.find(p => p.id === lease.propertyId);
+        let status: LeaseExpiration["status"] = "healthy";
+        if (daysUntilExpiration < 0) status = "expired";
+        else if (daysUntilExpiration <= 30) status = "critical";
+        else if (daysUntilExpiration <= 60) status = "warning";
+
+        const tenant = tenants.find((t) => t.id === lease.tenantId);
+        const property = properties.find((p) => p.id === lease.propertyId);
 
         return {
           leaseId: lease.id,
-          tenantName: tenant?.name || 'Unknown',
-          propertyName: property?.name || 'Unknown',
-          unitNumber: 'N/A', // Simplified - no unit number in Lease type
+          tenantName: tenant?.name || "Unknown",
+          propertyName: property?.name || "Unknown",
+          unitNumber: "N/A", // Simplified - no unit number in Lease type
           endDate: lease.endDate,
           daysUntilExpiration,
           monthlyRent: lease.monthlyRent || 0,
-          status
+          status,
         };
       })
       .sort((a, b) => a.daysUntilExpiration - b.daysUntilExpiration);
@@ -218,20 +271,31 @@ export function AnalyticsDashboard(): React.ReactElement {
 
   // Calculate property performance
   const propertyPerformance = React.useMemo((): PropertyPerformance[] => {
-    return properties.map(property => {
+    return properties.map((property) => {
       // Each property counts as 1 unit
       const totalUnitsCount = 1;
-      const occupiedUnitsCount = property.status === 'occupied' ? 1 : 0;
-      const occupancyRate = totalUnitsCount > 0 ? (occupiedUnitsCount / totalUnitsCount) * 100 : 0;
+      const occupiedUnitsCount = property.status === "occupied" ? 1 : 0;
+      const occupancyRate =
+        totalUnitsCount > 0 ? (occupiedUnitsCount / totalUnitsCount) * 100 : 0;
 
-      const propertyReceipts = receipts.filter(r => 
-        r.propertyId === property.id && r.status === 'paid'
+      const propertyReceipts = receipts.filter(
+        (r) => r.propertyId === property.id && r.status === "paid",
       );
-      const yearlyRevenue = propertyReceipts.reduce((sum, r) => sum + r.amount, 0);
+      const yearlyRevenue = propertyReceipts.reduce(
+        (sum, r) => sum + r.amount,
+        0,
+      );
       const monthlyRevenue = yearlyRevenue / 12;
-      const expenses = yearlyRevenue * 0.3;
-      const netIncome = yearlyRevenue - expenses;
-      const roi = yearlyRevenue > 0 ? (netIncome / (yearlyRevenue * 10)) * 100 : 0;
+      const propertyExpenses = expenses.filter(
+        (e) => e.propertyId === property.id,
+      );
+      const expenseTotal = propertyExpenses.reduce(
+        (sum, e) => sum + e.amount,
+        0,
+      );
+      const netIncome = yearlyRevenue - expenseTotal;
+      const roi =
+        yearlyRevenue > 0 ? (netIncome / (yearlyRevenue * 10)) * 100 : 0;
 
       return {
         propertyId: property.id,
@@ -242,12 +306,12 @@ export function AnalyticsDashboard(): React.ReactElement {
         occupancyRate,
         monthlyRevenue,
         yearlyRevenue,
-        expenses,
+        expenses: expenseTotal,
         netIncome,
-        roi
+        roi,
       };
     });
-  }, [properties, receipts]);
+  }, [properties, receipts, expenses]);
 
   // Maintenance stats (mock for now)
   const maintenanceStats: MaintenanceStats = {
@@ -256,7 +320,7 @@ export function AnalyticsDashboard(): React.ReactElement {
     inProgress: 2,
     completed: 7,
     urgent: 1,
-    averageResolutionDays: 2.5
+    averageResolutionDays: 2.5,
   };
 
   // Recent activities
@@ -265,18 +329,18 @@ export function AnalyticsDashboard(): React.ReactElement {
 
     // Add recent payments
     receipts
-      .filter(r => r.status === 'paid')
+      .filter((r) => r.status === "paid")
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5)
-      .forEach(receipt => {
-        const tenant = tenants.find(t => t.id === receipt.tenantId);
+      .forEach((receipt) => {
+        const tenant = tenants.find((t) => t.id === receipt.tenantId);
         activities.push({
           id: receipt.id,
-          type: 'payment',
-          message: `Payment received from ${tenant?.name || receipt.propertyName || 'Unknown'}`,
+          type: "payment",
+          message: `Payment received from ${tenant?.name || receipt.propertyName || "Unknown"}`,
           timestamp: receipt.date,
           amount: receipt.amount,
-          icon: '💰'
+          icon: "💰",
         });
       });
 
@@ -284,36 +348,46 @@ export function AnalyticsDashboard(): React.ReactElement {
   }, [receipts, tenants]);
 
   // Chart data transformations
-  const revenueChartData = revenueByMonth.map(m => ({
+  const revenueChartData = revenueByMonth.map((m) => ({
     label: m.month,
-    value: m.revenue
+    value: m.revenue,
   }));
 
-  const _expenseChartData = revenueByMonth.map(m => ({
+  const _expenseChartData = revenueByMonth.map((m) => ({
     label: m.month,
     value: m.expenses,
-    color: '#ef4444'
+    color: "#ef4444",
   }));
 
-  const netIncomeChartData = revenueByMonth.map(m => ({
+  const netIncomeChartData = revenueByMonth.map((m) => ({
     label: m.month,
     value: m.netIncome,
-    color: m.netIncome >= 0 ? '#22c55e' : '#ef4444'
+    color: m.netIncome >= 0 ? "#22c55e" : "#ef4444",
   }));
 
-  const propertyTypeData = properties.reduce<Record<string, number>>((acc, property) => {
-    const type = property.type || 'other';
-    acc[type] = (acc[type] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const propertyTypeData = properties.reduce<Record<string, number>>(
+    (acc, property) => {
+      const type = property.type || "other";
+      acc[type] = (acc[type] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
-  const propertyTypeChartData = Object.entries(propertyTypeData).map(([type, count]) => ({
-    label: type.charAt(0).toUpperCase() + type.slice(1),
-    value: count as number,
-    color: type === 'apartment' ? '#3b82f6' : 
-           type === 'house' ? '#10b981' : 
-           type === 'commercial' ? '#f59e0b' : '#6b7280'
-  }));
+  const propertyTypeChartData = Object.entries(propertyTypeData).map(
+    ([type, count]) => ({
+      label: type.charAt(0).toUpperCase() + type.slice(1),
+      value: count as number,
+      color:
+        type === "apartment"
+          ? "#3b82f6"
+          : type === "house"
+            ? "#10b981"
+            : type === "commercial"
+              ? "#f59e0b"
+              : "#6b7280",
+    }),
+  );
 
   const handleRefresh = () => {
     setIsLoading(true);
@@ -333,21 +407,23 @@ export function AnalyticsDashboard(): React.ReactElement {
             <span className="text-zinc-200">Analytics Dashboard</span>
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-zinc-50">
-            {t('navigation.dashboard')} Analytics
+            {t("navigation.dashboard")} Analytics
           </h2>
           <p className="text-sm text-zinc-400 mt-1">
             Comprehensive property management insights and KPIs
           </p>
         </div>
-        
+
         <div className="flex items-center gap-3">
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={handleRefresh}
             disabled={isLoading}
           >
-            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
           <Button variant="outline" size="sm">
@@ -364,30 +440,30 @@ export function AnalyticsDashboard(): React.ReactElement {
       {/* Quick Stats */}
       <QuickStatsRow
         stats={[
-          { 
-            label: 'Collection Rate', 
-            value: `${kpis.collectionRate.toFixed(0)}%`, 
+          {
+            label: "Collection Rate",
+            value: `${kpis.collectionRate.toFixed(0)}%`,
             icon: <Receipt className="h-4 w-4 text-green-400" />,
-            color: 'bg-green-500/10'
+            color: "bg-green-500/10",
           },
-          { 
-            label: 'Avg. Rent', 
-            value: formatCurrency(kpis.averageRent), 
+          {
+            label: "Avg. Rent",
+            value: formatCurrency(kpis.averageRent),
             icon: <Wallet className="h-4 w-4 text-blue-400" />,
-            color: 'bg-blue-500/10'
+            color: "bg-blue-500/10",
           },
-          { 
-            label: 'Overdue', 
-            value: kpis.overduePayments, 
+          {
+            label: "Overdue",
+            value: kpis.overduePayments,
             icon: <Clock className="h-4 w-4 text-red-400" />,
-            color: 'bg-red-500/10'
+            color: "bg-red-500/10",
           },
-          { 
-            label: 'Active Tenants', 
-            value: kpis.activeTenants, 
+          {
+            label: "Active Tenants",
+            value: kpis.activeTenants,
             icon: <Users className="h-4 w-4 text-purple-400" />,
-            color: 'bg-purple-500/10'
-          }
+            color: "bg-purple-500/10",
+          },
         ]}
       />
 
@@ -482,7 +558,7 @@ export function AnalyticsDashboard(): React.ReactElement {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Lease Expirations */}
             <LeaseExpirationTimeline leases={leaseExpirations} />
-            
+
             {/* Maintenance */}
             <MaintenanceStatusCard stats={maintenanceStats} />
           </div>
@@ -499,10 +575,14 @@ export function AnalyticsDashboard(): React.ReactElement {
                     <div className="flex items-center gap-3">
                       <span className="text-lg">{activity.icon}</span>
                       <div className="space-y-1">
-                        <p className="text-sm font-medium text-zinc-300">{activity.message}</p>
+                        <p className="text-sm font-medium text-zinc-300">
+                          {activity.message}
+                        </p>
                         <div className="flex items-center gap-2 text-xs text-zinc-500">
                           <span>{activity.type}</span>
-                          {activity.amount && <span>• {formatCurrency(activity.amount)}</span>}
+                          {activity.amount && (
+                            <span>• {formatCurrency(activity.amount)}</span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -582,12 +662,7 @@ export function AnalyticsDashboard(): React.ReactElement {
             <ChartWidget
               title="Net Income Trend"
               subtitle="Monthly net income"
-              chart={
-                <AreaChart
-                  data={netIncomeChartData}
-                  height={250}
-                />
-              }
+              chart={<AreaChart data={netIncomeChartData} height={250} />}
             />
           </div>
         </TabsContent>
@@ -597,24 +672,40 @@ export function AnalyticsDashboard(): React.ReactElement {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <KPICard
               title="Active Leases"
-              value={leases?.filter(l => l.status === 'active').length || 0}
+              value={leases?.filter((l) => l.status === "active").length || 0}
               icon={<FileText className="h-5 w-5 text-blue-400" />}
             />
             <KPICard
               title="Expiring (30 days)"
-              value={leaseExpirations.filter(l => l.status === 'critical').length}
-              variant={leaseExpirations.filter(l => l.status === 'critical').length > 0 ? "warning" : "default"}
+              value={
+                leaseExpirations.filter((l) => l.status === "critical").length
+              }
+              variant={
+                leaseExpirations.filter((l) => l.status === "critical").length >
+                0
+                  ? "warning"
+                  : "default"
+              }
               icon={<Clock className="h-5 w-5 text-orange-400" />}
             />
             <KPICard
               title="Expiring (60 days)"
-              value={leaseExpirations.filter(l => l.status === 'warning').length}
+              value={
+                leaseExpirations.filter((l) => l.status === "warning").length
+              }
               icon={<Calendar className="h-5 w-5 text-yellow-400" />}
             />
             <KPICard
               title="Expired"
-              value={leaseExpirations.filter(l => l.status === 'expired').length}
-              variant={leaseExpirations.filter(l => l.status === 'expired').length > 0 ? "danger" : "default"}
+              value={
+                leaseExpirations.filter((l) => l.status === "expired").length
+              }
+              variant={
+                leaseExpirations.filter((l) => l.status === "expired").length >
+                0
+                  ? "danger"
+                  : "default"
+              }
               icon={<AlertTriangle className="h-5 w-5 text-red-400" />}
             />
           </div>

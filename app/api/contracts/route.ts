@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
     if (isMockMode) {
       const leases = await leaseService.getAll(userId);
       // Filter by status if provided
-      const filteredLeases = status 
-        ? leases.filter(l => l.status === status)
+      const filteredLeases = status
+        ? leases.filter((l) => l.status === status)
         : leases;
       // Transform to match frontend contract shape
       const contracts = filteredLeases.map((lease) => ({
@@ -51,16 +51,23 @@ export async function GET(request: NextRequest) {
     });
 
     // Transform to frontend contract shape
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const contracts = leases.map((lease: any) => ({
+    const contracts = leases.map((lease) => ({
       id: lease.id,
       propertyName: lease.property?.name || "Unknown Property",
       unitName: lease.unit?.number || null,
       tenantName: lease.tenant?.name || "Unknown Tenant",
-      startDate: lease.startDate.toISOString(),
-      endDate: lease.endDate?.toISOString() || null,
+      startDate:
+        lease.startDate instanceof Date
+          ? lease.startDate.toISOString()
+          : String(lease.startDate),
+      endDate:
+        lease.endDate instanceof Date
+          ? lease.endDate.toISOString()
+          : lease.endDate
+            ? String(lease.endDate)
+            : null,
       monthlyRent: lease.monthlyRent,
-      currency: "EUR", // Default currency
+      currency: "EUR",
       status: lease.status,
     }));
 

@@ -1,20 +1,16 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { Session } from 'next-auth';
-import { getAuthOptions } from '@/lib/services/auth/auth';
-import { getPrismaClient } from '@/lib/services/database/database';
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/services/auth/auth-middleware";
+import { getPrismaClient } from "@/lib/services/database/database";
 
 export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(getAuthOptions() as any) as Session | null;
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult instanceof Response) return authResult;
 
+    const { userId } = authResult;
     const { id } = await params;
     const prisma = getPrismaClient();
 
@@ -22,7 +18,7 @@ export async function GET(
       where: {
         id,
         property: {
-          userId: session.user.id,
+          userId,
         },
       },
       include: {
@@ -38,42 +34,40 @@ export async function GET(
             tenant: true,
           },
           orderBy: {
-            createdAt: 'desc',
+            createdAt: "desc",
           },
         },
         documents: {
           orderBy: {
-            uploadedAt: 'desc',
+            uploadedAt: "desc",
           },
         },
       },
     });
 
     if (!unit) {
-      return NextResponse.json({ error: 'Unit not found' }, { status: 404 });
+      return NextResponse.json({ error: "Unit not found" }, { status: 404 });
     }
 
     return NextResponse.json(unit);
   } catch (error) {
-    console.error('Error fetching unit:', error);
+    console.error("Error fetching unit:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
 
 export async function PUT(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(getAuthOptions() as any) as Session | null;
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult instanceof Response) return authResult;
 
+    const { userId } = authResult;
     const { id } = await params;
     const body = await request.json();
     const { number, floor, sizeSqM, bedrooms, bathrooms, status, notes } = body;
@@ -85,15 +79,15 @@ export async function PUT(
       where: {
         id,
         property: {
-          userId: session.user.id,
+          userId,
         },
       },
     });
 
     if (!existingUnit) {
       return NextResponse.json(
-        { error: 'Unit not found or access denied' },
-        { status: 404 }
+        { error: "Unit not found or access denied" },
+        { status: 404 },
       );
     }
 
@@ -122,33 +116,36 @@ export async function PUT(
 
     return NextResponse.json(unit);
   } catch (error: unknown) {
-    console.error('Error updating unit:', error);
+    console.error("Error updating unit:", error);
 
-    if (error && typeof error === 'object' && 'code' in error && error.code === 'P2002') {
+    if (
+      error &&
+      typeof error === "object" &&
+      "code" in error &&
+      error.code === "P2002"
+    ) {
       return NextResponse.json(
-        { error: 'A unit with this number already exists for this property' },
-        { status: 409 }
+        { error: "A unit with this number already exists for this property" },
+        { status: 409 },
       );
     }
 
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }
 
 export async function DELETE(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session = await getServerSession(getAuthOptions() as any) as Session | null;
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const authResult = await requireAuth(request);
+    if (authResult instanceof Response) return authResult;
 
+    const { userId } = authResult;
     const { id } = await params;
     const prisma = getPrismaClient();
 
@@ -157,15 +154,15 @@ export async function DELETE(
       where: {
         id,
         property: {
-          userId: session.user.id,
+          userId,
         },
       },
     });
 
     if (!unit) {
       return NextResponse.json(
-        { error: 'Unit not found or access denied' },
-        { status: 404 }
+        { error: "Unit not found or access denied" },
+        { status: 404 },
       );
     }
 
@@ -176,10 +173,10 @@ export async function DELETE(
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting unit:', error);
+    console.error("Error deleting unit:", error);
     return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }

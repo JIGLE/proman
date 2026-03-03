@@ -1,7 +1,6 @@
-
-
 declare module "next-auth" {
   interface Session {
+    expires: string;
     user: {
       id: string;
       role: string;

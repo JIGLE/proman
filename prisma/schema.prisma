@@ -389,6 +389,11 @@ model Lease {
   tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   unit     Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
 
+  @@index([userId])
+  @@index([propertyId])
+  @@index([tenantId])
+  @@index([status])
+  @@index([userId, status])
   @@map("leases")
 }
 
@@ -441,6 +446,9 @@ model Document {
   owner    Owner?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
+  @@index([userId])
+  @@index([propertyId])
+  @@index([type])
   @@map("documents")
 }
 
@@ -469,6 +477,10 @@ model Invoice {
   tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
   paymentTransactions PaymentTransaction[]
 
+  @@index([userId])
+  @@index([status])
+  @@index([dueDate])
+  @@index([tenantId])
   @@map("invoices")
 }
 
@@ -488,6 +500,9 @@ model Notification {
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
+  @@index([userId, read])
+  @@index([createdAt])
   @@map("notifications")
 }
 

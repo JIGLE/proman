@@ -1,26 +1,34 @@
 // Payment Service - Core payment processing for Portugal and Spain
 // Supports: Stripe (card, SEPA), Multibanco, MB WAY, Bank Transfer
 
-import Stripe from 'stripe';
-import { getSecret, isEnabled } from '@/lib/utils/env';
-import { getPrismaClient } from '@/lib/services/database/database';
-import type { PrismaClient, PaymentTransaction, Tenant, TransactionStatus, PaymentMethodType } from '@prisma/client';
+import Stripe from "stripe";
+import { getSecret, isEnabled } from "@/lib/utils/env";
+import { getPrismaClient } from "@/lib/services/database/database";
+import type {
+  PrismaClient,
+  PaymentTransaction,
+  Tenant,
+  TransactionStatus,
+  PaymentMethodType,
+} from "@prisma/client";
 
 // Initialize Stripe client lazily to avoid build-time errors
 let stripeInstance: Stripe | null = null;
 
 function getStripeInstance(): Stripe {
   if (!stripeInstance) {
-    const stripeKey = getSecret('STRIPE_SECRET_KEY');
-    const enabled = isEnabled('ENABLE_STRIPE') || !!stripeKey;
+    const stripeKey = getSecret("STRIPE_SECRET_KEY");
+    const enabled = isEnabled("ENABLE_STRIPE") || !!stripeKey;
     if (!enabled) {
-      throw new Error('Stripe is not enabled. Set ENABLE_STRIPE=true or provide STRIPE_SECRET_KEY to enable payments');
+      throw new Error(
+        "Stripe is not enabled. Set ENABLE_STRIPE=true or provide STRIPE_SECRET_KEY to enable payments",
+      );
     }
     if (!stripeKey) {
-      throw new Error('STRIPE_SECRET_KEY is not set');
+      throw new Error("STRIPE_SECRET_KEY is not set");
     }
     stripeInstance = new Stripe(stripeKey, {
-      apiVersion: '2025-02-24.acacia',
+      apiVersion: "2025-02-24.acacia",
     });
   }
   return stripeInstance;
@@ -74,13 +82,13 @@ export class PaymentService {
   }
 
   private initialize() {
-    const stripeKey = getSecret('STRIPE_SECRET_KEY');
-    const enabled = isEnabled('ENABLE_STRIPE') || !!stripeKey;
+    const stripeKey = getSecret("STRIPE_SECRET_KEY");
+    const enabled = isEnabled("ENABLE_STRIPE") || !!stripeKey;
     this.isInitialized = enabled && !!stripeKey;
   }
 
   public isReady(): boolean {
-    return this.isInitialized && !!getSecret('STRIPE_SECRET_KEY');
+    return this.isInitialized && !!getSecret("STRIPE_SECRET_KEY");
   }
 
   /**
@@ -95,18 +103,20 @@ export class PaymentService {
    */
   public async getOrCreateStripeCustomer(tenantId: string): Promise<string> {
     const prisma: PrismaClient = getPrismaClient();
-    
+
     const tenant = await prisma.tenant.findUnique({
       where: { id: tenantId },
       include: { paymentMethods: true },
     });
 
     if (!tenant) {
-      throw new Error('Tenant not found');
+      throw new Error("Tenant not found");
     }
 
     // Check if tenant already has a Stripe customer ID
-    const existingMethod = tenant.paymentMethods.find(m => m.stripeCustomerId);
+    const existingMethod = tenant.paymentMethods.find(
+      (m) => m.stripeCustomerId,
+    );
     if (existingMethod?.stripeCustomerId) {
       return existingMethod.stripeCustomerId;
     }
@@ -119,7 +129,7 @@ export class PaymentService {
       phone: tenant.phone,
       metadata: {
         tenantId: tenant.id,
-        promanSource: 'true',
+        promanSource: "true",
       },
     });
 
@@ -129,9 +139,11 @@ export class PaymentService {
   /**
    * Create a payment intent for various payment methods
    */
-  public async createPaymentIntent(params: CreatePaymentIntentParams): Promise<PaymentIntentResult> {
+  public async createPaymentIntent(
+    params: CreatePaymentIntentParams,
+  ): Promise<PaymentIntentResult> {
     if (!this.isReady()) {
-      return { success: false, error: 'Payment service not configured' };
+      return { success: false, error: "Payment service not configured" };
     }
 
     const prisma: PrismaClient = getPrismaClient();
@@ -142,7 +154,7 @@ export class PaymentService {
       });
 
       if (!tenant) {
-        return { success: false, error: 'Tenant not found' };
+        return { success: false, error: "Tenant not found" };
       }
 
       // Get or create Stripe customer
@@ -156,48 +168,52 @@ export class PaymentService {
         description: params.description || `Payment for invoice`,
         metadata: {
           tenantId: params.tenantId,
-          invoiceId: params.invoiceId || '',
+          invoiceId: params.invoiceId || "",
           ...params.metadata,
         },
       };
 
       // Configure payment method types based on region and method
       switch (params.paymentMethodType) {
-        case 'card':
-          paymentIntentParams.payment_method_types = ['card'];
+        case "card":
+          paymentIntentParams.payment_method_types = ["card"];
           break;
-        case 'sepa_debit':
-          paymentIntentParams.payment_method_types = ['sepa_debit'];
+        case "sepa_debit":
+          paymentIntentParams.payment_method_types = ["sepa_debit"];
           break;
-        case 'multibanco':
-          paymentIntentParams.payment_method_types = ['multibanco'];
+        case "multibanco":
+          paymentIntentParams.payment_method_types = ["multibanco"];
           break;
-        case 'mbway':
+        case "mbway":
           // MB WAY is not directly supported by Stripe, handled separately
           return this.createMBWayPayment(params, tenant);
-        case 'bank_transfer':
-          paymentIntentParams.payment_method_types = ['customer_balance'];
+        case "bank_transfer":
+          paymentIntentParams.payment_method_types = ["customer_balance"];
           paymentIntentParams.payment_method_data = {
-            type: 'customer_balance',
+            type: "customer_balance",
           };
           paymentIntentParams.payment_method_options = {
             customer_balance: {
-              funding_type: 'bank_transfer',
+              funding_type: "bank_transfer",
               bank_transfer: {
-                type: 'eu_bank_transfer',
+                type: "eu_bank_transfer",
                 eu_bank_transfer: {
-                  country: 'PT',
+                  country: "PT",
                 },
               },
             },
           };
           break;
         default:
-          return { success: false, error: `Unsupported payment method: ${params.paymentMethodType}` };
+          return {
+            success: false,
+            error: `Unsupported payment method: ${params.paymentMethodType}`,
+          };
       }
 
       const stripe = getStripeInstance();
-      const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
+      const paymentIntent =
+        await stripe.paymentIntents.create(paymentIntentParams);
 
       // Create transaction record
       const transaction = await prisma.paymentTransaction.create({
@@ -206,8 +222,8 @@ export class PaymentService {
           invoiceId: params.invoiceId,
           amount: params.amount,
           currency: params.currency,
-          status: 'pending',
-          provider: 'stripe',
+          status: "pending",
+          provider: "stripe",
           stripePaymentIntentId: paymentIntent.id,
           description: params.description,
           metadata: JSON.stringify(params.metadata || {}),
@@ -223,11 +239,16 @@ export class PaymentService {
       };
 
       // Extract Multibanco details if available
-      if (params.paymentMethodType === 'multibanco' && paymentIntent.next_action?.multibanco_display_details) {
+      if (
+        params.paymentMethodType === "multibanco" &&
+        paymentIntent.next_action?.multibanco_display_details
+      ) {
         const mbDetails = paymentIntent.next_action.multibanco_display_details;
         result.multibancoEntity = mbDetails.entity || undefined;
         result.multibancoReference = mbDetails.reference || undefined;
-        result.multibancoExpiresAt = mbDetails.expires_at ? new Date(mbDetails.expires_at * 1000) : undefined;
+        result.multibancoExpiresAt = mbDetails.expires_at
+          ? new Date(Number(mbDetails.expires_at) * 1000)
+          : undefined;
 
         // Update transaction with Multibanco details
         await prisma.paymentTransaction.update({
@@ -242,8 +263,11 @@ export class PaymentService {
 
       return result;
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Payment intent creation failed';
-      console.error('Payment intent error:', error);
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Payment intent creation failed";
+      console.error("Payment intent error:", error);
       return { success: false, error: message };
     }
   }
@@ -254,26 +278,26 @@ export class PaymentService {
    * This is a placeholder for future SIBS integration
    */
   private async createMBWayPayment(
-    params: CreatePaymentIntentParams, 
-    _tenant: Tenant
+    params: CreatePaymentIntentParams,
+    _tenant: Tenant,
   ): Promise<PaymentIntentResult> {
     const prisma: PrismaClient = getPrismaClient();
 
     // MB WAY would require SIBS API integration
     // For now, we create a pending transaction and return instructions
-    
+
     const transaction = await prisma.paymentTransaction.create({
       data: {
         tenantId: params.tenantId,
         invoiceId: params.invoiceId,
         amount: params.amount,
         currency: params.currency,
-        status: 'pending',
-        provider: 'mbway',
+        status: "pending",
+        provider: "mbway",
         description: params.description,
         metadata: JSON.stringify({
           ...params.metadata,
-          note: 'MB WAY requires SIBS API integration',
+          note: "MB WAY requires SIBS API integration",
         }),
       },
     });
@@ -281,32 +305,34 @@ export class PaymentService {
     return {
       success: true,
       transactionId: transaction.id,
-      status: 'requires_action',
-      error: 'MB WAY integration pending - requires SIBS API setup',
+      status: "requires_action",
+      error: "MB WAY integration pending - requires SIBS API setup",
     };
   }
 
   /**
    * Process Stripe webhook events
    */
-  public async processStripeWebhook(event: Stripe.Event): Promise<ProcessWebhookResult> {
+  public async processStripeWebhook(
+    event: Stripe.Event,
+  ): Promise<ProcessWebhookResult> {
     const prisma: PrismaClient = getPrismaClient();
 
     try {
       switch (event.type) {
-        case 'payment_intent.succeeded': {
+        case "payment_intent.succeeded": {
           const paymentIntent = event.data.object as Stripe.PaymentIntent;
           return this.handlePaymentSuccess(paymentIntent, prisma);
         }
-        case 'payment_intent.payment_failed': {
+        case "payment_intent.payment_failed": {
           const paymentIntent = event.data.object as Stripe.PaymentIntent;
           return this.handlePaymentFailure(paymentIntent, prisma);
         }
-        case 'payment_intent.canceled': {
+        case "payment_intent.canceled": {
           const paymentIntent = event.data.object as Stripe.PaymentIntent;
           return this.handlePaymentCanceled(paymentIntent, prisma);
         }
-        case 'charge.refunded': {
+        case "charge.refunded": {
           const charge = event.data.object as Stripe.Charge;
           return this.handleRefund(charge, prisma);
         }
@@ -314,28 +340,29 @@ export class PaymentService {
           return { success: true }; // Ignore unhandled events
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Webhook processing failed';
-      console.error('Webhook processing error:', error);
+      const message =
+        error instanceof Error ? error.message : "Webhook processing failed";
+      console.error("Webhook processing error:", error);
       return { success: false, error: message };
     }
   }
 
   private async handlePaymentSuccess(
-    paymentIntent: Stripe.PaymentIntent, 
-    prisma: PrismaClient
+    paymentIntent: Stripe.PaymentIntent,
+    prisma: PrismaClient,
   ): Promise<ProcessWebhookResult> {
     const transaction = await prisma.paymentTransaction.findFirst({
       where: { stripePaymentIntentId: paymentIntent.id },
     });
 
     if (!transaction) {
-      return { success: false, error: 'Transaction not found' };
+      return { success: false, error: "Transaction not found" };
     }
 
     await prisma.paymentTransaction.update({
       where: { id: transaction.id },
       data: {
-        status: 'succeeded',
+        status: "succeeded",
         stripeChargeId: paymentIntent.latest_charge as string,
         processedAt: new Date(),
       },
@@ -346,90 +373,105 @@ export class PaymentService {
       await prisma.invoice.update({
         where: { id: transaction.invoiceId },
         data: {
-          status: 'paid',
+          status: "paid",
           paidDate: new Date(),
         },
       });
     }
 
-    return { success: true, transactionId: transaction.id, newStatus: 'succeeded' };
+    return {
+      success: true,
+      transactionId: transaction.id,
+      newStatus: "succeeded",
+    };
   }
 
   private async handlePaymentFailure(
-    paymentIntent: Stripe.PaymentIntent, 
-    prisma: PrismaClient
+    paymentIntent: Stripe.PaymentIntent,
+    prisma: PrismaClient,
   ): Promise<ProcessWebhookResult> {
     const transaction = await prisma.paymentTransaction.findFirst({
       where: { stripePaymentIntentId: paymentIntent.id },
     });
 
     if (!transaction) {
-      return { success: false, error: 'Transaction not found' };
+      return { success: false, error: "Transaction not found" };
     }
 
     await prisma.paymentTransaction.update({
       where: { id: transaction.id },
       data: {
-        status: 'failed',
+        status: "failed",
         failedAt: new Date(),
         failureCode: paymentIntent.last_payment_error?.code || undefined,
         failureMessage: paymentIntent.last_payment_error?.message || undefined,
       },
     });
 
-    return { success: true, transactionId: transaction.id, newStatus: 'failed' };
+    return {
+      success: true,
+      transactionId: transaction.id,
+      newStatus: "failed",
+    };
   }
 
   private async handlePaymentCanceled(
-    paymentIntent: Stripe.PaymentIntent, 
-    prisma: PrismaClient
+    paymentIntent: Stripe.PaymentIntent,
+    prisma: PrismaClient,
   ): Promise<ProcessWebhookResult> {
     const transaction = await prisma.paymentTransaction.findFirst({
       where: { stripePaymentIntentId: paymentIntent.id },
     });
 
     if (!transaction) {
-      return { success: false, error: 'Transaction not found' };
+      return { success: false, error: "Transaction not found" };
     }
 
     await prisma.paymentTransaction.update({
       where: { id: transaction.id },
       data: {
-        status: 'cancelled',
+        status: "cancelled",
       },
     });
 
-    return { success: true, transactionId: transaction.id, newStatus: 'cancelled' };
+    return {
+      success: true,
+      transactionId: transaction.id,
+      newStatus: "cancelled",
+    };
   }
 
   private async handleRefund(
-    charge: Stripe.Charge, 
-    prisma: PrismaClient
+    charge: Stripe.Charge,
+    prisma: PrismaClient,
   ): Promise<ProcessWebhookResult> {
     const transaction = await prisma.paymentTransaction.findFirst({
       where: { stripeChargeId: charge.id },
     });
 
     if (!transaction) {
-      return { success: false, error: 'Transaction not found for refund' };
+      return { success: false, error: "Transaction not found for refund" };
     }
 
-    const refundedAmount = charge.amount_refunded;
+    const refundedAmount =
+      typeof charge.amount_refunded === "number"
+        ? charge.amount_refunded
+        : Number(charge.amount_refunded) || 0;
     const isFullRefund = refundedAmount >= transaction.amount;
 
     await prisma.paymentTransaction.update({
       where: { id: transaction.id },
       data: {
-        status: isFullRefund ? 'refunded' : 'partially_refunded',
+        status: isFullRefund ? "refunded" : "partially_refunded",
         refundedAmount: refundedAmount,
         refundedAt: new Date(),
       },
     });
 
-    return { 
-      success: true, 
-      transactionId: transaction.id, 
-      newStatus: isFullRefund ? 'refunded' : 'partially_refunded',
+    return {
+      success: true,
+      transactionId: transaction.id,
+      newStatus: isFullRefund ? "refunded" : "partially_refunded",
     };
   }
 
@@ -438,54 +480,61 @@ export class PaymentService {
    */
   public getAvailablePaymentMethods(country: string): PaymentMethodType[] {
     switch (country.toUpperCase()) {
-      case 'PT': // Portugal
-        return ['card', 'sepa_debit', 'multibanco', 'mbway', 'bank_transfer'];
-      case 'ES': // Spain
-        return ['card', 'sepa_debit', 'bank_transfer'];
+      case "PT": // Portugal
+        return ["card", "sepa_debit", "multibanco", "mbway", "bank_transfer"];
+      case "ES": // Spain
+        return ["card", "sepa_debit", "bank_transfer"];
       default: // EU fallback
-        return ['card', 'sepa_debit', 'bank_transfer'];
+        return ["card", "sepa_debit", "bank_transfer"];
     }
   }
 
   /**
    * Get payment method display info
    */
-  public getPaymentMethodInfo(type: PaymentMethodType): { name: string; description: string; icon: string } {
-    const methods: Record<PaymentMethodType, { name: string; description: string; icon: string }> = {
+  public getPaymentMethodInfo(type: PaymentMethodType): {
+    name: string;
+    description: string;
+    icon: string;
+  } {
+    const methods: Record<
+      PaymentMethodType,
+      { name: string; description: string; icon: string }
+    > = {
       card: {
-        name: 'Credit/Debit Card',
-        description: 'Pay securely with Visa, Mastercard, or American Express',
-        icon: 'credit-card',
+        name: "Credit/Debit Card",
+        description: "Pay securely with Visa, Mastercard, or American Express",
+        icon: "credit-card",
       },
       sepa_debit: {
-        name: 'SEPA Direct Debit',
-        description: 'Automatic payments from your European bank account',
-        icon: 'bank',
+        name: "SEPA Direct Debit",
+        description: "Automatic payments from your European bank account",
+        icon: "bank",
       },
       multibanco: {
-        name: 'Multibanco',
-        description: 'Pay at any Multibanco ATM or via home banking (Portugal)',
-        icon: 'building',
+        name: "Multibanco",
+        description: "Pay at any Multibanco ATM or via home banking (Portugal)",
+        icon: "building",
       },
       mbway: {
-        name: 'MB WAY',
-        description: 'Instant payment via MB WAY app (Portugal)',
-        icon: 'smartphone',
+        name: "MB WAY",
+        description: "Instant payment via MB WAY app (Portugal)",
+        icon: "smartphone",
       },
       bank_transfer: {
-        name: 'Bank Transfer',
-        description: 'Manual bank transfer to our account',
-        icon: 'arrow-right-left',
+        name: "Bank Transfer",
+        description: "Manual bank transfer to our account",
+        icon: "arrow-right-left",
       },
       cash: {
-        name: 'Cash',
-        description: 'Pay in cash (in-person only)',
-        icon: 'banknote',
+        name: "Cash",
+        description: "Pay in cash (in-person only)",
+        icon: "banknote",
       },
       other: {
-        name: 'Other',
-        description: 'Alternative payment method',
-        icon: 'circle-help',
+        name: "Other",
+        description: "Alternative payment method",
+        icon: "circle-help",
       },
     };
 
@@ -496,17 +545,21 @@ export class PaymentService {
    * List transactions for a tenant
    */
   public async getTenantTransactions(
-    tenantId: string, 
-    options: { limit?: number; offset?: number; status?: TransactionStatus } = {}
+    tenantId: string,
+    options: {
+      limit?: number;
+      offset?: number;
+      status?: TransactionStatus;
+    } = {},
   ): Promise<PaymentTransaction[]> {
     const prisma: PrismaClient = getPrismaClient();
-    
+
     return prisma.paymentTransaction.findMany({
       where: {
         tenantId,
         ...(options.status ? { status: options.status } : {}),
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
       take: options.limit || 20,
       skip: options.offset || 0,
     });
@@ -515,7 +568,9 @@ export class PaymentService {
   /**
    * Get transaction by ID
    */
-  public async getTransaction(transactionId: string): Promise<PaymentTransaction | null> {
+  public async getTransaction(
+    transactionId: string,
+  ): Promise<PaymentTransaction | null> {
     const prisma: PrismaClient = getPrismaClient();
     return prisma.paymentTransaction.findUnique({
       where: { id: transactionId },

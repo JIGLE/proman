@@ -54,7 +54,7 @@ export function UpdateBanner(): React.ReactElement | null {
   }, []);
 
   // Only admins should see this
-  const userRole = (session?.user as any)?.role;
+  const userRole = (session?.user as { role?: string })?.role;
   if (!session || userRole !== "ADMIN") return null;
   if (!latest || !current) return null;
   const latestTag = latest.tag_name || latest.tag || latest.name;

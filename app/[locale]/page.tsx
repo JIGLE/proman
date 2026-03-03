@@ -14,10 +14,9 @@ export default async function LandingPage({ params }: Props) {
 
   // If user is authenticated, redirect to dashboard instead of landing page
   try {
-    const { getServerSession } = await import('next-auth/next');
-    const { getAuthOptions } = await import('@/lib/services/auth/auth');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const session: any = await getServerSession(getAuthOptions() as any);
+    const { getServerSession } = await import("next-auth/next");
+    const { getAuthOptions } = await import("@/lib/services/auth/auth");
+    const session = await getServerSession(getAuthOptions());
     if (session?.user) {
       redirect(`/${locale}/overview`);
     }
@@ -57,7 +56,11 @@ export default async function LandingPage({ params }: Props) {
           <div className="flex items-center gap-3">
             <LanguageSelector />
             <Link href="/auth/signin">
-              <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-300 hover:text-zinc-50 hover:border-zinc-600">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-zinc-700 text-zinc-300 hover:text-zinc-50 hover:border-zinc-600"
+              >
                 {t("cta")}
               </Button>
             </Link>
@@ -75,7 +78,10 @@ export default async function LandingPage({ params }: Props) {
             {t("subtitle")}
           </p>
           <Link href="/auth/signin">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white gap-2 px-8 h-12 text-base">
+            <Button
+              size="lg"
+              className="bg-blue-600 hover:bg-blue-700 text-white gap-2 px-8 h-12 text-base"
+            >
               {t("cta")}
               <ArrowRight className="h-4 w-4" />
             </Button>

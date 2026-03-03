@@ -800,15 +800,20 @@ export function AppProvider({
     }
   };
 
-  const deleteExpense = async (_id: string) => {
+  const deleteExpense = async (id: string) => {
     if (!userId) throw new Error("User not authenticated");
-    // Note: Delete API not implemented yet, so we'll just optimistically update state or throw
-    // Actually, I should probably implement the DELETE route for completeness, but for now I'll skip it or add a TODO.
-    // Wait, the interface says `deleteExpense` returns Promise<void>.
-    // I'll add a simple client-side error for now or implement it in backend in next step if critical.
-    // Let's implement it in backend actually. But I missed adding it to route.ts.
-    // I'll just comment it out effectively or throw 'Not implemented'.
-    throw new Error("Delete expense not implemented yet");
+    try {
+      await apiFetch(`/api/expenses/${id}`, csrfToken, "DELETE");
+      dispatch({
+        type: "SET_EXPENSES",
+        payload: state.expenses.filter((e) => e.id !== id),
+      });
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to delete expense";
+      showError(errorMessage);
+      throw err;
+    }
   };
 
   // Maintenance actions

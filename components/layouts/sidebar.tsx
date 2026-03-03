@@ -29,7 +29,6 @@ import { LanguageSelector } from "@/components/shared/language-selector";
 import {
   NotificationCenter,
   useNotifications,
-  getSampleNotifications,
 } from "@/components/ui/notification-center";
 
 interface SidebarProps {
@@ -63,7 +62,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
     markAllAsRead,
     deleteNotification,
     clearAll,
-  } = useNotifications(getSampleNotifications());
+  } = useNotifications();
 
   const handleToggleCollapsed = useCallback(() => {
     setCollapsed((prev) => {
