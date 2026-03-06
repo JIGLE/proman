@@ -17,19 +17,41 @@ export interface FormFieldProps {
   className?: string;
 }
 
-export function FormField({ 
-  label, 
-  error, 
-  success, 
-  hint, 
-  required, 
-  tooltip, 
-  children, 
-  className 
+export function FormField({
+  label,
+  error,
+  success,
+  hint,
+  required,
+  tooltip,
+  children,
+  className,
 }: FormFieldProps) {
   const hasError = !!error;
   const _hasSuccess = success && !hasError;
-  
+  const errorId = React.useId();
+  const hintId = React.useId();
+
+  // Inject aria-describedby into the first child element (the input)
+  const describedBy =
+    [hasError ? errorId : null, hint && !hasError ? hintId : null]
+      .filter(Boolean)
+      .join(" ") || undefined;
+
+  const enhancedChildren = describedBy
+    ? React.Children.map(children, (child, index) =>
+        index === 0 && React.isValidElement(child)
+          ? React.cloneElement(
+              child as React.ReactElement<Record<string, unknown>>,
+              {
+                "aria-describedby": describedBy,
+                "aria-invalid": hasError || undefined,
+              },
+            )
+          : child,
+      )
+    : children;
+
   return (
     <div className={cn("space-y-2", className)}>
       {label && (
@@ -48,18 +70,25 @@ export function FormField({
           )}
         </div>
       )}
-      
-      {children}
-      
+
+      {enhancedChildren}
+
       {error && (
-        <div className="flex items-center gap-1 text-destructive text-xs">
+        <div
+          id={errorId}
+          role="alert"
+          className="flex items-center gap-1 text-destructive text-xs"
+        >
           <AlertCircle className="w-3 h-3" />
           <span>{error}</span>
         </div>
       )}
-      
+
       {hint && !error && (
-        <div className="flex items-center gap-1 text-muted-foreground text-xs">
+        <div
+          id={hintId}
+          className="flex items-center gap-1 text-muted-foreground text-xs"
+        >
           <Info className="w-3 h-3" />
           <span>{hint}</span>
         </div>
@@ -77,16 +106,16 @@ export interface FormSectionProps {
   defaultCollapsed?: boolean;
 }
 
-export function FormSection({ 
-  title, 
-  subtitle, 
-  children, 
+export function FormSection({
+  title,
+  subtitle,
+  children,
   className,
   collapsible = false,
-  defaultCollapsed = false
+  defaultCollapsed = false,
 }: FormSectionProps) {
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed);
-  
+
   return (
     <div className={cn("space-y-4", className)}>
       {(title || subtitle) && (
@@ -102,7 +131,7 @@ export function FormSection({
                   onClick={() => setIsCollapsed(!isCollapsed)}
                   className="text-muted-foreground hover:text-foreground"
                 >
-                  {isCollapsed ? 'Expand' : 'Collapse'}
+                  {isCollapsed ? "Expand" : "Collapse"}
                 </Button>
               )}
             </div>
@@ -112,7 +141,7 @@ export function FormSection({
           )}
         </div>
       )}
-      
+
       {(!collapsible || !isCollapsed) && (
         <div className="space-y-4 border-l-2 border-border pl-4">
           {children}
@@ -129,32 +158,29 @@ export interface FormGridProps {
   gap?: "sm" | "md" | "lg";
 }
 
-export function FormGrid({ 
-  columns = 2, 
-  children, 
+export function FormGrid({
+  columns = 2,
+  children,
   className,
-  gap = "md"
+  gap = "md",
 }: FormGridProps) {
   const gridClasses = {
     1: "grid-cols-1",
     2: "grid-cols-1 md:grid-cols-2",
     3: "grid-cols-1 md:grid-cols-2 lg:grid-cols-3",
-    4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4"
+    4: "grid-cols-1 md:grid-cols-2 lg:grid-cols-4",
   };
-  
+
   const gapClasses = {
     sm: "gap-3",
     md: "gap-4",
-    lg: "gap-6"
+    lg: "gap-6",
   };
-  
+
   return (
-    <div className={cn(
-      "grid",
-      gridClasses[columns],
-      gapClasses[gap],
-      className
-    )}>
+    <div
+      className={cn("grid", gridClasses[columns], gapClasses[gap], className)}
+    >
       {children}
     </div>
   );
@@ -167,26 +193,28 @@ export interface FormActionsProps {
   sticky?: boolean;
 }
 
-export function FormActions({ 
-  children, 
-  align = "right", 
+export function FormActions({
+  children,
+  align = "right",
   className,
-  sticky = false
+  sticky = false,
 }: FormActionsProps) {
   const alignClasses = {
     left: "justify-start",
     center: "justify-center",
     right: "justify-end",
-    between: "justify-between"
+    between: "justify-between",
   };
-  
+
   return (
-    <div className={cn(
-      "flex items-center gap-3 pt-6 mt-6 border-t border-border",
-      alignClasses[align],
-      sticky && "sticky bottom-0 bg-background/80 backdrop-blur-sm",
-      className
-    )}>
+    <div
+      className={cn(
+        "flex items-center gap-3 pt-6 mt-6 border-t border-border",
+        alignClasses[align],
+        sticky && "sticky bottom-0 bg-background/80 backdrop-blur-sm",
+        className,
+      )}
+    >
       {children}
     </div>
   );
@@ -199,11 +227,11 @@ export interface FormProgressProps {
   variant?: "dots" | "line" | "numbered";
 }
 
-export function FormProgress({ 
-  steps, 
-  currentStep, 
+export function FormProgress({
+  steps,
+  currentStep,
   className,
-  variant = "dots"
+  variant = "dots",
 }: FormProgressProps) {
   if (variant === "line") {
     return (
@@ -215,7 +243,7 @@ export function FormProgress({
           <span className="font-medium">{steps[currentStep]}</span>
         </div>
         <div className="w-full bg-border rounded-full h-2">
-          <div 
+          <div
             className="bg-primary h-2 rounded-full transition-all duration-300"
             style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
           />
@@ -223,7 +251,7 @@ export function FormProgress({
       </div>
     );
   }
-  
+
   if (variant === "numbered") {
     return (
       <div className={cn("flex items-center justify-between", className)}>
@@ -231,40 +259,47 @@ export function FormProgress({
           const isCompleted = index < currentStep;
           const isCurrent = index === currentStep;
           const isUpcoming = index > currentStep;
-          
+
           return (
             <React.Fragment key={index}>
               <div className="flex flex-col items-center space-y-2">
-                <div className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200",
-                  {
-                    "bg-primary text-primary-foreground": isCompleted || isCurrent,
-                    "bg-muted text-muted-foreground": isUpcoming,
-                    "ring-2 ring-primary ring-offset-2": isCurrent
-                  }
-                )}>
+                <div
+                  className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200",
+                    {
+                      "bg-primary text-primary-foreground":
+                        isCompleted || isCurrent,
+                      "bg-muted text-muted-foreground": isUpcoming,
+                      "ring-2 ring-primary ring-offset-2": isCurrent,
+                    },
+                  )}
+                >
                   {isCompleted ? (
                     <Check className="w-5 h-5" />
                   ) : (
                     <span>{index + 1}</span>
                   )}
                 </div>
-                <span className={cn(
-                  "text-xs text-center max-w-[80px] leading-tight",
-                  {
-                    "text-foreground font-medium": isCurrent,
-                    "text-muted-foreground": !isCurrent
-                  }
-                )}>
+                <span
+                  className={cn(
+                    "text-xs text-center max-w-[80px] leading-tight",
+                    {
+                      "text-foreground font-medium": isCurrent,
+                      "text-muted-foreground": !isCurrent,
+                    },
+                  )}
+                >
                   {step}
                 </span>
               </div>
-              
+
               {index < steps.length - 1 && (
-                <div className={cn(
-                  "flex-1 h-0.5 mx-4 transition-colors duration-200",
-                  index < currentStep ? "bg-primary" : "bg-border"
-                )} />
+                <div
+                  className={cn(
+                    "flex-1 h-0.5 mx-4 transition-colors duration-200",
+                    index < currentStep ? "bg-primary" : "bg-border",
+                  )}
+                />
               )}
             </React.Fragment>
           );
@@ -272,24 +307,23 @@ export function FormProgress({
       </div>
     );
   }
-  
+
   return (
-    <div className={cn("flex items-center justify-center space-x-2", className)}>
+    <div
+      className={cn("flex items-center justify-center space-x-2", className)}
+    >
       {steps.map((step, index) => {
         const isCompleted = index < currentStep;
         const isCurrent = index === currentStep;
-        
+
         return (
           <div
             key={index}
-            className={cn(
-              "w-3 h-3 rounded-full transition-all duration-200",
-              {
-                "bg-primary": isCompleted || isCurrent,
-                "bg-border": index > currentStep,
-                "ring-2 ring-primary ring-offset-2": isCurrent
-              }
-            )}
+            className={cn("w-3 h-3 rounded-full transition-all duration-200", {
+              "bg-primary": isCompleted || isCurrent,
+              "bg-border": index > currentStep,
+              "ring-2 ring-primary ring-offset-2": isCurrent,
+            })}
             title={step}
           />
         );

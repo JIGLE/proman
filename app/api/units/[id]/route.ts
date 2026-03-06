@@ -85,10 +85,7 @@ export async function PUT(
     });
 
     if (!existingUnit) {
-      return NextResponse.json(
-        { error: "Unit not found or access denied" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Unit not found" }, { status: 404 });
     }
 
     // Update unit
@@ -160,10 +157,7 @@ export async function DELETE(
     });
 
     if (!unit) {
-      return NextResponse.json(
-        { error: "Unit not found or access denied" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Unit not found" }, { status: 404 });
     }
 
     // Delete unit

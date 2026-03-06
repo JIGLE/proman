@@ -125,7 +125,7 @@ function createBaseAuthOptions(): NextAuthOptions {
     providers,
     session: {
       strategy: "jwt",
-      maxAge: 7 * 24 * 60 * 60, // 7 days (reduced from 30 for security)
+      maxAge: 24 * 60 * 60, // 1 day — SaaS-grade session lifetime
     },
     pages: {
       signIn: "/auth/signin",

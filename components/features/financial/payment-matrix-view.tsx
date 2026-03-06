@@ -2,16 +2,36 @@ import { useState, useMemo } from "react";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Tenant } from "@/lib/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar, DollarSign, CheckCircle, Clock, XCircle, Filter, Download } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Calendar,
+  DollarSign,
+  CheckCircle,
+  Clock,
+  XCircle,
+  Filter,
+  Download,
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
-export type PaymentMatrixViewProps = Record<string, never>
+export type PaymentMatrixViewProps = Record<string, never>;
 
 interface PaymentCell {
-  status: 'paid' | 'pending' | 'overdue' | 'none';
+  status: "paid" | "pending" | "overdue" | "none";
   date?: string;
   amount?: number;
   receiptId?: string;
@@ -22,20 +42,34 @@ export function PaymentMatrixView(): React.ReactElement {
   const { tenants, receipts, properties: _properties } = state;
   const { formatCurrency } = useCurrency();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [viewMode, setViewMode] = useState<'detailed' | 'heatmap'>('detailed');
-  const [expandedProperties, setExpandedProperties] = useState<Set<string>>(new Set());
-  const [statusFilter, setStatusFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
+  const [viewMode, setViewMode] = useState<"detailed" | "heatmap">("detailed");
+  const [expandedProperties, setExpandedProperties] = useState<Set<string>>(
+    new Set(),
+  );
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "paid" | "pending" | "overdue"
+  >("all");
 
   // Generate months array
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
 
   // Get unique years from receipts
   const availableYears = useMemo(() => {
     const years = new Set<number>();
-    receipts.forEach(receipt => {
+    receipts.forEach((receipt) => {
       const year = new Date(receipt.date).getFullYear();
       years.add(year);
     });
@@ -50,27 +84,29 @@ export function PaymentMatrixView(): React.ReactElement {
   const paymentMatrix = useMemo(() => {
     const matrix: Record<string, PaymentCell[]> = {};
 
-    tenants.forEach(tenant => {
+    tenants.forEach((tenant) => {
       matrix[tenant.id] = new Array(12).fill(null).map(() => ({
-        status: 'none' as const
+        status: "none" as const,
       }));
 
       // Find receipts for this tenant in the selected year
-      const tenantReceipts = receipts.filter(receipt =>
-        receipt.tenantId === tenant.id &&
-        receipt.type === 'rent' &&
-        new Date(receipt.date).getFullYear() === selectedYear
+      const tenantReceipts = receipts.filter(
+        (receipt) =>
+          receipt.tenantId === tenant.id &&
+          receipt.type === "rent" &&
+          new Date(receipt.date).getFullYear() === selectedYear,
       );
 
-      tenantReceipts.forEach(receipt => {
+      tenantReceipts.forEach((receipt) => {
         const month = new Date(receipt.date).getMonth();
-        const status: PaymentCell['status'] = receipt.status === 'paid' ? 'paid' : 'pending';
+        const status: PaymentCell["status"] =
+          receipt.status === "paid" ? "paid" : "pending";
 
         matrix[tenant.id][month] = {
           status,
           date: receipt.date,
           amount: receipt.amount,
-          receiptId: receipt.id
+          receiptId: receipt.id,
         };
       });
 
@@ -80,9 +116,9 @@ export function PaymentMatrixView(): React.ReactElement {
 
       if (selectedYear === currentYear) {
         for (let month = 0; month <= currentMonth; month++) {
-          if (matrix[tenant.id][month].status === 'none') {
+          if (matrix[tenant.id][month].status === "none") {
             matrix[tenant.id][month] = {
-              status: 'overdue'
+              status: "overdue",
             };
           }
         }
@@ -94,11 +130,11 @@ export function PaymentMatrixView(): React.ReactElement {
 
   const getCellIcon = (cell: PaymentCell) => {
     switch (cell.status) {
-      case 'paid':
+      case "paid":
         return <CheckCircle className="h-4 w-4 text-green-500" />;
-      case 'pending':
+      case "pending":
         return <Clock className="h-4 w-4 text-yellow-500" />;
-      case 'overdue':
+      case "overdue":
         return <XCircle className="h-4 w-4 text-red-500" />;
       default:
         return <div className="h-4 w-4 rounded-full bg-gray-200" />;
@@ -107,22 +143,22 @@ export function PaymentMatrixView(): React.ReactElement {
 
   const getCellColor = (cell: PaymentCell) => {
     switch (cell.status) {
-      case 'paid':
-        return 'bg-[var(--color-success)]/10 border-[var(--color-success)]/30 hover:bg-[var(--color-success)]/20';
-      case 'pending':
-        return 'bg-[var(--color-warning)]/10 border-[var(--color-warning)]/30 hover:bg-[var(--color-warning)]/20';
-      case 'overdue':
-        return 'bg-[var(--color-error)]/10 border-[var(--color-error)]/30 hover:bg-[var(--color-error)]/20';
+      case "paid":
+        return "bg-[var(--color-success)]/10 border-[var(--color-success)]/30 hover:bg-[var(--color-success)]/20";
+      case "pending":
+        return "bg-[var(--color-warning)]/10 border-[var(--color-warning)]/30 hover:bg-[var(--color-warning)]/20";
+      case "overdue":
+        return "bg-[var(--color-error)]/10 border-[var(--color-error)]/30 hover:bg-[var(--color-error)]/20";
       default:
-        return 'bg-[var(--color-muted)]/10 border-[var(--color-border)] hover:bg-[var(--color-muted)]/20';
+        return "bg-[var(--color-muted)]/10 border-[var(--color-border)] hover:bg-[var(--color-muted)]/20";
     }
   };
 
   // Group tenants by property
   const _tenantsByProperty = useMemo(() => {
     const grouped: Record<string, typeof tenants> = {};
-    tenants.forEach(tenant => {
-      const propId = tenant.propertyId || 'unassigned';
+    tenants.forEach((tenant) => {
+      const propId = tenant.propertyId || "unassigned";
       if (!grouped[propId]) grouped[propId] = [];
       grouped[propId].push(tenant);
     });
@@ -142,23 +178,27 @@ export function PaymentMatrixView(): React.ReactElement {
 
   // Filter tenants based on status
   const filteredTenants = useMemo(() => {
-    if (statusFilter === 'all') return tenants;
-    return tenants.filter(tenant => {
+    if (statusFilter === "all") return tenants;
+    return tenants.filter((tenant) => {
       const tenantCells = paymentMatrix[tenant.id] || [];
-      return tenantCells.some(cell => cell.status === statusFilter);
+      return tenantCells.some((cell) => cell.status === statusFilter);
     });
   }, [tenants, paymentMatrix, statusFilter]);
 
   const getTotalPaid = (tenantId: string) => {
-    return paymentMatrix[tenantId]?.reduce((total, cell) => {
-      return total + (cell.status === 'paid' ? (cell.amount || 0) : 0);
-    }, 0) || 0;
+    return (
+      paymentMatrix[tenantId]?.reduce((total, cell) => {
+        return total + (cell.status === "paid" ? cell.amount || 0 : 0);
+      }, 0) || 0
+    );
   };
 
   const getTotalExpected = (tenant: Tenant) => {
     // Calculate expected payments based on lease terms
     // This is a simplified calculation - in reality you'd check lease dates
-    const paidMonths = paymentMatrix[tenant.id]?.filter(cell => cell.status === 'paid').length || 0;
+    const paidMonths =
+      paymentMatrix[tenant.id]?.filter((cell) => cell.status === "paid")
+        .length || 0;
     return paidMonths * tenant.rent;
   };
 
@@ -167,8 +207,12 @@ export function PaymentMatrixView(): React.ReactElement {
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <DollarSign className="h-12 w-12 text-[var(--color-muted-foreground)] mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">No Tenants Yet</h3>
-          <p className="text-[var(--color-muted-foreground)]">Add tenants to start tracking payments</p>
+          <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
+            No Tenants Yet
+          </h3>
+          <p className="text-[var(--color-muted-foreground)]">
+            Add tenants to start tracking payments
+          </p>
         </div>
       </div>
     );
@@ -181,31 +225,36 @@ export function PaymentMatrixView(): React.ReactElement {
           <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
             Payment Tracking Matrix
           </h2>
-          <p className="text-[var(--color-muted-foreground)]">Monthly payment status overview for all tenants</p>
+          <p className="text-[var(--color-muted-foreground)]">
+            Monthly payment status overview for all tenants
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {/* View Mode Toggle */}
           <div className="flex items-center rounded-lg border border-[var(--color-border)] p-1">
             <Button
-              variant={viewMode === 'detailed' ? 'secondary' : 'ghost'}
+              variant={viewMode === "detailed" ? "secondary" : "ghost"}
               size="sm"
-              onClick={() => setViewMode('detailed')}
+              onClick={() => setViewMode("detailed")}
               className="h-7 px-3"
             >
               Detailed
             </Button>
             <Button
-              variant={viewMode === 'heatmap' ? 'secondary' : 'ghost'}
+              variant={viewMode === "heatmap" ? "secondary" : "ghost"}
               size="sm"
-              onClick={() => setViewMode('heatmap')}
+              onClick={() => setViewMode("heatmap")}
               className="h-7 px-3"
             >
               Heatmap
             </Button>
           </div>
-          
+
           {/* Status Filter */}
-          <Select value={statusFilter} onValueChange={(v: typeof statusFilter) => setStatusFilter(v)}>
+          <Select
+            value={statusFilter}
+            onValueChange={(v: typeof statusFilter) => setStatusFilter(v)}
+          >
             <SelectTrigger className="w-32">
               <Filter className="h-4 w-4 mr-2" />
               <SelectValue />
@@ -217,21 +266,24 @@ export function PaymentMatrixView(): React.ReactElement {
               <SelectItem value="overdue">Overdue</SelectItem>
             </SelectContent>
           </Select>
-          
+
           {/* Year Selector */}
-          <Select value={selectedYear.toString()} onValueChange={(value) => setSelectedYear(parseInt(value))}>
+          <Select
+            value={selectedYear.toString()}
+            onValueChange={(value) => setSelectedYear(parseInt(value))}
+          >
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {availableYears.map(year => (
+              {availableYears.map((year) => (
                 <SelectItem key={year} value={year.toString()}>
                   {year}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-          
+
           {/* Export Button */}
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
@@ -244,62 +296,101 @@ export function PaymentMatrixView(): React.ReactElement {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">Total Expected</CardTitle>
+            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+              Total Expected
+            </CardTitle>
             <DollarSign className="h-4 w-4 text-[var(--color-muted-foreground)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[var(--color-foreground)]">
-              {formatCurrency(tenants.reduce((total, tenant) => total + getTotalExpected(tenant), 0))}
+              {formatCurrency(
+                tenants.reduce(
+                  (total, tenant) => total + getTotalExpected(tenant),
+                  0,
+                ),
+              )}
             </div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">For {selectedYear}</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              For {selectedYear}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">Total Received</CardTitle>
+            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+              Total Received
+            </CardTitle>
             <CheckCircle className="h-4 w-4 text-[var(--color-success)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[var(--color-foreground)]">
-              {formatCurrency(tenants.reduce((total, tenant) => total + getTotalPaid(tenant.id), 0))}
+              {formatCurrency(
+                tenants.reduce(
+                  (total, tenant) => total + getTotalPaid(tenant.id),
+                  0,
+                ),
+              )}
             </div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">Paid amounts</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              Paid amounts
+            </p>
           </CardContent>
         </Card>
 
         <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">Outstanding</CardTitle>
+            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+              Outstanding
+            </CardTitle>
             <Clock className="h-4 w-4 text-[var(--color-warning)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[var(--color-foreground)]">
               {formatCurrency(
-                tenants.reduce((total, tenant) => total + getTotalExpected(tenant), 0) -
-                tenants.reduce((total, tenant) => total + getTotalPaid(tenant.id), 0)
+                tenants.reduce(
+                  (total, tenant) => total + getTotalExpected(tenant),
+                  0,
+                ) -
+                  tenants.reduce(
+                    (total, tenant) => total + getTotalPaid(tenant.id),
+                    0,
+                  ),
               )}
             </div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">Pending payments</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              Pending payments
+            </p>
           </CardContent>
         </Card>
 
         <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">Collection Rate</CardTitle>
+            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+              Collection Rate
+            </CardTitle>
             <Calendar className="h-4 w-4 text-[var(--color-muted-foreground)]" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[var(--color-foreground)]">
               {tenants.length > 0
                 ? Math.round(
-                    (tenants.reduce((total, tenant) => total + getTotalPaid(tenant.id), 0) /
-                     tenants.reduce((total, tenant) => total + getTotalExpected(tenant), 0)) * 100
+                    (tenants.reduce(
+                      (total, tenant) => total + getTotalPaid(tenant.id),
+                      0,
+                    ) /
+                      tenants.reduce(
+                        (total, tenant) => total + getTotalExpected(tenant),
+                        0,
+                      )) *
+                      100,
                   )
-                : 0
-              }%
+                : 0}
+              %
             </div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">Payment success rate</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              Payment success rate
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -312,9 +403,12 @@ export function PaymentMatrixView(): React.ReactElement {
       >
         <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
           <CardHeader>
-            <CardTitle className="text-[var(--color-foreground)]">Payment Matrix - {selectedYear}</CardTitle>
+            <CardTitle className="text-[var(--color-foreground)]">
+              Payment Matrix - {selectedYear}
+            </CardTitle>
             <CardDescription>
-              Green: Paid • Yellow: Pending • Red: Overdue • Gray: No payment due
+              Green: Paid • Yellow: Pending • Red: Overdue • Gray: No payment
+              due
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -332,19 +426,30 @@ export function PaymentMatrixView(): React.ReactElement {
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.3 }}
                   >
-                    <th className="text-left py-3 px-4 font-medium text-[var(--color-muted-foreground)]">Tenant</th>
+                    <th
+                      scope="col"
+                      className="text-left py-3 px-4 font-medium text-[var(--color-muted-foreground)]"
+                    >
+                      Tenant
+                    </th>
                     {months.map((month, index) => (
                       <motion.th
                         key={month}
+                        scope="col"
                         className="text-center py-3 px-2 font-medium text-[var(--color-muted-foreground)] text-sm"
                         initial={{ y: -10, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 + (index * 0.05) }}
+                        transition={{ delay: 0.3 + index * 0.05 }}
                       >
                         {month}
                       </motion.th>
                     ))}
-                    <th className="text-right py-3 px-4 font-medium text-[var(--color-muted-foreground)]">Total</th>
+                    <th
+                      scope="col"
+                      className="text-right py-3 px-4 font-medium text-[var(--color-muted-foreground)]"
+                    >
+                      Total
+                    </th>
                   </motion.tr>
                 </thead>
                 <AnimatePresence>
@@ -359,27 +464,36 @@ export function PaymentMatrixView(): React.ReactElement {
                         className="border-b border-[var(--color-border)] hover:bg-[var(--color-hover)] transition-colors duration-200"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.6 + (tenantIndex * 0.1) }}
+                        transition={{ delay: 0.6 + tenantIndex * 0.1 }}
                       >
                         <td className="py-3 px-4">
                           <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
-                            transition={{ delay: 0.7 + (tenantIndex * 0.1) }}
+                            transition={{ delay: 0.7 + tenantIndex * 0.1 }}
                           >
-                            <div className="font-medium text-[var(--color-foreground)]">{tenant.name}</div>
-                            <div className="text-sm text-[var(--color-muted-foreground)]">{formatCurrency(tenant.rent)}/mo</div>
+                            <div className="font-medium text-[var(--color-foreground)]">
+                              {tenant.name}
+                            </div>
+                            <div className="text-sm text-[var(--color-muted-foreground)]">
+                              {formatCurrency(tenant.rent)}/mo
+                            </div>
                           </motion.div>
                         </td>
                         {months.map((month, monthIndex) => {
-                          const cell = paymentMatrix[tenant.id]?.[monthIndex] || { status: 'none' };
+                          const cell = paymentMatrix[tenant.id]?.[
+                            monthIndex
+                          ] || { status: "none" };
                           return (
                             <motion.td
                               key={month}
                               className="py-3 px-2 text-center"
                               initial={{ scale: 0.8, opacity: 0 }}
                               animate={{ scale: 1, opacity: 1 }}
-                              transition={{ delay: 0.8 + (tenantIndex * 0.1) + (monthIndex * 0.05) }}
+                              transition={{
+                                delay:
+                                  0.8 + tenantIndex * 0.1 + monthIndex * 0.05,
+                              }}
                             >
                               <motion.div
                                 className={`inline-flex items-center justify-center w-8 h-8 rounded border ${getCellColor(cell)} cursor-pointer transition-all duration-200 hover:scale-110`}
@@ -388,15 +502,18 @@ export function PaymentMatrixView(): React.ReactElement {
                                 title={
                                   cell.date
                                     ? `${cell.status} on ${new Date(cell.date).toLocaleDateString()} - ${formatCurrency(cell.amount || 0)}`
-                                    : cell.status === 'overdue'
-                                    ? 'Overdue payment'
-                                    : 'No payment'
+                                    : cell.status === "overdue"
+                                      ? "Overdue payment"
+                                      : "No payment"
                                 }
                               >
                                 <motion.div
                                   initial={{ scale: 0 }}
                                   animate={{ scale: 1 }}
-                                  transition={{ delay: 1 + (tenantIndex * 0.1) + (monthIndex * 0.05) }}
+                                  transition={{
+                                    delay:
+                                      1 + tenantIndex * 0.1 + monthIndex * 0.05,
+                                  }}
                                 >
                                   {getCellIcon(cell)}
                                 </motion.div>
@@ -408,7 +525,7 @@ export function PaymentMatrixView(): React.ReactElement {
                           <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.9 + (tenantIndex * 0.1) }}
+                            transition={{ delay: 0.9 + tenantIndex * 0.1 }}
                           >
                             <div className="font-medium text-[var(--color-foreground)]">
                               {formatCurrency(getTotalPaid(tenant.id))}
@@ -434,19 +551,27 @@ export function PaymentMatrixView(): React.ReactElement {
           <div className="flex flex-wrap gap-6">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-[var(--color-success)]" />
-              <span className="text-sm text-[var(--color-muted-foreground)]">Paid</span>
+              <span className="text-sm text-[var(--color-muted-foreground)]">
+                Paid
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-[var(--color-warning)]" />
-              <span className="text-sm text-[var(--color-muted-foreground)]">Pending</span>
+              <span className="text-sm text-[var(--color-muted-foreground)]">
+                Pending
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <XCircle className="h-4 w-4 text-[var(--color-error)]" />
-              <span className="text-sm text-[var(--color-muted-foreground)]">Overdue</span>
+              <span className="text-sm text-[var(--color-muted-foreground)]">
+                Overdue
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded-full bg-[var(--color-muted)]" />
-              <span className="text-sm text-[var(--color-muted-foreground)]">No payment due</span>
+              <span className="text-sm text-[var(--color-muted-foreground)]">
+                No payment due
+              </span>
             </div>
           </div>
         </CardContent>

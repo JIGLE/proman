@@ -1,37 +1,63 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 
 // Custom error types
 export class ValidationError extends Error {
-  constructor(message: string, public field?: string) {
+  constructor(
+    message: string,
+    public field?: string,
+  ) {
     super(message);
-    this.name = 'ValidationError';
+    this.name = "ValidationError";
   }
 }
 
 export class AuthenticationError extends Error {
-  constructor(message: string = 'Authentication required') {
+  constructor(message: string = "Authentication required") {
     super(message);
-    this.name = 'AuthenticationError';
+    this.name = "AuthenticationError";
   }
 }
 
 export class AuthorizationError extends Error {
-  constructor(message: string = 'Insufficient permissions') {
+  constructor(message: string = "Insufficient permissions") {
     super(message);
-    this.name = 'AuthorizationError';
+    this.name = "AuthorizationError";
+  }
+}
+
+export class ResourceNotFoundError extends Error {
+  constructor(resource: string, id?: string) {
+    super(
+      id ? `${resource} with id '${id}' not found` : `${resource} not found`,
+    );
+    this.name = "ResourceNotFoundError";
+  }
+}
+
+export class ForbiddenError extends Error {
+  constructor(message: string = "Access denied") {
+    super(message);
+    this.name = "ForbiddenError";
   }
 }
 
 export class DatabaseError extends Error {
-  constructor(message: string, public originalError?: unknown) {
+  constructor(
+    message: string,
+    public originalError?: unknown,
+  ) {
     super(message);
-    this.name = 'DatabaseError';
+    this.name = "DatabaseError";
   }
 }
 
 // Logger utility
 export class Logger {
-  static log(level: 'info' | 'warn' | 'error', message: string, data?: unknown): void {
+  static log(
+    level: "info" | "warn" | "error",
+    message: string,
+    data?: unknown,
+  ): void {
     const timestamp = new Date().toISOString();
     const logEntry: Record<string, unknown> = {
       timestamp,
@@ -41,9 +67,9 @@ export class Logger {
     if (data !== undefined) logEntry.data = data;
 
     // In production, you might want to use a proper logging service
-    if (level === 'error') {
+    if (level === "error") {
       console.error(JSON.stringify(logEntry));
-    } else if (level === 'warn') {
+    } else if (level === "warn") {
       console.warn(JSON.stringify(logEntry));
     } else {
       // Use debug for informational logs to reduce noise during tests
@@ -52,15 +78,15 @@ export class Logger {
   }
 
   static info(message: string, data?: unknown): void {
-    this.log('info', message, data);
+    this.log("info", message, data);
   }
 
   static warn(message: string, data?: unknown): void {
-    this.log('warn', message, data);
+    this.log("warn", message, data);
   }
 
   static error(message: string, data?: unknown): void {
-    this.log('error', message, data);
+    this.log("error", message, data);
   }
 }
 
@@ -68,19 +94,19 @@ export class Logger {
 export function createErrorResponse(
   error: Error,
   statusCode: number = 500,
-  request?: NextRequest
+  request?: NextRequest,
 ): NextResponse {
   // Log the error
-  Logger.error('API Error', {
+  Logger.error("API Error", {
     error: error.message,
     stack: error.stack,
     url: request?.url,
     method: request?.method,
-    userAgent: request?.headers.get('user-agent'),
+    userAgent: request?.headers.get("user-agent"),
   });
 
   // Determine error response based on error type
-  let message = 'Internal server error';
+  let message = "Internal server error";
   let status = statusCode;
 
   if (error instanceof ValidationError) {
@@ -92,49 +118,63 @@ export function createErrorResponse(
   } else if (error instanceof AuthorizationError) {
     message = error.message;
     status = 403;
+  } else if (error instanceof ResourceNotFoundError) {
+    message = error.message;
+    status = 404;
+  } else if (error instanceof ForbiddenError) {
+    message = error.message;
+    status = 403;
   } else if (error instanceof DatabaseError) {
-    message = 'Database operation failed';
+    message = "Database operation failed";
     status = 500;
   }
 
   return new NextResponse(
     JSON.stringify({
       error: message,
-      ...(error instanceof ValidationError && error.field && { field: error.field }),
-      ...(process.env.NODE_ENV === 'development' && { stack: error.stack }),
+      ...(error instanceof ValidationError &&
+        error.field && { field: error.field }),
+      ...(process.env.NODE_ENV === "development" && { stack: error.stack }),
     }),
     {
       status,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-    }
+    },
   );
 }
 
 // Success response utility
-export function createSuccessResponse(data: unknown, statusCode: number = 200): NextResponse {
-  return new NextResponse(
-    JSON.stringify({ data }),
-    {
-      status: statusCode,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    }
-  );
+export function createSuccessResponse(
+  data: unknown,
+  statusCode: number = 200,
+): NextResponse {
+  return new NextResponse(JSON.stringify({ data }), {
+    status: statusCode,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
 }
 
 // Async error wrapper for API routes (generic to allow typed context)
 export function withErrorHandler<C = unknown>(
-  handler: (request: NextRequest, context?: C) => Promise<Response | NextResponse>
+  handler: (
+    request: NextRequest,
+    context?: C,
+  ) => Promise<Response | NextResponse>,
 ): (request: NextRequest, context?: C) => Promise<Response | NextResponse> {
-  return async (request: NextRequest, context?: C): Promise<Response | NextResponse> => {
+  return async (
+    request: NextRequest,
+    context?: C,
+  ): Promise<Response | NextResponse> => {
     try {
       return await handler(request, context);
     } catch (error: unknown) {
       // If it's an Error, use it, otherwise wrap in a generic Error
-      const err = error instanceof Error ? error : new Error(JSON.stringify(error));
+      const err =
+        error instanceof Error ? error : new Error(JSON.stringify(error));
       return createErrorResponse(err, 500, request);
     }
   };

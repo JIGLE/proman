@@ -12,10 +12,19 @@ services:
       - ./data:/app/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/ready"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:3000/api/ready"]
       interval: 15s
       timeout: 5s
       retries: 3
+      start_period: 30s
+      start_interval: 5s
+    labels:
+      com.truenas.app.name: "ProMan"
+      com.truenas.app.version: "1.0.0"
+      com.truenas.app.icon: "https://raw.githubusercontent.com/JIGLE/proman/main/public/proman-icon.svg"
+      org.opencontainers.image.title: "ProMan"
+      org.opencontainers.image.description: "Property Management System"
+      org.opencontainers.image.source: "https://github.com/JIGLE/proman"
     profiles:
       - prod
 
@@ -62,11 +71,12 @@ services:
     tty: true
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/ready"]
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:3000/api/ready"]
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 40s
+      start_interval: 5s
     profiles:
       - dev
 

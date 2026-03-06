@@ -1,7 +1,7 @@
 /**
  * Security Headers Middleware
  * Implements security best practices via HTTP headers
- * 
+ *
  * Headers implemented:
  * - HSTS (HTTP Strict Transport Security)
  * - X-Frame-Options (Clickjacking protection)
@@ -12,7 +12,7 @@
  * - Content-Security-Policy (XSS and injection protection)
  */
 
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
 export interface SecurityHeadersConfig {
   enableHSTS?: boolean;
@@ -43,46 +43,43 @@ export interface ContentSecurityPolicyDirectives {
 }
 
 /**
- * Default CSP directives - restrictive but functional
+ * Generate a cryptographic nonce for CSP headers.
+ * Must be called per-request for script/style allowlisting.
+ */
+export function generateCSPNonce(): string {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Buffer.from(array).toString("base64");
+}
+
+/**
+ * Default CSP directives - restrictive, nonce-based
  */
 const DEFAULT_CSP_DIRECTIVES: ContentSecurityPolicyDirectives = {
   defaultSrc: ["'self'"],
   scriptSrc: [
     "'self'",
-    "'unsafe-inline'", // Required for Next.js inline scripts - TODO: use nonces
-    "'unsafe-eval'",   // Required for Next.js dev mode - remove in production
-    'https://accounts.google.com',
-    'https://apis.google.com',
+    // Nonce is injected at runtime via applySecurityHeaders
+    ...(process.env.NODE_ENV !== "production" ? ["'unsafe-eval'"] : []),
+    "https://accounts.google.com",
+    "https://apis.google.com",
   ],
   styleSrc: [
     "'self'",
-    "'unsafe-inline'", // Required for styled-components/CSS-in-JS
-    'https://fonts.googleapis.com',
+    // Nonce is injected at runtime via applySecurityHeaders
+    "https://fonts.googleapis.com",
   ],
-  imgSrc: [
-    "'self'",
-    'data:',
-    'blob:',
-    'https:',
-  ],
-  fontSrc: [
-    "'self'",
-    'data:',
-    'https://fonts.gstatic.com',
-  ],
+  imgSrc: ["'self'", "data:", "blob:", "https:"],
+  fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
   connectSrc: [
     "'self'",
-    'https://accounts.google.com',
-    'https://api.stripe.com',
+    "https://accounts.google.com",
+    "https://api.stripe.com",
   ],
-  frameSrc: [
-    "'self'",
-    'https://accounts.google.com',
-    'https://js.stripe.com',
-  ],
+  frameSrc: ["'self'", "https://accounts.google.com", "https://js.stripe.com"],
   objectSrc: ["'none'"],
   mediaSrc: ["'self'"],
-  workerSrc: ["'self'", 'blob:'],
+  workerSrc: ["'self'", "blob:"],
   formAction: ["'self'"],
   frameAncestors: ["'self'"],
   baseUri: ["'self'"],
@@ -90,67 +87,75 @@ const DEFAULT_CSP_DIRECTIVES: ContentSecurityPolicyDirectives = {
 };
 
 /**
- * Build CSP header value from directives
+ * Build CSP header value from directives, injecting a nonce for script/style sources.
  */
-function buildCSPHeader(directives: ContentSecurityPolicyDirectives): string {
+function buildCSPHeader(
+  directives: ContentSecurityPolicyDirectives,
+  nonce?: string,
+): string {
   const parts: string[] = [];
 
   if (directives.defaultSrc) {
-    parts.push(`default-src ${directives.defaultSrc.join(' ')}`);
+    parts.push(`default-src ${directives.defaultSrc.join(" ")}`);
   }
   if (directives.scriptSrc) {
-    parts.push(`script-src ${directives.scriptSrc.join(' ')}`);
+    const scriptParts = [...directives.scriptSrc];
+    if (nonce) scriptParts.push(`'nonce-${nonce}'`);
+    parts.push(`script-src ${scriptParts.join(" ")}`);
   }
   if (directives.styleSrc) {
-    parts.push(`style-src ${directives.styleSrc.join(' ')}`);
+    const styleParts = [...directives.styleSrc];
+    if (nonce) styleParts.push(`'nonce-${nonce}'`);
+    parts.push(`style-src ${styleParts.join(" ")}`);
   }
   if (directives.imgSrc) {
-    parts.push(`img-src ${directives.imgSrc.join(' ')}`);
+    parts.push(`img-src ${directives.imgSrc.join(" ")}`);
   }
   if (directives.fontSrc) {
-    parts.push(`font-src ${directives.fontSrc.join(' ')}`);
+    parts.push(`font-src ${directives.fontSrc.join(" ")}`);
   }
   if (directives.connectSrc) {
-    parts.push(`connect-src ${directives.connectSrc.join(' ')}`);
+    parts.push(`connect-src ${directives.connectSrc.join(" ")}`);
   }
   if (directives.frameSrc) {
-    parts.push(`frame-src ${directives.frameSrc.join(' ')}`);
+    parts.push(`frame-src ${directives.frameSrc.join(" ")}`);
   }
   if (directives.objectSrc) {
-    parts.push(`object-src ${directives.objectSrc.join(' ')}`);
+    parts.push(`object-src ${directives.objectSrc.join(" ")}`);
   }
   if (directives.mediaSrc) {
-    parts.push(`media-src ${directives.mediaSrc.join(' ')}`);
+    parts.push(`media-src ${directives.mediaSrc.join(" ")}`);
   }
   if (directives.workerSrc) {
-    parts.push(`worker-src ${directives.workerSrc.join(' ')}`);
+    parts.push(`worker-src ${directives.workerSrc.join(" ")}`);
   }
   if (directives.formAction) {
-    parts.push(`form-action ${directives.formAction.join(' ')}`);
+    parts.push(`form-action ${directives.formAction.join(" ")}`);
   }
   if (directives.frameAncestors) {
-    parts.push(`frame-ancestors ${directives.frameAncestors.join(' ')}`);
+    parts.push(`frame-ancestors ${directives.frameAncestors.join(" ")}`);
   }
   if (directives.baseUri) {
-    parts.push(`base-uri ${directives.baseUri.join(' ')}`);
+    parts.push(`base-uri ${directives.baseUri.join(" ")}`);
   }
   if (directives.upgradeInsecureRequests) {
-    parts.push('upgrade-insecure-requests');
+    parts.push("upgrade-insecure-requests");
   }
 
-  return parts.join('; ');
+  return parts.join("; ");
 }
 
 /**
  * Apply security headers to a response
- * 
+ *
  * @param response - The response to modify
  * @param config - Optional configuration to enable/disable specific headers
  * @returns Modified response with security headers
  */
 export function applySecurityHeaders(
   response: NextResponse,
-  config: SecurityHeadersConfig = {}
+  config: SecurityHeadersConfig = {},
+  nonce?: string,
 ): NextResponse {
   const {
     enableHSTS = true,
@@ -164,45 +169,49 @@ export function applySecurityHeaders(
   } = config;
 
   // HSTS: Force HTTPS for 1 year, include subdomains
-  if (enableHSTS && process.env.NODE_ENV === 'production') {
+  if (enableHSTS && process.env.NODE_ENV === "production") {
     response.headers.set(
-      'Strict-Transport-Security',
-      'max-age=31536000; includeSubDomains; preload'
+      "Strict-Transport-Security",
+      "max-age=31536000; includeSubDomains; preload",
     );
   }
 
   // X-Frame-Options: Prevent clickjacking
   if (enableFrameProtection) {
-    response.headers.set('X-Frame-Options', 'DENY');
+    response.headers.set("X-Frame-Options", "DENY");
   }
 
   // X-Content-Type-Options: Prevent MIME sniffing
   if (enableContentTypeProtection) {
-    response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set("X-Content-Type-Options", "nosniff");
   }
 
   // X-XSS-Protection: Legacy XSS protection for older browsers
   if (enableXSSProtection) {
-    response.headers.set('X-XSS-Protection', '1; mode=block');
+    response.headers.set("X-XSS-Protection", "1; mode=block");
   }
 
   // Referrer-Policy: Control referrer information
   if (enableReferrerPolicy) {
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+    response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   }
 
   // Permissions-Policy: Disable unnecessary browser features
   if (enablePermissionsPolicy) {
     response.headers.set(
-      'Permissions-Policy',
-      'camera=(), microphone=(), geolocation=(), interest-cohort=()'
+      "Permissions-Policy",
+      "camera=(), microphone=(), geolocation=(), interest-cohort=()",
     );
   }
 
   // Content-Security-Policy: XSS and injection protection
   if (enableCSP) {
-    const cspHeader = buildCSPHeader(cspDirectives);
-    response.headers.set('Content-Security-Policy', cspHeader);
+    const cspHeader = buildCSPHeader(cspDirectives, nonce);
+    response.headers.set("Content-Security-Policy", cspHeader);
+    if (nonce) {
+      // Pass the nonce downstream so pages/components can read it
+      response.headers.set("x-csp-nonce", nonce);
+    }
   }
 
   return response;
@@ -210,7 +219,7 @@ export function applySecurityHeaders(
 
 /**
  * Higher-order function to wrap API handlers with security headers
- * 
+ *
  * @example
  * ```typescript
  * export const GET = withSecurityHeaders(async (request) => {
@@ -220,7 +229,7 @@ export function applySecurityHeaders(
  */
 export function withSecurityHeaders(
   handler: (request: Request) => Promise<Response>,
-  config?: SecurityHeadersConfig
+  config?: SecurityHeadersConfig,
 ) {
   return async (request: Request): Promise<Response> => {
     const response = await handler(request);

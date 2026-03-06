@@ -11,12 +11,22 @@ type DebugAuthInfo = {
   timestamp: string;
 };
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: Request): Promise<NextResponse> {
   // Block access in production to prevent information leakage
   if (process.env.NODE_ENV === "production") {
     return NextResponse.json(
       { error: "Debug endpoints are disabled in production" },
       { status: 403 },
+    );
+  }
+
+  // Require a shared secret even in non-production environments
+  const authHeader = request.headers.get("authorization") || "";
+  const expectedSecret = process.env.INIT_SECRET;
+  if (expectedSecret && authHeader !== `Bearer ${expectedSecret}`) {
+    return NextResponse.json(
+      { error: "Unauthorized: provide Authorization: Bearer <INIT_SECRET>" },
+      { status: 401 },
     );
   }
 

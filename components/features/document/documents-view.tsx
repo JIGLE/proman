@@ -1,14 +1,28 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useSession } from 'next-auth/react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { useState, useEffect, useCallback } from "react";
+import { useSession } from "next-auth/react";
+import { apiFetch } from "@/lib/utils/api-client";
+import { useCsrf } from "@/lib/contexts/csrf-context";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
+} from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,12 +42,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog';
-import { 
-  Upload, 
-  FileText, 
-  Download, 
-  Trash2, 
+} from "@/components/ui/alert-dialog";
+import {
+  Upload,
+  FileText,
+  Download,
+  Trash2,
   Search,
   File,
   Image,
@@ -41,7 +55,7 @@ import {
   FilePlus,
   Eye,
   Filter,
-} from 'lucide-react';
+} from "lucide-react";
 
 // Types
 interface Document {
@@ -65,7 +79,14 @@ interface Document {
   updatedAt: string;
 }
 
-type DocumentType = 'contract' | 'invoice' | 'receipt' | 'photo' | 'floor_plan' | 'certificate' | 'other';
+type DocumentType =
+  | "contract"
+  | "invoice"
+  | "receipt"
+  | "photo"
+  | "floor_plan"
+  | "certificate"
+  | "other";
 
 interface DocumentStats {
   totalDocuments: number;
@@ -89,36 +110,64 @@ interface Owner {
 }
 
 // Document type labels and colors
-const documentTypeConfig: Record<DocumentType, { label: string; color: string; icon: typeof FileText }> = {
-  contract: { label: 'Contract', color: 'bg-blue-100 text-blue-800', icon: FileText },
-  invoice: { label: 'Invoice', color: 'bg-green-100 text-green-800', icon: File },
-  receipt: { label: 'Receipt', color: 'bg-emerald-100 text-emerald-800', icon: File },
-  photo: { label: 'Photo', color: 'bg-purple-100 text-purple-800', icon: Image },
-  floor_plan: { label: 'Floor Plan', color: 'bg-orange-100 text-orange-800', icon: FileImage },
-  certificate: { label: 'Certificate', color: 'bg-yellow-100 text-yellow-800', icon: FileText },
-  other: { label: 'Other', color: 'bg-gray-100 text-gray-800', icon: File },
+const documentTypeConfig: Record<
+  DocumentType,
+  { label: string; color: string; icon: typeof FileText }
+> = {
+  contract: {
+    label: "Contract",
+    color: "bg-blue-100 text-blue-800",
+    icon: FileText,
+  },
+  invoice: {
+    label: "Invoice",
+    color: "bg-green-100 text-green-800",
+    icon: File,
+  },
+  receipt: {
+    label: "Receipt",
+    color: "bg-emerald-100 text-emerald-800",
+    icon: File,
+  },
+  photo: {
+    label: "Photo",
+    color: "bg-purple-100 text-purple-800",
+    icon: Image,
+  },
+  floor_plan: {
+    label: "Floor Plan",
+    color: "bg-orange-100 text-orange-800",
+    icon: FileImage,
+  },
+  certificate: {
+    label: "Certificate",
+    color: "bg-yellow-100 text-yellow-800",
+    icon: FileText,
+  },
+  other: { label: "Other", color: "bg-gray-100 text-gray-800", icon: File },
 };
 
 // Format file size
 function formatFileSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }
 
 // Format date
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 }
 
 export function DocumentsView() {
   const { data: session } = useSession();
+  const { token: csrfToken } = useCsrf();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [stats, setStats] = useState<DocumentStats | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -126,90 +175,97 @@ export function DocumentsView() {
   const [owners, setOwners] = useState<Owner[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Filter state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<DocumentType | 'all'>('all');
-  const [propertyFilter, setPropertyFilter] = useState<string>('all');
-  
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState<DocumentType | "all">("all");
+  const [propertyFilter, setPropertyFilter] = useState<string>("all");
+
   // Upload dialog state
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [uploadForm, setUploadForm] = useState({
-    name: '',
-    description: '',
-    type: 'other' as DocumentType,
-    propertyId: '',
-    tenantId: '',
-    ownerId: '',
+    name: "",
+    description: "",
+    type: "other" as DocumentType,
+    propertyId: "",
+    tenantId: "",
+    ownerId: "",
     file: null as File | null,
   });
   const [uploading, setUploading] = useState(false);
-  
+
   // Template dialog state
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<'lease' | 'receipt' | 'notice'>('lease');
+  const [selectedTemplate, setSelectedTemplate] = useState<
+    "lease" | "receipt" | "notice"
+  >("lease");
   const [generatingTemplate, setGeneratingTemplate] = useState(false);
 
   // Fetch documents
   const fetchDocuments = useCallback(async () => {
     try {
       const params = new URLSearchParams();
-      if (typeFilter !== 'all') params.set('type', typeFilter);
-      if (propertyFilter !== 'all') params.set('propertyId', propertyFilter);
-      if (searchTerm) params.set('search', searchTerm);
-      
-      const response = await fetch(`/api/documents?${params}`);
-      if (!response.ok) throw new Error('Failed to fetch documents');
-      const data = await response.json();
-      setDocuments(data.data || []);
+      if (typeFilter !== "all") params.set("type", typeFilter);
+      if (propertyFilter !== "all") params.set("propertyId", propertyFilter);
+      if (searchTerm) params.set("search", searchTerm);
+
+      const data = await apiFetch<{ data: Document[] } | Document[]>(
+        `/api/documents?${params}`,
+        csrfToken,
+      );
+      setDocuments(Array.isArray(data) ? data : data.data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load documents');
+      setError(err instanceof Error ? err.message : "Failed to load documents");
     }
-  }, [typeFilter, propertyFilter, searchTerm]);
+  }, [typeFilter, propertyFilter, searchTerm, csrfToken]);
 
   // Fetch stats
   const fetchStats = useCallback(async () => {
     try {
-      const response = await fetch('/api/documents/stats');
-      if (!response.ok) throw new Error('Failed to fetch stats');
-      const data = await response.json();
-      setStats(data.data);
+      const data = await apiFetch<{ data: DocumentStats } | DocumentStats>(
+        "/api/documents/stats",
+        csrfToken,
+      );
+      setStats(
+        (data as { data: DocumentStats }).data ?? (data as DocumentStats),
+      );
     } catch (err) {
-      console.error('Failed to fetch stats:', err);
+      console.error("Failed to fetch stats:", err);
     }
-  }, []);
+  }, [csrfToken]);
 
   // Fetch reference data
   const fetchReferenceData = useCallback(async () => {
     try {
-      const [propsRes, tenantsRes, ownersRes] = await Promise.all([
-        fetch('/api/properties'),
-        fetch('/api/tenants'),
-        fetch('/api/owners'),
+      const [propsData, tenantsData, ownersData] = await Promise.all([
+        apiFetch<{ data: Property[] } | Property[]>(
+          "/api/properties",
+          csrfToken,
+        ),
+        apiFetch<{ data: Tenant[] } | Tenant[]>("/api/tenants", csrfToken),
+        apiFetch<{ data: Owner[] } | Owner[]>("/api/owners", csrfToken),
       ]);
-      
-      if (propsRes.ok) {
-        const data = await propsRes.json();
-        setProperties(data.data || []);
-      }
-      if (tenantsRes.ok) {
-        const data = await tenantsRes.json();
-        setTenants(data.data || []);
-      }
-      if (ownersRes.ok) {
-        const data = await ownersRes.json();
-        setOwners(data.data || []);
-      }
+
+      setProperties(
+        Array.isArray(propsData) ? propsData : propsData.data || [],
+      );
+      setTenants(
+        Array.isArray(tenantsData) ? tenantsData : tenantsData.data || [],
+      );
+      setOwners(Array.isArray(ownersData) ? ownersData : ownersData.data || []);
     } catch (err) {
-      console.error('Failed to fetch reference data:', err);
+      console.error("Failed to fetch reference data:", err);
     }
-  }, []);
+  }, [csrfToken]);
 
   // Initial load
   useEffect(() => {
     if (session) {
-      Promise.all([fetchDocuments(), fetchStats(), fetchReferenceData()])
-        .finally(() => setLoading(false));
+      Promise.all([
+        fetchDocuments(),
+        fetchStats(),
+        fetchReferenceData(),
+      ]).finally(() => setLoading(false));
     }
   }, [session, fetchDocuments, fetchStats, fetchReferenceData]);
 
@@ -217,7 +273,7 @@ export function DocumentsView() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setUploadForm(prev => ({
+      setUploadForm((prev) => ({
         ...prev,
         file,
         name: prev.name || file.name,
@@ -228,7 +284,7 @@ export function DocumentsView() {
   // Upload document
   const handleUpload = async () => {
     if (!uploadForm.file || !uploadForm.name) return;
-    
+
     setUploading(true);
     try {
       // Convert file to base64
@@ -236,16 +292,17 @@ export function DocumentsView() {
       const fileContent = await new Promise<string>((resolve, reject) => {
         reader.onload = () => {
           const result = reader.result as string;
-          resolve(result.split(',')[1]); // Remove data URL prefix
+          resolve(result.split(",")[1]); // Remove data URL prefix
         };
         reader.onerror = reject;
         reader.readAsDataURL(uploadForm.file!);
       });
 
-      const response = await fetch('/api/documents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const response = await apiFetch<Record<string, unknown>>(
+        "/api/documents",
+        csrfToken,
+        "POST",
+        {
           name: uploadForm.name,
           description: uploadForm.description || undefined,
           type: uploadForm.type,
@@ -254,28 +311,23 @@ export function DocumentsView() {
           propertyId: uploadForm.propertyId || undefined,
           tenantId: uploadForm.tenantId || undefined,
           ownerId: uploadForm.ownerId || undefined,
-        }),
-      });
-
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Upload failed');
-      }
+        },
+      );
 
       setUploadDialogOpen(false);
       setUploadForm({
-        name: '',
-        description: '',
-        type: 'other',
-        propertyId: '',
-        tenantId: '',
-        ownerId: '',
+        name: "",
+        description: "",
+        type: "other",
+        propertyId: "",
+        tenantId: "",
+        ownerId: "",
         file: null,
       });
       fetchDocuments();
       fetchStats();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Upload failed');
+      setError(err instanceof Error ? err.message : "Upload failed");
     } finally {
       setUploading(false);
     }
@@ -285,11 +337,11 @@ export function DocumentsView() {
   const handleDownload = async (doc: Document) => {
     try {
       const response = await fetch(`/api/documents/${doc.id}/download`);
-      if (!response.ok) throw new Error('Download failed');
-      
+      if (!response.ok) throw new Error("Download failed");
+
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.href = url;
       a.download = doc.name;
       document.body.appendChild(a);
@@ -297,36 +349,35 @@ export function DocumentsView() {
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Download failed');
+      setError(err instanceof Error ? err.message : "Download failed");
     }
   };
 
   // Delete document
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/documents/${id}`, {
-        method: 'DELETE',
-      });
-      
-      if (!response.ok) throw new Error('Delete failed');
-      
+      await apiFetch(`/api/documents/${id}`, csrfToken, "DELETE");
+
       fetchDocuments();
       fetchStats();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Delete failed');
+      setError(err instanceof Error ? err.message : "Delete failed");
     }
   };
 
   // Generate template
-  const handleGenerateTemplate = async (format: 'html' | 'pdf') => {
+  const handleGenerateTemplate = async (format: "html" | "pdf") => {
     setGeneratingTemplate(true);
     try {
       // For demo, use placeholder data - in real app, this would come from a form
       const templateData = getTemplateData(selectedTemplate);
-      
-      const response = await fetch('/api/documents/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+
+      const response = await fetch("/api/documents/generate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
+        },
         body: JSON.stringify({
           templateType: selectedTemplate,
           format,
@@ -336,18 +387,18 @@ export function DocumentsView() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || 'Generation failed');
+        throw new Error(data.error || "Generation failed");
       }
 
-      if (format === 'html') {
+      if (format === "html") {
         const html = await response.text();
-        const blob = new Blob([html], { type: 'text/html' });
+        const blob = new Blob([html], { type: "text/html" });
         const url = window.URL.createObjectURL(blob);
-        window.open(url, '_blank');
+        window.open(url, "_blank");
       } else {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = url;
         a.download = `${selectedTemplate}_document.pdf`;
         document.body.appendChild(a);
@@ -355,54 +406,59 @@ export function DocumentsView() {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
       }
-      
+
       setTemplateDialogOpen(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Generation failed');
+      setError(err instanceof Error ? err.message : "Generation failed");
     } finally {
       setGeneratingTemplate(false);
     }
   };
 
   // Get sample template data
-  const getTemplateData = (type: 'lease' | 'receipt' | 'notice') => {
+  const getTemplateData = (type: "lease" | "receipt" | "notice") => {
     switch (type) {
-      case 'lease':
+      case "lease":
         return {
-          propertyName: 'Sample Property',
-          propertyAddress: '123 Main Street, City, State 12345',
-          tenantName: 'John Doe',
-          tenantEmail: 'john@example.com',
-          ownerName: 'Jane Smith',
-          startDate: new Date().toISOString().split('T')[0],
-          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          propertyName: "Sample Property",
+          propertyAddress: "123 Main Street, City, State 12345",
+          tenantName: "John Doe",
+          tenantEmail: "john@example.com",
+          ownerName: "Jane Smith",
+          startDate: new Date().toISOString().split("T")[0],
+          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
+            .toISOString()
+            .split("T")[0],
           monthlyRent: 1500,
           securityDeposit: 3000,
-          currency: 'USD',
+          currency: "USD",
           paymentDueDay: 1,
         };
-      case 'receipt':
+      case "receipt":
         return {
           receiptNumber: `RCP-${Date.now()}`,
-          receiptDate: new Date().toISOString().split('T')[0],
+          receiptDate: new Date().toISOString().split("T")[0],
           paymentAmount: 1500,
-          paymentPeriod: new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
-          currency: 'USD',
-          tenantName: 'John Doe',
-          propertyName: 'Sample Property',
-          propertyAddress: '123 Main Street, City, State 12345',
-          landlordName: 'Jane Smith',
+          paymentPeriod: new Date().toLocaleDateString("en-US", {
+            month: "long",
+            year: "numeric",
+          }),
+          currency: "USD",
+          tenantName: "John Doe",
+          propertyName: "Sample Property",
+          propertyAddress: "123 Main Street, City, State 12345",
+          landlordName: "Jane Smith",
         };
-      case 'notice':
+      case "notice":
         return {
-          noticeType: 'general',
-          recipientName: 'John Doe',
-          recipientAddress: '123 Main Street, Unit 1, City, State 12345',
-          propertyAddress: '123 Main Street, City, State 12345',
-          issueDate: new Date().toISOString().split('T')[0],
-          description: 'This is a sample notice for demonstration purposes.',
-          senderName: 'Property Management',
-          senderTitle: 'Property Manager',
+          noticeType: "general",
+          recipientName: "John Doe",
+          recipientAddress: "123 Main Street, Unit 1, City, State 12345",
+          propertyAddress: "123 Main Street, City, State 12345",
+          issueDate: new Date().toISOString().split("T")[0],
+          description: "This is a sample notice for demonstration purposes.",
+          senderName: "Property Management",
+          senderTitle: "Property Manager",
         };
     }
   };
@@ -410,7 +466,9 @@ export function DocumentsView() {
   if (!session) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Please sign in to view documents</p>
+        <p className="text-muted-foreground">
+          Please sign in to view documents
+        </p>
       </div>
     );
   }
@@ -434,7 +492,10 @@ export function DocumentsView() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+          <Dialog
+            open={templateDialogOpen}
+            onOpenChange={setTemplateDialogOpen}
+          >
             <DialogTrigger asChild>
               <Button variant="outline">
                 <FilePlus className="mr-2 h-4 w-4" />
@@ -451,7 +512,12 @@ export function DocumentsView() {
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label>Template Type</Label>
-                  <Select value={selectedTemplate} onValueChange={(v) => setSelectedTemplate(v as typeof selectedTemplate)}>
+                  <Select
+                    value={selectedTemplate}
+                    onValueChange={(v) =>
+                      setSelectedTemplate(v as typeof selectedTemplate)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -463,22 +529,30 @@ export function DocumentsView() {
                   </Select>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  This will generate a sample document. For production use, connect this to your actual property and tenant data.
+                  This will generate a sample document. For production use,
+                  connect this to your actual property and tenant data.
                 </p>
               </div>
               <DialogFooter className="gap-2">
-                <Button variant="outline" onClick={() => handleGenerateTemplate('html')} disabled={generatingTemplate}>
+                <Button
+                  variant="outline"
+                  onClick={() => handleGenerateTemplate("html")}
+                  disabled={generatingTemplate}
+                >
                   <Eye className="mr-2 h-4 w-4" />
                   Preview HTML
                 </Button>
-                <Button onClick={() => handleGenerateTemplate('pdf')} disabled={generatingTemplate}>
+                <Button
+                  onClick={() => handleGenerateTemplate("pdf")}
+                  disabled={generatingTemplate}
+                >
                   <Download className="mr-2 h-4 w-4" />
                   Download PDF
                 </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          
+
           <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -508,20 +582,37 @@ export function DocumentsView() {
                   <Input
                     id="name"
                     value={uploadForm.name}
-                    onChange={(e) => setUploadForm(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setUploadForm((prev) => ({
+                        ...prev,
+                        name: e.target.value,
+                      }))
+                    }
                     placeholder="Document name"
                   />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="type">Type</Label>
-                  <Select value={uploadForm.type} onValueChange={(v) => setUploadForm(prev => ({ ...prev, type: v as DocumentType }))}>
+                  <Select
+                    value={uploadForm.type}
+                    onValueChange={(v) =>
+                      setUploadForm((prev) => ({
+                        ...prev,
+                        type: v as DocumentType,
+                      }))
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(documentTypeConfig).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>{config.label}</SelectItem>
-                      ))}
+                      {Object.entries(documentTypeConfig).map(
+                        ([key, config]) => (
+                          <SelectItem key={key} value={key}>
+                            {config.label}
+                          </SelectItem>
+                        ),
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
@@ -530,7 +621,12 @@ export function DocumentsView() {
                   <Textarea
                     id="description"
                     value={uploadForm.description}
-                    onChange={(e) => setUploadForm(prev => ({ ...prev, description: e.target.value }))}
+                    onChange={(e) =>
+                      setUploadForm((prev) => ({
+                        ...prev,
+                        description: e.target.value,
+                      }))
+                    }
                     placeholder="Brief description"
                     rows={2}
                   />
@@ -538,36 +634,57 @@ export function DocumentsView() {
                 <div className="grid gap-2">
                   <Label>Link to (optional)</Label>
                   <div className="grid grid-cols-3 gap-2">
-                    <Select value={uploadForm.propertyId} onValueChange={(v) => setUploadForm(prev => ({ ...prev, propertyId: v }))}>
+                    <Select
+                      value={uploadForm.propertyId}
+                      onValueChange={(v) =>
+                        setUploadForm((prev) => ({ ...prev, propertyId: v }))
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Property" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="">None</SelectItem>
-                        {properties.map(p => (
-                          <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                        {properties.map((p) => (
+                          <SelectItem key={p.id} value={p.id}>
+                            {p.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Select value={uploadForm.tenantId} onValueChange={(v) => setUploadForm(prev => ({ ...prev, tenantId: v }))}>
+                    <Select
+                      value={uploadForm.tenantId}
+                      onValueChange={(v) =>
+                        setUploadForm((prev) => ({ ...prev, tenantId: v }))
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Tenant" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="">None</SelectItem>
-                        {tenants.map(t => (
-                          <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                        {tenants.map((t) => (
+                          <SelectItem key={t.id} value={t.id}>
+                            {t.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    <Select value={uploadForm.ownerId} onValueChange={(v) => setUploadForm(prev => ({ ...prev, ownerId: v }))}>
+                    <Select
+                      value={uploadForm.ownerId}
+                      onValueChange={(v) =>
+                        setUploadForm((prev) => ({ ...prev, ownerId: v }))
+                      }
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Owner" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="">None</SelectItem>
-                        {owners.map(o => (
-                          <SelectItem key={o.id} value={o.id}>{o.name}</SelectItem>
+                        {owners.map((o) => (
+                          <SelectItem key={o.id} value={o.id}>
+                            {o.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -575,9 +692,17 @@ export function DocumentsView() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>Cancel</Button>
-                <Button onClick={handleUpload} disabled={uploading || !uploadForm.file || !uploadForm.name}>
-                  {uploading ? 'Uploading...' : 'Upload'}
+                <Button
+                  variant="outline"
+                  onClick={() => setUploadDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleUpload}
+                  disabled={uploading || !uploadForm.file || !uploadForm.name}
+                >
+                  {uploading ? "Uploading..." : "Upload"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -589,7 +714,9 @@ export function DocumentsView() {
       {error && (
         <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-lg">
           {error}
-          <button onClick={() => setError(null)} className="ml-2 underline">Dismiss</button>
+          <button onClick={() => setError(null)} className="ml-2 underline">
+            Dismiss
+          </button>
         </div>
       )}
 
@@ -605,19 +732,25 @@ export function DocumentsView() {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Total Size</CardDescription>
-              <CardTitle className="text-3xl">{formatFileSize(stats.totalSize)}</CardTitle>
+              <CardTitle className="text-3xl">
+                {formatFileSize(stats.totalSize)}
+              </CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Contracts</CardDescription>
-              <CardTitle className="text-3xl">{stats.byType.contract || 0}</CardTitle>
+              <CardTitle className="text-3xl">
+                {stats.byType.contract || 0}
+              </CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Photos</CardDescription>
-              <CardTitle className="text-3xl">{stats.byType.photo || 0}</CardTitle>
+              <CardTitle className="text-3xl">
+                {stats.byType.photo || 0}
+              </CardTitle>
             </CardHeader>
           </Card>
         </div>
@@ -638,7 +771,10 @@ export function DocumentsView() {
                 />
               </div>
             </div>
-            <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as DocumentType | 'all')}>
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => setTypeFilter(v as DocumentType | "all")}
+            >
               <SelectTrigger className="w-[180px]">
                 <Filter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder="Filter by type" />
@@ -646,7 +782,9 @@ export function DocumentsView() {
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
                 {Object.entries(documentTypeConfig).map(([key, config]) => (
-                  <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                  <SelectItem key={key} value={key}>
+                    {config.label}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -656,8 +794,10 @@ export function DocumentsView() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Properties</SelectItem>
-                {properties.map(p => (
-                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                {properties.map((p) => (
+                  <SelectItem key={p.id} value={p.id}>
+                    {p.name}
+                  </SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -670,7 +810,7 @@ export function DocumentsView() {
         <CardHeader>
           <CardTitle>All Documents</CardTitle>
           <CardDescription>
-            {documents.length} document{documents.length !== 1 ? 's' : ''} found
+            {documents.length} document{documents.length !== 1 ? "s" : ""} found
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -678,14 +818,16 @@ export function DocumentsView() {
             <div className="text-center py-12">
               <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-semibold">No documents</h3>
-              <p className="text-muted-foreground">Upload your first document to get started</p>
+              <p className="text-muted-foreground">
+                Upload your first document to get started
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
               {documents.map((doc) => {
                 const config = documentTypeConfig[doc.type];
                 const Icon = config.icon;
-                
+
                 return (
                   <div
                     key={doc.id}
@@ -720,12 +862,18 @@ export function DocumentsView() {
                           )}
                         </div>
                         {doc.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{doc.description}</p>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {doc.description}
+                          </p>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)}>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDownload(doc)}
+                      >
                         <Download className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
@@ -738,12 +886,17 @@ export function DocumentsView() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Delete Document</AlertDialogTitle>
                             <AlertDialogDescription>
-                              Are you sure you want to delete &quot;{doc.name}&quot;? This action cannot be undone.
+                              Are you sure you want to delete &quot;{doc.name}
+                              &quot;? This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(doc.id)}>Delete</AlertDialogAction>
+                            <AlertDialogAction
+                              onClick={() => handleDelete(doc.id)}
+                            >
+                              Delete
+                            </AlertDialogAction>
                           </AlertDialogFooter>
                         </AlertDialogContent>
                       </AlertDialog>

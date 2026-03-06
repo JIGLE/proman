@@ -34,6 +34,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
+import { useCsrf } from "@/lib/contexts/csrf-context";
+import { apiFetch } from "@/lib/utils/api-client";
 import { cn } from "@/lib/utils/utils";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -57,6 +59,7 @@ export function InvoicesView({
 }: InvoicesViewProps): React.ReactElement {
   const { success, error } = useToast();
   const { formatCurrency } = useCurrency();
+  const { token: csrfToken } = useCsrf();
   const confirmDialog = useConfirmDialog();
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -100,11 +103,11 @@ export function InvoicesView({
   const fetchInvoices = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/invoices");
-      if (response.ok) {
-        const data = await response.json();
-        setInvoices(data.data || []);
-      }
+      const data = await apiFetch<{ data: Invoice[] } | Invoice[]>(
+        "/api/invoices",
+        csrfToken,
+      );
+      setInvoices(Array.isArray(data) ? data : data.data || []);
     } catch (err) {
       console.error("Failed to fetch invoices:", err);
     } finally {
@@ -154,10 +157,11 @@ export function InvoicesView({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/invoices", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const response = await apiFetch<{ message?: string }>(
+        "/api/invoices",
+        csrfToken,
+        "POST",
+        {
           ...formData,
           lineItems:
             formData.amount > 0
@@ -170,21 +174,17 @@ export function InvoicesView({
                   },
                 ]
               : undefined,
-        }),
-      });
+        },
+      );
 
-      if (response.ok) {
-        success("Invoice created successfully!");
-        setIsDialogOpen(false);
-        resetForm();
-        fetchInvoices();
-      } else {
-        const data = await response.json();
-        error(data.message || "Failed to create invoice");
-      }
+      success("Invoice created successfully!");
+      setIsDialogOpen(false);
+      resetForm();
+      fetchInvoices();
     } catch (err) {
-      error("Failed to create invoice");
-      console.error(err);
+      const msg =
+        err instanceof Error ? err.message : "Failed to create invoice";
+      error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -195,27 +195,25 @@ export function InvoicesView({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/invoices/batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const data = await apiFetch<{ successCount: number; message?: string }>(
+        "/api/invoices/batch",
+        csrfToken,
+        "POST",
+        {
           dueDate: batchDueDate,
           month: batchMonth,
-        }),
-      });
+        },
+      );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        success(`Generated ${data.successCount} invoices!`);
-        setIsBatchDialogOpen(false);
-        fetchInvoices();
-      } else {
-        error(data.message || "Failed to generate batch invoices");
-      }
+      success(`Generated ${data.successCount ?? 0} invoices!`);
+      setIsBatchDialogOpen(false);
+      fetchInvoices();
     } catch (err) {
-      error("Failed to generate batch invoices");
-      console.error(err);
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Failed to generate batch invoices";
+      error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -226,28 +224,24 @@ export function InvoicesView({
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/invoices/late-fees", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(lateFeeConfig),
-      });
+      const data = await apiFetch<{ count: number; message?: string }>(
+        "/api/invoices/late-fees",
+        csrfToken,
+        "POST",
+        lateFeeConfig,
+      );
 
-      const data = await response.json();
-
-      if (response.ok) {
-        if (data.count > 0) {
-          success(`Applied late fees to ${data.count} invoices`);
-        } else {
-          success("No invoices required late fee application");
-        }
-        setIsLateFeeDialogOpen(false);
-        fetchInvoices();
+      if (data.count > 0) {
+        success(`Applied late fees to ${data.count} invoices`);
       } else {
-        error(data.message || "Failed to apply late fees");
+        success("No invoices required late fee application");
       }
+      setIsLateFeeDialogOpen(false);
+      fetchInvoices();
     } catch (err) {
-      error("Failed to apply late fees");
-      console.error(err);
+      const msg =
+        err instanceof Error ? err.message : "Failed to apply late fees";
+      error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -256,21 +250,11 @@ export function InvoicesView({
   // Mark as paid
   const handleMarkPaid = async (invoiceId: string) => {
     try {
-      const response = await fetch(`/api/invoices/${invoiceId}/pay`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-
-      if (response.ok) {
-        success("Invoice marked as paid");
-        fetchInvoices();
-      } else {
-        error("Failed to mark invoice as paid");
-      }
+      await apiFetch(`/api/invoices/${invoiceId}/pay`, csrfToken, "POST", {});
+      success("Invoice marked as paid");
+      fetchInvoices();
     } catch (err) {
       error("Failed to mark invoice as paid");
-      console.error(err);
     }
   };
 
@@ -285,16 +269,9 @@ export function InvoicesView({
         variant: "destructive",
       },
       async () => {
-        const response = await fetch(`/api/invoices/${invoiceId}`, {
-          method: "DELETE",
-        });
-
-        if (response.ok) {
-          success("Invoice deleted");
-          fetchInvoices();
-        } else {
-          error("Failed to delete invoice");
-        }
+        await apiFetch(`/api/invoices/${invoiceId}`, csrfToken, "DELETE");
+        success("Invoice deleted");
+        fetchInvoices();
       },
     );
   };

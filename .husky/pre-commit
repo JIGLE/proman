@@ -1,1 +1,16 @@
+# Lightweight secret pattern check on staged files
+STAGED=$(git diff --cached --name-only --diff-filter=ACM)
+if [ -n "$STAGED" ]; then
+  PATTERNS='(AKIA[0-9A-Z]{16}|-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----|sk_live_[0-9a-zA-Z]{24,}|ghp_[0-9a-zA-Z]{36}|glpat-[0-9a-zA-Z\-_]{20,})'
+  # Only scan text files in the staged set
+  MATCHES=$(echo "$STAGED" | xargs grep -lPn "$PATTERNS" 2>/dev/null || true)
+  if [ -n "$MATCHES" ]; then
+    echo "🚨 Potential secrets detected in staged files:"
+    echo "$MATCHES"
+    echo ""
+    echo "If these are false positives, commit with --no-verify (use with caution)."
+    exit 1
+  fi
+fi
+
 npx lint-staged

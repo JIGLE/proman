@@ -1,16 +1,16 @@
 import type { NextConfig } from "next";
-import createNextIntlPlugin from 'next-intl/plugin';
+import createNextIntlPlugin from "next-intl/plugin";
 
-const withNextIntl = createNextIntlPlugin('./lib/i18n/config.ts');
+const withNextIntl = createNextIntlPlugin("./lib/i18n/config.ts");
 
 const nextConfig: NextConfig = {
   compress: true,
-  output: 'standalone',
+  output: "standalone",
   experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-slot'],
+    optimizePackageImports: ["lucide-react", "@radix-ui/react-slot"],
   },
   images: {
-    unoptimized: true,
+    remotePatterns: [{ protocol: "https", hostname: "**" }],
   },
   // Configure turbopack with explicit root to avoid lockfile detection issues
   turbopack: {
@@ -20,25 +20,25 @@ const nextConfig: NextConfig = {
     return [
       {
         // Apply to all routes
-        source: '/(.*)',
+        source: "/(.*)",
         headers: [
           // CSP is handled dynamically by proxy.ts middleware (with nonces for scripts)
           // Only set non-CSP security headers here as fallback
           {
-            key: 'X-Frame-Options',
-            value: 'DENY',
+            key: "X-Frame-Options",
+            value: "DENY",
           },
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
+            key: "X-Content-Type-Options",
+            value: "nosniff",
           },
           {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
           },
           {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
           },
         ],
       },

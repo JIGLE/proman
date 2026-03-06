@@ -157,10 +157,10 @@ function SignInContent() {
               Sign in with Google
             </Button>
 
-            {isDemoEnabled && (
+            {isDemoEnabled && process.env.NODE_ENV !== "production" && (
               <div className="mt-6 text-center">
                 <p className="text-xs text-zinc-500">
-                  Demo: demo@proman.local / demo123
+                  Demo mode active — enter any credentials
                 </p>
               </div>
             )}

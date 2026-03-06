@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useCsrf } from "@/lib/contexts/csrf-context";
 import { useToast } from "@/lib/contexts/toast-context";
+import { apiFetch } from "@/lib/utils/api-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,17 +62,17 @@ export function ContractsView(): React.ReactElement {
   const fetchContracts = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/contracts");
-      if (res.ok) {
-        const json = await res.json();
-        setLeases(json.data || []);
-      }
+      const json = await apiFetch<{ data: Lease[] } | Lease[]>(
+        "/api/contracts",
+        csrfToken,
+      );
+      setLeases(Array.isArray(json) ? json : json.data || []);
     } catch (err) {
       console.error("Failed to fetch contracts:", err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [csrfToken]);
 
   useEffect(() => {
     fetchContracts();
@@ -145,15 +146,7 @@ export function ContractsView(): React.ReactElement {
     setIsDetailOpen(false);
 
     try {
-      const res = await fetch(`/api/leases/${leaseId}`, {
-        method: "DELETE",
-        headers: {
-          ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
-        },
-      });
-      if (!res.ok) {
-        throw new Error("Failed to delete contract");
-      }
+      await apiFetch(`/api/leases/${leaseId}`, csrfToken, "DELETE");
       toast.success("Contract deleted successfully");
     } catch (err) {
       // Revert on failure

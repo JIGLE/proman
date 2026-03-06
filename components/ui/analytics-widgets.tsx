@@ -5,9 +5,9 @@ import { cn } from "@/lib/utils/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "./card";
 import { Badge } from "./badge";
 import { ProgressBar } from "./progress";
-import { 
-  TrendingUp, 
-  TrendingDown, 
+import {
+  TrendingUp,
+  TrendingDown,
   AlertTriangle,
   CheckCircle2,
   Clock,
@@ -15,7 +15,7 @@ import {
   Building2,
   Home,
   Wrench,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -27,8 +27,8 @@ interface KPICardProps {
   change?: number;
   changeLabel?: string;
   icon?: React.ReactNode;
-  trend?: 'up' | 'down' | 'neutral';
-  variant?: 'default' | 'success' | 'warning' | 'danger';
+  trend?: "up" | "down" | "neutral";
+  variant?: "default" | "success" | "warning" | "danger";
   className?: string;
 }
 
@@ -40,21 +40,22 @@ export function KPICard({
   changeLabel,
   icon,
   trend,
-  variant = 'default',
-  className
+  variant = "default",
+  className,
 }: KPICardProps) {
   const variantStyles = {
-    default: 'border-zinc-700/50',
-    success: 'border-green-500/30 bg-green-500/5',
-    warning: 'border-yellow-500/30 bg-yellow-500/5',
-    danger: 'border-red-500/30 bg-red-500/5'
+    default: "border-zinc-700/50",
+    success: "border-green-500/30 bg-green-500/5",
+    warning: "border-yellow-500/30 bg-yellow-500/5",
+    danger: "border-red-500/30 bg-red-500/5",
   };
 
-  const trendIcon = trend === 'up' ? (
-    <TrendingUp className="h-4 w-4 text-green-400" />
-  ) : trend === 'down' ? (
-    <TrendingDown className="h-4 w-4 text-red-400" />
-  ) : null;
+  const trendIcon =
+    trend === "up" ? (
+      <TrendingUp className="h-4 w-4 text-green-400" />
+    ) : trend === "down" ? (
+      <TrendingDown className="h-4 w-4 text-red-400" />
+    ) : null;
 
   return (
     <motion.div
@@ -63,38 +64,43 @@ export function KPICard({
       whileHover={{ y: -4 }}
       transition={{ duration: 0.2 }}
     >
-      <Card className={cn(
-        "relative overflow-hidden transition-all duration-300 hover:shadow-lg",
-        variantStyles[variant],
-        className
-      )}>
+      <Card
+        className={cn(
+          "relative overflow-hidden transition-all duration-300 hover:shadow-lg",
+          variantStyles[variant],
+          className,
+        )}
+      >
         <CardContent className="p-6">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
               <p className="text-sm font-medium text-zinc-400">{title}</p>
               <p className="text-3xl font-bold text-zinc-50">
-                {typeof value === 'number' ? value.toLocaleString() : value}
+                {typeof value === "number" ? value.toLocaleString() : value}
               </p>
-              {subtitle && (
-                <p className="text-xs text-zinc-500">{subtitle}</p>
-              )}
+              {subtitle && <p className="text-xs text-zinc-500">{subtitle}</p>}
             </div>
             {icon && (
-              <div className="p-3 rounded-xl bg-zinc-800/50">
-                {icon}
-              </div>
+              <div className="p-3 rounded-xl bg-zinc-800/50">{icon}</div>
             )}
           </div>
-          
+
           {(change !== undefined || changeLabel) && (
             <div className="mt-4 flex items-center gap-2">
               {trendIcon}
               {change !== undefined && (
-                <span className={cn(
-                  "text-sm font-medium",
-                  change > 0 ? "text-green-400" : change < 0 ? "text-red-400" : "text-zinc-400"
-                )}>
-                  {change > 0 ? '+' : ''}{change.toFixed(1)}%
+                <span
+                  className={cn(
+                    "text-sm font-medium",
+                    change > 0
+                      ? "text-green-400"
+                      : change < 0
+                        ? "text-red-400"
+                        : "text-zinc-400",
+                  )}
+                >
+                  {change > 0 ? "+" : ""}
+                  {change.toFixed(1)}%
                 </span>
               )}
               {changeLabel && (
@@ -117,14 +123,20 @@ interface OccupancyGaugeProps {
   className?: string;
 }
 
-export function OccupancyGauge({ rate, total, occupied, vacant, className }: OccupancyGaugeProps) {
+export function OccupancyGauge({
+  rate,
+  total,
+  occupied,
+  vacant,
+  className,
+}: OccupancyGaugeProps) {
   const circumference = 2 * Math.PI * 45;
   const strokeDashoffset = circumference - (rate / 100) * circumference;
-  
+
   const getColor = (rate: number) => {
-    if (rate >= 90) return '#22c55e'; // green
-    if (rate >= 70) return '#eab308'; // yellow
-    return '#ef4444'; // red
+    if (rate >= 90) return "#22c55e"; // green
+    if (rate >= 70) return "#eab308"; // yellow
+    return "#ef4444"; // red
   };
 
   return (
@@ -165,12 +177,14 @@ export function OccupancyGauge({ rate, total, occupied, vacant, className }: Occ
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
-                <span className="text-3xl font-bold text-zinc-50">{rate.toFixed(0)}%</span>
+                <span className="text-3xl font-bold text-zinc-50">
+                  {rate.toFixed(0)}%
+                </span>
               </div>
             </div>
           </div>
         </div>
-        
+
         <div className="mt-4 grid grid-cols-3 gap-4 text-center">
           <div>
             <p className="text-2xl font-bold text-zinc-50">{total}</p>
@@ -199,7 +213,7 @@ interface LeaseExpirationItem {
   endDate: string;
   daysUntilExpiration: number;
   monthlyRent: number;
-  status: 'expired' | 'critical' | 'warning' | 'healthy';
+  status: "expired" | "critical" | "warning" | "healthy";
 }
 
 interface LeaseExpirationTimelineProps {
@@ -208,17 +222,41 @@ interface LeaseExpirationTimelineProps {
   onViewAll?: () => void;
 }
 
-export function LeaseExpirationTimeline({ leases, className, onViewAll }: LeaseExpirationTimelineProps) {
-  const getStatusConfig = (status: LeaseExpirationItem['status']) => {
+export function LeaseExpirationTimeline({
+  leases,
+  className,
+  onViewAll,
+}: LeaseExpirationTimelineProps) {
+  const getStatusConfig = (status: LeaseExpirationItem["status"]) => {
     switch (status) {
-      case 'expired':
-        return { color: 'bg-red-500', textColor: 'text-red-400', label: 'Expired', icon: AlertTriangle };
-      case 'critical':
-        return { color: 'bg-orange-500', textColor: 'text-orange-400', label: '< 30 days', icon: Clock };
-      case 'warning':
-        return { color: 'bg-yellow-500', textColor: 'text-yellow-400', label: '30-60 days', icon: Calendar };
+      case "expired":
+        return {
+          color: "bg-red-500",
+          textColor: "text-red-400",
+          label: "Expired",
+          icon: AlertTriangle,
+        };
+      case "critical":
+        return {
+          color: "bg-orange-500",
+          textColor: "text-orange-400",
+          label: "< 30 days",
+          icon: Clock,
+        };
+      case "warning":
+        return {
+          color: "bg-yellow-500",
+          textColor: "text-yellow-400",
+          label: "30-60 days",
+          icon: Calendar,
+        };
       default:
-        return { color: 'bg-green-500', textColor: 'text-green-400', label: '> 60 days', icon: CheckCircle2 };
+        return {
+          color: "bg-green-500",
+          textColor: "text-green-400",
+          label: "> 60 days",
+          icon: CheckCircle2,
+        };
     }
   };
 
@@ -240,12 +278,14 @@ export function LeaseExpirationTimeline({ leases, className, onViewAll }: LeaseE
       </CardHeader>
       <CardContent className="p-0 space-y-3">
         {leases.length === 0 ? (
-          <p className="text-sm text-zinc-500 text-center py-4">No upcoming lease expirations</p>
+          <p className="text-sm text-zinc-500 text-center py-4">
+            No upcoming lease expirations
+          </p>
         ) : (
           leases.slice(0, 5).map((lease, index) => {
             const config = getStatusConfig(lease.status);
             const StatusIcon = config.icon;
-            
+
             return (
               <motion.div
                 key={lease.leaseId}
@@ -266,11 +306,12 @@ export function LeaseExpirationTimeline({ leases, className, onViewAll }: LeaseE
                 <div className="text-right">
                   <div className="flex items-center gap-1">
                     <StatusIcon className={cn("h-4 w-4", config.textColor)} />
-                    <span className={cn("text-sm font-medium", config.textColor)}>
-                      {lease.daysUntilExpiration < 0 
+                    <span
+                      className={cn("text-sm font-medium", config.textColor)}
+                    >
+                      {lease.daysUntilExpiration < 0
                         ? `${Math.abs(lease.daysUntilExpiration)} days ago`
-                        : `${lease.daysUntilExpiration} days`
-                      }
+                        : `${lease.daysUntilExpiration} days`}
                     </span>
                   </div>
                   <p className="text-xs text-zinc-500">
@@ -299,8 +340,12 @@ interface MaintenanceStatsProps {
   className?: string;
 }
 
-export function MaintenanceStatusCard({ stats, className }: MaintenanceStatsProps) {
-  const completionRate = stats.total > 0 ? (stats.completed / stats.total) * 100 : 0;
+export function MaintenanceStatusCard({
+  stats,
+  className,
+}: MaintenanceStatsProps) {
+  const completionRate =
+    stats.total > 0 ? (stats.completed / stats.total) * 100 : 0;
 
   return (
     <Card className={cn("p-6", className)}>
@@ -324,7 +369,9 @@ export function MaintenanceStatusCard({ stats, className }: MaintenanceStatsProp
           )}
           {stats.urgent === 0 && (
             <div className="text-center p-3 rounded-lg bg-zinc-800/30">
-              <p className="text-2xl font-bold text-zinc-50">{stats.averageResolutionDays.toFixed(1)}</p>
+              <p className="text-2xl font-bold text-zinc-50">
+                {stats.averageResolutionDays.toFixed(1)}
+              </p>
               <p className="text-xs text-zinc-400">Avg. Days to Resolve</p>
             </div>
           )}
@@ -333,24 +380,35 @@ export function MaintenanceStatusCard({ stats, className }: MaintenanceStatsProp
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
             <span className="text-zinc-400">Completion Rate</span>
-            <span className="text-zinc-200 font-medium">{completionRate.toFixed(0)}%</span>
+            <span className="text-zinc-200 font-medium">
+              {completionRate.toFixed(0)}%
+            </span>
           </div>
           <ProgressBar progress={completionRate} height={8} className="" />
         </div>
 
         <div className="grid grid-cols-3 gap-2">
           <div className="text-center">
-            <Badge variant="outline" className="text-yellow-400 border-yellow-400/30">
+            <Badge
+              variant="outline"
+              className="text-yellow-400 border-yellow-400/30"
+            >
               {stats.pending} Pending
             </Badge>
           </div>
           <div className="text-center">
-            <Badge variant="outline" className="text-blue-400 border-blue-400/30">
+            <Badge
+              variant="outline"
+              className="text-blue-400 border-blue-400/30"
+            >
               {stats.inProgress} In Progress
             </Badge>
           </div>
           <div className="text-center">
-            <Badge variant="outline" className="text-green-400 border-green-400/30">
+            <Badge
+              variant="outline"
+              className="text-green-400 border-green-400/30"
+            >
               {stats.completed} Done
             </Badge>
           </div>
@@ -381,7 +439,11 @@ interface PropertyPerformanceTableProps {
   className?: string;
 }
 
-export function PropertyPerformanceTable({ data, formatCurrency, className }: PropertyPerformanceTableProps) {
+export function PropertyPerformanceTable({
+  data,
+  formatCurrency,
+  className,
+}: PropertyPerformanceTableProps) {
   return (
     <Card className={cn("p-6", className)}>
       <CardHeader className="p-0 pb-4">
@@ -392,17 +454,44 @@ export function PropertyPerformanceTable({ data, formatCurrency, className }: Pr
       </CardHeader>
       <CardContent className="p-0">
         {data.length === 0 ? (
-          <p className="text-sm text-zinc-500 text-center py-4">No properties found</p>
+          <p className="text-sm text-zinc-500 text-center py-4">
+            No properties found
+          </p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-zinc-700">
-                  <th className="text-left py-3 px-2 text-xs font-medium text-zinc-400">Property</th>
-                  <th className="text-center py-3 px-2 text-xs font-medium text-zinc-400">Occupancy</th>
-                  <th className="text-right py-3 px-2 text-xs font-medium text-zinc-400">Revenue</th>
-                  <th className="text-right py-3 px-2 text-xs font-medium text-zinc-400">Net Income</th>
-                  <th className="text-right py-3 px-2 text-xs font-medium text-zinc-400">ROI</th>
+                  <th
+                    scope="col"
+                    className="text-left py-3 px-2 text-xs font-medium text-zinc-400"
+                  >
+                    Property
+                  </th>
+                  <th
+                    scope="col"
+                    className="text-center py-3 px-2 text-xs font-medium text-zinc-400"
+                  >
+                    Occupancy
+                  </th>
+                  <th
+                    scope="col"
+                    className="text-right py-3 px-2 text-xs font-medium text-zinc-400"
+                  >
+                    Revenue
+                  </th>
+                  <th
+                    scope="col"
+                    className="text-right py-3 px-2 text-xs font-medium text-zinc-400"
+                  >
+                    Net Income
+                  </th>
+                  <th
+                    scope="col"
+                    className="text-right py-3 px-2 text-xs font-medium text-zinc-400"
+                  >
+                    ROI
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -415,29 +504,53 @@ export function PropertyPerformanceTable({ data, formatCurrency, className }: Pr
                     className="border-b border-zinc-800 hover:bg-zinc-800/30"
                   >
                     <td className="py-3 px-2">
-                      <p className="text-sm font-medium text-zinc-200">{property.propertyName}</p>
-                      <p className="text-xs text-zinc-500">{property.totalUnits} units</p>
+                      <p className="text-sm font-medium text-zinc-200">
+                        {property.propertyName}
+                      </p>
+                      <p className="text-xs text-zinc-500">
+                        {property.totalUnits} units
+                      </p>
                     </td>
                     <td className="py-3 px-2 text-center">
                       <div className="inline-flex items-center gap-2">
-                        <ProgressBar progress={property.occupancyRate} height={8} className="w-16" />
-                        <span className="text-sm text-zinc-300">{property.occupancyRate.toFixed(0)}%</span>
+                        <ProgressBar
+                          progress={property.occupancyRate}
+                          height={8}
+                          className="w-16"
+                        />
+                        <span className="text-sm text-zinc-300">
+                          {property.occupancyRate.toFixed(0)}%
+                        </span>
                       </div>
                     </td>
                     <td className="py-3 px-2 text-right">
-                      <p className="text-sm text-zinc-200">{formatCurrency(property.monthlyRevenue)}</p>
+                      <p className="text-sm text-zinc-200">
+                        {formatCurrency(property.monthlyRevenue)}
+                      </p>
                       <p className="text-xs text-zinc-500">/month</p>
                     </td>
                     <td className="py-3 px-2 text-right">
-                      <p className={cn(
-                        "text-sm font-medium",
-                        property.netIncome >= 0 ? "text-green-400" : "text-red-400"
-                      )}>
+                      <p
+                        className={cn(
+                          "text-sm font-medium",
+                          property.netIncome >= 0
+                            ? "text-green-400"
+                            : "text-red-400",
+                        )}
+                      >
                         {formatCurrency(property.netIncome)}
                       </p>
                     </td>
                     <td className="py-3 px-2 text-right">
-                      <Badge variant={property.roi >= 8 ? "success" : property.roi >= 5 ? "warning" : "destructive"}>
+                      <Badge
+                        variant={
+                          property.roi >= 8
+                            ? "success"
+                            : property.roi >= 5
+                              ? "warning"
+                              : "destructive"
+                        }
+                      >
                         {property.roi.toFixed(1)}%
                       </Badge>
                     </td>

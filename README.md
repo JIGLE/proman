@@ -5,9 +5,37 @@
 
 # ProMan — Property Management Dashboard
 
-Lightweight, self-hosted property management built with **Next.js**, **Prisma**, and **SQLite**. Includes Playwright E2E tests, Docker/Helm packaging, and TrueNAS SCALE support.
+A modern, self-hosted property management platform for landlords, property managers, and small real-estate firms. Track properties, tenants, leases, receipts, expenses, maintenance tickets, and correspondence — all from a single dashboard with multi-language support.
 
-## Quick Start (Development)
+## Features
+
+- **Multi-property management** — properties, units, tenants, owners
+- **Financial tracking** — receipts, expenses, invoices, payment matrix, tax compliance
+- **Maintenance** — ticket creation, assignment, status tracking with image uploads
+- **Leases & contracts** — lifecycle management with expiration alerts
+- **Correspondence** — templates, bulk generation, email delivery (SendGrid)
+- **Tenant self-service portal** — secure JWT-based access for tenants to view their data
+- **Document management** — upload, categorize, template generation (HTML/PDF)
+- **Insights dashboard** — occupancy, revenue, ROI analytics
+- **Internationalization** — English, Spanish, Portuguese (next-intl)
+- **Payment integrations** — Stripe, Bizum (opt-in)
+
+## Tech Stack
+
+| Layer      | Technology                                 |
+| ---------- | ------------------------------------------ |
+| Framework  | Next.js 15 (App Router, Turbopack)         |
+| Language   | TypeScript (strict)                        |
+| Database   | Prisma ORM + SQLite                        |
+| Auth       | NextAuth.js (Google OAuth + Credentials)   |
+| UI         | shadcn/ui + Tailwind CSS + Framer Motion   |
+| Validation | Zod                                        |
+| Testing    | Vitest (unit) + Playwright (E2E)           |
+| Deployment | Docker / Kubernetes / Helm / TrueNAS SCALE |
+
+## Quick Start
+
+### Development
 
 ```bash
 npm install
@@ -17,7 +45,7 @@ npm run dev
 
 Open http://localhost:3000
 
-## Quick Start (Docker)
+### Docker
 
 ```bash
 # Build and run locally
@@ -39,15 +67,38 @@ npm run lint            # ESLint
 npm run type-check      # TypeScript check
 ```
 
-## Key Environment Variables
+## Architecture
 
-| Variable          | Required    | Description                                         |
-| ----------------- | ----------- | --------------------------------------------------- |
-| `DATABASE_URL`    | Yes (prod)  | SQLite path, e.g. `file:/app/data/proman.db`        |
-| `NEXTAUTH_URL`    | Yes (prod)  | Public URL of the application                       |
-| `NEXTAUTH_SECRET` | Yes (prod)  | Session signing secret (min 32 chars)               |
-| `INIT_SECRET`     | Recommended | Protects the DB init endpoint                       |
-| `AUTO_DB_INIT`    | No          | Auto-create tables on first start (default: `true`) |
+```
+app/
+  [locale]/        → i18n-aware pages (dashboard, settings)
+  api/             → RESTful API routes (properties, tenants, receipts, …)
+  auth/            → Sign-in / sign-out pages
+  tenant-portal/   → Self-service tenant portal
+components/
+  features/        → Domain components (property, financial, document, …)
+  layouts/         → Page layouts and navigation
+  shared/          → Reusable components (confirmation dialogs, etc.)
+  ui/              → shadcn/ui primitives
+lib/
+  contexts/        → React contexts (app state, CSRF, toast, currency)
+  services/        → Database services, auth, payments, email
+  schemas/         → Zod validation schemas
+  middleware/      → CSRF, rate limiting, security headers
+  utils/           → API client, error handling, currency, logger
+prisma/            → Schema and migrations
+```
+
+## Configuration
+
+### Required Environment Variables
+
+| Variable          | Required    | Description                                  |
+| ----------------- | ----------- | -------------------------------------------- |
+| `DATABASE_URL`    | Yes (prod)  | SQLite path, e.g. `file:/app/data/proman.db` |
+| `NEXTAUTH_URL`    | Yes (prod)  | Public URL of the application                |
+| `NEXTAUTH_SECRET` | Yes (prod)  | Session signing secret (min 32 chars)        |
+| `INIT_SECRET`     | Recommended | Protects the DB init and debug endpoints     |
 
 See [.env.example](.env.example) for the complete list with defaults and documentation.
 
@@ -61,10 +112,12 @@ See [.env.example](.env.example) for the complete list with defaults and documen
 
 ## Deployment
 
-- **Docker**: [Dockerfile](Dockerfile) + [docker-compose.yml](docker-compose.yml)
-- **Kubernetes**: [k8s/](k8s/) manifests with probes and resource limits
-- **Helm**: [helm/proman/](helm/proman/) with TrueNAS values
-- **TrueNAS SCALE**: See [TrueNAS Guide](docs/truenas.md)
+| Target        | Resources                                                           |
+| ------------- | ------------------------------------------------------------------- |
+| Docker        | [Dockerfile](Dockerfile) + [docker-compose.yml](docker-compose.yml) |
+| Kubernetes    | [k8s/](k8s/) manifests with probes and resource limits              |
+| Helm          | [helm/proman/](helm/proman/) with TrueNAS values                    |
+| TrueNAS SCALE | [TrueNAS Guide](docs/truenas.md)                                    |
 
 Full deployment instructions: [docs/deployment.md](docs/deployment.md)
 
@@ -72,9 +125,7 @@ Full deployment instructions: [docs/deployment.md](docs/deployment.md)
 
 The database schema is **automatically created on first startup** when the
 container detects an empty SQLite database (controlled by `AUTO_DB_INIT`,
-default: `true`). No manual steps are needed for new deployments.
-
-For manual initialization or re-initialization:
+default: `true`). For manual initialization:
 
 ```bash
 curl -sS -X POST -H "Authorization: Bearer $INIT_SECRET" \
@@ -83,50 +134,33 @@ curl -sS -X POST -H "Authorization: Bearer $INIT_SECRET" \
 
 See [Database Strategy](docs/DATABASE_STRATEGY.md) for migrations, backups, and production guidance.
 
-## Helper Scripts
+## Security
 
-| Script                    | Description                        |
-| ------------------------- | ---------------------------------- |
-| `scripts/build-image.sh`  | Build Docker image with build args |
-| `scripts/helm-package.sh` | Package Helm chart                 |
-| `scripts/init-db.sh`      | Initialize database via API        |
-| `scripts/db-backup.sh`    | Backup SQLite database             |
+- CSRF token protection on all state-changing requests
+- Nonce-based Content Security Policy headers
+- Rate limiting (in-memory + Redis)
+- JWT session management with configurable expiration
+- Debug endpoints require `INIT_SECRET` authentication
+- SendGrid webhook signature verification
+
+See [Security Guide](docs/SECURITY.md) for full details.
 
 ## Documentation
 
-- **[Documentation Index](docs/README.md)** — links to all available guides
-- [Deployment Guide](docs/deployment.md)
-- [TrueNAS SCALE Guide](docs/truenas.md)
-- [Troubleshooting](docs/troubleshooting.md)
-- [Security Guide](docs/SECURITY.md)
-- [Database Strategy](docs/DATABASE_STRATEGY.md)
-- [Metrics & Monitoring](docs/METRICS_AND_MONITORING.md)
-
-## Webhook & Release Notifications
-
-ProMan supports in-app update notifications. Set `UPDATE_WEBHOOK_SECRET` and `UPDATE_WEBHOOK_URL` to enable secure webhook notifications from CI/CD. See [docs/SECURITY.md](docs/SECURITY.md) for HMAC enforcement details.
+| Guide                                                  | Description                   |
+| ------------------------------------------------------ | ----------------------------- |
+| [Documentation Index](docs/README.md)                  | Links to all available guides |
+| [Deployment Guide](docs/deployment.md)                 | Production setup instructions |
+| [TrueNAS Guide](docs/truenas.md)                       | TrueNAS SCALE deployment      |
+| [Troubleshooting](docs/troubleshooting.md)             | Common issues and fixes       |
+| [Security Guide](docs/SECURITY.md)                     | Security architecture         |
+| [Database Strategy](docs/DATABASE_STRATEGY.md)         | Migrations, backups           |
+| [Metrics & Monitoring](docs/METRICS_AND_MONITORING.md) | Observability setup           |
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-## Windows Development Notes
-
-- Use forward slashes in `DATABASE_URL`: `file:./dev.db` (not backslashes)
-- SQLite binaries are compiled during `npm install` — ensure build tools are available (Visual Studio Build Tools or `windows-build-tools`)
-- PowerShell equivalents for bash scripts are available (or use Git Bash / WSL)
-- Line endings: the repo uses `.gitattributes` to normalize; if you see issues, run `git config core.autocrlf true`
-
-## Support
-
-Issues & discussions: https://github.com/JIGLE/proman
-
 ## License
 
 [MIT](LICENSE)
-
-```
-
-
-
-```

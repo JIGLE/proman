@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Building2, Plus, Edit2, Trash2, Home, X, Loader2 } from "lucide-react";
 import { useCsrf } from "@/lib/contexts/csrf-context";
 import { useToast } from "@/lib/contexts/toast-context";
+import { apiFetch } from "@/lib/utils/api-client";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 
@@ -72,17 +73,14 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
 
   const fetchUnits = useCallback(async () => {
     try {
-      const res = await fetch("/api/units");
-      if (res.ok) {
-        const data = await res.json();
-        setUnits(data);
-      }
+      const data = await apiFetch<Unit[]>("/api/units", csrfToken);
+      setUnits(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching units:", error);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [csrfToken]);
 
   useEffect(() => {
     fetchUnits();
@@ -140,18 +138,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
     try {
       const url = editingUnit ? `/api/units/${editingUnit.id}` : "/api/units";
       const method = editingUnit ? "PUT" : "POST";
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
-        },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({ error: "Request failed" }));
-        throw new Error(err.error || "Failed to save unit");
-      }
+      await apiFetch(url, csrfToken, method, payload);
       toast.success(editingUnit ? "Unit updated" : "Unit created");
       closeModal();
       await fetchUnits();
@@ -167,13 +154,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
     const previousUnits = units;
     setUnits(units.filter((u) => u.id !== unitId));
     try {
-      const res = await fetch(`/api/units/${unitId}`, {
-        method: "DELETE",
-        headers: {
-          ...(csrfToken ? { "X-CSRF-Token": csrfToken } : {}),
-        },
-      });
-      if (!res.ok) throw new Error("Failed to delete unit");
+      await apiFetch(`/api/units/${unitId}`, csrfToken, "DELETE");
       toast.success("Unit deleted");
     } catch (err) {
       setUnits(previousUnits);

@@ -3,15 +3,19 @@
  * Prisma-backed insights for production use
  */
 
-import { getPrismaClient } from './database/database';
-import type { InsightTotals, TimeSeriesPoint, InsightsOverview } from './insights.types';
+import { getPrismaClient } from "./database/database";
+import type {
+  InsightTotals,
+  TimeSeriesPoint,
+  InsightsOverview,
+} from "./insights.types";
 
 /**
  * Get insights overview from real database
  */
 export async function getInsightsOverview(): Promise<InsightsOverview> {
   const prisma = getPrismaClient();
-  
+
   // Get current period data
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -29,42 +33,48 @@ export async function getInsightsOverview(): Promise<InsightsOverview> {
 
   const totalProperties = properties.length;
   const totalUnits = totalProperties; // Simplified: 1 unit per property
-  const occupiedUnits = properties.filter(p => p.status === 'occupied').length;
+  const occupiedUnits = properties.filter(
+    (p) => p.status === "occupied",
+  ).length;
   const occupancyRate = totalUnits > 0 ? occupiedUnits / totalUnits : 0;
 
-  // Get revenue metrics
-  const monthlyReceipts = await prisma.receipt.findMany({
+  // OPTIMIZED: Single query for all receipt periods instead of 3 separate queries
+  const allPeriodReceipts = await prisma.receipt.findMany({
     where: {
-      status: 'paid',
-      date: { gte: startOfMonth },
+      status: "paid",
+      date: { gte: lastYearStart },
     },
-    select: { amount: true },
+    select: { amount: true, date: true },
   });
 
-  const yearlyReceipts = await prisma.receipt.findMany({
-    where: {
-      status: 'paid',
-      date: { gte: startOfYear },
-    },
-    select: { amount: true },
-  });
-
-  const lastYearReceipts = await prisma.receipt.findMany({
-    where: {
-      status: 'paid',
-      date: { gte: lastYearStart, lte: lastYearEnd },
-    },
-    select: { amount: true },
+  const monthlyReceipts = allPeriodReceipts.filter(
+    (r) => new Date(r.date) >= startOfMonth,
+  );
+  const yearlyReceipts = allPeriodReceipts.filter(
+    (r) => new Date(r.date) >= startOfYear,
+  );
+  const lastYearReceipts = allPeriodReceipts.filter((r) => {
+    const d = new Date(r.date);
+    return d >= lastYearStart && d <= lastYearEnd;
   });
 
   const monthlyRevenue = monthlyReceipts.reduce((sum, r) => sum + r.amount, 0);
   const yearlyRevenue = yearlyReceipts.reduce((sum, r) => sum + r.amount, 0);
-  const lastYearRevenue = lastYearReceipts.reduce((sum, r) => sum + r.amount, 0);
+  const lastYearRevenue = lastYearReceipts.reduce(
+    (sum, r) => sum + r.amount,
+    0,
+  );
 
   // Calculate expenses (simplified: 30% of revenue)
   const monthlyExpenses = monthlyRevenue * 0.3;
-  const profitMargin = monthlyRevenue > 0 ? (monthlyRevenue - monthlyExpenses) / monthlyRevenue : 0;
-  const yoyGrowth = lastYearRevenue > 0 ? ((yearlyRevenue - lastYearRevenue) / lastYearRevenue) * 100 : 0;
+  const profitMargin =
+    monthlyRevenue > 0
+      ? (monthlyRevenue - monthlyExpenses) / monthlyRevenue
+      : 0;
+  const yoyGrowth =
+    lastYearRevenue > 0
+      ? ((yearlyRevenue - lastYearRevenue) / lastYearRevenue) * 100
+      : 0;
 
   const totals: InsightTotals = {
     properties: totalProperties,
@@ -78,37 +88,58 @@ export async function getInsightsOverview(): Promise<InsightsOverview> {
 
   // Get revenue trend (last 6 months) - OPTIMIZED: Single query instead of N+1
   const revenueTrend: TimeSeriesPoint[] = [];
-  const MONTH_LABELS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-  
+  const MONTH_LABELS = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
+  ];
+
   // Calculate date range for last 6 months
   const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1);
-  
+
   // Fetch ALL receipts for the last 6 months in ONE query
   const allRecentReceipts = await prisma.receipt.findMany({
     where: {
-      status: 'paid',
+      status: "paid",
       date: {
         gte: sixMonthsAgo,
         lte: now,
       },
     },
-    select: { 
+    select: {
       amount: true,
       date: true,
     },
   });
-  
+
   // Group receipts by month in memory (much faster than 6 separate queries)
   for (let i = 5; i >= 0; i--) {
     const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const monthStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
-    const monthEnd = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
-    
-    const monthReceipts = allRecentReceipts.filter(r => {
+    const monthStart = new Date(
+      targetDate.getFullYear(),
+      targetDate.getMonth(),
+      1,
+    );
+    const monthEnd = new Date(
+      targetDate.getFullYear(),
+      targetDate.getMonth() + 1,
+      0,
+    );
+
+    const monthReceipts = allRecentReceipts.filter((r) => {
       const receiptDate = new Date(r.date);
       return receiptDate >= monthStart && receiptDate <= monthEnd;
     });
-    
+
     revenueTrend.push({
       label: MONTH_LABELS[targetDate.getMonth()] || "",
       value: monthReceipts.reduce((sum, r) => sum + r.amount, 0),

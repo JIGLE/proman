@@ -1,0 +1,18 @@
+name: proman
+title: ProMan
+version: 1.0.0
+app_version: "1.1.10"
+icon: https://raw.githubusercontent.com/JIGLE/proman/main/public/proman-icon.svg
+description: Property Management System — track leases, tenants, properties, and payments.
+home: https://github.com/JIGLE/proman
+sources:
+  - https://github.com/JIGLE/proman
+  - https://ghcr.io/jigle/proman
+keywords:
+  - property
+  - management
+  - nextjs
+  - sqlite
+maintainers:
+  - name: JIGLE
+    url: https://github.com/JIGLE

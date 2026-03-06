@@ -63,7 +63,7 @@ jobs:
 
       - name: Upload audit report
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: npm-audit-report
           path: audit-report.json
@@ -90,12 +90,12 @@ jobs:
       - name: Run security scan
         id: security-scan
         run: |
-          node scripts/security-scan.js || true
+          node scripts/security-scan.js
         continue-on-error: true
 
       - name: Upload security report
         if: always()
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: security-report
           path: security-report.json
@@ -167,7 +167,7 @@ jobs:
     name: Secret Scanning
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'push' || github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch'
 
     steps:
       - uses: actions/checkout@v4
@@ -190,7 +190,7 @@ jobs:
 
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         continue-on-error: true
 
       - name: Generate summary

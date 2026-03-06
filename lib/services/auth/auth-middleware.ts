@@ -47,19 +47,22 @@ export async function requireAuth(_request: NextRequest): Promise<
       const { getPrismaClient } =
         await import("@/lib/services/database/database");
       const prisma = getPrismaClient();
-      let user = await prisma.user.findUnique({
+      const user = await prisma.user.findUnique({
         where: { email: session.user.email },
       });
 
       if (!user) {
-        // Create user if not found (fallback for auth issues)
-        user = await prisma.user.create({
-          data: {
-            email: session.user.email,
-            name: session.user.name || "",
+        // Do not auto-create users — they must register via a proper auth flow
+        return new NextResponse(
+          JSON.stringify({
+            error:
+              "User account not found. Please sign up or contact an administrator.",
+          }),
+          {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
           },
-        });
-        console.debug("Created missing user:", user.id);
+        );
       }
 
       return { session, userId: user.id };
