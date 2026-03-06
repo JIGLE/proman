@@ -76,7 +76,9 @@ function createBaseAuthOptions(): NextAuthOptions {
           email: { label: "Email", type: "email" },
           password: { label: "Password", type: "password" },
         },
-        async authorize(credentials) {
+        async authorize(
+          credentials: { email?: string; password?: string } | undefined,
+        ) {
           if (
             credentials?.email === "demo@proman.local" &&
             credentials?.password === "demo123"

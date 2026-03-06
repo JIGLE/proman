@@ -64,6 +64,11 @@ function verifySendGridSignature(
 async function processEvent(event: SendGridEvent): Promise<void> {
   const prisma = getPrismaClient();
 
+  const safeEmail =
+    typeof event.email === "string" ? event.email.slice(0, 255) : "";
+  const safeReason =
+    typeof event.reason === "string" ? event.reason.slice(0, 500) : undefined;
+
   // Map SendGrid event types to internal status
   const eventStatusMap: Record<string, string> = {
     processed: "sent",
@@ -82,7 +87,9 @@ async function processEvent(event: SendGridEvent): Promise<void> {
 
   try {
     // Find email log by SendGrid message ID
-    const sgMessageId = event["sg_message_id"] || event["message-id"] || "";
+    const sgMessageId = String(
+      event["sg_message_id"] || event["message-id"] || "",
+    ).trim();
 
     if (!sgMessageId) {
       console.debug(
@@ -101,32 +108,31 @@ async function processEvent(event: SendGridEvent): Promise<void> {
         status,
         lastEventAt: new Date(event.timestamp * 1000),
         lastEventType: event.event,
-        ...(event.reason && { failureReason: event.reason }),
+        ...(safeReason && { failureReason: safeReason }),
       },
       create: {
-        to: event.email,
+        to: safeEmail,
         from: "noreply@proman.local",
         subject: "[Webhook] Email Status Update",
         sendgridMessageId: sgMessageId,
         status,
         lastEventAt: new Date(event.timestamp * 1000),
         lastEventType: event.event,
-        ...(event.reason && { failureReason: event.reason }),
+        ...(safeReason && { failureReason: safeReason }),
       },
     });
 
-    console.debug(
-      `[SendGrid webhook] Processed ${event.event} for ${event.email}`,
-      {
-        messageId: sgMessageId,
-        logId: emailLog.id,
-      },
-    );
+    console.debug("[SendGrid webhook] Processed event", {
+      eventType: event.event,
+      email: safeEmail,
+      messageId: sgMessageId,
+      logId: emailLog.id,
+    });
   } catch (error) {
-    console.error(
-      `[SendGrid webhook] Failed to process ${event.event} event:`,
-      error instanceof Error ? error.message : String(error),
-    );
+    console.error("[SendGrid webhook] Failed to process event", {
+      eventType: event.event,
+      message: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 

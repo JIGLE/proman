@@ -134,7 +134,6 @@ export function createErrorResponse(
       error: message,
       ...(error instanceof ValidationError &&
         error.field && { field: error.field }),
-      ...(process.env.NODE_ENV === "development" && { stack: error.stack }),
     }),
     {
       status,

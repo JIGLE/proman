@@ -1,4 +1,4 @@
-import DOMPurify from 'isomorphic-dompurify';
+import DOMPurify from "isomorphic-dompurify";
 
 /**
  * Sanitizes HTML input to prevent XSS attacks
@@ -6,8 +6,8 @@ import DOMPurify from 'isomorphic-dompurify';
  * @returns Sanitized string safe for HTML rendering
  */
 export function sanitizeHtml(input: unknown): string {
-  if (typeof input !== 'string' || input.length === 0) {
-    return '';
+  if (typeof input !== "string" || input.length === 0) {
+    return "";
   }
 
   // Ensure we pass a string and explicitly disallow tags and attributes
@@ -23,19 +23,24 @@ export function sanitizeHtml(input: unknown): string {
  * @returns Sanitized string safe for database storage
  */
 export function sanitizeForDatabase(input: unknown): string {
-  if (typeof input !== 'string') {
-    return '';
+  if (typeof input !== "string") {
+    return "";
   }
 
   // First strip any HTML tags using DOMPurify (no tags allowed), then collapse whitespace
-  const stripped = DOMPurify.sanitize(input, { ALLOWED_TAGS: [], ALLOWED_ATTR: [] });
-  return String(stripped)
-    // Remove any HTML entities (e.g., &amp;) that may remain after sanitization
-    .replace(/&[a-z]+;/gi, ' ')
-    .replace(/[<>'"&]/g, '') // Remove remaining dangerous characters
-    .replace(/\s+/g, ' ') // Collapse whitespace
-    .trim()
-    .slice(0, 10000); // Limit length to prevent DoS
+  const stripped = DOMPurify.sanitize(input, {
+    ALLOWED_TAGS: [],
+    ALLOWED_ATTR: [],
+  });
+  return (
+    String(stripped)
+      // Remove named/numeric/hex HTML entities that may remain after sanitization
+      .replace(/&#(?:x[0-9a-f]+|\d+);|&[a-z][a-z0-9]+;/gi, " ")
+      .replace(/[<>'"&]/g, "") // Remove remaining dangerous characters
+      .replace(/\s+/g, " ") // Collapse whitespace
+      .trim()
+      .slice(0, 10000)
+  ); // Limit length to prevent DoS
 }
 
 /**
@@ -44,25 +49,25 @@ export function sanitizeForDatabase(input: unknown): string {
  * @returns Sanitized filename
  */
 export function sanitizeFilename(filename: unknown): string {
-  if (typeof filename !== 'string' || filename.length === 0) {
-    return 'file';
+  if (typeof filename !== "string" || filename.length === 0) {
+    return "file";
   }
 
   let s = String(filename)
     // Normalize path separators to underscore
-    .replace(/[\\/]+/g, '_')
+    .replace(/[\\/]+/g, "_");
 
   // Collapse directory traversal dots into a safe delimiter
-  s = s.replace(/\.\.+/g, '_')
+  s = s.replace(/\.\.+/g, "_");
 
   s = s
-    .replace(/[^a-zA-Z0-9._-]+/g, '_') // Replace other unsafe characters with underscore
-    .replace(/_+/g, '_') // Replace multiple underscores with single
-    .replace(/\.{2,}/g, '.') // Collapse multiple dots
-    .replace(/^[_\.]+|[_\.]+$/g, '') // Remove leading/trailing underscores/dots
+    .replace(/[^a-zA-Z0-9._-]+/g, "_") // Replace other unsafe characters with underscore
+    .replace(/_+/g, "_") // Replace multiple underscores with single
+    .replace(/\.{2,}/g, ".") // Collapse multiple dots
+    .replace(/^[_\.]+|[_\.]+$/g, "") // Remove leading/trailing underscores/dots
     .slice(0, 255); // Limit length
 
-  return s
+  return s;
 }
 
 /**
@@ -71,7 +76,7 @@ export function sanitizeFilename(filename: unknown): string {
  * @returns Sanitized email or null if invalid
  */
 export function sanitizeEmail(email: unknown): string | null {
-  if (typeof email !== 'string') {
+  if (typeof email !== "string") {
     return null;
   }
 
@@ -99,7 +104,7 @@ export function sanitizeNumber(
   input: unknown,
   defaultValue: number = 0,
   min?: number,
-  max?: number
+  max?: number,
 ): number {
   const num = Number(String(input));
 

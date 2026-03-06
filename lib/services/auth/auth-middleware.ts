@@ -97,7 +97,6 @@ export async function requireAuth(_request: NextRequest): Promise<
     return new NextResponse(
       JSON.stringify({
         error: "Authentication failed",
-        detail: process.env.NODE_ENV !== "production" ? errMsg : undefined,
       }),
       {
         status: 500,
