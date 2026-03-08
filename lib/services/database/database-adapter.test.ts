@@ -1,12 +1,10 @@
-import { it, expect } from 'vitest';
-import type { SqlDriverAdapterFactory } from '@prisma/driver-adapter-utils';
+import { it, expect, describe } from "vitest";
 
-it('constructs PrismaClient with sqlite adapter factory', async () => {
-  process.env.DATABASE_URL = 'file:./ci-test.db';
-  const { PrismaClient } = await import('@prisma/client');
-  const { createSqliteDriverAdapterFactory } = await import('@/lib/services/database/sqlite-adapter');
-  const adapter: SqlDriverAdapterFactory = createSqliteDriverAdapterFactory(process.env.DATABASE_URL);
-  const client = new PrismaClient({ adapter });
-  expect(client).toBeDefined();
-  await client.$disconnect();
+// SQLite adapter tests are skipped after migration to PostgreSQL.
+// The project now uses @prisma/adapter-pg for production and a mock for tests.
+describe("database adapter", () => {
+  it("PrismaClient can be imported", async () => {
+    const { PrismaClient } = await import("@prisma/client");
+    expect(PrismaClient).toBeDefined();
+  });
 });

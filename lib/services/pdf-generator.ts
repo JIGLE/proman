@@ -317,4 +317,22 @@ export const documentExport = {
 
     return pdfGenerator.generateFromHTML(html, fileName, options);
   },
+
+  /**
+   * Generate an Iberian lease agreement PDF (PT or ES)
+   */
+  async generateIberianLeasePDF(
+    leaseData: import("./lease-templates").IberianLeaseTemplateData,
+    options?: PDFGenerationOptions,
+  ): Promise<PDFResult> {
+    const { generateIberianLease } = await import("./lease-templates");
+    const html = generateIberianLease(leaseData);
+    const prefix =
+      leaseData.country === "PT"
+        ? "Contrato_Arrendamento"
+        : "Contrato_Arrendamiento";
+    const fileName = `${prefix}_${leaseData.tenantName.replace(/\s+/g, "_")}_${leaseData.startDate}`;
+
+    return pdfGenerator.generateFromHTML(html, fileName, options);
+  },
 };

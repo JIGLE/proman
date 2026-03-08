@@ -5,12 +5,17 @@ import { defineConfig } from "prisma/config";
 
 const schemaPath = "prisma/schema.prisma";
 
+const defaultUrl =
+  process.env["NODE_ENV"] === "production"
+    ? "postgresql://proman:proman@localhost:5432/proman"
+    : "postgresql://proman:proman@localhost:5432/proman_dev";
+
 export default defineConfig({
   schema: schemaPath,
   migrations: {
     path: "prisma/migrations",
   },
   datasource: {
-    url: process.env["DATABASE_URL"] || (process.env["NODE_ENV"] === "production" ? "file:/data/proman.db" : "file:./dev.db"),
+    url: process.env["DATABASE_URL"] || defaultUrl,
   },
 });

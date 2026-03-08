@@ -1,16 +1,62 @@
 /**
  * Tax calculation engine for Portugal and Spain rental income
- * Based on 2024 tax regulations - should be reviewed annually
+ * Updated for 2025/2026 tax regulations
+ *
+ * Portugal: IRS (Imposto sobre o Rendimento das Pessoas Singulares)
+ * - Progressive brackets updated for 2025/2026
+ * - Renda acessível (affordable rent) 10% flat rate support
+ *
+ * Spain: IRPF (Impuesto sobre la Renta de las Personas Físicas)
+ * - Ley de Vivienda (Housing Law 12/2023) rent caps
+ * - Stressed-zone (zona tensionada) deductions: 50%/60%/70%/90%
+ * - Grandes Tenedores (large holders) detection
  */
 
+// ─── Portugal: Renda Acessível (Affordable Rent) ─────────────────────────
+// Landlords who participate in programa de renda acessível get a flat 10% IRS rate
+// Conditions: monthly rent ≤ threshold (€2,300 for 2026), property registered with IHRU
+
+export const PT_RENDA_ACESSIVEL_THRESHOLD_2026 = 2300; // €/month max rent
+export const PT_RENDA_ACESSIVEL_RATE = 0.1; // 10% flat rate
+
+// ─── Spain: Ley de Vivienda / Stressed Zones ────────────────────────────
+// Reduction tiers for rental income in IRPF when renting in stressed zones
+
+export const ES_STRESSED_ZONE_DEDUCTIONS = {
+  /** 90% deduction: rent reduced ≥5% vs. prior contract in zona tensionada */
+  REDUCED_RENT: 0.9,
+  /** 70% deduction: first rental to tenant aged 18-35 in zona tensionada */
+  YOUNG_TENANT: 0.7,
+  /** 60% deduction: property with substantial renovation (≥2 yrs prior) */
+  REHABILITATED: 0.6,
+  /** 50% deduction: base deduction for any residential rental (general) */
+  BASE: 0.5,
+} as const;
+
+export const ES_GRANDES_TENEDORES_THRESHOLD_STRESSED = 5; // 5+ units in stressed zone
+export const ES_GRANDES_TENEDORES_THRESHOLD_GENERAL = 10; // 10+ units outside stressed zone
+
 export interface TaxCalculationInput {
-  country: 'Portugal' | 'Spain';
-  regime: 'portugal_rendimentos' | 'spain_inmuebles';
+  country: "Portugal" | "Spain";
+  regime: "portugal_rendimentos" | "spain_inmuebles";
   annualRentalIncome: number;
-  deductibleExpenses: number; // Repairs, maintenance, taxes, insurance
-  mortgageInterest?: number; // For Spain
-  communityFees?: number; // For Spain
-  yearsOfOwnership?: number; // For Portugal progressive tax
+  deductibleExpenses: number;
+  mortgageInterest?: number;
+  communityFees?: number;
+  yearsOfOwnership?: number;
+
+  // Portugal: renda acessível
+  isRendaAcessivel?: boolean;
+  monthlyRent?: number; // to validate against threshold
+
+  // Spain: Ley de Vivienda
+  isZonaTensionada?: boolean;
+  stressedZoneDeductionTier?: keyof typeof ES_STRESSED_ZONE_DEDUCTIONS;
+  tenantAge?: number;
+  isRehabilitatedProperty?: boolean;
+  isRentReducedVsPrior?: boolean; // rent reduced ≥5% vs. prior contract
+  totalUnitsOwned?: number; // for grandes tenedores
+  unitsInStressedZones?: number;
 }
 
 export interface TaxCalculationResult {
@@ -26,104 +72,205 @@ export interface TaxCalculationResult {
     total: number;
     breakdown: Record<string, number>;
   };
+  // New: compliance metadata
+  appliedRegime?: string;
+  warnings?: string[];
+  grandesTenedores?: boolean;
+  rentCapApplied?: boolean;
 }
+
+// ─── Portugal IRS Brackets 2025/2026 ─────────────────────────────────────
+// Source: Código do IRS, updated for 2025 (Orçamento do Estado 2025)
+const PT_TAX_BRACKETS_2026 = [
+  { min: 0, max: 7703, rate: 0.1325 },
+  { min: 7703, max: 11623, rate: 0.18 },
+  { min: 11623, max: 16472, rate: 0.23 },
+  { min: 16472, max: 21321, rate: 0.26 },
+  { min: 21321, max: 27146, rate: 0.3275 },
+  { min: 27146, max: 39791, rate: 0.37 },
+  { min: 39791, max: 51997, rate: 0.435 },
+  { min: 51997, max: 81199, rate: 0.45 },
+  { min: 81199, max: Infinity, rate: 0.48 },
+];
+
+// ─── Spain IRPF Brackets for rental income 2025/2026 ────────────────────
+const ES_TAX_BRACKETS_2026 = [
+  { min: 0, max: 12450, rate: 0.19 },
+  { min: 12450, max: 20200, rate: 0.24 },
+  { min: 20200, max: 35200, rate: 0.3 },
+  { min: 35200, max: 60000, rate: 0.37 },
+  { min: 60000, max: 300000, rate: 0.45 },
+  { min: 300000, max: Infinity, rate: 0.47 },
+];
 
 export class TaxCalculator {
   /**
-   * Calculate tax for Portugal - Rendimentos de Capitais
-   * Based on IRS (Imposto sobre o Rendimento das Pessoas Singulares)
+   * Calculate tax for Portugal - Rendimentos Prediais (Categoria F)
    */
-  private static calculatePortugalTax(input: TaxCalculationInput): TaxCalculationResult {
-    const { annualRentalIncome, deductibleExpenses, yearsOfOwnership = 1 } = input;
+  private static calculatePortugalTax(
+    input: TaxCalculationInput,
+  ): TaxCalculationResult {
+    const {
+      annualRentalIncome,
+      deductibleExpenses,
+      yearsOfOwnership = 1,
+    } = input;
+    const warnings: string[] = [];
 
-    // Deductible expenses (up to 15% of gross income or actual expenses)
-    const maxDeductible = Math.min(annualRentalIncome * 0.15, deductibleExpenses);
-    const taxableIncome = Math.max(0, annualRentalIncome - maxDeductible);
-
-    // Progressive tax brackets (2024)
-    let taxAmount = 0;
-    let marginalRate = 0;
-
-    if (taxableIncome <= 7520) {
-      taxAmount = taxableIncome * 0.12;
-      marginalRate = 12;
-    } else if (taxableIncome <= 11284) {
-      taxAmount = 7520 * 0.12 + (taxableIncome - 7520) * 0.15;
-      marginalRate = 15;
-    } else if (taxableIncome <= 15992) {
-      taxAmount = 7520 * 0.12 + (11284 - 7520) * 0.15 + (taxableIncome - 11284) * 0.21;
-      marginalRate = 21;
-    } else if (taxableIncome <= 20700) {
-      taxAmount = 7520 * 0.12 + (11284 - 7520) * 0.15 + (15992 - 11284) * 0.21 + (taxableIncome - 15992) * 0.26;
-      marginalRate = 26;
-    } else if (taxableIncome <= 26355) {
-      taxAmount = 7520 * 0.12 + (11284 - 7520) * 0.15 + (15992 - 11284) * 0.21 + (20700 - 15992) * 0.26 + (taxableIncome - 20700) * 0.29;
-      marginalRate = 29;
-    } else if (taxableIncome <= 50752) {
-      taxAmount = 7520 * 0.12 + (11284 - 7520) * 0.15 + (15992 - 11284) * 0.21 + (20700 - 15992) * 0.26 + (26355 - 20700) * 0.29 + (taxableIncome - 26355) * 0.31;
-      marginalRate = 31;
-    } else {
-      taxAmount = 7520 * 0.12 + (11284 - 7520) * 0.15 + (15992 - 11284) * 0.21 + (20700 - 15992) * 0.26 + (26355 - 20700) * 0.29 + (50752 - 26355) * 0.31 + (taxableIncome - 50752) * 0.35;
-      marginalRate = 35;
+    // ── Renda Acessível: flat 10% rate ──
+    if (input.isRendaAcessivel) {
+      const monthlyRent = input.monthlyRent ?? annualRentalIncome / 12;
+      if (monthlyRent > PT_RENDA_ACESSIVEL_THRESHOLD_2026) {
+        warnings.push(
+          `Monthly rent €${monthlyRent.toFixed(0)} exceeds renda acessível threshold of €${PT_RENDA_ACESSIVEL_THRESHOLD_2026}. Standard brackets applied.`,
+        );
+      } else {
+        // Flat 10% on gross income — no deductions apply under this regime
+        const taxAmount = annualRentalIncome * PT_RENDA_ACESSIVEL_RATE;
+        return {
+          grossIncome: annualRentalIncome,
+          netIncome: annualRentalIncome - taxAmount,
+          taxableIncome: annualRentalIncome,
+          taxRate: 10,
+          taxAmount,
+          quarterlyPayment: taxAmount / 4,
+          annualSettlement: taxAmount,
+          effectiveRate: 10,
+          deductions: { total: 0, breakdown: {} },
+          appliedRegime: "renda_acessivel_10pct",
+          warnings,
+        };
+      }
     }
 
-    // Apply property ownership bonus (reduces taxable income by 5-15% based on years owned)
+    // ── Standard progressive brackets (Categoria F — Rendimentos Prediais) ──
+    // Deductible expenses capped at 15% of gross income
+    const maxDeductible = Math.min(
+      annualRentalIncome * 0.15,
+      deductibleExpenses,
+    );
+    const taxableIncome = Math.max(0, annualRentalIncome - maxDeductible);
+
+    let taxAmount = 0;
+    let marginalRate = 0;
+    let remaining = taxableIncome;
+
+    for (const bracket of PT_TAX_BRACKETS_2026) {
+      const bracketWidth =
+        bracket.max === Infinity ? remaining : bracket.max - bracket.min;
+      const taxableInBracket = Math.min(remaining, bracketWidth);
+      if (taxableInBracket <= 0) break;
+      taxAmount += taxableInBracket * bracket.rate;
+      marginalRate = bracket.rate * 100;
+      remaining -= taxableInBracket;
+    }
+
+    // Ownership bonus (5% per year, max 15%)
     const ownershipBonus = Math.min(yearsOfOwnership * 0.05, 0.15);
-    const finalTaxableIncome = taxableIncome * (1 - ownershipBonus);
     const finalTaxAmount = taxAmount * (1 - ownershipBonus);
 
     return {
       grossIncome: annualRentalIncome,
       netIncome: annualRentalIncome - deductibleExpenses,
-      taxableIncome: finalTaxableIncome,
+      taxableIncome,
       taxRate: marginalRate,
       taxAmount: finalTaxAmount,
       quarterlyPayment: finalTaxAmount / 4,
       annualSettlement: finalTaxAmount,
-      effectiveRate: (finalTaxAmount / annualRentalIncome) * 100,
+      effectiveRate:
+        annualRentalIncome > 0
+          ? (finalTaxAmount / annualRentalIncome) * 100
+          : 0,
       deductions: {
-        total: deductibleExpenses + (taxableIncome * ownershipBonus),
+        total: deductibleExpenses + taxableIncome * ownershipBonus,
         breakdown: {
           expenses: deductibleExpenses,
           ownershipBonus: taxableIncome * ownershipBonus,
           maxDeductible,
-        }
-      }
+        },
+      },
+      appliedRegime: "portugal_categoria_f_standard",
+      warnings,
     };
   }
 
   /**
    * Calculate tax for Spain - IRPF Inmuebles Urbanos
-   * Based on Impuesto sobre la Renta de las Personas Físicas
+   * Includes Ley de Vivienda stressed-zone deductions (Art. 23 LIRPF modified 2024)
    */
-  private static calculateSpainTax(input: TaxCalculationInput): TaxCalculationResult {
+  private static calculateSpainTax(
+    input: TaxCalculationInput,
+  ): TaxCalculationResult {
     const {
       annualRentalIncome,
       deductibleExpenses,
       mortgageInterest = 0,
-      communityFees = 0
+      communityFees = 0,
     } = input;
+    const warnings: string[] = [];
 
-    // Total deductions
-    const totalDeductions = deductibleExpenses + mortgageInterest + communityFees;
+    // ── Grandes Tenedores detection ──
+    const grandesTenedores = TaxCalculator.isGrandesTenedores(
+      input.totalUnitsOwned ?? 0,
+      input.unitsInStressedZones ?? 0,
+    );
+    if (grandesTenedores) {
+      warnings.push(
+        'Classified as "gran tenedor" — stricter rent cap rules apply per Ley de Vivienda Art. 17.6.',
+      );
+    }
 
-    // Taxable income (reduced by deductions, max 50% of gross income)
+    // ── Total deductions (general expenses) ──
+    const totalDeductions =
+      deductibleExpenses + mortgageInterest + communityFees;
     const maxDeductible = annualRentalIncome * 0.5;
     const actualDeductions = Math.min(totalDeductions, maxDeductible);
-    const taxableIncome = Math.max(0, annualRentalIncome - actualDeductions);
+    const netRentalIncome = Math.max(0, annualRentalIncome - actualDeductions);
 
-    // Progressive tax brackets for rental income (2024)
-    // Note: Spain taxes rental income at marginal rates, but with special rules
+    // ── Stressed-zone deduction (Art. 23 LIRPF as modified by Ley de Vivienda) ──
+    let stressedZoneReduction = 0;
+    let appliedTier = "none";
+
+    if (input.isZonaTensionada) {
+      // Priority order: 90% > 70% > 60% > 50%
+      if (input.isRentReducedVsPrior) {
+        stressedZoneReduction = ES_STRESSED_ZONE_DEDUCTIONS.REDUCED_RENT;
+        appliedTier = "reduced_rent_90pct";
+      } else if (
+        input.tenantAge &&
+        input.tenantAge >= 18 &&
+        input.tenantAge <= 35
+      ) {
+        stressedZoneReduction = ES_STRESSED_ZONE_DEDUCTIONS.YOUNG_TENANT;
+        appliedTier = "young_tenant_70pct";
+      } else if (input.isRehabilitatedProperty) {
+        stressedZoneReduction = ES_STRESSED_ZONE_DEDUCTIONS.REHABILITATED;
+        appliedTier = "rehabilitated_60pct";
+      } else {
+        stressedZoneReduction = ES_STRESSED_ZONE_DEDUCTIONS.BASE;
+        appliedTier = "base_50pct";
+      }
+    } else {
+      // Outside stressed zones: standard 50% deduction for residential
+      stressedZoneReduction = ES_STRESSED_ZONE_DEDUCTIONS.BASE;
+      appliedTier = "standard_50pct";
+    }
+
+    const taxableIncome = netRentalIncome * (1 - stressedZoneReduction);
+
+    // ── Apply IRPF progressive brackets ──
     let taxAmount = 0;
     let marginalRate = 0;
+    let remaining = taxableIncome;
 
-    // For rental income, apply 19% for income up to €35,000, then 24% above
-    if (taxableIncome <= 35000) {
-      taxAmount = taxableIncome * 0.19;
-      marginalRate = 19;
-    } else {
-      taxAmount = 35000 * 0.19 + (taxableIncome - 35000) * 0.24;
-      marginalRate = 24;
+    for (const bracket of ES_TAX_BRACKETS_2026) {
+      const bracketWidth =
+        bracket.max === Infinity ? remaining : bracket.max - bracket.min;
+      const taxableInBracket = Math.min(remaining, bracketWidth);
+      if (taxableInBracket <= 0) break;
+      taxAmount += taxableInBracket * bracket.rate;
+      marginalRate = bracket.rate * 100;
+      remaining -= taxableInBracket;
     }
 
     return {
@@ -132,18 +279,125 @@ export class TaxCalculator {
       taxableIncome,
       taxRate: marginalRate,
       taxAmount,
-      quarterlyPayment: taxAmount / 4, // Spain requires quarterly payments
+      quarterlyPayment: taxAmount / 4,
       annualSettlement: taxAmount,
-      effectiveRate: (taxAmount / annualRentalIncome) * 100,
+      effectiveRate:
+        annualRentalIncome > 0 ? (taxAmount / annualRentalIncome) * 100 : 0,
       deductions: {
-        total: actualDeductions,
+        total: actualDeductions + netRentalIncome * stressedZoneReduction,
         breakdown: {
           expenses: deductibleExpenses,
           mortgageInterest,
           communityFees,
           maxDeductible,
-        }
+          stressedZoneReduction: netRentalIncome * stressedZoneReduction,
+          stressedZoneTier: appliedTier as unknown as number,
+        },
+      },
+      appliedRegime: `spain_irpf_${appliedTier}`,
+      warnings,
+      grandesTenedores,
+    };
+  }
+
+  /**
+   * Determine if landlord is a "gran tenedor" (large holder)
+   * Ley de Vivienda Art. 3.k:
+   * - ≥5 urban residential units in a zona tensionada, OR
+   * - ≥10 urban residential units (or >1,500m² residential) anywhere
+   */
+  static isGrandesTenedores(
+    totalUnits: number,
+    unitsInStressedZones: number,
+  ): boolean {
+    if (unitsInStressedZones >= ES_GRANDES_TENEDORES_THRESHOLD_STRESSED)
+      return true;
+    if (totalUnits >= ES_GRANDES_TENEDORES_THRESHOLD_GENERAL) return true;
+    return false;
+  }
+
+  /**
+   * Validate rent against Ley de Vivienda cap for stressed zones
+   * Returns the maximum legal rent and whether the proposed rent exceeds it.
+   *
+   * For existing tenants: rent increase capped at INE reference index (max 3% for 2024, 2% for 2025)
+   * For new contracts (non-gran-tenedor): limited by prior contract rent
+   * For new contracts (gran tenedor): limited by official MITMA reference index
+   */
+  static validateRentCap(params: {
+    proposedMonthlyRent: number;
+    priorContractRent?: number;
+    mitmaReferenceIndex?: number;
+    isNewContract: boolean;
+    isZonaTensionada: boolean;
+    isGranTenedor: boolean;
+    year?: number;
+  }): { allowed: boolean; maxRent: number; reason: string } {
+    const {
+      proposedMonthlyRent,
+      priorContractRent,
+      mitmaReferenceIndex,
+      isNewContract,
+      isZonaTensionada,
+      isGranTenedor,
+    } = params;
+    const year = params.year ?? 2026;
+
+    if (!isZonaTensionada) {
+      return {
+        allowed: true,
+        maxRent: proposedMonthlyRent,
+        reason: "Property not in zona tensionada — no cap applies.",
+      };
+    }
+
+    // INE reference index cap for rent updates (existing contracts)
+    const maxAnnualIncrease = year >= 2025 ? 0.02 : 0.03; // 2% from 2025, 3% for 2024
+
+    if (!isNewContract && priorContractRent) {
+      const maxRent = priorContractRent * (1 + maxAnnualIncrease);
+      return {
+        allowed: proposedMonthlyRent <= maxRent,
+        maxRent,
+        reason: `Existing contract in zona tensionada: max increase ${(maxAnnualIncrease * 100).toFixed(0)}% (INE reference index). Max: €${maxRent.toFixed(2)}/mo.`,
+      };
+    }
+
+    // New contracts
+    if (isNewContract) {
+      if (isGranTenedor && mitmaReferenceIndex) {
+        // Gran tenedor: must use MITMA official reference index
+        return {
+          allowed: proposedMonthlyRent <= mitmaReferenceIndex,
+          maxRent: mitmaReferenceIndex,
+          reason: `Gran tenedor in zona tensionada: rent capped at MITMA reference index €${mitmaReferenceIndex.toFixed(2)}/mo.`,
+        };
       }
+
+      if (priorContractRent) {
+        // Non-gran-tenedor: capped at prior contract rent (adjusted by index)
+        const maxRent = priorContractRent * (1 + maxAnnualIncrease);
+        return {
+          allowed: proposedMonthlyRent <= maxRent,
+          maxRent,
+          reason: `New contract in zona tensionada: capped at prior rent + ${(maxAnnualIncrease * 100).toFixed(0)}%. Max: €${maxRent.toFixed(2)}/mo.`,
+        };
+      }
+
+      if (mitmaReferenceIndex) {
+        return {
+          allowed: proposedMonthlyRent <= mitmaReferenceIndex,
+          maxRent: mitmaReferenceIndex,
+          reason: `New contract in zona tensionada (no prior rent): capped at MITMA reference index €${mitmaReferenceIndex.toFixed(2)}/mo.`,
+        };
+      }
+    }
+
+    return {
+      allowed: true,
+      maxRent: proposedMonthlyRent,
+      reason:
+        "Insufficient data to validate rent cap. Ensure prior rent or MITMA index is provided.",
     };
   }
 
@@ -151,9 +405,9 @@ export class TaxCalculator {
    * Main calculation method
    */
   static calculateTax(input: TaxCalculationInput): TaxCalculationResult {
-    if (input.country === 'Portugal') {
+    if (input.country === "Portugal") {
       return this.calculatePortugalTax(input);
-    } else if (input.country === 'Spain') {
+    } else if (input.country === "Spain") {
       return this.calculateSpainTax(input);
     }
 
@@ -163,22 +417,21 @@ export class TaxCalculator {
   /**
    * Get tax brackets for a country (for display purposes)
    */
-  static getTaxBrackets(country: 'Portugal' | 'Spain'): Array<{ min: number; max: number; rate: number }> {
-    if (country === 'Portugal') {
-      return [
-        { min: 0, max: 7520, rate: 12 },
-        { min: 7520, max: 11284, rate: 15 },
-        { min: 11284, max: 15992, rate: 21 },
-        { min: 15992, max: 20700, rate: 26 },
-        { min: 20700, max: 26355, rate: 29 },
-        { min: 26355, max: 50752, rate: 31 },
-        { min: 50752, max: Infinity, rate: 35 },
-      ];
-    } else if (country === 'Spain') {
-      return [
-        { min: 0, max: 35000, rate: 19 },
-        { min: 35000, max: Infinity, rate: 24 },
-      ];
+  static getTaxBrackets(
+    country: "Portugal" | "Spain",
+  ): Array<{ min: number; max: number; rate: number }> {
+    if (country === "Portugal") {
+      return PT_TAX_BRACKETS_2026.map((b) => ({
+        min: b.min,
+        max: b.max,
+        rate: b.rate * 100,
+      }));
+    } else if (country === "Spain") {
+      return ES_TAX_BRACKETS_2026.map((b) => ({
+        min: b.min,
+        max: b.max,
+        rate: b.rate * 100,
+      }));
     }
 
     return [];
@@ -188,13 +441,14 @@ export class TaxCalculator {
    * Estimate quarterly tax payments
    */
   static calculateQuarterlyEstimate(
-    country: 'Portugal' | 'Spain',
+    country: "Portugal" | "Spain",
     quarterlyIncome: number,
-    quarterlyExpenses: number
+    quarterlyExpenses: number,
   ): number {
     const annualEstimate = this.calculateTax({
       country,
-      regime: country === 'Portugal' ? 'portugal_rendimentos' : 'spain_inmuebles',
+      regime:
+        country === "Portugal" ? "portugal_rendimentos" : "spain_inmuebles",
       annualRentalIncome: quarterlyIncome * 4,
       deductibleExpenses: quarterlyExpenses * 4,
     });
@@ -205,9 +459,9 @@ export class TaxCalculator {
   /**
    * Format currency for display
    */
-  static formatCurrency(amount: number, currency: string = 'EUR'): string {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
+  static formatCurrency(amount: number, currency: string = "EUR"): string {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
       currency,
       minimumFractionDigits: 0,
       maximumFractionDigits: 2,

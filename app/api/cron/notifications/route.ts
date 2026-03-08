@@ -1,0 +1,50 @@
+/**
+ * Cron endpoint for notification automation.
+ *
+ * Trigger daily via:
+ * - Kubernetes CronJob: curl -H "Authorization: Bearer $CRON_SECRET" https://app/api/cron/notifications
+ * - GitHub Actions: scheduled workflow
+ * - Vercel Cron: vercel.json crons config
+ *
+ * Protected by CRON_SECRET env var to prevent unauthorized access.
+ */
+
+import { NextRequest, NextResponse } from "next/server";
+import { runNotificationAutomation } from "@/lib/services/notifications/notification-automation";
+
+export async function POST(request: NextRequest): Promise<NextResponse> {
+  // Verify cron secret to prevent unauthorized triggers
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+    return NextResponse.json(
+      { error: "CRON_SECRET not configured" },
+      { status: 503 },
+    );
+  }
+
+  const authHeader = request.headers.get("authorization");
+  const token = authHeader?.replace("Bearer ", "");
+
+  if (token !== cronSecret) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  try {
+    const result = await runNotificationAutomation();
+    return NextResponse.json({
+      ok: true,
+      ...result,
+    });
+  } catch (error) {
+    console.error("Notification cron failed:", error);
+    return NextResponse.json(
+      { error: "Notification automation failed" },
+      { status: 500 },
+    );
+  }
+}
+
+// Also support GET for simple cron services
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  return POST(request);
+}

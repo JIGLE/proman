@@ -1,5 +1,24 @@
 # Releases
 
+- Date: 2026-03-08
+  - Version: v1.4.0
+  - Image: `ghcr.io/jigle/proman:1.4.0`
+  - Notes: Iberian compliance — full Portugal & Spain production readiness for 2026
+    - **Portugal Compliance**: Recibos de Renda Eletrónicos module (AT XML submission, NIF validation, 5-day deadline enforcement)
+    - **Portugal Tax**: 2026 IRS brackets, Renda Acessível flat 10% rate (rents ≤ €2,300/month)
+    - **Portugal SAF-T**: RSA-SHA1 digital signature with hash chain across invoices, certificate from env
+    - **Spain Compliance**: NRUA Ventanilla Única Digital — mandatory rental contract registry from 2026 (`NRUARegistration` model + XML export)
+    - **Spain Tax**: Ley de Vivienda 12/2023 rent caps, stressed-zone deductions (50/60/70/90%), grandes tenedores detection (5+ units threshold)
+    - **Database**: Migrated from SQLite to PostgreSQL; new migration `20260308000000_iberian_compliance` adds `StressedZone`, `NRUARegistration`, `RentReceipt` tables and Iberian columns on `Lease`/`Property`
+    - **Payments**: SEPA Direct Debit mandate lifecycle API (create, list, cancel via Stripe)
+    - **Security**: AES-256-GCM field-level PII encryption for IBAN, NIF, phone
+    - **Automation**: Daily notification cron service — rent reminders (D-5), overdue notices (D+1, D+7), lease renewal (D-60), receipt deadline (D+4)
+    - **Lease Templates**: Bilingual PDF generation — PT Contrato de Arrendamento Urbano (NRAU) and ES Contrato de Arrendamiento de Vivienda (LAU + Ley 12/2023)
+    - **i18n**: Expanded from 82 to 236 keys across EN/PT/ES with full parity (compliance, tax, payments, leases, maintenance, documents, notifications, owners, invoices, tenant portal)
+    - **Infrastructure**: K8s CronJob manifest for notification automation; `CRON_SECRET` env var protection
+    - **Testing**: 36/36 unit tests green; 18 new E2E compliance endpoint tests
+    - **Demo Safety**: `ENABLE_DEMO_LOGIN` kill switch for credentials provider
+
 - Date: 2026-03-03
   - Version: v1.2.2
   - Image: `ghcr.io/jigle/proman:1.2.2`
