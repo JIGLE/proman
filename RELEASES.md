@@ -1,5 +1,18 @@
 # Releases
 
+- Date: 2026-03-11
+  - Version: main@c7f2d65 (post-v1.4.0 stabilization)
+  - Image: `ghcr.io/jigle/proman:1.4.0` (no image tag change)
+  - Notes: Sprint execution completion — quality gates, security hardening, auditability, and documentation claim alignment
+    - **Quality Gate**: CI now enforces `eslint --max-warnings=0`; required Playwright PR smoke gate added in `.github/workflows/ci.yml`
+    - **Security**: Added timing-safe secret comparison utility and migrated cron auth token checks to constant-time comparison
+    - **GDPR Auditability**: Admin database access route now writes `DATABASE_ACCESS` audit events with actor, scope, request metadata, and resilient failure handling
+    - **Type/Lint Burn-down**: Warning backlog reduced to zero; strict lint ratchet introduced to prevent regression
+    - **Testing Signal Cleanup**: Reduced expected test noise by normalizing error/log handling in high-noise suites (error-boundary, webhook, audit-log)
+    - **Docs Governance**: Added active sprint board and claim audit report; marked legacy status doc as historical/non-authoritative
+    - **Claim Alignment**: Public capability wording refreshed to avoid overclaims (notably payments/compliance phrasing) and test-baseline counts updated
+    - **Verification**: `verify:ci` green at commit `c7f2d65` (37 test files, 86 passing, 6 skipped)
+
 - Date: 2026-03-08
   - Version: v1.4.0
   - Image: `ghcr.io/jigle/proman:1.4.0`
