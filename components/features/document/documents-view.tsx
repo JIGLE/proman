@@ -298,7 +298,7 @@ export function DocumentsView() {
         reader.readAsDataURL(uploadForm.file!);
       });
 
-      const response = await apiFetch<Record<string, unknown>>(
+      await apiFetch<Record<string, unknown>>(
         "/api/documents",
         csrfToken,
         "POST",

@@ -184,12 +184,30 @@ export const pdfGenerator = {
     try {
       // Try to import puppeteer at runtime without static analysis so the bundler
       // does not require it during build when it's not installed.
-      let puppeteer: any | undefined;
+      let puppeteer:
+        | {
+            default?: {
+              launch: (opts: {
+                headless: boolean;
+                args: string[];
+              }) => Promise<{
+                newPage: () => Promise<{
+                  setContent: (
+                    content: string,
+                    options: { waitUntil: string },
+                  ) => Promise<void>;
+                  pdf: (opts: Record<string, unknown>) => Promise<Buffer>;
+                }>;
+                close: () => Promise<void>;
+              }>;
+            };
+          }
+        | undefined;
       try {
         // Dynamic import of optional puppeteer dependency
         // @ts-expect-error puppeteer is an optional peer dependency
         puppeteer = await import("puppeteer").catch(() => undefined);
-      } catch (e) {
+      } catch {
         puppeteer = undefined;
       }
 

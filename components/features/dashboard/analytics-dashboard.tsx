@@ -1,13 +1,7 @@
 "use client";
 
 import * as React from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -28,7 +22,6 @@ import {
 import { LeaseCalendar } from "@/components/ui/lease-calendar";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { useApp } from "@/lib/contexts/app-context";
-import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import {
   Building2,

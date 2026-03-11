@@ -1,24 +1,28 @@
-import { useState, useEffect, useCallback } from 'react';
-import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 
 /**
  * Hook for persisting tab state across page reloads
  * Stores state in both localStorage and URL query params
- * 
+ *
  * @param moduleId - Unique identifier for the module (e.g., 'properties', 'financials')
  * @param defaultTab - Default tab to show if none is selected
  * @returns [activeTab, setActiveTab] tuple
  */
-export function useTabPersistence(moduleId: string, defaultTab: string): [string, (tab: string) => void] {
+export function useTabPersistence(
+  moduleId: string,
+  defaultTab: string,
+): [string, (tab: string) => void] {
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
-  
+  const hasHydratedFromStorage = useRef(false);
+
   // Get initial tab from URL or default only. Avoid reading localStorage during initial render
   // to prevent hydration mismatches between server and client. LocalStorage will be read
   // on the client after mount and will override the active tab if needed.
   const getInitialTab = useCallback(() => {
-    const urlTab = searchParams.get('view');
+    const urlTab = searchParams.get("view");
     if (urlTab) return urlTab;
     return defaultTab;
   }, [searchParams, defaultTab]);
@@ -26,30 +30,35 @@ export function useTabPersistence(moduleId: string, defaultTab: string): [string
   const [activeTab, setActiveTabState] = useState<string>(getInitialTab);
 
   // Update both URL and localStorage when tab changes
-  const setActiveTab = useCallback((tab: string) => {
-    setActiveTabState(tab);
+  const setActiveTab = useCallback(
+    (tab: string) => {
+      setActiveTabState(tab);
 
-    // Update localStorage (client only)
-    if (typeof window !== 'undefined') {
-      try {
-        localStorage.setItem(`tab-${moduleId}`, tab);
-      } catch (e) {
-        // ignore quota errors
+      // Update localStorage (client only)
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(`tab-${moduleId}`, tab);
+        } catch {
+          // ignore quota errors
+        }
       }
-    }
 
-    // Update URL without page reload
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('view', tab);
-    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
-  }, [moduleId, searchParams, router, pathname]);
+      // Update URL without page reload
+      const params = new URLSearchParams(searchParams.toString());
+      params.set("view", tab);
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [moduleId, searchParams, router, pathname],
+  );
 
   // On mount (client only) hydrate from localStorage if present (preference) or from URL
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
+    if (hasHydratedFromStorage.current) return;
+    hasHydratedFromStorage.current = true;
 
     // Prefer URL param if present
-    const urlTab = searchParams.get('view');
+    const urlTab = searchParams.get("view");
     if (urlTab && urlTab !== activeTab) {
       setActiveTabState(urlTab);
       return;
@@ -61,14 +70,14 @@ export function useTabPersistence(moduleId: string, defaultTab: string): [string
       if (stored && stored !== activeTab) {
         setActiveTabState(stored);
       }
-    } catch (e) {
+    } catch {
       // ignore
     }
-  }, []);
+  }, [activeTab, moduleId, searchParams]);
 
   // Sync with URL changes (e.g., browser back/forward)
   useEffect(() => {
-    const urlTab = searchParams.get('view');
+    const urlTab = searchParams.get("view");
     if (urlTab && urlTab !== activeTab) {
       setActiveTabState(urlTab);
     }

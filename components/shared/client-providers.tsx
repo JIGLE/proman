@@ -11,15 +11,17 @@ interface ClientProvidersProps {
   nonce?: string;
 }
 
-export function ClientProviders({ children, nonce }: ClientProvidersProps): React.ReactElement {
+export function ClientProviders({
+  children,
+  nonce,
+}: ClientProvidersProps): React.ReactElement {
+  void nonce;
   return (
     <DevAuthProvider>
       <ThemeProvider>
         <CsrfProvider>
           <ToastProvider>
-            <AppProvider>
-              {children}
-            </AppProvider>
+            <AppProvider>{children}</AppProvider>
           </ToastProvider>
         </CsrfProvider>
       </ThemeProvider>

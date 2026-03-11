@@ -1,11 +1,17 @@
 # Proman Property Management - Project Status
 
+> Historical document (non-authoritative).
+> Active planning and delivery source of truth: [SPRINT_BOARD_2026Q2.md](./SPRINT_BOARD_2026Q2.md).
+> Snapshot preserved for context only.
+
 ## Project Overview
+
 **Current Stage**: Production-ready MVP with modern UI/UX and comprehensive testing  
 **Completion**: ~95% of original roadmap  
-**Next Phase**: Advanced features, analytics, and workflow automation  
+**Next Phase**: Advanced features, analytics, and workflow automation
 
 ## Progress Summary
+
 - ✅ **Completed**: Data persistence, authentication, API layer, security hardening, middleware optimization, modern UI/UX, comprehensive testing, email integration
 - ✅ **UI/UX Overhaul**: Advanced search, filtering, sorting, export functionality across all views
 - ✅ **Testing Framework**: 93.2% test coverage with unit, integration, and component tests
@@ -13,9 +19,11 @@
 - 📋 **Remaining**: E2E test coverage, email retry logic, staging validation
 
 ## Current Development Plan (Feb 2026)
+
 **Goal**: Production readiness with monitoring, email reliability, and comprehensive E2E testing
 
 ### Active Tasks
+
 1. ✅ **Schema Synchronization** - Created shared property schema (lib/schemas/property.schema.ts), synced frontend/backend validation
 2. ✅ **E2E Authentication** - Fixed JWT + Credentials provider issues, removed middleware.ts conflict
 3. ✅ **E2E Test Suite** - All 36 tests passing (smoke, dashboard, email, payments, tax, tenant-portal, crud, property workflow)
@@ -26,6 +34,7 @@
 8. 📋 **Production Rollout** - Blue-green deployment with traffic shifting and rollback plan
 
 ## Recently Completed ✅
+
 - [x] **Health Check Endpoints** - Implemented `/api/health` (combined check), `/api/health/db` (database latency), `/api/health/email` (config verification)
 - [x] **Metrics Endpoint** - Created `/api/metrics` with Prometheus-compatible format (http_requests_total, db_queries_total, email_sent_total, process_uptime_seconds)
 - [x] **Monitoring Documentation** - Comprehensive guide in docs/MONITORING_SETUP.md (440+ lines covering health checks, metrics, logging, alerting, runbooks)
@@ -48,6 +57,7 @@
 ## 🔴 Critical Remaining (P0 - Production Readiness)
 
 ### 1. Email Integration for Correspondence
+
 - [x] **SMTP Service Integration** - SendGrid integrated (`@sendgrid/mail`) and configured
 - [x] **Email Templates** - HTML templates created (rent reminders, lease renewals, maintenance notifications, custom templates)
 - [x] **Delivery Tracking** - Email logging implemented (Prisma `EmailLog` model, status enum). Real-time webhook handling for delivered/bounced events implemented.
@@ -60,6 +70,7 @@
 - **Priority**: P0
 
 ### 2. Testing Framework Implementation
+
 - [x] **Unit Tests** - Vitest + Testing Library in place; many component tests added and stabilized
 - [x] **Integration Tests** - Added integration tests for SQLite DB init and a sample end-to-end property creation; CI runs integration tests in a dedicated job with a job-scoped SQLite file
 - [ ] **E2E Tests** - Playwright configured; 8 test files exist; workflow-property.spec.ts blocked by schema validation mismatch
@@ -74,6 +85,7 @@
 ## 🟡 Core Feature Completion (P1 - MVP Enhancement)
 
 ### 3. Financial Tracking Enhancement
+
 - [ ] **Income/Expense Categories** - Advanced financial categorization system
 - [ ] **Rent Collection Automation** - Automated rent payment monitoring and reminders
 - [ ] **Financial Reports** - Monthly/yearly reports with charts and analytics
@@ -83,6 +95,7 @@
 - **Priority**: P1
 
 ### 4. PDF Generation Enhancements
+
 - [ ] **Template Customization** - User-configurable PDF templates
 - [ ] **Multi-language Support** - Localized PDF generation
 - [ ] **Branding Options** - Company logo and color scheme integration
@@ -96,6 +109,7 @@
 ## 🟢 User Experience & Design Improvements
 
 ### 5. Responsive Design Optimization
+
 - [ ] **Mobile-First Design** - Complete mobile experience overhaul
 - [ ] **Tablet Optimization** - Proper layout for tablet devices
 - [ ] **Touch Interactions** - Enhanced touch-friendly UI elements
@@ -105,6 +119,7 @@
 - **Priority**: P1
 
 ### 6. Accessibility Compliance
+
 - [ ] **WCAG 2.1 AA Audit** - Full accessibility audit and implementation
 - [ ] **Keyboard Navigation** - Complete keyboard-only navigation support
 - [ ] **Screen Reader** - Proper ARIA labels and semantic HTML
@@ -114,6 +129,7 @@
 - **Priority**: P2
 
 ### 7. UI/UX Polish & Dashboard Analytics
+
 - [ ] **Dashboard Metrics** - Occupancy rates, financial summaries, KPI displays
 - [ ] **Micro-interactions** - Smooth animations and loading states
 - [ ] **Visual Hierarchy** - Improved typography and spacing consistency
@@ -127,6 +143,7 @@
 ## 🔵 Technical Debt & Architecture
 
 ### 8. Performance Optimization
+
 - [ ] **Bundle Analysis** - Identify and optimize large dependencies
 - [ ] **Code Splitting** - Lazy loading for better initial load times
 - [ ] **Database Optimization** - Query optimization and indexing
@@ -136,6 +153,7 @@
 - **Priority**: P2
 
 ### 9. State Management Evaluation
+
 - [ ] **Assessment** - Evaluate if Zustand/Redux needed for complex state management
 - [ ] **Migration** - Migrate to more robust state management if needed
 - **Status**: React Context working well
@@ -145,6 +163,7 @@
 ---
 
 ### 10. Data Privacy & GDPR Compliance
+
 - [ ] **Privacy Policy** - Implement privacy policy and data sharing controls
 - [ ] **Data Export/Deletion** - GDPR-compliant data portability features
 - [ ] **Consent Management** - User consent tracking and management
@@ -153,6 +172,7 @@
 - **Priority**: P1
 
 ### 11. Audit Logging
+
 - [ ] **User Action Tracking** - Comprehensive audit system for compliance
 - [ ] **Change History** - Data change tracking and security event logging
 - **Status**: No audit trails
@@ -164,6 +184,7 @@
 ## 📚 Documentation & Deployment
 
 ### 12. User Documentation
+
 - [ ] **User Guides** - Comprehensive feature documentation and tutorials
 - [ ] **Video Tutorials** - Step-by-step video guides for key workflows
 - [ ] **FAQ** - Frequently asked questions and troubleshooting
@@ -172,6 +193,7 @@
 - **Priority**: P2
 
 ### 13. API Documentation
+
 - [ ] **OpenAPI Specs** - Swagger/OpenAPI documentation for future integrations
 - [ ] **Developer Docs** - API reference and integration guides
 - **Status**: API routes exist but undocumented
@@ -179,6 +201,7 @@
 - **Priority**: P2
 
 ### 14. Deployment Automation
+
 - [x] **Environment Configs** - Environment-specific configuration management (Dec 24, 2025)
 - [x] **Monitoring Setup** - Health monitoring and alerting (GitHub Actions configured)
 - [x] **CI/CD Pipeline** - Automated Docker builds and GHCR deployment (Dec 24, 2025)
@@ -194,16 +217,19 @@
 - **Total Estimated Effort Remaining**: 10-13 weeks (reduced from 12-16 weeks)
 
 ### Phase 1: Production Readiness (Weeks 1-3)
+
 - [x] API layer and security hardening completion
 - [x] CI/CD pipeline and automated deployment setup (Dec 24, 2025)
 - [ ] Email integration and testing framework completion
 - [x] **Milestone**: Production-deployable application (Dec 24, 2025)
 
 ### Phase 2: Feature Completion (Weeks 4-8)
+
 - [ ] Financial enhancements and responsive design
 - [ ] **Milestone**: Enterprise-ready feature set
 
 ### Phase 3: Polish & Quality (Weeks 9-12)
+
 - [ ] Accessibility, documentation, and performance optimization
 - [ ] **Milestone**: Market-ready product
 
@@ -229,7 +255,7 @@
 
 ---
 
-*Last Updated: January 9, 2026*  
-*Next Review: January 16, 2026*  
+_Last Updated: January 9, 2026 (historical snapshot)_  
+_Replaced by active sprint board on: March 11, 2026_
 
 **Instructions**: Mark completed items with [x], update status, and add completion notes. Review weekly to track progress.

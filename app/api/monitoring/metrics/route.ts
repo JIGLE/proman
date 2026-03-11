@@ -9,7 +9,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { metrics } from "@/lib/monitoring/metrics";
 import { getMetrics } from "@/lib/monitoring/performance";
-import { getRecentErrors, getErrorStats } from "@/lib/monitoring/error-tracker";
 import { logger } from "@/lib/utils/logger";
 
 /**

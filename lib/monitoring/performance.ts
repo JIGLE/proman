@@ -1,6 +1,6 @@
 /**
  * Performance Monitoring Utilities
- * 
+ *
  * Tracks application performance metrics including:
  * - Page load times
  * - API response times
@@ -9,12 +9,12 @@
  * - Web Vitals (LCP, FID, CLS)
  */
 
-import { logger } from '@/lib/utils/logger';
+import { logger } from "@/lib/utils/logger";
 
 export interface PerformanceMetric {
   name: string;
   value: number;
-  unit: 'ms' | 'bytes' | 'score';
+  unit: "ms" | "bytes" | "score";
   timestamp: number;
   metadata?: Record<string, unknown>;
 }
@@ -56,7 +56,7 @@ class MetricsStore {
   }
 
   getAverageByName(name: string): number {
-    const filtered = this.metrics.filter(m => m.name === name);
+    const filtered = this.metrics.filter((m) => m.name === name);
     if (filtered.length === 0) return 0;
     const sum = filtered.reduce((acc, m) => acc + m.value, 0);
     return sum / filtered.length;
@@ -76,8 +76,8 @@ const metricsStore = new MetricsStore();
 export function recordMetric(
   name: string,
   value: number,
-  unit: 'ms' | 'bytes' | 'score' = 'ms',
-  metadata?: Record<string, unknown>
+  unit: "ms" | "bytes" | "score" = "ms",
+  metadata?: Record<string, unknown>,
 ): void {
   const metric: PerformanceMetric = {
     name,
@@ -104,18 +104,18 @@ export function recordMetric(
  */
 function shouldLogMetric(name: string, value: number, unit: string): boolean {
   // Log slow operations
-  if (unit === 'ms') {
+  if (unit === "ms") {
     // API calls over 1s
-    if (name.includes('api') && value > 1000) return true;
+    if (name.includes("api") && value > 1000) return true;
     // Database queries over 500ms
-    if (name.includes('db') && value > 500) return true;
+    if (name.includes("db") && value > 500) return true;
     // Page loads over 3s
-    if (name.includes('page') && value > 3000) return true;
+    if (name.includes("page") && value > 3000) return true;
   }
-  
+
   // Log poor Web Vitals scores
-  if (unit === 'score' && value < 0.75) return true;
-  
+  if (unit === "score" && value < 0.75) return true;
+
   return false;
 }
 
@@ -138,7 +138,7 @@ export class PerformanceTimer {
    */
   end(success: boolean = true, error?: string): number {
     const duration = performance.now() - this.startTime;
-    
+
     const timing: TimingMetric = {
       operation: this.operation,
       duration,
@@ -150,7 +150,7 @@ export class PerformanceTimer {
     metricsStore.addTiming(timing);
 
     // Record as metric
-    recordMetric(this.operation, duration, 'ms', {
+    recordMetric(this.operation, duration, "ms", {
       success,
       error,
       ...this.metadata,
@@ -173,16 +173,16 @@ export class PerformanceTimer {
 export async function measureAsync<T>(
   operation: string,
   fn: () => Promise<T>,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): Promise<T> {
   const timer = new PerformanceTimer(operation, metadata);
-  
+
   try {
     const result = await fn();
     timer.end(true);
     return result;
   } catch (error) {
-    timer.end(false, error instanceof Error ? error.message : 'Unknown error');
+    timer.end(false, error instanceof Error ? error.message : "Unknown error");
     throw error;
   }
 }
@@ -193,16 +193,16 @@ export async function measureAsync<T>(
 export function measureSync<T>(
   operation: string,
   fn: () => T,
-  metadata?: Record<string, unknown>
+  metadata?: Record<string, unknown>,
 ): T {
   const timer = new PerformanceTimer(operation, metadata);
-  
+
   try {
     const result = fn();
     timer.end(true);
     return result;
   } catch (error) {
-    timer.end(false, error instanceof Error ? error.message : 'Unknown error');
+    timer.end(false, error instanceof Error ? error.message : "Unknown error");
     throw error;
   }
 }
@@ -212,24 +212,27 @@ export function measureSync<T>(
  */
 export function trackWebVitals(): void {
   // Only run in browser
-  if (typeof window === 'undefined') return;
+  if (typeof window === "undefined") return;
 
   // Track Core Web Vitals if API is available
-  if ('PerformanceObserver' in window) {
+  if ("PerformanceObserver" in window) {
     // Largest Contentful Paint (LCP)
     const lcpObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries();
-      const lastEntry = entries[entries.length - 1] as PerformanceEntry & { renderTime?: number; loadTime?: number };
+      const lastEntry = entries[entries.length - 1] as PerformanceEntry & {
+        renderTime?: number;
+        loadTime?: number;
+      };
       const lcp = lastEntry.renderTime || lastEntry.loadTime || 0;
-      
-      recordMetric('web-vitals-lcp', lcp, 'ms', {
-        rating: lcp < 2500 ? 'good' : lcp < 4000 ? 'needs-improvement' : 'poor',
+
+      recordMetric("web-vitals-lcp", lcp, "ms", {
+        rating: lcp < 2500 ? "good" : lcp < 4000 ? "needs-improvement" : "poor",
       });
     });
-    
+
     try {
-      lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
-    } catch (e) {
+      lcpObserver.observe({ entryTypes: ["largest-contentful-paint"] });
+    } catch {
       // LCP not supported
     }
 
@@ -237,18 +240,19 @@ export function trackWebVitals(): void {
     const fidObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       entries.forEach((entry) => {
-        const processingStart = (entry as PerformanceEventTiming).processingStart || 0;
+        const processingStart =
+          (entry as PerformanceEventTiming).processingStart || 0;
         const fid = processingStart - entry.startTime;
-        
-        recordMetric('web-vitals-fid', fid, 'ms', {
-          rating: fid < 100 ? 'good' : fid < 300 ? 'needs-improvement' : 'poor',
+
+        recordMetric("web-vitals-fid", fid, "ms", {
+          rating: fid < 100 ? "good" : fid < 300 ? "needs-improvement" : "poor",
         });
       });
     });
-    
+
     try {
-      fidObserver.observe({ entryTypes: ['first-input'] });
-    } catch (e) {
+      fidObserver.observe({ entryTypes: ["first-input"] });
+    } catch {
       // FID not supported
     }
 
@@ -261,31 +265,37 @@ export function trackWebVitals(): void {
           clsValue += (entry as LayoutShift).value;
         }
       });
-      
-      recordMetric('web-vitals-cls', clsValue, 'score', {
-        rating: clsValue < 0.1 ? 'good' : clsValue < 0.25 ? 'needs-improvement' : 'poor',
+
+      recordMetric("web-vitals-cls", clsValue, "score", {
+        rating:
+          clsValue < 0.1
+            ? "good"
+            : clsValue < 0.25
+              ? "needs-improvement"
+              : "poor",
       });
     });
-    
+
     try {
-      clsObserver.observe({ entryTypes: ['layout-shift'] });
-    } catch (e) {
+      clsObserver.observe({ entryTypes: ["layout-shift"] });
+    } catch {
       // CLS not supported
     }
   }
 
   // Track page load performance
-  if ('performance' in window && window.performance.timing) {
-    window.addEventListener('load', () => {
+  if ("performance" in window && window.performance.timing) {
+    window.addEventListener("load", () => {
       setTimeout(() => {
         const timing = window.performance.timing;
         const loadTime = timing.loadEventEnd - timing.navigationStart;
-        const domReady = timing.domContentLoadedEventEnd - timing.navigationStart;
+        const domReady =
+          timing.domContentLoadedEventEnd - timing.navigationStart;
         const firstPaint = timing.responseEnd - timing.fetchStart;
 
-        recordMetric('page-load-total', loadTime, 'ms');
-        recordMetric('page-load-dom-ready', domReady, 'ms');
-        recordMetric('page-load-first-paint', firstPaint, 'ms');
+        recordMetric("page-load-total", loadTime, "ms");
+        recordMetric("page-load-dom-ready", domReady, "ms");
+        recordMetric("page-load-first-paint", firstPaint, "ms");
       }, 0);
     });
   }
@@ -301,12 +311,12 @@ export function getMetrics(): {
 } {
   const metrics = metricsStore.getMetrics();
   const timings = metricsStore.getTimings();
-  
+
   // Calculate averages for common operations
   const averages: Record<string, number> = {};
-  const uniqueNames = new Set(metrics.map(m => m.name));
-  
-  uniqueNames.forEach(name => {
+  const uniqueNames = new Set(metrics.map((m) => m.name));
+
+  uniqueNames.forEach((name) => {
     averages[name] = metricsStore.getAverageByName(name);
   });
 

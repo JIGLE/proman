@@ -1,14 +1,13 @@
 import { NextRequest } from "next/server";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { requireAdmin } from "@/lib/services/auth/auth-middleware";
+import { logAudit } from "@/lib/services/audit-log";
 
 export async function GET(request: NextRequest) {
   try {
     const authResult = await requireAdmin(request);
     if (authResult instanceof Response) return authResult;
     const prisma = getPrismaClient();
-
-    // TODO: Log access for GDPR compliance (auditLog not yet available in client)
 
     // Get all table names from Prisma schema (simplified introspection)
     const tables = [
@@ -28,6 +27,41 @@ export async function GET(request: NextRequest) {
       "Session",
       "VerificationToken",
     ];
+
+    const requestIp =
+      request.headers.get("x-forwarded-for") ||
+      request.headers.get("x-real-ip") ||
+      request.headers.get("cf-connecting-ip") ||
+      "unknown";
+    const userAgent = request.headers.get("user-agent") || "unknown";
+
+    // Audit administrative data-access for GDPR accountability.
+    try {
+      await logAudit({
+        userId: authResult.userId,
+        action: "DATABASE_ACCESS",
+        resourceType: "AdminDatabaseView",
+        details: {
+          scope: {
+            tables,
+            perTableLimit: 50,
+          },
+          request: {
+            method: request.method,
+            path: request.nextUrl.pathname,
+            query: request.nextUrl.search,
+          },
+          metadata: {
+            ipAddress: requestIp,
+            userAgent,
+            timestamp: new Date().toISOString(),
+          },
+        },
+      });
+    } catch (auditError) {
+      // Keep endpoint available even if audit persistence fails.
+      console.error("Admin database access audit logging failed:", auditError);
+    }
 
     const data: Record<string, unknown[]> = {};
 

@@ -14,7 +14,6 @@ import {
   DollarSign,
   TrendingUp,
   Trophy,
-  Plus,
   Sun,
   Sunset,
   Moon,
@@ -38,7 +37,7 @@ import {
   ChartWidget,
   ListWidget,
 } from "@/components/ui/dashboard-widgets";
-import { QuickActions, AttentionNeeded } from "@/components/ui/quick-actions";
+import { AttentionNeeded } from "@/components/ui/quick-actions";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { useApp } from "@/lib/contexts/app-context";
 import { AchievementGrid } from "@/components/ui/achievements";

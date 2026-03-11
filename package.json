@@ -7,7 +7,7 @@
     "build": "next build",
     "prestart": "node scripts/prestart.js",
     "start": "next start",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings=0",
     "type-check": "tsc --noEmit",
     "verify": "npm run type-check && npm test",
     "verify:ci": "npm run type-check && npm run lint && npm test",
@@ -120,6 +120,7 @@
     "prisma": "^7.4.2",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "vite": "^7.1.12",
     "vitest": "^4.0.16"
   },
   "overrides": {

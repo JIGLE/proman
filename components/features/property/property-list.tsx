@@ -13,8 +13,6 @@ import {
   Bed,
   Bath,
   Plus,
-  Edit,
-  Trash2,
   CheckCircle,
   Wrench,
   ArrowUpDown,
@@ -37,7 +35,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,13 +48,11 @@ import {
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/ui/loading-state";
 import { SearchFilter } from "@/components/ui/search-filter";
-import { ExportButton } from "@/components/ui/export-button";
 import { cn } from "@/lib/utils/utils";
 import {
   BulkActionBar,
   getDefaultBulkActions,
 } from "@/components/ui/bulk-action-bar";
-import { EditableCell } from "@/components/ui/editable-cell";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 import { useApp } from "@/lib/contexts/app-context";
@@ -73,7 +68,6 @@ import {
   AddressSuggestion,
 } from "@/lib/services/address-verification";
 import PropertyMap from "./property-map";
-import UnitsView from "./units-view";
 import { PropertyDetailModal } from "./property-detail-modal";
 
 export type PropertiesViewProps = {
@@ -116,11 +110,7 @@ export const PropertiesView = forwardRef<
   PropertiesViewRef,
   PropertiesViewProps
 >(function PropertiesView(
-  {
-    viewMode = "list",
-    onPropertySelect,
-    density = "compact",
-  }: PropertiesViewProps,
+  { viewMode = "list", onPropertySelect }: PropertiesViewProps,
   ref,
 ): React.ReactElement {
   const { state, addProperty, updateProperty, deleteProperty } = useApp();
@@ -240,24 +230,6 @@ export const PropertiesView = forwardRef<
       );
     },
     [deleteProperty, success, bulkSelection, confirmDialog],
-  );
-
-  const handleInlineEdit = useCallback(
-    async (
-      propertyId: string,
-      field: keyof Property,
-      value: string | number,
-    ) => {
-      try {
-        await updateProperty(propertyId, {
-          [field]: value,
-        } as Partial<Property>);
-        success(`${String(field)} updated`);
-      } catch (err) {
-        console.error(err);
-      }
-    },
-    [updateProperty, success],
   );
 
   const handleExportSelected = useCallback(
@@ -437,44 +409,6 @@ export const PropertiesView = forwardRef<
 
   const _handleSubmit = async (e: React.FormEvent) => {
     await dialog.handleSubmit(e);
-  };
-
-  const handleEdit = (property: Property) => {
-    dialog.openEditDialog(property, (prop) => ({
-      name: prop.name,
-      address: prop.address,
-      streetAddress: prop.streetAddress || "",
-      city: prop.city || "",
-      zipCode: prop.zipCode || "",
-      country: (prop.country as "Portugal" | "Spain") || "Portugal",
-      latitude: prop.latitude,
-      longitude: prop.longitude,
-      addressVerified: prop.addressVerified || false,
-      buildingId: prop.buildingId,
-      buildingName: prop.buildingName || "",
-      type: prop.type,
-      bedrooms: prop.bedrooms,
-      bathrooms: prop.bathrooms,
-      rent: prop.rent,
-      status: prop.status,
-      description: prop.description || "",
-    }));
-  };
-
-  const handleDelete = (id: string) => {
-    confirmDialog.confirm(
-      {
-        title: "Delete Property",
-        description:
-          "This property and all associated data will be permanently removed. This action cannot be undone.",
-        confirmLabel: "Delete Property",
-        variant: "destructive",
-      },
-      async () => {
-        await deleteProperty(id);
-        success("Property deleted successfully!");
-      },
-    );
   };
 
   return (

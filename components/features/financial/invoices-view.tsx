@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   FileText,
   Plus,
@@ -100,7 +100,7 @@ export function InvoicesView({
   });
 
   // Fetch invoices
-  const fetchInvoices = async () => {
+  const fetchInvoices = useCallback(async () => {
     try {
       setIsLoading(true);
       const data = await apiFetch<{ data: Invoice[] } | Invoice[]>(
@@ -113,11 +113,11 @@ export function InvoicesView({
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [csrfToken]);
 
   useEffect(() => {
     fetchInvoices();
-  }, []);
+  }, [fetchInvoices]);
 
   // Summary calculations
   const summary = useMemo(() => {
@@ -157,25 +157,20 @@ export function InvoicesView({
     setIsSubmitting(true);
 
     try {
-      const response = await apiFetch<{ message?: string }>(
-        "/api/invoices",
-        csrfToken,
-        "POST",
-        {
-          ...formData,
-          lineItems:
-            formData.amount > 0
-              ? [
-                  {
-                    description: formData.description || "Monthly Rent",
-                    quantity: 1,
-                    unitPrice: formData.amount,
-                    total: formData.amount,
-                  },
-                ]
-              : undefined,
-        },
-      );
+      await apiFetch<{ message?: string }>("/api/invoices", csrfToken, "POST", {
+        ...formData,
+        lineItems:
+          formData.amount > 0
+            ? [
+                {
+                  description: formData.description || "Monthly Rent",
+                  quantity: 1,
+                  unitPrice: formData.amount,
+                  total: formData.amount,
+                },
+              ]
+            : undefined,
+      });
 
       success("Invoice created successfully!");
       setIsDialogOpen(false);
@@ -253,7 +248,7 @@ export function InvoicesView({
       await apiFetch(`/api/invoices/${invoiceId}/pay`, csrfToken, "POST", {});
       success("Invoice marked as paid");
       fetchInvoices();
-    } catch (err) {
+    } catch {
       error("Failed to mark invoice as paid");
     }
   };

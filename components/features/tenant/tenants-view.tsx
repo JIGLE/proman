@@ -13,8 +13,6 @@ import {
   Phone,
   Calendar,
   Plus,
-  Edit,
-  Trash2,
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
@@ -50,7 +48,6 @@ import {
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/ui/loading-state";
 import { SearchFilter } from "@/components/ui/search-filter";
-import { ExportButton } from "@/components/ui/export-button";
 import {
   BulkActionBar,
   getDefaultBulkActions,
@@ -107,7 +104,7 @@ export type TenantsViewRef = {
 };
 
 export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
-  function TenantsView({ density = "compact" }, ref): React.ReactElement {
+  function TenantsView(_props, ref): React.ReactElement {
     const { state, addTenant, updateTenant, deleteTenant } = useApp();
     const { tenants, properties, loading } = state;
     const { success, error: showError } = useToast();
@@ -170,36 +167,6 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
         case "pending":
           return <Badge variant="secondary">Pending</Badge>;
       }
-    };
-
-    const handleEdit = (tenant: Tenant) => {
-      dialog.openEditDialog(tenant, (t) => ({
-        name: t.name,
-        email: t.email,
-        phone: t.phone,
-        propertyId: t.propertyId || "",
-        rent: t.rent,
-        leaseStart: t.leaseStart,
-        leaseEnd: t.leaseEnd,
-        paymentStatus: t.paymentStatus,
-        notes: t.notes || "",
-      }));
-    };
-
-    const handleDelete = (id: string) => {
-      confirmDialog.confirm(
-        {
-          title: "Delete Tenant",
-          description:
-            "This tenant and all associated data will be permanently removed. This action cannot be undone.",
-          confirmLabel: "Delete Tenant",
-          variant: "destructive",
-        },
-        async () => {
-          await deleteTenant(id);
-          success("Tenant deleted successfully!");
-        },
-      );
     };
 
     // Bulk delete handler

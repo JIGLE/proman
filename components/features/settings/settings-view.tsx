@@ -143,7 +143,7 @@ export function SettingsView(): React.ReactElement {
       } else {
         showError("Failed to save settings");
       }
-    } catch (err) {
+    } catch {
       showError("Failed to save settings");
     } finally {
       setSaving(false);

@@ -1,8 +1,8 @@
-import * as React from "react"
-import SafeSlot from "./safe-slot"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import SafeSlot from "./safe-slot";
+import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils/utils"
+import { cn } from "@/lib/utils/utils";
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium transition-all duration-200 focus-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.98]",
@@ -23,10 +23,8 @@ const buttonVariants = cva(
           "border border-border bg-card hover:bg-hover hover:text-foreground shadow-sm hover:shadow-md",
         secondary:
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80 hover:shadow-md",
-        ghost: 
-          "hover:bg-hover hover:text-foreground",
-        link: 
-          "text-primary underline-offset-4 hover:underline hover:text-primary/80",
+        ghost: "hover:bg-hover hover:text-foreground",
+        link: "text-primary underline-offset-4 hover:underline hover:text-primary/80",
       },
       size: {
         xs: "h-7 px-2 text-xs rounded",
@@ -49,70 +47,88 @@ const buttonVariants = cva(
       size: "default",
       emphasis: "medium",
     },
-  }
-)
+  },
+);
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
-  asChild?: boolean
-  loading?: boolean
+  asChild?: boolean;
+  loading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, emphasis, asChild = false, loading = false, children, disabled, ...props }, ref) => {
-    const Comp = asChild ? SafeSlot : "button"
-        // Ensure a single React element is passed to Slot when `asChild` is used.
-        let childForSlot: React.ReactNode = children
-        if (asChild) {
-          try {
-            if (React.Children.count(children) === 1) {
-              childForSlot = React.Children.only(children as any)
-            } else {
-              childForSlot = <span>{children}</span>
-            }
-          } catch (err) {
-            // Defensive fallback: if React.Children.only throws (e.g., unexpected null),
-            // wrap children to avoid server render crashes in development.
-            // This prevents `React.Children.only` from bubbling up errors during SSR.
-            childForSlot = <span>{children}</span>
-          }
+  (
+    {
+      className,
+      variant,
+      size,
+      emphasis,
+      asChild = false,
+      loading = false,
+      children,
+      disabled,
+      ...props
+    },
+    ref,
+  ) => {
+    const Comp = asChild ? SafeSlot : "button";
+    // Ensure a single React element is passed to Slot when `asChild` is used.
+    let childForSlot: React.ReactNode = children;
+    if (asChild) {
+      try {
+        if (React.Children.count(children) === 1) {
+          childForSlot = React.isValidElement(children) ? (
+            children
+          ) : (
+            <span>{children}</span>
+          );
         } else {
-          childForSlot = children
+          childForSlot = <span>{children}</span>;
         }
-      return (
-        <Comp
-          className={cn(buttonVariants({ variant, size, emphasis, className }))}
-          ref={ref}
-          disabled={disabled || loading}
-          {...props}
-        >
-          {loading && (
-            <svg
-              className="animate-spin -ml-1 mr-2 h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
-          )}
-            {childForSlot}
-        </Comp>
-      )
-  }
-)
-Button.displayName = "Button"
+      } catch {
+        // Defensive fallback: if React.Children.only throws (e.g., unexpected null),
+        // wrap children to avoid server render crashes in development.
+        // This prevents `React.Children.only` from bubbling up errors during SSR.
+        childForSlot = <span>{children}</span>;
+      }
+    } else {
+      childForSlot = children;
+    }
+    return (
+      <Comp
+        className={cn(buttonVariants({ variant, size, emphasis, className }))}
+        ref={ref}
+        disabled={disabled || loading}
+        {...props}
+      >
+        {loading && (
+          <svg
+            className="animate-spin -ml-1 mr-2 h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
+          </svg>
+        )}
+        {childForSlot}
+      </Comp>
+    );
+  },
+);
+Button.displayName = "Button";
 
-export { Button, buttonVariants }
+export { Button, buttonVariants };

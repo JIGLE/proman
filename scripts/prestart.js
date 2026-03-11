@@ -6,9 +6,6 @@
  * - If DATABASE_URL indicates sqlite (file:) then run ensure-sqlite, otherwise skip sqlite ensure step
  */
 
-const path = require("path");
-const fs = require("fs");
-
 if (process.env.SKIP_PRESTART === "true") {
   console.log("[prestart] SKIP_PRESTART=true; skipping prestart checks.");
   process.exit(0);

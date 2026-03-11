@@ -1,7 +1,11 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { type Currency, formatCurrency as formatCurrencyUtil, CURRENCY_LOCALES, CURRENCY_SYMBOLS } from '@/lib/utils/currency';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import {
+  type Currency,
+  formatCurrency as formatCurrencyUtil,
+  CURRENCY_SYMBOLS,
+} from "@/lib/utils/currency";
 
 interface CurrencyContextType {
   currency: Currency;
@@ -12,12 +16,14 @@ interface CurrencyContextType {
   isLoading: boolean;
 }
 
-const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
+const CurrencyContext = createContext<CurrencyContextType | undefined>(
+  undefined,
+);
 
 export function useCurrency() {
   const context = useContext(CurrencyContext);
   if (context === undefined) {
-    throw new Error('useCurrency must be used within a CurrencyProvider');
+    throw new Error("useCurrency must be used within a CurrencyProvider");
   }
   return context;
 }
@@ -30,8 +36,8 @@ interface CurrencyProviderProps {
 
 export function CurrencyProvider({
   children,
-  initialCurrency = 'EUR',
-  initialLocale = 'en'
+  initialCurrency = "EUR",
+  initialLocale = "en",
 }: CurrencyProviderProps) {
   const [currency, setCurrencyState] = useState<Currency>(initialCurrency);
   const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +48,7 @@ export function CurrencyProvider({
   useEffect(() => {
     const fetchCurrency = async () => {
       try {
-        const response = await fetch('/api/settings');
+        const response = await fetch("/api/settings");
         if (response.ok) {
           const data = await response.json();
           if (data.defaultCurrency) {
@@ -50,7 +56,7 @@ export function CurrencyProvider({
           }
         }
       } catch (error) {
-        console.error('Failed to fetch user currency:', error);
+        console.error("Failed to fetch user currency:", error);
         // Fall back to initialCurrency on error
       } finally {
         setIsLoading(false);
@@ -62,16 +68,16 @@ export function CurrencyProvider({
 
   const setCurrency = async (newCurrency: Currency) => {
     setCurrencyState(newCurrency);
-    
+
     // Save to UserSettings via API
     try {
-      await fetch('/api/settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ defaultCurrency: newCurrency }),
       });
     } catch (error) {
-      console.error('Failed to save currency:', error);
+      console.error("Failed to save currency:", error);
     }
   };
 

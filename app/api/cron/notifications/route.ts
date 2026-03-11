@@ -11,6 +11,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { runNotificationAutomation } from "@/lib/services/notifications/notification-automation";
+import { timingSafeEqualString } from "@/lib/utils/security";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   // Verify cron secret to prevent unauthorized triggers
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const authHeader = request.headers.get("authorization");
   const token = authHeader?.replace("Bearer ", "");
 
-  if (token !== cronSecret) {
+  if (!timingSafeEqualString(token, cronSecret)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 

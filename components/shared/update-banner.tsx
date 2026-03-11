@@ -5,6 +5,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 
+interface ReleaseInfo {
+  tag_name?: string;
+  tag?: string;
+  name?: string;
+  html_url?: string;
+}
+
 function compareVersions(a?: string, b?: string): number {
   if (!a || !b) return 0;
   const pa = a
@@ -27,7 +34,7 @@ function compareVersions(a?: string, b?: string): number {
 export function UpdateBanner(): React.ReactElement | null {
   const sess = useSession();
   const session = sess?.data;
-  const [latest, setLatest] = useState<any | null>(null);
+  const [latest] = useState<ReleaseInfo | null>(null);
   const [current, setCurrent] = useState<string | null>(null);
   const [dismissedTag, setDismissedTag] = useState<string | null>(null);
 
@@ -39,7 +46,7 @@ export function UpdateBanner(): React.ReactElement | null {
         if (!res.ok) return;
         const j = await res.json();
         setCurrent(j.version || null);
-      } catch (err) {
+      } catch {
         // ignore
       }
     })();

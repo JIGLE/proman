@@ -54,14 +54,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const result = await documentExport.generateIberianLeasePDF(parsed.data);
 
-    if (!result.success || !result.buffer) {
+    if (!result.buffer) {
       return NextResponse.json(
         { error: "PDF generation failed" },
         { status: 500 },
       );
     }
 
-    return new NextResponse(result.buffer, {
+    const pdfBody = new Uint8Array(result.buffer);
+
+    return new NextResponse(pdfBody, {
       status: 200,
       headers: {
         "Content-Type": "application/pdf",

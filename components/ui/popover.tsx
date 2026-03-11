@@ -10,10 +10,20 @@ const PopoverTrigger = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Trigger>
 >(({ children, ...props }, ref) => {
-  const asChild = (props as any).asChild;
-  const safeChild = React.Children.count(children) === 1 ? React.Children.only(children as any) : <div>{children}</div>;
+  const triggerProps = props as React.ComponentPropsWithoutRef<
+    typeof PopoverPrimitive.Trigger
+  > & {
+    asChild?: boolean;
+  };
+  const { asChild, ...forwardProps } = triggerProps;
+  const safeChild =
+    React.Children.count(children) === 1 ? (
+      React.Children.only(children as React.ReactElement)
+    ) : (
+      <div>{children}</div>
+    );
   return (
-    <PopoverPrimitive.Trigger ref={ref as any} asChild={!!asChild} {...(Object.fromEntries(Object.entries(props).filter(([k]) => k !== 'asChild')) as any)}>
+    <PopoverPrimitive.Trigger ref={ref} asChild={!!asChild} {...forwardProps}>
       {asChild ? safeChild : children}
     </PopoverPrimitive.Trigger>
   );
@@ -25,7 +35,11 @@ const PopoverContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Content>
 >(({ className, ...props }, ref) => (
   <PopoverPrimitive.Portal>
-    <PopoverPrimitive.Content ref={ref} className={cn("z-[var(--z-popover)]", className)} {...props} />
+    <PopoverPrimitive.Content
+      ref={ref}
+      className={cn("z-[var(--z-popover)]", className)}
+      {...props}
+    />
   </PopoverPrimitive.Portal>
 ));
 PopoverContent.displayName = "PopoverContent";

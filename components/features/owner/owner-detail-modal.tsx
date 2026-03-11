@@ -1,15 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  User,
-  Mail,
-  Phone,
-  MapPin,
-  Building2,
-  Edit,
-  Trash2,
-} from "lucide-react";
+import { Mail, Phone, MapPin, Building2, Edit, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,

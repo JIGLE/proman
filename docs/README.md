@@ -6,6 +6,8 @@ Welcome to the ProMan documentation. This index links to all available guides.
 
 - [Quick Start & README](../README.md) — Install, run, and deploy in minutes
 - [.env.example](../.env.example) — Full list of environment variables with defaults
+- [Active Sprint Board](SPRINT_BOARD_2026Q2.md) — Authoritative execution board and current priorities
+- [Claim Audit (2026-03-11)](CLAIM_AUDIT_2026-03-11.md) — Verification and corrections for public-facing capability/status claims
 
 ## Deployment
 

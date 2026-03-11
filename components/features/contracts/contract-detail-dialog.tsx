@@ -13,7 +13,6 @@ import {
   Building2,
   User,
   DollarSign,
-  FileText,
   Edit,
   Trash2,
 } from "lucide-react";

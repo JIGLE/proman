@@ -5,8 +5,6 @@ import {
   Briefcase,
   Download,
   Plus,
-  Edit,
-  Trash2,
   Phone,
   Mail,
   MapPin,
@@ -46,8 +44,8 @@ export type OwnersViewRef = {
 export const OwnersView = forwardRef<
   OwnersViewRef,
   { density?: "comfortable" | "compact" }
->(function OwnersView({ density = "compact" }, ref): React.ReactElement {
-  const { state, addOwner, updateOwner, deleteOwner } = useApp();
+>(function OwnersView(_props, ref): React.ReactElement {
+  const { state, addOwner, updateOwner } = useApp();
   const { owners, properties, receipts, expenses, loading } = state;
   const { success, error } = useToast();
   const { formatCurrency } = useCurrency();
@@ -94,32 +92,6 @@ export const OwnersView = forwardRef<
   useImperativeHandle(ref, () => ({
     openDialog: dialog.openDialog,
   }));
-
-  const handleEdit = (owner: Owner) => {
-    dialog.openEditDialog(owner, (o) => ({
-      name: o.name,
-      email: o.email,
-      phone: o.phone || "",
-      address: o.address || "",
-      notes: o.notes || "",
-    }));
-  };
-
-  const handleDelete = (id: string) => {
-    confirmDialog.confirm(
-      {
-        title: "Delete Owner",
-        description:
-          "This owner and all associated data will be permanently removed. This action cannot be undone.",
-        confirmLabel: "Delete Owner",
-        variant: "destructive",
-      },
-      async () => {
-        await deleteOwner(id);
-        success("Owner deleted successfully!");
-      },
-    );
-  };
 
   const generateStatement = async (owner: Owner) => {
     setGeneratingPdf(owner.id);

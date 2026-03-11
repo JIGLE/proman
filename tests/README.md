@@ -85,16 +85,16 @@ npm run test:e2e
 Tests support all TypeScript path aliases:
 
 ```typescript
-import { Button } from '@/ui/button'              // components/ui/button
-import { PropertyList } from '@/features/property' // components/features/property
-import { emailService } from '@/services/email'   // lib/services/email
-import { useForm } from '@/hooks/use-form'        // lib/hooks/use-form
-import { cn } from '@/utils/utils'                // lib/utils/utils
-import { propertySchema } from '@/schemas/property' // lib/schemas/property
-import { ErrorBoundary } from '@/shared/error-boundary' // components/shared/error-boundary
-import { Sidebar } from '@/layouts/sidebar'       // components/layouts/sidebar
-import type { Property } from '@/types'           // types/index
-import { GET } from '@/api/properties/route'      // app/api/properties/route
+import { Button } from "@/ui/button"; // components/ui/button
+import { PropertyList } from "@/features/property"; // components/features/property
+import { emailService } from "@/services/email"; // lib/services/email
+import { useForm } from "@/hooks/use-form"; // lib/hooks/use-form
+import { cn } from "@/utils/utils"; // lib/utils/utils
+import { propertySchema } from "@/schemas/property"; // lib/schemas/property
+import { ErrorBoundary } from "@/shared/error-boundary"; // components/shared/error-boundary
+import { Sidebar } from "@/layouts/sidebar"; // components/layouts/sidebar
+import type { Property } from "@/types"; // types/index
+import { GET } from "@/api/properties/route"; // app/api/properties/route
 ```
 
 ---
@@ -128,19 +128,19 @@ describe('MyComponent', () => {
 Service tests don't need React providers:
 
 ```typescript
-import { describe, it, expect, beforeEach } from 'vitest'
-import { myService } from './my-service'
+import { describe, it, expect, beforeEach } from "vitest";
+import { myService } from "./my-service";
 
-describe('MyService', () => {
+describe("MyService", () => {
   beforeEach(() => {
     // Setup before each test
-  })
+  });
 
-  it('processes data correctly', async () => {
-    const result = await myService.processData({ foo: 'bar' })
-    expect(result).toEqual({ processed: true })
-  })
-})
+  it("processes data correctly", async () => {
+    const result = await myService.processData({ foo: "bar" });
+    expect(result).toEqual({ processed: true });
+  });
+});
 ```
 
 ---
@@ -185,12 +185,14 @@ it('displays properties from context', () => {
 ### ❌ Pitfall 1: Wrong Import Paths for Context Mocks
 
 **Wrong:**
+
 ```typescript
 vi.mock('@/lib/currency-context', () => ({ ... }))
 vi.mock('@/lib/toast-context', () => ({ ... }))
 ```
 
 **Correct:**
+
 ```typescript
 vi.mock('@/lib/contexts/currency-context', () => ({ ... }))
 vi.mock('@/lib/contexts/toast-context', () => ({ ... }))
@@ -203,23 +205,25 @@ vi.mock('@/lib/contexts/toast-context', () => ({ ... }))
 **Solution:** Global mocks in `tests/setup.ts` handle this automatically. For custom mocks:
 
 ```typescript
-vi.mock('next/navigation', () => ({
-  usePathname: () => '/en/overview',
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/en/overview",
   useRouter: () => ({
     push: vi.fn(),
   }),
-}))
+}));
 ```
 
 ### ❌ Pitfall 3: Not Wrapping Components in Providers
 
 **Wrong:**
+
 ```typescript
 import { render } from '@testing-library/react'
 render(<MyComponent />) // Missing context providers!
 ```
 
 **Correct:**
+
 ```typescript
 import { renderWithProviders as render } from '@/tests/helpers/render-with-providers'
 render(<MyComponent />) // Has Intl, Theme, Currency, Toast providers
@@ -232,6 +236,7 @@ render(<MyComponent />) // Has Intl, Theme, Currency, Toast providers
 ### Global Mocks (tests/setup.ts)
 
 Automatically applied to ALL tests:
+
 - `next/navigation` - Router hooks
 - `next-intl` - Translation hooks
 
@@ -241,15 +246,15 @@ Use when you need custom behavior:
 
 ```typescript
 // Mock specific context with custom data
-vi.mock('@/lib/contexts/app-context', () => ({
+vi.mock("@/lib/contexts/app-context", () => ({
   useApp: () => ({
-    state: { 
-      properties: [{ id: 'p1', name: 'Test Property' }],
+    state: {
+      properties: [{ id: "p1", name: "Test Property" }],
       loading: false,
     },
     addProperty: vi.fn(),
-  })
-}))
+  }),
+}));
 ```
 
 ### Shared Mock Functions (tests/setup/mocks.ts)
@@ -291,8 +296,9 @@ mockAppContext({ properties: [...] })
 ## Test Coverage Goals
 
 ### Current Status
-- **Test Files**: 35 test files
-- **Tests**: 79 passing, 6 skipped
+
+- **Test Files**: 37 test files
+- **Tests**: 86 passing, 6 skipped
 - **Pass Rate**: 100%
 - **Coverage Target**: 80%+ for critical paths
 
@@ -307,5 +313,5 @@ mockAppContext({ properties: [...] })
 
 ---
 
-**Last Updated:** 2026-02-02  
-**Version:** 0.9.0
+**Last Updated:** 2026-03-11  
+**Version:** 1.4.0

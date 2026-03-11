@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import {
-  User,
   Mail,
   Phone,
   MapPin,
@@ -10,8 +9,6 @@ import {
   DollarSign,
   Edit,
   Trash2,
-  X,
-  FileText,
 } from "lucide-react";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import {

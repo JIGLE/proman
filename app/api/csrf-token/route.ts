@@ -3,8 +3,8 @@
  * Provides CSRF tokens to frontend for protecting state-changing requests
  */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { generateCsrfToken, setCsrfCookie, getOrGenerateCsrfToken } from '@/lib/middleware/csrf';
+import { NextRequest, NextResponse } from "next/server";
+import { setCsrfCookie, getOrGenerateCsrfToken } from "@/lib/middleware/csrf";
 
 /**
  * GET /api/csrf-token
@@ -13,7 +13,7 @@ import { generateCsrfToken, setCsrfCookie, getOrGenerateCsrfToken } from '@/lib/
 export async function GET(request: NextRequest): Promise<Response> {
   // Get existing token or generate new one
   const token = getOrGenerateCsrfToken(request);
-  
+
   // Create response with token
   const response = NextResponse.json({
     csrfToken: token,

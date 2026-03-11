@@ -12,17 +12,21 @@ const AlertDialogTrigger = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Trigger>
 >(({ children, ...props }, ref) => {
-  const asChild = (props as any).asChild;
+  const triggerProps = props as React.ComponentPropsWithoutRef<
+    typeof AlertDialogPrimitive.Trigger
+  > & {
+    asChild?: boolean;
+  };
+  const asChild = !!triggerProps.asChild;
   const safeChild =
     React.Children.count(children) === 1 ? (
-      React.Children.only(children as any)
+      React.Children.only(children as React.ReactElement)
     ) : (
       <div>{children}</div>
     );
-  const forwardProps = { ...(props as any) };
-  if ((forwardProps as any).asChild) delete (forwardProps as any).asChild;
+  const { asChild: _asChild, ...forwardProps } = triggerProps;
   return (
-    <AlertDialogPrimitive.Trigger ref={ref as any} {...(forwardProps as any)}>
+    <AlertDialogPrimitive.Trigger ref={ref} {...forwardProps}>
       {asChild ? safeChild : children}
     </AlertDialogPrimitive.Trigger>
   );

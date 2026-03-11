@@ -106,7 +106,15 @@ export class MemoryRateLimitStore implements RateLimitStore {
  * Distributed rate limiting with automatic expiration
  */
 export class RedisRateLimitStore implements RateLimitStore {
-  private client: any = null; // Redis client (dynamically imported)
+  private client: {
+    on: (event: string, listener: (...args: unknown[]) => void) => void;
+    connect: () => Promise<void>;
+    get: (key: string) => Promise<string | null>;
+    setEx: (key: string, ttl: number, value: string) => Promise<void>;
+    incr: (key: string) => Promise<number>;
+    del: (key: string) => Promise<void>;
+    quit: () => Promise<void>;
+  } | null = null; // Redis client (dynamically imported)
   private connected = false;
   private initializing = false;
   private initPromise: Promise<void> | null = null;
@@ -125,7 +133,17 @@ export class RedisRateLimitStore implements RateLimitStore {
       // Use type assertion to avoid compile-time Redis dependency
       const redis = (await import("redis" as string).catch(() => {
         throw new Error("Redis package not installed. Run: npm install redis");
-      })) as any;
+      })) as {
+        createClient: (opts: { url: string }) => {
+          on: (event: string, listener: (...args: unknown[]) => void) => void;
+          connect: () => Promise<void>;
+          get: (key: string) => Promise<string | null>;
+          setEx: (key: string, ttl: number, value: string) => Promise<void>;
+          incr: (key: string) => Promise<number>;
+          del: (key: string) => Promise<void>;
+          quit: () => Promise<void>;
+        };
+      };
 
       const url = redisUrl || process.env.REDIS_URL;
       if (!url) {
@@ -136,10 +154,14 @@ export class RedisRateLimitStore implements RateLimitStore {
 
       this.client = redis.createClient({ url });
 
-      this.client.on("error", (err: Error) => {
-        logger.error("Redis connection error", err, {
-          component: "RedisRateLimitStore",
-        });
+      this.client.on("error", (err: unknown) => {
+        logger.error(
+          "Redis connection error",
+          err instanceof Error ? err : new Error(String(err)),
+          {
+            component: "RedisRateLimitStore",
+          },
+        );
         this.connected = false;
       });
 
@@ -172,10 +194,11 @@ export class RedisRateLimitStore implements RateLimitStore {
 
   async get(key: string): Promise<RateLimitEntry | null> {
     await this.ensureConnected();
-    if (!this.connected) return null;
+    const client = this.client;
+    if (!this.connected || !client) return null;
 
     try {
-      const data = await this.client.get(`ratelimit:${key}`);
+      const data = await client.get(`ratelimit:${key}`);
       if (!data) return null;
 
       const entry = JSON.parse(data) as RateLimitEntry;
@@ -202,13 +225,14 @@ export class RedisRateLimitStore implements RateLimitStore {
 
   async set(key: string, entry: RateLimitEntry): Promise<void> {
     await this.ensureConnected();
-    if (!this.connected) return;
+    const client = this.client;
+    if (!this.connected || !client) return;
 
     try {
       const ttl = Math.ceil((entry.resetTime - Date.now()) / 1000);
       if (ttl <= 0) return; // Already expired
 
-      await this.client.setEx(`ratelimit:${key}`, ttl, JSON.stringify(entry));
+      await client.setEx(`ratelimit:${key}`, ttl, JSON.stringify(entry));
     } catch (error) {
       logger.error(
         "Redis SET error",
@@ -223,11 +247,12 @@ export class RedisRateLimitStore implements RateLimitStore {
 
   async increment(key: string): Promise<number> {
     await this.ensureConnected();
-    if (!this.connected) return 1;
+    const client = this.client;
+    if (!this.connected || !client) return 1;
 
     try {
       // Use Redis INCR for atomic increment
-      const count = await this.client.incr(`ratelimit:count:${key}`);
+      const count = await client.incr(`ratelimit:count:${key}`);
       return count;
     } catch (error) {
       logger.error(
@@ -244,11 +269,12 @@ export class RedisRateLimitStore implements RateLimitStore {
 
   async delete(key: string): Promise<void> {
     await this.ensureConnected();
-    if (!this.connected) return;
+    const client = this.client;
+    if (!this.connected || !client) return;
 
     try {
-      await this.client.del(`ratelimit:${key}`);
-      await this.client.del(`ratelimit:count:${key}`);
+      await client.del(`ratelimit:${key}`);
+      await client.del(`ratelimit:count:${key}`);
     } catch (error) {
       logger.error(
         "Redis DELETE error",

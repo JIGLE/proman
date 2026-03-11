@@ -45,19 +45,13 @@ async function generateRentReminders(
       status: "pending",
     },
     include: {
-      lease: {
-        include: {
-          tenant: true,
-          property: true,
-        },
-      },
+      tenant: true,
+      property: true,
     },
   });
 
   let created = 0;
   for (const invoice of upcomingInvoices) {
-    if (!invoice.lease) continue;
-
     // Check if a reminder was already created for this invoice
     const existing = await prisma.notification.findFirst({
       where: {
@@ -69,8 +63,8 @@ async function generateRentReminders(
     });
     if (existing) continue;
 
-    const tenantName = invoice.lease.tenant?.name ?? "Tenant";
-    const propertyAddr = invoice.lease.property?.address ?? "Property";
+    const tenantName = invoice.tenant?.name ?? "Tenant";
+    const propertyAddr = invoice.property?.address ?? "Property";
 
     await prisma.notification.create({
       data: {
@@ -104,19 +98,13 @@ async function generateOverdueNotices(
       status: "pending",
     },
     include: {
-      lease: {
-        include: {
-          tenant: true,
-          property: true,
-        },
-      },
+      tenant: true,
+      property: true,
     },
   });
 
   let created = 0;
   for (const invoice of overdueInvoices) {
-    if (!invoice.lease) continue;
-
     const daysPastDue = Math.floor(
       (today.getTime() - new Date(invoice.dueDate).getTime()) /
         (1000 * 60 * 60 * 24),
@@ -139,8 +127,8 @@ async function generateOverdueNotices(
     });
     if (existing) continue;
 
-    const tenantName = invoice.lease.tenant?.name ?? "Tenant";
-    const propertyAddr = invoice.lease.property?.address ?? "Property";
+    const tenantName = invoice.tenant?.name ?? "Tenant";
+    const propertyAddr = invoice.property?.address ?? "Property";
 
     await prisma.notification.create({
       data: {
@@ -238,10 +226,9 @@ async function generateReceiptDeadlineReminders(
       createdAt: { gte: startOfTargetDay, lte: endOfTargetDay },
     },
     include: {
-      lease: {
+      tenant: {
         include: {
           property: true,
-          tenant: true,
         },
       },
     },
@@ -249,18 +236,22 @@ async function generateReceiptDeadlineReminders(
 
   let created = 0;
   for (const payment of payments) {
-    if (!payment.lease?.property) continue;
+    if (!payment.tenant?.property) continue;
 
     // Only for Portuguese properties (check country or tax regime)
-    const taxRegime = payment.lease.taxRegime;
-    if (taxRegime && !taxRegime.includes("portugal")) continue;
+    const country = (payment.tenant.property.country ?? "").toUpperCase();
+    const isPortugueseProperty = country === "PT" || country === "PORTUGAL";
+    if (!isPortugueseProperty) continue;
 
     // Check if a rent receipt already exists for this payment
     const receiptExists = await prisma.rentReceipt.findFirst({
       where: {
-        leaseId: payment.leaseId ?? undefined,
-        rentalPeriodStart: { lte: payment.createdAt },
-        rentalPeriodEnd: { gte: payment.createdAt },
+        tenantId: payment.tenantId,
+        propertyId: payment.tenant.property.id,
+        paymentDate: {
+          gte: startOfTargetDay,
+          lte: endOfTargetDay,
+        },
       },
     });
     if (receiptExists) continue;
@@ -268,7 +259,7 @@ async function generateReceiptDeadlineReminders(
     // Check if reminder already sent
     const existing = await prisma.notification.findFirst({
       where: {
-        userId: payment.userId,
+        userId: payment.tenant.userId,
         type: "rent_receipt_due",
         entityType: "PaymentTransaction",
         entityId: payment.id,
@@ -276,12 +267,12 @@ async function generateReceiptDeadlineReminders(
     });
     if (existing) continue;
 
-    const tenantName = payment.lease.tenant?.name ?? "Tenant";
-    const propertyAddr = payment.lease.property.address ?? "Property";
+    const tenantName = payment.tenant.name ?? "Tenant";
+    const propertyAddr = payment.tenant.property.address ?? "Property";
 
     await prisma.notification.create({
       data: {
-        userId: payment.userId,
+        userId: payment.tenant.userId,
         type: "rent_receipt_due",
         title: "Recibo de renda deadline tomorrow",
         message: `A rent receipt for ${tenantName} at ${propertyAddr} (payment of €${payment.amount.toFixed(2)}) must be issued by tomorrow to meet the 5-day legal deadline.`,

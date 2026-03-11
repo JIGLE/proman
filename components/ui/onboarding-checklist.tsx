@@ -61,11 +61,21 @@ export function OnboardingChecklist({
 
   const completedCount = useMemo(
     () => steps.filter((s) => s.completed).length,
-    [steps]
+    [steps],
   );
   const totalSteps = steps.length;
   const allComplete = completedCount === totalSteps;
   const progress = totalSteps > 0 ? (completedCount / totalSteps) * 100 : 0;
+
+  const handleDismiss = useCallback(() => {
+    setDismissed(true);
+    try {
+      localStorage.setItem(CHECKLIST_DISMISSED_KEY, "true");
+    } catch {
+      // Ignore
+    }
+    onDismiss?.();
+  }, [onDismiss]);
 
   // Trigger celebration when all complete
   useEffect(() => {
@@ -78,17 +88,7 @@ export function OnboardingChecklist({
       }, 8000);
       return () => clearTimeout(timer);
     }
-  }, [allComplete, celebrateComplete, onAllComplete]);
-
-  const handleDismiss = useCallback(() => {
-    setDismissed(true);
-    try {
-      localStorage.setItem(CHECKLIST_DISMISSED_KEY, "true");
-    } catch {
-      // Ignore
-    }
-    onDismiss?.();
-  }, [onDismiss]);
+  }, [allComplete, celebrateComplete, onAllComplete, handleDismiss]);
 
   const handleToggleCollapse = useCallback(() => {
     setCollapsed((prev) => {
@@ -114,7 +114,7 @@ export function OnboardingChecklist({
       exit={{ opacity: 0, y: -10 }}
       className={cn(
         "rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden",
-        className
+        className,
       )}
     >
       {/* Header */}
@@ -154,7 +154,7 @@ export function OnboardingChecklist({
                   "h-1.5 w-1.5 rounded-full transition-colors",
                   step.completed
                     ? "bg-[var(--color-success)]"
-                    : "bg-[var(--color-muted)]"
+                    : "bg-[var(--color-muted)]",
                 )}
               />
             ))}
@@ -226,7 +226,6 @@ export function OnboardingChecklist({
               /* Step list */
               <div className="p-2">
                 {steps.map((step, index) => {
-                  const Icon = step.icon;
                   const isNext = nextStep?.id === step.id;
 
                   return (
@@ -239,7 +238,7 @@ export function OnboardingChecklist({
                         "flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors",
                         isNext
                           ? "bg-[var(--color-accent)]/5 border border-[var(--color-accent)]/20"
-                          : "hover:bg-[var(--color-surface-hover)]"
+                          : "hover:bg-[var(--color-surface-hover)]",
                       )}
                     >
                       {/* Status icon */}
@@ -251,7 +250,7 @@ export function OnboardingChecklist({
                             "h-5 w-5 flex-shrink-0",
                             isNext
                               ? "text-[var(--color-accent)]"
-                              : "text-[var(--color-muted-foreground)]"
+                              : "text-[var(--color-muted-foreground)]",
                           )}
                         />
                       )}
@@ -263,7 +262,7 @@ export function OnboardingChecklist({
                             "text-sm font-medium",
                             step.completed
                               ? "text-[var(--color-muted-foreground)] line-through"
-                              : "text-[var(--color-foreground)]"
+                              : "text-[var(--color-foreground)]",
                           )}
                         >
                           {step.label}
@@ -321,8 +320,7 @@ export function getDefaultOnboardingSteps(config: {
     {
       id: "tenant",
       label: "Add a tenant",
-      description:
-        "Add tenant details and assign them to a property.",
+      description: "Add tenant details and assign them to a property.",
       completed: config.hasTenants,
       icon: Users,
       action: config.onAddTenant,
@@ -331,8 +329,7 @@ export function getDefaultOnboardingSteps(config: {
     {
       id: "payment",
       label: "Record a payment",
-      description:
-        "Log your first rent payment to unlock revenue analytics.",
+      description: "Log your first rent payment to unlock revenue analytics.",
       completed: config.hasPayments,
       icon: DollarSign,
       action: config.onRecordPayment,

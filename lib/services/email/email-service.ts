@@ -1,5 +1,4 @@
 // Email service for correspondence functionality
-import type { MailDataRequired, ClientResponse } from "@sendgrid/mail";
 import { getPrismaClient } from "@/lib/services/database/database";
 import type { PrismaClient } from "@prisma/client";
 import { logger } from "@/lib/utils/logger";
@@ -178,7 +177,10 @@ export class EmailService {
   }
 
   // Lazily loaded SendGrid client instance (optional)
-  private sendGridClient?: any;
+  private sendGridClient?: {
+    setApiKey?: (key: string) => void;
+    send: (msg: unknown) => Promise<unknown>;
+  };
 
   private initialize() {
     const key = getSecret("SENDGRID_API_KEY");
@@ -211,18 +213,29 @@ export class EmailService {
     }
     try {
       // Dynamic import first so test-runner mocks (vi.doMock) are applied for ESM imports.
-      let mod: any | undefined;
+      let mod: { default?: unknown } | undefined;
       try {
         mod = await import("@sendgrid/mail");
       } catch (impErr) {
         // Fallback to require() for environments that need CJS resolution
         try {
           mod = require("@sendgrid/mail");
-        } catch (reqErr) {
+        } catch {
           throw impErr;
         }
       }
-      this.sendGridClient = mod && (mod.default || mod);
+      const maybeClient = mod && (mod.default || mod);
+      if (
+        maybeClient &&
+        typeof maybeClient === "object" &&
+        "send" in maybeClient &&
+        typeof (maybeClient as { send?: unknown }).send === "function"
+      ) {
+        this.sendGridClient = maybeClient as {
+          setApiKey?: (key: string) => void;
+          send: (msg: unknown) => Promise<unknown>;
+        };
+      }
       if (this.sendGridClient) {
         // Try to set API key, but don't let provider validation break our initialization
         try {
@@ -314,8 +327,6 @@ export class EmailService {
         !!this.sendGridClient,
         "sendType=",
         typeof this.sendGridClient?.send,
-        "sendHasMock=",
-        !!this.sendGridClient?.send?.mock,
       );
     } catch {}
     let result: unknown;
@@ -470,11 +481,10 @@ export class EmailService {
     let htmlContent = template.htmlContent;
 
     Object.entries(variables).forEach(([key, value]) => {
-      // Escape special regex characters in key to prevent regex injection
-      const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      const regex = new RegExp(`\\{\\{${escapedKey}\\}\\}`, "g");
-      subject = subject.replace(regex, String(value));
-      htmlContent = htmlContent.replace(regex, String(value));
+      const token = `{{${key}}}`;
+      const replacement = String(value);
+      subject = subject.split(token).join(replacement);
+      htmlContent = htmlContent.split(token).join(replacement);
     });
 
     return this.sendEmail(

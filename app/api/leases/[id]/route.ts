@@ -91,3 +91,5 @@ export async function DELETE(
     );
   }
 }
+
+export const OPTIONS = handleOptions;

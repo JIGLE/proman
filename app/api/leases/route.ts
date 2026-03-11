@@ -106,3 +106,5 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 }
+
+export const OPTIONS = handleOptions;
