@@ -142,16 +142,6 @@ jobs:
           sbom: true
           provenance: mode=max
 
-      - name: Generate SBOM attestation
-        if: github.event.inputs.dry_run != 'true' && steps.build-push.outputs.digest
-        uses: actions/attest-sbom@v4
-        with:
-          subject-name: ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name_lower }}
-          subject-digest: ${{ steps.build-push.outputs.digest }}
-          sbom-path: ${{ steps.build-push.outputs.metadata }}
-          push-to-registry: true
-        continue-on-error: true
-
       - name: Deployment summary
         run: |
           echo "## 🚀 Deployment Summary" >> $GITHUB_STEP_SUMMARY

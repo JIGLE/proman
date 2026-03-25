@@ -82,37 +82,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Package Helm chart
-        run: |
-          mkdir -p release-charts
-          helm package helm/proman -d release-charts
-
-      - name: Setup Helm (needed for repo index)
+      - name: Setup Helm
         uses: azure/setup-helm@v5
-
-
-      - name: Upload Helm chart artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: release-charts
-          path: release-charts
-
-      - name: Create Helm repo index
-        run: |
-          OWNER=${GITHUB_REPOSITORY%%/*}
-          REPO=${GITHUB_REPOSITORY##*/}
-          URL="https://${OWNER}.github.io/${REPO}/release-charts"
-          echo "Generating Helm repo index with URL: $URL"
-          helm repo index release-charts --url "$URL"
-
-      - name: Publish Helm charts to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./release-charts
-          user_name: github-actions[bot]
-          user_email: github-actions[bot]@users.noreply.github.com
 
       - name: Verify project before release
         run: |
@@ -168,6 +139,19 @@ jobs:
           
           cat release_notes.md
 
+      - name: Package Helm chart
+        run: |
+          mkdir -p release-charts
+          helm package helm/proman -d release-charts
+
+      - name: Create Helm repo index
+        run: |
+          OWNER=${GITHUB_REPOSITORY%%/*}
+          REPO=${GITHUB_REPOSITORY##*/}
+          URL="https://${OWNER}.github.io/${REPO}/release-charts"
+          echo "Generating Helm repo index with URL: $URL"
+          helm repo index release-charts --url "$URL"
+
       - name: Commit version bump
         run: |
           git add package.json package-lock.json helm/proman/Chart.yaml item.yaml docker-compose.yml
@@ -191,6 +175,21 @@ jobs:
           files: release-charts/*.tgz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish Helm charts to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./release-charts
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+
+      - name: Upload Helm chart artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: release-charts
+          path: release-charts
 
       - name: Trigger Deploy to GHCR workflow (with cluster update)
         uses: actions/github-script@v8
