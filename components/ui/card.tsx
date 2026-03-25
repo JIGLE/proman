@@ -12,7 +12,8 @@ const Card = React.forwardRef<
       "rounded-xl bg-[var(--color-card)] text-[var(--color-card-foreground)]",
       "border border-[var(--color-inner-border)]",
       "shadow-[var(--shadow-card)]",
-      "transition-all duration-200",
+      "transition-all duration-200 ease-out",
+      "hover:shadow-[var(--shadow-card-hover)] hover:border-[var(--color-inner-border-hover)] hover:-translate-y-0.5",
       className,
     )}
     {...props}

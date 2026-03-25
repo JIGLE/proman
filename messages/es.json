@@ -43,7 +43,22 @@
     "recentActivities": "Actividades Recientes",
     "noActivity": "Sin actividad aún",
     "addPropertiesToStart": "Añade tu primer inmueble para comenzar",
-    "addTenantsToSeeActivity": "Añade inquilinos y registra pagos para ver actividad aquí"
+    "addTenantsToSeeActivity": "Añade inquilinos y registra pagos para ver actividad aquí",
+    "portfolioOverview": "Resumen del Portafolio",
+    "recentProperties": "Propiedades Recientes",
+    "viewAll": "Ver todo",
+    "achievements": "Logros",
+    "achievementsDescription": "Hitos y reconocimientos por tu éxito en gestión de propiedades",
+    "latestTenantPayments": "Últimos pagos de inquilinos",
+    "currentPropertyConditions": "Estado actual de las propiedades",
+    "paid": "Pagado",
+    "latestPortfolioUpdates": "Últimas actualizaciones de tu portafolio",
+    "activityFeedPlaceholder": "Tu feed de actividad aparecerá aquí",
+    "portfolioBreakdown": "Distribución del portafolio por tipo de propiedad",
+    "noPropertyData": "Sin datos de propiedad disponibles",
+    "startManagingPortfolio": "Empieza a gestionar tu portafolio",
+    "startManagingPortfolioDesc": "Añade tu primera propiedad para desbloquear estadísticas, análisis y seguimiento financiero de todo tu portafolio.",
+    "addYourFirstProperty": "Añadir Primera Propiedad"
   },
   "greeting": {
     "morning": "Buenos días",
@@ -298,5 +313,212 @@
     "requestMaintenance": "Solicitar Mantenimiento",
     "downloadReceipt": "Descargar Recibo",
     "selectPaymentMethod": "Seleccionar Método de Pago"
+  },
+  "calendar": {
+    "months": {
+      "jan": "Ene",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Abr",
+      "may": "May",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Ago",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Dic"
+    },
+    "monthsFull": {
+      "january": "Enero",
+      "february": "Febrero",
+      "march": "Marzo",
+      "april": "Abril",
+      "may": "Mayo",
+      "june": "Junio",
+      "july": "Julio",
+      "august": "Agosto",
+      "september": "Septiembre",
+      "october": "Octubre",
+      "november": "Noviembre",
+      "december": "Diciembre"
+    },
+    "weekdays": {
+      "sun": "Dom",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mié",
+      "thu": "Jue",
+      "fri": "Vie",
+      "sat": "Sáb"
+    }
+  },
+  "charts": {
+    "revenueTrend": "Tendencia de Ingresos",
+    "propertyDistribution": "Distribución de Propiedades",
+    "revenue": "Ingresos",
+    "expenses": "Gastos",
+    "netIncome": "Ingreso Neto",
+    "income": "Ingreso"
+  },
+  "forms": {
+    "fullName": "Nombre Completo",
+    "email": "Correo Electrónico",
+    "phone": "Teléfono",
+    "address": "Dirección",
+    "country": "País",
+    "city": "Ciudad",
+    "notes": "Notas",
+    "description": "Descripción",
+    "property": "Propiedad",
+    "tenant": "Inquilino",
+    "unit": "Unidad",
+    "type": "Tipo",
+    "status": "Estado",
+    "rent": "Alquiler",
+    "bedrooms": "Dormitorios",
+    "bathrooms": "Baños",
+    "leaseStart": "Inicio del Contrato",
+    "leaseEnd": "Fin del Contrato",
+    "allProperties": "Todas las Propiedades",
+    "saving": "Guardando...",
+    "selectProperty": "Seleccionar Propiedad",
+    "selectTenant": "Seleccionar Inquilino"
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo",
+    "paid": "Pagado",
+    "pending": "Pendiente",
+    "overdue": "Vencido",
+    "all": "Todos",
+    "occupied": "Ocupado",
+    "vacant": "Vacante"
+  },
+  "messages": {
+    "addedSuccess": "¡{item} añadido con éxito!",
+    "updatedSuccess": "¡{item} actualizado con éxito!",
+    "deletedSuccess": "{count} {item}(s) eliminado(s) con éxito",
+    "savedSuccess": "Configuración guardada con éxito",
+    "confirmDelete": "¿Está seguro de que desea eliminar {count} {item}(s)?",
+    "confirmDeleteDescription": "Esta acción no se puede deshacer.",
+    "noResults": "No se encontraron resultados"
+  },
+  "properties": {
+    "addNew": "Añadir Nueva Propiedad",
+    "editProperty": "Editar Propiedad",
+    "updateDetails": "Actualizar detalles de la propiedad",
+    "enterInfo": "Introducir información de la propiedad",
+    "deleteConfirm": "{count} propiedad(es) y todos los datos asociados se eliminarán permanentemente",
+    "fields": {
+      "name": "Nombre de la Propiedad",
+      "type": "Tipo de Propiedad",
+      "selectType": "Seleccionar tipo",
+      "address": "Búsqueda de Dirección Completa",
+      "verified": "Verificado",
+      "bedrooms": "Dormitorios",
+      "bathrooms": "Baños",
+      "monthlyRent": "Alquiler Mensual",
+      "propertyStatus": "Estado de la Propiedad"
+    },
+    "types": {
+      "apartment": "Apartamento",
+      "house": "Casa",
+      "condo": "Condominio",
+      "townhouse": "Casa Adosada",
+      "other": "Otro"
+    }
+  },
+  "financial": {
+    "title": "Finanzas",
+    "description": "Seguimiento de ingresos, gastos y flujo de caja",
+    "addExpense": "Añadir Gasto",
+    "recordExpense": "Registrar Gasto",
+    "addExpenseDesc": "Añadir un nuevo gasto de propiedad",
+    "saveExpense": "Guardar Gasto",
+    "totalIncome": "Ingresos Totales",
+    "totalExpenses": "Gastos Totales",
+    "netIncome": "Ingreso Neto",
+    "fromRent": "De alquileres y depósitos",
+    "maintenanceEtc": "Mantenimiento, reparaciones, etc.",
+    "cashFlow": "Flujo de caja del período",
+    "allTime": "Todo el Período",
+    "thisMonth": "Este Mes",
+    "thisYear": "Este Año",
+    "categories": {
+      "maintenance": "Mantenimiento",
+      "repairs": "Reparaciones",
+      "utilities": "Servicios",
+      "insurance": "Seguro",
+      "taxes": "Impuestos",
+      "mortgage": "Hipoteca",
+      "management": "Honorarios de Gestión",
+      "other": "Otro"
+    },
+    "receipts": {
+      "title": "Recibos",
+      "type": {
+        "rent": "Alquiler",
+        "deposit": "Depósito",
+        "maintenance": "Mantenimiento",
+        "other": "Otro"
+      }
+    }
+  },
+  "quickActions": {
+    "title": "Acciones Rápidas",
+    "addProperty": "Añadir Propiedad",
+    "addTenant": "Añadir Inquilino",
+    "createLease": "Crear Contrato",
+    "recordPayment": "Registrar Pago",
+    "maintenanceTicket": "Solicitud de Mantenimiento",
+    "sendCorrespondence": "Enviar Correspondencia",
+    "generateInvoice": "Generar Factura",
+    "addPropertyDesc": "Registrar una nueva propiedad en tu portafolio",
+    "addTenantDesc": "Registrar un nuevo inquilino",
+    "recordPaymentDesc": "Registrar un pago de alquiler o gasto",
+    "createLeaseDesc": "Redactar un nuevo contrato de arrendamiento",
+    "maintenanceTicketDesc": "Reportar un problema o solicitud",
+    "sendCorrespondenceDesc": "Enviar email o notificar a un inquilino"
+  },
+  "insights": {
+    "title": "Análisis",
+    "description": "Rendimiento y análisis del portafolio",
+    "occupancyRate": "Tasa de Ocupación",
+    "severity": {
+      "danger": "Crítico",
+      "warning": "Advertencia",
+      "info": "Información"
+    }
+  },
+  "reports": {
+    "title": "Informes",
+    "description": "Informes financieros y análisis de propiedades",
+    "income": "Ingresos",
+    "expenses": "Gastos",
+    "netIncome": "Ingreso Neto",
+    "profitMargin": "Margen de Beneficio",
+    "quarterly": "Trimestral"
+  },
+  "correspondence": {
+    "title": "Correspondencia",
+    "description": "Gestionar plantillas y comunicaciones",
+    "types": {
+      "welcome": "Bienvenida",
+      "rentReminder": "Recordatorio de Alquiler",
+      "evictionNotice": "Aviso de Desahucio",
+      "maintenanceRequest": "Solicitud de Mantenimiento",
+      "leaseRenewal": "Renovación de Contrato",
+      "custom": "Personalizado"
+    }
+  },
+  "contracts": {
+    "title": "Contratos",
+    "status": {
+      "active": "Activo",
+      "expiring": "Por Vencer",
+      "expired": "Vencido",
+      "terminated": "Terminado"
+    }
   }
 }

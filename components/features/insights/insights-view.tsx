@@ -28,6 +28,7 @@ import { useCurrency } from "@/lib/contexts/currency-context";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils/utils";
+import { getPropertyTypeColor } from "@/lib/design-tokens";
 
 /**
  * Insights View — Executive summary dashboard
@@ -52,34 +53,40 @@ export function InsightsView(): React.ReactElement {
     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
     const totalProperties = properties.length;
-    const occupiedCount = properties.filter((p) => p.status === "occupied").length;
+    const occupiedCount = properties.filter(
+      (p) => p.status === "occupied",
+    ).length;
     const vacantCount = totalProperties - occupiedCount;
-    const occupancyRate = totalProperties > 0 ? (occupiedCount / totalProperties) * 100 : 0;
+    const occupancyRate =
+      totalProperties > 0 ? (occupiedCount / totalProperties) * 100 : 0;
 
     const totalTenants = tenants.length;
-    const activeTenants = tenants.filter((t) => new Date(t.leaseEnd) >= now).length;
+    const activeTenants = tenants.filter(
+      (t) => new Date(t.leaseEnd) >= now,
+    ).length;
 
     const paidThisMonth = receipts.filter(
-      (r) => r.status === "paid" && new Date(r.date) >= startOfMonth
+      (r) => r.status === "paid" && new Date(r.date) >= startOfMonth,
     );
     const monthlyRevenue = paidThisMonth.reduce((s, r) => s + r.amount, 0);
 
     const paidThisYear = receipts.filter(
-      (r) => r.status === "paid" && new Date(r.date) >= startOfYear
+      (r) => r.status === "paid" && new Date(r.date) >= startOfYear,
     );
     const yearlyRevenue = paidThisYear.reduce((s, r) => s + r.amount, 0);
 
     const thirtyDaysAgo = new Date(now);
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const overdueReceipts = receipts.filter(
-      (r) => r.status === "pending" && new Date(r.date) < thirtyDaysAgo
+      (r) => r.status === "pending" && new Date(r.date) < thirtyDaysAgo,
     );
     const overdueAmount = overdueReceipts.reduce((s, r) => s + r.amount, 0);
 
     const activeLeases = leases?.filter((l) => l.status === "active") || [];
     const avgRent =
       activeLeases.length > 0
-        ? activeLeases.reduce((s, l) => s + (l.monthlyRent || 0), 0) / activeLeases.length
+        ? activeLeases.reduce((s, l) => s + (l.monthlyRent || 0), 0) /
+          activeLeases.length
         : 0;
 
     // Leases expiring within 60 days
@@ -92,20 +99,45 @@ export function InsightsView(): React.ReactElement {
 
     // Revenue last 6 months for sparkline
     const revenueTrend: { label: string; value: number }[] = [];
-    const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const MONTHS = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
       const rev = receipts
-        .filter((r) => r.status === "paid" && new Date(r.date) >= d && new Date(r.date) <= end)
+        .filter(
+          (r) =>
+            r.status === "paid" &&
+            new Date(r.date) >= d &&
+            new Date(r.date) <= end,
+        )
         .reduce((s, r) => s + r.amount, 0);
       revenueTrend.push({ label: MONTHS[d.getMonth()], value: rev });
     }
 
     // Month-over-month change
-    const prevMonth = revenueTrend.length >= 2 ? revenueTrend[revenueTrend.length - 2].value : 0;
-    const curMonth = revenueTrend.length >= 1 ? revenueTrend[revenueTrend.length - 1].value : 0;
-    const momChange = prevMonth > 0 ? ((curMonth - prevMonth) / prevMonth) * 100 : 0;
+    const prevMonth =
+      revenueTrend.length >= 2
+        ? revenueTrend[revenueTrend.length - 2].value
+        : 0;
+    const curMonth =
+      revenueTrend.length >= 1
+        ? revenueTrend[revenueTrend.length - 1].value
+        : 0;
+    const momChange =
+      prevMonth > 0 ? ((curMonth - prevMonth) / prevMonth) * 100 : 0;
 
     // Property type breakdown
     const typeCounts = properties.reduce<Record<string, number>>((acc, p) => {
@@ -116,10 +148,7 @@ export function InsightsView(): React.ReactElement {
     const typeChart = Object.entries(typeCounts).map(([type, count]) => ({
       label: type.charAt(0).toUpperCase() + type.slice(1),
       value: count,
-      color:
-        type === "apartment" ? "#3b82f6" :
-        type === "house" ? "#10b981" :
-        type === "commercial" ? "#f59e0b" : "#6b7280",
+      color: getPropertyTypeColor(type),
     }));
 
     return {
@@ -139,12 +168,18 @@ export function InsightsView(): React.ReactElement {
       momChange,
       typeChart,
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [properties, tenants, receipts, leases, refreshKey]);
 
   // ── Alerts ───────────────────────────────────────────────────────
   const alerts = useMemo(() => {
-    const items: { icon: React.ReactNode; label: string; detail: string; severity: "danger" | "warning" | "info"; href: string }[] = [];
+    const items: {
+      icon: React.ReactNode;
+      label: string;
+      detail: string;
+      severity: "danger" | "warning" | "info";
+      href: string;
+    }[] = [];
 
     if (metrics.overdueReceipts.length > 0) {
       items.push({
@@ -190,9 +225,11 @@ export function InsightsView(): React.ReactElement {
   }, [metrics, formatCurrency, locale]);
 
   const severityColors: Record<string, string> = {
-    danger: "bg-red-500/10 text-red-400 border-red-500/20",
-    warning: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-    info: "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    danger:
+      "bg-[var(--color-error-muted)] text-[var(--color-error)] border-[var(--color-error)]/20",
+    warning:
+      "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20",
+    info: "bg-[var(--color-info-muted)] text-[var(--color-info)] border-[var(--color-info)]/20",
   };
 
   // ── Render ───────────────────────────────────────────────────────
@@ -209,7 +246,12 @@ export function InsightsView(): React.ReactElement {
             Executive summary of your portfolio performance
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2 self-start">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          className="gap-2 self-start"
+        >
           <RefreshCw className="h-4 w-4" />
           Refresh
         </Button>
@@ -257,13 +299,15 @@ export function InsightsView(): React.ReactElement {
               onClick={() => a.href !== "#" && router.push(a.href)}
               className={cn(
                 "w-full flex items-center gap-3 px-4 py-3 rounded-lg border text-left transition-colors hover:opacity-80",
-                severityColors[a.severity]
+                severityColors[a.severity],
               )}
             >
               {a.icon}
               <span className="flex-1 text-sm font-medium">{a.label}</span>
               <span className="text-xs opacity-70">{a.detail}</span>
-              {a.href !== "#" && <ArrowRight className="h-3.5 w-3.5 opacity-50" />}
+              {a.href !== "#" && (
+                <ArrowRight className="h-3.5 w-3.5 opacity-50" />
+              )}
             </button>
           ))}
         </CardContent>
@@ -284,7 +328,11 @@ export function InsightsView(): React.ReactElement {
           </CardHeader>
           <CardContent>
             {metrics.revenueTrend.some((d) => d.value > 0) ? (
-              <LineChart data={metrics.revenueTrend} height={220} showValues={false} />
+              <LineChart
+                data={metrics.revenueTrend}
+                height={220}
+                showValues={false}
+              />
             ) : (
               <div className="flex items-center justify-center h-[220px] text-[var(--color-muted-foreground)] text-sm">
                 No revenue data yet — record payments to see trends
@@ -337,14 +385,23 @@ export function InsightsView(): React.ReactElement {
               {metrics.expiringLeases.slice(0, 5).map((lease) => {
                 const end = new Date(lease.endDate);
                 const now = new Date();
-                const daysLeft = Math.ceil((end.getTime() - now.getTime()) / 86_400_000);
+                const daysLeft = Math.ceil(
+                  (end.getTime() - now.getTime()) / 86_400_000,
+                );
                 const tenant = tenants.find((t) => t.id === lease.tenantId);
-                const property = properties.find((p) => p.id === lease.propertyId);
+                const property = properties.find(
+                  (p) => p.id === lease.propertyId,
+                );
 
                 return (
-                  <div key={lease.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
+                  <div
+                    key={lease.id}
+                    className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
+                  >
                     <div className="space-y-0.5">
-                      <p className="text-sm font-medium">{tenant?.name || "Unknown tenant"}</p>
+                      <p className="text-sm font-medium">
+                        {tenant?.name || "Unknown tenant"}
+                      </p>
                       <p className="text-xs text-[var(--color-muted-foreground)]">
                         {property?.name || "Unknown property"}
                       </p>
@@ -355,8 +412,8 @@ export function InsightsView(): React.ReactElement {
                         daysLeft <= 14
                           ? "bg-red-500/15 text-red-400"
                           : daysLeft <= 30
-                          ? "bg-amber-500/15 text-amber-400"
-                          : "bg-blue-500/15 text-blue-400"
+                            ? "bg-amber-500/15 text-amber-400"
+                            : "bg-blue-500/15 text-blue-400",
                       )}
                     >
                       {daysLeft <= 0 ? "Expired" : `${daysLeft}d left`}
@@ -410,16 +467,31 @@ function KPITile({
           <span className="text-xs font-medium text-[var(--color-muted-foreground)] uppercase tracking-wide">
             {label}
           </span>
-          <div className="rounded-md bg-[var(--color-muted)]/30 p-1.5">{icon}</div>
+          <div className="rounded-md bg-[var(--color-muted)]/30 p-1.5">
+            {icon}
+          </div>
         </div>
         <div className="text-2xl font-bold tracking-tight">{value}</div>
         {change !== undefined && (
-          <div className={cn("flex items-center gap-1 mt-1 text-xs font-medium", change >= 0 ? "text-emerald-400" : "text-red-400")}>
-            {change >= 0 ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+          <div
+            className={cn(
+              "flex items-center gap-1 mt-1 text-xs font-medium",
+              change >= 0 ? "text-emerald-400" : "text-red-400",
+            )}
+          >
+            {change >= 0 ? (
+              <TrendingUp className="h-3 w-3" />
+            ) : (
+              <TrendingDown className="h-3 w-3" />
+            )}
             {Math.abs(change).toFixed(1)}% vs last month
           </div>
         )}
-        {sub && <p className="text-xs text-[var(--color-muted-foreground)] mt-1">{sub}</p>}
+        {sub && (
+          <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
+            {sub}
+          </p>
+        )}
       </CardContent>
     </Card>
   );
@@ -449,7 +521,9 @@ function QuickLink({
           {title}
           <ArrowRight className="h-3.5 w-3.5 opacity-0 -translate-x-1 transition-all group-hover:opacity-70 group-hover:translate-x-0" />
         </h3>
-        <p className="text-xs text-[var(--color-muted-foreground)] line-clamp-2">{description}</p>
+        <p className="text-xs text-[var(--color-muted-foreground)] line-clamp-2">
+          {description}
+        </p>
       </div>
     </button>
   );

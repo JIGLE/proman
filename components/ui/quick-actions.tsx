@@ -4,17 +4,16 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import {
   Plus,
-  Building2,
-  Users,
-  FileText,
-  DollarSign,
-  Wrench,
-  Mail,
   ArrowRight,
   Sparkles,
   MoreHorizontal,
+  Building2,
+  DollarSign,
+  FileText,
+  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
+import { useMagneticHover } from "@/lib/hooks/use-magnetic-hover";
 import { Button } from "./button";
 import { Card, CardContent, CardHeader, CardTitle } from "./card";
 import {
@@ -24,110 +23,103 @@ import {
   DropdownMenuTrigger,
 } from "./dropdown-menu";
 
-interface QuickAction {
-  id: string;
+export interface QuickAction<T extends string = string> {
+  id: T;
   label: string;
   description: string;
   icon: React.ElementType;
   color: string;
   bgColor: string;
-  onClick: () => void;
   shortcut?: string;
 }
 
-interface QuickActionsProps {
-  onAddProperty?: () => void;
-  onAddTenant?: () => void;
-  onAddLease?: () => void;
-  onRecordPayment?: () => void;
-  onCreateTicket?: () => void;
-  onSendCorrespondence?: () => void;
+interface QuickActionsProps<T extends string = string> {
+  actions: QuickAction<T>[];
+  onAction: (id: T) => void;
   className?: string;
   variant?: "grid" | "horizontal" | "compact";
   showOverflowOnly?: boolean;
+  /** Number of primary actions to show before overflow (default: 2) */
+  overflowAfter?: number;
+  /** Title for the card header (default: "Quick Actions") */
+  title?: string;
 }
 
-export function QuickActions({
-  onAddProperty,
-  onAddTenant,
-  onAddLease,
-  onRecordPayment,
-  onCreateTicket,
-  onSendCorrespondence,
+function MagneticGridCard<T extends string>({
+  action,
+  index,
+  onAction,
+}: {
+  action: QuickAction<T>;
+  index: number;
+  onAction: (id: T) => void;
+}) {
+  const { ref, onMouseMove, onMouseLeave } =
+    useMagneticHover<HTMLButtonElement>();
+  const Icon = action.icon;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: index * 0.05 }}
+    >
+      <button
+        ref={ref}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
+        onClick={() => onAction(action.id)}
+        className={cn(
+          "group relative flex flex-col items-start p-4 rounded-xl w-full",
+          "border border-[var(--color-border)]",
+          "bg-[var(--color-background)]",
+          "hover:bg-[var(--color-hover)] hover:border-[var(--color-accent)]/50",
+          "hover:shadow-[var(--shadow-glow)]",
+          "transition-all duration-200",
+          "active:scale-[0.98]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]",
+        )}
+      >
+        <div className={cn("p-2 rounded-lg mb-3", action.bgColor)}>
+          <Icon className={cn("h-5 w-5", action.color)} />
+        </div>
+        <span className="text-sm font-medium text-[var(--color-foreground)] mb-1">
+          {action.label}
+        </span>
+        <span className="text-xs text-[var(--color-muted-foreground)]">
+          {action.description}
+        </span>
+        {action.shortcut && (
+          <kbd className="absolute top-2 right-2 hidden md:inline-flex h-5 items-center px-1.5 rounded border border-[var(--color-border)] bg-[var(--color-background)] text-[10px] font-mono text-[var(--color-muted-foreground)] opacity-0 group-hover:opacity-100 transition-opacity">
+            {action.shortcut}
+          </kbd>
+        )}
+        <ArrowRight className="absolute bottom-3 right-3 h-4 w-4 text-[var(--color-muted-foreground)] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+      </button>
+    </motion.div>
+  );
+}
+
+export function QuickActions<T extends string = string>({
+  actions,
+  onAction,
   className,
   variant = "grid",
   showOverflowOnly = false,
-}: QuickActionsProps): React.ReactElement {
-  const actions: QuickAction[] = [
-    {
-      id: "add-property",
-      label: "Add Property",
-      description: "Register a new property",
-      icon: Building2,
-      color: "text-blue-400",
-      bgColor: "bg-blue-500/10 hover:bg-blue-500/20",
-      onClick: onAddProperty || (() => {}),
-      shortcut: "⌘P",
-    },
-    {
-      id: "add-tenant",
-      label: "Add Tenant",
-      description: "Register a new tenant",
-      icon: Users,
-      color: "text-purple-400",
-      bgColor: "bg-purple-500/10 hover:bg-purple-500/20",
-      onClick: onAddTenant || (() => {}),
-      shortcut: "⌘T",
-    },
-    {
-      id: "add-lease",
-      label: "Create Lease",
-      description: "Draft a new lease agreement",
-      icon: FileText,
-      color: "text-emerald-400",
-      bgColor: "bg-emerald-500/10 hover:bg-emerald-500/20",
-      onClick: onAddLease || (() => {}),
-      shortcut: "⌘L",
-    },
-    {
-      id: "record-payment",
-      label: "Record Payment",
-      description: "Log a rent payment",
-      icon: DollarSign,
-      color: "text-green-400",
-      bgColor: "bg-green-500/10 hover:bg-green-500/20",
-      onClick: onRecordPayment || (() => {}),
-      shortcut: "⌘R",
-    },
-    {
-      id: "create-ticket",
-      label: "Maintenance Ticket",
-      description: "Create a new ticket",
-      icon: Wrench,
-      color: "text-orange-400",
-      bgColor: "bg-orange-500/10 hover:bg-orange-500/20",
-      onClick: onCreateTicket || (() => {}),
-      shortcut: "⌘M",
-    },
-    {
-      id: "send-correspondence",
-      label: "Send Message",
-      description: "Email or letter to tenant",
-      icon: Mail,
-      color: "text-cyan-400",
-      bgColor: "bg-cyan-500/10 hover:bg-cyan-500/20",
-      onClick: onSendCorrespondence || (() => {}),
-      shortcut: "⌘E",
-    },
-  ];
-
-  // Overflow-only mode: shows remaining actions (excluding first 2 which are shown as primary buttons)
+  overflowAfter = 2,
+  title = "Quick Actions",
+}: QuickActionsProps<T>): React.ReactElement {
+  // Overflow-only mode: shows remaining actions (excluding first N which are shown as primary buttons)
   if (showOverflowOnly) {
-    const overflowActions = actions.slice(2); // Skip first 2 (Add Property, Add Tenant)
+    const overflowActions = actions.slice(overflowAfter);
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className={cn("h-9 w-9 p-0", className)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={cn("h-9 w-9 p-0", className)}
+          >
             <MoreHorizontal className="h-4 w-4" />
             <span className="sr-only">More actions</span>
           </Button>
@@ -136,7 +128,10 @@ export function QuickActions({
           {overflowActions.map((action) => {
             const Icon = action.icon;
             return (
-              <DropdownMenuItem key={action.id} onClick={action.onClick}>
+              <DropdownMenuItem
+                key={action.id}
+                onClick={() => onAction(action.id)}
+              >
                 <Icon className={cn("h-4 w-4 mr-2", action.color)} />
                 {action.label}
               </DropdownMenuItem>
@@ -149,7 +144,12 @@ export function QuickActions({
 
   if (variant === "horizontal") {
     return (
-      <div className={cn("flex gap-2 overflow-x-auto pb-2 scrollbar-hide", className)}>
+      <div
+        className={cn(
+          "flex gap-2 overflow-x-auto pb-2 scrollbar-hide",
+          className,
+        )}
+      >
         {actions.map((action, index) => {
           const Icon = action.icon;
           return (
@@ -162,11 +162,11 @@ export function QuickActions({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={action.onClick}
+                onClick={() => onAction(action.id)}
                 className={cn(
                   "flex items-center gap-2 whitespace-nowrap",
                   "border-[var(--color-border)] hover:border-[var(--color-accent)]/50",
-                  "transition-all duration-200"
+                  "transition-all duration-200",
                 )}
               >
                 <Icon className={cn("h-4 w-4", action.color)} />
@@ -181,11 +181,16 @@ export function QuickActions({
 
   if (variant === "compact") {
     return (
-      <Card className={cn("bg-[var(--color-card)] border-[var(--color-border)]", className)}>
+      <Card
+        className={cn(
+          "bg-[var(--color-card)] border-[var(--color-border)]",
+          className,
+        )}
+      >
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-[var(--color-foreground)] flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-[var(--color-accent)]" />
-            Quick Actions
+            {title}
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-0">
@@ -197,11 +202,11 @@ export function QuickActions({
                   key={action.id}
                   variant="ghost"
                   size="sm"
-                  onClick={action.onClick}
+                  onClick={() => onAction(action.id)}
                   className={cn(
                     "h-8 px-2",
                     action.bgColor,
-                    "border border-transparent"
+                    "border border-transparent",
                   )}
                 >
                   <Icon className={cn("h-3.5 w-3.5 mr-1.5", action.color)} />
@@ -217,53 +222,28 @@ export function QuickActions({
 
   // Default grid variant
   return (
-    <Card className={cn("bg-[var(--color-card)] border-[var(--color-border)]", className)}>
+    <Card
+      className={cn(
+        "bg-[var(--color-card)] border-[var(--color-border)]",
+        className,
+      )}
+    >
       <CardHeader>
         <CardTitle className="text-[var(--color-foreground)] flex items-center gap-2">
           <Plus className="h-5 w-5 text-[var(--color-accent)]" />
-          Quick Actions
+          {title}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {actions.map((action, index) => {
-            const Icon = action.icon;
-            return (
-              <motion.button
-                key={action.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={action.onClick}
-                className={cn(
-                  "group relative flex flex-col items-start p-4 rounded-lg",
-                  "border border-[var(--color-border)]",
-                  "bg-[var(--color-background)]",
-                  "hover:bg-[var(--color-hover)] hover:border-[var(--color-accent)]/50",
-                  "transition-all duration-200",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
-                )}
-              >
-                <div className={cn("p-2 rounded-lg mb-3", action.bgColor)}>
-                  <Icon className={cn("h-5 w-5", action.color)} />
-                </div>
-                <span className="text-sm font-medium text-[var(--color-foreground)] mb-1">
-                  {action.label}
-                </span>
-                <span className="text-xs text-[var(--color-muted-foreground)]">
-                  {action.description}
-                </span>
-                {action.shortcut && (
-                  <kbd className="absolute top-2 right-2 hidden md:inline-flex h-5 items-center px-1.5 rounded border border-[var(--color-border)] bg-[var(--color-background)] text-[10px] font-mono text-[var(--color-muted-foreground)] opacity-0 group-hover:opacity-100 transition-opacity">
-                    {action.shortcut}
-                  </kbd>
-                )}
-                <ArrowRight className="absolute bottom-3 right-3 h-4 w-4 text-[var(--color-muted-foreground)] opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-              </motion.button>
-            );
-          })}
+          {actions.map((action, index) => (
+            <MagneticGridCard
+              key={action.id}
+              action={action}
+              index={index}
+              onAction={onAction}
+            />
+          ))}
         </div>
       </CardContent>
     </Card>
@@ -308,7 +288,12 @@ export function AttentionNeeded({
 }: AttentionNeededProps): React.ReactElement {
   if (items.length === 0) {
     return (
-      <Card className={cn("bg-[var(--color-card)] border-[var(--color-border)]", className)}>
+      <Card
+        className={cn(
+          "bg-[var(--color-card)] border-[var(--color-border)]",
+          className,
+        )}
+      >
         <CardContent className="py-8 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500/10 mb-3">
             <Sparkles className="h-6 w-6 text-green-400" />
@@ -325,7 +310,12 @@ export function AttentionNeeded({
   }
 
   return (
-    <Card className={cn("bg-[var(--color-card)] border-[var(--color-border)]", className)}>
+    <Card
+      className={cn(
+        "bg-[var(--color-card)] border-[var(--color-border)]",
+        className,
+      )}
+    >
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="text-sm font-medium text-[var(--color-foreground)] flex items-center gap-2">
           <span className="relative flex h-2 w-2">
@@ -338,7 +328,12 @@ export function AttentionNeeded({
           </span>
         </CardTitle>
         {onViewAll && (
-          <Button variant="ghost" size="sm" onClick={onViewAll} className="text-xs">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onViewAll}
+            className="text-xs"
+          >
             View All
           </Button>
         )}
@@ -354,7 +349,7 @@ export function AttentionNeeded({
               transition={{ delay: index * 0.05 }}
               className={cn(
                 "flex items-center gap-3 p-3 rounded-lg border-l-4",
-                urgencyColors[item.urgency]
+                urgencyColors[item.urgency],
               )}
             >
               <Icon className="h-4 w-4 text-[var(--color-muted-foreground)] shrink-0" />

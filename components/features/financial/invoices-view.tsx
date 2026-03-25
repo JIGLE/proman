@@ -288,19 +288,19 @@ export function InvoicesView({
     switch (status) {
       case "paid":
         return (
-          <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+          <Badge className="bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]/30">
             Paid
           </Badge>
         );
       case "pending":
         return (
-          <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30">
+          <Badge className="bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/30">
             Pending
           </Badge>
         );
       case "overdue":
         return (
-          <Badge className="bg-red-500/20 text-red-400 border-red-500/30">
+          <Badge className="bg-[var(--color-error-muted)] text-[var(--color-error)] border-[var(--color-error)]/30">
             Overdue
           </Badge>
         );

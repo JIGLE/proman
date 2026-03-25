@@ -5,6 +5,7 @@ import "@/lib/dev/patch-react-children-only";
 import "./globals.css";
 import { getNonce } from "@/lib/utils/csp-nonce";
 import UpdateBannerClient from "@/components/shared/update-banner-client";
+import { defaultLocale } from "@/lib/i18n/config";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ["latin"],
@@ -28,7 +29,7 @@ export default async function RootLayout({
 
   return (
     <html
-      lang="en"
+      lang={defaultLocale}
       className={plusJakartaSans.variable}
       data-scroll-behavior="smooth"
       suppressHydrationWarning

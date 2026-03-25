@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 interface SkeletonProps {
   className?: string;
-  variant?: 'text' | 'circular' | 'rectangular';
+  variant?: "text" | "circular" | "rectangular";
   width?: string | number;
   height?: string | number;
   style?: React.CSSProperties;
@@ -10,21 +10,23 @@ interface SkeletonProps {
 
 export function Skeleton({
   className = "",
-  variant = 'text',
+  variant = "text",
   width,
-  height
+  height,
 }: SkeletonProps) {
-  const baseClasses = "bg-zinc-700 animate-shimmer bg-gradient-to-r from-zinc-700 via-zinc-600 to-zinc-700";
+  const baseClasses =
+    "bg-zinc-700 animate-shimmer bg-gradient-to-r from-zinc-700 via-zinc-600 to-zinc-700";
 
   const variantClasses = {
     text: "h-4 rounded",
     circular: "rounded-full",
-    rectangular: "rounded-md"
+    rectangular: "rounded-lg",
   };
 
   const style: React.CSSProperties = {};
-  if (width) style.width = typeof width === 'number' ? `${width}px` : width;
-  if (height) style.height = typeof height === 'number' ? `${height}px` : height;
+  if (width) style.width = typeof width === "number" ? `${width}px` : width;
+  if (height)
+    style.height = typeof height === "number" ? `${height}px` : height;
 
   return (
     <div
@@ -40,7 +42,11 @@ interface SkeletonCardProps {
   className?: string;
 }
 
-export function SkeletonCard({ lines = 3, showAvatar = false, className = "" }: SkeletonCardProps) {
+export function SkeletonCard({
+  lines = 3,
+  showAvatar = false,
+  className = "",
+}: SkeletonCardProps) {
   return (
     <motion.div
       className={`p-4 border border-zinc-800 rounded-lg bg-zinc-900 ${className}`}
@@ -73,7 +79,11 @@ interface TableSkeletonProps {
   className?: string;
 }
 
-export function TableSkeleton({ rows = 5, columns = 4, className = "" }: TableSkeletonProps) {
+export function TableSkeleton({
+  rows = 5,
+  columns = 4,
+  className = "",
+}: TableSkeletonProps) {
   return (
     <motion.div
       className={`space-y-3 ${className}`}

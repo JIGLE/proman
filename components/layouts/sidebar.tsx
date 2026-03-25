@@ -31,12 +31,194 @@ import {
   useNotifications,
 } from "@/components/ui/notification-center";
 
+// ── Nav Item Type ──────────────────────────────────────
+export interface SidebarNavItem {
+  key: string;
+  icon: React.ElementType;
+  labelKey: string; // i18n key under "navigation.*"
+  label: string; // fallback display label
+  href: string;
+  feature?: string; // env var gate (e.g. NEXT_PUBLIC_ENABLE_INSIGHTS)
+}
+
+export interface SidebarNavGroup {
+  group: string;
+  items: SidebarNavItem[];
+}
+
+// ── Default navigation config ──────────────────────────
+const NAV_CONFIG: SidebarNavGroup[] = [
+  {
+    group: "Main",
+    items: [
+      {
+        key: "home",
+        icon: Home,
+        labelKey: "navigation.home",
+        label: "Home",
+        href: "/overview",
+      },
+      {
+        key: "assets",
+        icon: Building2,
+        labelKey: "navigation.properties",
+        label: "Properties",
+        href: "/properties",
+      },
+      {
+        key: "people",
+        icon: Users,
+        labelKey: "navigation.tenants",
+        label: "Tenants",
+        href: "/tenants",
+      },
+      {
+        key: "contracts",
+        icon: FileText,
+        labelKey: "navigation.contracts",
+        label: "Contracts",
+        href: "/contracts",
+      },
+    ],
+  },
+  {
+    group: "Operations",
+    items: [
+      {
+        key: "maintenance",
+        icon: Hammer,
+        labelKey: "navigation.maintenance",
+        label: "Maintenance",
+        href: "/maintenance",
+      },
+      {
+        key: "contacts",
+        icon: UserCircle,
+        labelKey: "navigation.contacts",
+        label: "Contacts",
+        href: "/contacts",
+      },
+      {
+        key: "correspondence",
+        icon: Mail,
+        labelKey: "navigation.messages",
+        label: "Messages",
+        href: "/correspondence",
+      },
+    ],
+  },
+  {
+    group: "Analytics",
+    items: [
+      {
+        key: "finance",
+        icon: Wallet,
+        labelKey: "navigation.finance",
+        label: "Finance",
+        href: "/financials",
+      },
+      {
+        key: "insights",
+        icon: LightbulbIcon,
+        labelKey: "navigation.insights",
+        label: "Insights",
+        href: "/insights",
+        feature: "NEXT_PUBLIC_ENABLE_INSIGHTS",
+      },
+    ],
+  },
+];
+
 interface SidebarProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
 }
 
 const SIDEBAR_COLLAPSE_KEY = "proman.sidebar.collapsed";
+
+// ── Sidebar Footer ─────────────────────────────────────
+interface SidebarFooterProps {
+  collapsed: boolean;
+  onToggleCollapsed: () => void;
+  locale: string;
+  user?: { name?: string | null; email?: string | null; image?: string | null };
+}
+
+function SidebarFooter({
+  collapsed,
+  onToggleCollapsed,
+  locale,
+  user,
+}: SidebarFooterProps): React.ReactElement {
+  const initials =
+    user?.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase() || "U";
+
+  if (!collapsed) {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
+          <Avatar className="w-8 h-8 ring-2 ring-[var(--color-inner-border)]">
+            <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+            <AvatarFallback className="bg-[var(--color-primary)] text-white text-xs font-semibold">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
+              {user?.name}
+            </p>
+            <p className="text-xs text-[var(--color-muted-foreground)] truncate">
+              {user?.email}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center justify-between gap-1 px-1">
+          <LanguageSelector compact />
+          <ThemeToggle variant="button" size="sm" className="h-8 w-8" />
+          <Link href={`/${locale}/settings`} title="Settings">
+            <div className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
+              <Settings className="h-4 w-4" />
+            </div>
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => signOut({ callbackUrl: `/${locale}` })}
+            className="h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-500"
+            title="Sign Out"
+            aria-label="Sign Out"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <Avatar className="w-8 h-8 ring-2 ring-[var(--color-inner-border)]">
+        <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+        <AvatarFallback className="bg-[var(--color-primary)] text-white text-xs font-semibold">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onToggleCollapsed}
+        className="h-8 w-8 p-0 text-[var(--color-muted-foreground)]"
+        title="Expand Sidebar"
+      >
+        <ChevronRight className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
 
 export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   const [collapsed, setCollapsed] = useState(false);
@@ -55,6 +237,17 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   }, []);
 
   const insightsEnabled = process.env.NEXT_PUBLIC_ENABLE_INSIGHTS !== "false";
+
+  // Build menu from config, filtering by feature flags
+  const menuItems = NAV_CONFIG.map((group) => ({
+    ...group,
+    items: group.items.filter((item) => {
+      if (!item.feature) return true;
+      if (item.feature === "NEXT_PUBLIC_ENABLE_INSIGHTS")
+        return insightsEnabled;
+      return true;
+    }),
+  })).filter((group) => group.items.length > 0);
 
   const {
     notifications,
@@ -76,74 +269,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
     });
   }, []);
 
-  const menuItems = [
-    {
-      group: "Main",
-      items: [
-        { id: "home", label: "Home", icon: Home, href: "/overview" },
-        {
-          id: "assets",
-          label: "Properties",
-          icon: Building2,
-          href: "/properties",
-        },
-        { id: "people", label: "Tenants", icon: Users, href: "/tenants" },
-        {
-          id: "contracts",
-          label: "Contracts",
-          icon: FileText,
-          href: "/contracts",
-        },
-      ],
-    },
-    {
-      group: "Operations",
-      items: [
-        {
-          id: "maintenance",
-          label: "Maintenance",
-          icon: Hammer,
-          href: "/maintenance",
-        },
-        {
-          id: "contacts",
-          label: "Contacts",
-          icon: UserCircle,
-          href: "/contacts",
-        },
-        {
-          id: "correspondence",
-          label: "Messages",
-          icon: Mail,
-          href: "/correspondence",
-        },
-      ],
-    },
-    {
-      group: "Analytics",
-      items: [
-        { id: "finance", label: "Finance", icon: Wallet, href: "/financials" },
-        ...(insightsEnabled
-          ? [
-              {
-                id: "insights",
-                label: "Insights",
-                icon: LightbulbIcon,
-                href: "/insights",
-              },
-            ]
-          : []),
-      ],
-    },
-  ];
-
   const user = session?.user;
-  const initials =
-    user?.name
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase() || "U";
   const currentLocale = pathname.split("/")[1] || "pt";
 
   return (
@@ -229,10 +355,10 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
 
                 return (
                   <Link
-                    key={item.id}
+                    key={item.key}
                     href={`/${currentLocale}${item.href}`}
                     role="listitem"
-                    onClick={() => onTabChange?.(item.id)}
+                    onClick={() => onTabChange?.(item.key)}
                     aria-current={isActive ? "page" : undefined}
                     title={collapsed ? item.label : undefined}
                   >
@@ -265,70 +391,12 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
       {/* User Profile */}
       {session && (
         <div className="flex-none border-t border-[var(--color-inner-border)] p-2">
-          {!collapsed ? (
-            <div className="space-y-2">
-              <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
-                <Avatar className="w-8 h-8 ring-2 ring-[var(--color-inner-border)]">
-                  <AvatarImage
-                    src={user?.image || ""}
-                    alt={user?.name || "User"}
-                  />
-                  <AvatarFallback className="bg-[var(--color-primary)] text-white text-xs font-semibold">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
-                    {user?.name}
-                  </p>
-                  <p className="text-xs text-[var(--color-muted-foreground)] truncate">
-                    {user?.email}
-                  </p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between gap-1 px-1">
-                <LanguageSelector compact />
-                <ThemeToggle variant="button" size="sm" className="h-8 w-8" />
-                <Link href={`/${currentLocale}/settings`} title="Settings">
-                  <div className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
-                    <Settings className="h-4 w-4" />
-                  </div>
-                </Link>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => signOut({ callbackUrl: `/${currentLocale}` })}
-                  className="h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-500"
-                  title="Sign Out"
-                  aria-label="Sign Out"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-2">
-              <Avatar className="w-8 h-8 ring-2 ring-[var(--color-inner-border)]">
-                <AvatarImage
-                  src={user?.image || ""}
-                  alt={user?.name || "User"}
-                />
-                <AvatarFallback className="bg-[var(--color-primary)] text-white text-xs font-semibold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleToggleCollapsed}
-                className="h-8 w-8 p-0 text-[var(--color-muted-foreground)]"
-                title="Expand Sidebar"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          )}
+          <SidebarFooter
+            collapsed={collapsed}
+            onToggleCollapsed={handleToggleCollapsed}
+            locale={currentLocale}
+            user={user}
+          />
         </div>
       )}
     </div>

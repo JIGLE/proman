@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "./button";
 import { cn } from "@/lib/utils/utils";
+import { useTranslations } from "next-intl";
 
 const CHECKLIST_DISMISSED_KEY = "proman.onboarding.checklist.dismissed";
 const CHECKLIST_COLLAPSED_KEY = "proman.onboarding.checklist.collapsed";
@@ -49,6 +50,7 @@ export function OnboardingChecklist({
   const [dismissed, setDismissed] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const [celebrateComplete, setCelebrateComplete] = useState(false);
+  const t = useTranslations("onboarding");
 
   useEffect(() => {
     try {
@@ -135,12 +137,12 @@ export function OnboardingChecklist({
           <Sparkles className="h-4 w-4 text-amber-400" />
           <div>
             <h3 className="text-sm font-semibold text-[var(--color-foreground)]">
-              {allComplete ? "🎉 Setup Complete!" : "Getting Started"}
+              {allComplete ? `🎉 ${t("setupComplete")}` : t("gettingStarted")}
             </h3>
             <p className="text-xs text-[var(--color-muted-foreground)]">
               {allComplete
-                ? "You're all set to manage your properties"
-                : `${completedCount} of ${totalSteps} steps complete`}
+                ? t("allSet")
+                : `${completedCount} of ${totalSteps} ${t("complete")}`}
             </p>
           </div>
         </div>
@@ -205,22 +207,32 @@ export function OnboardingChecklist({
               <div className="p-4 text-center">
                 <motion.div
                   initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
+                  animate={{ scale: [0, 1.3, 1] }}
                   transition={{
                     type: "spring",
-                    stiffness: 200,
+                    stiffness: 400,
                     damping: 15,
                   }}
                   className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-success)]/20 mb-3"
                 >
                   <CheckCircle2 className="h-6 w-6 text-[var(--color-success)]" />
                 </motion.div>
-                <p className="text-sm text-[var(--color-foreground)] font-medium">
+                <motion.p
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="text-sm text-[var(--color-foreground)] font-medium"
+                >
                   You&apos;re all set!
-                </p>
-                <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
+                </motion.p>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.5 }}
+                  className="text-xs text-[var(--color-muted-foreground)] mt-1"
+                >
                   Your property management dashboard is ready to use.
-                </p>
+                </motion.p>
               </div>
             ) : (
               /* Step list */
@@ -243,7 +255,17 @@ export function OnboardingChecklist({
                     >
                       {/* Status icon */}
                       {step.completed ? (
-                        <CheckCircle2 className="h-5 w-5 text-[var(--color-success)] flex-shrink-0" />
+                        <motion.div
+                          initial={{ scale: 1 }}
+                          animate={{ scale: [1, 1.3, 1] }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 400,
+                            damping: 15,
+                          }}
+                        >
+                          <CheckCircle2 className="h-5 w-5 text-[var(--color-success)] flex-shrink-0" />
+                        </motion.div>
                       ) : (
                         <Circle
                           className={cn(
@@ -259,9 +281,9 @@ export function OnboardingChecklist({
                       <div className="flex-1 min-w-0">
                         <p
                           className={cn(
-                            "text-sm font-medium",
+                            "text-sm font-medium transition-all duration-300",
                             step.completed
-                              ? "text-[var(--color-muted-foreground)] line-through"
+                              ? "text-[var(--color-muted-foreground)] line-through decoration-[var(--color-success)]/50"
                               : "text-[var(--color-foreground)]",
                           )}
                         >

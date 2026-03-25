@@ -18,6 +18,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { motion } from "framer-motion";
+import { getOccupancyColor } from "@/lib/design-tokens";
 
 // KPI Card Component
 interface KPICardProps {
@@ -133,11 +134,7 @@ export function OccupancyGauge({
   const circumference = 2 * Math.PI * 45;
   const strokeDashoffset = circumference - (rate / 100) * circumference;
 
-  const getColor = (rate: number) => {
-    if (rate >= 90) return "#22c55e"; // green
-    if (rate >= 70) return "#eab308"; // yellow
-    return "#ef4444"; // red
-  };
+  const getColor = (rate: number) => getOccupancyColor(rate);
 
   return (
     <Card className={cn("p-6", className)}>

@@ -49,6 +49,12 @@
   --color-surface-raised: rgba(22, 27, 38, 0.8);
   --color-surface-overlay: rgba(11, 14, 20, 0.9);
   --color-surface-elevated: rgba(18, 22, 32, 0.9);
+
+  /* Numbered elevation layers — S0 deepest, S3 highest */
+  --color-surface-0: #020617;
+  --color-surface-1: rgba(15, 23, 42, 0.8);
+  --color-surface-2: rgba(22, 27, 38, 0.8);
+  --color-surface-3: rgba(30, 36, 51, 0.9);
   --color-surface-hover: rgba(99, 102, 241, 0.06);
   --color-surface-pressed: rgba(99, 102, 241, 0.12);
   --color-hover: rgba(99, 102, 241, 0.06);
@@ -141,6 +147,11 @@
   --color-surface-raised: rgba(255, 255, 255, 0.9);
   --color-surface-overlay: rgba(248, 250, 252, 0.95);
   --color-surface-elevated: rgba(255, 255, 255, 0.95);
+
+  --color-surface-0: #f1f5f9;
+  --color-surface-1: rgba(255, 255, 255, 0.85);
+  --color-surface-2: rgba(255, 255, 255, 0.92);
+  --color-surface-3: rgba(255, 255, 255, 0.97);
   --color-surface-hover: rgba(79, 70, 229, 0.04);
   --color-surface-pressed: rgba(79, 70, 229, 0.08);
   --color-hover: rgba(79, 70, 229, 0.04);
@@ -219,6 +230,11 @@
   --color-surface-raised: rgba(14, 14, 20, 0.8);
   --color-surface-overlay: rgba(0, 0, 0, 0.95);
   --color-surface-elevated: rgba(12, 12, 18, 0.9);
+
+  --color-surface-0: #000000;
+  --color-surface-1: rgba(8, 8, 12, 0.8);
+  --color-surface-2: rgba(14, 14, 20, 0.85);
+  --color-surface-3: rgba(20, 20, 28, 0.9);
   --color-surface-hover: rgba(99, 102, 241, 0.05);
   --color-surface-pressed: rgba(99, 102, 241, 0.1);
   --color-hover: rgba(99, 102, 241, 0.05);
@@ -351,6 +367,25 @@ body {
 .card-elevated:hover {
   border-color: var(--color-inner-border-hover);
   box-shadow: var(--shadow-card-hover);
+}
+
+/* Numbered surface utility classes */
+.surface-0 {
+  background-color: var(--color-surface-0);
+}
+.surface-1 {
+  background-color: var(--color-surface-1);
+  border: 1px solid var(--color-inner-border);
+}
+.surface-2 {
+  background-color: var(--color-surface-2);
+  border: 1px solid var(--color-inner-border);
+  box-shadow: var(--shadow-card);
+}
+.surface-3 {
+  background-color: var(--color-surface-3);
+  border: 1px solid var(--color-inner-border);
+  box-shadow: var(--shadow-modal);
 }
 
 /* ============================================

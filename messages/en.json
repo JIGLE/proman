@@ -43,7 +43,22 @@
     "recentActivities": "Recent Activities",
     "noActivity": "No activity yet",
     "addPropertiesToStart": "Add your first property to get started",
-    "addTenantsToSeeActivity": "Add tenants and record payments to see activity here"
+    "addTenantsToSeeActivity": "Add tenants and record payments to see activity here",
+    "portfolioOverview": "Portfolio Overview",
+    "recentProperties": "Recent Properties",
+    "viewAll": "View all",
+    "achievements": "Achievements",
+    "achievementsDescription": "Milestones and recognitions for your property management success",
+    "latestTenantPayments": "Latest tenant payments",
+    "currentPropertyConditions": "Current property conditions",
+    "paid": "Paid",
+    "latestPortfolioUpdates": "Latest updates across your portfolio",
+    "activityFeedPlaceholder": "Your activity feed will appear here",
+    "portfolioBreakdown": "Portfolio breakdown by property type",
+    "noPropertyData": "No property data available",
+    "startManagingPortfolio": "Start managing your portfolio",
+    "startManagingPortfolioDesc": "Add your first property to unlock stats, analytics, and financial tracking across your entire portfolio.",
+    "addYourFirstProperty": "Add Your First Property"
   },
   "greeting": {
     "morning": "Good morning",
@@ -298,5 +313,212 @@
     "requestMaintenance": "Request Maintenance",
     "downloadReceipt": "Download Receipt",
     "selectPaymentMethod": "Select Payment Method"
+  },
+  "calendar": {
+    "months": {
+      "jan": "Jan",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Apr",
+      "may": "May",
+      "jun": "Jun",
+      "jul": "Jul",
+      "aug": "Aug",
+      "sep": "Sep",
+      "oct": "Oct",
+      "nov": "Nov",
+      "dec": "Dec"
+    },
+    "monthsFull": {
+      "january": "January",
+      "february": "February",
+      "march": "March",
+      "april": "April",
+      "may": "May",
+      "june": "June",
+      "july": "July",
+      "august": "August",
+      "september": "September",
+      "october": "October",
+      "november": "November",
+      "december": "December"
+    },
+    "weekdays": {
+      "sun": "Sun",
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat"
+    }
+  },
+  "charts": {
+    "revenueTrend": "Revenue Trend",
+    "propertyDistribution": "Property Distribution",
+    "revenue": "Revenue",
+    "expenses": "Expenses",
+    "netIncome": "Net Income",
+    "income": "Income"
+  },
+  "forms": {
+    "fullName": "Full Name",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "country": "Country",
+    "city": "City",
+    "notes": "Notes",
+    "description": "Description",
+    "property": "Property",
+    "tenant": "Tenant",
+    "unit": "Unit",
+    "type": "Type",
+    "status": "Status",
+    "rent": "Rent",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "leaseStart": "Lease Start",
+    "leaseEnd": "Lease End",
+    "allProperties": "All Properties",
+    "saving": "Saving...",
+    "selectProperty": "Select Property",
+    "selectTenant": "Select Tenant"
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive",
+    "paid": "Paid",
+    "pending": "Pending",
+    "overdue": "Overdue",
+    "all": "All",
+    "occupied": "Occupied",
+    "vacant": "Vacant"
+  },
+  "messages": {
+    "addedSuccess": "{item} added successfully!",
+    "updatedSuccess": "{item} updated successfully!",
+    "deletedSuccess": "Successfully deleted {count} {item}(s)",
+    "savedSuccess": "Settings saved successfully",
+    "confirmDelete": "Are you sure you want to delete {count} {item}(s)?",
+    "confirmDeleteDescription": "This action cannot be undone.",
+    "noResults": "No results found"
+  },
+  "properties": {
+    "addNew": "Add New Property",
+    "editProperty": "Edit Property",
+    "updateDetails": "Update property details",
+    "enterInfo": "Enter property information",
+    "deleteConfirm": "{count} property(ies) and all associated data will be permanently removed",
+    "fields": {
+      "name": "Property Name",
+      "type": "Property Type",
+      "selectType": "Select type",
+      "address": "Full Address Search",
+      "verified": "Verified",
+      "bedrooms": "Bedrooms",
+      "bathrooms": "Bathrooms",
+      "monthlyRent": "Monthly Rent",
+      "propertyStatus": "Property Status"
+    },
+    "types": {
+      "apartment": "Apartment",
+      "house": "House",
+      "condo": "Condo",
+      "townhouse": "Townhouse",
+      "other": "Other"
+    }
+  },
+  "financial": {
+    "title": "Financials",
+    "description": "Track income, expenses, and cash flow",
+    "addExpense": "Add Expense",
+    "recordExpense": "Record Expense",
+    "addExpenseDesc": "Add a new property expense to track your spending",
+    "saveExpense": "Save Expense",
+    "totalIncome": "Total Income",
+    "totalExpenses": "Total Expenses",
+    "netIncome": "Net Income",
+    "fromRent": "From rent and deposits",
+    "maintenanceEtc": "Maintenance, repairs, etc.",
+    "cashFlow": "Cash flow for period",
+    "allTime": "All Time",
+    "thisMonth": "This Month",
+    "thisYear": "This Year",
+    "categories": {
+      "maintenance": "Maintenance",
+      "repairs": "Repairs",
+      "utilities": "Utilities",
+      "insurance": "Insurance",
+      "taxes": "Taxes",
+      "mortgage": "Mortgage",
+      "management": "Management Fees",
+      "other": "Other"
+    },
+    "receipts": {
+      "title": "Receipts",
+      "type": {
+        "rent": "Rent",
+        "deposit": "Deposit",
+        "maintenance": "Maintenance",
+        "other": "Other"
+      }
+    }
+  },
+  "quickActions": {
+    "title": "Quick Actions",
+    "addProperty": "Add Property",
+    "addTenant": "Add Tenant",
+    "createLease": "Create Lease",
+    "recordPayment": "Record Payment",
+    "maintenanceTicket": "Maintenance Ticket",
+    "sendCorrespondence": "Send Correspondence",
+    "generateInvoice": "Generate Invoice",
+    "addPropertyDesc": "Register a new property to your portfolio",
+    "addTenantDesc": "Register a new tenant",
+    "recordPaymentDesc": "Log a rent or expense payment",
+    "createLeaseDesc": "Draft a new lease agreement",
+    "maintenanceTicketDesc": "Report an issue or request",
+    "sendCorrespondenceDesc": "Email or notify a tenant"
+  },
+  "insights": {
+    "title": "Insights",
+    "description": "Portfolio performance and analytics",
+    "occupancyRate": "Occupancy Rate",
+    "severity": {
+      "danger": "Critical",
+      "warning": "Warning",
+      "info": "Info"
+    }
+  },
+  "reports": {
+    "title": "Reports",
+    "description": "Financial reports and property analytics",
+    "income": "Income",
+    "expenses": "Expenses",
+    "netIncome": "Net Income",
+    "profitMargin": "Profit Margin",
+    "quarterly": "Quarterly"
+  },
+  "correspondence": {
+    "title": "Correspondence",
+    "description": "Manage templates and communications",
+    "types": {
+      "welcome": "Welcome",
+      "rentReminder": "Rent Reminder",
+      "evictionNotice": "Eviction Notice",
+      "maintenanceRequest": "Maintenance Request",
+      "leaseRenewal": "Lease Renewal",
+      "custom": "Custom"
+    }
+  },
+  "contracts": {
+    "title": "Contracts",
+    "status": {
+      "active": "Active",
+      "expiring": "Expiring",
+      "expired": "Expired",
+      "terminated": "Terminated"
+    }
   }
 }

@@ -283,10 +283,12 @@ export function CorrespondenceView(): React.ReactElement {
 
   const getTypeBadge = (type: CorrespondenceTemplate["type"]) => {
     const colors = {
-      welcome: "bg-green-600/20 text-green-400",
+      welcome: "bg-[var(--color-success-muted)] text-[var(--color-success)]",
       rent_reminder: "bg-orange-600/20 text-orange-400",
-      eviction_notice: "bg-red-600/20 text-red-400",
-      maintenance_request: "bg-blue-600/20 text-blue-400",
+      eviction_notice:
+        "bg-[var(--color-error-muted)] text-[var(--color-error)]",
+      maintenance_request:
+        "bg-[var(--color-info-muted)] text-[var(--color-info)]",
       lease_renewal: "bg-purple-600/20 text-purple-400",
       custom: "bg-gray-600/20 text-gray-400",
     };

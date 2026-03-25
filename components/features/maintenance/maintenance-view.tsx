@@ -175,13 +175,13 @@ export function MaintenanceView(): React.ReactElement {
   const getPriorityColor = (priority: MaintenancePriority) => {
     switch (priority) {
       case "low":
-        return "bg-blue-900/20 text-blue-400 border-blue-900";
+        return "bg-[var(--color-info-muted)] text-[var(--color-info)] border-[var(--color-info)]/20";
       case "medium":
-        return "bg-yellow-900/20 text-yellow-400 border-yellow-900";
+        return "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20";
       case "high":
         return "bg-orange-900/20 text-orange-400 border-orange-900";
       case "urgent":
-        return "bg-red-900/20 text-red-400 border-red-900";
+        return "bg-[var(--color-error-muted)] text-[var(--color-error)] border-[var(--color-error)]/20";
       default:
         return "bg-zinc-800 text-zinc-400";
     }

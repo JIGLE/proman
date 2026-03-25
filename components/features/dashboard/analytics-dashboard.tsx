@@ -23,6 +23,7 @@ import { LeaseCalendar } from "@/components/ui/lease-calendar";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { useApp } from "@/lib/contexts/app-context";
 import { useTranslations } from "next-intl";
+import { tokens, getPropertyTypeColor } from "@/lib/design-tokens";
 import {
   Building2,
   Users,
@@ -349,13 +350,16 @@ export function AnalyticsDashboard(): React.ReactElement {
   const _expenseChartData = revenueByMonth.map((m) => ({
     label: m.month,
     value: m.expenses,
-    color: "#ef4444",
+    color: tokens.chartStatus.negative,
   }));
 
   const netIncomeChartData = revenueByMonth.map((m) => ({
     label: m.month,
     value: m.netIncome,
-    color: m.netIncome >= 0 ? "#22c55e" : "#ef4444",
+    color:
+      m.netIncome >= 0
+        ? tokens.chartStatus.positive
+        : tokens.chartStatus.negative,
   }));
 
   const propertyTypeData = properties.reduce<Record<string, number>>(
@@ -371,14 +375,7 @@ export function AnalyticsDashboard(): React.ReactElement {
     ([type, count]) => ({
       label: type.charAt(0).toUpperCase() + type.slice(1),
       value: count as number,
-      color:
-        type === "apartment"
-          ? "#3b82f6"
-          : type === "house"
-            ? "#10b981"
-            : type === "commercial"
-              ? "#f59e0b"
-              : "#6b7280",
+      color: getPropertyTypeColor(type),
     }),
   );
 

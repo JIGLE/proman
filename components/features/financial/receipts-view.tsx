@@ -178,8 +178,8 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
 
     const getTypeBadge = (type: Receipt["type"]) => {
       const colors = {
-        rent: "bg-blue-600/20 text-blue-400",
-        deposit: "bg-green-600/20 text-green-400",
+        rent: "bg-[var(--color-info-muted)] text-[var(--color-info)]",
+        deposit: "bg-[var(--color-success-muted)] text-[var(--color-success)]",
         maintenance: "bg-orange-600/20 text-orange-400",
         other: "bg-gray-600/20 text-gray-400",
       };

@@ -1,7 +1,23 @@
 "use client";
 
 import * as React from "react";
-import { debounce } from "lodash";
+
+// Minimal debounce with cancel support (replaces lodash.debounce)
+function debounce<A extends unknown[]>(
+  fn: (...args: A) => void,
+  wait: number,
+): ((...args: A) => void) & { cancel: () => void } {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const debounced = (...args: A) => {
+    if (timer !== undefined) clearTimeout(timer);
+    timer = setTimeout(() => fn(...args), wait);
+  };
+  debounced.cancel = () => {
+    if (timer !== undefined) clearTimeout(timer);
+    timer = undefined;
+  };
+  return debounced;
+}
 
 // Auto-save hook for form data
 export interface UseAutoSaveOptions {
@@ -15,7 +31,7 @@ export interface UseAutoSaveOptions {
 
 export function useAutoSave<T extends Record<string, unknown>>(
   data: T,
-  options: UseAutoSaveOptions
+  options: UseAutoSaveOptions,
 ) {
   const {
     key,
@@ -23,7 +39,7 @@ export function useAutoSave<T extends Record<string, unknown>>(
     enabled = true,
     onSave,
     onRestore,
-    excludeFields = []
+    excludeFields = [],
   } = options;
 
   const [isSaving, setIsSaving] = React.useState(false);
@@ -32,30 +48,39 @@ export function useAutoSave<T extends Record<string, unknown>>(
   const previousDataRef = React.useRef<T>(data);
 
   // Filter out excluded fields
-  const getFilteredData = React.useCallback((data: T) => {
-    if (excludeFields.length === 0) return data;
-    
-    const filtered = { ...data };
-    excludeFields.forEach(field => {
-      delete filtered[field];
-    });
-    return filtered;
-  }, [excludeFields]);
+  const getFilteredData = React.useCallback(
+    (data: T) => {
+      if (excludeFields.length === 0) return data;
+
+      const filtered = { ...data };
+      excludeFields.forEach((field) => {
+        delete filtered[field];
+      });
+      return filtered;
+    },
+    [excludeFields],
+  );
 
   // Save to localStorage
-  const saveToLocalStorage = React.useCallback((data: T) => {
-    try {
-      const filteredData = getFilteredData(data);
-      localStorage.setItem(`autosave_${key}`, JSON.stringify({
-        data: filteredData,
-        timestamp: new Date().toISOString()
-      }));
-      setLastSaved(new Date());
-      setHasUnsavedChanges(false);
-    } catch (error) {
-      console.error('Failed to save to localStorage:', error);
-    }
-  }, [key, getFilteredData]);
+  const saveToLocalStorage = React.useCallback(
+    (data: T) => {
+      try {
+        const filteredData = getFilteredData(data);
+        localStorage.setItem(
+          `autosave_${key}`,
+          JSON.stringify({
+            data: filteredData,
+            timestamp: new Date().toISOString(),
+          }),
+        );
+        setLastSaved(new Date());
+        setHasUnsavedChanges(false);
+      } catch (error) {
+        console.error("Failed to save to localStorage:", error);
+      }
+    },
+    [key, getFilteredData],
+  );
 
   // Restore from localStorage
   const restoreFromLocalStorage = React.useCallback(() => {
@@ -68,40 +93,41 @@ export function useAutoSave<T extends Record<string, unknown>>(
         return savedData;
       }
     } catch (error) {
-      console.error('Failed to restore from localStorage:', error);
+      console.error("Failed to restore from localStorage:", error);
     }
     return null;
   }, [key, onRestore]);
 
   // Auto-save function with debounce
   const debouncedSave = React.useMemo(
-    () => debounce(async (data: T) => {
-      if (!enabled) return;
-      
-      setIsSaving(true);
-      
-      try {
-        // Save to localStorage
-        saveToLocalStorage(data);
-        
-        // Call custom save function if provided
-        if (onSave) {
-          await onSave(getFilteredData(data));
+    () =>
+      debounce(async (data: T) => {
+        if (!enabled) return;
+
+        setIsSaving(true);
+
+        try {
+          // Save to localStorage
+          saveToLocalStorage(data);
+
+          // Call custom save function if provided
+          if (onSave) {
+            await onSave(getFilteredData(data));
+          }
+        } catch (error) {
+          console.error("Auto-save failed:", error);
+        } finally {
+          setIsSaving(false);
         }
-      } catch (error) {
-        console.error('Auto-save failed:', error);
-      } finally {
-        setIsSaving(false);
-      }
-    }, delay),
-    [enabled, delay, onSave, saveToLocalStorage, getFilteredData]
+      }, delay),
+    [enabled, delay, onSave, saveToLocalStorage, getFilteredData],
   );
 
   // Track data changes
   React.useEffect(() => {
     const currentData = getFilteredData(data);
     const previousData = getFilteredData(previousDataRef.current);
-    
+
     // Check if data has actually changed
     if (JSON.stringify(currentData) !== JSON.stringify(previousData)) {
       setHasUnsavedChanges(true);
@@ -142,7 +168,7 @@ export function useAutoSave<T extends Record<string, unknown>>(
     restoreFromLocalStorage,
     clearSaved,
     forceSave,
-    hasSavedData
+    hasSavedData,
   };
 }
 
@@ -157,51 +183,51 @@ export interface UseFormPersistenceOptions {
 export function useFormPersistence<T extends Record<string, unknown>>(
   formData: T,
   setFormData: (data: T | ((prev: T) => T)) => void,
-  options: UseFormPersistenceOptions
+  options: UseFormPersistenceOptions,
 ) {
   const { key, enabled = true, fields, ttl } = options;
 
   // Save form data to localStorage
   const saveFormData = React.useCallback(() => {
     if (!enabled) return;
-    
+
     try {
-      const dataToSave = fields 
+      const dataToSave = fields
         ? Object.fromEntries(
-            Object.entries(formData).filter(([k]) => fields.includes(k))
+            Object.entries(formData).filter(([k]) => fields.includes(k)),
           )
         : formData;
-      
+
       const persistData = {
         data: dataToSave,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
-      
+
       localStorage.setItem(`form_${key}`, JSON.stringify(persistData));
     } catch (error) {
-      console.error('Failed to save form data:', error);
+      console.error("Failed to save form data:", error);
     }
   }, [enabled, formData, fields, key]);
 
   // Load form data from localStorage
   const loadFormData = React.useCallback(() => {
     if (!enabled) return null;
-    
+
     try {
       const saved = localStorage.getItem(`form_${key}`);
       if (!saved) return null;
-      
+
       const { data, timestamp } = JSON.parse(saved);
-      
+
       // Check if data has expired
       if (ttl && Date.now() - timestamp > ttl) {
         localStorage.removeItem(`form_${key}`);
         return null;
       }
-      
+
       return data;
     } catch (error) {
-      console.error('Failed to load form data:', error);
+      console.error("Failed to load form data:", error);
       return null;
     }
   }, [enabled, key, ttl]);
@@ -220,7 +246,7 @@ export function useFormPersistence<T extends Record<string, unknown>>(
   const restoreFormData = React.useCallback(() => {
     const savedData = loadFormData();
     if (savedData) {
-      setFormData(prevData => ({ ...prevData, ...savedData }));
+      setFormData((prevData) => ({ ...prevData, ...savedData }));
       return true;
     }
     return false;
@@ -240,7 +266,7 @@ export function useFormPersistence<T extends Record<string, unknown>>(
     loadFormData,
     clearFormData,
     hasPersistedData,
-    restoreFormData
+    restoreFormData,
   };
 }
 
@@ -256,7 +282,7 @@ export function AutoSaveStatus({
   isSaving,
   lastSaved,
   hasUnsavedChanges,
-  className
+  className,
 }: AutoSaveStatusProps) {
   const getStatusText = () => {
     if (isSaving) return "Saving...";
@@ -265,13 +291,13 @@ export function AutoSaveStatus({
       const now = new Date();
       const diff = now.getTime() - lastSaved.getTime();
       const minutes = Math.floor(diff / 60000);
-      
+
       if (minutes < 1) return "Saved just now";
       if (minutes < 60) return `Saved ${minutes}m ago`;
-      
+
       const hours = Math.floor(minutes / 60);
       if (hours < 24) return `Saved ${hours}h ago`;
-      
+
       return `Saved ${lastSaved.toLocaleDateString()}`;
     }
     return "No changes";
@@ -284,11 +310,13 @@ export function AutoSaveStatus({
   };
 
   return (
-    <div className={cn(
-      "flex items-center gap-2 text-xs",
-      getStatusColor(),
-      className
-    )}>
+    <div
+      className={cn(
+        "flex items-center gap-2 text-xs",
+        getStatusColor(),
+        className,
+      )}
+    >
       {isSaving && (
         <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
       )}
@@ -309,26 +337,27 @@ export function FormRecovery({
   onRestore,
   onDiscard,
   lastSaved,
-  className
+  className,
 }: FormRecoveryProps) {
   return (
-    <div className={cn(
-      "p-4 bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/20 rounded-lg",
-      className
-    )}>
+    <div
+      className={cn(
+        "p-4 bg-[var(--color-warning)]/10 border border-[var(--color-warning)]/20 rounded-lg",
+        className,
+      )}
+    >
       <div className="space-y-3">
         <div>
           <h3 className="text-sm font-semibold text-[var(--color-foreground)]">
             Unsaved changes found
           </h3>
           <p className="text-xs text-[var(--color-muted-foreground)]">
-            {lastSaved 
+            {lastSaved
               ? `Last saved: ${lastSaved.toLocaleString()}`
-              : "We found unsaved changes from a previous session."
-            }
+              : "We found unsaved changes from a previous session."}
           </p>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <button
             type="button"
@@ -337,7 +366,7 @@ export function FormRecovery({
           >
             Restore changes
           </button>
-          
+
           <button
             type="button"
             onClick={onDiscard}
@@ -353,5 +382,5 @@ export function FormRecovery({
 
 // Utility function imports
 function cn(...classes: (string | undefined | false | null)[]): string {
-  return classes.filter(Boolean).join(' ');
+  return classes.filter(Boolean).join(" ");
 }

@@ -110,6 +110,7 @@ proman_image.tar
 # ===========================================
 # 12. Temporary & Local Files
 # ===========================================
+verify-output.txt
 /release-charts-local/
 /release-charts-temp/
 /tmp-release-charts/

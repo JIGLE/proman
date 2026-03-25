@@ -129,6 +129,18 @@ jobs:
       - name: Update package.json version
         run: npm version ${{ steps.version.outputs.new_version }} --no-git-tag-version
 
+      - name: Sync version across manifests
+        run: |
+          NEW_VER="${{ steps.version.outputs.new_version }}"
+          # Helm Chart.yaml
+          sed -i "s/^version:.*/version: ${NEW_VER}/" helm/proman/Chart.yaml
+          sed -i "s/^appVersion:.*/appVersion: \"${NEW_VER}\"/" helm/proman/Chart.yaml
+          # item.yaml (TrueNAS catalog)
+          sed -i "s/^version:.*/version: ${NEW_VER}/" item.yaml
+          sed -i "s/^app_version:.*/app_version: \"${NEW_VER}\"/" item.yaml
+          # docker-compose.yml
+          sed -i "s/NEXT_PUBLIC_APP_VERSION:.*/NEXT_PUBLIC_APP_VERSION: ${NEW_VER}/" docker-compose.yml
+
       - name: Generate changelog
         id: changelog
         run: |
@@ -158,7 +170,7 @@ jobs:
 
       - name: Commit version bump
         run: |
-          git add package.json package-lock.json
+          git add package.json package-lock.json helm/proman/Chart.yaml item.yaml docker-compose.yml
           git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
           git push origin main
 

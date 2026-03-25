@@ -52,30 +52,32 @@ import { useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { cn } from "@/lib/utils/utils";
+import { tokens } from "@/lib/design-tokens";
 
-const MONTH_LABELS = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec",
-];
-const getMonthLabel = (date: Date): string =>
-  MONTH_LABELS[date.getMonth()] || "";
+const MONTH_KEYS = [
+  "jan",
+  "feb",
+  "mar",
+  "apr",
+  "may",
+  "jun",
+  "jul",
+  "aug",
+  "sep",
+  "oct",
+  "nov",
+  "dec",
+] as const;
 
-function getGreeting(): { text: string; icon: typeof Sun } {
+function getGreetingKey(): {
+  key: "morning" | "afternoon" | "evening" | "night";
+  icon: typeof Sun;
+} {
   const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return { text: "Good morning", icon: Sun };
-  if (hour >= 12 && hour < 17) return { text: "Good afternoon", icon: Sun };
-  if (hour >= 17 && hour < 21) return { text: "Good evening", icon: Sunset };
-  return { text: "Good night", icon: Moon };
+  if (hour >= 5 && hour < 12) return { key: "morning", icon: Sun };
+  if (hour >= 12 && hour < 17) return { key: "afternoon", icon: Sun };
+  if (hour >= 17 && hour < 21) return { key: "evening", icon: Sunset };
+  return { key: "night", icon: Moon };
 }
 
 /* ─── Stat Card ─────────────────────────────────────── */
@@ -163,7 +165,7 @@ function QuickActionHero({
         "relative flex items-start gap-4 p-5 rounded-xl text-left w-full transition-all duration-200",
         "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]",
         primary
-          ? "bg-gradient-to-br from-[var(--color-primary)] to-[#8B5CF6] text-white border-transparent shadow-lg animate-glow-pulse"
+          ? `bg-gradient-to-br from-[var(--color-primary)] to-[${tokens.accentSecondary}] text-white border-transparent shadow-lg animate-glow-pulse`
           : "card-elevated hover:border-[var(--color-inner-border-active)]",
       )}
     >
@@ -298,8 +300,9 @@ export function OverviewView({
   const { formatCurrency } = useCurrency();
   const t = useTranslations();
   const { data: session } = useSession();
-  const greeting = useMemo(() => getGreeting(), []);
-  const GreetingIcon = greeting.icon;
+  const greetingInfo = useMemo(() => getGreetingKey(), []);
+  const GreetingIcon = greetingInfo.icon;
+  const greetingText = t(`greeting.${greetingInfo.key}`);
   const userName = session?.user?.name?.split(" ")[0] || "there";
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -323,31 +326,31 @@ export function OverviewView({
         key: "p",
         ctrl: true,
         action: () => onAddProperty?.(),
-        description: "Add Property",
+        description: t("quickActions.addProperty"),
       },
       {
         key: "t",
         ctrl: true,
         action: () => onAddTenant?.(),
-        description: "Add Tenant",
+        description: t("quickActions.addTenant"),
       },
       {
         key: "l",
         ctrl: true,
         action: () => onAddLease?.(),
-        description: "Create Lease",
+        description: t("quickActions.createLease"),
       },
       {
         key: "r",
         ctrl: true,
         action: () => onRecordPayment?.(),
-        description: "Record Payment",
+        description: t("quickActions.recordPayment"),
       },
       {
         key: "m",
         ctrl: true,
         action: () => onCreateTicket?.(),
-        description: "Maintenance Ticket",
+        description: t("quickActions.maintenanceTicket"),
       },
       {
         key: "/",
@@ -368,6 +371,7 @@ export function OverviewView({
       onRecordPayment,
       onCreateTicket,
       handleRefresh,
+      t,
     ],
   );
 
@@ -412,12 +416,12 @@ export function OverviewView({
         );
       });
       trend.push({
-        label: getMonthLabel(targetDate),
+        label: t(`calendar.months.${MONTH_KEYS[targetDate.getMonth()]}`),
         value: monthReceipts.reduce((sum, r) => sum + r.amount, 0),
       });
     }
     return trend;
-  }, [receipts]);
+  }, [receipts, t]);
 
   // Property type distribution
   const propertyTypeData = useMemo(() => {
@@ -427,10 +431,10 @@ export function OverviewView({
       return acc;
     }, {});
     const colors: Record<string, string> = {
-      apartment: "#6366F1",
-      house: "#10B981",
-      commercial: "#F59E0B",
-      other: "#94A3B8",
+      apartment: tokens.chartPropertyType.apartment,
+      house: tokens.chartPropertyType.house,
+      commercial: tokens.chartPropertyType.commercial,
+      other: tokens.chartPropertyType.other,
     };
     return Object.entries(types).map(([type, count]) => ({
       label: type.charAt(0).toUpperCase() + type.slice(1),
@@ -634,7 +638,7 @@ export function OverviewView({
           <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)] mb-1">
             <GreetingIcon className="h-4 w-4 text-amber-500" />
             <span>
-              {greeting.text}, {userName}
+              {greetingText}, {userName}
             </span>
             <span className="text-[var(--color-border)]">·</span>
             <span className="text-xs">
@@ -699,13 +703,13 @@ export function OverviewView({
         <div className="flex items-center gap-2 mb-4">
           <Zap className="h-4 w-4 text-[var(--color-primary)]" />
           <h2 className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wider">
-            Quick Actions
+            {t("quickActions.title")}
           </h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <QuickActionHero
-            label="Add Property"
-            description="Register a new property to your portfolio"
+            label={t("quickActions.addProperty")}
+            description={t("quickActions.addPropertyDesc")}
             icon={Building2}
             onClick={onAddProperty}
             primary
@@ -713,36 +717,36 @@ export function OverviewView({
             testId="add-property-btn"
           />
           <QuickActionHero
-            label="Add Tenant"
-            description="Register a new tenant"
+            label={t("quickActions.addTenant")}
+            description={t("quickActions.addTenantDesc")}
             icon={Users}
             onClick={onAddTenant}
             shortcut="⌘T"
           />
           <QuickActionHero
-            label="Record Payment"
-            description="Log a rent or expense payment"
+            label={t("quickActions.recordPayment")}
+            description={t("quickActions.recordPaymentDesc")}
             icon={DollarSign}
             onClick={onRecordPayment}
             shortcut="⌘R"
             testId="record-payment-btn"
           />
           <QuickActionHero
-            label="Create Lease"
-            description="Draft a new lease agreement"
+            label={t("quickActions.createLease")}
+            description={t("quickActions.createLeaseDesc")}
             icon={FileText}
             onClick={onAddLease}
             testId="add-lease-btn"
           />
           <QuickActionHero
-            label="Maintenance Ticket"
-            description="Report an issue or request"
+            label={t("quickActions.maintenanceTicket")}
+            description={t("quickActions.maintenanceTicketDesc")}
             icon={Wrench}
             onClick={onCreateTicket}
           />
           <QuickActionHero
-            label="Send Correspondence"
-            description="Email or notify a tenant"
+            label={t("quickActions.sendCorrespondence")}
+            description={t("quickActions.sendCorrespondenceDesc")}
             icon={Mail}
             onClick={onSendCorrespondence}
           />
@@ -753,31 +757,31 @@ export function OverviewView({
       {hasProperties ? (
         <section>
           <h2 className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wider mb-4">
-            Portfolio Overview
+            {t("dashboard.portfolioOverview")}
           </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             <StatCard
-              title="Total Properties"
+              title={t("dashboard.totalProperties")}
               value={totalProperties}
               change={totalProperties > 0 ? 5.2 : undefined}
               icon={Building2}
             />
             <StatCard
-              title="Active Tenants"
+              title={t("dashboard.activeTenants")}
               value={activeTenants}
               change={activeTenants > 0 ? 2.1 : undefined}
               icon={Users}
               accent="text-purple-400"
             />
             <StatCard
-              title="Monthly Revenue"
+              title={t("dashboard.monthlyRevenue")}
               value={formatCurrency(monthlyRevenue)}
               change={monthlyRevenue > 0 ? 8.3 : undefined}
               icon={DollarSign}
               accent="text-emerald-400"
             />
             <StatCard
-              title="Occupancy Rate"
+              title={t("dashboard.occupancyRate")}
               value={`${occupancyRate.toFixed(1)}%`}
               change={
                 occupancyRate > 0
@@ -794,10 +798,10 @@ export function OverviewView({
       ) : (
         <EmptyStateIllustration
           type="properties"
-          title="Start managing your portfolio"
-          description="Add your first property to unlock stats, analytics, and financial tracking across your entire portfolio."
+          title={t("dashboard.startManagingPortfolio")}
+          description={t("dashboard.startManagingPortfolioDesc")}
           onAction={onAddProperty}
-          actionLabel="Add Your First Property"
+          actionLabel={t("dashboard.addYourFirstProperty")}
         />
       )}
 
@@ -806,8 +810,8 @@ export function OverviewView({
         <DashboardGrid columns={2} gap={6}>
           {hasPayments && (
             <ChartWidget
-              title="Revenue Trend"
-              subtitle="Monthly revenue for the last 6 months"
+              title={t("charts.revenueTrend")}
+              subtitle={t("charts.revenueTrend")}
               chart={
                 <LineChart
                   data={monthlyTrend}
@@ -819,14 +823,14 @@ export function OverviewView({
           )}
 
           <ChartWidget
-            title="Property Distribution"
-            subtitle="Portfolio breakdown by property type"
+            title={t("charts.propertyDistribution")}
+            subtitle={t("dashboard.portfolioBreakdown")}
             chart={
               propertyTypeData.length > 0 ? (
                 <DonutChart data={propertyTypeData} height={200} />
               ) : (
                 <div className="flex items-center justify-center h-[200px] text-[var(--color-muted-foreground)]">
-                  <p className="text-sm">No property data available</p>
+                  <p className="text-sm">{t("dashboard.noPropertyData")}</p>
                 </div>
               )
             }
@@ -839,14 +843,14 @@ export function OverviewView({
         <section>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wider">
-              Recent Properties
+              {t("dashboard.recentProperties")}
             </h2>
             <Button
               variant="ghost"
               size="sm"
               className="text-xs text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
             >
-              View all
+              {t("dashboard.viewAll")}
               <ChevronRight className="h-3 w-3 ml-1" />
             </Button>
           </div>
@@ -867,7 +871,7 @@ export function OverviewView({
                   type="properties"
                   compact
                   onAction={onAddProperty}
-                  actionLabel="Add Property"
+                  actionLabel={t("quickActions.addProperty")}
                 />
               )}
             </CardContent>
@@ -878,11 +882,11 @@ export function OverviewView({
       {/* ─── Recent Activities ─── */}
       <DashboardGrid columns={1} gap={6}>
         <ListWidget
-          title="Recent Activities"
+          title={t("dashboard.recentActivities")}
           subtitle={
             hasActivities
-              ? "Latest updates across your portfolio"
-              : "Your activity feed will appear here"
+              ? t("dashboard.latestPortfolioUpdates")
+              : t("dashboard.activityFeedPlaceholder")
           }
           items={recentActivities}
           renderItem={(activity) => (
@@ -911,11 +915,11 @@ export function OverviewView({
               <div className="rounded-full bg-[var(--color-secondary)] p-3 mb-3">
                 <TrendingUp className="h-6 w-6 text-[var(--color-primary)]" />
               </div>
-              <p className="font-medium mb-1">No activity yet</p>
+              <p className="font-medium mb-1">{t("dashboard.noActivity")}</p>
               <p className="text-sm text-[var(--color-muted-foreground)] max-w-xs">
                 {hasProperties
-                  ? "Add tenants and record payments to see activity here"
-                  : "Add your first property to get started"}
+                  ? t("dashboard.addTenantsToSeeActivity")
+                  : t("dashboard.addPropertiesToStart")}
               </p>
             </div>
           }
@@ -933,10 +937,10 @@ export function OverviewView({
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-yellow-500" />
-                Achievements
+                {t("dashboard.achievements")}
               </CardTitle>
               <CardDescription>
-                Milestones and recognitions for your property management success
+                {t("dashboard.achievementsDescription")}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -955,8 +959,10 @@ export function OverviewView({
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="card-elevated">
           <CardHeader>
-            <CardTitle>Recent Payments</CardTitle>
-            <CardDescription>Latest tenant payments</CardDescription>
+            <CardTitle>{t("dashboard.recentPayments")}</CardTitle>
+            <CardDescription>
+              {t("dashboard.latestTenantPayments")}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {recentPayments.length > 0 ? (
@@ -978,7 +984,7 @@ export function OverviewView({
                       {formatCurrency(payment.amount)}
                     </p>
                     <Badge variant="success" className="text-xs">
-                      Paid
+                      {t("dashboard.paid")}
                     </Badge>
                   </div>
                 </div>
@@ -988,7 +994,7 @@ export function OverviewView({
                 type="payments"
                 compact
                 onAction={onRecordPayment}
-                actionLabel="Record Payment"
+                actionLabel={t("quickActions.recordPayment")}
               />
             )}
           </CardContent>
@@ -996,8 +1002,10 @@ export function OverviewView({
 
         <Card className="card-elevated">
           <CardHeader>
-            <CardTitle>Property Status</CardTitle>
-            <CardDescription>Current property conditions</CardDescription>
+            <CardTitle>{t("dashboard.propertyStatus")}</CardTitle>
+            <CardDescription>
+              {t("dashboard.currentPropertyConditions")}
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {propertyStatus.length > 0 ? (
@@ -1032,7 +1040,7 @@ export function OverviewView({
                 type="properties"
                 compact
                 onAction={onAddProperty}
-                actionLabel="Add Property"
+                actionLabel={t("quickActions.addProperty")}
               />
             )}
           </CardContent>

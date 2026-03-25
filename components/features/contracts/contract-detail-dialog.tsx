@@ -44,9 +44,12 @@ interface ContractDetailDialogProps {
 }
 
 const statusColors: Record<string, string> = {
-  active: "bg-green-500/10 text-green-600 border-green-500/20",
-  expiring: "bg-amber-500/10 text-amber-600 border-amber-500/20",
-  expired: "bg-red-500/10 text-red-600 border-red-500/20",
+  active:
+    "bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]/20",
+  expiring:
+    "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20",
+  expired:
+    "bg-[var(--color-error-muted)] text-[var(--color-error)] border-[var(--color-error)]/20",
   terminated: "bg-gray-500/10 text-gray-600 border-gray-500/20",
 };
 
