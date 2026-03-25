@@ -60,13 +60,17 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "America/New_York"
-    open-pull-requests-limit: 1
+    open-pull-requests-limit: 3
     rebase-strategy: "auto"
     commit-message:
       prefix: "ci"
     labels:
       - "dependencies"
       - "github-actions"
+    groups:
+      github-actions:
+        patterns:
+          - "*"
 
   # Docker dependencies (Dockerfile base images)
   - package-ecosystem: "docker"

@@ -17,3 +17,9 @@ maintainers:
   - name: Proman Maintainers
     url: https://github.com/JIGLE
 icon: https://raw.githubusercontent.com/JIGLE/proman/main/public/proman-icon.svg
+annotations:
+  truenas.category: "Productivity"
+  truenas.recommended_min_memory: "512Mi"
+  truenas.recommended_min_cpu: "200m"
+  truenas.recommended_min_storage: "1Gi"
+  truenas.port: "3000"

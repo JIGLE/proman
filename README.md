@@ -82,6 +82,34 @@ docker-compose --profile prod up -d    # production (GHCR image)
 docker-compose --profile dev up -d     # development (build from source)
 ```
 
+## TrueNAS SCALE
+
+Proman ships a Helm chart at [`helm/proman/`](helm/proman/) targeting the TrueNAS SCALE Kubernetes runtime.
+
+### Install via Helm
+
+```bash
+helm install proman ./helm/proman \
+  -f helm/proman/values-truenas.yaml \
+  --namespace ix-app \
+  --set image.tag=1.4.0
+```
+
+### Configuration
+
+Key settings in [`helm/proman/values-truenas.yaml`](helm/proman/values-truenas.yaml):
+
+| Setting                      | Default                                   | Description                                             |
+| ---------------------------- | ----------------------------------------- | ------------------------------------------------------- |
+| `service.type`               | `NodePort`                                | Exposes port 30080 on the TrueNAS host                  |
+| `persistence.hostPath`       | `/mnt/pools/<POOL_NAME>/apps/proman/data` | Pool path for persistent data                           |
+| `securityContext.runAsUser`  | `1001`                                    | UID for file ownership — match your dataset permissions |
+| `securityContext.runAsGroup` | `1001`                                    | GID for file ownership                                  |
+
+Replace `<POOL_NAME>` with your TrueNAS pool name before deploying, or set it via `--set`.
+
+> See [docs/truenas.md](docs/truenas.md) for a full step-by-step TrueNAS SCALE setup guide including dataset creation, dataset permissions, and the Kubernetes namespace configuration.
+
 ## Testing
 
 ```bash

@@ -144,7 +144,7 @@ jobs:
 
       - name: Generate SBOM attestation
         if: github.event.inputs.dry_run != 'true' && steps.build-push.outputs.digest
-        uses: actions/attest-sbom@v4
+        uses: actions/attest-sbom@v1
         with:
           subject-name: ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name_lower }}
           subject-digest: ${{ steps.build-push.outputs.digest }}
@@ -192,7 +192,7 @@ jobs:
           echo "$KUBECONFIG" > kubeconfig
           chmod 600 kubeconfig
           echo "Updating deployment $DEPLOYMENT in namespace $NAMESPACE to image $IMAGE (container: $CONTAINER)"
-          kubectl --kubeconfig=kubeconfig -n "$NAMESPACE" set image deployment/$DEPLOYMENT $CONTAINER="$IMAGE" --record
+          kubectl --kubeconfig=kubeconfig -n "$NAMESPACE" set image deployment/$DEPLOYMENT $CONTAINER="$IMAGE"
           kubectl --kubeconfig=kubeconfig -n "$NAMESPACE" annotate deployment/$DEPLOYMENT proman.image="$IMAGE" proman.digest="${{ steps.build-push.outputs.digest }}" --overwrite || true
 
           # Wait for rollout to finish
