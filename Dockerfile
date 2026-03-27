@@ -14,7 +14,7 @@ ENV BUILD_TIME=${BUILD_TIME}
 
 WORKDIR /app
 
-# Install build dependencies required for native modules (better-sqlite3)
+# Install build dependencies required for native modules (better-sqlite3 used by ensure-sqlite.js)
 RUN apk add --no-cache python3 make g++ pkgconfig
 
 # Copy package files and prisma schema (needed for postinstall prisma generate)
