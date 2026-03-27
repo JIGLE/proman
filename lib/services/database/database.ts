@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { logger } from "@/lib/utils/logger";
 import {
   Property,
@@ -44,9 +45,10 @@ function getPrismaClient(): PrismaClient {
         }
       }
 
-      // With engineType="library" in schema, PrismaClient reads DATABASE_URL directly
+      // Prisma 7 requires a driver adapter to provide the database connection
       try {
-        globalForPrisma.prisma = new PrismaClient();
+        const adapter = new PrismaBetterSqlite3({ url: dbUrl });
+        globalForPrisma.prisma = new PrismaClient({ adapter });
         logger.debug("PrismaClient constructed successfully");
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
