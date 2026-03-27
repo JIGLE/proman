@@ -1,0 +1,66 @@
+apiVersion: v1
+entries:
+  proman:
+  - annotations:
+      truenas.category: Productivity
+      truenas.port: "3000"
+      truenas.recommended_min_cpu: 200m
+      truenas.recommended_min_memory: 512Mi
+      truenas.recommended_min_storage: 1Gi
+    apiVersion: v2
+    appVersion: 1.5.0
+    created: "2026-03-27T19:54:53.49369147Z"
+    description: A Helm chart for deploying the Proman property management platform
+    digest: 8f01494d6f6bacae89df58f8875ce70767a71e79d3d363df369b9c5bec000b8a
+    home: https://github.com/JIGLE/proman
+    icon: https://raw.githubusercontent.com/JIGLE/proman/main/public/proman-icon.svg
+    keywords:
+    - property
+    - management
+    - nextjs
+    - sqlite
+    maintainers:
+    - name: Proman Maintainers
+      url: https://github.com/JIGLE
+    name: proman
+    sources:
+    - https://github.com/JIGLE/proman
+    - https://ghcr.io/jigle/proman
+    type: application
+    urls:
+    - https://JIGLE.github.io/proman/release-charts/proman-1.5.0.tgz
+    version: 1.5.0
+  - apiVersion: v2
+    appVersion: 0.6.2
+    created: "2026-03-27T19:54:53.493142483Z"
+    description: A Helm chart for deploying the Proman property management platform
+    digest: 7c08cac7e3defae58e846caa8e04a57225afb119f827a993c3f661eb26d2787f
+    home: https://github.com/JIGLE/proman
+    icon: https://raw.githubusercontent.com/JIGLE/proman/main/public/proman-icon.svg
+    keywords:
+    - property
+    - management
+    - nextjs
+    - sqlite
+    maintainers:
+    - name: Proman Maintainers
+      url: https://github.com/JIGLE
+    name: proman
+    sources:
+    - https://github.com/JIGLE/proman
+    - https://ghcr.io/jigle/proman
+    type: application
+    urls:
+    - https://JIGLE.github.io/proman/release-charts/proman-0.6.0.tgz
+    version: 0.6.0
+  - apiVersion: v2
+    appVersion: 0.1.1
+    created: "2026-03-27T19:54:53.492615699Z"
+    description: A Helm chart for deploying Proman property management app
+    digest: 73f015c2991d5e752b6fe16bbb4bcd0bf0c80725a49868413b7285afc8a80af2
+    name: proman
+    type: application
+    urls:
+    - https://JIGLE.github.io/proman/release-charts/proman-0.1.0.tgz
+    version: 0.1.0
+generated: "2026-03-27T19:54:53.492072038Z"
