@@ -60,3 +60,29 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Render the structured env block used by both init and main containers.
+Emits DATABASE_URL and NEXTAUTH_URL as literal values, and
+NEXTAUTH_SECRET / INIT_SECRET from the auto-generated K8s Secret.
+Any extra entries in .Values.env are appended at the end.
+*/}}
+{{- define "proman.env" -}}
+- name: DATABASE_URL
+  value: {{ .Values.app.databaseUrl | quote }}
+- name: NEXTAUTH_URL
+  value: {{ .Values.app.nextauthUrl | quote }}
+- name: NEXTAUTH_SECRET
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "proman.fullname" . }}-secrets
+      key: NEXTAUTH_SECRET
+- name: INIT_SECRET
+  valueFrom:
+    secretKeyRef:
+      name: {{ include "proman.fullname" . }}-secrets
+      key: INIT_SECRET
+{{- with .Values.env }}
+{{ toYaml . }}
+{{- end }}
+{{- end }}

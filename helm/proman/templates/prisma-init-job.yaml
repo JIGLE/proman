@@ -23,7 +23,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: [ "sh", "-c", "npx prisma db push --schema=prisma/schema.prisma && npx prisma generate" ]
           env:
-            {{- toYaml .Values.env | nindent 12 }}
+            {{- include "proman.env" . | nindent 12 }}
           {{- if .Values.persistence.enabled }}
           volumeMounts:
             - name: data

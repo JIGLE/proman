@@ -1,25 +1,31 @@
 # TrueNAS SCALE tuned Helm values for ProMan
-# Edit <POOL_NAME> and other values before installing.
+#
+# ━━━ You only need to edit TWO things: ━━━
+#   1. app.nextauthUrl  — the URL you access the app at
+#   2. persistence.hostPath — the dataset path on your TrueNAS pool
+#
+# Secrets (NEXTAUTH_SECRET, INIT_SECRET) are generated automatically
+# on first install. All other defaults work out of the box.
 
-replicaCount: 1
+# ── Required ──────────────────────────────────────────────────────────────────
+app:
+  # IMPORTANT: Must match the URL you access the app at (protocol + host + port).
+  # Examples: https://proman.example.com  or  http://192.168.1.50:30080
+  nextauthUrl: "http://<YOUR_TRUENAS_IP>:30080"
 
-image:
-  repository: ghcr.io/jigle/proman
-  pullPolicy: IfNotPresent
-  # Prefer using an explicit release tag; avoid 'latest' for production installs
-  tag: ""
+persistence:
+  enabled: true
+  # Edit <POOL_NAME> to match your TrueNAS storage pool
+  hostPath: /mnt/pools/<POOL_NAME>/apps/proman/data
 
+# ── Networking ────────────────────────────────────────────────────────────────
 service:
   type: NodePort
   port: 80
   targetPort: 3000
-  # Common default NodePort for HTTP on TrueNAS SCALE; change if conflict
   nodePort: 30080
 
-ingress:
-  enabled: false
-
-# Security context — must match the container user (UID/GID 1001)
+# ── Security context (matches container UID/GID 1001) ─────────────────────────
 podSecurityContext:
   fsGroup: 1001
 
@@ -28,55 +34,13 @@ securityContext:
   runAsGroup: 1001
   runAsNonRoot: true
 
-env:
-  - name: DATABASE_URL
-    value: "file:/app/data/proman.db"
-  - name: NEXTAUTH_URL
-    # IMPORTANT: Must match the URL you access the app at (including protocol).
-    # Examples: https://proman.example.com  or  http://192.168.1.50:30080
-    value: "https://<YOUR_DOMAIN_OR_IP>:30080"
-  - name: NEXTAUTH_SECRET
-    # IMPORTANT: Must be at least 32 characters. Generate with: openssl rand -base64 32
-    value: "REPLACE-ME-with-at-least-32-characters-secret"
-  - name: NODE_ENV
-    value: "production"
-  - name: HOSTNAME
-    value: "0.0.0.0"
-  - name: PORT
-    value: "3000"
-  - name: INIT_SECRET
-    # IMPORTANT: Replace with a random secret. Generate with: openssl rand -hex 32
-    # Required for the /api/debug/db/init endpoint (manual DB initialization)
-    value: "REPLACE-ME-with-random-hex-secret"
-  # --- Google OAuth (optional) ---
-  # To enable Google sign-in, create OAuth 2.0 credentials at
-  # https://console.cloud.google.com/apis/credentials
-  # Authorized redirect URI: https://<YOUR_DOMAIN>/api/auth/callback/google
-  # - name: GOOGLE_CLIENT_ID
-  #   value: "<your-google-client-id>.apps.googleusercontent.com"
-  # - name: GOOGLE_CLIENT_SECRET
-  #   value: "<your-google-client-secret>"
-
-# Run prisma db push as a post-install/post-upgrade Job
-initJob:
-  enabled: true
-
-persistence:
-  enabled: true
-  # Use a hostPath on the TrueNAS SCALE pool (edit <POOL_NAME> to your pool)
-  hostPath: /mnt/pools/<POOL_NAME>/apps/proman/data
-  mountPath: /app/data
-  accessMode: ReadWriteOnce
-  size: 1Gi
-  # storageClass: ""  # leave empty to use hostPath (no dynamic provisioning)
-
-resources:
-  requests:
-    cpu: 100m
-    memory: 256Mi
-  limits:
-    cpu: 500m
-    memory: 512Mi
+# ── Optional: Google OAuth ────────────────────────────────────────────────────
+# To enable Google sign-in, uncomment and fill in:
+# env:
+#   - name: GOOGLE_CLIENT_ID
+#     value: "<your-client-id>.apps.googleusercontent.com"
+#   - name: GOOGLE_CLIENT_SECRET
+#     value: "<your-client-secret>"
 
 # Notes:
 # - hostPath is not HA/resilient across node failures. Prefer a proper PVC backed by TrueNAS CSI if available.

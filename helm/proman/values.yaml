@@ -77,37 +77,31 @@ tolerations: []
 
 affinity: {}
 
-# Environment variables
-env:
-  - name: DATABASE_URL
-    valueFrom:
-      secretKeyRef:
-        name: proman-secrets
-        key: DATABASE_URL
-  - name: NEXTAUTH_SECRET
-    valueFrom:
-      secretKeyRef:
-        name: proman-secrets
-        key: NEXTAUTH_SECRET
-  - name: NEXTAUTH_URL
-    value: "http://localhost"
-  - name: HOSTNAME
-    value: "0.0.0.0"
-  - name: PORT
-    value: "3000"
-  - name: SENDGRID_API_KEY
-    valueFrom:
-      secretKeyRef:
-        name: proman-secrets
-        key: SENDGRID_API_KEY
-  - name: INIT_SECRET
-    valueFrom:
-      secretKeyRef:
-        name: proman-secrets
-        key: INIT_SECRET
-  # Add other env vars as needed (or set literals for NEXTAUTH_URL)
+# ── Application settings ──────────────────────────────────────────────────────
+# These are rendered as individual env vars by the proman.env helper.
+# NEXTAUTH_SECRET and INIT_SECRET are auto-generated on first install
+# (stored in a K8s Secret) unless you provide explicit values here.
+app:
+  # REQUIRED: The URL users access the app at (protocol + host + port).
+  nextauthUrl: "http://localhost"
+  # SQLite database path inside the container (rarely needs changing).
+  databaseUrl: "file:/app/data/proman.db"
+  # Leave empty to auto-generate on first install.
+  nextauthSecret: ""
+  initSecret: ""
 
-# Control whether a Helm Job is run to initialize Prisma (recommended)
+# Extra environment variables appended after the structured ones above.
+# Use this for optional integrations (SendGrid, Google OAuth, etc.).
+env: []
+  # - name: SENDGRID_API_KEY
+  #   value: "SG.xxx"
+  # - name: GOOGLE_CLIENT_ID
+  #   value: "xxx.apps.googleusercontent.com"
+  # - name: GOOGLE_CLIENT_SECRET
+  #   value: "xxx"
+
+# Control whether a Helm Job is run to initialize Prisma
+# (disabled by default — the init container in the Deployment handles this).
 initJob:
   enabled: false
 

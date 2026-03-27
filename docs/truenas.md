@@ -1,65 +1,59 @@
 # TrueNAS SCALE Deployment Guide
 
-This guide covers deploying ProMan specifically on TrueNAS SCALE.
+This guide covers deploying ProMan on TrueNAS SCALE.
 
 ## Quick Install
 
-1. In TrueNAS Apps UI, select **Custom App** (or install from a catalog if available).
-2. Set the container image: `ghcr.io/jigle/proman:<version>` (use a fixed tag, not `latest`).
-3. Configure environment variables (see below).
-4. Mount a host path dataset for persistent storage at `/app/data`.
-5. Set the network port (default: `30080` NodePort).
+1. In TrueNAS Apps UI, select **Custom App** (or install from a catalog).
+2. Set the container image: `ghcr.io/jigle/proman:<version>`.
+3. Fill in **Application URL** and **Storage Path** (see below).
+4. Click **Install** — secrets and database are set up automatically.
 
-## Required Environment Variables
+## Required Settings
 
-Set these in the TrueNAS Custom App UI or via Helm values:
+You only need to configure **two things**:
 
-| Variable              | Value                          | Notes                                   |
-| --------------------- | ------------------------------ | --------------------------------------- |
-| `DATABASE_URL`        | `file:/app/data/proman.db`     | Points to persistent volume             |
-| `NEXTAUTH_URL`        | `https://proman.example.com`   | Must match the URL you access the app at (protocol + domain/IP + port) |
-| `NEXTAUTH_SECRET`     | `<random-32-char-string>`      | Generate with `openssl rand -base64 32` |
-| `NODE_ENV`            | `production`                   |                                         |
-| `HOSTNAME`            | `0.0.0.0`                      | Bind to all interfaces                  |
-| `PORT`                | `3000`                         | Internal container port                 |
-| `INIT_SECRET`         | `<random-hex-string>`          | Protects DB init endpoint               |
-| `GOOGLE_CLIENT_ID`    | *(from Google Cloud Console)*  | Optional — enables Google sign-in       |
-| `GOOGLE_CLIENT_SECRET`| *(from Google Cloud Console)*  | Required if `GOOGLE_CLIENT_ID` is set   |
+| Setting             | Example                              | Notes                             |
+| ------------------- | ------------------------------------ | --------------------------------- |
+| **Application URL** | `http://192.168.1.50:30080`          | The URL you access the app at     |
+| **Storage Path**    | `/mnt/pools/mypool/apps/proman/data` | TrueNAS dataset for the SQLite DB |
 
-## Optional Environment Variables
+Everything else has sensible defaults:
 
-| Variable                           | Default | Notes                                                                                                                                                                                   |
-| ---------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ENABLE_STRIPE`                    | `false` | Enable Stripe payments                                                                                                                                                                  |
-| `ENABLE_SENDGRID`                  | `false` | Enable email delivery                                                                                                                                                                   |
-| `ENABLE_OAUTH`                     | `false` | Enable Google OAuth                                                                                                                                                                     |
-| `SKIP_PRESTART`                    | `false` | Keep `false` (default) so the container auto-initializes the DB on first start                                                                                                          |
-| `PRESTART_FAIL_ON_SQLITE`          | `false` | Keep false to allow operator remediation                                                                                                                                                |
-| `RUN_PRISMA_DB_PUSH_AT_STARTUP`    | `false` | When `true`, run `npx prisma db push` and `npx prisma generate` on container start (not recommended for production). Prefer using the Helm init Job when `persistence.enabled` is true. |
-| `NEXT_PUBLIC_DISABLE_AUTO_DB_INIT` | `false` | Set to `true` after initial DB setup to avoid rate limit errors                                                                                                                         |
+- **NEXTAUTH_SECRET** and **INIT_SECRET** are auto-generated on first install
+  and stored in a Kubernetes Secret. They persist across upgrades.
+- **DATABASE_URL** defaults to `file:/app/data/proman.db`.
+- **NODE_ENV**, **PORT**, and **HOSTNAME** are baked into the container image.
 
 ## Helm Installation
 
-Using the ProMan Helm chart:
-
 ```bash
+# 1. Edit the two required values
+vim helm/proman/values-truenas.yaml
+
+# 2. Install
 helm install proman helm/proman -f helm/proman/values-truenas.yaml
 ```
 
-Edit `helm/proman/values-truenas.yaml` before installing:
+The values file is intentionally minimal:
 
 ```yaml
-image:
-  tag: "1.1.0" # Use a specific release tag
-
-env:
-  - name: NEXTAUTH_URL
-    value: "http://YOUR_TRUENAS_IP:30080"
-  - name: NEXTAUTH_SECRET
-    value: "your-secret-here" # Or use secretKeyRef
+app:
+  nextauthUrl: "http://192.168.1.50:30080"
 
 persistence:
-  hostPath: /mnt/pools/YOUR_POOL/apps/proman/data
+  hostPath: /mnt/pools/mypool/apps/proman/data
+```
+
+### Overriding auto-generated secrets
+
+If you need to provide your own secrets (e.g. migrating from another install):
+
+```yaml
+app:
+  nextauthUrl: "http://192.168.1.50:30080"
+  nextauthSecret: "your-existing-secret-here"
+  initSecret: "your-existing-init-secret"
 ```
 
 ## Storage Setup
@@ -80,61 +74,55 @@ kubectl exec -it <pod> -- ls -la /app/data
 
 ## Database Initialization
 
-On first deploy the database schema is created **automatically** at startup
-(the container runs `prisma db push` when it detects an empty database).
-If automatic initialization is disabled (`AUTO_DB_INIT=false`), you can
-initialize the database manually:
+On first deploy the database schema is created **automatically** by an init
+container that runs `prisma db push` before the app starts. No manual steps
+are needed.
+
+If automatic initialization fails, you can initialize manually:
 
 ### Option A: Use the init API endpoint
 
-Requires `INIT_SECRET` to be set in environment variables.
+The auto-generated `INIT_SECRET` is stored in the Kubernetes Secret
+`proman-secrets`. Retrieve it with:
+
+```bash
+kubectl get secret proman-secrets -n ix-proman \
+  -o jsonpath='{.data.INIT_SECRET}' | base64 -d
+```
+
+Then call the init endpoint:
 
 ```bash
 curl -sS -X POST \
-  -H "Authorization: Bearer $INIT_SECRET" \
+  -H "Authorization: Bearer <INIT_SECRET>" \
   http://<TRUENAS_IP>:30080/api/debug/db/init | jq
-```
-
-Expected response:
-
-```json
-{
-  "ok": true,
-  "dbPath": "/app/data/proman.db",
-  "pushOut": "...",
-  "genOut": "..."
-}
 ```
 
 ### Option B: Exec into the container
 
 ```bash
-# Find the pod name
 kubectl get pods -n ix-proman
-
-# Run prisma db push
 kubectl exec -it <pod-name> -n ix-proman -- npx prisma db push --schema=prisma/schema.prisma
-```
-
-### Option C: Helm init Job (automatic)
-
-If `initJob.enabled: true` is set in your Helm values (default in
-`values-truenas.yaml`), a Kubernetes Job runs `prisma db push` automatically
-after `helm install` or `helm upgrade`.
-
-Verify the job succeeded:
-
-```bash
-kubectl get jobs -n ix-proman
-kubectl logs job/proman-prisma-init -n ix-proman
 ```
 
 ## Updating the App
 
 1. Check for new releases at https://github.com/JIGLE/proman/releases
 2. Update the image tag in TrueNAS App settings or Helm values
-3. Restart the app
+3. Restart the app — the init container will run any pending schema migrations
 4. Verify: `curl http://<TRUENAS_IP>:30080/version.json`
+
+## Optional Environment Variables
+
+Add these via the **Extra Environment Variables** section in the TrueNAS UI
+or in the `env:` list in your values file:
+
+| Variable               | Notes                                   |
+| ---------------------- | --------------------------------------- |
+| `GOOGLE_CLIENT_ID`     | Enables Google sign-in (see below)      |
+| `GOOGLE_CLIENT_SECRET` | Required if `GOOGLE_CLIENT_ID` is set   |
+| `SENDGRID_API_KEY`     | Enables email delivery via SendGrid     |
+| `ENABLE_STRIPE`        | Set to `true` to enable Stripe payments |
 
 ## TrueNAS App Info Panel
 
@@ -152,32 +140,24 @@ See [Troubleshooting Guide](troubleshooting.md) for common issues.
 
 **All API routes return 500 "Authentication failed":**
 
-This is the most common issue on first deploy. It means the database file
-exists but has no tables (the schema was never applied).
+The database exists but has no tables. The init container should handle this
+automatically, but if it failed:
 
-1. Check pod logs for `"no such table"` errors:
-   ```bash
-   kubectl logs -l app=proman -n ix-proman --tail=100
-   ```
-2. Initialize the database (see [Database Initialization](#database-initialization) above).
-3. If using Helm, check if the init Job failed:
-   ```bash
-   kubectl get jobs -n ix-proman
-   kubectl logs job/proman-prisma-init -n ix-proman
-   ```
-4. Verify the data directory is writable by UID 1001:
+1. Check pod logs: `kubectl logs -l app=proman -n ix-proman --tail=100`
+2. Initialize the database manually (see [Database Initialization](#database-initialization)).
+3. Verify the data directory is writable by UID 1001:
    ```bash
    kubectl exec -it <pod> -n ix-proman -- ls -la /app/data
    ```
-   Expected: file owned by `nextjs` (UID 1001, GID 1001).
 
 **App shows "Deploying" indefinitely:**
 
-- The health check (`/api/health`) returns 503 when the database is not
-  initialized. Kubernetes will never mark the pod as ready, causing a
-  deploy loop. Fix by initializing the database.
-- Check pod logs: `kubectl logs -l app=proman -n ix-proman --tail=100`
+- Check init container logs — the `prisma-init` init container may have failed:
+  ```bash
+  kubectl logs <pod-name> -c prisma-init -n ix-proman
+  ```
 - Verify the dataset path is correct and writable
+- Check main container logs: `kubectl logs -l app=proman -n ix-proman --tail=100`
 
 **Cannot access the app after install:**
 
@@ -187,13 +167,7 @@ exists but has no tables (the schema was never applied).
 **Permission denied / SQLite not writable:**
 
 - Ensure the TrueNAS dataset permissions are set to UID `1001`, GID `1001`.
-- In Helm values, set `podSecurityContext.fsGroup: 1001`.
 - Verify: `kubectl exec -it <pod> -- stat /app/data/proman.db`
-
-**Database errors after TrueNAS update:**
-
-- Re-run database init (see above)
-- Check dataset permissions haven't changed
 
 ## Google OAuth Setup
 
@@ -204,14 +178,12 @@ To enable Google sign-in:
 3. Set **Authorized JavaScript origins**: `https://proman.example.com`
 4. Set **Authorized redirect URIs**: `https://proman.example.com/api/auth/callback/google`
 5. Copy the Client ID and Client Secret
-6. Add these environment variables to your TrueNAS app configuration:
-   ```
-   GOOGLE_CLIENT_ID=<your-client-id>.apps.googleusercontent.com
-   GOOGLE_CLIENT_SECRET=<your-client-secret>
-   ```
+6. Add as extra environment variables in TrueNAS app configuration:
+   - `GOOGLE_CLIENT_ID` = `<your-client-id>.apps.googleusercontent.com`
+   - `GOOGLE_CLIENT_SECRET` = `<your-client-secret>`
 7. Restart the app — the Google sign-in button will appear on the login page
 
-> **Note:** `NEXTAUTH_URL` must exactly match the origin you configured in
+> **Note:** `app.nextauthUrl` must exactly match the origin you configured in
 > Google Cloud Console (including `https://` and port if non-standard).
 
 ## Removing the App

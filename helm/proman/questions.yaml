@@ -1,52 +1,73 @@
 groups:
-  - name: General
-    description: Core settings for the Proman application.
-  - name: Networking
-    description: Service exposure and ingress configuration.
-  - name: Storage
-    description: Persistence configuration for the SQLite database.
   - name: Application
-    description: Application-specific environment variables.
+    description: Core application settings.
+  - name: Storage
+    description: Persistent storage for the SQLite database.
+  - name: Networking
+    description: Service exposure configuration.
+  - name: Advanced
+    description: Optional overrides and integrations.
 
 questions:
-  - variable: replicaCount
-    group: General
-    label: Replicas
-    description: Number of Proman pods to run.
-    schema:
-      type: int
-      default: 1
-      min: 1
-
-  - variable: image
-    group: General
-    label: Container Image
+  # ── Application ─────────────────────────────────────────────────
+  - variable: app
+    group: Application
+    label: Application Settings
     schema:
       type: dict
       attrs:
-        - variable: repository
-          label: Repository
+        - variable: nextauthUrl
+          label: Application URL
+          description: >
+            The full URL users use to access ProMan (protocol + host + port).
+            Examples: https://proman.example.com  or  http://192.168.1.50:30080
           schema:
             type: string
-            default: ghcr.io/jigle/proman
-        - variable: tag
-          label: Tag
+            required: true
+            default: "http://localhost:30080"
+        - variable: nextauthSecret
+          label: Auth Secret (leave empty to auto-generate)
+          description: >
+            Session signing secret (min 32 chars). Auto-generated on first
+            install if left empty. Generate manually with: openssl rand -base64 32
           schema:
             type: string
             default: ""
-        - variable: pullPolicy
-          label: Image Pull Policy
+        - variable: initSecret
+          label: Init Secret (leave empty to auto-generate)
+          description: >
+            Protects the /api/debug/db/init endpoint. Auto-generated on first
+            install if left empty. Generate manually with: openssl rand -hex 32
           schema:
             type: string
-            default: IfNotPresent
-            enum:
-              - IfNotPresent
-              - Always
-              - Never
+            default: ""
 
+  # ── Storage ─────────────────────────────────────────────────────
+  - variable: persistence
+    group: Storage
+    label: Storage
+    schema:
+      type: dict
+      attrs:
+        - variable: enabled
+          label: Enable Persistence
+          schema:
+            type: boolean
+            default: true
+        - variable: hostPath
+          label: Host Path (TrueNAS dataset)
+          description: >
+            Path to a dataset on your TrueNAS pool.
+            Example: /mnt/pools/mypool/apps/proman/data
+          schema:
+            type: string
+            required: true
+            default: /mnt/pools/<POOL_NAME>/apps/proman/data
+
+  # ── Networking ──────────────────────────────────────────────────
   - variable: service
     group: Networking
-    label: Service Configuration
+    label: Service
     schema:
       type: dict
       attrs:
@@ -58,133 +79,43 @@ questions:
             enum:
               - NodePort
               - ClusterIP
-        - variable: port
-          label: Service Port
-          schema:
-            type: int
-            default: 80
-            min: 1
-            max: 65535
-        - variable: targetPort
-          label: Target Port
-          schema:
-            type: int
-            default: 3000
-            min: 1
-            max: 65535
         - variable: nodePort
-          label: NodePort (if NodePort service)
+          label: NodePort
+          description: External port to access the app (30000-32767).
           schema:
             type: int
             default: 30080
             min: 30000
             max: 32767
 
-  - variable: ingress
-    group: Networking
-    label: Ingress
+  # ── Advanced ────────────────────────────────────────────────────
+  - variable: image
+    group: Advanced
+    label: Container Image
     schema:
       type: dict
       attrs:
-        - variable: enabled
-          label: Enable Ingress
-          schema:
-            type: boolean
-            default: false
-        - variable: hosts
-          label: Host Entries
-          schema:
-            type: list
-            default:
-              - host: proman.local
-                paths:
-                  - path: /
-                    pathType: Prefix
-            items:
-              - variable: hostEntry
-                schema:
-                  type: dict
-                  attrs:
-                    - variable: host
-                      label: Hostname
-                      schema:
-                        type: string
-                        default: proman.local
-                    - variable: paths
-                      label: Paths
-                      schema:
-                        type: list
-                        default:
-                          - path: /
-                            pathType: Prefix
-                        items:
-                          - variable: pathEntry
-                            schema:
-                              type: dict
-                              attrs:
-                                - variable: path
-                                  label: Path
-                                  schema:
-                                    type: string
-                                    default: /
-                                - variable: pathType
-                                  label: Path Type
-                                  schema:
-                                    type: string
-                                    default: Prefix
-                                    enum:
-                                      - Prefix
-                                      - ImplementationSpecific
-                                      - Exact
-
-  - variable: persistence
-    group: Storage
-    label: Persistence
-    schema:
-      type: dict
-      attrs:
-        - variable: enabled
-          label: Enable Persistence
-          schema:
-            type: boolean
-            default: true
-        - variable: hostPath
-          label: Host Path
+        - variable: repository
+          label: Repository
           schema:
             type: string
-            default: /mnt/pools/<POOL_NAME>/apps/proman/data
-        - variable: size
-          label: Requested Size
+            default: ghcr.io/jigle/proman
+        - variable: tag
+          label: Tag (empty = chart appVersion)
           schema:
             type: string
-            default: 1Gi
-        - variable: accessMode
-          label: Access Mode
-          schema:
-            type: string
-            default: ReadWriteOnce
-            enum:
-              - ReadWriteOnce
-              - ReadWriteMany
+            default: ""
 
   - variable: env
-    group: Application
-    label: Environment Variables
+    group: Advanced
+    label: Extra Environment Variables
+    description: >
+      Additional env vars for optional integrations (Google OAuth, SendGrid, etc.).
+      DATABASE_URL, NEXTAUTH_URL, NEXTAUTH_SECRET, and INIT_SECRET are set
+      automatically — do NOT add them here.
     schema:
       type: list
-      default:
-        - name: DATABASE_URL
-          value: file:/app/data/proman.db
-        - name: NEXTAUTH_URL
-          value: http://<TRUENAS_IP_OR_HOSTNAME>:30080
-        - name: NEXTAUTH_SECRET
-          value: replace-with-secure-secret
-        - name: NODE_ENV
-          value: production
-        - name: HOSTNAME
-          value: 0.0.0.0
-        - name: PORT
-          value: "3000"
+      default: []
       items:
         - variable: envvar
           schema:
