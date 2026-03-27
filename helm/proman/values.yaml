@@ -109,7 +109,7 @@ env:
 
 # Control whether a Helm Job is run to initialize Prisma (recommended)
 initJob:
-  enabled: true
+  enabled: false
 
 # Persistent volume for SQLite database
 persistence:

@@ -93,7 +93,7 @@ ENV HOSTNAME=0.0.0.0
 # "Running" even while the database is still being initialised.
 # NOTE: Use GET (-O /dev/null) not --spider (HEAD) — Next.js auto-generated
 # HEAD responses may not satisfy wget --spider's expectations.
-HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=3 \
+HEALTHCHECK --interval=10s --timeout=3s --start-period=60s --retries=3 \
   CMD wget -q -O /dev/null http://localhost:3000/api/ready || exit 1
 
 CMD ["sh", "-c", "npm run prestart && node server.js"]
