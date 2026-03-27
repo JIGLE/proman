@@ -96,7 +96,7 @@ jobs:
           PLATFORMS="${{ github.event.inputs.platforms || 'linux/amd64' }}"
           
           # Set tags based on trigger
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+          if [[ "${GITHUB_REF}" == refs/tags/* ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             TAGS="ghcr.io/${IMAGE_NAME_LOWER}:${VERSION},ghcr.io/${IMAGE_NAME_LOWER}:latest"
           elif [[ "${GITHUB_REF}" == refs/heads/main ]]; then
             TAGS="ghcr.io/${IMAGE_NAME_LOWER}:main,ghcr.io/${IMAGE_NAME_LOWER}:${VERSION}-main"
