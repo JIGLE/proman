@@ -81,9 +81,6 @@ COPY --from=builder --chown=nextjs:nextjs /app/package*.json ./
 COPY --from=builder --chown=nextjs:nextjs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nextjs /app/.next/static ./.next/static
 
-# Ensure runner has latest npm as well (fixes runtime npm warnings)
-RUN npm install -g npm@latest
-
 USER nextjs
 
 EXPOSE 3000
