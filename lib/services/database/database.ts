@@ -33,14 +33,17 @@ function getPrismaClient(): PrismaClient {
         logger.debug("Using SQLite database", { path: resolvedPath, exists });
         if (!exists) {
           throw new Error(
-            `SQLite DB file does not exist: ${resolvedPath}. Ensure a writable dataset is mounted at the path.`,
+            `SQLite DB file does not exist: ${resolvedPath}. ` +
+              `Run POST /api/debug/db/init to create and initialize the database, ` +
+              `or ensure a writable dataset is mounted at the path.`,
           );
         }
         try {
           fs.accessSync(resolvedPath, fs.constants.W_OK);
         } catch {
           throw new Error(
-            `SQLite DB file is not writable: ${resolvedPath}. Fix dataset permissions (chown/chmod).`,
+            `SQLite DB file is not writable: ${resolvedPath}. ` +
+              `Fix permissions with: chmod 666 ${resolvedPath} && chown app:app ${resolvedPath}`,
           );
         }
       }
@@ -50,6 +53,19 @@ function getPrismaClient(): PrismaClient {
         const adapter = new PrismaBetterSqlite3({ url: dbUrl });
         globalForPrisma.prisma = new PrismaClient({ adapter });
         logger.debug("PrismaClient constructed successfully");
+
+        // Validate connection with a quick query
+        try {
+          (
+            globalForPrisma.prisma as unknown as {
+              $queryRawUnsafe: (q: string) => Promise<unknown>;
+            }
+          ).$queryRawUnsafe("SELECT 1");
+        } catch {
+          logger.warn(
+            "Database connection check skipped or failed — queries may fail at runtime",
+          );
+        }
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         logger.error(

@@ -43,13 +43,39 @@ export async function requireAuth(_request: NextRequest): Promise<
     // Support multiple session shapes in tests: prefer email-based lookup when
     // available (real auth), but accept a session.user.id fallback used by tests/mocks.
     if (session.user?.email) {
-      // Find or create user in database (database accessor is lazy as well)
-      const { getPrismaClient } =
-        await import("@/lib/services/database/database");
-      const prisma = getPrismaClient();
-      const user = await prisma.user.findUnique({
-        where: { email: session.user.email },
-      });
+      // Find user in database — separate DB errors from "not found"
+      let user;
+      try {
+        const { getPrismaClient } =
+          await import("@/lib/services/database/database");
+        const prisma = getPrismaClient();
+        user = await prisma.user.findUnique({
+          where: { email: session.user.email },
+        });
+      } catch (dbError: unknown) {
+        const msg =
+          dbError instanceof Error ? dbError.message : String(dbError);
+        console.error("requireAuth: database error during user lookup:", msg);
+
+        if (msg.includes("no such table") || msg.includes("SQLITE_ERROR")) {
+          console.error(
+            "HINT: The database exists but has no tables. " +
+              "Run database initialization: POST /api/debug/db/init " +
+              "or exec into the container and run: npx prisma db push --schema=prisma/schema.prisma",
+          );
+        }
+
+        return new NextResponse(
+          JSON.stringify({
+            error: "Service temporarily unavailable",
+            detail: "Database connection error",
+          }),
+          {
+            status: 503,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
 
       if (!user) {
         // Do not auto-create users — they must register via a proper auth flow
@@ -85,12 +111,33 @@ export async function requireAuth(_request: NextRequest): Promise<
     const errName = error instanceof Error ? error.name : "UnknownError";
     console.error("requireAuth error:", errName, errMsg);
 
-    // Provide actionable hints in logs for common root causes
-    if (errMsg.includes("no such table") || errMsg.includes("SQLITE_ERROR")) {
-      console.error(
-        "HINT: The database exists but has no tables. " +
-          "Run database initialization: POST /api/debug/db/init " +
-          "or exec into the container and run: npx prisma db push --schema=prisma/schema.prisma",
+    // Distinguish database errors from auth errors
+    const isDbError =
+      errMsg.includes("no such table") ||
+      errMsg.includes("SQLITE_ERROR") ||
+      errMsg.includes("SQLite DB file") ||
+      errMsg.includes("Prisma") ||
+      errMsg.includes("database") ||
+      errMsg.includes("not writable") ||
+      errMsg.includes("does not exist");
+
+    if (isDbError) {
+      if (errMsg.includes("no such table") || errMsg.includes("SQLITE_ERROR")) {
+        console.error(
+          "HINT: The database exists but has no tables. " +
+            "Run database initialization: POST /api/debug/db/init " +
+            "or exec into the container and run: npx prisma db push --schema=prisma/schema.prisma",
+        );
+      }
+      return new NextResponse(
+        JSON.stringify({
+          error: "Service temporarily unavailable",
+          detail: "Database connection error",
+        }),
+        {
+          status: 503,
+          headers: { "Content-Type": "application/json" },
+        },
       );
     }
 

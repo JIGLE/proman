@@ -28,6 +28,7 @@ type Account = {
 
 import CredentialsProvider from "next-auth/providers/credentials";
 import { getPrismaClient } from "@/lib/services/database/database";
+import { isMockMode } from "@/lib/config/data-mode";
 
 function createBaseAuthOptions(): NextAuthOptions {
   const secret = process.env.NEXTAUTH_SECRET;
@@ -83,6 +84,17 @@ function createBaseAuthOptions(): NextAuthOptions {
             credentials?.email === "demo@proman.local" &&
             credentials?.password === "demo123"
           ) {
+            // In mock mode, return a stable demo user without DB access
+            if (isMockMode) {
+              logger.debug("Demo auth successful (mock mode)");
+              return {
+                id: "demo-user",
+                email: credentials.email,
+                name: "Demo User",
+                image: null,
+              };
+            }
+
             try {
               const prisma = getPrismaClient();
               let user = await prisma.user.findUnique({
@@ -98,6 +110,7 @@ function createBaseAuthOptions(): NextAuthOptions {
                     imageConsent: true,
                   },
                 });
+                logger.debug("Demo user created in database", { id: user.id });
               }
 
               logger.debug("Demo auth successful", { id: user.id });
@@ -109,7 +122,7 @@ function createBaseAuthOptions(): NextAuthOptions {
               };
             } catch (error) {
               logger.error(
-                "Demo auth error",
+                "Demo auth error — database may be unavailable",
                 error instanceof Error ? error : new Error(String(error)),
               );
               return null;
