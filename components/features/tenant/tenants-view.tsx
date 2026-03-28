@@ -16,6 +16,9 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  MoreHorizontal,
+  Trash2,
+  Edit,
 } from "lucide-react";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { cn } from "@/lib/utils/utils";
@@ -47,6 +50,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/ui/loading-state";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { SearchFilter } from "@/components/ui/search-filter";
 import {
   BulkActionBar,
@@ -190,6 +199,25 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
         );
       },
       [deleteTenant, success, bulkSelection, confirmDialog],
+    );
+
+    // Single delete handler
+    const handleDelete = useCallback(
+      async (tenant: Tenant) => {
+        confirmDialog.confirm(
+          {
+            title: "Delete Tenant",
+            description: `"${tenant.name}" will be permanently removed. This action cannot be undone.`,
+            confirmLabel: "Delete",
+            variant: "destructive",
+          },
+          async () => {
+            await deleteTenant(tenant.id);
+            success(`Tenant "${tenant.name}" deleted`);
+          },
+        );
+      },
+      [deleteTenant, success, confirmDialog],
     );
 
     // Inline edit handler
@@ -638,7 +666,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                 className={cn(
                   "grid",
                   compact
-                    ? "gap-1 grid-cols-2 md:grid-cols-4 xl:grid-cols-6"
+                    ? "gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
                     : "gap-4 md:grid-cols-2 xl:grid-cols-3",
                 )}
               >
@@ -708,7 +736,58 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                               </div>
                             </div>
                           </div>
-                          {/* Actions removed from card; use tenant detail modal to edit/delete */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  dialog.openEditDialog(tenant, (t) => ({
+                                    name: t.name,
+                                    email: t.email,
+                                    phone: t.phone || "",
+                                    propertyId: t.propertyId || "",
+                                    rent: Number(t.rent),
+                                    leaseStart: t.leaseStart || "",
+                                    leaseEnd: t.leaseEnd || "",
+                                    paymentStatus: t.paymentStatus,
+                                    notes: t.notes || "",
+                                  }));
+                                }}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.location.href = `mailto:${tenant.email}`;
+                                }}
+                              >
+                                <Mail className="h-4 w-4 mr-2" />
+                                Send Email
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(tenant);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
 
                         <div

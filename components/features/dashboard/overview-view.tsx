@@ -763,33 +763,23 @@ export function OverviewView({
             <StatCard
               title={t("dashboard.totalProperties")}
               value={totalProperties}
-              change={totalProperties > 0 ? 5.2 : undefined}
               icon={Building2}
             />
             <StatCard
               title={t("dashboard.activeTenants")}
               value={activeTenants}
-              change={activeTenants > 0 ? 2.1 : undefined}
               icon={Users}
               accent="text-purple-400"
             />
             <StatCard
               title={t("dashboard.monthlyRevenue")}
               value={formatCurrency(monthlyRevenue)}
-              change={monthlyRevenue > 0 ? 8.3 : undefined}
               icon={DollarSign}
               accent="text-emerald-400"
             />
             <StatCard
               title={t("dashboard.occupancyRate")}
               value={`${occupancyRate.toFixed(1)}%`}
-              change={
-                occupancyRate > 0
-                  ? occupancyRate > 90
-                    ? 1.5
-                    : -2.1
-                  : undefined
-              }
               icon={TrendingUp}
               accent="text-amber-400"
             />

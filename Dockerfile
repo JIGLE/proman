@@ -46,6 +46,31 @@ RUN DATABASE_URL="file:./build.db" \
 # Generate version.json
 RUN echo "{\"version\":\"${BUILD_VERSION}\",\"git_commit\":\"${GIT_COMMIT}\",\"build_time\":\"${BUILD_TIME}\",\"node_env\":\"production\"}" > public/version.json
 
+# ── Development stage (used by docker-compose --profile dev) ──────────────────
+FROM node:22-alpine AS development
+
+WORKDIR /app
+
+# Install build dependencies for native modules (better-sqlite3)
+RUN apk add --no-cache python3 make g++ pkgconfig
+
+# Copy package files and install all dependencies (including devDependencies)
+COPY package*.json ./
+COPY prisma ./prisma/
+COPY prisma.config.ts ./
+RUN npm install
+
+# Source code is mounted via docker-compose volumes, not COPY'd
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+ENV NODE_ENV=development
+
+CMD ["npm", "run", "dev"]
+
+# ── Production runner stage ───────────────────────────────────────────────────
 FROM node:22-alpine AS runner
 
 # OCI image labels — TrueNAS SCALE reads these for "App Version" / "Version" display

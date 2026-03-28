@@ -34,7 +34,7 @@ import {
 // ── Nav Item Type ──────────────────────────────────────
 export interface SidebarNavItem {
   key: string;
-  icon: React.ElementType;
+  icon: React.ComponentType<{ className?: string }>;
   labelKey: string; // i18n key under "navigation.*"
   label: string; // fallback display label
   href: string;
