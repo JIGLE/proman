@@ -171,10 +171,15 @@ jobs:
           git commit -m "chore: bump version to ${{ steps.version.outputs.new_version }}"
           git push origin main
 
-      - name: Create and push tag
+      - name: Create and push tag (if missing)
         run: |
-          git tag -a v${{ steps.version.outputs.new_version }} -m "Release v${{ steps.version.outputs.new_version }}"
-          git push origin v${{ steps.version.outputs.new_version }}
+          git fetch --tags
+          if git rev-parse -q --verify "refs/tags/v${{ steps.version.outputs.new_version }}" >/dev/null; then
+            echo "Tag v${{ steps.version.outputs.new_version }} already exists, skipping tag creation."
+          else
+            git tag -a v${{ steps.version.outputs.new_version }} -m "Release v${{ steps.version.outputs.new_version }}"
+            git push origin v${{ steps.version.outputs.new_version }}
+          fi
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
