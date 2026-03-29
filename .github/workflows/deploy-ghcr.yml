@@ -115,16 +115,10 @@ jobs:
       - name: Output image tags
         run: |
           echo "Pushed image tags: ${{ steps.vars.outputs.tags }}"
-          elif [[ "${GITHUB_REF}" == refs/heads/main ]]; then
-            TAGS="ghcr.io/${IMAGE_NAME_LOWER}:main,ghcr.io/${IMAGE_NAME_LOWER}:${VERSION}-main"
-          else
-            TAGS="ghcr.io/${IMAGE_NAME_LOWER}:${VERSION}-${GITHUB_SHA::8}"
-          fi
-          
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "image_name_lower=${IMAGE_NAME_LOWER}" >> $GITHUB_OUTPUT
-          echo "platforms=${PLATFORMS}" >> $GITHUB_OUTPUT
-          echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "version=${{ steps.vars.outputs.version }}" >> $GITHUB_OUTPUT
+          echo "image_name_lower=${{ steps.vars.outputs.image_name_lower }}" >> $GITHUB_OUTPUT
+          echo "platforms=${{ steps.vars.outputs.platforms }}" >> $GITHUB_OUTPUT
+          echo "tags=${{ steps.vars.outputs.tags }}" >> $GITHUB_OUTPUT
           echo "build_time=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> $GITHUB_OUTPUT
 
       - name: Log in to Container Registry
