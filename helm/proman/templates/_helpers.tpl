@@ -69,7 +69,7 @@ Any extra entries in .Values.env are appended at the end.
 */}}
 {{- define "proman.env" -}}
 - name: DATABASE_URL
-  value: {{ .Values.app.databaseUrl | quote }}
+  value: {{ .Values.app.databaseUrl | default (printf "file:%s/proman.db" (.Values.persistence.mountPath | default "/app/data")) | quote }}
 - name: NEXTAUTH_URL
   value: {{ .Values.app.nextauthUrl | quote }}
 - name: NEXTAUTH_SECRET

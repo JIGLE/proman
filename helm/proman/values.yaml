@@ -111,3 +111,5 @@ persistence:
   accessMode: ReadWriteOnce
   size: 1Gi
   # storageClass: ""  # Leave empty for default
+  # Path inside the container where the dataset is mounted. Defaults to /app/data
+  mountPath: /app/data

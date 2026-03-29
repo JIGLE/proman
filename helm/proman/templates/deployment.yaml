@@ -56,7 +56,7 @@ spec:
           {{- if .Values.persistence.enabled }}
           volumeMounts:
             - name: data
-              mountPath: /app/data
+              mountPath: {{ .Values.persistence.mountPath | default "/app/data" | quote }}
           {{- end }}
       containers:
         - name: {{ .Chart.Name }}
@@ -97,7 +97,7 @@ spec:
           {{- if .Values.persistence.enabled }}
           volumeMounts:
             - name: data
-              mountPath: /app/data
+              mountPath: {{ .Values.persistence.mountPath | default "/app/data" | quote }}
           {{- end }}
       {{- if .Values.persistence.enabled }}
       volumes:

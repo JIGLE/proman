@@ -15,22 +15,26 @@
  * It also removes any orphaned OAuth accounts whose user record no longer exists.
  */
 
-'use strict';
+"use strict";
 
-require('dotenv').config();
-const { PrismaClient } = require('@prisma/client');
+require("dotenv").config();
+const { PrismaClient } = require("@prisma/client");
 
 const emailArg = process.argv[2] || process.env.USER_EMAIL;
 
 if (!emailArg) {
-  console.error('Error: missing email. Pass it as an argument or set USER_EMAIL.');
-  console.error('Example: node scripts/delete-user.js user@example.com');
+  console.error(
+    "Error: missing email. Pass it as an argument or set USER_EMAIL.",
+  );
+  console.error("Example: node scripts/delete-user.js user@example.com");
   process.exit(1);
 }
 
 const fallbackDbUrl =
   process.env.DATABASE_URL ||
-  (process.env.NODE_ENV === 'production' ? 'file:/data/proman.db' : 'file:./dev.db');
+  (process.env.NODE_ENV === "production"
+    ? "file:/app/data/proman.db"
+    : "file:./dev.db");
 process.env.DATABASE_URL = fallbackDbUrl;
 
 const prisma = new PrismaClient({
@@ -62,7 +66,7 @@ async function deleteUserByEmail(email) {
 
   await prisma.user.delete({ where: { id: user.id } });
 
-  console.log('Removed user and related records:', {
+  console.log("Removed user and related records:", {
     email,
     sessions: sessionResult.count,
     accounts: accountResult.count,
@@ -73,7 +77,12 @@ async function deleteUserByEmail(email) {
 async function deleteOrphanedAccounts() {
   const [accounts, users] = await Promise.all([
     prisma.account.findMany({
-      select: { id: true, userId: true, provider: true, providerAccountId: true },
+      select: {
+        id: true,
+        userId: true,
+        provider: true,
+        providerAccountId: true,
+      },
     }),
     prisma.user.findMany({
       select: { id: true },
@@ -81,10 +90,12 @@ async function deleteOrphanedAccounts() {
   ]);
 
   const validUserIds = new Set(users.map((user) => user.id));
-  const orphaned = accounts.filter((account) => !validUserIds.has(account.userId));
+  const orphaned = accounts.filter(
+    (account) => !validUserIds.has(account.userId),
+  );
 
   if (!orphaned.length) {
-    console.log('No orphaned OAuth accounts detected.');
+    console.log("No orphaned OAuth accounts detected.");
     return;
   }
 
@@ -92,7 +103,7 @@ async function deleteOrphanedAccounts() {
     where: { id: { in: orphaned.map((account) => account.id) } },
   });
 
-  console.log('Removed orphaned OAuth accounts:', {
+  console.log("Removed orphaned OAuth accounts:", {
     count: deleteResult.count,
     providerAccountIds: orphaned.map((account) => account.providerAccountId),
   });
@@ -103,7 +114,7 @@ async function main() {
     await deleteUserByEmail(emailArg);
     await deleteOrphanedAccounts();
   } catch (error) {
-    console.error('Failed to delete user data:', error);
+    console.error("Failed to delete user data:", error);
     process.exitCode = 1;
   } finally {
     await prisma.$disconnect();

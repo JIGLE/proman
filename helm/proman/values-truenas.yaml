@@ -12,11 +12,16 @@ app:
   # IMPORTANT: Must match the URL you access the app at (protocol + host + port).
   # Examples: https://proman.example.com  or  http://192.168.1.50:30080
   nextauthUrl: "http://<YOUR_TRUENAS_IP>:30080"
+  # Optional: explicitly set the SQLite DATABASE_URL inside the container.
+  # If omitted, the chart will derive it from persistence.mountPath.
+  # databaseUrl: "file:/app/data/proman.db"
 
 persistence:
   enabled: true
   # Edit <POOL_NAME> to match your TrueNAS storage pool
   hostPath: /mnt/pools/<POOL_NAME>/apps/proman/data
+  # Container path where the hostPath is mounted. Keep as /app/data by default.
+  mountPath: /app/data
 
 # ── Networking ────────────────────────────────────────────────────────────────
 service:

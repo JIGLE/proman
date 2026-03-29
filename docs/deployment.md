@@ -19,7 +19,7 @@ docker build \
 ```bash
 docker run --rm -p 3000:3000 \
   -e NODE_ENV=production \
-  -e DATABASE_URL=file:/data/proman.sqlite \
+  -e DATABASE_URL=file:/app/data/proman.db \
   -e NEXTAUTH_URL=http://localhost:3000 \
   -e NEXTAUTH_SECRET="$(openssl rand -base64 32)" \
   -v proman-data:/data \
@@ -48,7 +48,7 @@ docker-compose --profile dev up -d
 ```bash
 kubectl create secret generic proman-secrets \
   --from-literal=NEXTAUTH_SECRET="$(openssl rand -base64 32)" \
-  --from-literal=DATABASE_URL="file:/data/proman.sqlite" \
+  --from-literal=DATABASE_URL="file:/app/data/proman.db" \
   --from-literal=SENDGRID_API_KEY="" \
   --from-literal=INIT_SECRET="$(openssl rand -hex 32)" \
   -n <namespace>
@@ -97,13 +97,13 @@ bash scripts/helm-package.sh
 
 See [.env.example](../.env.example) for the complete list. Key production variables:
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | SQLite connection string (e.g., `file:/data/proman.sqlite`) |
-| `NEXTAUTH_URL` | Yes | Public URL of the application |
-| `NEXTAUTH_SECRET` | Yes | Session signing secret (min 32 chars) |
-| `NODE_ENV` | Yes | Set to `production` |
-| `INIT_SECRET` | Recommended | Protects the DB init endpoint |
+| Variable          | Required    | Description                                                 |
+| ----------------- | ----------- | ----------------------------------------------------------- |
+| `DATABASE_URL`    | Yes         | SQLite connection string (e.g., `file:/app/data/proman.db`) |
+| `NEXTAUTH_URL`    | Yes         | Public URL of the application                               |
+| `NEXTAUTH_SECRET` | Yes         | Session signing secret (min 32 chars)                       |
+| `NODE_ENV`        | Yes         | Set to `production`                                         |
+| `INIT_SECRET`     | Recommended | Protects the DB init endpoint                               |
 
 ## Health Checks
 
@@ -114,7 +114,7 @@ The application exposes:
 
 ## Persistent Storage
 
-ProMan requires a writable volume mounted at `/data` for:
+- ProMan requires a writable volume mounted at `/app/data` for:
 - SQLite database file
 - Release cache (`latest-release.json`)
 
