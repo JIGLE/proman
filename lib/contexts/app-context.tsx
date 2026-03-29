@@ -160,7 +160,11 @@ export function AppProvider({
   // --- data loading ---
 
   const loadData = useCallback(async () => {
-    if (!userId) return;
+    // Prevent API calls if not authenticated
+    if (!userId) {
+      dispatch({ type: "SET_LOADING", payload: false });
+      return;
+    }
     try {
       dispatch({ type: "SET_LOADING", payload: true });
       dispatch({ type: "SET_ERROR", payload: null });
@@ -231,8 +235,23 @@ export function AppProvider({
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to load data";
-      dispatch({ type: "SET_ERROR", payload: errorMessage });
-      showError(errorMessage);
+
+      // Check if this is a CSRF error
+      const isCsrfError =
+        (err instanceof Error &&
+          (err.message.includes("CSRF") || err.message.includes("csrf"))) ||
+        (typeof err === "object" &&
+          err !== null &&
+          "status" in err &&
+          (err as any).status === 403);
+
+      // For CSRF errors, suggest refresh
+      const displayMessage = isCsrfError
+        ? "Security token expired. Please refresh the page."
+        : errorMessage;
+
+      dispatch({ type: "SET_ERROR", payload: displayMessage });
+      showError(displayMessage);
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }

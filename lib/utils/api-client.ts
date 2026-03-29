@@ -72,10 +72,17 @@ export async function apiFetch<T = unknown>(
   if (requiresCsrf && csrfToken) {
     requestHeaders["X-CSRF-Token"] = csrfToken;
   } else if (requiresCsrf && !csrfToken) {
-    logger.warn("CSRF token missing for state-changing request", {
+    // Fail fast for state-changing requests without CSRF token
+    const error = new Error(
+      "CSRF token not available. Please refresh the page and try again.",
+    );
+    const typedError = error as Error & { status: number };
+    typedError.status = 403; // Use 403 Forbidden for CSRF failure
+    logger.error("CSRF token missing for state-changing request", {
       url,
       method: httpVerb,
     });
+    throw typedError;
   }
 
   try {

@@ -29,6 +29,10 @@ type Account = {
 import CredentialsProvider from "next-auth/providers/credentials";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { isMockMode } from "@/lib/config/data-mode";
+import {
+  createDevSession,
+  isDevAuthEnabled,
+} from "@/lib/services/auth/dev-session";
 
 function createBaseAuthOptions(): NextAuthOptions {
   const secret = process.env.NEXTAUTH_SECRET;
@@ -88,7 +92,7 @@ function createBaseAuthOptions(): NextAuthOptions {
             if (isMockMode) {
               logger.debug("Demo auth successful (mock mode)");
               return {
-                id: "demo-user",
+                id: "mock-user",
                 email: credentials.email,
                 name: "Demo User",
                 image: null,
@@ -155,6 +159,27 @@ function createBaseAuthOptions(): NextAuthOptions {
         user?: NextAuthUser | null;
         account?: unknown;
       }): Promise<JWT> {
+        // If no user yet and dev auth is enabled, inject dev session
+        if (!user && isDevAuthEnabled() && !token.isDevAuth) {
+          const devSession = createDevSession();
+          const t = token as JWT & {
+            id?: string;
+            sub?: string;
+            email?: string;
+            name?: string;
+            picture?: string;
+            isDevAuth?: boolean;
+          };
+          t.id = devSession.user.id;
+          t.sub = devSession.user.id;
+          t.email = devSession.user.email;
+          t.name = devSession.user.name;
+          t.picture = devSession.user.image ?? undefined;
+          t.isDevAuth = true;
+          logger.debug("Dev session injected into JWT");
+          return token;
+        }
+
         if (user) {
           const t = token as JWT & {
             id?: string;
@@ -193,11 +218,19 @@ function createBaseAuthOptions(): NextAuthOptions {
               email?: string;
               name?: string;
               picture?: string;
+              isDevAuth?: boolean;
             };
             sessionUser.id = t.sub || t.id;
             if (t.email) sessionUser.email = t.email;
             if (t.name) sessionUser.name = t.name;
             if (t.picture) sessionUser.image = t.picture;
+
+            // If dev auth, update session expiry to 24 hours from now
+            if (t.isDevAuth) {
+              const expiresAt = new Date();
+              expiresAt.setHours(expiresAt.getHours() + 24);
+              session.expires = expiresAt.toISOString();
+            }
           }
           return session;
         } catch (err: unknown) {

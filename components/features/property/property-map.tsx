@@ -1,27 +1,27 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
-import { MapPin } from 'lucide-react';
-import 'leaflet/dist/leaflet.css';
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import dynamic from "next/dynamic";
+import { MapPin } from "lucide-react";
+import "leaflet/dist/leaflet.css";
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.MapContainer),
-  { ssr: false }
+  () => import("react-leaflet").then((mod) => mod.MapContainer),
+  { ssr: false },
 );
 const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => mod.TileLayer),
-  { ssr: false }
+  () => import("react-leaflet").then((mod) => mod.TileLayer),
+  { ssr: false },
 );
 const Marker = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Marker),
-  { ssr: false }
+  () => import("react-leaflet").then((mod) => mod.Marker),
+  { ssr: false },
 );
-const Popup = dynamic(
-  () => import('react-leaflet').then((mod) => mod.Popup),
-  { ssr: false }
-);
+const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
+  ssr: false,
+});
 
 interface PropertyMarker {
   id: string;
@@ -29,8 +29,8 @@ interface PropertyMarker {
   address: string;
   latitude: number;
   longitude: number;
-  status: 'occupied' | 'vacant' | 'maintenance';
-  type: 'apartment' | 'house' | 'commercial';
+  status: "occupied" | "vacant" | "maintenance";
+  type: "apartment" | "house" | "commercial";
   tenants?: number;
   rent?: number;
   units?: number;
@@ -44,41 +44,49 @@ interface _MapViewState {
 }
 
 export default function PropertyMap() {
+  const { data: session } = useSession();
   const [properties, setProperties] = useState<PropertyMarker[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([38.7223, -9.1393]); // Lisbon default
+  const [mapCenter, setMapCenter] = useState<[number, number]>([
+    38.7223, -9.1393,
+  ]); // Lisbon default
 
   useEffect(() => {
-    fetchProperties();
-  }, []);
+    // Only fetch properties if authenticated
+    if (session?.user) {
+      fetchProperties();
+    } else {
+      setLoading(false);
+    }
+  }, [session?.user]);
 
   const fetchProperties = async () => {
     try {
-      const res = await fetch('/api/properties');
+      const res = await fetch("/api/properties");
       if (res.ok) {
         const response = await res.json();
         // Handle both direct array and wrapped response
-        const data = Array.isArray(response) ? response : (response.data || []);
-        const withCoords = data.filter(
-          (p: PropertyMarker) => p.latitude && p.longitude
-        ).map((p: PropertyMarker) => ({
-          id: p.id,
-          name: p.name,
-          address: p.address,
-          latitude: p.latitude,
-          longitude: p.longitude,
-          status: p.status,
-        }));
-        
+        const data = Array.isArray(response) ? response : response.data || [];
+        const withCoords = data
+          .filter((p: PropertyMarker) => p.latitude && p.longitude)
+          .map((p: PropertyMarker) => ({
+            id: p.id,
+            name: p.name,
+            address: p.address,
+            latitude: p.latitude,
+            longitude: p.longitude,
+            status: p.status,
+          }));
+
         setProperties(withCoords);
-        
+
         // Center on first property if available
         if (withCoords.length > 0) {
           setMapCenter([withCoords[0].latitude, withCoords[0].longitude]);
         }
       }
     } catch (error) {
-      console.error('Error fetching properties:', error);
+      console.error("Error fetching properties:", error);
     } finally {
       setLoading(false);
     }
@@ -109,7 +117,7 @@ export default function PropertyMap() {
           <MapContainer
             center={mapCenter}
             zoom={13}
-            style={{ height: '100%', width: '100%' }}
+            style={{ height: "100%", width: "100%" }}
             className="z-0"
           >
             <TileLayer
@@ -123,7 +131,9 @@ export default function PropertyMap() {
               >
                 <Popup>
                   <div className="p-2">
-                    <h3 className="font-semibold text-gray-900">{property.name}</h3>
+                    <h3 className="font-semibold text-gray-900">
+                      {property.name}
+                    </h3>
                     <p className="text-sm text-gray-600">{property.address}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       Status: {property.status}
