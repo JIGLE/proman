@@ -15,6 +15,8 @@ describe("auth options", () => {
     Object.defineProperty(process.env, "NODE_ENV", {
       value: "test",
       writable: true,
+      configurable: true,
+      enumerable: true,
     });
   });
 
@@ -63,6 +65,8 @@ describe("auth options", () => {
     Object.defineProperty(process.env, "NODE_ENV", {
       value: "development",
       writable: true,
+      configurable: true,
+      enumerable: true,
     });
 
     const mod = await import("@/lib/services/auth/auth");
@@ -77,6 +81,8 @@ describe("auth options", () => {
     Object.defineProperty(process.env, "NODE_ENV", {
       value: "development",
       writable: true,
+      configurable: true,
+      enumerable: true,
     });
 
     const mod = await import("@/lib/services/auth/auth");

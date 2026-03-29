@@ -1,7 +1,6 @@
 import { describe, it, expect, afterEach } from "vitest";
 import { render, screen } from "@/tests/helpers/render-with-providers";
 import { act } from "react";
-import { DevAuthProvider } from "./dev-auth";
 import { useSession } from "next-auth/react";
 import React from "react";
 
@@ -46,6 +45,8 @@ describe("DevAuthProvider", () => {
       "development";
     process.env.NEXT_PUBLIC_DEV_AUTH = "true";
 
+    const { DevAuthProvider } = await import("./dev-auth");
+
     await act(async () => {
       render(
         <DevAuthProvider>
@@ -61,6 +62,8 @@ describe("DevAuthProvider", () => {
     (process.env as NodeJS.ProcessEnv & { NODE_ENV?: string }).NODE_ENV =
       "production";
     delete process.env.NEXT_PUBLIC_DEV_AUTH;
+
+    const { DevAuthProvider } = await import("./dev-auth");
 
     await act(async () => {
       render(
