@@ -55,7 +55,7 @@ describe("DevAuthProvider", () => {
       );
     });
 
-    expect(screen.getByText("Dev User")).toBeDefined();
+    expect(await screen.findByText("Dev User")).toBeDefined();
   });
 
   it("does not inject dev session when not enabled", async () => {
