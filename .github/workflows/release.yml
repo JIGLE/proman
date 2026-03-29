@@ -112,7 +112,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           event-type: deploy-ghcr
           client-payload: '{"version": "${{ steps.version.outputs.new_version }}"}'
-        run: npm version ${{ steps.version.outputs.new_version }} --no-git-tag-version
+        # Note: no 'run' allowed in a step that uses 'uses:'
 
       - name: Sync version across manifests
         run: |
