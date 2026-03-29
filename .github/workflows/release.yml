@@ -103,8 +103,7 @@ jobs:
           npm install --package-lock-only
           git add package.json package-lock.json
           git commit -m "chore(release): bump version to ${{ steps.version.outputs.new_version }}"
-          git tag ${{ steps.version.outputs.tag }}
-          git push origin HEAD:main --tags
+          git push origin HEAD:main
 
       - name: Trigger Deploy to GHCR
         uses: peter-evans/repository-dispatch@v3
