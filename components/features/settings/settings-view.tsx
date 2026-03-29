@@ -126,6 +126,11 @@ export function SettingsView(): React.ReactElement {
   }, []);
 
   const loadSettings = async () => {
+    // Only load settings if authenticated
+    if (!session?.user) {
+      setLoading(false);
+      return;
+    }
     try {
       const response = await fetch("/api/settings");
       if (response.ok) {

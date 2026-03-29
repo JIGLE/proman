@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import type { Session } from "next-auth";
 import { getAuthOptions } from "@/lib/services/auth/auth";
 import { isMockMode } from "@/lib/config/data-mode";
+import { isDevAuthEnabled } from "@/lib/services/auth/dev-session";
 
 // Authentication middleware for API routes
 export async function requireAuth(_request: NextRequest): Promise<
@@ -31,6 +32,12 @@ export async function requireAuth(_request: NextRequest): Promise<
           headers: { "Content-Type": "application/json" },
         },
       );
+    }
+
+    // In dev auth mode, use session data directly without database lookup
+    if (isDevAuthEnabled()) {
+      const userId = session.user?.id || session.user?.email || "dev-user";
+      return { session, userId };
     }
 
     // In mock mode, use session data directly without database lookup

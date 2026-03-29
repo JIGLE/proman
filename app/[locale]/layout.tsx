@@ -1,10 +1,10 @@
 import { ClientProviders } from "@/components/shared/client-providers";
-import DevDebug from '@/components/shared/dev-debug';
-import VersionBadge from '@/components/shared/version-badge';
-import { CurrencyProvider } from '@/lib/contexts/currency-context';
-import {NextIntlClientProvider, hasLocale} from 'next-intl';
-import {getMessages, setRequestLocale} from 'next-intl/server';
-import {locales, defaultLocale} from '@/lib/i18n/config';
+import DevDebug from "@/components/shared/dev-debug";
+import VersionBadge from "@/components/shared/version-badge";
+import { CurrencyProvider } from "@/lib/contexts/currency-context";
+import { NextIntlClientProvider, hasLocale } from "next-intl";
+import { getMessages, setRequestLocale } from "next-intl/server";
+import { locales, defaultLocale } from "@/lib/i18n/config";
 
 // Generate static params for all supported locales
 export function generateStaticParams() {
@@ -13,16 +13,18 @@ export function generateStaticParams() {
 
 export default async function Layout({
   children,
-  params
+  params,
 }: {
   children: React.ReactNode;
-  params: Promise<{locale: string}>;
+  params: Promise<{ locale: string }>;
 }): Promise<React.ReactElement> {
-  const {locale: requestedLocale} = await params;
-  
+  const { locale: requestedLocale } = await params;
+
   // Validate locale and fallback to default
-  const locale = hasLocale(locales, requestedLocale) ? requestedLocale : defaultLocale;
-  
+  const locale = hasLocale(locales, requestedLocale)
+    ? requestedLocale
+    : defaultLocale;
+
   // Enable static rendering for this locale
   setRequestLocale(locale);
 
@@ -35,10 +37,7 @@ export default async function Layout({
       <CurrencyProvider initialLocale={locale}>
         <ClientProviders>
           {children}
-          {process.env.NODE_ENV === 'development' && <DevDebug />}
-          <div style={{position: 'fixed', right: 12, bottom: 8}}>
-            <VersionBadge />
-          </div>
+          {process.env.NODE_ENV === "development" && <DevDebug />}
         </ClientProviders>
       </CurrencyProvider>
     </NextIntlClientProvider>
