@@ -180,11 +180,11 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
       - name: Set up kubectl (optional)
-        if: ${{ ((github.event.inputs.deploy_k8s == 'true') || (github.event.client_payload && github.event.client_payload.deploy_k8s == 'true')) && ((github.event.inputs.dry_run != 'true') || (github.event.client_payload && github.event.client_payload.dry_run != 'true')) && secrets.KUBECONFIG != '' }}
+        if: ${{ ((github.event.inputs.deploy_k8s == 'true') || (github.event.client_payload && github.event.client_payload.deploy_k8s == 'true')) && ((github.event.inputs.dry_run != 'true') || (github.event.client_payload && github.event.client_payload.dry_run != 'true')) }}
         uses: azure/setup-kubectl@v5
 
       - name: Deploy to Kubernetes (optional)
-        if: ${{ ((github.event.inputs.deploy_k8s == 'true') || (github.event.client_payload && github.event.client_payload.deploy_k8s == 'true')) && ((github.event.inputs.dry_run != 'true') || (github.event.client_payload && github.event.client_payload.dry_run != 'true')) && secrets.KUBECONFIG != '' }}
+        if: ${{ ((github.event.inputs.deploy_k8s == 'true') || (github.event.client_payload && github.event.client_payload.deploy_k8s == 'true')) && ((github.event.inputs.dry_run != 'true') || (github.event.client_payload && github.event.client_payload.dry_run != 'true')) }}
         env:
           KUBECONFIG: ${{ secrets.KUBECONFIG }}
           IMAGE: ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name_lower }}:${{ steps.vars.outputs.version }}
