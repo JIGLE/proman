@@ -62,24 +62,36 @@ export function DevAuthProvider({ children }: { children: React.ReactNode }) {
     process.env.NODE_ENV === "development" &&
     process.env.NEXT_PUBLIC_DEV_AUTH === "true";
 
-  const [session, setSession] = useState<Session | null>(null);
-  const [isClient, setIsClient] = useState(false);
+  const isWindow = typeof window !== "undefined";
+
+  // Initialize client flag and session synchronously when possible so
+  // tests and client code see the dev session without waiting for effects.
+  const [isClient, setIsClient] = useState<boolean>(isWindow);
+
+  const [session, setSession] = useState<Session | null>(() => {
+    if (!isWindow || !enabled) return null;
+    const stored = getStoredDevSession();
+    if (stored) return stored;
+    const newSession = createDevSession();
+    storeDevSession(newSession);
+    return newSession;
+  });
 
   useEffect(() => {
-    setIsClient(true);
-    if (enabled) {
-      // Try to restore session from sessionStorage
+    if (!isClient) setIsClient(true);
+    if (!enabled) return;
+
+    // If session is not set for some reason, ensure it's initialized.
+    if (!session) {
       const stored = getStoredDevSession();
-      if (stored) {
-        setSession(stored);
-      } else {
-        // Create new session and store it
+      if (stored) setSession(stored);
+      else {
         const newSession = createDevSession();
         storeDevSession(newSession);
         setSession(newSession);
       }
     }
-  }, [enabled]);
+  }, [enabled, isClient, session]);
 
   // Extend session expiry on page focus or visibility change
   useEffect(() => {
