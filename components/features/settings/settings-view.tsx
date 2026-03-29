@@ -13,6 +13,10 @@ import {
   Shield,
   Save,
   Info,
+  Server,
+  Database,
+  HardDrive,
+  Activity,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import {
@@ -83,12 +87,38 @@ export function SettingsView(): React.ReactElement {
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [appVersion, setAppVersion] = useState<string>("");
+  const [systemInfo, setSystemInfo] = useState<{
+    status: string;
+    uptime: number;
+    environment: string;
+    checks: {
+      database: { status: string; latency_ms: number };
+      email: { status: string; provider?: string };
+    };
+  } | null>(null);
+  const [systemLoading, setSystemLoading] = useState(false);
 
   // Extract current locale from pathname
   const currentLocale = pathname.split("/")[1] || "en";
 
+  const fetchSystemInfo = async () => {
+    setSystemLoading(true);
+    try {
+      const res = await fetch("/api/health");
+      if (res.ok) {
+        const data = await res.json();
+        setSystemInfo(data);
+      }
+    } catch {
+      // Health endpoint unavailable
+    } finally {
+      setSystemLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadSettings();
+    fetchSystemInfo();
     fetch("/version.json")
       .then((r) => r.json())
       .then((d) => setAppVersion(d.version || ""))
@@ -96,6 +126,11 @@ export function SettingsView(): React.ReactElement {
   }, []);
 
   const loadSettings = async () => {
+    // Only load settings if authenticated
+    if (!session?.user) {
+      setLoading(false);
+      return;
+    }
     try {
       const response = await fetch("/api/settings");
       if (response.ok) {
@@ -402,6 +437,97 @@ export function SettingsView(): React.ReactElement {
                   <span>ProMan v{appVersion}</span>
                 </div>
               </div>
+            )}
+          </CardContent>
+        </Card>
+        {/* System Info */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Server className="h-5 w-5" />
+              System
+            </CardTitle>
+            <CardDescription>Server and database status</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {systemLoading ? (
+              <div className="flex items-center justify-center h-16">
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+              </div>
+            ) : systemInfo ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Database className="h-4 w-4 text-muted-foreground" />
+                    <Label>Database</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-block h-2 w-2 rounded-full ${
+                        systemInfo.checks.database.status === "healthy"
+                          ? "bg-emerald-500"
+                          : systemInfo.checks.database.status === "mock"
+                            ? "bg-amber-500"
+                            : "bg-red-500"
+                      }`}
+                    />
+                    <span className="text-sm text-muted-foreground capitalize">
+                      {systemInfo.checks.database.status}
+                    </span>
+                    {systemInfo.checks.database.latency_ms > 0 && (
+                      <span className="text-xs text-muted-foreground">
+                        ({systemInfo.checks.database.latency_ms}ms)
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                    <Label>Uptime</Label>
+                  </div>
+                  <span className="text-sm text-muted-foreground">
+                    {Math.floor(systemInfo.uptime / 3600)}h{" "}
+                    {Math.floor((systemInfo.uptime % 3600) / 60)}m
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <HardDrive className="h-4 w-4 text-muted-foreground" />
+                    <Label>Environment</Label>
+                  </div>
+                  <span className="text-sm text-muted-foreground capitalize">
+                    {systemInfo.environment}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-muted-foreground" />
+                    <Label>Email Service</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`inline-block h-2 w-2 rounded-full ${
+                        systemInfo.checks.email.status === "configured"
+                          ? "bg-emerald-500"
+                          : "bg-amber-500"
+                      }`}
+                    />
+                    <span className="text-sm text-muted-foreground capitalize">
+                      {systemInfo.checks.email.status}
+                    </span>
+                  </div>
+                </div>
+                <div className="pt-2">
+                  <Button variant="outline" size="sm" onClick={fetchSystemInfo}>
+                    Refresh
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Unable to fetch system information
+              </p>
             )}
           </CardContent>
         </Card>

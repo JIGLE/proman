@@ -38,6 +38,18 @@ Five GitHub Actions workflows protect the repository:
 
 The **Production Gate** and **Security Scan** run on every push to `main`. Both must pass before cutting a release tag.
 
+## CI/CD and Deployment Workflow Details
+
+Recent improvements to the CI/CD system include:
+
+- **ci.yml**: Runs lint, build, and tests on all pushes and pull requests. A summary of results is posted to the workflow summary.
+- **release.yml**: Handles version bumping, tagging, and triggers the `deploy-ghcr` workflow to build and push Docker images to GHCR after a successful release.
+- **deploy-ghcr.yml**: Builds and pushes multi-architecture Docker images to GitHub Container Registry (GHCR), with explicit login and a summary of image tags.
+- **production.yml**: Deploys to the production environment from the `main` branch, with a summary step for deployment status.
+- **security-scan.yml**: Runs security scans and posts a summary of results.
+
+All workflow changes should be tested via pull requests. For details on each workflow, see the `.github/workflows/` directory.
+
 ## Design System
 
 ### CSS Variables

@@ -13,6 +13,10 @@ spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
   {{- end }}
+  # Recreate ensures the old pod is fully terminated before the new one starts.
+  # Required for SQLite: prevents concurrent prisma db push from old+new pods.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       {{- include "proman.selectorLabels" . | nindent 6 }}
@@ -36,6 +40,24 @@ spec:
       serviceAccountName: {{ include "proman.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      # Init container runs prisma db push before the main container starts.
+      # This eliminates the race condition between the old pod and the new pod
+      # both trying to write to SQLite simultaneously on upgrades.
+      initContainers:
+        - name: prisma-init
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command:
+            - sh
+            - -c
+            - npx prisma db push --schema=prisma/schema.prisma --accept-data-loss
+          env:
+            {{- include "proman.env" . | nindent 12 }}
+          {{- if .Values.persistence.enabled }}
+          volumeMounts:
+            - name: data
+              mountPath: /app/data
+          {{- end }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
@@ -47,7 +69,7 @@ spec:
               containerPort: 3000
               protocol: TCP
           env:
-            {{- toYaml .Values.env | nindent 12 }}
+            {{- include "proman.env" . | nindent 12 }}
           startupProbe:
             httpGet:
               path: /api/ready

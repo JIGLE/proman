@@ -5,6 +5,7 @@ import "@/lib/dev/patch-react-children-only";
 import "./globals.css";
 import { getNonce } from "@/lib/utils/csp-nonce";
 import UpdateBannerClient from "@/components/shared/update-banner-client";
+import { DevAuthProvider } from "@/components/shared/dev-auth";
 import { defaultLocale } from "@/lib/i18n/config";
 
 const plusJakartaSans = Plus_Jakarta_Sans({
@@ -36,9 +37,11 @@ export default async function RootLayout({
     >
       <head>{nonce && <meta name="csp-nonce" content={nonce} />}</head>
       <body className={`${plusJakartaSans.className} antialiased`}>
-        {/* Update banner (admin-only) */}
-        <UpdateBannerClient />
-        {children}
+        <DevAuthProvider>
+          {/* Update banner (admin-only) */}
+          <UpdateBannerClient />
+          {children}
+        </DevAuthProvider>
       </body>
     </html>
   );

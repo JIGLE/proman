@@ -14,11 +14,8 @@ ENV BUILD_TIME=${BUILD_TIME}
 
 WORKDIR /app
 
-# Install build dependencies required for native modules (better-sqlite3)
+# Install build dependencies required for native modules (better-sqlite3 used by ensure-sqlite.js)
 RUN apk add --no-cache python3 make g++ pkgconfig
-
-# Update npm to latest version to avoid deprecation notices
-RUN npm install -g npm@latest
 
 # Copy package files and prisma schema (needed for postinstall prisma generate)
 COPY package*.json ./
@@ -49,6 +46,31 @@ RUN DATABASE_URL="file:./build.db" \
 # Generate version.json
 RUN echo "{\"version\":\"${BUILD_VERSION}\",\"git_commit\":\"${GIT_COMMIT}\",\"build_time\":\"${BUILD_TIME}\",\"node_env\":\"production\"}" > public/version.json
 
+# ── Development stage (used by docker-compose --profile dev) ──────────────────
+FROM node:22-alpine AS development
+
+WORKDIR /app
+
+# Install build dependencies for native modules (better-sqlite3)
+RUN apk add --no-cache python3 make g++ pkgconfig
+
+# Copy package files and install all dependencies (including devDependencies)
+COPY package*.json ./
+COPY prisma ./prisma/
+COPY prisma.config.ts ./
+RUN npm install
+
+# Source code is mounted via docker-compose volumes, not COPY'd
+
+EXPOSE 3000
+
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+ENV NODE_ENV=development
+
+CMD ["npm", "run", "dev"]
+
+# ── Production runner stage ───────────────────────────────────────────────────
 FROM node:22-alpine AS runner
 
 # OCI image labels — TrueNAS SCALE reads these for "App Version" / "Version" display
@@ -84,9 +106,6 @@ COPY --from=builder --chown=nextjs:nextjs /app/package*.json ./
 COPY --from=builder --chown=nextjs:nextjs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nextjs /app/.next/static ./.next/static
 
-# Ensure runner has latest npm as well (fixes runtime npm warnings)
-RUN npm install -g npm@latest
-
 USER nextjs
 
 EXPOSE 3000
@@ -99,7 +118,7 @@ ENV HOSTNAME=0.0.0.0
 # "Running" even while the database is still being initialised.
 # NOTE: Use GET (-O /dev/null) not --spider (HEAD) — Next.js auto-generated
 # HEAD responses may not satisfy wget --spider's expectations.
-HEALTHCHECK --interval=10s --timeout=3s --start-period=15s --retries=3 \
+HEALTHCHECK --interval=10s --timeout=3s --start-period=60s --retries=3 \
   CMD wget -q -O /dev/null http://localhost:3000/api/ready || exit 1
 
 CMD ["sh", "-c", "npm run prestart && node server.js"]

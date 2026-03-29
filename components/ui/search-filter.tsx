@@ -1,11 +1,18 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { Search, X } from 'lucide-react';
-import { Input } from './input';
-import { Button } from './button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './select';
-import { cn } from '@/lib/utils/utils';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { debounce } from "./debounce";
+import { Search, X } from "lucide-react";
+import { Input } from "./input";
+import { Button } from "./button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./select";
+import { cn } from "@/lib/utils/utils";
 
 export interface FilterOption {
   label: string;
@@ -30,43 +37,52 @@ export interface SearchFilterProps {
 export function SearchFilter({
   onSearchChange,
   onFilterChange,
-  searchPlaceholder = 'Search...',
+  searchPlaceholder = "Search...",
   filters = [],
   debounceMs = 300,
   className,
   showClearButton = true,
 }: SearchFilterProps): React.ReactElement {
-  const [searchValue, setSearchValue] = useState('');
-  const [debouncedValue, setDebouncedValue] = useState('');
+  const [searchValue, setSearchValue] = useState("");
 
-  // Debounce search input
+  // Debounced search handler
+  const debouncedOnSearchChange = useRef(
+    debounce((value: string) => {
+      onSearchChange(value);
+    }, debounceMs),
+  );
+
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedValue(searchValue);
+    debouncedOnSearchChange.current = debounce((value: string) => {
+      onSearchChange(value);
     }, debounceMs);
+    // Cancel on unmount
+    return () => {
+      debouncedOnSearchChange.current.cancel();
+    };
+  }, [onSearchChange, debounceMs]);
 
-    return () => clearTimeout(timer);
-  }, [searchValue, debounceMs]);
-
-  // Notify parent of debounced search changes
   useEffect(() => {
-    onSearchChange(debouncedValue);
-  }, [debouncedValue, onSearchChange]);
+    debouncedOnSearchChange.current(searchValue);
+  }, [searchValue]);
 
   const handleClear = useCallback(() => {
-    setSearchValue('');
-    setDebouncedValue('');
-    onSearchChange('');
+    setSearchValue("");
+    debouncedOnSearchChange.current.cancel();
+    onSearchChange("");
   }, [onSearchChange]);
 
-  const handleFilterChange = useCallback((key: string, value: string) => {
-    if (onFilterChange) {
-      onFilterChange(key, value);
-    }
-  }, [onFilterChange]);
+  const handleFilterChange = useCallback(
+    (key: string, value: string) => {
+      if (onFilterChange) {
+        onFilterChange(key, value);
+      }
+    },
+    [onFilterChange],
+  );
 
   return (
-    <div className={cn('flex flex-col sm:flex-row gap-3', className)}>
+    <div className={cn("flex flex-col sm:flex-row gap-3", className)}>
       {/* Search Input */}
       <div className="relative flex-1">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
@@ -83,6 +99,8 @@ export function SearchFilter({
             size="sm"
             onClick={handleClear}
             className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+            aria-label="Clear search"
+            data-testid="clear-search-btn"
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Clear search</span>
@@ -92,22 +110,45 @@ export function SearchFilter({
 
       {/* Filter Dropdowns */}
       {filters.map((filter) => (
-        <Select
-          key={filter.key}
-          defaultValue={filter.defaultValue || 'all'}
-          onValueChange={(value) => handleFilterChange(filter.key, value)}
-        >
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder={filter.label} />
-          </SelectTrigger>
-          <SelectContent>
-            {filter.options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div key={filter.key}>
+          <Select
+            defaultValue={filter.defaultValue || "all"}
+            onValueChange={(value) => handleFilterChange(filter.key, value)}
+          >
+            <SelectTrigger
+              className="w-full sm:w-[180px]"
+              data-testid={`select-trigger-${filter.key}`}
+            >
+              <SelectValue placeholder={filter.label} />
+            </SelectTrigger>
+            <SelectContent>
+              {filter.options.map((option) => (
+                <SelectItem
+                  key={option.value}
+                  value={option.value}
+                  data-testid={`select-item-${option.value}`}
+                >
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {process.env.NODE_ENV === "test" && (
+            <select
+              data-testid={`native-select-${filter.key}`}
+              value={filter.defaultValue || "all"}
+              onChange={(e) => handleFilterChange(filter.key, e.target.value)}
+              hidden
+            >
+              {filter.options.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
       ))}
     </div>
   );

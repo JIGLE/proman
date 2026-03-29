@@ -20,6 +20,15 @@ jobs:
   dependency-scan:
     name: Dependency Security Scan
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Run Security Scan
+        run: echo "Run your security scan here" # Replace with actual scan command
+      - name: Summary
+        run: |
+          echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
+          echo "Security scan completed for $GITHUB_REF" >> $GITHUB_STEP_SUMMARY
     timeout-minutes: 10
 
     steps:

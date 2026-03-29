@@ -73,44 +73,69 @@ function SignInContent() {
 
             {/* Credentials login — only shown when demo login is enabled */}
             {isDemoEnabled && (
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const formData = new FormData(e.currentTarget);
-                  const browserLang =
-                    typeof navigator !== "undefined"
-                      ? navigator.language?.split("-")[0]
+              <>
+                <form
+                  id="demo-login-form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    const browserLang =
+                      typeof navigator !== "undefined"
+                        ? navigator.language?.split("-")[0]
+                        : "pt";
+                    const locale = ["pt", "en", "es"].includes(browserLang)
+                      ? browserLang
                       : "pt";
-                  const locale = ["pt", "en", "es"].includes(browserLang)
-                    ? browserLang
-                    : "pt";
-                  signIn("credentials", {
-                    email: formData.get("email"),
-                    password: formData.get("password"),
-                    callbackUrl: `/${locale}/overview`,
-                  });
-                }}
-                className="space-y-3"
-              >
-                <input
-                  name="email"
-                  type="email"
-                  className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none"
-                  placeholder="Email"
-                />
-                <input
-                  name="password"
-                  type="password"
-                  className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none"
-                  placeholder="Password"
-                />
-                <Button
-                  type="submit"
-                  className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white"
+                    signIn("credentials", {
+                      email: formData.get("email"),
+                      password: formData.get("password"),
+                      callbackUrl: `/${locale}/overview`,
+                    });
+                  }}
+                  className="space-y-3"
                 >
-                  Sign In
+                  <input
+                    name="email"
+                    type="email"
+                    className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none"
+                    placeholder="Email"
+                    defaultValue=""
+                  />
+                  <input
+                    name="password"
+                    type="password"
+                    className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none"
+                    placeholder="Password"
+                    defaultValue=""
+                  />
+                  <Button
+                    type="submit"
+                    className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Sign In
+                  </Button>
+                </form>
+                <Button
+                  type="button"
+                  className="w-full h-10 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={() => {
+                    const form = document.getElementById(
+                      "demo-login-form",
+                    ) as HTMLFormElement | null;
+                    if (form) {
+                      (
+                        form.elements.namedItem("email") as HTMLInputElement
+                      ).value = "demo@proman.local";
+                      (
+                        form.elements.namedItem("password") as HTMLInputElement
+                      ).value = "demo123";
+                      form.requestSubmit();
+                    }
+                  }}
+                >
+                  Demo Login
                 </Button>
-              </form>
+              </>
             )}
 
             <div className="relative my-6">
