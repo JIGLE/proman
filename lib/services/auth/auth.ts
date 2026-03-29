@@ -160,8 +160,7 @@ function createBaseAuthOptions(): NextAuthOptions {
         account?: unknown;
       }): Promise<JWT> {
         // If no user yet and dev auth is enabled, inject dev session
-        const t = token as JWT & { isDevAuth?: boolean };
-        if (!user && isDevAuthEnabled() && !t.isDevAuth) {
+        if (!user && isDevAuthEnabled() && !(token as any).isDevAuth) {
           const devSession = createDevSession();
           const t = token as JWT & {
             id?: string;
