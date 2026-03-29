@@ -180,11 +180,11 @@ jobs:
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
       - name: Set up kubectl (optional)
-        if: ${{ github.event.inputs.deploy_k8s == 'true' && github.event.inputs.dry_run != 'true' }}
+        if: ${{ ((github.event.inputs.deploy_k8s == 'true') || (github.event.client_payload && github.event.client_payload.deploy_k8s == 'true')) && ((github.event.inputs.dry_run != 'true') || (github.event.client_payload && github.event.client_payload.dry_run != 'true')) && secrets.KUBECONFIG != '' }}
         uses: azure/setup-kubectl@v5
 
       - name: Deploy to Kubernetes (optional)
-        if: ${{ github.event.inputs.deploy_k8s == 'true' && github.event.inputs.dry_run != 'true' }}
+        if: ${{ ((github.event.inputs.deploy_k8s == 'true') || (github.event.client_payload && github.event.client_payload.deploy_k8s == 'true')) && ((github.event.inputs.dry_run != 'true') || (github.event.client_payload && github.event.client_payload.dry_run != 'true')) && secrets.KUBECONFIG != '' }}
         env:
           KUBECONFIG: ${{ secrets.KUBECONFIG }}
           IMAGE: ${{ env.REGISTRY }}/${{ steps.vars.outputs.image_name_lower }}:${{ steps.vars.outputs.version }}
@@ -193,8 +193,8 @@ jobs:
           CONTAINER: ${{ github.event.inputs.kube_container }}
         run: |
           if [ -z "$KUBECONFIG" ]; then
-            echo "KUBECONFIG secret is not set. Set secret 'KUBECONFIG' containing kubeconfig content to enable cluster deploy." >&2
-            exit 1
+            echo "KUBECONFIG secret is not set. Skipping cluster deploy." >&2
+            exit 0
           fi
           echo "$KUBECONFIG" > kubeconfig
           chmod 600 kubeconfig
