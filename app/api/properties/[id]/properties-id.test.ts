@@ -45,17 +45,17 @@ vi.mock("@/lib/services/database", () => ({
 
 // Mock error handling
 vi.mock("@/lib/utils/error-handling", () => ({
-  createErrorResponse: (error, status, req) =>
+  createErrorResponse: (error: any, status: any, req: any) =>
     new Response(JSON.stringify({ error: error.message }), { status }),
-  createSuccessResponse: (data, status = 200) =>
+  createSuccessResponse: (data: any, status: any = 200) =>
     new Response(JSON.stringify(data), { status }),
-  withErrorHandler: (fn) => fn,
+  withErrorHandler: (fn: any) => fn,
 }));
 
 // Mock sanitize
 vi.mock("@/lib/utils/sanitize", () => ({
-  sanitizeForDatabase: (val) => val,
-  sanitizeNumber: (val, min, minBound, max) =>
+  sanitizeForDatabase: (val: any) => val,
+  sanitizeNumber: (val: any, min: any, minBound: any, max: any) =>
     Math.min(Math.max(val, min), max),
 }));
 

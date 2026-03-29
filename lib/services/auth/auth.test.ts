@@ -12,7 +12,10 @@ describe("auth options", () => {
     delete process.env.GOOGLE_CLIENT_SECRET;
     delete process.env.ENABLE_DEMO_LOGIN;
     // Set NODE_ENV to test to avoid database requirement checks
-    process.env.NODE_ENV = "test";
+    Object.defineProperty(process.env, "NODE_ENV", {
+      value: "test",
+      writable: true,
+    });
   });
 
   afterEach(() => {
@@ -57,7 +60,10 @@ describe("auth options", () => {
 
   it("includes credentials provider when ENABLE_DEMO_LOGIN=true", async () => {
     process.env.ENABLE_DEMO_LOGIN = "true";
-    process.env.NODE_ENV = "development";
+    Object.defineProperty(process.env, "NODE_ENV", {
+      value: "development",
+      writable: true,
+    });
 
     const mod = await import("@/lib/services/auth/auth");
     const { getAuthOptions } = mod as typeof import("@/lib/services/auth/auth");
@@ -68,7 +74,10 @@ describe("auth options", () => {
   });
 
   it("includes credentials provider in non-production environment", async () => {
-    process.env.NODE_ENV = "development";
+    Object.defineProperty(process.env, "NODE_ENV", {
+      value: "development",
+      writable: true,
+    });
 
     const mod = await import("@/lib/services/auth/auth");
     const { getAuthOptions } = mod as typeof import("@/lib/services/auth/auth");
@@ -119,7 +128,10 @@ describe("auth options", () => {
   it("includes Google OAuth when real credentials are provided", async () => {
     process.env.GOOGLE_CLIENT_ID = "real-client-id";
     process.env.GOOGLE_CLIENT_SECRET = "real-client-secret";
-    process.env.NODE_ENV = "development";
+    Object.defineProperty(process.env, "NODE_ENV", {
+      value: "development",
+      writable: true,
+    });
 
     const mod = await import("@/lib/services/auth/auth");
     const { getAuthOptions } = mod as typeof import("@/lib/services/auth/auth");

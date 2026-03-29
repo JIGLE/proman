@@ -56,18 +56,18 @@ vi.mock("@/lib/services/database", () => ({
 
 // Mock error handling
 vi.mock("@/lib/utils/error-handling", () => ({
-  createErrorResponse: (error, status) =>
+  createErrorResponse: (error: any, status: any) =>
     new Response(JSON.stringify({ error: error.message }), { status }),
-  createSuccessResponse: (data, status = 200) =>
+  createSuccessResponse: (data: any, status: any = 200) =>
     new Response(JSON.stringify(data), { status }),
-  withErrorHandler: (fn) => fn,
+  withErrorHandler: (fn: any) => fn,
 }));
 
 // Mock sanitize
 vi.mock("@/lib/utils/sanitize", () => ({
-  sanitizeForDatabase: (val) => val,
-  sanitizeEmail: (val) => val,
-  sanitizeNumber: (val, min, minBound) => Math.max(val, min),
+  sanitizeForDatabase: (val: any) => val,
+  sanitizeEmail: (val: any) => val,
+  sanitizeNumber: (val: any, min: any, minBound: any) => Math.max(val, min),
 }));
 
 describe("Tenants API - GET /api/tenants/[id]", () => {

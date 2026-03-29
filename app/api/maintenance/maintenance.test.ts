@@ -33,7 +33,7 @@ vi.mock("@/lib/config/data-mode", () => ({
 
 // Mock validation
 vi.mock("@/lib/utils/validation", () => ({
-  maintenanceSchema: { parse: (data) => data },
+  maintenanceSchema: { parse: (data: any) => data },
 }));
 
 describe("Maintenance API - List and Create", () => {

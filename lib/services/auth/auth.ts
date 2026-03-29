@@ -160,7 +160,8 @@ function createBaseAuthOptions(): NextAuthOptions {
         account?: unknown;
       }): Promise<JWT> {
         // If no user yet and dev auth is enabled, inject dev session
-        if (!user && isDevAuthEnabled() && !token.isDevAuth) {
+        const t = token as JWT & { isDevAuth?: boolean };
+        if (!user && isDevAuthEnabled() && !t.isDevAuth) {
           const devSession = createDevSession();
           const t = token as JWT & {
             id?: string;
@@ -168,13 +169,15 @@ function createBaseAuthOptions(): NextAuthOptions {
             email?: string;
             name?: string;
             picture?: string;
+            role?: string;
             isDevAuth?: boolean;
           };
           t.id = devSession.user.id;
           t.sub = devSession.user.id;
-          t.email = devSession.user.email;
-          t.name = devSession.user.name;
+          t.email = devSession.user.email ?? undefined;
+          t.name = devSession.user.name ?? undefined;
           t.picture = devSession.user.image ?? undefined;
+          t.role = devSession.user.role;
           t.isDevAuth = true;
           logger.debug("Dev session injected into JWT");
           return token;
@@ -187,6 +190,7 @@ function createBaseAuthOptions(): NextAuthOptions {
             email?: string;
             name?: string;
             picture?: string;
+            role?: string;
           };
           t.id = user.id;
           t.sub = user.id;

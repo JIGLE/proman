@@ -41,7 +41,7 @@ vi.mock("@/lib/services/database/database", () => ({
 // Mock validation
 vi.mock("@/lib/utils/validation", () => ({
   leaseSchema: {
-    parse: (data) => data,
+    parse: (data: any) => data,
   },
 }));
 

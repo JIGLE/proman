@@ -145,13 +145,13 @@ describe("Receipts API - Update Receipt", () => {
   it("should not allow amount changes", async () => {
     const originalAmount = 1200;
     const newAmount = 1300;
-    expect(originalAmount === newAmount).toBe(false);
+    expect((originalAmount as number) !== (newAmount as number)).toBe(true);
   });
 
   it("should not allow payment date changes", async () => {
     const originalDate = "2024-02-01";
     const newDate = "2024-02-02";
-    expect(originalDate === newDate).toBe(false);
+    expect((originalDate as string) !== (newDate as string)).toBe(true);
   });
 
   it("should allow notes updates", async () => {

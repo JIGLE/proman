@@ -97,7 +97,21 @@ jobs:
           GOOGLE_CLIENT_ID: release-placeholder
           GOOGLE_CLIENT_SECRET: release-placeholder
 
-      - name: Update package.json version
+      - name: Update package.json and package-lock.json version
+        run: |
+          npm version ${{ steps.version.outputs.new_version }} --no-git-tag-version
+          npm install --package-lock-only
+          git add package.json package-lock.json
+          git commit -m "chore(release): bump version to ${{ steps.version.outputs.new_version }}"
+          git tag ${{ steps.version.outputs.tag }}
+          git push origin HEAD:main --tags
+
+      - name: Trigger Deploy to GHCR
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          event-type: deploy-ghcr
+          client-payload: '{"version": "${{ steps.version.outputs.new_version }}"}'
         run: npm version ${{ steps.version.outputs.new_version }} --no-git-tag-version
 
       - name: Sync version across manifests
