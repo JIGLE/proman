@@ -108,7 +108,7 @@
     "@vitest/coverage-v8": "^4.1.1",
     "artillery": "^2.0.20",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "16.2.1",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-security": "^4.0.0",
     "husky": "^9.1.7",
@@ -119,7 +119,7 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^7.1.12",
-    "vitest": "^4.0.16"
+    "vitest": "^4.1.2"
   },
   "overrides": {
     "@opentelemetry/api": "1.4.1"
