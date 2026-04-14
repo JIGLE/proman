@@ -1,0 +1,29 @@
+# Build outputs
+.next/
+out/
+dist/
+build/
+coverage/
+
+# Dependencies
+node_modules/
+
+# Generated
+prisma/migrations/
+lib/generated/
+*.tsbuildinfo
+
+# Package manager
+package-lock.json
+pnpm-lock.yaml
+
+# Static assets
+public/
+
+# Helm charts
+helm/
+release-charts/
+
+# Database
+*.db
+*.db-journal
