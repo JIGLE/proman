@@ -1,5 +1,21 @@
 # Releases
 
+- Date: 2026-04-14
+  - Version: v1.7.1
+  - Image: `ghcr.io/jigle/proman:1.7.1`
+  - Notes: Production-grade quality pass — security, build stability, CI alignment, testing, and consistency
+    - **Security**: Upgraded Next.js 16.2.1→16.2.3 (fixes high-severity DoS GHSA-q4gf-8mx6-v5v3); added @hono/node-server ≥1.19.13 override; `npm audit` reports 0 vulnerabilities
+    - **Build Stability**: Added `serverExternalPackages` for redis and puppeteer to prevent Turbopack bundle failures on optional deps
+    - **TypeScript**: Fixed 9 type errors (EmptyStateIllustration `entityType` alias prop); replaced unsafe `any` casts with proper typed casts in auth.ts and app-context.tsx
+    - **ESLint**: Resolved 24 warnings across 14 files — unused imports, unused parameters, explicit any types; CI enforces `--max-warnings=0`
+    - **CI/CD**: Fixed duplicate YAML `steps` blocks silently overriding in ci.yml and security-scan.yml; added Prettier format check to CI and production pipelines; aligned Node 22 across all workflows
+    - **Formatting**: Added `.prettierrc` and `.prettierignore`; formatted 413 files for consistent style; fixed YAML indentation in production.yml
+    - **Testing**: Added 36 payment service tests (singleton, Stripe integration, webhooks, transactions); total: 52 test files, 541 tests passing
+    - **Documentation**: Corrected README database type (PostgreSQL→SQLite), version (1.4.0→1.7.1), test counts (37/86→52/541); added Demo Mode section
+    - **Cleanup**: Deleted 5 stale output files; moved 8 analysis docs to docs/archive/; updated .gitignore
+    - **i18n**: Verified 460 keys × 3 locales (pt, en, es) all in sync
+    - **Verification**: `tsc --noEmit` clean, `eslint --max-warnings=0` clean, `prettier --check .` clean, 52/52 test files passing (541 tests)
+
 - Date: 2026-03-11
   - Version: main@c7f2d65 (post-v1.4.0 stabilization)
   - Image: `ghcr.io/jigle/proman:1.4.0` (no image tag change)
