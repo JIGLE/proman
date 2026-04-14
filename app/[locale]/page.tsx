@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { getTranslations } from "next-intl/server";
 
+import pkg from "@/package.json";
+
 interface Props {
   params: Promise<{ locale: string }>;
 }
@@ -113,7 +115,8 @@ export default async function LandingPage({ params }: Props) {
       {/* Footer */}
       <footer className="py-8 px-4 border-t border-zinc-800 mt-auto">
         <div className="max-w-6xl mx-auto text-center text-sm text-zinc-500">
-          {tFooter("copyright", { year: new Date().getFullYear().toString() })}
+          <p>{tFooter("copyright", { year: new Date().getFullYear().toString() })}</p>
+          <p className="mt-1 text-zinc-600">v{pkg.version}</p>
         </div>
       </footer>
     </div>
