@@ -7,7 +7,7 @@
 
 A modern, self-hosted property management platform built for landlords and property managers in **Portugal and Spain**. Track properties, tenants, leases, receipts, expenses, maintenance, and correspondence with Iberian-focused tax and legal compliance tooling.
 
-> **v1.4.0** — Production-ready baseline for the 2026 Portuguese and Spanish rental market. See [RELEASES.md](RELEASES.md) for the full changelog.
+> **v1.7.0** — Production-ready baseline for the 2026 Portuguese and Spanish rental market. See [RELEASES.md](RELEASES.md) for the full changelog.
 
 ## Features
 
@@ -43,17 +43,17 @@ A modern, self-hosted property management platform built for landlords and prope
 
 ## Tech Stack
 
-| Layer      | Technology                                 |
-| ---------- | ------------------------------------------ |
-| Framework  | Next.js 16 (App Router)                    |
-| Language   | TypeScript (strict)                        |
-| Database   | Prisma ORM + **PostgreSQL**                |
-| Auth       | NextAuth.js (Google OAuth + Credentials)   |
-| UI         | shadcn/ui + Tailwind CSS v4 + Radix UI     |
-| Validation | Zod                                        |
-| Email      | SendGrid                                   |
-| Testing    | Vitest (unit) + Playwright (E2E)           |
-| Deployment | Docker / Kubernetes / Helm / TrueNAS SCALE |
+| Layer      | Technology                                   |
+| ---------- | -------------------------------------------- |
+| Framework  | Next.js 16 (App Router)                      |
+| Language   | TypeScript (strict)                          |
+| Database   | Prisma ORM + **SQLite** (via better-sqlite3) |
+| Auth       | NextAuth.js (Google OAuth + Credentials)     |
+| UI         | shadcn/ui + Tailwind CSS v4 + Radix UI       |
+| Validation | Zod                                          |
+| Email      | SendGrid                                     |
+| Testing    | Vitest (unit) + Playwright (E2E)             |
+| Deployment | Docker / Kubernetes / Helm / TrueNAS SCALE   |
 
 ## Quick Start
 
@@ -73,8 +73,9 @@ Open http://localhost:3000
 # Build and run locally
 docker build -t proman:local .
 docker run --rm -p 3000:3000 \
-  -e DATABASE_URL=postgresql://user:pass@host:5432/proman \
+  -e DATABASE_URL=file:/data/proman.sqlite \
   -e NEXTAUTH_SECRET=your-secret \
+  -v proman-data:/data \
   proman:local
 
 # Or use Docker Compose
@@ -92,7 +93,7 @@ Proman ships a Helm chart at [`helm/proman/`](helm/proman/) targeting the TrueNA
 helm install proman ./helm/proman \
   -f helm/proman/values-truenas.yaml \
   --namespace ix-app \
-  --set image.tag=1.4.0
+  --set image.tag=1.7.0
 ```
 
 ### Configuration
@@ -113,7 +114,7 @@ Replace `<POOL_NAME>` with your TrueNAS pool name before deploying, or set it vi
 ## Testing
 
 ```bash
-npm test                # Unit tests (Vitest) — current CI baseline: 37 files, 86 tests
+npm test                # Unit tests (Vitest) — 52 files, 541 tests
 npm run test:coverage   # With coverage report
 npm run test:e2e        # E2E tests (Playwright)
 npm run lint            # ESLint
@@ -148,7 +149,7 @@ lib/
   tax/                → SAF-T PT generation
   utils/              → API client, PII encryption, logger, env validation
 prisma/
-  schema.prisma       → 27 models, 23 enums (PostgreSQL)
+  schema.prisma       → 27 models, 23 enums (SQLite)
   migrations/         → All database migrations
 k8s/                  → Deployment, Service, CronJob manifests
 helm/proman/          → Helm chart with TrueNAS SCALE values
@@ -160,7 +161,7 @@ helm/proman/          → Helm chart with TrueNAS SCALE values
 
 | Variable             | Required    | Description                                     |
 | -------------------- | ----------- | ----------------------------------------------- |
-| `DATABASE_URL`       | ✅ Yes      | PostgreSQL connection string                    |
+| `DATABASE_URL`       | ✅ Yes      | SQLite path: `file:/data/proman.sqlite`         |
 | `NEXTAUTH_URL`       | ✅ Yes      | Public URL of the application                   |
 | `NEXTAUTH_SECRET`    | ✅ Yes      | Session signing secret (min 32 chars)           |
 | `INIT_SECRET`        | Recommended | Protects DB init and debug endpoints            |
@@ -207,9 +208,23 @@ kubectl apply -f k8s/cronjob-notifications.yaml
 
 The CronJob runs at 08:00 UTC and authenticates with `CRON_SECRET`.
 
+## Demo Mode
+
+ProMan includes a public demo mode for exploring the app without authentication:
+
+```
+https://your-domain.com/demo
+```
+
+- Uses read-only mock data (5 properties, 4 tenants, 4 leases)
+- No real user data is exposed
+- Mutations return simulated success without database writes
+- Settings and debug routes are blocked
+- Session expires after 1 hour
+
 ## Database
 
-ProMan uses **PostgreSQL** via Prisma ORM. Run migrations with:
+ProMan uses **SQLite** via Prisma ORM with the `better-sqlite3` adapter. Set up with:
 
 ```bash
 npx prisma migrate deploy   # apply all pending migrations
