@@ -111,7 +111,7 @@
     "@vitest/coverage-v8": "^4.1.1",
     "artillery": "^2.0.20",
     "eslint": "^9",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "16.2.3",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-security": "^4.0.0",
     "husky": "^9.1.7",
