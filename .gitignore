@@ -111,6 +111,12 @@ proman_image.tar
 # 12. Temporary & Local Files
 # ===========================================
 verify-output.txt
+eslint-output.txt
+test-output.txt
+test-results.txt
+final-test.txt
+*-output.txt
+*-results.txt
 /release-charts-local/
 /release-charts-temp/
 /tmp-release-charts/
