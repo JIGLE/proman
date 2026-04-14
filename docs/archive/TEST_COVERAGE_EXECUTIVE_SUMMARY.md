@@ -80,9 +80,7 @@ describe("PaymentService", () => {
 
   it("should handle Stripe API failure", async () => {
     // Mock Stripe to fail
-    vi.mocked(stripe.paymentIntents.create).mockRejectedOnce(
-      new Error("Stripe API error"),
-    );
+    vi.mocked(stripe.paymentIntents.create).mockRejectedOnce(new Error("Stripe API error"));
 
     const result = await paymentService.createPaymentIntent({
       /* ... */
@@ -258,11 +256,9 @@ describe("POST /api/webhooks/stripe", () => {
       payload: JSON.stringify(event),
     });
 
-    const response = await request.post(
-      "/api/webhooks/stripe",
-      JSON.stringify(event),
-      { headers: { "stripe-signature": signature } },
-    );
+    const response = await request.post("/api/webhooks/stripe", JSON.stringify(event), {
+      headers: { "stripe-signature": signature },
+    });
 
     expect(response.status).toBe(200);
 
@@ -276,11 +272,9 @@ describe("POST /api/webhooks/stripe", () => {
       /* ... */
     };
 
-    const response = await request.post(
-      "/api/webhooks/stripe",
-      JSON.stringify(event),
-      { headers: { "stripe-signature": "invalid-signature" } },
-    );
+    const response = await request.post("/api/webhooks/stripe", JSON.stringify(event), {
+      headers: { "stripe-signature": "invalid-signature" },
+    });
 
     expect(response.status).toBe(401);
   });
