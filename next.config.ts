@@ -6,6 +6,7 @@ const withNextIntl = createNextIntlPlugin("./lib/i18n/config.ts");
 const nextConfig: NextConfig = {
   compress: true,
   output: "standalone",
+  serverExternalPackages: ["redis", "puppeteer"],
   experimental: {
     optimizePackageImports: ["lucide-react", "@radix-ui/react-slot"],
   },
@@ -22,7 +23,7 @@ const nextConfig: NextConfig = {
         // Apply to all routes
         source: "/(.*)",
         headers: [
-          // CSP is handled dynamically by proxy.ts middleware (with nonces for scripts)
+          // CSP is handled dynamically by proxy.ts (with nonces for scripts)
           // Only set non-CSP security headers here as fallback
           {
             key: "X-Frame-Options",
