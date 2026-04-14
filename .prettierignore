@@ -24,6 +24,9 @@ public/
 helm/
 release-charts/
 
+# Archived workflows (non-standard YAML)
+docs/archived-workflows/
+
 # Database
 *.db
 *.db-journal

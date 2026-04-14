@@ -12,7 +12,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  NODE_VERSION: '22'
+  NODE_VERSION: "22"
 
 jobs:
   lint-type:
@@ -26,7 +26,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -51,7 +51,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -79,7 +79,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Restore Next.js build cache
         uses: actions/cache@v5
@@ -102,9 +102,10 @@ jobs:
           NEXTAUTH_SECRET: ci-test-secret-minimum-32-characters
           GOOGLE_CLIENT_ID: ci-placeholder
           GOOGLE_CLIENT_SECRET: ci-placeholder
-        - name: Summary
-          run: |
-            echo "## Production Deployment" >> $GITHUB_STEP_SUMMARY
-            echo "Deployed commit $GITHUB_SHA to production environment." >> $GITHUB_STEP_SUMMARY
-      environment:
-        name: production
+
+      - name: Summary
+        run: |
+          echo "## Production Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "Deployed commit $GITHUB_SHA to production environment." >> $GITHUB_STEP_SUMMARY
+    environment:
+      name: production
