@@ -80,7 +80,7 @@ jobs:
           echo "tag=v${NEW_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
-        run: npm ci || (npm install --package-lock-only && npm ci)
+        run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
 
       - name: Setup Helm
         uses: azure/setup-helm@v5
