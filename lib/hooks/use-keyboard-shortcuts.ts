@@ -21,7 +21,7 @@ interface UseKeyboardShortcutsOptions {
 
 /**
  * Hook for managing keyboard shortcuts
- * 
+ *
  * @example
  * useKeyboardShortcuts({
  *   shortcuts: [
@@ -76,7 +76,7 @@ export function useKeyboardShortcuts({
         }
       }
     },
-    [enabled, preventDefault]
+    [enabled, preventDefault],
   );
 
   useEffect(() => {
@@ -101,14 +101,12 @@ export function useNavigationShortcuts(onNavigate: (tabId: string) => void) {
     "9": "settings",
   };
 
-  const shortcuts: KeyboardShortcut[] = Object.entries(navigationMap).map(
-    ([key, tabId]) => ({
-      key,
-      ctrl: true,
-      action: () => onNavigate(tabId),
-      description: `Go to ${tabId}`,
-    })
-  );
+  const shortcuts: KeyboardShortcut[] = Object.entries(navigationMap).map(([key, tabId]) => ({
+    key,
+    ctrl: true,
+    action: () => onNavigate(tabId),
+    description: `Go to ${tabId}`,
+  }));
 
   // Add escape to close modals (handled separately)
   shortcuts.push({
@@ -151,10 +149,10 @@ export function useCloseModals(onClose: () => void) {
  */
 export function formatShortcut(shortcut: KeyboardShortcut): string {
   const parts: string[] = [];
-  
+
   // Use ⌘ for Mac, Ctrl for others
   const isMac = typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
-  
+
   if (shortcut.ctrl || shortcut.meta) {
     parts.push(isMac ? "⌘" : "Ctrl");
   }
@@ -164,7 +162,7 @@ export function formatShortcut(shortcut: KeyboardShortcut): string {
   if (shortcut.shift) {
     parts.push("⇧");
   }
-  
+
   // Format key nicely
   let keyDisplay = shortcut.key;
   if (shortcut.key === "Escape") keyDisplay = "Esc";
@@ -173,16 +171,19 @@ export function formatShortcut(shortcut: KeyboardShortcut): string {
   if (shortcut.key === "ArrowDown") keyDisplay = "↓";
   if (shortcut.key === "ArrowLeft") keyDisplay = "←";
   if (shortcut.key === "ArrowRight") keyDisplay = "→";
-  
+
   parts.push(keyDisplay.toUpperCase());
-  
+
   return parts.join(isMac ? "" : "+");
 }
 
 /**
  * Get all available shortcuts for help display
  */
-export function getAvailableShortcuts(): { category: string; shortcuts: { keys: string; description: string }[] }[] {
+export function getAvailableShortcuts(): {
+  category: string;
+  shortcuts: { keys: string; description: string }[];
+}[] {
   const isMac = typeof navigator !== "undefined" && /Mac|iPod|iPhone|iPad/.test(navigator.platform);
   const mod = isMac ? "⌘" : "Ctrl+";
 

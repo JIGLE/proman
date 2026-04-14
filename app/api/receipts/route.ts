@@ -1,11 +1,16 @@
-import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { receiptService } from '@/lib/services/database';
-import { sanitizeForDatabase, sanitizeNumber } from '@/lib/utils/sanitize';
-import { getPaginationFromRequest, createPaginatedResponse } from '@/lib/utils/pagination';
-import { getPrismaClient } from '@/lib/services/database/database';
-import { z } from 'zod';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { receiptService } from "@/lib/services/database";
+import { sanitizeForDatabase, sanitizeNumber } from "@/lib/utils/sanitize";
+import { getPaginationFromRequest, createPaginatedResponse } from "@/lib/utils/pagination";
+import { getPrismaClient } from "@/lib/services/database/database";
+import { z } from "zod";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 
 // Validation schemas
 const createReceiptSchema = z.object({
@@ -13,8 +18,8 @@ const createReceiptSchema = z.object({
   propertyId: z.string().min(1),
   amount: z.number().min(0.01),
   date: z.string().datetime(),
-  type: z.enum(['rent', 'deposit', 'maintenance', 'other']),
-  status: z.enum(['paid', 'pending']).default('paid'),
+  type: z.enum(["rent", "deposit", "maintenance", "other"]),
+  status: z.enum(["paid", "pending"]).default("paid"),
   description: z.string().max(500).optional(),
 });
 
@@ -22,6 +27,9 @@ const _updateReceiptSchema = createReceiptSchema.partial();
 
 // GET /api/receipts - Get all receipts for the authenticated user (with pagination)
 async function handleGet(request: NextRequest): Promise<Response> {
+  const demo = handleDemoGet(request, "receipts");
+  if (demo.response) return demo.response;
+
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -30,7 +38,7 @@ async function handleGet(request: NextRequest): Promise<Response> {
   try {
     // Check if pagination is requested
     const url = new URL(request.url);
-    const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
+    const usePagination = url.searchParams.has("page") || url.searchParams.has("limit");
 
     if (usePagination) {
       // Paginated response
@@ -42,7 +50,7 @@ async function handleGet(request: NextRequest): Promise<Response> {
           where: { userId },
           skip: pagination.skip,
           take: pagination.limit,
-          orderBy: { date: 'desc' },
+          orderBy: { date: "desc" },
         }),
         prisma.receipt.count({ where: { userId } }),
       ]);
@@ -60,6 +68,9 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
 // POST /api/receipts - Create a new receipt
 async function handlePost(request: NextRequest): Promise<Response> {
+  const demo = handleDemoMutation(request, "receipts");
+  if (demo.response) return demo.response;
+
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -85,9 +96,9 @@ async function handlePost(request: NextRequest): Promise<Response> {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
-        request
+        request,
       );
     }
     return createErrorResponse(error as Error, 500, request);

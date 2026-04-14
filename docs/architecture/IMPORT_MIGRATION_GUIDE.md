@@ -10,6 +10,7 @@ This guide documents all import path changes made during the file organization p
 ## Phase 1: Documentation & Core Files
 
 ### Documentation Moves (No Import Impact)
+
 - ✅ `RELEASES.md` → `docs/releases/RELEASES.md`
 - ✅ `RELEASE_NOTES_*.md` → `docs/releases/`
 - ✅ `TRUENAS_DEPLOYMENT.md` → `docs/deployment/`
@@ -21,18 +22,21 @@ This guide documents all import path changes made during the file organization p
 ### i18n Configuration Changes
 
 **OLD (Removed):**
+
 ```typescript
-import { locales, defaultLocale } from '@/i18n';
+import { locales, defaultLocale } from "@/i18n";
 ```
 
 **NEW:**
+
 ```typescript
-import { locales, defaultLocale } from '@/lib/i18n/config';
+import { locales, defaultLocale } from "@/lib/i18n/config";
 // OR
-import { locales, defaultLocale } from './lib/i18n/config'; // relative
+import { locales, defaultLocale } from "./lib/i18n/config"; // relative
 ```
 
 **Affected Files:**
+
 - `lib/i18n.ts` - Updated ✅
 - `middleware.ts` (formerly proxy.ts) - Already correct ✅
 
@@ -41,14 +45,16 @@ import { locales, defaultLocale } from './lib/i18n/config'; // relative
 **Note**: Next.js 16 uses proxy.ts, not middleware.ts
 
 **CORRECT (Next.js 16):**
+
 ```typescript
 // proxy.ts
 export function proxy(request: NextRequest) { ... }
 ```
 
 **DEPRECATED:**
+
 ```typescript
-// middleware.ts  
+// middleware.ts
 export function middleware(request: NextRequest) { ... }
 ```
 
@@ -65,124 +71,143 @@ export function middleware(request: NextRequest) { ... }
 #### Properties
 
 **OLD:**
+
 ```typescript
-import { PropertiesView } from '@/components/properties-view';
+import { PropertiesView } from "@/components/properties-view";
 ```
 
 **NEW:**
+
 ```typescript
-import { PropertiesView } from '@/components/features/property/property-list';
+import { PropertiesView } from "@/components/features/property/property-list";
 ```
 
 #### Tenants
 
 **OLD:**
+
 ```typescript
-import { TenantsView } from '@/components/tenants-view';
+import { TenantsView } from "@/components/tenants-view";
 ```
 
 **NEW:**
+
 ```typescript
-import { TenantsView } from '@/components/features/tenant/tenants-view';
+import { TenantsView } from "@/components/features/tenant/tenants-view";
 ```
 
 #### Leases
 
 **OLD:**
+
 ```typescript
-import { LeasesView } from '@/components/leases-view';
+import { LeasesView } from "@/components/leases-view";
 ```
 
 **NEW:**
+
 ```typescript
-import { LeasesView } from '@/components/features/lease/leases-view';
+import { LeasesView } from "@/components/features/lease/leases-view";
 ```
 
 #### Financials
 
 **OLD:**
+
 ```typescript
-import { FinancialsView } from '@/components/financials-view';
-import { PaymentMatrixView } from '@/components/payment-matrix-view';
-import { ReceiptsView } from '@/components/receipts-view';
+import { FinancialsView } from "@/components/financials-view";
+import { PaymentMatrixView } from "@/components/payment-matrix-view";
+import { ReceiptsView } from "@/components/receipts-view";
 ```
 
 **NEW:**
+
 ```typescript
-import { FinancialsView } from '@/components/features/financial/financials-view';
-import { PaymentMatrixView } from '@/components/features/financial/payment-matrix-view';
-import { ReceiptsView } from '@/components/features/financial/receipts-view';
+import { FinancialsView } from "@/components/features/financial/financials-view";
+import { PaymentMatrixView } from "@/components/features/financial/payment-matrix-view";
+import { ReceiptsView } from "@/components/features/financial/receipts-view";
 ```
 
 #### Dashboard & Overview
 
 **OLD:**
+
 ```typescript
-import { OverviewView } from '@/components/overview-view';
+import { OverviewView } from "@/components/overview-view";
 ```
 
 **NEW:**
+
 ```typescript
-import { OverviewView } from '@/components/features/dashboard/overview-view';
+import { OverviewView } from "@/components/features/dashboard/overview-view";
 ```
 
 #### Maintenance
 
 **OLD:**
+
 ```typescript
-import { MaintenanceView } from '@/components/maintenance-view';
+import { MaintenanceView } from "@/components/maintenance-view";
 ```
 
 **NEW:**
+
 ```typescript
-import { MaintenanceView } from '@/components/features/maintenance/maintenance-view';
+import { MaintenanceView } from "@/components/features/maintenance/maintenance-view";
 ```
 
 #### Owners
 
 **OLD:**
+
 ```typescript
-import { OwnersView } from '@/components/owners-view';
+import { OwnersView } from "@/components/owners-view";
 ```
 
 **NEW:**
+
 ```typescript
-import { OwnersView } from '@/components/features/owner/owners-view';
+import { OwnersView } from "@/components/features/owner/owners-view";
 ```
 
 #### Correspondence
 
 **OLD:**
+
 ```typescript
-import { CorrespondenceView } from '@/components/correspondence-view';
+import { CorrespondenceView } from "@/components/correspondence-view";
 ```
 
 **NEW:**
+
 ```typescript
-import { CorrespondenceView } from '@/components/features/correspondence/correspondence-view';
+import { CorrespondenceView } from "@/components/features/correspondence/correspondence-view";
 ```
 
 #### Shared Components
 
 **OLD:**
+
 ```typescript
-import { ErrorBoundary } from '@/components/error-boundary';
-import { VersionBadge } from '@/components/version-badge';
-import { ClientProviders } from '@/components/client-providers';
-import { Sidebar } from '@/components/sidebar';
+import { ErrorBoundary } from "@/components/error-boundary";
+import { VersionBadge } from "@/components/version-badge";
+import { ClientProviders } from "@/components/client-providers";
+import { Sidebar } from "@/components/sidebar";
 ```
 
 **NEW:**
+
 ```typescript
-import { ErrorBoundary } from '@/components/shared/error-boundary';
-import { VersionBadge } from '@/components/shared/version-badge';
-import { ClientProviders } from '@/components/shared/client-providers';
-import { Sidebar } from '@/components/layouts/sidebar';
+import { ErrorBoundary } from "@/components/shared/error-boundary";
+import { VersionBadge } from "@/components/shared/version-badge";
+import { ClientProviders } from "@/components/shared/client-providers";
+import { Sidebar } from "@/components/layouts/sidebar";
 ```
 
 ### Files to be Removed
 
 **Component Re-exports** (will be deleted):
+
 - `components/properties-view.tsx`
 - `components/tenants-view.tsx`
 - `components/leases-view.tsx`
@@ -209,39 +234,43 @@ import { Sidebar } from '@/components/layouts/sidebar';
 After adding enhanced path aliases to tsconfig.json:
 
 **Shorter UI Component Imports:**
+
 ```typescript
 // OLD
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 
 // NEW (with @/ui/* alias)
-import { Button } from '@/ui/button';
+import { Button } from "@/ui/button";
 ```
 
 **Feature Component Imports:**
+
 ```typescript
 // OLD
-import { PropertyList } from '@/components/features/property/property-list';
+import { PropertyList } from "@/components/features/property/property-list";
 
 // NEW (with @/features/* alias)
-import { PropertyList } from '@/features/property/property-list';
+import { PropertyList } from "@/features/property/property-list";
 ```
 
 **Service Imports:**
+
 ```typescript
 // OLD
-import { getPrismaClient } from '@/lib/services/database/database';
+import { getPrismaClient } from "@/lib/services/database/database";
 
 // NEW (with @/services/* alias)
-import { getPrismaClient } from '@/services/database/database';
+import { getPrismaClient } from "@/services/database/database";
 ```
 
 **Hook Imports:**
+
 ```typescript
 // OLD
-import { useFormDialog } from '@/lib/hooks/use-form-dialog';
+import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 
 // NEW (with @/hooks/* alias)
-import { useFormDialog } from '@/hooks/use-form-dialog';
+import { useFormDialog } from "@/hooks/use-form-dialog";
 ```
 
 ### Planned tsconfig.json Updates
@@ -268,6 +297,7 @@ import { useFormDialog } from '@/hooks/use-form-dialog';
 ### Financial Routes
 
 **OLD:**
+
 ```typescript
 // app/api/invoices/route.ts
 // app/api/payments/route.ts
@@ -275,6 +305,7 @@ import { useFormDialog } from '@/hooks/use-form-dialog';
 ```
 
 **NEW:**
+
 ```typescript
 // app/api/financial/invoices/route.ts
 // app/api/financial/payments/route.ts
@@ -284,12 +315,14 @@ import { useFormDialog } from '@/hooks/use-form-dialog';
 ### Property Routes
 
 **OLD:**
+
 ```typescript
 // app/api/properties/route.ts
 // app/api/units/route.ts
 ```
 
 **NEW:**
+
 ```typescript
 // app/api/property/properties/route.ts
 // app/api/property/units/route.ts
@@ -298,12 +331,14 @@ import { useFormDialog } from '@/hooks/use-form-dialog';
 ### Tenant Routes
 
 **OLD:**
+
 ```typescript
 // app/api/tenants/route.ts
 // app/api/leases/route.ts
 ```
 
 **NEW:**
+
 ```typescript
 // app/api/tenant/tenants/route.ts
 // app/api/tenant/leases/route.ts
@@ -312,12 +347,14 @@ import { useFormDialog } from '@/hooks/use-form-dialog';
 ### Operations Routes
 
 **OLD:**
+
 ```typescript
 // app/api/maintenance/route.ts
 // app/api/correspondence/route.ts
 ```
 
 **NEW:**
+
 ```typescript
 // app/api/operations/maintenance/route.ts
 // app/api/operations/correspondence/route.ts
@@ -334,22 +371,25 @@ import { useFormDialog } from '@/hooks/use-form-dialog';
 **Pattern**: Update test imports to use `@/` aliases consistently
 
 **OLD:**
+
 ```typescript
 // tests/ui/button.test.tsx
-import { Button } from '../../components/ui/button';
+import { Button } from "../../components/ui/button";
 ```
 
 **NEW:**
+
 ```typescript
 // components/ui/button.test.tsx (co-located)
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 // OR with new alias
-import { Button } from '@/ui/button';
+import { Button } from "@/ui/button";
 ```
 
 ### Test File Moves
 
 **OLD Location:**
+
 ```
 tests/
   ui/
@@ -361,6 +401,7 @@ tests/
 ```
 
 **NEW Location (Co-located):**
+
 ```
 components/
   ui/
@@ -385,18 +426,21 @@ lib/
 **After adding index.ts to feature directories:**
 
 **OLD:**
+
 ```typescript
-import { PropertyList } from '@/components/features/property/property-list';
-import { PropertyForm } from '@/components/features/property/property-form';
-import { PropertyDetail } from '@/components/features/property/property-detail';
+import { PropertyList } from "@/components/features/property/property-list";
+import { PropertyForm } from "@/components/features/property/property-form";
+import { PropertyDetail } from "@/components/features/property/property-detail";
 ```
 
 **NEW:**
+
 ```typescript
-import { PropertyList, PropertyForm, PropertyDetail } from '@/features/property';
+import { PropertyList, PropertyForm, PropertyDetail } from "@/features/property";
 ```
 
 **Barrel Export Files to be Created:**
+
 - `components/features/property/index.ts`
 - `components/features/tenant/index.ts`
 - `components/features/lease/index.ts`
@@ -427,6 +471,7 @@ npx jscodeshift -t scripts/codemods/update-component-imports.ts **/*.{ts,tsx}
 ### Manual Review Required
 
 After automated updates:
+
 1. Run `npm run type-check` to catch any import errors
 2. Run `npm run build` to verify build succeeds
 3. Run `npm test` to ensure tests still pass
@@ -435,6 +480,7 @@ After automated updates:
 ### Rollback Plan
 
 Each phase is committed separately:
+
 - Phase 1 commit: Documentation + i18n + middleware
 - Phase 2 commit: Legacy re-exports removal
 - Phase 3 commit: Enhanced paths + barrel exports + API reorganization
@@ -448,19 +494,22 @@ Use `git reset --hard <commit-hash>` to rollback to any phase.
 ### Issue: Module Not Found Error
 
 **Error:**
+
 ```
 Module not found: Can't resolve '@/components/properties-view'
 ```
 
 **Solution:**
 Update import to use direct path:
+
 ```typescript
-import { PropertiesView } from '@/components/features/property/property-list';
+import { PropertiesView } from "@/components/features/property/property-list";
 ```
 
 ### Issue: Circular Dependency
 
 **Error:**
+
 ```
 Circular dependency detected
 ```
@@ -471,14 +520,16 @@ Check barrel exports - avoid re-exporting from index.ts files that import each o
 ### Issue: Test Import Path Not Found
 
 **Error:**
+
 ```
 Cannot find module '../../components/ui/button'
 ```
 
 **Solution:**
 Update to use path alias:
+
 ```typescript
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
 ```
 
 ---
@@ -494,6 +545,7 @@ import { Button } from '@/components/ui/button';
 ## Questions?
 
 Contact the development team via:
+
 - Slack: #proman-dev
 - Email: dev-team@example.com
 

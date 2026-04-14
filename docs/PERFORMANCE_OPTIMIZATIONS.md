@@ -1,6 +1,7 @@
 # Performance Optimizations - Week 1 Implementation
 
 ## Date: February 4, 2026
+
 ## Status: ✅ Complete
 
 ---
@@ -20,6 +21,7 @@ This document details the performance optimizations implemented in Week 1 of the
 #### Indexes Added:
 
 **Properties Table**:
+
 ```prisma
 @@index([userId])
 @@index([status])
@@ -27,6 +29,7 @@ This document details the performance optimizations implemented in Week 1 of the
 ```
 
 **Tenants Table**:
+
 ```prisma
 @@index([userId])
 @@index([propertyId])
@@ -35,6 +38,7 @@ This document details the performance optimizations implemented in Week 1 of the
 ```
 
 **Receipts Table**:
+
 ```prisma
 @@index([userId])
 @@index([propertyId])
@@ -45,6 +49,7 @@ This document details the performance optimizations implemented in Week 1 of the
 ```
 
 **Expenses Table**:
+
 ```prisma
 @@index([userId])
 @@index([propertyId])
@@ -53,6 +58,7 @@ This document details the performance optimizations implemented in Week 1 of the
 ```
 
 **Maintenance Tickets Table**:
+
 ```prisma
 @@index([userId])
 @@index([propertyId])
@@ -62,6 +68,7 @@ This document details the performance optimizations implemented in Week 1 of the
 ```
 
 **Expected Performance Gains**:
+
 - Property listing: ~50% faster
 - Overdue tenant queries: ~80% faster
 - Revenue insights: ~90% faster (combined with N+1 fix)
@@ -76,19 +83,23 @@ This document details the performance optimizations implemented in Week 1 of the
 **Issue**: Revenue trend calculation executed 6 separate database queries (one per month)
 
 **Before** (600ms+ latency):
+
 ```typescript
 for (let i = 5; i >= 0; i--) {
-  const receipts = await prisma.receipt.findMany({ /* filter by month */ });
+  const receipts = await prisma.receipt.findMany({
+    /* filter by month */
+  });
   // Process receipts...
 }
 ```
 
 **After** (<100ms latency):
+
 ```typescript
 // Single query for ALL 6 months
 const allRecentReceipts = await prisma.receipt.findMany({
   where: {
-    status: 'paid',
+    status: "paid",
     date: { gte: sixMonthsAgo, lte: now },
   },
   select: { amount: true, date: true },
@@ -102,6 +113,7 @@ for (let i = 5; i >= 0; i--) {
 ```
 
 **Performance Improvement**:
+
 - Database queries: 6 → 1 (-83%)
 - Latency: ~600ms → ~80ms (-87%)
 - Network round trips: 6 → 1
@@ -112,18 +124,21 @@ for (let i = 5; i >= 0; i--) {
 ### 3. ✅ API Pagination
 
 **Files Modified**:
+
 - [app/api/properties/route.ts](../app/api/properties/route.ts)
 - [app/api/tenants/route.ts](../app/api/tenants/route.ts)
 - [app/api/receipts/route.ts](../app/api/receipts/route.ts)
 - [lib/utils/pagination.ts](../lib/utils/pagination.ts) (NEW)
 
 **Features**:
+
 - Cursor-based pagination via query parameters
 - Configurable page size (default: 50, max: 100)
 - Backward compatible (unpaginated if no params)
 - Metadata includes: total, totalPages, hasNext, hasPrev
 
 **Usage**:
+
 ```bash
 # Get first page (50 items)
 GET /api/properties?page=1&limit=50
@@ -139,9 +154,12 @@ GET /api/receipts
 ```
 
 **Response Format**:
+
 ```json
 {
-  "data": [ /* array of items */ ],
+  "data": [
+    /* array of items */
+  ],
   "pagination": {
     "page": 1,
     "limit": 50,
@@ -154,6 +172,7 @@ GET /api/receipts
 ```
 
 **Performance Impact**:
+
 - Large datasets: 90% faster response time
 - Memory usage: Reduced by up to 95% for large collections
 - Network transfer: Smaller payloads improve mobile performance
@@ -201,20 +220,21 @@ curl "http://localhost:3000/api/properties"
 
 ## 📈 Performance Metrics
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| **Property Listing** (100 items) | 150ms | 75ms | -50% |
-| **Overdue Tenants Query** | 200ms | 40ms | -80% |
-| **Revenue Trends (6 months)** | 600ms | 80ms | -87% |
-| **Receipts API (1000 items)** | 800ms | 120ms | -85% |
-| **Database Queries (insights)** | 10+ | 4 | -60% |
-| **Memory Usage (large lists)** | High | Low | -95% |
+| Metric                           | Before | After | Improvement |
+| -------------------------------- | ------ | ----- | ----------- |
+| **Property Listing** (100 items) | 150ms  | 75ms  | -50%        |
+| **Overdue Tenants Query**        | 200ms  | 40ms  | -80%        |
+| **Revenue Trends (6 months)**    | 600ms  | 80ms  | -87%        |
+| **Receipts API (1000 items)**    | 800ms  | 120ms | -85%        |
+| **Database Queries (insights)**  | 10+    | 4     | -60%        |
+| **Memory Usage (large lists)**   | High   | Low   | -95%        |
 
 ---
 
 ## 🚀 Deployment Steps
 
 ### 1. Apply Database Migration:
+
 ```bash
 # Development
 npx prisma migrate dev --name add_performance_indexes
@@ -224,6 +244,7 @@ npx prisma migrate deploy
 ```
 
 ### 2. Verify Indexes Created:
+
 ```sql
 -- SQLite
 .indexes properties
@@ -242,7 +263,7 @@ If using pagination, update frontend components:
 
 ```typescript
 // Example: Fetch paginated properties
-const response = await fetch('/api/properties?page=1&limit=50');
+const response = await fetch("/api/properties?page=1&limit=50");
 const { data, pagination } = await response.json();
 
 console.log(`Showing ${data.length} of ${pagination.total} properties`);
@@ -259,11 +280,11 @@ Located in [lib/utils/pagination.ts](../lib/utils/pagination.ts):
 
 ```typescript
 // Default values
-const DEFAULT_LIMIT = 50;  // Items per page
-const MAX_LIMIT = 100;     // Maximum allowed limit
+const DEFAULT_LIMIT = 50; // Items per page
+const MAX_LIMIT = 100; // Maximum allowed limit
 
 // Adjust in getPaginationFromRequest() calls
-getPaginationFromRequest(request, 25, 50);  // Custom: 25 default, 50 max
+getPaginationFromRequest(request, 25, 50); // Custom: 25 default, 50 max
 ```
 
 ### Index Maintenance:
@@ -279,9 +300,10 @@ All changes are **100% backward compatible**:
 ✅ **Unpaginated Requests**: Endpoints work without pagination params  
 ✅ **Legacy Clients**: Existing frontend code requires no changes  
 ✅ **Database Schema**: Indexes don't affect existing queries  
-✅ **N+1 Fix**: Transparent optimization (same output format)  
+✅ **N+1 Fix**: Transparent optimization (same output format)
 
 **Migration Path**:
+
 1. Deploy backend with pagination support
 2. Test legacy endpoints still work
 3. Gradually migrate frontend to use pagination
@@ -316,7 +338,7 @@ Enable Prisma query logging:
 ```typescript
 // prisma.config.ts or database.ts
 const prisma = new PrismaClient({
-  log: ['query', 'info', 'warn', 'error'],
+  log: ["query", "info", "warn", "error"],
 });
 ```
 

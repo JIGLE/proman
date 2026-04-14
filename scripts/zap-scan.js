@@ -65,15 +65,9 @@ function checkZapAvailability() {
     print("\nTo run OWASP ZAP:", "yellow");
     print("  1. Download from: https://www.zaproxy.org/download/", "yellow");
     print("  2. Start ZAP in daemon mode:", "yellow");
-    print(
-      "     zap.sh -daemon -port 8080 -config api.key=YOUR_API_KEY",
-      "yellow",
-    );
+    print("     zap.sh -daemon -port 8080 -config api.key=YOUR_API_KEY", "yellow");
     print("  3. Or use Docker:", "yellow");
-    print(
-      "     docker run -p 8080:8080 zaproxy/zap-stable zap.sh -daemon -port 8080",
-      "yellow",
-    );
+    print("     docker run -p 8080:8080 zaproxy/zap-stable zap.sh -daemon -port 8080", "yellow");
     return false;
   }
 }
@@ -85,13 +79,10 @@ function checkTargetAvailability() {
   printSection("TARGET APPLICATION CHECK");
 
   try {
-    const response = execSync(
-      `curl -s -o /dev/null -w "%{http_code}" ${config.targetUrl}`,
-      {
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "ignore"],
-      },
-    );
+    const response = execSync(`curl -s -o /dev/null -w "%{http_code}" ${config.targetUrl}`, {
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "ignore"],
+    });
 
     if (response && response.trim() !== "000") {
       print(`✓ Target application is running at ${config.targetUrl}`, "green");
@@ -157,10 +148,7 @@ function generateMockReport() {
   };
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const reportPath = path.join(
-    config.reportDir,
-    `zap-report-${timestamp}.json`,
-  );
+  const reportPath = path.join(config.reportDir, `zap-report-${timestamp}.json`);
 
   fs.writeFileSync(reportPath, JSON.stringify(report, null, 2));
 
@@ -280,9 +268,7 @@ function generateHtmlReport(report, summary) {
     <h2>Findings</h2>
     ${report.site[0].alerts
       .map((alert) => {
-        const riskLevel = ["info", "low", "medium", "high"][
-          parseInt(alert.riskcode, 10)
-        ];
+        const riskLevel = ["info", "low", "medium", "high"][parseInt(alert.riskcode, 10)];
         return `
         <div class="alert ${riskLevel}">
           <h3>${alert.alert}</h3>
@@ -351,16 +337,10 @@ function main() {
   printSection("SCAN COMPLETE");
 
   if (summary.high > 0) {
-    print(
-      "❌ Critical vulnerabilities found! Review report immediately.",
-      "red",
-    );
+    print("❌ Critical vulnerabilities found! Review report immediately.", "red");
     process.exit(1);
   } else if (summary.medium > 0) {
-    print(
-      "⚠ Medium risk vulnerabilities found. Review and remediate.",
-      "yellow",
-    );
+    print("⚠ Medium risk vulnerabilities found. Review and remediate.", "yellow");
     process.exit(0);
   } else {
     print("✓ No critical vulnerabilities detected", "green");

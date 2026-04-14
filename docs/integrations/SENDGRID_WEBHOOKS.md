@@ -5,6 +5,7 @@ This guide walks through setting up SendGrid email delivery tracking webhooks fo
 ## Overview
 
 ProMan's email webhook endpoint (`/api/webhooks/sendgrid`) tracks email delivery events including:
+
 - **Delivered** - Email successfully delivered to recipient
 - **Bounce** - Email bounced (hard bounce = invalid address, soft bounce = temporary issue)
 - **Open** - Recipient opened the email
@@ -13,6 +14,7 @@ ProMan's email webhook endpoint (`/api/webhooks/sendgrid`) tracks email delivery
 - **Unsubscribe** - Recipient unsubscribed
 
 Each event updates the `EmailLog` database record with:
+
 - SendGrid Message ID
 - Event type and timestamp
 - Failure reason (if applicable)
@@ -47,6 +49,7 @@ curl --request GET \
 ```
 
 This returns:
+
 ```json
 {
   "enabled": true,
@@ -71,11 +74,13 @@ This returns:
 Update your environment variables with the public key:
 
 **In `.env` file:**
+
 ```bash
 SENDGRID_WEBHOOK_PUBLIC_KEY=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANK...
 ```
 
 **In Kubernetes:**
+
 ```bash
 kubectl set env deployment/proman \
   SENDGRID_WEBHOOK_PUBLIC_KEY="MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANK..." \
@@ -83,6 +88,7 @@ kubectl set env deployment/proman \
 ```
 
 **Restart the application:**
+
 ```bash
 kubectl rollout restart deployment/proman -n proman
 ```
@@ -93,11 +99,13 @@ kubectl rollout restart deployment/proman -n proman
 
 1. Go to **Settings** → **Mail Send** → **Event Webhook**
 2. In the **HTTP POST URL** field, enter your webhook endpoint:
+
    ```
    https://yourdomain.com/api/webhooks/sendgrid
    ```
-   
+
    Or with port (if not using standard HTTPS):
+
    ```
    https://yourdomain.com:3000/api/webhooks/sendgrid
    ```
@@ -163,6 +171,7 @@ kubectl logs -f deployment/proman -n proman
 ```
 
 Look for webhook processing logs:
+
 ```
 [INFO] SendGrid webhook received: message-id=xxxxx
 [INFO] Processing event: delivered
@@ -234,17 +243,21 @@ kubectl port-forward svc/proman 3000:3000 -n proman
 **Problem**: SendGrid cannot reach your webhook endpoint
 
 **Solutions**:
+
 1. Verify domain is resolvable:
+
    ```bash
    nslookup yourdomain.com
    ```
 
 2. Verify endpoint is accessible:
+
    ```bash
    curl -v https://yourdomain.com/api/webhooks/sendgrid
    ```
 
 3. Check firewall rules - port 443 must be open to SendGrid IP ranges:
+
    ```
    SendGrid webhook IPs: see https://sendgrid.com/docs/for-developers/parsing-webhook/setting-up-a-parse-webhook/#troubleshooting
    ```
@@ -259,6 +272,7 @@ kubectl port-forward svc/proman 3000:3000 -n proman
 **Problem**: ProMan rejects webhook with signature mismatch
 
 **Causes & Solutions**:
+
 1. Wrong public key configured
    - Verify in SendGrid console → Settings → Mail Send → Event Webhook → Public Key
    - Compare to `SENDGRID_WEBHOOK_PUBLIC_KEY` env variable
@@ -276,6 +290,7 @@ kubectl port-forward svc/proman 3000:3000 -n proman
 **Problem**: SendGrid webhook isn't firing
 
 **Solutions**:
+
 1. Verify webhook is enabled in SendGrid console (checkbox checked)
 2. Verify webhook URL is correct (check for typos)
 3. Check SendGrid's webhook delivery logs:
@@ -283,6 +298,7 @@ kubectl port-forward svc/proman 3000:3000 -n proman
    - Look for failed attempts
 
 4. Test with a fresh email send:
+
    ```bash
    # Send via SendGrid API
    curl --request POST \
@@ -299,11 +315,13 @@ kubectl port-forward svc/proman 3000:3000 -n proman
 **Problem**: Webhook received but ProMan reports error
 
 Check logs for specific error:
+
 ```bash
 kubectl logs deployment/proman -n proman | grep -A5 "webhook error"
 ```
 
 Common errors:
+
 - **Database constraint violation** - Email already marked as delivered (OK, idempotent update)
 - **Invalid message ID** - Webhook missing `sg_message_id` field (report to SendGrid)
 - **Unknown event type** - SendGrid sent new event type ProMan doesn't recognize yet
@@ -331,20 +349,21 @@ Common errors:
 
 ProMan tracks the following email statuses based on webhook events:
 
-| SendGrid Event | ProMan Status | Database Field | Notes |
-|---|---|---|---|
-| processed | sending | status | Email processed by SendGrid |
-| dropped | failed | status | Email was rejected (permanent) |
-| deferred | pending | status | Temporary delivery delay |
-| bounce | bounced | status | Hard or soft bounce |
-| delivered | delivered | status | Email arrived at recipient |
-| open | opened | status | Recipient opened email |
-| click | clicked | status | Recipient clicked a link |
-| unsubscribe | unsubscribed | status | Recipient unsubscribed |
-| spam_report | reported | status | Marked as spam |
-| group_unsubscribe | unsubscribed | status | Unsubscribed from group |
+| SendGrid Event    | ProMan Status | Database Field | Notes                          |
+| ----------------- | ------------- | -------------- | ------------------------------ |
+| processed         | sending       | status         | Email processed by SendGrid    |
+| dropped           | failed        | status         | Email was rejected (permanent) |
+| deferred          | pending       | status         | Temporary delivery delay       |
+| bounce            | bounced       | status         | Hard or soft bounce            |
+| delivered         | delivered     | status         | Email arrived at recipient     |
+| open              | opened        | status         | Recipient opened email         |
+| click             | clicked       | status         | Recipient clicked a link       |
+| unsubscribe       | unsubscribed  | status         | Recipient unsubscribed         |
+| spam_report       | reported      | status         | Marked as spam                 |
+| group_unsubscribe | unsubscribed  | status         | Unsubscribed from group        |
 
 All events include:
+
 - `lastEventType` - Most recent event type
 - `lastEventAt` - Timestamp of most recent event
 - `failureReason` - Error message (for bounce, dropped, etc.)
@@ -352,6 +371,7 @@ All events include:
 ## Webhook Retry Policy
 
 SendGrid retries failed webhook deliveries:
+
 - **Initial attempt**: Immediate
 - **Retry 1**: 5 minutes
 - **Retry 2**: 30 minutes
@@ -365,11 +385,13 @@ If your endpoint is down, you can manually request webhook replay from SendGrid 
 ## Advanced: Custom Event Processing
 
 To add new event types or customize processing, edit:
+
 - `app/api/webhooks/sendgrid/route.ts`
 
 Example: Add SMS notifications for bounces
+
 ```typescript
-if (eventType === 'bounce') {
+if (eventType === "bounce") {
   // Send SMS alert to admin
   await sendSMSAlert(`Email bounced: ${email}`);
 }
@@ -378,6 +400,7 @@ if (eventType === 'bounce') {
 ## Support
 
 For issues:
+
 1. Check SendGrid webhook logs (Settings → Mail Send → Event Webhook)
 2. Check ProMan logs (`kubectl logs deployment/proman -n proman`)
 3. Verify public key matches

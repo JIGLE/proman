@@ -1,8 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import {
-  renderWithProviders as render,
-  screen,
-} from "@/tests/helpers/render-with-providers";
+import { renderWithProviders as render, screen } from "@/tests/helpers/render-with-providers";
 import React from "react";
 import { ErrorBoundary } from "./error-boundary";
 
@@ -37,13 +34,7 @@ describe("ErrorBoundary", () => {
   });
 
   it("uses custom fallback when provided", () => {
-    const Fallback = ({
-      error,
-      resetError,
-    }: {
-      error?: Error;
-      resetError: () => void;
-    }) => (
+    const Fallback = ({ error, resetError }: { error?: Error; resetError: () => void }) => (
       <div>
         <span>Custom: {error?.message}</span>
         <button onClick={resetError}>Reset</button>

@@ -11,9 +11,7 @@ const crypto = require("crypto");
 
 // DATABASE_URL may be unset in development; in that case we default to ./dev.db
 if (!process.env.DATABASE_URL) {
-  console.warn(
-    "[ensure-sqlite] DATABASE_URL is not set; defaulting to dev.db for local/dev usage",
-  );
+  console.warn("[ensure-sqlite] DATABASE_URL is not set; defaulting to dev.db for local/dev usage");
 } else {
   console.debug(
     "[ensure-sqlite] DATABASE_URL is available:",
@@ -44,10 +42,7 @@ if (resetDb) {
     const expectedChecksum = process.env.DB_BACKUP_CHECKSUM;
     if (expectedChecksum) {
       const backupData = fs.readFileSync(BACKUP_PATH);
-      const actualChecksum = crypto
-        .createHash("sha256")
-        .update(backupData)
-        .digest("hex");
+      const actualChecksum = crypto.createHash("sha256").update(backupData).digest("hex");
       if (actualChecksum !== expectedChecksum) {
         console.error(
           `[ensure-sqlite] Backup checksum mismatch! Expected: ${expectedChecksum}, Actual: ${actualChecksum}`,
@@ -56,9 +51,7 @@ if (resetDb) {
       }
       console.debug("[ensure-sqlite] Backup checksum validated.");
     } else {
-      console.debug(
-        "[ensure-sqlite] No checksum provided; proceeding without validation.",
-      );
+      console.debug("[ensure-sqlite] No checksum provided; proceeding without validation.");
     }
   } else {
     console.debug("[ensure-sqlite] No backup found; proceeding with clean DB.");
@@ -99,8 +92,7 @@ try {
 // Check if auto DB initialization is enabled.
 // AUTO_DB_INIT (default: "true") will run `prisma db push` when the DB has no tables.
 // Operators can disable this by setting AUTO_DB_INIT=false.
-const autoDbInit =
-  process.env.AUTO_DB_INIT !== "false" && process.env.AUTO_DB_INIT !== "0";
+const autoDbInit = process.env.AUTO_DB_INIT !== "false" && process.env.AUTO_DB_INIT !== "0";
 
 // After applying schema, verify tables exist in sqlite
 let expectedTables = [];
@@ -145,9 +137,7 @@ try {
   const Database = require("better-sqlite3");
   let db = new Database(resolved, { readonly: true, fileMustExist: true });
 
-  let rows = db
-    .prepare("SELECT name FROM sqlite_master WHERE type='table'")
-    .all();
+  let rows = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
   let present = new Set(rows.map((r) => String(r.name)));
 
   const critical = [
@@ -163,9 +153,7 @@ try {
   let missing = [];
   for (const req of critical) {
     if (present.has(req)) continue;
-    const hasAny = expectedTables.some(
-      (candidate) => candidate && present.has(String(candidate)),
-    );
+    const hasAny = expectedTables.some((candidate) => candidate && present.has(String(candidate)));
     if (!hasAny && !present.has(req)) {
       missing.push(req);
     }
@@ -181,24 +169,17 @@ try {
       "— running automatic DB initialization (AUTO_DB_INIT is enabled).",
     );
     try {
-      log(
-        "Running: npx prisma db push --schema=prisma/schema.prisma --accept-data-loss",
-      );
-      execSync(
-        "npx prisma db push --schema=prisma/schema.prisma --accept-data-loss",
-        {
-          stdio: "inherit",
-          env: { ...process.env, DATABASE_URL: dbUrl },
-          timeout: 60000,
-        },
-      );
+      log("Running: npx prisma db push --schema=prisma/schema.prisma --accept-data-loss");
+      execSync("npx prisma db push --schema=prisma/schema.prisma --accept-data-loss", {
+        stdio: "inherit",
+        env: { ...process.env, DATABASE_URL: dbUrl },
+        timeout: 60000,
+      });
       log("Prisma DB push completed successfully.");
 
       // Re-verify tables after push
       db = new Database(resolved, { readonly: true, fileMustExist: true });
-      rows = db
-        .prepare("SELECT name FROM sqlite_master WHERE type='table'")
-        .all();
+      rows = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
       present = new Set(rows.map((r) => String(r.name)));
 
       missing = [];
@@ -216,10 +197,7 @@ try {
       if (missing.length === 0) {
         log("Auto DB initialization succeeded. All critical tables present.");
       } else {
-        error(
-          "Auto DB initialization completed but tables still missing:",
-          missing.join(", "),
-        );
+        error("Auto DB initialization completed but tables still missing:", missing.join(", "));
       }
     } catch (pushErr) {
       error("Auto DB initialization failed:", pushErr && pushErr.message);
@@ -257,9 +235,7 @@ try {
   log("Verified sqlite tables exist:", critical.join(", "));
   // Also log all tables for debugging
   db = new Database(resolved, { readonly: true, fileMustExist: true });
-  const allRows = db
-    .prepare("SELECT name FROM sqlite_master WHERE type='table'")
-    .all();
+  const allRows = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
   const allTables = allRows.map((r) => String(r.name)).join(", ");
   log("All sqlite tables present:", allTables);
   log("Table count:", allRows.length);

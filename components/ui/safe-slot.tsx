@@ -16,11 +16,7 @@ export default function SafeSlot({ children, ...props }: SafeSlotProps) {
 
   try {
     if (React.Children.count(children) === 1) {
-      childForSlot = React.isValidElement(children) ? (
-        children
-      ) : (
-        <span>{children}</span>
-      );
+      childForSlot = React.isValidElement(children) ? children : <span>{children}</span>;
     } else {
       childForSlot = <span>{children}</span>;
     }

@@ -10,9 +10,7 @@ const PopoverTrigger = React.forwardRef<
   React.ElementRef<typeof PopoverPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Trigger>
 >(({ children, ...props }, ref) => {
-  const triggerProps = props as React.ComponentPropsWithoutRef<
-    typeof PopoverPrimitive.Trigger
-  > & {
+  const triggerProps = props as React.ComponentPropsWithoutRef<typeof PopoverPrimitive.Trigger> & {
     asChild?: boolean;
   };
   const { asChild, ...forwardProps } = triggerProps;

@@ -7,10 +7,7 @@ interface RouteParams {
   params: Promise<{ id: string }>;
 }
 
-export async function GET(
-  req: NextRequest,
-  { params }: RouteParams,
-): Promise<NextResponse> {
+export async function GET(req: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   try {
     const { id } = await params;
 
@@ -42,17 +39,11 @@ export async function GET(
     });
   } catch (error) {
     console.error("Error fetching maintenance ticket:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch ticket" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch ticket" }, { status: 500 });
   }
 }
 
-export async function PUT(
-  req: NextRequest,
-  { params }: RouteParams,
-): Promise<NextResponse> {
+export async function PUT(req: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   try {
     const { id } = await params;
 
@@ -104,17 +95,11 @@ export async function PUT(
     });
   } catch (error) {
     console.error("Error updating maintenance ticket:", error);
-    return NextResponse.json(
-      { error: "Failed to update ticket" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to update ticket" }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  req: NextRequest,
-  { params }: RouteParams,
-): Promise<NextResponse> {
+export async function DELETE(req: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   try {
     const { id } = await params;
 
@@ -146,9 +131,6 @@ export async function DELETE(
     });
   } catch (error) {
     console.error("Error deleting maintenance ticket:", error);
-    return NextResponse.json(
-      { error: "Failed to delete ticket" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to delete ticket" }, { status: 500 });
   }
 }

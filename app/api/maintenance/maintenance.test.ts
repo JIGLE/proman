@@ -67,14 +67,7 @@ describe("Maintenance API - List and Create", () => {
   });
 
   it("should validate ticket category", async () => {
-    const validCategories = [
-      "plumbing",
-      "electrical",
-      "hvac",
-      "structural",
-      "appliance",
-      "other",
-    ];
+    const validCategories = ["plumbing", "electrical", "hvac", "structural", "appliance", "other"];
     expect(validCategories.length).toBeGreaterThan(0);
   });
 

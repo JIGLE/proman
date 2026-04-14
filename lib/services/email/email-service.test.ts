@@ -21,9 +21,7 @@ describe("EmailService", () => {
   it("sendTemplatedEmail succeeds when sendgrid send is mocked and logs are attempted", async () => {
     // Ensure fresh modules and then mock sendgrid
     vi.resetModules();
-    const mockSend = vi
-      .fn()
-      .mockResolvedValue([{ headers: { "x-message-id": "message-123" } }]);
+    const mockSend = vi.fn().mockResolvedValue([{ headers: { "x-message-id": "message-123" } }]);
     vi.mock("@sendgrid/mail", () => ({
       setApiKey: vi.fn(),
       send: mockSend,
@@ -52,9 +50,7 @@ describe("EmailService", () => {
 
   it("handles single response object from send and extracts message id", async () => {
     vi.resetModules();
-    const mockSend = vi
-      .fn()
-      .mockResolvedValue({ headers: { "x-message-id": "single-456" } });
+    const mockSend = vi.fn().mockResolvedValue({ headers: { "x-message-id": "single-456" } });
     vi.mock("@sendgrid/mail", () => ({
       setApiKey: vi.fn(),
       send: mockSend,

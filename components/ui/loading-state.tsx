@@ -1,31 +1,31 @@
 "use client";
 
-import { Skeleton } from './skeleton';
-import { Card, CardContent, CardHeader } from './card';
-import { cn } from '@/lib/utils/utils';
+import { Skeleton } from "./skeleton";
+import { Card, CardContent, CardHeader } from "./card";
+import { cn } from "@/lib/utils/utils";
 
 export interface LoadingStateProps {
-  variant?: 'skeleton' | 'spinner' | 'cards';
+  variant?: "skeleton" | "spinner" | "cards";
   count?: number;
   className?: string;
 }
 
-export function LoadingState({ 
-  variant = 'skeleton', 
+export function LoadingState({
+  variant = "skeleton",
   count = 6,
-  className 
+  className,
 }: LoadingStateProps): React.ReactElement {
-  if (variant === 'spinner') {
+  if (variant === "spinner") {
     return (
-      <div className={cn('flex items-center justify-center py-12', className)}>
+      <div className={cn("flex items-center justify-center py-12", className)}>
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-50" />
       </div>
     );
   }
 
-  if (variant === 'cards') {
+  if (variant === "cards") {
     return (
-      <div className={cn('grid gap-4 md:grid-cols-2 lg:grid-cols-3', className)}>
+      <div className={cn("grid gap-4 md:grid-cols-2 lg:grid-cols-3", className)}>
         {Array.from({ length: count }).map((_, i) => (
           <Card key={i}>
             <CardHeader>
@@ -47,7 +47,7 @@ export function LoadingState({
 
   // Default: skeleton grid
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn("space-y-4", className)}>
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="flex items-center space-x-4">
           <Skeleton className="h-12 w-12 rounded-full" />
@@ -77,7 +77,7 @@ export function EmptyState({
   className,
 }: EmptyStateProps): React.ReactElement {
   return (
-    <div className={cn('flex flex-col items-center justify-center py-12 text-center', className)}>
+    <div className={cn("flex flex-col items-center justify-center py-12 text-center", className)}>
       {icon && <div className="mb-4 text-zinc-500">{icon}</div>}
       <h3 className="text-lg font-semibold text-zinc-50 mb-2">{title}</h3>
       {description && <p className="text-sm text-zinc-400 mb-6 max-w-md">{description}</p>}

@@ -4,13 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSession } from "next-auth/react";
 import { apiFetch } from "@/lib/utils/api-client";
 import { useCsrf } from "@/lib/contexts/csrf-context";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -196,9 +190,7 @@ export function DocumentsView() {
 
   // Template dialog state
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<
-    "lease" | "receipt" | "notice"
-  >("lease");
+  const [selectedTemplate, setSelectedTemplate] = useState<"lease" | "receipt" | "notice">("lease");
   const [generatingTemplate, setGeneratingTemplate] = useState(false);
 
   // Fetch documents
@@ -226,9 +218,7 @@ export function DocumentsView() {
         "/api/documents/stats",
         csrfToken,
       );
-      setStats(
-        (data as { data: DocumentStats }).data ?? (data as DocumentStats),
-      );
+      setStats((data as { data: DocumentStats }).data ?? (data as DocumentStats));
     } catch (err) {
       console.error("Failed to fetch stats:", err);
     }
@@ -238,20 +228,13 @@ export function DocumentsView() {
   const fetchReferenceData = useCallback(async () => {
     try {
       const [propsData, tenantsData, ownersData] = await Promise.all([
-        apiFetch<{ data: Property[] } | Property[]>(
-          "/api/properties",
-          csrfToken,
-        ),
+        apiFetch<{ data: Property[] } | Property[]>("/api/properties", csrfToken),
         apiFetch<{ data: Tenant[] } | Tenant[]>("/api/tenants", csrfToken),
         apiFetch<{ data: Owner[] } | Owner[]>("/api/owners", csrfToken),
       ]);
 
-      setProperties(
-        Array.isArray(propsData) ? propsData : propsData.data || [],
-      );
-      setTenants(
-        Array.isArray(tenantsData) ? tenantsData : tenantsData.data || [],
-      );
+      setProperties(Array.isArray(propsData) ? propsData : propsData.data || []);
+      setTenants(Array.isArray(tenantsData) ? tenantsData : tenantsData.data || []);
       setOwners(Array.isArray(ownersData) ? ownersData : ownersData.data || []);
     } catch (err) {
       console.error("Failed to fetch reference data:", err);
@@ -261,11 +244,9 @@ export function DocumentsView() {
   // Initial load
   useEffect(() => {
     if (session) {
-      Promise.all([
-        fetchDocuments(),
-        fetchStats(),
-        fetchReferenceData(),
-      ]).finally(() => setLoading(false));
+      Promise.all([fetchDocuments(), fetchStats(), fetchReferenceData()]).finally(() =>
+        setLoading(false),
+      );
     }
   }, [session, fetchDocuments, fetchStats, fetchReferenceData]);
 
@@ -298,21 +279,16 @@ export function DocumentsView() {
         reader.readAsDataURL(uploadForm.file!);
       });
 
-      await apiFetch<Record<string, unknown>>(
-        "/api/documents",
-        csrfToken,
-        "POST",
-        {
-          name: uploadForm.name,
-          description: uploadForm.description || undefined,
-          type: uploadForm.type,
-          mimeType: uploadForm.file.type,
-          fileContent,
-          propertyId: uploadForm.propertyId || undefined,
-          tenantId: uploadForm.tenantId || undefined,
-          ownerId: uploadForm.ownerId || undefined,
-        },
-      );
+      await apiFetch<Record<string, unknown>>("/api/documents", csrfToken, "POST", {
+        name: uploadForm.name,
+        description: uploadForm.description || undefined,
+        type: uploadForm.type,
+        mimeType: uploadForm.file.type,
+        fileContent,
+        propertyId: uploadForm.propertyId || undefined,
+        tenantId: uploadForm.tenantId || undefined,
+        ownerId: uploadForm.ownerId || undefined,
+      });
 
       setUploadDialogOpen(false);
       setUploadForm({
@@ -426,9 +402,7 @@ export function DocumentsView() {
           tenantEmail: "john@example.com",
           ownerName: "Jane Smith",
           startDate: new Date().toISOString().split("T")[0],
-          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000)
-            .toISOString()
-            .split("T")[0],
+          endDate: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
           monthlyRent: 1500,
           securityDeposit: 3000,
           currency: "USD",
@@ -466,9 +440,7 @@ export function DocumentsView() {
   if (!session) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">
-          Please sign in to view documents
-        </p>
+        <p className="text-muted-foreground">Please sign in to view documents</p>
       </div>
     );
   }
@@ -492,10 +464,7 @@ export function DocumentsView() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Dialog
-            open={templateDialogOpen}
-            onOpenChange={setTemplateDialogOpen}
-          >
+          <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
             <DialogTrigger asChild>
               <Button variant="outline">
                 <FilePlus className="mr-2 h-4 w-4" />
@@ -505,18 +474,14 @@ export function DocumentsView() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Generate Document</DialogTitle>
-                <DialogDescription>
-                  Create a document from a template
-                </DialogDescription>
+                <DialogDescription>Create a document from a template</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
                   <Label>Template Type</Label>
                   <Select
                     value={selectedTemplate}
-                    onValueChange={(v) =>
-                      setSelectedTemplate(v as typeof selectedTemplate)
-                    }
+                    onValueChange={(v) => setSelectedTemplate(v as typeof selectedTemplate)}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -529,8 +494,8 @@ export function DocumentsView() {
                   </Select>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  This will generate a sample document. For production use,
-                  connect this to your actual property and tenant data.
+                  This will generate a sample document. For production use, connect this to your
+                  actual property and tenant data.
                 </p>
               </div>
               <DialogFooter className="gap-2">
@@ -542,10 +507,7 @@ export function DocumentsView() {
                   <Eye className="mr-2 h-4 w-4" />
                   Preview HTML
                 </Button>
-                <Button
-                  onClick={() => handleGenerateTemplate("pdf")}
-                  disabled={generatingTemplate}
-                >
+                <Button onClick={() => handleGenerateTemplate("pdf")} disabled={generatingTemplate}>
                   <Download className="mr-2 h-4 w-4" />
                   Download PDF
                 </Button>
@@ -563,9 +525,7 @@ export function DocumentsView() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle>Upload Document</DialogTitle>
-                <DialogDescription>
-                  Upload a new document to your library
-                </DialogDescription>
+                <DialogDescription>Upload a new document to your library</DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
                 <div className="grid gap-2">
@@ -606,13 +566,11 @@ export function DocumentsView() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {Object.entries(documentTypeConfig).map(
-                        ([key, config]) => (
-                          <SelectItem key={key} value={key}>
-                            {config.label}
-                          </SelectItem>
-                        ),
-                      )}
+                      {Object.entries(documentTypeConfig).map(([key, config]) => (
+                        <SelectItem key={key} value={key}>
+                          {config.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -636,9 +594,7 @@ export function DocumentsView() {
                   <div className="grid grid-cols-3 gap-2">
                     <Select
                       value={uploadForm.propertyId}
-                      onValueChange={(v) =>
-                        setUploadForm((prev) => ({ ...prev, propertyId: v }))
-                      }
+                      onValueChange={(v) => setUploadForm((prev) => ({ ...prev, propertyId: v }))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Property" />
@@ -654,9 +610,7 @@ export function DocumentsView() {
                     </Select>
                     <Select
                       value={uploadForm.tenantId}
-                      onValueChange={(v) =>
-                        setUploadForm((prev) => ({ ...prev, tenantId: v }))
-                      }
+                      onValueChange={(v) => setUploadForm((prev) => ({ ...prev, tenantId: v }))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Tenant" />
@@ -672,9 +626,7 @@ export function DocumentsView() {
                     </Select>
                     <Select
                       value={uploadForm.ownerId}
-                      onValueChange={(v) =>
-                        setUploadForm((prev) => ({ ...prev, ownerId: v }))
-                      }
+                      onValueChange={(v) => setUploadForm((prev) => ({ ...prev, ownerId: v }))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Owner" />
@@ -692,10 +644,7 @@ export function DocumentsView() {
                 </div>
               </div>
               <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => setUploadDialogOpen(false)}
-                >
+                <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
                   Cancel
                 </Button>
                 <Button
@@ -732,25 +681,19 @@ export function DocumentsView() {
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Total Size</CardDescription>
-              <CardTitle className="text-3xl">
-                {formatFileSize(stats.totalSize)}
-              </CardTitle>
+              <CardTitle className="text-3xl">{formatFileSize(stats.totalSize)}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Contracts</CardDescription>
-              <CardTitle className="text-3xl">
-                {stats.byType.contract || 0}
-              </CardTitle>
+              <CardTitle className="text-3xl">{stats.byType.contract || 0}</CardTitle>
             </CardHeader>
           </Card>
           <Card>
             <CardHeader className="pb-2">
               <CardDescription>Photos</CardDescription>
-              <CardTitle className="text-3xl">
-                {stats.byType.photo || 0}
-              </CardTitle>
+              <CardTitle className="text-3xl">{stats.byType.photo || 0}</CardTitle>
             </CardHeader>
           </Card>
         </div>
@@ -818,9 +761,7 @@ export function DocumentsView() {
             <div className="text-center py-12">
               <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-semibold">No documents</h3>
-              <p className="text-muted-foreground">
-                Upload your first document to get started
-              </p>
+              <p className="text-muted-foreground">Upload your first document to get started</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -862,18 +803,12 @@ export function DocumentsView() {
                           )}
                         </div>
                         {doc.description && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {doc.description}
-                          </p>
+                          <p className="text-sm text-muted-foreground mt-1">{doc.description}</p>
                         )}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleDownload(doc)}
-                      >
+                      <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)}>
                         <Download className="h-4 w-4" />
                       </Button>
                       <AlertDialog>
@@ -892,9 +827,7 @@ export function DocumentsView() {
                           </AlertDialogHeader>
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => handleDelete(doc.id)}
-                            >
+                            <AlertDialogAction onClick={() => handleDelete(doc.id)}>
                               Delete
                             </AlertDialogAction>
                           </AlertDialogFooter>

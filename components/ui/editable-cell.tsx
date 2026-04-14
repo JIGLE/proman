@@ -79,35 +79,38 @@ export function EditableCell({
     }
   };
 
-  const validateValue = useCallback((val: string): string | null => {
-    // Built-in validation
-    if (type === "email" && val) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(val)) {
-        return "Invalid email address";
+  const validateValue = useCallback(
+    (val: string): string | null => {
+      // Built-in validation
+      if (type === "email" && val) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(val)) {
+          return "Invalid email address";
+        }
       }
-    }
 
-    if (type === "phone" && val) {
-      const phoneRegex = /^[+]?[\d\s-()]{7,}$/;
-      if (!phoneRegex.test(val)) {
-        return "Invalid phone number";
+      if (type === "phone" && val) {
+        const phoneRegex = /^[+]?[\d\s-()]{7,}$/;
+        if (!phoneRegex.test(val)) {
+          return "Invalid phone number";
+        }
       }
-    }
 
-    if ((type === "number" || type === "currency") && val) {
-      if (isNaN(Number(val))) {
-        return "Must be a number";
+      if ((type === "number" || type === "currency") && val) {
+        if (isNaN(Number(val))) {
+          return "Must be a number";
+        }
       }
-    }
 
-    // Custom validation
-    if (validate) {
-      return validate(val);
-    }
+      // Custom validation
+      if (validate) {
+        return validate(val);
+      }
 
-    return null;
-  }, [type, validate]);
+      return null;
+    },
+    [type, validate],
+  );
 
   const handleStartEdit = () => {
     if (disabled) return;
@@ -136,9 +139,7 @@ export function EditableCell({
 
     setIsSaving(true);
     try {
-      const finalValue = type === "number" || type === "currency"
-        ? Number(editValue)
-        : editValue;
+      const finalValue = type === "number" || type === "currency" ? Number(editValue) : editValue;
       await onSave(finalValue);
       setIsEditing(false);
       setError(null);
@@ -167,9 +168,7 @@ export function EditableCell({
     handleSave();
   };
 
-  const displayValue = formatter
-    ? formatter(value)
-    : String(value) || placeholder;
+  const displayValue = formatter ? formatter(value) : String(value) || placeholder;
 
   if (isEditing) {
     return (
@@ -188,14 +187,12 @@ export function EditableCell({
             disabled={isSaving}
             className={cn(
               "h-7 text-sm py-1 px-2",
-              error && "border-[var(--color-error)] focus-visible:ring-[var(--color-error)]"
+              error && "border-[var(--color-error)] focus-visible:ring-[var(--color-error)]",
             )}
             placeholder={placeholder}
           />
           {error && (
-            <p className="absolute -bottom-5 left-0 text-xs text-[var(--color-error)]">
-              {error}
-            </p>
+            <p className="absolute -bottom-5 left-0 text-xs text-[var(--color-error)]">{error}</p>
           )}
         </div>
         <button
@@ -229,7 +226,7 @@ export function EditableCell({
         "hover:bg-[var(--color-hover)] rounded px-1 -mx-1 py-0.5 transition-colors",
         disabled && "cursor-default hover:bg-transparent",
         !value && "text-[var(--color-muted-foreground)] italic",
-        className
+        className,
       )}
     >
       <span className="truncate">{displayValue}</span>
@@ -257,7 +254,7 @@ export function EditableTableCell({
       className={cn(
         "py-2 px-3",
         align === "center" && "text-center",
-        align === "right" && "text-right"
+        align === "right" && "text-right",
       )}
     >
       <EditableCell {...props} />

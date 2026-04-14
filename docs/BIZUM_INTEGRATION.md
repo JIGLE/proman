@@ -14,15 +14,18 @@ Bizum is Spain's most popular instant mobile payment system, operated by a conso
 ## Integration Options
 
 ### Option 1: Direct Bank Integration (Recommended for Spain)
+
 Each Spanish bank has its own Bizum API. To integrate directly:
 
 **Requirements:**
+
 - Partnership agreement with one or more Spanish banks
 - Technical integration with each bank's API
 - PCI-DSS compliance (if handling payment data)
 - Local Spanish business registration
 
 **Supported Banks (Partial List):**
+
 - Santander
 - BBVA
 - CaixaBank
@@ -34,9 +37,11 @@ Each Spanish bank has its own Bizum API. To integrate directly:
 - And 30+ more
 
 ### Option 2: Payment Service Provider (PSP)
+
 Some PSPs offer Bizum as a payment method:
 
 **Potential Partners:**
+
 1. **Redsys** (https://www.redsys.es/)
    - Official payment gateway for many Spanish banks
    - Supports Bizum through "Commerce Bizum"
@@ -51,7 +56,9 @@ Some PSPs offer Bizum as a payment method:
    - Easier integration than direct bank APIs
 
 ### Option 3: Stripe (Limited Support)
+
 As of 2024, Stripe does not directly support Bizum. However:
+
 - Stripe supports SEPA Direct Debit for Spain
 - Consider Bizum as a complementary payment method
 
@@ -66,7 +73,7 @@ interface BizumPaymentRequest {
   terminalId: string;
   orderId: string;
   amount: number; // in cents
-  currency: 'EUR';
+  currency: "EUR";
   beneficiaryPhone: string; // Tenant's phone registered with Bizum
   payerPhone?: string; // Optional for P2P
   concept: string; // Payment description
@@ -76,7 +83,7 @@ interface BizumPaymentRequest {
 interface BizumPaymentResponse {
   success: boolean;
   transactionId?: string;
-  status: 'pending' | 'completed' | 'failed' | 'expired';
+  status: "pending" | "completed" | "failed" | "expired";
   authorizationCode?: string;
   error?: {
     code: string;
@@ -86,18 +93,20 @@ interface BizumPaymentResponse {
 ```
 
 ### Webhook Events
+
 ```typescript
 type BizumWebhookEvent =
-  | 'payment.authorized'
-  | 'payment.completed'
-  | 'payment.failed'
-  | 'payment.expired'
-  | 'refund.completed';
+  | "payment.authorized"
+  | "payment.completed"
+  | "payment.failed"
+  | "payment.expired"
+  | "refund.completed";
 ```
 
 ## Implementation Steps
 
 ### Phase 1: Bank Partnership (2-6 months)
+
 1. Register business with Spanish tax authority
 2. Contact target banks' merchant services
 3. Complete KYC/AML requirements
@@ -105,6 +114,7 @@ type BizumWebhookEvent =
 5. Receive API credentials
 
 ### Phase 2: Technical Integration (1-2 months)
+
 1. Set up development environment with bank sandbox
 2. Implement payment request flow
 3. Implement webhook handlers
@@ -112,6 +122,7 @@ type BizumWebhookEvent =
 5. Complete security audit
 
 ### Phase 3: Production (2-4 weeks)
+
 1. Production credentials from bank
 2. PCI-DSS attestation (if required)
 3. User acceptance testing
@@ -119,14 +130,14 @@ type BizumWebhookEvent =
 
 ## Cost Structure
 
-| Item | Typical Cost |
-|------|-------------|
-| Setup Fee | €500 - €2,000 |
-| Monthly Fee | €0 - €100 |
-| Per Transaction | €0.00 - €0.20 |
-| Annual Maintenance | €200 - €500 |
+| Item               | Typical Cost  |
+| ------------------ | ------------- |
+| Setup Fee          | €500 - €2,000 |
+| Monthly Fee        | €0 - €100     |
+| Per Transaction    | €0.00 - €0.20 |
+| Annual Maintenance | €200 - €500   |
 
-*Costs vary significantly by bank and volume*
+_Costs vary significantly by bank and volume_
 
 ## Security Considerations
 
@@ -138,6 +149,7 @@ type BizumWebhookEvent =
 ## Placeholder Implementation
 
 For ProMan, we've implemented a placeholder that:
+
 1. Validates Spanish phone numbers
 2. Returns mock transaction IDs
 3. Logs integration attempts

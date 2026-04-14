@@ -71,11 +71,7 @@ const DEFAULT_CSP_DIRECTIVES: ContentSecurityPolicyDirectives = {
   ],
   imgSrc: ["'self'", "data:", "blob:", "https:"],
   fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
-  connectSrc: [
-    "'self'",
-    "https://accounts.google.com",
-    "https://api.stripe.com",
-  ],
+  connectSrc: ["'self'", "https://accounts.google.com", "https://api.stripe.com"],
   frameSrc: ["'self'", "https://accounts.google.com", "https://js.stripe.com"],
   objectSrc: ["'none'"],
   mediaSrc: ["'self'"],
@@ -89,10 +85,7 @@ const DEFAULT_CSP_DIRECTIVES: ContentSecurityPolicyDirectives = {
 /**
  * Build CSP header value from directives, injecting a nonce for script/style sources.
  */
-function buildCSPHeader(
-  directives: ContentSecurityPolicyDirectives,
-  nonce?: string,
-): string {
+function buildCSPHeader(directives: ContentSecurityPolicyDirectives, nonce?: string): string {
   const parts: string[] = [];
 
   if (directives.defaultSrc) {

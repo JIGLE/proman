@@ -1,6 +1,6 @@
 /**
  * Application Metrics Collection
- * 
+ *
  * Tracks business and application metrics:
  * - User activity (logins, actions)
  * - Feature usage
@@ -8,26 +8,26 @@
  * - System health indicators
  */
 
-import { logger } from '@/lib/utils/logger';
+import { logger } from "@/lib/utils/logger";
 
 export interface Metric {
   name: string;
   value: number;
   timestamp: number;
   tags?: Record<string, string>;
-  type: 'counter' | 'gauge' | 'histogram';
+  type: "counter" | "gauge" | "histogram";
 }
 
 export interface CounterMetric extends Metric {
-  type: 'counter';
+  type: "counter";
 }
 
 export interface GaugeMetric extends Metric {
-  type: 'gauge';
+  type: "gauge";
 }
 
 export interface HistogramMetric extends Metric {
-  type: 'histogram';
+  type: "histogram";
   buckets?: number[];
 }
 
@@ -51,7 +51,7 @@ class MetricsCollector {
       value: newValue,
       timestamp: Date.now(),
       tags,
-      type: 'counter',
+      type: "counter",
     });
   }
 
@@ -73,7 +73,7 @@ class MetricsCollector {
       value,
       timestamp: Date.now(),
       tags,
-      type: 'gauge',
+      type: "gauge",
     });
   }
 
@@ -83,12 +83,12 @@ class MetricsCollector {
   histogram(name: string, value: number, tags?: Record<string, string>): void {
     const values = this.histograms.get(name) || [];
     values.push(value);
-    
+
     // Keep only last 100 values per histogram
     if (values.length > 100) {
       values.shift();
     }
-    
+
     this.histograms.set(name, values);
 
     this.recordMetric({
@@ -96,7 +96,7 @@ class MetricsCollector {
       value,
       timestamp: Date.now(),
       tags,
-      type: 'histogram',
+      type: "histogram",
     });
   }
 
@@ -149,7 +149,7 @@ class MetricsCollector {
    */
   private recordMetric(metric: Metric): void {
     this.metrics.push(metric);
-    
+
     // Keep only last N metrics
     if (this.metrics.length > this.maxMetrics) {
       this.metrics.shift();
@@ -170,18 +170,13 @@ class MetricsCollector {
    */
   private shouldLogMetric(metric: Metric): boolean {
     // Log all errors
-    if (metric.name.includes('error')) return true;
-    
+    if (metric.name.includes("error")) return true;
+
     // Log high-value business metrics
-    const businessMetrics = [
-      'user.login',
-      'property.created',
-      'tenant.added',
-      'payment.processed',
-    ];
-    
-    if (businessMetrics.some(m => metric.name.startsWith(m))) return true;
-    
+    const businessMetrics = ["user.login", "property.created", "tenant.added", "payment.processed"];
+
+    if (businessMetrics.some((m) => metric.name.startsWith(m))) return true;
+
     return false;
   }
 
@@ -247,7 +242,7 @@ class MetricsCollector {
       }
     });
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 }
 
@@ -323,38 +318,38 @@ export const metrics = {
 
 // Common metric helpers
 export const userMetrics = {
-  login: (userId: string) => metrics.increment('user.login', 1, { userId }),
-  logout: (userId: string) => metrics.increment('user.logout', 1, { userId }),
-  signUp: () => metrics.increment('user.signup', 1),
+  login: (userId: string) => metrics.increment("user.login", 1, { userId }),
+  logout: (userId: string) => metrics.increment("user.logout", 1, { userId }),
+  signUp: () => metrics.increment("user.signup", 1),
 };
 
 export const propertyMetrics = {
-  created: (userId: string) => metrics.increment('property.created', 1, { userId }),
-  updated: (userId: string) => metrics.increment('property.updated', 1, { userId }),
-  deleted: (userId: string) => metrics.increment('property.deleted', 1, { userId }),
+  created: (userId: string) => metrics.increment("property.created", 1, { userId }),
+  updated: (userId: string) => metrics.increment("property.updated", 1, { userId }),
+  deleted: (userId: string) => metrics.increment("property.deleted", 1, { userId }),
 };
 
 export const tenantMetrics = {
-  added: (propertyId: string) => metrics.increment('tenant.added', 1, { propertyId }),
-  removed: (propertyId: string) => metrics.increment('tenant.removed', 1, { propertyId }),
+  added: (propertyId: string) => metrics.increment("tenant.added", 1, { propertyId }),
+  removed: (propertyId: string) => metrics.increment("tenant.removed", 1, { propertyId }),
 };
 
 export const apiMetrics = {
-  request: (endpoint: string, method: string) => 
-    metrics.increment('api.request', 1, { endpoint, method }),
-  success: (endpoint: string, method: string) => 
-    metrics.increment('api.success', 1, { endpoint, method }),
-  error: (endpoint: string, method: string, statusCode: string) => 
-    metrics.increment('api.error', 1, { endpoint, method, statusCode }),
-  responseTime: (endpoint: string, duration: number) => 
-    metrics.histogram('api.response_time', duration, { endpoint }),
+  request: (endpoint: string, method: string) =>
+    metrics.increment("api.request", 1, { endpoint, method }),
+  success: (endpoint: string, method: string) =>
+    metrics.increment("api.success", 1, { endpoint, method }),
+  error: (endpoint: string, method: string, statusCode: string) =>
+    metrics.increment("api.error", 1, { endpoint, method, statusCode }),
+  responseTime: (endpoint: string, duration: number) =>
+    metrics.histogram("api.response_time", duration, { endpoint }),
 };
 
 export const dbMetrics = {
-  query: (model: string, operation: string) => 
-    metrics.increment('db.query', 1, { model, operation }),
-  queryTime: (model: string, duration: number) => 
-    metrics.histogram('db.query_time', duration, { model }),
-  error: (model: string, operation: string) => 
-    metrics.increment('db.error', 1, { model, operation }),
+  query: (model: string, operation: string) =>
+    metrics.increment("db.query", 1, { model, operation }),
+  queryTime: (model: string, duration: number) =>
+    metrics.histogram("db.query_time", duration, { model }),
+  error: (model: string, operation: string) =>
+    metrics.increment("db.error", 1, { model, operation }),
 };

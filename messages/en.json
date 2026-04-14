@@ -94,6 +94,66 @@
     "generic": {
       "title": "Nothing here yet",
       "description": "Get started by adding your first item."
+    },
+    "leases": {
+      "title": "No leases yet",
+      "description": "Create lease agreements to formalize tenant relationships.",
+      "action": "Add First Lease"
+    },
+    "maintenance": {
+      "title": "No maintenance tickets",
+      "description": "Create a new ticket to track maintenance requests.",
+      "action": "Create Ticket"
+    },
+    "correspondence": {
+      "title": "No templates yet",
+      "description": "Create correspondence templates to streamline communications.",
+      "action": "Create Template"
+    },
+    "reports": {
+      "title": "No reports available",
+      "description": "Reports are generated from your property and financial data."
+    },
+    "owners": {
+      "title": "No owners yet",
+      "description": "Add owners to start tracking shared property ownership.",
+      "action": "Add First Owner"
+    },
+    "receipts": {
+      "title": "No receipts yet",
+      "description": "Create payment receipts to keep a record of payments received.",
+      "action": "Create First Receipt"
+    },
+    "expenses": {
+      "title": "No expenses recorded",
+      "description": "Track property expenses to monitor costs."
+    },
+    "invoices": {
+      "title": "No invoices yet",
+      "description": "Create invoices for tenants to formalize payment obligations.",
+      "action": "Create Invoice"
+    },
+    "contracts": {
+      "title": "No contracts found",
+      "description": "Contracts are created from lease agreements."
+    },
+    "documents": {
+      "title": "No documents yet",
+      "description": "Upload documents to keep records organized.",
+      "action": "Upload Document"
+    },
+    "contacts": {
+      "title": "No contacts found",
+      "description": "Contacts are populated from your tenants and owners."
+    },
+    "units": {
+      "title": "No units yet",
+      "description": "Add units to this property to track individual spaces.",
+      "action": "Add First Unit"
+    },
+    "noResults": {
+      "title": "No results found",
+      "description": "Try adjusting your search or filters."
     }
   },
   "actions": {
@@ -520,5 +580,29 @@
       "expired": "Expired",
       "terminated": "Terminated"
     }
+  },
+  "demo": {
+    "banner": "Demo Mode – Changes are not saved",
+    "exitButton": "Exit Demo",
+    "preparing": "Preparing demo environment...",
+    "title": "Proman Demo",
+    "readOnly": "This feature is read-only in demo mode",
+    "changesNotSaved": "Demo mode: changes are not saved"
+  },
+  "loading": {
+    "default": "Loading...",
+    "application": "Loading application...",
+    "signingIn": "Signing in...",
+    "pleaseWait": "Please wait..."
+  },
+  "rateLimit": {
+    "tooManyRequests": "Too many requests. Please try again in {retryAfter} seconds."
+  },
+  "footer": {
+    "copyright": "© {year} Proman. All rights reserved."
+  },
+  "pageHeader": {
+    "filter": "Filter",
+    "export": "Export"
   }
 }

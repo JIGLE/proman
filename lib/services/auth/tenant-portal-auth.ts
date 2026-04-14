@@ -35,17 +35,12 @@ export function generatePortalToken(tenantId: string, userId: string): string {
     exp: Math.floor(Date.now() / 1000) + TOKEN_EXPIRATION,
   };
 
-  const header = Buffer.from(
-    JSON.stringify({ alg: "HS256", typ: "JWT" }),
-  ).toString("base64url");
+  const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
   const payloadStr = Buffer.from(JSON.stringify(payload)).toString("base64url");
 
   // Create HMAC-SHA256 signature
   const signatureData = `${header}.${payloadStr}`;
-  const signature = crypto
-    .createHmac("sha256", secret)
-    .update(signatureData)
-    .digest("base64url");
+  const signature = crypto.createHmac("sha256", secret).update(signatureData).digest("base64url");
 
   return `${header}.${payloadStr}.${signature}`;
 }
@@ -54,9 +49,7 @@ export function generatePortalToken(tenantId: string, userId: string): string {
  * Verify a portal token and return payload if valid
  * Uses HMAC-SHA256 for cryptographic verification
  */
-export async function verifyPortalToken(
-  token: string,
-): Promise<PortalTokenPayload | null> {
+export async function verifyPortalToken(token: string): Promise<PortalTokenPayload | null> {
   try {
     const secret = process.env.NEXTAUTH_SECRET;
     if (!secret) {
@@ -80,9 +73,7 @@ export async function verifyPortalToken(
     }
 
     // Decode payload
-    const payload: PortalTokenPayload = JSON.parse(
-      Buffer.from(payloadStr, "base64url").toString(),
-    );
+    const payload: PortalTokenPayload = JSON.parse(Buffer.from(payloadStr, "base64url").toString());
 
     // Check expiration
     if (payload.exp < Math.floor(Date.now() / 1000)) {
@@ -109,11 +100,7 @@ export async function verifyPortalToken(
 /**
  * Generate a portal link for a tenant
  */
-export function generatePortalLink(
-  tenantId: string,
-  userId: string,
-  baseUrl?: string,
-): string {
+export function generatePortalLink(tenantId: string, userId: string, baseUrl?: string): string {
   const token = generatePortalToken(tenantId, userId);
   const base = baseUrl || process.env.NEXTAUTH_URL || "http://localhost:3000";
   return `${base}/tenant-portal/${token}`;
@@ -182,8 +169,7 @@ export const tenantPortalService = {
     } catch (error) {
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : "Failed to send invitation",
+        error: error instanceof Error ? error.message : "Failed to send invitation",
       };
     }
   },

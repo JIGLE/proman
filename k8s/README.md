@@ -21,5 +21,6 @@ kubectl apply -f k8s/service.yaml
 ```
 
 Notes:
+
 - `DATABASE_URL` is set to `file:/data/proman.sqlite` and the container mounts the PVC at `/data`.
 - After deploy, initialize the DB (one-time) by calling the init endpoint with `INIT_SECRET`.

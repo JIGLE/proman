@@ -17,12 +17,14 @@ const store = getRateLimitStore();
 ```
 
 **Selection Logic**:
+
 - ✅ **Production + `REDIS_URL` set**: Use Redis for distributed rate limiting
 - ✅ **Development or no `REDIS_URL`**: Use in-memory store for simplicity
 
 ### Store Implementations
 
 #### 1. Memory Store (Development)
+
 **File**: [lib/middleware/rate-limit-store.ts](lib/middleware/rate-limit-store.ts) - `MemoryRateLimitStore`
 
 ```typescript
@@ -33,17 +35,20 @@ class MemoryRateLimitStore implements RateLimitStore {
 ```
 
 **Features**:
+
 - Simple Map-based storage
 - Automatic cleanup of expired entries
 - Zero external dependencies
 - Perfect for single-instance deployments
 
 **Limitations**:
+
 - ❌ Not shared across instances
 - ❌ Lost on server restart
 - ❌ Cannot scale horizontally
 
 #### 2. Redis Store (Production)
+
 **File**: [lib/middleware/rate-limit-store.ts](lib/middleware/rate-limit-store.ts) - `RedisRateLimitStore`
 
 ```typescript
@@ -54,6 +59,7 @@ class RedisRateLimitStore implements RateLimitStore {
 ```
 
 **Features**:
+
 - ✅ Distributed storage across instances
 - ✅ Persistent rate limits
 - ✅ Automatic TTL expiration
@@ -61,6 +67,7 @@ class RedisRateLimitStore implements RateLimitStore {
 - ✅ Horizontal scaling support
 
 **Requirements**:
+
 - Redis server (localhost, managed service, or cluster)
 - `redis` npm package installed
 - `REDIS_URL` environment variable
@@ -80,6 +87,7 @@ yarn add redis
 ### 2. Configure Environment Variables
 
 #### Development (In-Memory)
+
 ```bash
 # .env.local
 NODE_ENV=development
@@ -87,6 +95,7 @@ NODE_ENV=development
 ```
 
 #### Production (Redis)
+
 ```bash
 # .env.production
 NODE_ENV=production
@@ -99,6 +108,7 @@ REDIS_URL=redis://localhost:6379
 ### 3. Redis Server Options
 
 #### Option A: Local Redis (Development/Testing)
+
 ```bash
 # Docker
 docker run -d -p 6379:6379 redis:alpine
@@ -115,6 +125,7 @@ sudo systemctl start redis
 #### Option B: Managed Redis (Production)
 
 **Popular Services**:
+
 - **Redis Cloud** (redis.com) - Free tier available
 - **AWS ElastiCache** - Managed Redis on AWS
 - **Azure Cache for Redis** - Managed Redis on Azure
@@ -122,6 +133,7 @@ sudo systemctl start redis
 - **Upstash Redis** - Serverless Redis with free tier
 
 **Example**: Upstash Redis
+
 1. Create account at upstash.com
 2. Create Redis database
 3. Copy connection URL
@@ -135,13 +147,13 @@ The rate limiting middleware **automatically uses the appropriate store**:
 
 ```typescript
 // app/api/properties/route.ts
-import { rateLimit, RateLimits } from '@/lib/middleware/rate-limit';
+import { rateLimit, RateLimits } from "@/lib/middleware/rate-limit";
 
 export async function POST(request: Request) {
   // Automatically uses Redis in production, memory in dev
   const rateLimitResponse = await rateLimit(request, RateLimits.API);
   if (rateLimitResponse) return rateLimitResponse;
-  
+
   // Handle request...
 }
 ```
@@ -149,35 +161,37 @@ export async function POST(request: Request) {
 ### Manual Store Access (Advanced)
 
 ```typescript
-import { getRateLimitStore } from '@/lib/middleware/rate-limit-store';
+import { getRateLimitStore } from "@/lib/middleware/rate-limit-store";
 
 // Get singleton store instance
 const store = getRateLimitStore();
 
 // Get rate limit entry
-const entry = await store.get('user:127.0.0.1:/api/properties');
+const entry = await store.get("user:127.0.0.1:/api/properties");
 
 // Set rate limit entry
-await store.set('user:127.0.0.1:/api/properties', {
+await store.set("user:127.0.0.1:/api/properties", {
   count: 5,
-  resetTime: Date.now() + 60000
+  resetTime: Date.now() + 60000,
 });
 
 // Increment counter (atomic in Redis)
-const newCount = await store.increment('user:127.0.0.1:/api/properties');
+const newCount = await store.increment("user:127.0.0.1:/api/properties");
 
 // Delete entry
-await store.delete('user:127.0.0.1:/api/properties');
+await store.delete("user:127.0.0.1:/api/properties");
 ```
 
 ## Redis Key Schema
 
 ### Rate Limit Keys
+
 ```
 ratelimit:{identifier}:{pathname}
 ```
 
 **Example**:
+
 ```
 ratelimit:192.168.1.100:/api/properties
 ratelimit:user@example.com:/api/payments
@@ -186,11 +200,13 @@ ratelimit:user@example.com:/api/payments
 **TTL**: Automatically expires at `resetTime`
 
 ### Count Keys (Atomic Increment)
+
 ```
 ratelimit:count:{identifier}:{pathname}
 ```
 
 **Example**:
+
 ```
 ratelimit:count:192.168.1.100:/api/properties
 ```
@@ -198,12 +214,14 @@ ratelimit:count:192.168.1.100:/api/properties
 ## Benefits
 
 ### Development
+
 - ✅ Zero configuration
 - ✅ No external dependencies
 - ✅ Fast iteration
 - ✅ Works offline
 
 ### Production
+
 - ✅ **Horizontal Scaling**: Deploy multiple instances with shared rate limits
 - ✅ **Persistence**: Rate limits survive server restarts
 - ✅ **Consistency**: All instances see same counters
@@ -213,12 +231,14 @@ ratelimit:count:192.168.1.100:/api/properties
 ## Performance
 
 ### In-Memory Store
+
 - **GET**: <0.1ms (Map lookup)
 - **SET**: <0.1ms (Map insert)
 - **Memory**: ~100 bytes per entry
 - **Cleanup**: Runs every 5 minutes
 
 ### Redis Store
+
 - **GET**: <1ms (network + Redis)
 - **SET**: <1ms (network + Redis)
 - **INCREMENT**: <1ms (atomic operation)
@@ -227,12 +247,12 @@ ratelimit:count:192.168.1.100:/api/properties
 
 ### Comparison
 
-| Operation | Memory Store | Redis Store (Local) | Redis Store (Cloud) |
-|-----------|--------------|---------------------|---------------------|
-| GET       | <0.1ms       | <1ms                | 5-15ms              |
-| SET       | <0.1ms       | <1ms                | 5-15ms              |
-| Horizontal Scaling | ❌ No | ✅ Yes | ✅ Yes |
-| Persistence | ❌ No | ✅ Yes | ✅ Yes |
+| Operation          | Memory Store | Redis Store (Local) | Redis Store (Cloud) |
+| ------------------ | ------------ | ------------------- | ------------------- |
+| GET                | <0.1ms       | <1ms                | 5-15ms              |
+| SET                | <0.1ms       | <1ms                | 5-15ms              |
+| Horizontal Scaling | ❌ No        | ✅ Yes              | ✅ Yes              |
+| Persistence        | ❌ No        | ✅ Yes              | ✅ Yes              |
 
 ## Monitoring
 
@@ -284,8 +304,8 @@ If Redis connection fails in production:
 
 ```typescript
 // Store operations return null/defaults
-const entry = await store.get(key);  // Returns null
-await store.set(key, entry);         // Silently fails (logged)
+const entry = await store.get(key); // Returns null
+await store.set(key, entry); // Silently fails (logged)
 
 // Rate limiting continues with degraded mode
 // Requests are NOT rate limited (fail open for availability)
@@ -296,6 +316,7 @@ await store.set(key, entry);         // Silently fails (logged)
 ### Logging
 
 All Redis errors are logged:
+
 ```
 [ERROR] Redis connection error: ECONNREFUSED
 [ERROR] Redis SET error: timeout after 5000ms
@@ -308,17 +329,20 @@ All Redis errors are logged:
 **No code changes required!**
 
 1. **Install Redis client**:
+
    ```bash
    npm install redis
    ```
 
 2. **Set environment variable**:
+
    ```bash
    # .env.production
    REDIS_URL=redis://your-redis-server:6379
    ```
 
 3. **Deploy application**:
+
    ```bash
    npm run build
    npm start
@@ -361,6 +385,7 @@ redis-cli
 **Cause**: `REDIS_URL` environment variable not set
 
 **Solution**:
+
 ```bash
 # Set REDIS_URL in your deployment environment
 export REDIS_URL=redis://your-redis-server:6379
@@ -373,6 +398,7 @@ export REDIS_URL=redis://your-redis-server:6379
 **Cause**: Redis server not running or not accessible
 
 **Solutions**:
+
 1. Verify Redis is running: `redis-cli PING`
 2. Check firewall allows port 6379
 3. Verify REDIS_URL hostname/IP is correct
@@ -385,6 +411,7 @@ export REDIS_URL=redis://your-redis-server:6379
 **Cause**: Using in-memory store instead of Redis
 
 **Solution**:
+
 1. Verify `REDIS_URL` is set
 2. Check logs for "Using Redis rate limit store"
 3. Restart application after setting `REDIS_URL`
@@ -396,6 +423,7 @@ export REDIS_URL=redis://your-redis-server:6379
 **Cause**: Redis server is far away or overloaded
 
 **Solutions**:
+
 1. Use Redis in same region as app servers
 2. Use managed Redis with optimized networking
 3. Enable Redis connection pooling
@@ -406,6 +434,7 @@ export REDIS_URL=redis://your-redis-server:6379
 ### Redis Connection
 
 **Recommendations**:
+
 - ✅ Use TLS/SSL for production: `rediss://` (note the double 's')
 - ✅ Set strong Redis password: `redis://user:password@host:6379`
 - ✅ Use private network (VPC) for Redis
@@ -413,6 +442,7 @@ export REDIS_URL=redis://your-redis-server:6379
 - ✅ Restrict Redis port (6379) to app servers only
 
 **Example Secure URL**:
+
 ```bash
 REDIS_URL=rediss://default:strong-password@redis.example.com:6380
 ```
@@ -422,6 +452,7 @@ REDIS_URL=rediss://default:strong-password@redis.example.com:6380
 **Attack**: Attacker changes IP to bypass rate limits
 
 **Mitigation**:
+
 - Use `x-forwarded-for` header (set by trusted proxy)
 - Consider user ID + IP for authenticated endpoints
 - Monitor for suspicious patterns
@@ -444,10 +475,12 @@ Deploying with Redis rate limiting:
 ## Related Files
 
 ### Created/Modified:
+
 - [lib/middleware/rate-limit-store.ts](lib/middleware/rate-limit-store.ts) - Store implementations
 - [lib/middleware/rate-limit.ts](lib/middleware/rate-limit.ts) - Updated to use abstract store
 
 ### Related Documentation:
+
 - [docs/WEEK_1_COMPLETE.md](WEEK_1_COMPLETE.md) - Initial rate limiting implementation
 - [docs/WEEK_2_SECURITY_COMPLETE.md](WEEK_2_SECURITY_COMPLETE.md) - Security overview
 

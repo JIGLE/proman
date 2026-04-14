@@ -1,7 +1,7 @@
 "use client";
 
-import { createContext, useContext, ReactNode } from 'react';
-import { useCsrfToken } from '@/lib/hooks/use-csrf-token';
+import { createContext, useContext, ReactNode } from "react";
+import { useCsrfToken } from "@/lib/hooks/use-csrf-token";
 
 interface CsrfContextType {
   token: string | null;
@@ -14,30 +14,26 @@ const CsrfContext = createContext<CsrfContextType | undefined>(undefined);
 
 /**
  * Provider for CSRF token management
- * 
+ *
  * Wraps the application to provide CSRF tokens to all components
  */
 export function CsrfProvider({ children }: { children: ReactNode }): React.ReactElement {
   const csrf = useCsrfToken();
 
-  return (
-    <CsrfContext.Provider value={csrf}>
-      {children}
-    </CsrfContext.Provider>
-  );
+  return <CsrfContext.Provider value={csrf}>{children}</CsrfContext.Provider>;
 }
 
 /**
  * Hook to access CSRF token from context
- * 
+ *
  * @throws Error if used outside CsrfProvider
- * 
+ *
  * @example
  * ```tsx
  * const { token, isLoading } = useCsrf();
- * 
+ *
  * if (isLoading) return <Loading />;
- * 
+ *
  * const response = await fetch('/api/data', {
  *   method: 'POST',
  *   headers: { 'X-CSRF-Token': token || '' },
@@ -47,10 +43,10 @@ export function CsrfProvider({ children }: { children: ReactNode }): React.React
  */
 export function useCsrf(): CsrfContextType {
   const context = useContext(CsrfContext);
-  
+
   if (context === undefined) {
-    throw new Error('useCsrf must be used within a CsrfProvider');
+    throw new Error("useCsrf must be used within a CsrfProvider");
   }
-  
+
   return context;
 }

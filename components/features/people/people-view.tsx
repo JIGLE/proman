@@ -1,18 +1,19 @@
 "use client";
 
-import { Users, Briefcase, Plus } from "lucide-react";
+import { Users, Briefcase, Plus, Wrench } from "lucide-react";
 import { useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { TenantsView, TenantsViewRef } from "@/components/features/tenant/tenants-view";
 import { OwnersView, OwnersViewRef } from "@/components/features/owner/owners-view";
+import { ContactsView } from "@/components/features/contacts/contacts-view";
 import { ExportButton } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 
 /**
  * People View - Unified view for managing all people: tenants and owners
- * 
+ *
  * Information Architecture:
  * - Purpose: Manage tenant and owner relationships
  * - Belongs here: Tenant directory, Owner directory, communication history, payment status
@@ -22,7 +23,7 @@ import { useApp } from "@/lib/contexts/app-context";
  * - Links to: Assets (tenant's/owner's property), Maintenance (tickets), Correspondence (messages)
  */
 export function PeopleView(): React.ReactElement {
-  const [activeTab, setActiveTab] = useTabPersistence('people', 'tenants');
+  const [activeTab, setActiveTab] = useTabPersistence("people", "tenants");
   const { state } = useApp();
   const { tenants, owners } = state;
   const tenantsViewRef = useRef<TenantsViewRef>(null);
@@ -30,26 +31,27 @@ export function PeopleView(): React.ReactElement {
 
   // Export columns for tenants
   const tenantColumns = [
-    { key: 'name', label: 'Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Phone' },
-    { key: 'paymentStatus', label: 'Status' },
-    { key: 'leaseStart', label: 'Lease Start' },
-    { key: 'leaseEnd', label: 'Lease End' }
+    { key: "name", label: "Name" },
+    { key: "email", label: "Email" },
+    { key: "phone", label: "Phone" },
+    { key: "paymentStatus", label: "Status" },
+    { key: "leaseStart", label: "Lease Start" },
+    { key: "leaseEnd", label: "Lease End" },
   ];
 
   // Export columns for owners
   const ownerColumns = [
-    { key: 'name', label: 'Name' },
-    { key: 'email', label: 'Email' },
-    { key: 'phone', label: 'Phone' },
-    { key: 'address', label: 'Address' }
+    { key: "name", label: "Name" },
+    { key: "email", label: "Email" },
+    { key: "phone", label: "Phone" },
+    { key: "address", label: "Address" },
   ];
 
   // Get export data based on active tab
-  const exportConfig = activeTab === 'tenants' 
-    ? { data: tenants, columns: tenantColumns }
-    : { data: owners, columns: ownerColumns };
+  const exportConfig =
+    activeTab === "tenants"
+      ? { data: tenants, columns: tenantColumns }
+      : { data: owners, columns: ownerColumns };
 
   return (
     <div className="space-y-6">
@@ -73,7 +75,7 @@ export function PeopleView(): React.ReactElement {
             />
           </div>
         </div>
-        
+
         {/* People Statistics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
@@ -85,20 +87,16 @@ export function PeopleView(): React.ReactElement {
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Current Leases</div>
             <div className="text-2xl font-bold text-green-500">
-              {tenants.filter(t => new Date(t.leaseEnd) > new Date()).length}
+              {tenants.filter((t) => new Date(t.leaseEnd) > new Date()).length}
             </div>
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Total Owners</div>
-            <div className="text-2xl font-bold text-[var(--color-foreground)]">
-              {owners.length}
-            </div>
+            <div className="text-2xl font-bold text-[var(--color-foreground)]">{owners.length}</div>
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Active Owners</div>
-            <div className="text-2xl font-bold text-blue-500">
-              {owners.length}
-            </div>
+            <div className="text-2xl font-bold text-blue-500">{owners.length}</div>
           </div>
         </div>
       </div>
@@ -106,7 +104,7 @@ export function PeopleView(): React.ReactElement {
       {/* Tab Navigation - Tenants and Owners */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center gap-2">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsList className="grid w-full max-w-lg grid-cols-3">
             <TabsTrigger value="tenants" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
               <span>Tenants</span>
@@ -121,9 +119,13 @@ export function PeopleView(): React.ReactElement {
                 {owners.length}
               </span>
             </TabsTrigger>
+            <TabsTrigger value="contacts" className="flex items-center gap-2">
+              <Wrench className="h-4 w-4" />
+              <span>Contacts</span>
+            </TabsTrigger>
           </TabsList>
-          {activeTab === 'tenants' && (
-            <Button 
+          {activeTab === "tenants" && (
+            <Button
               onClick={() => tenantsViewRef.current?.openDialog()}
               className="flex items-center gap-2"
             >
@@ -131,8 +133,8 @@ export function PeopleView(): React.ReactElement {
               <span className="hidden sm:inline">Add Tenant</span>
             </Button>
           )}
-          {activeTab === 'owners' && (
-            <Button 
+          {activeTab === "owners" && (
+            <Button
               onClick={() => ownersViewRef.current?.openDialog()}
               className="flex items-center gap-2"
             >
@@ -148,6 +150,10 @@ export function PeopleView(): React.ReactElement {
 
         <TabsContent value="owners" className="mt-0">
           <OwnersView ref={ownersViewRef} density="compact" />
+        </TabsContent>
+
+        <TabsContent value="contacts" className="mt-0">
+          <ContactsView />
         </TabsContent>
       </Tabs>
     </div>

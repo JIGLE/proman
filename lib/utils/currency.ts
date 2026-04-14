@@ -4,20 +4,20 @@
  */
 
 // Currency type matching database schema
-export type Currency = 'EUR' | 'DKK' | 'USD' | 'GBP';
+export type Currency = "EUR" | "DKK" | "USD" | "GBP";
 
 export const CURRENCY_SYMBOLS: Record<Currency, string> = {
-  EUR: '€',
-  DKK: 'kr',
-  USD: '$',
-  GBP: '£',
+  EUR: "€",
+  DKK: "kr",
+  USD: "$",
+  GBP: "£",
 };
 
 export const CURRENCY_LOCALES: Record<Currency, string> = {
-  EUR: 'pt-PT',
-  DKK: 'da-DK',
-  USD: 'en-US',
-  GBP: 'en-GB',
+  EUR: "pt-PT",
+  DKK: "da-DK",
+  USD: "en-US",
+  GBP: "en-GB",
 };
 
 export interface FormatCurrencyOptions {
@@ -32,10 +32,10 @@ export interface FormatCurrencyOptions {
  */
 export function formatCurrency(
   amount: number | null | undefined,
-  options: FormatCurrencyOptions
+  options: FormatCurrencyOptions,
 ): string {
   if (amount === null || amount === undefined) {
-    return '-';
+    return "-";
   }
 
   const {
@@ -46,7 +46,7 @@ export function formatCurrency(
   } = options;
 
   const locale = CURRENCY_LOCALES[currency];
-  
+
   const formatted = new Intl.NumberFormat(locale, {
     minimumFractionDigits,
     maximumFractionDigits,
@@ -55,7 +55,7 @@ export function formatCurrency(
   if (showSymbol) {
     const symbol = CURRENCY_SYMBOLS[currency];
     // DKK symbol typically goes after the amount
-    if (currency === 'DKK') {
+    if (currency === "DKK") {
       return `${formatted} ${symbol}`;
     }
     // EUR, USD, GBP go before
@@ -77,11 +77,11 @@ export function getCurrencySymbol(currency: Currency): string {
  */
 export function parseCurrency(value: string): number | null {
   // Remove all non-digit characters except decimal point and minus sign
-  const cleaned = value.replace(/[^\d.,-]/g, '');
-  
+  const cleaned = value.replace(/[^\d.,-]/g, "");
+
   // Handle European format (comma as decimal separator)
-  const normalized = cleaned.replace(',', '.');
-  
+  const normalized = cleaned.replace(",", ".");
+
   const parsed = parseFloat(normalized);
   return isNaN(parsed) ? null : parsed;
 }

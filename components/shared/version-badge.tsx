@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 
 export type VersionInfo = {
   version?: string;
@@ -14,15 +14,17 @@ export default function VersionBadge(): React.ReactElement | null {
 
   useEffect(() => {
     let mounted = true;
-    fetch('/version.json')
-      .then(res => res.json())
+    fetch("/version.json")
+      .then((res) => res.json())
       .then((data) => {
         if (mounted) setV(data as VersionInfo);
       })
       .catch(() => {
         /* ignore */
       });
-    return () => { mounted = false };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (!v) return null;
@@ -30,7 +32,7 @@ export default function VersionBadge(): React.ReactElement | null {
   return (
     <div className="text-[11px] opacity-90">
       <span className="font-bold">v{v.version}</span>
-      {v.git_commit ? <span className="ml-1.5 font-mono">{v.git_commit.slice(0,7)}</span> : null}
+      {v.git_commit ? <span className="ml-1.5 font-mono">{v.git_commit.slice(0, 7)}</span> : null}
     </div>
   );
 }

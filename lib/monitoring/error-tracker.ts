@@ -71,10 +71,7 @@ const errorStore = new ErrorStore();
 /**
  * Determine error severity based on error type and context
  */
-function determineSeverity(
-  error: Error,
-  context?: ErrorContext,
-): TrackedError["severity"] {
+function determineSeverity(error: Error, context?: ErrorContext): TrackedError["severity"] {
   // Critical: Authentication, authorization, database errors
   if (
     error.name === "AuthenticationError" ||
@@ -171,10 +168,7 @@ function sendToMonitoringService(trackedError: TrackedError): void {
     (
       window as unknown as {
         Sentry?: {
-          captureException: (
-            error: Error,
-            context?: Record<string, unknown>,
-          ) => void;
+          captureException: (error: Error, context?: Record<string, unknown>) => void;
         };
       }
     ).Sentry
@@ -183,10 +177,7 @@ function sendToMonitoringService(trackedError: TrackedError): void {
       (
         window as unknown as {
           Sentry: {
-            captureException: (
-              error: Error,
-              context?: Record<string, unknown>,
-            ) => void;
+            captureException: (error: Error, context?: Record<string, unknown>) => void;
           };
         }
       ).Sentry.captureException(trackedError.error, {
@@ -213,10 +204,7 @@ function sendToMonitoringService(trackedError: TrackedError): void {
     (
       window as unknown as {
         LogRocket?: {
-          captureException: (
-            error: Error,
-            context?: Record<string, unknown>,
-          ) => void;
+          captureException: (error: Error, context?: Record<string, unknown>) => void;
         };
       }
     ).LogRocket
@@ -225,10 +213,7 @@ function sendToMonitoringService(trackedError: TrackedError): void {
       (
         window as unknown as {
           LogRocket: {
-            captureException: (
-              error: Error,
-              context?: Record<string, unknown>,
-            ) => void;
+            captureException: (error: Error, context?: Record<string, unknown>) => void;
           };
         }
       ).LogRocket.captureException(trackedError.error, {

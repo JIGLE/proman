@@ -36,10 +36,7 @@ export function encryptPII(plaintext: string): string {
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
-  const encrypted = Buffer.concat([
-    cipher.update(plaintext, "utf8"),
-    cipher.final(),
-  ]);
+  const encrypted = Buffer.concat([cipher.update(plaintext, "utf8"), cipher.final()]);
   const tag = cipher.getAuthTag();
 
   // Format: enc:<iv>:<tag>:<ciphertext> (all base64)
@@ -50,14 +47,11 @@ export function encryptPII(plaintext: string): string {
  * Decrypt an encrypted PII string. If not prefixed, assumes plaintext.
  */
 export function decryptPII(ciphertext: string): string {
-  if (!ciphertext || !ciphertext.startsWith(ENCRYPTED_PREFIX))
-    return ciphertext;
+  if (!ciphertext || !ciphertext.startsWith(ENCRYPTED_PREFIX)) return ciphertext;
 
   const key = getEncryptionKey();
   if (!key) {
-    console.warn(
-      "[PII] Encrypted data found but PII_ENCRYPTION_KEY not set — cannot decrypt",
-    );
+    console.warn("[PII] Encrypted data found but PII_ENCRYPTION_KEY not set — cannot decrypt");
     return "[ENCRYPTED]";
   }
 
@@ -74,9 +68,7 @@ export function decryptPII(ciphertext: string): string {
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(tag);
 
-  return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString(
-    "utf8",
-  );
+  return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf8");
 }
 
 /**
@@ -89,11 +81,7 @@ export function isEncrypted(value: string): boolean {
 /**
  * Mask a decrypted PII value for display (e.g. IBAN → "PT50****1234")
  */
-export function maskPII(
-  value: string,
-  visibleStart = 4,
-  visibleEnd = 4,
-): string {
+export function maskPII(value: string, visibleStart = 4, visibleEnd = 4): string {
   if (!value || value.length <= visibleStart + visibleEnd) return value;
   const start = value.slice(0, visibleStart);
   const end = value.slice(-visibleEnd);

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { logger } from '@/lib/utils/logger';
+import { useState, useEffect, useCallback } from "react";
+import { logger } from "@/lib/utils/logger";
 
 interface UseCsrfTokenReturn {
   token: string | null;
@@ -12,17 +12,17 @@ interface UseCsrfTokenReturn {
 
 /**
  * Hook to manage CSRF tokens for secure API requests
- * 
+ *
  * Features:
  * - Automatically fetches token on mount
  * - Refreshes token before expiration (24h default)
  * - Provides manual refresh function
  * - Handles errors gracefully
- * 
+ *
  * Usage:
  * ```tsx
  * const { token, isLoading, error, refreshToken } = useCsrfToken();
- * 
+ *
  * // In API call
  * await fetch('/api/endpoint', {
  *   method: 'POST',
@@ -43,9 +43,9 @@ export function useCsrfToken(): UseCsrfTokenReturn {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch('/api/csrf-token', {
-        method: 'GET',
-        credentials: 'include', // Include cookies
+      const response = await fetch("/api/csrf-token", {
+        method: "GET",
+        credentials: "include", // Include cookies
       });
 
       if (!response.ok) {
@@ -53,19 +53,19 @@ export function useCsrfToken(): UseCsrfTokenReturn {
       }
 
       const data = await response.json();
-      
+
       // API returns { csrfToken: '...' }
       const csrfToken = data.csrfToken || data.token;
       if (!csrfToken) {
-        throw new Error('CSRF token not found in response');
+        throw new Error("CSRF token not found in response");
       }
 
       setToken(csrfToken);
-      logger.debug('CSRF token fetched successfully');
+      logger.debug("CSRF token fetched successfully");
     } catch (err) {
       const errorObj = err instanceof Error ? err : new Error(String(err));
       setError(errorObj);
-      logger.error('Failed to fetch CSRF token', errorObj);
+      logger.error("Failed to fetch CSRF token", errorObj);
     } finally {
       setIsLoading(false);
     }
@@ -82,7 +82,7 @@ export function useCsrfToken(): UseCsrfTokenReturn {
 
     const refreshInterval = 23 * 60 * 60 * 1000; // 23 hours in milliseconds
     const intervalId = setInterval(() => {
-      logger.debug('Auto-refreshing CSRF token');
+      logger.debug("Auto-refreshing CSRF token");
       fetchToken();
     }, refreshInterval);
 

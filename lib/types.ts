@@ -65,7 +65,13 @@ export interface Receipt {
 export interface CorrespondenceTemplate {
   id: string;
   name: string;
-  type: "welcome" | "rent_reminder" | "eviction_notice" | "maintenance_request" | "lease_renewal" | "custom";
+  type:
+    | "welcome"
+    | "rent_reminder"
+    | "eviction_notice"
+    | "maintenance_request"
+    | "lease_renewal"
+    | "custom";
   subject: string;
   content: string;
   variables: string[];
@@ -153,8 +159,8 @@ export interface Expense {
   updatedAt: string;
 }
 
-export type MaintenanceStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
-export type MaintenancePriority = 'low' | 'medium' | 'high' | 'urgent';
+export type MaintenanceStatus = "open" | "in_progress" | "resolved" | "closed";
+export type MaintenancePriority = "low" | "medium" | "high" | "urgent";
 
 export interface MaintenanceTicket {
   id: string;
@@ -204,7 +210,16 @@ Please don't hesitate to contact us if you need anything.
 
 Best regards,
 Property Management Team`,
-    variables: ["tenant_name", "property_name", "lease_start", "lease_end", "property_address", "rent_amount", "bedrooms", "bathrooms"],
+    variables: [
+      "tenant_name",
+      "property_name",
+      "lease_start",
+      "lease_end",
+      "property_address",
+      "rent_amount",
+      "bedrooms",
+      "bathrooms",
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },

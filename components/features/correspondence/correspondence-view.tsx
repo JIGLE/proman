@@ -16,15 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  EnhancedInput,
-  EnhancedTextarea,
-} from "@/components/ui/enhanced-input";
-import {
-  FormField,
-  FormGrid,
-  FormActions,
-} from "@/components/ui/form-components";
+import { EnhancedInput, EnhancedTextarea } from "@/components/ui/enhanced-input";
+import { FormField, FormGrid, FormActions } from "@/components/ui/form-components";
 import {
   Select,
   SelectContent,
@@ -33,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { useApp } from "@/lib/contexts/app-context";
 import { CorrespondenceTemplate, Tenant } from "@/lib/types";
 import { templateSchema, TemplateFormData } from "@/lib/utils/validation";
@@ -45,24 +39,12 @@ import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 export type CorrespondenceViewProps = Record<string, never>;
 
 export function CorrespondenceView(): React.ReactElement {
-  const {
-    state,
-    addTemplate,
-    updateTemplate,
-    deleteTemplate,
-    addCorrespondence,
-  } = useApp();
-  const {
-    templates,
-    correspondence: _correspondence,
-    tenants,
-    loading,
-  } = state;
+  const { state, addTemplate, updateTemplate, deleteTemplate, addCorrespondence } = useApp();
+  const { templates, correspondence: _correspondence, tenants, loading } = state;
   const { success, error } = useToast();
   const confirmDialog = useConfirmDialog();
   const [isComposeOpen, setIsComposeOpen] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] =
-    useState<CorrespondenceTemplate | null>(null);
+  const [selectedTemplate, setSelectedTemplate] = useState<CorrespondenceTemplate | null>(null);
   const [composeData, setComposeData] = useState({
     tenantId: "",
     subject: "",
@@ -70,9 +52,7 @@ export function CorrespondenceView(): React.ReactElement {
   });
 
   const [isBatchOpen, setIsBatchOpen] = useState(false);
-  const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>(
-    [],
-  );
+  const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>([]);
   const [generatingBatch, setGeneratingBatch] = useState(false);
 
   const initialFormData: TemplateFormData = {
@@ -140,17 +120,12 @@ export function CorrespondenceView(): React.ReactElement {
     setGeneratingBatch(true);
     try {
       const doc = new jsPDF();
-      const recipients = tenants.filter((t) =>
-        selectedRecipientIds.includes(t.id),
-      );
+      const recipients = tenants.filter((t) => selectedRecipientIds.includes(t.id));
 
       recipients.forEach((tenant, index) => {
         if (index > 0) doc.addPage();
 
-        const content = replaceVariables(
-          selectedTemplate.content || "",
-          tenant,
-        );
+        const content = replaceVariables(selectedTemplate.content || "", tenant);
 
         // Header
         doc.setFontSize(20);
@@ -196,10 +171,7 @@ export function CorrespondenceView(): React.ReactElement {
 
     try {
       // Replace variables in content
-      const processedContent = replaceVariables(
-        composeData.content,
-        selectedTenant,
-      );
+      const processedContent = replaceVariables(composeData.content, selectedTenant);
 
       const correspondenceData = {
         templateId: selectedTemplate.id,
@@ -234,8 +206,7 @@ export function CorrespondenceView(): React.ReactElement {
     confirmDialog.confirm(
       {
         title: "Delete Template",
-        description:
-          "This template will be permanently removed. This action cannot be undone.",
+        description: "This template will be permanently removed. This action cannot be undone.",
         confirmLabel: "Delete Template",
         variant: "destructive",
       },
@@ -249,31 +220,22 @@ export function CorrespondenceView(): React.ReactElement {
   const extractVariables = (content: string): string[] => {
     const variableRegex = /\{\{(\w+)\}\}/g;
     const matches = content.match(variableRegex);
-    return matches
-      ? [...new Set(matches.map((match) => match.slice(2, -2)))]
-      : [];
+    return matches ? [...new Set(matches.map((match) => match.slice(2, -2)))] : [];
   };
 
   const replaceVariables = (content: string, tenant: Tenant): string => {
     if (!content) return "";
     return content
       .replace(/\{\{tenant_name\}\}/g, tenant?.name || "Tenant")
-      .replace(
-        /\{\{property_name\}\}/g,
-        tenant?.propertyName || "your property",
-      )
+      .replace(/\{\{property_name\}\}/g, tenant?.propertyName || "your property")
       .replace(/\{\{rent_amount\}\}/g, tenant?.rent?.toString() || "0")
       .replace(
         /\{\{lease_start\}\}/g,
-        tenant?.leaseStart
-          ? new Date(tenant.leaseStart).toLocaleDateString()
-          : "N/A",
+        tenant?.leaseStart ? new Date(tenant.leaseStart).toLocaleDateString() : "N/A",
       )
       .replace(
         /\{\{lease_end\}\}/g,
-        tenant?.leaseEnd
-          ? new Date(tenant.leaseEnd).toLocaleDateString()
-          : "N/A",
+        tenant?.leaseEnd ? new Date(tenant.leaseEnd).toLocaleDateString() : "N/A",
       )
       .replace(/\{\{property_address\}\}/g, "Property address") // Would need property data
       .replace(/\{\{bedrooms\}\}/g, "bedrooms") // Would need property data
@@ -285,10 +247,8 @@ export function CorrespondenceView(): React.ReactElement {
     const colors = {
       welcome: "bg-[var(--color-success-muted)] text-[var(--color-success)]",
       rent_reminder: "bg-orange-600/20 text-orange-400",
-      eviction_notice:
-        "bg-[var(--color-error-muted)] text-[var(--color-error)]",
-      maintenance_request:
-        "bg-[var(--color-info-muted)] text-[var(--color-info)]",
+      eviction_notice: "bg-[var(--color-error-muted)] text-[var(--color-error)]",
+      maintenance_request: "bg-[var(--color-info-muted)] text-[var(--color-info)]",
       lease_renewal: "bg-purple-600/20 text-purple-400",
       custom: "bg-gray-600/20 text-gray-400",
     };
@@ -307,22 +267,12 @@ export function CorrespondenceView(): React.ReactElement {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
-                Correspondence
-              </h2>
-              <p className="text-zinc-400">
-                Manage templates and send communications
-              </p>
+              <h2 className="text-3xl font-bold tracking-tight text-zinc-50">Correspondence</h2>
+              <p className="text-zinc-400">Manage templates and send communications</p>
             </div>
-            <Dialog
-              open={dialog.isOpen}
-              onOpenChange={(open) => !open && dialog.closeDialog()}
-            >
+            <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogTrigger asChild>
-                <Button
-                  onClick={dialog.openDialog}
-                  className="flex items-center gap-2"
-                >
+                <Button onClick={dialog.openDialog} className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
                   Add Template
                 </Button>
@@ -333,8 +283,7 @@ export function CorrespondenceView(): React.ReactElement {
                     {dialog.editingItem ? "Edit Template" : "Create Template"}
                   </DialogTitle>
                   <DialogDescription>
-                    Create or edit correspondence templates with variable
-                    placeholders
+                    Create or edit correspondence templates with variable placeholders
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={dialog.handleSubmit} className="space-y-6">
@@ -348,9 +297,7 @@ export function CorrespondenceView(): React.ReactElement {
                       <EnhancedInput
                         id="name"
                         value={dialog.formData.name}
-                        onChange={(e) =>
-                          dialog.updateFormData({ name: e.target.value })
-                        }
+                        onChange={(e) => dialog.updateFormData({ name: e.target.value })}
                         placeholder="Enter template name..."
                         required
                       />
@@ -372,21 +319,11 @@ export function CorrespondenceView(): React.ReactElement {
                           <SelectValue placeholder="Select template type..." />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="welcome">
-                            Welcome Letter
-                          </SelectItem>
-                          <SelectItem value="rent_reminder">
-                            Rent Reminder
-                          </SelectItem>
-                          <SelectItem value="eviction_notice">
-                            Eviction Notice
-                          </SelectItem>
-                          <SelectItem value="maintenance_request">
-                            Maintenance Request
-                          </SelectItem>
-                          <SelectItem value="lease_renewal">
-                            Lease Renewal
-                          </SelectItem>
+                          <SelectItem value="welcome">Welcome Letter</SelectItem>
+                          <SelectItem value="rent_reminder">Rent Reminder</SelectItem>
+                          <SelectItem value="eviction_notice">Eviction Notice</SelectItem>
+                          <SelectItem value="maintenance_request">Maintenance Request</SelectItem>
+                          <SelectItem value="lease_renewal">Lease Renewal</SelectItem>
                           <SelectItem value="custom">Custom</SelectItem>
                         </SelectContent>
                       </Select>
@@ -402,9 +339,7 @@ export function CorrespondenceView(): React.ReactElement {
                     <EnhancedInput
                       id="subject"
                       value={dialog.formData.subject}
-                      onChange={(e) =>
-                        dialog.updateFormData({ subject: e.target.value })
-                      }
+                      onChange={(e) => dialog.updateFormData({ subject: e.target.value })}
                       placeholder="Enter email subject..."
                       maxLength={200}
                       showCharCount
@@ -422,9 +357,7 @@ export function CorrespondenceView(): React.ReactElement {
                     <EnhancedTextarea
                       id="content"
                       value={dialog.formData.content}
-                      onChange={(e) =>
-                        dialog.updateFormData({ content: e.target.value })
-                      }
+                      onChange={(e) => dialog.updateFormData({ content: e.target.value })}
                       rows={8}
                       placeholder="Enter email content with {{variable}} placeholders..."
                       maxLength={5000}
@@ -435,11 +368,7 @@ export function CorrespondenceView(): React.ReactElement {
                   </FormField>
 
                   <FormActions align="right">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={dialog.closeDialog}
-                    >
+                    <Button type="button" variant="outline" onClick={dialog.closeDialog}>
                       Cancel
                     </Button>
                     <Button type="submit" disabled={dialog.isSubmitting}>
@@ -457,24 +386,13 @@ export function CorrespondenceView(): React.ReactElement {
 
           <div className="grid gap-4">
             {templates.length === 0 ? (
-              <Card className="bg-zinc-900 border-zinc-800">
-                <CardContent className="p-8 text-center">
-                  <FileText className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-zinc-50 mb-2">
-                    No templates yet
-                  </h3>
-                  <p className="text-zinc-400 mb-4">
-                    Create your first correspondence template
-                  </p>
-                  <Button
-                    onClick={dialog.openDialog}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Create Template
-                  </Button>
-                </CardContent>
-              </Card>
+              <EmptyStateIllustration
+                type="correspondence"
+                title="No templates yet"
+                description="Create your first correspondence template"
+                onAction={dialog.openDialog}
+                actionLabel="Create Template"
+              />
             ) : (
               templates.map((template) => (
                 <Card key={template.id} className="bg-zinc-900 border-zinc-800">
@@ -482,14 +400,10 @@ export function CorrespondenceView(): React.ReactElement {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-zinc-50">
-                            {template.name}
-                          </h3>
+                          <h3 className="text-lg font-semibold text-zinc-50">{template.name}</h3>
                           {getTypeBadge(template.type)}
                         </div>
-                        <p className="text-sm font-medium text-zinc-50 mb-1">
-                          {template.subject}
-                        </p>
+                        <p className="text-sm font-medium text-zinc-50 mb-1">{template.subject}</p>
                         <p className="text-sm text-zinc-400 line-clamp-2 mb-2">
                           {template.content.length > 150
                             ? `${template.content.substring(0, 150)}...`
@@ -498,11 +412,7 @@ export function CorrespondenceView(): React.ReactElement {
                         {template.variables.length > 0 && (
                           <div className="flex flex-wrap gap-1">
                             {template.variables.map((variable: string) => (
-                              <Badge
-                                key={variable}
-                                variant="outline"
-                                className="text-xs"
-                              >
+                              <Badge key={variable} variant="outline" className="text-xs">
                                 {variable}
                               </Badge>
                             ))}
@@ -558,9 +468,7 @@ export function CorrespondenceView(): React.ReactElement {
           <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
             <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-zinc-50">
-                  Send Correspondence
-                </DialogTitle>
+                <DialogTitle className="text-zinc-50">Send Correspondence</DialogTitle>
                 <DialogDescription>
                   Compose and send a message using the selected template
                 </DialogDescription>
@@ -570,9 +478,7 @@ export function CorrespondenceView(): React.ReactElement {
                   <Label htmlFor="tenant">Select Tenant</Label>
                   <Select
                     value={composeData.tenantId}
-                    onValueChange={(value) =>
-                      setComposeData({ ...composeData, tenantId: value })
-                    }
+                    onValueChange={(value) => setComposeData({ ...composeData, tenantId: value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Choose a tenant" />
@@ -619,11 +525,7 @@ export function CorrespondenceView(): React.ReactElement {
                 </div>
 
                 <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsComposeOpen(false)}
-                  >
+                  <Button type="button" variant="outline" onClick={() => setIsComposeOpen(false)}>
                     Cancel
                   </Button>
                   <Button type="submit" className="flex items-center gap-2">
@@ -639,12 +541,9 @@ export function CorrespondenceView(): React.ReactElement {
           <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
             <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-zinc-50">
-                  Batch Generate PDF
-                </DialogTitle>
+                <DialogTitle className="text-zinc-50">Batch Generate PDF</DialogTitle>
                 <DialogDescription>
-                  Select recipients to generate letters for:{" "}
-                  {selectedTemplate?.name}
+                  Select recipients to generate letters for: {selectedTemplate?.name}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
@@ -654,9 +553,7 @@ export function CorrespondenceView(): React.ReactElement {
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() =>
-                        setSelectedRecipientIds(tenants.map((t) => t.id))
-                      }
+                      onClick={() => setSelectedRecipientIds(tenants.map((t) => t.id))}
                     >
                       Select All
                     </Button>
@@ -681,25 +578,18 @@ export function CorrespondenceView(): React.ReactElement {
                           >
                             {tenant.name}
                           </Label>
-                          <p className="text-xs text-zinc-500">
-                            {tenant.propertyName}
-                          </p>
+                          <p className="text-xs text-zinc-500">{tenant.propertyName}</p>
                         </div>
                       </div>
                     ))}
                     {tenants.length === 0 && (
-                      <p className="text-sm text-zinc-500 text-center">
-                        No tenants found.
-                      </p>
+                      <p className="text-sm text-zinc-500 text-center">No tenants found.</p>
                     )}
                   </div>
                 </div>
 
                 <div className="flex justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsBatchOpen(false)}
-                  >
+                  <Button variant="outline" onClick={() => setIsBatchOpen(false)}>
                     Cancel
                   </Button>
                   <Button onClick={generateBatchPDF} disabled={generatingBatch}>

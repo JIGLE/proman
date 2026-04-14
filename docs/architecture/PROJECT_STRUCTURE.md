@@ -209,14 +209,14 @@ All feature modules, services, and utilities use barrel exports (`index.ts`) for
 
 ```typescript
 // Before: Long nested imports
-import { PropertiesView } from '@/components/features/property/property-list'
-import { getPrismaClient } from '@/lib/services/database/database'
-import { useFormDialog } from '@/lib/hooks/use-form-dialog'
+import { PropertiesView } from "@/components/features/property/property-list";
+import { getPrismaClient } from "@/lib/services/database/database";
+import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 
 // After: Clean barrel exports
-import { PropertiesView } from '@/features/property'
-import { getPrismaClient } from '@/services/database'
-import { useFormDialog } from '@/hooks'
+import { PropertiesView } from "@/features/property";
+import { getPrismaClient } from "@/services/database";
+import { useFormDialog } from "@/hooks";
 ```
 
 ### 🧪 Co-located Tests
@@ -273,50 +273,53 @@ Granular path aliases for cleaner imports:
 
 ```typescript
 // UI Components
-import { Button, Card, Input } from '@/ui/button'
+import { Button, Card, Input } from "@/ui/button";
 
 // Feature Components
-import { PropertiesView, PropertyMap } from '@/features/property'
-import { TenantsView } from '@/features/tenant'
+import { PropertiesView, PropertyMap } from "@/features/property";
+import { TenantsView } from "@/features/tenant";
 
 // Shared Components
-import { ClientProviders, ErrorBoundary } from '@/shared'
+import { ClientProviders, ErrorBoundary } from "@/shared";
 
 // Layouts
-import { Sidebar } from '@/layouts'
+import { Sidebar } from "@/layouts";
 ```
 
 ### Services & Utilities
 
 ```typescript
 // Services
-import { getPrismaClient } from '@/services/database'
-import { EmailService } from '@/services/email'
-import { requireAuth } from '@/services/auth'
+import { getPrismaClient } from "@/services/database";
+import { EmailService } from "@/services/email";
+import { requireAuth } from "@/services/auth";
 
 // Hooks
-import { useFormDialog, useSortableData } from '@/hooks'
+import { useFormDialog, useSortableData } from "@/hooks";
 
 // Utils
-import { cn, formatCurrency, validateEmail } from '@/utils'
+import { cn, formatCurrency, validateEmail } from "@/utils";
 
 // Schemas
-import { createPropertySchema, updateTenantSchema } from '@/schemas'
+import { createPropertySchema, updateTenantSchema } from "@/schemas";
 ```
 
 ## Testing Structure
 
 ### Unit Tests
+
 - **Location**: Co-located with source files (`.test.ts` or `.test.tsx`)
 - **Framework**: Vitest
 - **Coverage**: Components, services, utilities, hooks
 
 ### Integration Tests
+
 - **Location**: `e2e/` directory
 - **Framework**: Playwright
 - **Coverage**: Critical workflows, API endpoints
 
 ### Test Utilities
+
 - **Location**: `tests/helpers/`
 - **Shared**: Test setup, mocks, render utilities
 

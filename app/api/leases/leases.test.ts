@@ -113,19 +113,14 @@ describe("Leases API - List and Create", () => {
 
 describe("Leases API - Get Individual Lease", () => {
   it("should get lease by ID when authorized", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/leases/lease-123",
-      {
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/leases/lease-123", {
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
     expect(request.headers.get("Authorization")).toBe("Bearer valid-token");
   });
 
   it("should return 401 when getting lease without auth", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/leases/lease-123",
-    );
+    const request = new NextRequest("http://localhost:3000/api/leases/lease-123");
     expect(request.headers.get("Authorization")).toBeNull();
   });
 

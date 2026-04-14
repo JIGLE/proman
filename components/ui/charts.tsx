@@ -1,12 +1,6 @@
 import * as React from "react";
 import { cn } from "@/lib/utils/utils";
-import {
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  PieChart,
-  Activity,
-} from "lucide-react";
+import { TrendingUp, TrendingDown, BarChart3, PieChart, Activity } from "lucide-react";
 
 interface ChartDataPoint {
   label: string;
@@ -50,16 +44,13 @@ export function BarChart({
               {title}
             </h3>
           )}
-          {subtitle && (
-            <p className="text-body-small text-zinc-400">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-body-small text-zinc-400">{subtitle}</p>}
         </div>
       )}
 
       <div className="space-y-3">
         {data.map((item, _index) => {
-          const percentage =
-            range > 0 ? ((item.value - minValue) / range) * 100 : 0;
+          const percentage = range > 0 ? ((item.value - minValue) / range) * 100 : 0;
 
           return (
             <div key={item.label} className="space-y-2">
@@ -68,9 +59,7 @@ export function BarChart({
                 <div className="flex items-center gap-2">
                   {showValues && (
                     <span className="text-zinc-50 font-semibold">
-                      {typeof item.value === "number"
-                        ? item.value.toLocaleString()
-                        : item.value}
+                      {typeof item.value === "number" ? item.value.toLocaleString() : item.value}
                     </span>
                   )}
                   {showTrend && item.trend && (
@@ -99,8 +88,7 @@ export function BarChart({
                   )}
                   style={{
                     width: `${Math.max(percentage, 2)}%`,
-                    backgroundColor:
-                      item.color || "var(--color-accent-primary)",
+                    backgroundColor: item.color || "var(--color-accent-primary)",
                   }}
                 />
               </div>
@@ -147,27 +135,15 @@ export function LineChart({
               {title}
             </h3>
           )}
-          {subtitle && (
-            <p className="text-body-small text-zinc-400">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-body-small text-zinc-400">{subtitle}</p>}
         </div>
       )}
 
       <div className="relative" style={{ height }}>
-        <svg
-          width="100%"
-          height="100%"
-          viewBox="0 0 100 100"
-          className="overflow-visible"
-        >
+        <svg width="100%" height="100%" viewBox="0 0 100 100" className="overflow-visible">
           {/* Grid Lines */}
           <defs>
-            <pattern
-              id="grid"
-              width="20"
-              height="20"
-              patternUnits="userSpaceOnUse"
-            >
+            <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
               <path
                 d="M 20 0 L 0 0 0 20"
                 fill="none"
@@ -226,13 +202,7 @@ export function LineChart({
 }
 
 // Donut Chart Component
-export function DonutChart({
-  data,
-  title,
-  subtitle,
-  height = 200,
-  className,
-}: ChartProps) {
+export function DonutChart({ data, title, subtitle, height = 200, className }: ChartProps) {
   const total = data.reduce((sum, item) => sum + item.value, 0);
   const radius = 40;
   const circumference = 2 * Math.PI * radius;
@@ -249,9 +219,7 @@ export function DonutChart({
               {title}
             </h3>
           )}
-          {subtitle && (
-            <p className="text-body-small text-zinc-400">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-body-small text-zinc-400">{subtitle}</p>}
         </div>
       )}
 
@@ -262,8 +230,7 @@ export function DonutChart({
             {data.map((item, index) => {
               const percentage = (item.value / total) * 100;
               const strokeDasharray = `${(percentage * circumference) / 100} ${circumference}`;
-              const strokeDashoffset =
-                (-accumulatedAngle * circumference) / 100;
+              const strokeDashoffset = (-accumulatedAngle * circumference) / 100;
 
               accumulatedAngle += percentage;
 
@@ -304,14 +271,11 @@ export function DonutChart({
                 <div
                   className="w-3 h-3 rounded-full"
                   style={{
-                    backgroundColor:
-                      item.color || `hsl(${index * 60}, 60%, 60%)`,
+                    backgroundColor: item.color || `hsl(${index * 60}, 60%, 60%)`,
                   }}
                 />
                 <div className="flex-1 flex items-center justify-between">
-                  <span className="text-sm text-zinc-300 font-medium">
-                    {item.label}
-                  </span>
+                  <span className="text-sm text-zinc-300 font-medium">{item.label}</span>
                   <div className="text-right">
                     <div className="text-sm font-semibold text-zinc-50">
                       {item.value.toLocaleString()}
@@ -353,13 +317,9 @@ export function AreaChart({
   });
 
   // Cardinal spline interpolation for organic curves
-  function cardinalSpline(
-    pts: { x: number; y: number }[],
-    tension = 0.4,
-  ): string {
+  function cardinalSpline(pts: { x: number; y: number }[], tension = 0.4): string {
     if (pts.length < 2) return "";
-    if (pts.length === 2)
-      return `M ${pts[0].x} ${pts[0].y} L ${pts[1].x} ${pts[1].y}`;
+    if (pts.length === 2) return `M ${pts[0].x} ${pts[0].y} L ${pts[1].x} ${pts[1].y}`;
 
     let path = `M ${pts[0].x} ${pts[0].y}`;
     for (let i = 0; i < pts.length - 1; i++) {
@@ -393,9 +353,7 @@ export function AreaChart({
               {title}
             </h3>
           )}
-          {subtitle && (
-            <p className="text-body-small text-zinc-400">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-body-small text-zinc-400">{subtitle}</p>}
         </div>
       )}
 
@@ -409,13 +367,7 @@ export function AreaChart({
         >
           {/* Gradient definition — violet */}
           <defs>
-            <linearGradient
-              id={`areaGradient-${gradientId}`}
-              x1="0%"
-              y1="0%"
-              x2="0%"
-              y2="100%"
-            >
+            <linearGradient id={`areaGradient-${gradientId}`} x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.4" />
               <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.02" />
             </linearGradient>
@@ -467,9 +419,7 @@ export function AreaChart({
                 cy={point.y}
                 r={hoveredIndex === index ? 4 : 3}
                 fill={
-                  hoveredIndex === index
-                    ? "var(--color-accent-secondary)"
-                    : "var(--color-surface)"
+                  hoveredIndex === index ? "var(--color-accent-secondary)" : "var(--color-surface)"
                 }
                 stroke="var(--color-accent-secondary)"
                 strokeWidth="2"
@@ -543,17 +493,13 @@ export function MetricCard({
     >
       <div className="flex items-start justify-between mb-4">
         <div className="space-y-1">
-          <p className="text-heading-small font-medium text-zinc-400">
-            {title}
-          </p>
+          <p className="text-heading-small font-medium text-zinc-400">{title}</p>
           <p className="text-display-medium font-bold text-zinc-50">
             {typeof value === "number" ? value.toLocaleString() : value}
           </p>
         </div>
 
-        {icon && (
-          <div className="p-2 rounded-lg bg-accent-primary/10">{icon}</div>
-        )}
+        {icon && <div className="p-2 rounded-lg bg-accent-primary/10">{icon}</div>}
       </div>
 
       {(change !== undefined || changeLabel) && (
@@ -562,11 +508,7 @@ export function MetricCard({
             <div
               className={cn(
                 "flex items-center gap-1 text-sm font-medium",
-                change > 0
-                  ? "text-green-400"
-                  : change < 0
-                    ? "text-red-400"
-                    : "text-zinc-400",
+                change > 0 ? "text-green-400" : change < 0 ? "text-red-400" : "text-zinc-400",
               )}
             >
               {change > 0 && <TrendingUp className="h-4 w-4" />}
@@ -574,9 +516,7 @@ export function MetricCard({
               {Math.abs(change)}%
             </div>
           )}
-          {changeLabel && (
-            <span className="text-sm text-zinc-400">{changeLabel}</span>
-          )}
+          {changeLabel && <span className="text-sm text-zinc-400">{changeLabel}</span>}
         </div>
       )}
 

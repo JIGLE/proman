@@ -39,7 +39,7 @@ export function StepIndicator({
         {steps.map((step, index) => {
           const isCompleted = completedSteps.has(index);
           const isCurrent = index === currentStep;
-          
+
           return (
             <motion.button
               key={step.id}
@@ -50,9 +50,9 @@ export function StepIndicator({
                 isCurrent
                   ? "w-8 bg-accent-primary"
                   : isCompleted
-                  ? "w-2 bg-accent-primary/60"
-                  : "w-2 bg-[var(--color-muted)]",
-                visitedSteps.has(index) && !isCurrent && "cursor-pointer hover:opacity-80"
+                    ? "w-2 bg-accent-primary/60"
+                    : "w-2 bg-[var(--color-muted)]",
+                visitedSteps.has(index) && !isCurrent && "cursor-pointer hover:opacity-80",
               )}
               initial={false}
               animate={{ scale: isCurrent ? 1 : 0.85 }}
@@ -65,7 +65,7 @@ export function StepIndicator({
 
   if (variant === "line") {
     const progress = ((currentStep + 1) / steps.length) * 100;
-    
+
     return (
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
@@ -106,10 +106,10 @@ export function StepIndicator({
                 isCurrent
                   ? "bg-accent-primary text-white"
                   : isCompleted
-                  ? "bg-[var(--color-success)]/20 text-[var(--color-success)]"
-                  : canClick
-                  ? "bg-[var(--color-hover)] text-[var(--color-foreground)] hover:bg-[var(--color-muted)]"
-                  : "bg-[var(--color-muted)]/50 text-[var(--color-muted-foreground)]"
+                    ? "bg-[var(--color-success)]/20 text-[var(--color-success)]"
+                    : canClick
+                      ? "bg-[var(--color-hover)] text-[var(--color-foreground)] hover:bg-[var(--color-muted)]"
+                      : "bg-[var(--color-muted)]/50 text-[var(--color-muted-foreground)]",
               )}
             >
               {isCompleted && <Check className="h-3.5 w-3.5" />}
@@ -137,7 +137,7 @@ export function StepIndicator({
               disabled={!canClick}
               className={cn(
                 "flex items-center gap-3 transition-colors",
-                canClick && !isCurrent && "cursor-pointer hover:opacity-80"
+                canClick && !isCurrent && "cursor-pointer hover:opacity-80",
               )}
             >
               {/* Step number/check */}
@@ -147,10 +147,10 @@ export function StepIndicator({
                   isCurrent
                     ? "bg-accent-primary text-white"
                     : isCompleted
-                    ? "bg-[var(--color-success)] text-white"
-                    : canClick
-                    ? "bg-[var(--color-hover)] text-[var(--color-foreground)]"
-                    : "bg-[var(--color-muted)] text-[var(--color-muted-foreground)]"
+                      ? "bg-[var(--color-success)] text-white"
+                      : canClick
+                        ? "bg-[var(--color-hover)] text-[var(--color-foreground)]"
+                        : "bg-[var(--color-muted)] text-[var(--color-muted-foreground)]",
                 )}
               >
                 {isCompleted ? <Check className="h-4 w-4" /> : index + 1}
@@ -163,15 +163,13 @@ export function StepIndicator({
                     "text-sm font-medium",
                     isCurrent
                       ? "text-[var(--color-foreground)]"
-                      : "text-[var(--color-muted-foreground)]"
+                      : "text-[var(--color-muted-foreground)]",
                   )}
                 >
                   {step.title}
                 </p>
                 {step.description && (
-                  <p className="text-xs text-[var(--color-muted-foreground)]">
-                    {step.description}
-                  </p>
+                  <p className="text-xs text-[var(--color-muted-foreground)]">{step.description}</p>
                 )}
               </div>
             </button>
@@ -181,9 +179,7 @@ export function StepIndicator({
               <div
                 className={cn(
                   "flex-1 h-px mx-4",
-                  isCompleted
-                    ? "bg-[var(--color-success)]"
-                    : "bg-[var(--color-border)]"
+                  isCompleted ? "bg-[var(--color-success)]" : "bg-[var(--color-border)]",
                 )}
               />
             )}
@@ -372,13 +368,9 @@ export function StepContent({
   return (
     <div className={cn("space-y-6", className)}>
       <div>
-        <h3 className="text-lg font-semibold text-[var(--color-foreground)]">
-          {title}
-        </h3>
+        <h3 className="text-lg font-semibold text-[var(--color-foreground)]">{title}</h3>
         {description && (
-          <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-            {description}
-          </p>
+          <p className="text-sm text-[var(--color-muted-foreground)] mt-1">{description}</p>
         )}
       </div>
       <div className="space-y-4">{children}</div>

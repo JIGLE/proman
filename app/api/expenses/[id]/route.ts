@@ -1,8 +1,5 @@
 import { NextRequest } from "next/server";
-import {
-  requireAuth,
-  handleOptions,
-} from "@/lib/services/auth/auth-middleware";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -22,11 +19,7 @@ const updateExpenseSchema = z.object({
     .refine((date) => !isNaN(Date.parse(date)), "Invalid date")
     .optional(),
   category: z.string().min(1).optional(),
-  description: z
-    .string()
-    .max(200, "Description too long")
-    .optional()
-    .nullable(),
+  description: z.string().max(200, "Description too long").optional().nullable(),
   vendor: z.string().max(100, "Vendor name too long").optional().nullable(),
 });
 
@@ -38,11 +31,7 @@ async function handleGet(
   },
 ): Promise<Response> {
   if (isMockMode) {
-    return createErrorResponse(
-      new Error("Not available in mock mode"),
-      404,
-      request,
-    );
+    return createErrorResponse(new Error("Not available in mock mode"), 404, request);
   }
 
   const authResult = await requireAuth(request);
@@ -51,18 +40,11 @@ async function handleGet(
   const { userId } = authResult;
   let id: string | undefined;
   if (context?.params) {
-    const maybe = context.params as
-      | Record<string, string>
-      | Promise<Record<string, string>>;
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
     const resolved = maybe instanceof Promise ? await maybe : maybe;
     id = resolved?.id;
   }
-  if (!id)
-    return createErrorResponse(
-      new Error("Invalid request: missing id"),
-      400,
-      request,
-    );
+  if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
 
   try {
     const prisma = getPrismaClient();
@@ -96,11 +78,7 @@ async function handlePut(
   },
 ): Promise<Response> {
   if (isMockMode) {
-    return createErrorResponse(
-      new Error("Not available in mock mode"),
-      404,
-      request,
-    );
+    return createErrorResponse(new Error("Not available in mock mode"), 404, request);
   }
 
   const authResult = await requireAuth(request);
@@ -109,18 +87,11 @@ async function handlePut(
   const { userId } = authResult;
   let id: string | undefined;
   if (context?.params) {
-    const maybe = context.params as
-      | Record<string, string>
-      | Promise<Record<string, string>>;
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
     const resolved = maybe instanceof Promise ? await maybe : maybe;
     id = resolved?.id;
   }
-  if (!id)
-    return createErrorResponse(
-      new Error("Invalid request: missing id"),
-      400,
-      request,
-    );
+  if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
 
   try {
     const prisma = getPrismaClient();
@@ -139,14 +110,9 @@ async function handlePut(
     const sanitizedBody = {
       ...body,
       category: body.category ? sanitizeForDatabase(body.category) : undefined,
-      description: body.description
-        ? sanitizeForDatabase(body.description)
-        : body.description,
+      description: body.description ? sanitizeForDatabase(body.description) : body.description,
       vendor: body.vendor ? sanitizeForDatabase(body.vendor) : body.vendor,
-      amount:
-        body.amount !== undefined
-          ? sanitizeNumber(body.amount, 0, 0.01)
-          : undefined,
+      amount: body.amount !== undefined ? sanitizeNumber(body.amount, 0, 0.01) : undefined,
     };
 
     const validatedData = updateExpenseSchema.parse(sanitizedBody);
@@ -173,9 +139,7 @@ async function handlePut(
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(
-        new Error(
-          `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-        ),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
         request,
       );
@@ -192,11 +156,7 @@ async function handleDelete(
   },
 ): Promise<Response> {
   if (isMockMode) {
-    return createErrorResponse(
-      new Error("Not available in mock mode"),
-      404,
-      request,
-    );
+    return createErrorResponse(new Error("Not available in mock mode"), 404, request);
   }
 
   const authResult = await requireAuth(request);
@@ -205,18 +165,11 @@ async function handleDelete(
   const { userId } = authResult;
   let id: string | undefined;
   if (context?.params) {
-    const maybe = context.params as
-      | Record<string, string>
-      | Promise<Record<string, string>>;
+    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
     const resolved = maybe instanceof Promise ? await maybe : maybe;
     id = resolved?.id;
   }
-  if (!id)
-    return createErrorResponse(
-      new Error("Invalid request: missing id"),
-      400,
-      request,
-    );
+  if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
 
   try {
     const prisma = getPrismaClient();

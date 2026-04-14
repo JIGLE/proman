@@ -1,13 +1,23 @@
-import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { documentService } from '@/lib/services/document-service';
-import { sanitizeForDatabase } from '@/lib/utils/sanitize';
-import { z } from 'zod';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { documentService } from "@/lib/services/document-service";
+import { sanitizeForDatabase } from "@/lib/utils/sanitize";
+import { z } from "zod";
 
 // Validation schema for updates
 const documentTypeSchema = z.enum([
-  'contract', 'invoice', 'receipt', 'photo', 'floor_plan', 'certificate', 'other'
+  "contract",
+  "invoice",
+  "receipt",
+  "photo",
+  "floor_plan",
+  "certificate",
+  "other",
 ]);
 
 const updateDocumentSchema = z.object({
@@ -23,28 +33,30 @@ const updateDocumentSchema = z.object({
 // GET /api/documents/[id] - Get a single document
 async function handleGet(
   request: NextRequest,
-  context?: { params?: Record<string, string> | Promise<Record<string, string>> }
+  context?: { params?: Record<string, string> | Promise<Record<string, string>> },
 ): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
-  
+
   // Handle both sync and async params
-  const params = context?.params ? (
-    context.params instanceof Promise ? await context.params : context.params
-  ) : {};
-  const id = params.id || request.url.split('/').pop()?.split('?')[0] || '';
+  const params = context?.params
+    ? context.params instanceof Promise
+      ? await context.params
+      : context.params
+    : {};
+  const id = params.id || request.url.split("/").pop()?.split("?")[0] || "";
 
   if (!id) {
-    return createErrorResponse(new Error('Document ID is required'), 400, request);
+    return createErrorResponse(new Error("Document ID is required"), 400, request);
   }
 
   try {
     const document = await documentService.getById(userId, id);
-    
+
     if (!document) {
-      return createErrorResponse(new Error('Document not found'), 404, request);
+      return createErrorResponse(new Error("Document not found"), 404, request);
     }
 
     return createSuccessResponse(document);
@@ -56,20 +68,22 @@ async function handleGet(
 // PUT /api/documents/[id] - Update document metadata
 async function handlePut(
   request: NextRequest,
-  context?: { params?: Record<string, string> | Promise<Record<string, string>> }
+  context?: { params?: Record<string, string> | Promise<Record<string, string>> },
 ): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
-  
-  const params = context?.params ? (
-    context.params instanceof Promise ? await context.params : context.params
-  ) : {};
-  const id = params.id || request.url.split('/').pop()?.split('?')[0] || '';
+
+  const params = context?.params
+    ? context.params instanceof Promise
+      ? await context.params
+      : context.params
+    : {};
+  const id = params.id || request.url.split("/").pop()?.split("?")[0] || "";
 
   if (!id) {
-    return createErrorResponse(new Error('Document ID is required'), 400, request);
+    return createErrorResponse(new Error("Document ID is required"), 400, request);
   }
 
   try {
@@ -101,18 +115,18 @@ async function handlePut(
     };
 
     const document = await documentService.update(userId, id, updateData);
-    
+
     if (!document) {
-      return createErrorResponse(new Error('Document not found'), 404, request);
+      return createErrorResponse(new Error("Document not found"), 404, request);
     }
 
     return createSuccessResponse(document);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
-        request
+        request,
       );
     }
     return createErrorResponse(error as Error, 500, request);
@@ -122,30 +136,32 @@ async function handlePut(
 // DELETE /api/documents/[id] - Delete a document
 async function handleDelete(
   request: NextRequest,
-  context?: { params?: Record<string, string> | Promise<Record<string, string>> }
+  context?: { params?: Record<string, string> | Promise<Record<string, string>> },
 ): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
   const { userId } = authResult;
-  
-  const params = context?.params ? (
-    context.params instanceof Promise ? await context.params : context.params
-  ) : {};
-  const id = params.id || request.url.split('/').pop()?.split('?')[0] || '';
+
+  const params = context?.params
+    ? context.params instanceof Promise
+      ? await context.params
+      : context.params
+    : {};
+  const id = params.id || request.url.split("/").pop()?.split("?")[0] || "";
 
   if (!id) {
-    return createErrorResponse(new Error('Document ID is required'), 400, request);
+    return createErrorResponse(new Error("Document ID is required"), 400, request);
   }
 
   try {
     const deleted = await documentService.delete(userId, id);
-    
+
     if (!deleted) {
-      return createErrorResponse(new Error('Document not found'), 404, request);
+      return createErrorResponse(new Error("Document not found"), 404, request);
     }
 
-    return createSuccessResponse({ message: 'Document deleted successfully' });
+    return createSuccessResponse({ message: "Document deleted successfully" });
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);
   }

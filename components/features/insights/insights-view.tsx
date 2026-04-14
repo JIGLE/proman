@@ -53,17 +53,12 @@ export function InsightsView(): React.ReactElement {
     const startOfYear = new Date(now.getFullYear(), 0, 1);
 
     const totalProperties = properties.length;
-    const occupiedCount = properties.filter(
-      (p) => p.status === "occupied",
-    ).length;
+    const occupiedCount = properties.filter((p) => p.status === "occupied").length;
     const vacantCount = totalProperties - occupiedCount;
-    const occupancyRate =
-      totalProperties > 0 ? (occupiedCount / totalProperties) * 100 : 0;
+    const occupancyRate = totalProperties > 0 ? (occupiedCount / totalProperties) * 100 : 0;
 
     const totalTenants = tenants.length;
-    const activeTenants = tenants.filter(
-      (t) => new Date(t.leaseEnd) >= now,
-    ).length;
+    const activeTenants = tenants.filter((t) => new Date(t.leaseEnd) >= now).length;
 
     const paidThisMonth = receipts.filter(
       (r) => r.status === "paid" && new Date(r.date) >= startOfMonth,
@@ -85,8 +80,7 @@ export function InsightsView(): React.ReactElement {
     const activeLeases = leases?.filter((l) => l.status === "active") || [];
     const avgRent =
       activeLeases.length > 0
-        ? activeLeases.reduce((s, l) => s + (l.monthlyRent || 0), 0) /
-          activeLeases.length
+        ? activeLeases.reduce((s, l) => s + (l.monthlyRent || 0), 0) / activeLeases.length
         : 0;
 
     // Leases expiring within 60 days
@@ -117,27 +111,15 @@ export function InsightsView(): React.ReactElement {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const end = new Date(d.getFullYear(), d.getMonth() + 1, 0);
       const rev = receipts
-        .filter(
-          (r) =>
-            r.status === "paid" &&
-            new Date(r.date) >= d &&
-            new Date(r.date) <= end,
-        )
+        .filter((r) => r.status === "paid" && new Date(r.date) >= d && new Date(r.date) <= end)
         .reduce((s, r) => s + r.amount, 0);
       revenueTrend.push({ label: MONTHS[d.getMonth()], value: rev });
     }
 
     // Month-over-month change
-    const prevMonth =
-      revenueTrend.length >= 2
-        ? revenueTrend[revenueTrend.length - 2].value
-        : 0;
-    const curMonth =
-      revenueTrend.length >= 1
-        ? revenueTrend[revenueTrend.length - 1].value
-        : 0;
-    const momChange =
-      prevMonth > 0 ? ((curMonth - prevMonth) / prevMonth) * 100 : 0;
+    const prevMonth = revenueTrend.length >= 2 ? revenueTrend[revenueTrend.length - 2].value : 0;
+    const curMonth = revenueTrend.length >= 1 ? revenueTrend[revenueTrend.length - 1].value : 0;
+    const momChange = prevMonth > 0 ? ((curMonth - prevMonth) / prevMonth) * 100 : 0;
 
     // Property type breakdown
     const typeCounts = properties.reduce<Record<string, number>>((acc, p) => {
@@ -246,12 +228,7 @@ export function InsightsView(): React.ReactElement {
             Executive summary of your portfolio performance
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          className="gap-2 self-start"
-        >
+        <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2 self-start">
           <RefreshCw className="h-4 w-4" />
           Refresh
         </Button>
@@ -305,9 +282,7 @@ export function InsightsView(): React.ReactElement {
               {a.icon}
               <span className="flex-1 text-sm font-medium">{a.label}</span>
               <span className="text-xs opacity-70">{a.detail}</span>
-              {a.href !== "#" && (
-                <ArrowRight className="h-3.5 w-3.5 opacity-50" />
-              )}
+              {a.href !== "#" && <ArrowRight className="h-3.5 w-3.5 opacity-50" />}
             </button>
           ))}
         </CardContent>
@@ -328,11 +303,7 @@ export function InsightsView(): React.ReactElement {
           </CardHeader>
           <CardContent>
             {metrics.revenueTrend.some((d) => d.value > 0) ? (
-              <LineChart
-                data={metrics.revenueTrend}
-                height={220}
-                showValues={false}
-              />
+              <LineChart data={metrics.revenueTrend} height={220} showValues={false} />
             ) : (
               <div className="flex items-center justify-center h-[220px] text-[var(--color-muted-foreground)] text-sm">
                 No revenue data yet — record payments to see trends
@@ -385,13 +356,9 @@ export function InsightsView(): React.ReactElement {
               {metrics.expiringLeases.slice(0, 5).map((lease) => {
                 const end = new Date(lease.endDate);
                 const now = new Date();
-                const daysLeft = Math.ceil(
-                  (end.getTime() - now.getTime()) / 86_400_000,
-                );
+                const daysLeft = Math.ceil((end.getTime() - now.getTime()) / 86_400_000);
                 const tenant = tenants.find((t) => t.id === lease.tenantId);
-                const property = properties.find(
-                  (p) => p.id === lease.propertyId,
-                );
+                const property = properties.find((p) => p.id === lease.propertyId);
 
                 return (
                   <div
@@ -399,9 +366,7 @@ export function InsightsView(): React.ReactElement {
                     className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
                   >
                     <div className="space-y-0.5">
-                      <p className="text-sm font-medium">
-                        {tenant?.name || "Unknown tenant"}
-                      </p>
+                      <p className="text-sm font-medium">{tenant?.name || "Unknown tenant"}</p>
                       <p className="text-xs text-[var(--color-muted-foreground)]">
                         {property?.name || "Unknown property"}
                       </p>
@@ -467,9 +432,7 @@ function KPITile({
           <span className="text-xs font-medium text-[var(--color-muted-foreground)] uppercase tracking-wide">
             {label}
           </span>
-          <div className="rounded-md bg-[var(--color-muted)]/30 p-1.5">
-            {icon}
-          </div>
+          <div className="rounded-md bg-[var(--color-muted)]/30 p-1.5">{icon}</div>
         </div>
         <div className="text-2xl font-bold tracking-tight">{value}</div>
         {change !== undefined && (
@@ -487,11 +450,7 @@ function KPITile({
             {Math.abs(change).toFixed(1)}% vs last month
           </div>
         )}
-        {sub && (
-          <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
-            {sub}
-          </p>
-        )}
+        {sub && <p className="text-xs text-[var(--color-muted-foreground)] mt-1">{sub}</p>}
       </CardContent>
     </Card>
   );
@@ -521,9 +480,7 @@ function QuickLink({
           {title}
           <ArrowRight className="h-3.5 w-3.5 opacity-0 -translate-x-1 transition-all group-hover:opacity-70 group-hover:translate-x-0" />
         </h3>
-        <p className="text-xs text-[var(--color-muted-foreground)] line-clamp-2">
-          {description}
-        </p>
+        <p className="text-xs text-[var(--color-muted-foreground)] line-clamp-2">{description}</p>
       </div>
     </button>
   );

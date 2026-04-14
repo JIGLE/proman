@@ -26,9 +26,7 @@ interface AutomationResult {
 /**
  * Generate rent payment reminders for invoices due in 5 days
  */
-async function generateRentReminders(
-  prisma: ReturnType<typeof getPrismaClient>,
-): Promise<number> {
+async function generateRentReminders(prisma: ReturnType<typeof getPrismaClient>): Promise<number> {
   const now = new Date();
   const fiveDaysFromNow = new Date(now);
   fiveDaysFromNow.setDate(fiveDaysFromNow.getDate() + 5);
@@ -84,9 +82,7 @@ async function generateRentReminders(
 /**
  * Generate overdue payment notices (D+1 and D+7)
  */
-async function generateOverdueNotices(
-  prisma: ReturnType<typeof getPrismaClient>,
-): Promise<number> {
+async function generateOverdueNotices(prisma: ReturnType<typeof getPrismaClient>): Promise<number> {
   const now = new Date();
   const today = new Date(now);
   today.setHours(0, 0, 0, 0);
@@ -106,8 +102,7 @@ async function generateOverdueNotices(
   let created = 0;
   for (const invoice of overdueInvoices) {
     const daysPastDue = Math.floor(
-      (today.getTime() - new Date(invoice.dueDate).getTime()) /
-        (1000 * 60 * 60 * 24),
+      (today.getTime() - new Date(invoice.dueDate).getTime()) / (1000 * 60 * 60 * 24),
     );
 
     // Only send at D+1 and D+7

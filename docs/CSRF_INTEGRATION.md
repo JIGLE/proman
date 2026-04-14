@@ -45,13 +45,15 @@ ProMan implements comprehensive CSRF (Cross-Site Request Forgery) protection usi
    - Type-safe wrapper around fetch API
    - Automatically injects CSRF token for POST/PUT/PATCH/DELETE
    - Supports two call signatures:
+
      ```typescript
      // Signature 1: Options object
-     apiFetch<T>('/api/endpoint', { method: 'POST', csrfToken, body: JSON.stringify(data) })
-     
+     apiFetch<T>("/api/endpoint", { method: "POST", csrfToken, body: JSON.stringify(data) });
+
      // Signature 2: Convenient shorthand
-     apiFetch<T>('/api/endpoint', csrfToken, 'POST', data)
+     apiFetch<T>("/api/endpoint", csrfToken, "POST", data);
      ```
+
    - Includes credentials (cookies) automatically
    - Logs warnings for missing CSRF tokens on state-changing requests
 
@@ -67,49 +69,49 @@ ProMan implements comprehensive CSRF (Cross-Site Request Forgery) protection usi
 ### Frontend: Using CSRF in Components
 
 ```tsx
-import { useCsrf } from '@/lib/contexts/csrf-context';
-import { apiFetch } from '@/lib/utils/api-client';
+import { useCsrf } from "@/lib/contexts/csrf-context";
+import { apiFetch } from "@/lib/utils/api-client";
 
 function MyComponent() {
   const { token, loading, error, refreshToken } = useCsrf();
-  
+
   const handleSubmit = async (data) => {
     try {
       // Convenient signature
-      const result = await apiFetch('/api/myendpoint', token, 'POST', data);
-      
+      const result = await apiFetch("/api/myendpoint", token, "POST", data);
+
       // Or options object signature
       // const result = await apiFetch('/api/myendpoint', {
       //   method: 'POST',
       //   csrfToken: token,
       //   body: JSON.stringify(data)
       // });
-      
-      console.log('Success:', result);
+
+      console.log("Success:", result);
     } catch (err) {
-      console.error('Failed:', err);
+      console.error("Failed:", err);
     }
   };
-  
+
   if (loading) return <div>Loading CSRF token...</div>;
   if (error) return <div>Error: {error}</div>;
-  
-  return <button onClick={() => handleSubmit({ foo: 'bar' })}>Submit</button>;
+
+  return <button onClick={() => handleSubmit({ foo: "bar" })}>Submit</button>;
 }
 ```
 
 ### Backend: Protecting Routes
 
 ```typescript
-import { withCsrfProtection } from '@/lib/middleware/csrf';
+import { withCsrfProtection } from "@/lib/middleware/csrf";
 
 export const POST = withCsrfProtection(async (request: Request) => {
   // Your route logic here
   // CSRF validation is automatic
-  
+
   const body = await request.json();
   // ... process request
-  
+
   return NextResponse.json({ success: true });
 });
 ```
@@ -186,10 +188,11 @@ curl -X POST http://localhost:3000/api/properties \
 **Cause**: Missing or invalid CSRF token
 
 **Solution**:
+
 ```typescript
 // Check if token is available
 const { token, loading, error } = useCsrf();
-console.log('Token:', token, 'Loading:', loading, 'Error:', error);
+console.log("Token:", token, "Loading:", loading, "Error:", error);
 
 // Ensure CsrfProvider wraps your component
 // Check components/shared/client-providers.tsx
@@ -221,6 +224,7 @@ If updating existing API calls to use CSRF:
 ## Related Files
 
 ### Frontend
+
 - `lib/contexts/csrf-context.tsx` - Context provider
 - `lib/hooks/use-csrf-token.tsx` - Token management hook
 - `lib/utils/api-client.ts` - Secure API client
@@ -228,6 +232,7 @@ If updating existing API calls to use CSRF:
 - `components/shared/client-providers.tsx` - Provider hierarchy
 
 ### Backend
+
 - `lib/middleware/csrf.ts` - CSRF middleware
 - `app/api/csrf-token/route.ts` - Token distribution endpoint
 - `middleware.ts` - Global security headers

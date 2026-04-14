@@ -1,10 +1,6 @@
-import { Suspense } from "react";
-import { ContactsView } from "@/components/features/contacts/contacts-view";
+import { redirect } from "next/navigation";
 
-export default function ContactsPage(): React.ReactElement {
-  return (
-    <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" /></div>}>
-      <ContactsView />
-    </Suspense>
-  );
+export default async function ContactsPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  redirect(`/${locale}/tenants?view=contacts`);
 }

@@ -20,6 +20,7 @@ Version 0.8.2 delivers a comprehensive user experience overhaul focused on simpl
 **After:** 8 navigation items with intelligent tabbed modules
 
 #### Desktop Sidebar Changes
+
 - âœ… **Removed** standalone items: Units, Map View, Leases, Payment Matrix, Receipts, Reports
 - âœ… **Consolidated** into tabbed modules (see below)
 - âœ… **Renamed** groups for clarity:
@@ -28,6 +29,7 @@ Version 0.8.2 delivers a comprehensive user experience overhaul focused on simpl
   - "Financial Management" â†’ "Finance"
 
 #### Mobile Navigation Updates
+
 - âœ… Updated "More" menu from 10 items â†’ 6 items
 - âœ… Changed "People" label â†’ "Tenants" for consistency
 - âœ… Removed redundant items (now accessible via tabs)
@@ -37,23 +39,27 @@ Version 0.8.2 delivers a comprehensive user experience overhaul focused on simpl
 ### ðŸ“‘ Modular Tabbed Architecture
 
 #### **Properties Module** (3 Tabs)
+
 ```
 Properties
 â”œâ”€ List (grid/table view with sorting, filtering, bulk actions)
 â”œâ”€ Map (interactive property map view)
 â””â”€ Units (unit-level management)
 ```
+
 - Shared state: search, filters, and bulk selection work across all tabs
 - URL persistence: `/properties?view=map`
 - Maintains all existing functionality with cleaner navigation
 
 #### **Financials Module** (3 Tabs + Summary Bar)
+
 ```
 Financials
 â”œâ”€ Overview (charts, revenue/expense trends, tax calculations)
 â”œâ”€ Payments (monthly payment matrix calendar)
 â””â”€ Receipts (transaction list with PDF generation)
 ```
+
 - **Financial Summary Bar** visible across all tabs:
   - Total Revenue (all income sources)
   - Total Expenses (all costs)
@@ -62,11 +68,13 @@ Financials
 - URL persistence: `/financials?view=receipts`
 
 #### **Tenants & Leases Module** (2 Tabs)
+
 ```
 Tenants
 â”œâ”€ Tenants (CRM with payment tracking, inline editing)
 â””â”€ Leases (agreements, 4-step wizard, document uploads)
 ```
+
 - Simplified workflow: view tenants, switch to leases tab to create agreements
 - Active lease badges shown in tenant cards
 - URL persistence: `/tenants?view=leases`
@@ -77,14 +85,14 @@ Tenants
 
 **Fixed:** All 6 dashboard quick action buttons now work correctly
 
-| Button | Action | Navigation |
-|--------|--------|------------|
-| **Add Property** | Opens property creation dialog | â†’ Properties module |
-| **Add Tenant** | Opens tenant registration | â†’ Tenants module |
-| **Create Lease** | Starts 4-step lease wizard | â†’ Tenants module (Leases tab) |
-| **Record Payment** | Opens payment entry form | â†’ Financials module (Payments tab) |
-| **Create Ticket** | Opens maintenance ticket | â†’ Maintenance module |
-| **Send Correspondence** | Opens email composer | â†’ Correspondence module |
+| Button                  | Action                         | Navigation                           |
+| ----------------------- | ------------------------------ | ------------------------------------ |
+| **Add Property**        | Opens property creation dialog | â†’ Properties module                |
+| **Add Tenant**          | Opens tenant registration      | â†’ Tenants module                   |
+| **Create Lease**        | Starts 4-step lease wizard     | â†’ Tenants module (Leases tab)      |
+| **Record Payment**      | Opens payment entry form       | â†’ Financials module (Payments tab) |
+| **Create Ticket**       | Opens maintenance ticket       | â†’ Maintenance module               |
+| **Send Correspondence** | Opens email composer           | â†’ Correspondence module            |
 
 - âœ… Each button navigates to the appropriate module/tab
 - âœ… Available in both horizontal (desktop) and compact (mobile) layouts
@@ -96,20 +104,22 @@ Tenants
 
 **Fixed:** 50+ instances of hardcoded white text that was invisible in light mode
 
-| Component | Fixes Applied |
-|-----------|---------------|
+| Component                                        | Fixes Applied  |
+| ------------------------------------------------ | -------------- |
 | `components/features/property/property-list.tsx` | 8 replacements |
-| `tenants-view.tsx` | 9 replacements |
-| `leases-view.tsx` | 7 replacements |
-| `financials-view.tsx` | 6 replacements |
-| `receipts-view.tsx` | 4 replacements |
-| `owners-view.tsx` | 4 replacements |
+| `tenants-view.tsx`                               | 9 replacements |
+| `leases-view.tsx`                                | 7 replacements |
+| `financials-view.tsx`                            | 6 replacements |
+| `receipts-view.tsx`                              | 4 replacements |
+| `owners-view.tsx`                                | 4 replacements |
 
 **Changes:**
+
 - `text-zinc-50` â†’ `text-[var(--color-foreground)]`
 - `text-zinc-400` â†’ `text-[var(--color-muted-foreground)]`
 
 **Result:**
+
 - âœ… WCAG AA compliant contrast ratios (4.5:1 minimum)
 - âœ… All text readable in light, dark, and OLED themes
 - âœ… Consistent with existing design system
@@ -121,18 +131,21 @@ Tenants
 **Upgraded:** Custom dropdown â†’ Radix UI Popover pattern
 
 **Before:**
+
 - Fixed positioning (`fixed top-14 right-4`)
 - Custom backdrop/overlay
 - Manual keyboard handling
 - Potential z-index conflicts
 
 **After:**
+
 - Radix Popover with `align="end"` and `sideOffset={8}`
 - Built-in accessibility (ARIA relationships, focus management)
 - Automatic positioning and collision detection
 - Consistent with Settings dropdown pattern
 
 **Features Maintained:**
+
 - âœ… Filter tabs (All / Unread)
 - âœ… Mark as read / Mark all read
 - âœ… Delete individual notifications
@@ -147,17 +160,20 @@ Tenants
 **New Hook:** `useTabPersistence(module, defaultTab)`
 
 **Features:**
+
 - ðŸ”— URL query params: `?tab=properties&view=map`
 - ðŸ’¾ localStorage fallback for persistence across sessions
 - â¬…ï¸ Browser back/forward navigation support
 - ðŸ”„ Sync between URL and component state
 
 **Usage:**
+
 ```typescript
-const [activeTab, setActiveTab] = useTabPersistence('properties', 'list');
+const [activeTab, setActiveTab] = useTabPersistence("properties", "list");
 ```
 
 **Benefits:**
+
 - Shareable deep links (copy URL â†’ paste in new window â†’ correct tab opens)
 - State survives page reloads
 - SEO-friendly URLs
@@ -167,24 +183,27 @@ const [activeTab, setActiveTab] = useTabPersistence('properties', 'list');
 ## ðŸ—ï¸ Technical Changes
 
 ### Files Created
-| File | Lines | Purpose |
-|------|-------|---------|
-| `lib/hooks/use-tab-persistence.ts` | 57 | URL + localStorage tab state sync |
-| `components/financials-container.tsx` | 110 | Tabbed financials module wrapper |
-| `components/tenants-leases-container.tsx` | 30 | Tabbed tenants/leases wrapper |
+
+| File                                      | Lines | Purpose                           |
+| ----------------------------------------- | ----- | --------------------------------- |
+| `lib/hooks/use-tab-persistence.ts`        | 57    | URL + localStorage tab state sync |
+| `components/financials-container.tsx`     | 110   | Tabbed financials module wrapper  |
+| `components/tenants-leases-container.tsx` | 30    | Tabbed tenants/leases wrapper     |
 
 ### Files Modified
-| File | Changes |
-|------|---------|
-| `components/features/property/property-list.tsx` | Added Tabs UI, integrated Map/Units views |
-| `components/sidebar.tsx` | Simplified menuItems (17â†’8 items) |
-| `components/ui/mobile-nav.tsx` | Updated primaryNavItems and secondaryNavItems |
-| `components/overview-view.tsx` | Added QuickActions props interface, wired handlers |
-| `components/ui/notification-center.tsx` | Refactored to Radix Popover |
-| `app/[locale]/page.tsx` | Updated imports, renderContent with new containers |
-| 6 view components | Fixed light mode text colors |
+
+| File                                             | Changes                                            |
+| ------------------------------------------------ | -------------------------------------------------- |
+| `components/features/property/property-list.tsx` | Added Tabs UI, integrated Map/Units views          |
+| `components/sidebar.tsx`                         | Simplified menuItems (17â†’8 items)                |
+| `components/ui/mobile-nav.tsx`                   | Updated primaryNavItems and secondaryNavItems      |
+| `components/overview-view.tsx`                   | Added QuickActions props interface, wired handlers |
+| `components/ui/notification-center.tsx`          | Refactored to Radix Popover                        |
+| `app/[locale]/page.tsx`                          | Updated imports, renderContent with new containers |
+| 6 view components                                | Fixed light mode text colors                       |
 
 ### Dependencies
+
 - âœ… No new dependencies added
 - âœ… Uses existing Radix UI primitives (`@radix-ui/react-popover`)
 - âœ… Leverages shadcn/ui Tabs component
@@ -193,19 +212,20 @@ const [activeTab, setActiveTab] = useTabPersistence('properties', 'list');
 
 ## ðŸ“Š Impact Metrics
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| **Navigation Items** | 17 | 8 | -53% |
-| **Light Mode Issues** | 50+ | 0 | -100% |
-| **Working Quick Actions** | 0/6 | 6/6 | +100% |
-| **Deep Linkable Views** | 0 | 9 | âˆž |
-| **Mobile "More" Menu** | 10 items | 6 items | -40% |
+| Metric                    | Before   | After   | Change |
+| ------------------------- | -------- | ------- | ------ |
+| **Navigation Items**      | 17       | 8       | -53%   |
+| **Light Mode Issues**     | 50+      | 0       | -100%  |
+| **Working Quick Actions** | 0/6      | 6/6     | +100%  |
+| **Deep Linkable Views**   | 0        | 9       | âˆž    |
+| **Mobile "More" Menu**    | 10 items | 6 items | -40%   |
 
 ---
 
 ## âœ… Backward Compatibility
 
 All v0.8.1 features maintained:
+
 - âœ… OLED theme system
 - âœ… Keyboard shortcuts (Ctrl+1-9, Ctrl+K command palette)
 - âœ… Z-index management system
@@ -218,6 +238,7 @@ All v0.8.1 features maintained:
 ## ðŸ§ª Testing Checklist
 
 ### Functionality
+
 - [x] All 8 navigation items accessible
 - [x] Tab switching works in Properties/Financials/Tenants modules
 - [x] Tab state persists on page reload
@@ -228,6 +249,7 @@ All v0.8.1 features maintained:
 - [x] Bulk selection works across property tabs
 
 ### Accessibility
+
 - [x] Light mode text passes WCAG AA contrast (4.5:1)
 - [x] Keyboard navigation works (Tab, Enter, Escape)
 - [x] Screen reader announcements for tab changes
@@ -235,6 +257,7 @@ All v0.8.1 features maintained:
 - [x] ARIA labels on buttons and popovers
 
 ### Visual
+
 - [x] No layout shifts on tab switching
 - [x] Consistent spacing and typography
 - [x] Proper z-index layering (no overlaps)
@@ -242,6 +265,7 @@ All v0.8.1 features maintained:
 - [x] Smooth animations and transitions
 
 ### Performance
+
 - [x] No TypeScript errors
 - [x] Bundle size impact minimal (no new dependencies)
 - [x] Tab switching instant (no lag)
@@ -252,6 +276,7 @@ All v0.8.1 features maintained:
 ## ðŸš€ Deployment
 
 ### Pre-deployment
+
 ```bash
 # Run tests
 npm test
@@ -267,6 +292,7 @@ npm run dev
 ```
 
 ### Git Workflow
+
 ```bash
 # Commit changes
 git add .
@@ -285,12 +311,15 @@ git push origin v0.8.2
 ## ðŸ“š Migration Guide
 
 ### For Users
+
 No migration required! All existing data and workflows remain unchanged. New tabbed navigation is intuitive and requires no training.
 
 ### For Developers
+
 If extending the project:
 
 1. **Adding new tabs to existing modules:**
+
 ```typescript
 // In components/features/property/property-list.tsx (example)
 <TabsList>
@@ -306,13 +335,14 @@ If extending the project:
 ```
 
 2. **Creating new tabbed modules:**
+
 ```typescript
 // components/your-module-container.tsx
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 
 export function YourModuleContainer() {
   const [activeTab, setActiveTab] = useTabPersistence('yourmodule', 'default');
-  
+
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       {/* ... */}
@@ -322,15 +352,14 @@ export function YourModuleContainer() {
 ```
 
 3. **Updating sidebar navigation:**
+
 ```typescript
 // components/sidebar.tsx
 const menuItems = [
   {
     group: "Your Group",
-    items: [
-      { id: "yourmodule", label: "Your Module", icon: YourIcon }
-    ]
-  }
+    items: [{ id: "yourmodule", label: "Your Module", icon: YourIcon }],
+  },
 ];
 ```
 
@@ -353,6 +382,7 @@ None identified. All changes compile without errors and pass manual testing.
 ## ðŸ“ž Support
 
 For issues or questions:
+
 1. Check this release notes document
 2. Review the [Project Status](PROJECT_STATUS.md)
 3. Open an issue on GitHub
@@ -361,5 +391,3 @@ For issues or questions:
 
 **Previous Release:** [v0.8.1 - UI/UX Improvements](RELEASE_NOTES_v0.8.1.md)  
 **Next Release:** TBD
-
-

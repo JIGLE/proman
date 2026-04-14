@@ -1,9 +1,13 @@
-import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { receiptService } from '@/lib/services/database';
-import { sanitizeForDatabase, sanitizeNumber } from '@/lib/utils/sanitize';
-import { z } from 'zod';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { receiptService } from "@/lib/services/database";
+import { sanitizeForDatabase, sanitizeNumber } from "@/lib/utils/sanitize";
+import { z } from "zod";
 
 // Validation schema for updates
 const updateReceiptSchema = z.object({
@@ -11,13 +15,16 @@ const updateReceiptSchema = z.object({
   propertyId: z.string().min(1).optional(),
   amount: z.number().min(0.01).optional(),
   date: z.string().datetime().optional(),
-  type: z.enum(['rent', 'deposit', 'maintenance', 'other']).optional(),
-  status: z.enum(['paid', 'pending']).optional(),
+  type: z.enum(["rent", "deposit", "maintenance", "other"]).optional(),
+  status: z.enum(["paid", "pending"]).optional(),
   description: z.string().max(500).optional(),
 });
 
 // GET /api/receipts/[id] - Get a specific receipt
-async function handleGet(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+async function handleGet(
+  request: NextRequest,
+  context?: { params?: Record<string, string> | Promise<Record<string, string>> },
+): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -25,16 +32,16 @@ async function handleGet(request: NextRequest, context?: { params?: Record<strin
   let id: string | undefined;
   if (context?.params) {
     const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
-    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    const resolved = maybe instanceof Promise ? await maybe : maybe;
     id = resolved?.id;
   }
-  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
+  if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
 
   try {
     const receipt = await receiptService.getById(userId, id);
 
     if (!receipt) {
-      return createErrorResponse(new Error('Receipt not found'), 404, request);
+      return createErrorResponse(new Error("Receipt not found"), 404, request);
     }
 
     return createSuccessResponse(receipt);
@@ -44,7 +51,10 @@ async function handleGet(request: NextRequest, context?: { params?: Record<strin
 }
 
 // PUT /api/receipts/[id] - Update a specific receipt
-async function handlePut(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+async function handlePut(
+  request: NextRequest,
+  context?: { params?: Record<string, string> | Promise<Record<string, string>> },
+): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -52,16 +62,16 @@ async function handlePut(request: NextRequest, context?: { params?: Record<strin
   let id: string | undefined;
   if (context?.params) {
     const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
-    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    const resolved = maybe instanceof Promise ? await maybe : maybe;
     id = resolved?.id;
   }
-  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
+  if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
 
   try {
     // First check if receipt exists and user owns it
     const existingReceipt = await receiptService.getById(userId, id);
     if (!existingReceipt) {
-      return createErrorResponse(new Error('Receipt not found'), 404, request);
+      return createErrorResponse(new Error("Receipt not found"), 404, request);
     }
 
     const body = await request.json();
@@ -83,9 +93,9 @@ async function handlePut(request: NextRequest, context?: { params?: Record<strin
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
-        request
+        request,
       );
     }
     return createErrorResponse(error as Error, 500, request);
@@ -93,7 +103,10 @@ async function handlePut(request: NextRequest, context?: { params?: Record<strin
 }
 
 // DELETE /api/receipts/[id] - Delete a specific receipt
-async function handleDelete(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+async function handleDelete(
+  request: NextRequest,
+  context?: { params?: Record<string, string> | Promise<Record<string, string>> },
+): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -101,20 +114,20 @@ async function handleDelete(request: NextRequest, context?: { params?: Record<st
   let id: string | undefined;
   if (context?.params) {
     const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
-    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    const resolved = maybe instanceof Promise ? await maybe : maybe;
     id = resolved?.id;
   }
-  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
+  if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
 
   try {
     // First check if receipt exists and user owns it
     const existingReceipt = await receiptService.getById(userId, id);
     if (!existingReceipt) {
-      return createErrorResponse(new Error('Receipt not found'), 404, request);
+      return createErrorResponse(new Error("Receipt not found"), 404, request);
     }
 
     await receiptService.delete(userId, id);
-    return createSuccessResponse({ message: 'Receipt deleted successfully' });
+    return createSuccessResponse({ message: "Receipt deleted successfully" });
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);
   }

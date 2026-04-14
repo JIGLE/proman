@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  requireAuth,
-  handleOptions,
-} from "@/lib/services/auth/auth-middleware";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { ownerSchema } from "@/lib/utils/validation";
 import { isMockMode } from "@/lib/config/data-mode";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
+    const demo = handleDemoGet(request, "owners");
+    if (demo.response) return demo.response;
+
     // In mock mode, return empty array
     if (isMockMode) {
       return NextResponse.json([]);
@@ -34,15 +35,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(owners);
   } catch (error) {
     console.error("Error fetching owners:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch owners" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch owners" }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    const demo = handleDemoMutation(request, "owners");
+    if (demo.response) return demo.response;
+
     // In mock mode, reject write operations
     if (isMockMode) {
       return NextResponse.json(
@@ -69,10 +70,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(owner);
   } catch (error) {
     console.error("Error creating owner:", error);
-    return NextResponse.json(
-      { error: "Failed to create owner" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create owner" }, { status: 500 });
   }
 }
 

@@ -40,11 +40,7 @@ type SendGridEvent = {
  * Verify SendGrid webhook signature
  * Reference: https://docs.sendgrid.com/for-developers/tracking-events/getting-started-event-webhook-security
  */
-function verifySendGridSignature(
-  payload: string,
-  signature: string,
-  publicKey: string,
-): boolean {
+function verifySendGridSignature(payload: string, signature: string, publicKey: string): boolean {
   try {
     const verifier = crypto.createVerify("RSA-SHA256");
     verifier.update(payload);
@@ -64,10 +60,8 @@ function verifySendGridSignature(
 async function processEvent(event: SendGridEvent): Promise<void> {
   const prisma = getPrismaClient();
 
-  const safeEmail =
-    typeof event.email === "string" ? event.email.slice(0, 255) : "";
-  const safeReason =
-    typeof event.reason === "string" ? event.reason.slice(0, 500) : undefined;
+  const safeEmail = typeof event.email === "string" ? event.email.slice(0, 255) : "";
+  const safeReason = typeof event.reason === "string" ? event.reason.slice(0, 500) : undefined;
 
   // Map SendGrid event types to internal status
   const eventStatusMap: Record<string, string> = {
@@ -87,15 +81,10 @@ async function processEvent(event: SendGridEvent): Promise<void> {
 
   try {
     // Find email log by SendGrid message ID
-    const sgMessageId = String(
-      event["sg_message_id"] || event["message-id"] || "",
-    ).trim();
+    const sgMessageId = String(event["sg_message_id"] || event["message-id"] || "").trim();
 
     if (!sgMessageId) {
-      console.debug(
-        "[SendGrid webhook] Event missing message ID, skipping update:",
-        event.event,
-      );
+      console.debug("[SendGrid webhook] Event missing message ID, skipping update:", event.event);
       return;
     }
 
@@ -144,15 +133,11 @@ export async function POST(request: Request): Promise<NextResponse> {
     // Verify SendGrid signature (if public key is configured)
     const sendgridPublicKey = process.env.SENDGRID_WEBHOOK_PUBLIC_KEY;
     if (sendgridPublicKey) {
-      const signature =
-        request.headers.get("X-Twilio-Email-Event-Webhook-Signature") || "";
-      const timestamp =
-        request.headers.get("X-Twilio-Email-Event-Webhook-Timestamp") || "";
+      const signature = request.headers.get("X-Twilio-Email-Event-Webhook-Signature") || "";
+      const timestamp = request.headers.get("X-Twilio-Email-Event-Webhook-Timestamp") || "";
 
       if (!signature || !timestamp) {
-        console.warn(
-          "[SendGrid webhook] Missing signature or timestamp header",
-        );
+        console.warn("[SendGrid webhook] Missing signature or timestamp header");
         return NextResponse.json({ error: "invalid headers" }, { status: 400 });
       }
 
@@ -160,20 +145,13 @@ export async function POST(request: Request): Promise<NextResponse> {
       const signedContent = `${timestamp}${body}`;
 
       // Verify signature
-      const isValid = verifySendGridSignature(
-        signedContent,
-        signature,
-        sendgridPublicKey,
-      );
+      const isValid = verifySendGridSignature(signedContent, signature, sendgridPublicKey);
       if (!isValid) {
         console.warn(
           "[SendGrid webhook] Invalid signature from IP:",
           request.headers.get("x-forwarded-for"),
         );
-        return NextResponse.json(
-          { error: "invalid signature" },
-          { status: 403 },
-        );
+        return NextResponse.json({ error: "invalid signature" }, { status: 403 });
       }
     } else {
       console.debug(
@@ -196,9 +174,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     // If running tests, keep synchronous behavior to satisfy test expectations.
     const isTest = process.env.NODE_ENV === "test";
-    const validEvents = events.filter(
-      (e) => e && e.email && e.event && e.timestamp,
-    );
+    const validEvents = events.filter((e) => e && e.email && e.event && e.timestamp);
 
     if (isTest) {
       // Synchronous processing for tests
@@ -249,9 +225,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       .catch((schedulingErr) => {
         console.error(
           "[SendGrid webhook] Failed to schedule background processing:",
-          schedulingErr instanceof Error
-            ? schedulingErr.message
-            : String(schedulingErr),
+          schedulingErr instanceof Error ? schedulingErr.message : String(schedulingErr),
         );
       });
 

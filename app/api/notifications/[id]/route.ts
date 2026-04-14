@@ -4,10 +4,7 @@ import { getPrismaClient } from "@/lib/services/database/database";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
-export async function GET(
-  request: NextRequest,
-  context: RouteContext,
-): Promise<NextResponse> {
+export async function GET(request: NextRequest, context: RouteContext): Promise<NextResponse> {
   try {
     const authResult = await requireAuth(request);
     if (authResult instanceof Response) return authResult as NextResponse;
@@ -20,26 +17,17 @@ export async function GET(
     });
 
     if (!notification) {
-      return NextResponse.json(
-        { error: "Notification not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Notification not found" }, { status: 404 });
     }
 
     return NextResponse.json(notification);
   } catch (error) {
     console.error("Error fetching notification:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch notification" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch notification" }, { status: 500 });
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  context: RouteContext,
-): Promise<NextResponse> {
+export async function PUT(request: NextRequest, context: RouteContext): Promise<NextResponse> {
   try {
     const authResult = await requireAuth(request);
     if (authResult instanceof Response) return authResult as NextResponse;
@@ -54,10 +42,7 @@ export async function PUT(
     });
 
     if (!existing) {
-      return NextResponse.json(
-        { error: "Notification not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Notification not found" }, { status: 404 });
     }
 
     const notification = await prisma.notification.update({
@@ -70,17 +55,11 @@ export async function PUT(
     return NextResponse.json(notification);
   } catch (error) {
     console.error("Error updating notification:", error);
-    return NextResponse.json(
-      { error: "Failed to update notification" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to update notification" }, { status: 500 });
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  context: RouteContext,
-): Promise<NextResponse> {
+export async function DELETE(request: NextRequest, context: RouteContext): Promise<NextResponse> {
   try {
     const authResult = await requireAuth(request);
     if (authResult instanceof Response) return authResult as NextResponse;
@@ -93,10 +72,7 @@ export async function DELETE(
     });
 
     if (!existing) {
-      return NextResponse.json(
-        { error: "Notification not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Notification not found" }, { status: 404 });
     }
 
     await prisma.notification.delete({
@@ -106,9 +82,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting notification:", error);
-    return NextResponse.json(
-      { error: "Failed to delete notification" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to delete notification" }, { status: 500 });
   }
 }

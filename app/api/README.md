@@ -36,6 +36,7 @@ api/
 ## Route Conventions
 
 ### File Structure
+
 - `route.ts` - API route handler (GET, POST, PUT, DELETE, etc.)
 - `route.test.ts` - Co-located tests for the route
 - `[id]/route.ts` - Dynamic route segments
@@ -45,25 +46,22 @@ api/
 All routes export HTTP method handlers:
 
 ```typescript
-import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/services/auth'
-import { getPrismaClient } from '@/services/database'
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/services/auth";
+import { getPrismaClient } from "@/services/database";
 
 export async function GET(request: NextRequest) {
-  const session = await requireAuth(request)
-  const prisma = getPrismaClient()
-  
+  const session = await requireAuth(request);
+  const prisma = getPrismaClient();
+
   try {
     const data = await prisma.model.findMany({
-      where: { userId: session.user.id }
-    })
-    
-    return NextResponse.json({ data })
+      where: { userId: session.user.id },
+    });
+
+    return NextResponse.json({ data });
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch data' },
-      { status: 500 }
-    )
+    return NextResponse.json({ error: "Failed to fetch data" }, { status: 500 });
   }
 }
 ```
@@ -73,10 +71,10 @@ export async function GET(request: NextRequest) {
 Most routes require authentication. Use the `requireAuth` middleware:
 
 ```typescript
-import { requireAuth } from '@/services/auth'
+import { requireAuth } from "@/services/auth";
 
 export async function GET(request: NextRequest) {
-  const session = await requireAuth(request)
+  const session = await requireAuth(request);
   // session.user contains authenticated user data
 }
 ```
@@ -86,12 +84,12 @@ export async function GET(request: NextRequest) {
 Use Zod schemas for input validation:
 
 ```typescript
-import { z } from 'zod'
-import { createPropertySchema } from '@/schemas'
+import { z } from "zod";
+import { createPropertySchema } from "@/schemas";
 
 export async function POST(request: NextRequest) {
-  const body = await request.json()
-  const validatedData = createPropertySchema.parse(body)
+  const body = await request.json();
+  const validatedData = createPropertySchema.parse(body);
   // validatedData is type-safe
 }
 ```
@@ -101,23 +99,17 @@ export async function POST(request: NextRequest) {
 Use consistent error responses:
 
 ```typescript
-import { ApiError } from '@/utils/errors'
+import { ApiError } from "@/utils/errors";
 
 export async function GET(request: NextRequest) {
   try {
     // ... route logic
   } catch (error) {
     if (error instanceof ApiError) {
-      return NextResponse.json(
-        { error: error.message },
-        { status: error.statusCode }
-      )
+      return NextResponse.json({ error: error.message }, { status: error.statusCode });
     }
-    
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    )
+
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 ```
@@ -127,14 +119,17 @@ export async function GET(request: NextRequest) {
 Protected routes automatically apply rate limiting:
 
 ```typescript
-import { withRateLimit } from '@/utils/rate-limit'
+import { withRateLimit } from "@/utils/rate-limit";
 
-export const GET = withRateLimit(async (request: NextRequest) => {
-  // Route logic
-}, {
-  limit: 100,
-  window: 900000 // 15 minutes
-})
+export const GET = withRateLimit(
+  async (request: NextRequest) => {
+    // Route logic
+  },
+  {
+    limit: 100,
+    window: 900000, // 15 minutes
+  },
+);
 ```
 
 ## CORS Configuration
@@ -143,12 +138,12 @@ CORS headers are automatically added by middleware. For specific route configs:
 
 ```typescript
 export async function GET(request: NextRequest) {
-  const response = NextResponse.json({ data })
-  
-  response.headers.set('Access-Control-Allow-Origin', '*')
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
-  
-  return response
+  const response = NextResponse.json({ data });
+
+  response.headers.set("Access-Control-Allow-Origin", "*");
+  response.headers.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+
+  return response;
 }
 ```
 
@@ -157,15 +152,15 @@ export async function GET(request: NextRequest) {
 Always use the Prisma client singleton:
 
 ```typescript
-import { getPrismaClient } from '@/services/database'
+import { getPrismaClient } from "@/services/database";
 
 export async function GET() {
-  const prisma = getPrismaClient()
-  
+  const prisma = getPrismaClient();
+
   // Use prisma client
-  const data = await prisma.property.findMany()
-  
-  return NextResponse.json({ data })
+  const data = await prisma.property.findMany();
+
+  return NextResponse.json({ data });
 }
 ```
 
@@ -175,54 +170,54 @@ Write tests for all API routes:
 
 ```typescript
 // route.test.ts
-import { describe, it, expect, vi } from 'vitest'
-import { GET } from './route'
+import { describe, it, expect, vi } from "vitest";
+import { GET } from "./route";
 
-describe('GET /api/properties', () => {
-  it('should return properties for authenticated user', async () => {
+describe("GET /api/properties", () => {
+  it("should return properties for authenticated user", async () => {
     // Mock authentication
-    vi.mock('@/services/auth', () => ({
-      requireAuth: vi.fn(() => Promise.resolve({
-        user: { id: 'user-123' }
-      }))
-    }))
-    
-    const request = new Request('http://localhost/api/properties')
-    const response = await GET(request)
-    
-    expect(response.status).toBe(200)
-  })
-})
+    vi.mock("@/services/auth", () => ({
+      requireAuth: vi.fn(() =>
+        Promise.resolve({
+          user: { id: "user-123" },
+        }),
+      ),
+    }));
+
+    const request = new Request("http://localhost/api/properties");
+    const response = await GET(request);
+
+    expect(response.status).toBe(200);
+  });
+});
 ```
 
 ## Webhooks
 
 Webhook routes should:
+
 1. Verify signatures
 2. Handle idempotency
 3. Process asynchronously
 4. Return quickly (< 5s)
 
 ```typescript
-import { validateWebhookSignature } from '@/lib/webhooks'
+import { validateWebhookSignature } from "@/lib/webhooks";
 
 export async function POST(request: NextRequest) {
   // Verify signature
-  const signature = request.headers.get('stripe-signature')
-  const isValid = await validateWebhookSignature(signature, body)
-  
+  const signature = request.headers.get("stripe-signature");
+  const isValid = await validateWebhookSignature(signature, body);
+
   if (!isValid) {
-    return NextResponse.json(
-      { error: 'Invalid signature' },
-      { status: 401 }
-    )
+    return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
-  
+
   // Process webhook asynchronously
-  processWebhookAsync(body)
-  
+  processWebhookAsync(body);
+
   // Return immediately
-  return NextResponse.json({ received: true })
+  return NextResponse.json({ received: true });
 }
 ```
 
@@ -246,6 +241,7 @@ See [API Routes Documentation](../../docs/architecture/API_ROUTES.md) for comple
 ## Environment Variables
 
 Required environment variables for API routes:
+
 - `DATABASE_URL` - PostgreSQL connection string
 - `NEXTAUTH_SECRET` - NextAuth.js secret
 - `NEXTAUTH_URL` - Application URL

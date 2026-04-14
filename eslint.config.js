@@ -1,14 +1,7 @@
 module.exports = [
   // Ignore common build and dependency folders
   {
-    ignores: [
-      "node_modules/**",
-      ".next/**",
-      "dist/**",
-      "out/**",
-      "tests/**",
-      "e2e/**",
-    ],
+    ignores: ["node_modules/**", ".next/**", "dist/**", "out/**", "tests/**", "e2e/**"],
   },
 
   // TypeScript files

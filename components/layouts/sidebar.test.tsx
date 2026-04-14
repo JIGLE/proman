@@ -40,9 +40,7 @@ describe("Sidebar", () => {
     const onTabChange = vi.fn();
     let container: HTMLElement;
     await act(async () => {
-      ({ container } = render(
-        <Sidebar activeTab="overview" onTabChange={onTabChange} />,
-      ));
+      ({ container } = render(<Sidebar activeTab="overview" onTabChange={onTabChange} />));
     });
 
     // Just verify the component renders
@@ -53,9 +51,7 @@ describe("Sidebar", () => {
     const onTabChange = vi.fn();
     let getByText: (text: string) => HTMLElement;
     await act(async () => {
-      ({ getByText } = render(
-        <Sidebar activeTab="overview" onTabChange={onTabChange} />,
-      ));
+      ({ getByText } = render(<Sidebar activeTab="overview" onTabChange={onTabChange} />));
     });
 
     // Username should be visible in expanded mode
@@ -92,9 +88,7 @@ describe("Sidebar", () => {
     let getByText: (text: string) => HTMLElement;
     let getByLabelText: (text: RegExp | string) => HTMLElement;
     await act(async () => {
-      ({ getByText, getByLabelText } = render(
-        <Sidebar activeTab="overview" />,
-      ));
+      ({ getByText, getByLabelText } = render(<Sidebar activeTab="overview" />));
     });
     expect(getByText!("Alice")).toBeDefined();
 

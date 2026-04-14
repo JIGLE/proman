@@ -57,13 +57,9 @@ function formatPrometheusMetrics(): string {
   lines.push(`process_uptime_seconds ${process.uptime()}`);
   lines.push("");
 
-  lines.push(
-    "# HELP metrics_reset_timestamp_seconds Unix timestamp of last metrics reset",
-  );
+  lines.push("# HELP metrics_reset_timestamp_seconds Unix timestamp of last metrics reset");
   lines.push("# TYPE metrics_reset_timestamp_seconds gauge");
-  lines.push(
-    `metrics_reset_timestamp_seconds ${Math.floor(metrics.last_reset / 1000)}`,
-  );
+  lines.push(`metrics_reset_timestamp_seconds ${Math.floor(metrics.last_reset / 1000)}`);
   lines.push("");
 
   return lines.join("\n");
@@ -121,10 +117,7 @@ export async function GET(request: Request): Promise<Response> {
       "Metrics endpoint error:",
       error instanceof Error ? error.message : String(error),
     );
-    return NextResponse.json(
-      { error: "Failed to retrieve metrics" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to retrieve metrics" }, { status: 500 });
   }
 }
 

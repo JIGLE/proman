@@ -1,16 +1,18 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { 
-  Download, 
-  Building2,
-  RefreshCw
-} from "lucide-react";
+import { Download, Building2, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
@@ -56,63 +58,63 @@ interface RentRollData {
 export function ReportsView(): React.ReactElement {
   const { success, error } = useToast();
   const { formatCurrency } = useCurrency();
-  
+
   const [isLoading, setIsLoading] = useState(false);
-  const [reportType, setReportType] = useState<'financial' | 'tax' | 'rent-roll'>('financial');
+  const [reportType, setReportType] = useState<"financial" | "tax" | "rent-roll">("financial");
   const [report, setReport] = useState<FinancialReport | null>(null);
   const [taxReport, setTaxReport] = useState<TaxReportData | null>(null);
   const [rentRoll, setRentRoll] = useState<RentRollData | null>(null);
-  
+
   // Date range state
   const now = new Date();
   const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   const lastOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  
-  const [startDate, setStartDate] = useState(firstOfMonth.toISOString().split('T')[0]);
-  const [endDate, setEndDate] = useState(lastOfMonth.toISOString().split('T')[0]);
+
+  const [startDate, setStartDate] = useState(firstOfMonth.toISOString().split("T")[0]);
+  const [endDate, setEndDate] = useState(lastOfMonth.toISOString().split("T")[0]);
   const [taxYear, setTaxYear] = useState(now.getFullYear());
 
   // Fetch report
   const fetchReport = React.useCallback(async () => {
     setIsLoading(true);
-    
+
     try {
-      let url = '/api/reports?';
-      
+      let url = "/api/reports?";
+
       switch (reportType) {
-        case 'financial':
+        case "financial":
           url += `type=financial&startDate=${startDate}&endDate=${endDate}`;
           break;
-        case 'tax':
+        case "tax":
           url += `type=tax&year=${taxYear}`;
           break;
-        case 'rent-roll':
-          url += 'type=rent-roll';
+        case "rent-roll":
+          url += "type=rent-roll";
           break;
       }
-      
+
       const response = await fetch(url);
-      
+
       if (response.ok) {
         const data = await response.json();
-        
+
         switch (reportType) {
-          case 'financial':
+          case "financial":
             setReport(data.data);
             break;
-          case 'tax':
+          case "tax":
             setTaxReport(data.data);
             break;
-          case 'rent-roll':
+          case "rent-roll":
             setRentRoll(data.data);
             break;
         }
       } else {
-        error('Failed to load report');
+        error("Failed to load report");
       }
     } catch (err) {
-      console.error('Failed to fetch report:', err);
-      error('Failed to load report');
+      console.error("Failed to fetch report:", err);
+      error("Failed to load report");
     } finally {
       setIsLoading(false);
     }
@@ -123,24 +125,24 @@ export function ReportsView(): React.ReactElement {
     try {
       const url = `/api/reports?type=financial&startDate=${startDate}&endDate=${endDate}&format=csv`;
       const response = await fetch(url);
-      
+
       if (response.ok) {
         const blob = await response.blob();
         const downloadUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
+        const a = document.createElement("a");
         a.href = downloadUrl;
         a.download = `financial-report-${startDate}-to-${endDate}.csv`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(downloadUrl);
-        success('Report downloaded');
+        success("Report downloaded");
       } else {
-        error('Failed to download report');
+        error("Failed to download report");
       }
     } catch (err) {
-      console.error('Failed to download:', err);
-      error('Failed to download report');
+      console.error("Failed to download:", err);
+      error("Failed to download report");
     }
   };
 
@@ -212,7 +214,9 @@ export function ReportsView(): React.ReactElement {
               <div className="grid gap-4 md:grid-cols-4">
                 <Card className="bg-zinc-900/50 border-zinc-800">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">Total Income</CardTitle>
+                    <CardTitle className="text-sm font-medium text-zinc-400">
+                      Total Income
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-green-400">
@@ -220,10 +224,12 @@ export function ReportsView(): React.ReactElement {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-zinc-900/50 border-zinc-800">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">Total Expenses</CardTitle>
+                    <CardTitle className="text-sm font-medium text-zinc-400">
+                      Total Expenses
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-red-400">
@@ -231,30 +237,36 @@ export function ReportsView(): React.ReactElement {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-zinc-900/50 border-zinc-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">Net Income</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className={cn(
-                      "text-2xl font-bold",
-                      report.netIncome >= 0 ? "text-green-400" : "text-red-400"
-                    )}>
+                    <div
+                      className={cn(
+                        "text-2xl font-bold",
+                        report.netIncome >= 0 ? "text-green-400" : "text-red-400",
+                      )}
+                    >
                       {formatCurrency(report.netIncome)}
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-zinc-900/50 border-zinc-800">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">Profit Margin</CardTitle>
+                    <CardTitle className="text-sm font-medium text-zinc-400">
+                      Profit Margin
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className={cn(
-                      "text-2xl font-bold",
-                      report.profitMargin >= 0 ? "text-green-400" : "text-red-400"
-                    )}>
+                    <div
+                      className={cn(
+                        "text-2xl font-bold",
+                        report.profitMargin >= 0 ? "text-green-400" : "text-red-400",
+                      )}
+                    >
                       {report.profitMargin.toFixed(1)}%
                     </div>
                   </CardContent>
@@ -271,19 +283,27 @@ export function ReportsView(): React.ReactElement {
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-400">Rent</span>
-                        <span className="font-medium text-zinc-50">{formatCurrency(report.income.totalRent)}</span>
+                        <span className="font-medium text-zinc-50">
+                          {formatCurrency(report.income.totalRent)}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-400">Deposits</span>
-                        <span className="font-medium text-zinc-50">{formatCurrency(report.income.totalDeposits)}</span>
+                        <span className="font-medium text-zinc-50">
+                          {formatCurrency(report.income.totalDeposits)}
+                        </span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-zinc-400">Other</span>
-                        <span className="font-medium text-zinc-50">{formatCurrency(report.income.totalOther)}</span>
+                        <span className="font-medium text-zinc-50">
+                          {formatCurrency(report.income.totalOther)}
+                        </span>
                       </div>
                       <div className="border-t border-zinc-700 pt-3 flex justify-between items-center">
                         <span className="font-medium text-zinc-300">Total</span>
-                        <span className="font-bold text-green-400">{formatCurrency(report.income.total)}</span>
+                        <span className="font-bold text-green-400">
+                          {formatCurrency(report.income.total)}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -295,13 +315,15 @@ export function ReportsView(): React.ReactElement {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {report.expenses.byCategory.map(cat => (
+                      {report.expenses.byCategory.map((cat) => (
                         <div key={cat.category} className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
                             <span className="text-zinc-400">{cat.category}</span>
                             <span className="text-xs text-zinc-500">({cat.percentage}%)</span>
                           </div>
-                          <span className="font-medium text-zinc-50">{formatCurrency(cat.amount)}</span>
+                          <span className="font-medium text-zinc-50">
+                            {formatCurrency(cat.amount)}
+                          </span>
                         </div>
                       ))}
                       {report.expenses.byCategory.length === 0 && (
@@ -309,7 +331,9 @@ export function ReportsView(): React.ReactElement {
                       )}
                       <div className="border-t border-zinc-700 pt-3 flex justify-between items-center">
                         <span className="font-medium text-zinc-300">Total</span>
-                        <span className="font-bold text-red-400">{formatCurrency(report.expenses.total)}</span>
+                        <span className="font-bold text-red-400">
+                          {formatCurrency(report.expenses.total)}
+                        </span>
                       </div>
                     </div>
                   </CardContent>
@@ -324,14 +348,19 @@ export function ReportsView(): React.ReactElement {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {report.income.byProperty.map(prop => (
-                        <div key={prop.propertyId} className="flex items-center justify-between p-3 rounded-lg bg-zinc-800/50">
+                      {report.income.byProperty.map((prop) => (
+                        <div
+                          key={prop.propertyId}
+                          className="flex items-center justify-between p-3 rounded-lg bg-zinc-800/50"
+                        >
                           <div className="flex items-center gap-3">
                             <Building2 className="h-5 w-5 text-zinc-500" />
                             <span className="text-zinc-50">{prop.propertyName}</span>
                           </div>
                           <div className="text-right">
-                            <div className="font-semibold text-zinc-50">{formatCurrency(prop.total)}</div>
+                            <div className="font-semibold text-zinc-50">
+                              {formatCurrency(prop.total)}
+                            </div>
                             <div className="text-xs text-zinc-500">
                               Rent: {formatCurrency(prop.rent)}
                             </div>
@@ -403,8 +432,10 @@ export function ReportsView(): React.ReactElement {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {[2024, 2025, 2026].map(year => (
-                        <SelectItem key={year} value={year.toString()}>{year}</SelectItem>
+                      {[2024, 2025, 2026].map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          {year}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -447,7 +478,10 @@ export function ReportsView(): React.ReactElement {
                 <h4 className="font-medium text-zinc-300 mb-3">Quarterly Breakdown</h4>
                 <div className="grid gap-3 md:grid-cols-4">
                   {(taxReport.quarterlyBreakdown || []).map((q) => (
-                    <div key={q.quarter} className="p-3 rounded-lg bg-zinc-800/30 border border-zinc-700/50">
+                    <div
+                      key={q.quarter}
+                      className="p-3 rounded-lg bg-zinc-800/30 border border-zinc-700/50"
+                    >
                       <div className="font-medium text-zinc-50 mb-2">{q.quarter}</div>
                       <div className="text-sm space-y-1">
                         <div className="flex justify-between">
@@ -487,7 +521,9 @@ export function ReportsView(): React.ReactElement {
               <div className="grid gap-4 md:grid-cols-3">
                 <Card className="bg-zinc-900/50 border-zinc-800">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">Monthly Rent</CardTitle>
+                    <CardTitle className="text-sm font-medium text-zinc-400">
+                      Monthly Rent
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-zinc-50">
@@ -495,7 +531,7 @@ export function ReportsView(): React.ReactElement {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-zinc-900/50 border-zinc-800">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-zinc-400">Annual Rent</CardTitle>
@@ -506,15 +542,15 @@ export function ReportsView(): React.ReactElement {
                     </div>
                   </CardContent>
                 </Card>
-                
+
                 <Card className="bg-zinc-900/50 border-zinc-800">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">Occupancy Rate</CardTitle>
+                    <CardTitle className="text-sm font-medium text-zinc-400">
+                      Occupancy Rate
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-zinc-50">
-                      {rentRoll.occupancyRate}%
-                    </div>
+                    <div className="text-2xl font-bold text-zinc-50">{rentRoll.occupancyRate}%</div>
                   </CardContent>
                 </Card>
               </div>
@@ -526,7 +562,7 @@ export function ReportsView(): React.ReactElement {
                 <CardContent>
                   <div className="space-y-3">
                     {(rentRoll.properties || []).map((prop) => (
-                      <div 
+                      <div
                         key={prop.propertyId}
                         className="flex items-center justify-between p-4 rounded-lg bg-zinc-800/50 border border-zinc-700/50"
                       >
@@ -540,12 +576,19 @@ export function ReportsView(): React.ReactElement {
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold text-zinc-50">{formatCurrency(prop.monthlyRent)}/mo</div>
-                          <div className={cn(
-                            "text-xs",
-                            prop.status === 'occupied' ? 'text-green-400' : 
-                            prop.status === 'vacant' ? 'text-yellow-400' : 'text-red-400'
-                          )}>
+                          <div className="font-semibold text-zinc-50">
+                            {formatCurrency(prop.monthlyRent)}/mo
+                          </div>
+                          <div
+                            className={cn(
+                              "text-xs",
+                              prop.status === "occupied"
+                                ? "text-green-400"
+                                : prop.status === "vacant"
+                                  ? "text-yellow-400"
+                                  : "text-red-400",
+                            )}
+                          >
                             {prop.status.charAt(0).toUpperCase() + prop.status.slice(1)}
                           </div>
                           {prop.leaseEnd && (

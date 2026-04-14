@@ -125,9 +125,7 @@ export function generateReceiptXml(params: {
 /**
  * Create and persist a Recibo de Renda Eletrónico
  */
-export async function createRentReceipt(
-  input: RentReceiptInput,
-): Promise<RentReceiptResult> {
+export async function createRentReceipt(input: RentReceiptInput): Promise<RentReceiptResult> {
   const prisma = getPrismaClient();
   const errors: string[] = [];
 
@@ -142,9 +140,7 @@ export async function createRentReceipt(
   }
 
   if (input.rentAmount <= 0) {
-    errors.push(
-      "Valor da renda deve ser positivo (rent amount must be positive)",
-    );
+    errors.push("Valor da renda deve ser positivo (rent amount must be positive)");
   }
 
   // Receipt must be issued within 5 days of payment

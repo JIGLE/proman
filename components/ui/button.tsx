@@ -9,14 +9,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default:
-          "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md",
+        default: "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 hover:shadow-md",
         primary:
           "bg-accent-primary text-accent-primary-foreground shadow-sm hover:bg-accent-primary/90 hover:shadow-md hover:-translate-y-0.5",
-        success:
-          "bg-success text-success-foreground shadow-sm hover:bg-success/90 hover:shadow-md",
-        warning:
-          "bg-warning text-warning-foreground shadow-sm hover:bg-warning/90 hover:shadow-md",
+        success: "bg-success text-success-foreground shadow-sm hover:bg-success/90 hover:shadow-md",
+        warning: "bg-warning text-warning-foreground shadow-sm hover:bg-warning/90 hover:shadow-md",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90 hover:shadow-md",
         outline:
@@ -51,9 +48,7 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends
-    React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
   loading?: boolean;
 }
@@ -79,11 +74,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     if (asChild) {
       try {
         if (React.Children.count(children) === 1) {
-          childForSlot = React.isValidElement(children) ? (
-            children
-          ) : (
-            <span>{children}</span>
-          );
+          childForSlot = React.isValidElement(children) ? children : <span>{children}</span>;
         } else {
           childForSlot = <span>{children}</span>;
         }
@@ -104,11 +95,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         {...props}
       >
         {loading && (
-          <svg
-            className="animate-spin -ml-1 mr-2 h-4 w-4"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
+          <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
             <circle
               className="opacity-25"
               cx="12"

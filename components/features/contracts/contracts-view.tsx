@@ -1,15 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  FileText,
-  Plus,
-  Search,
-  Calendar,
-  Building2,
-  User,
-  Loader2,
-} from "lucide-react";
+import { FileText, Plus, Search, Calendar, Building2, User, Loader2 } from "lucide-react";
 import { useCsrf } from "@/lib/contexts/csrf-context";
 import { useToast } from "@/lib/contexts/toast-context";
 import { apiFetch } from "@/lib/utils/api-client";
@@ -47,8 +39,7 @@ const statusColors: Record<string, string> = {
     "bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]/20",
   expiring:
     "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20",
-  expired:
-    "bg-[var(--color-error-muted)] text-[var(--color-error)] border-[var(--color-error)]/20",
+  expired: "bg-[var(--color-error-muted)] text-[var(--color-error)] border-[var(--color-error)]/20",
   terminated: "bg-gray-500/10 text-gray-600 border-gray-500/20",
 };
 
@@ -65,10 +56,7 @@ export function ContractsView(): React.ReactElement {
   const fetchContracts = useCallback(async () => {
     try {
       setLoading(true);
-      const json = await apiFetch<{ data: Lease[] } | Lease[]>(
-        "/api/contracts",
-        csrfToken,
-      );
+      const json = await apiFetch<{ data: Lease[] } | Lease[]>("/api/contracts", csrfToken);
       setLeases(Array.isArray(json) ? json : json.data || []);
     } catch (err) {
       console.error("Failed to fetch contracts:", err);
@@ -154,8 +142,7 @@ export function ContractsView(): React.ReactElement {
     } catch (err) {
       // Revert on failure
       setLeases(previousLeases);
-      const message =
-        err instanceof Error ? err.message : "Failed to delete contract";
+      const message = err instanceof Error ? err.message : "Failed to delete contract";
       toast.error(message);
     }
   };
@@ -200,9 +187,7 @@ export function ContractsView(): React.ReactElement {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Contracts
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Contracts</CardTitle>
             <FileText className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -215,9 +200,7 @@ export function ContractsView(): React.ReactElement {
             <div className="h-2 w-2 rounded-full bg-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {stats.active}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
           </CardContent>
         </Card>
         <Card>
@@ -226,9 +209,7 @@ export function ContractsView(): React.ReactElement {
             <div className="h-2 w-2 rounded-full bg-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600">
-              {stats.expiring}
-            </div>
+            <div className="text-2xl font-bold text-amber-600">{stats.expiring}</div>
           </CardContent>
         </Card>
         <Card>
@@ -237,9 +218,7 @@ export function ContractsView(): React.ReactElement {
             <div className="h-2 w-2 rounded-full bg-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
-              {stats.expired}
-            </div>
+            <div className="text-2xl font-bold text-red-600">{stats.expired}</div>
           </CardContent>
         </Card>
       </div>
@@ -282,10 +261,7 @@ export function ContractsView(): React.ReactElement {
             <TableBody>
               {sortedLeases.length === 0 ? (
                 <TableRow>
-                  <TableCell
-                    colSpan={6}
-                    className="text-center py-8 text-muted-foreground"
-                  >
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                     No contracts found
                   </TableCell>
                 </TableRow>
@@ -300,13 +276,9 @@ export function ContractsView(): React.ReactElement {
                       <div className="flex items-center gap-2">
                         <Building2 className="h-4 w-4 text-muted-foreground" />
                         <div>
-                          <div className="font-medium">
-                            {lease.propertyName}
-                          </div>
+                          <div className="font-medium">{lease.propertyName}</div>
                           {lease.unitName && (
-                            <div className="text-xs text-muted-foreground">
-                              {lease.unitName}
-                            </div>
+                            <div className="text-xs text-muted-foreground">{lease.unitName}</div>
                           )}
                         </div>
                       </div>
@@ -335,12 +307,8 @@ export function ContractsView(): React.ReactElement {
                       })}
                     </TableCell>
                     <TableCell>
-                      <Badge
-                        variant="outline"
-                        className={statusColors[lease.status]}
-                      >
-                        {lease.status.charAt(0).toUpperCase() +
-                          lease.status.slice(1)}
+                      <Badge variant="outline" className={statusColors[lease.status]}>
+                        {lease.status.charAt(0).toUpperCase() + lease.status.slice(1)}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">

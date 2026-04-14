@@ -1,12 +1,16 @@
-import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { invoiceService } from '@/lib/services/invoice-service';
-import { z } from 'zod';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { invoiceService } from "@/lib/services/invoice-service";
+import { z } from "zod";
 
 // Validation schema for batch invoice generation
 const batchInvoiceSchema = z.object({
-  dueDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
+  dueDate: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date"),
   month: z.string().optional(), // e.g., "February 2026"
 });
 
@@ -26,22 +30,25 @@ async function handlePost(request: NextRequest): Promise<Response> {
     const result = await invoiceService.generateBatchRentInvoices(
       userId,
       validatedData.dueDate,
-      validatedData.month
+      validatedData.month,
     );
 
-    return createSuccessResponse({
-      message: `Generated ${result.success.length} invoices`,
-      successCount: result.success.length,
-      failedCount: result.failed.length,
-      invoices: result.success,
-      failures: result.failed,
-    }, 201);
+    return createSuccessResponse(
+      {
+        message: `Generated ${result.success.length} invoices`,
+        successCount: result.success.length,
+        failedCount: result.failed.length,
+        invoices: result.success,
+        failures: result.failed,
+      },
+      201,
+    );
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
-        request
+        request,
       );
     }
     return createErrorResponse(error as Error, 500, request);

@@ -1,12 +1,23 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { analyticsService } from '@/lib/services/analytics-service';
-import { z } from 'zod';
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import { createSuccessResponse, withErrorHandler } from "@/lib/utils/error-handling";
+import { analyticsService } from "@/lib/services/analytics-service";
+import { z } from "zod";
 
 // Validation schema for analytics request
 const analyticsRequestSchema = z.object({
-  type: z.enum(['dashboard', 'kpis', 'revenue', 'occupancy', 'performance', 'leases', 'maintenance', 'activities']).default('dashboard'),
+  type: z
+    .enum([
+      "dashboard",
+      "kpis",
+      "revenue",
+      "occupancy",
+      "performance",
+      "leases",
+      "maintenance",
+      "activities",
+    ])
+    .default("dashboard"),
   months: z.coerce.number().min(1).max(24).default(12),
   limit: z.coerce.number().min(1).max(100).default(10),
 });
@@ -20,46 +31,46 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
   const { searchParams } = new URL(request.url);
   const params = analyticsRequestSchema.parse({
-    type: searchParams.get('type') || 'dashboard',
-    months: searchParams.get('months') || 12,
-    limit: searchParams.get('limit') || 10,
+    type: searchParams.get("type") || "dashboard",
+    months: searchParams.get("months") || 12,
+    limit: searchParams.get("limit") || 10,
   });
 
   switch (params.type) {
-    case 'dashboard':
+    case "dashboard":
       const dashboardData = await analyticsService.getDashboardAnalytics(userId);
       return createSuccessResponse(dashboardData);
 
-    case 'kpis':
+    case "kpis":
       const kpis = await analyticsService.getKPIMetrics(userId);
       return createSuccessResponse(kpis);
 
-    case 'revenue':
+    case "revenue":
       const revenue = await analyticsService.getRevenueByMonth(userId, params.months);
       return createSuccessResponse(revenue);
 
-    case 'occupancy':
+    case "occupancy":
       const occupancy = await analyticsService.getOccupancyTrend(userId, params.months);
       return createSuccessResponse(occupancy);
 
-    case 'performance':
+    case "performance":
       const performance = await analyticsService.getPropertyPerformance(userId);
       return createSuccessResponse(performance);
 
-    case 'leases':
+    case "leases":
       const leases = await analyticsService.getLeaseExpirations(userId);
       return createSuccessResponse(leases);
 
-    case 'maintenance':
+    case "maintenance":
       const maintenance = await analyticsService.getMaintenanceStats(userId);
       return createSuccessResponse(maintenance);
 
-    case 'activities':
+    case "activities":
       const activities = await analyticsService.getRecentActivities(userId, params.limit);
       return createSuccessResponse(activities);
 
     default:
-      return NextResponse.json({ error: 'Invalid analytics type' }, { status: 400 });
+      return NextResponse.json({ error: "Invalid analytics type" }, { status: 400 });
   }
 }
 

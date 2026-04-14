@@ -5,23 +5,23 @@ import { AppProvider } from "@/lib/contexts/app-context";
 import { ThemeProvider } from "@/lib/contexts/theme-context";
 import { CsrfProvider } from "@/lib/contexts/csrf-context";
 import { DevAuthProvider } from "@/components/shared/dev-auth";
+import { DemoProvider } from "@/lib/contexts/demo-context";
 
 interface ClientProvidersProps {
   children: React.ReactNode;
   nonce?: string;
 }
 
-export function ClientProviders({
-  children,
-  nonce,
-}: ClientProvidersProps): React.ReactElement {
+export function ClientProviders({ children, nonce }: ClientProvidersProps): React.ReactElement {
   void nonce;
   return (
     <DevAuthProvider>
       <ThemeProvider>
         <CsrfProvider>
           <ToastProvider>
-            <AppProvider>{children}</AppProvider>
+            <DemoProvider>
+              <AppProvider>{children}</AppProvider>
+            </DemoProvider>
           </ToastProvider>
         </CsrfProvider>
       </ThemeProvider>

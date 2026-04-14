@@ -51,13 +51,10 @@ function checkAppRunning(targetUrl) {
   printSection("APPLICATION CHECK");
 
   try {
-    const response = execSync(
-      `curl -s -o /dev/null -w "%{http_code}" ${targetUrl}`,
-      {
-        encoding: "utf-8",
-        stdio: ["pipe", "pipe", "ignore"],
-      },
-    );
+    const response = execSync(`curl -s -o /dev/null -w "%{http_code}" ${targetUrl}`, {
+      encoding: "utf-8",
+      stdio: ["pipe", "pipe", "ignore"],
+    });
 
     if (response && response.trim() !== "000") {
       print(`✓ Application is running at ${targetUrl}`, "green");
@@ -146,10 +143,9 @@ function generateHtmlReport(jsonReportPath) {
   print("\nGenerating HTML report...", "blue");
 
   try {
-    execSync(
-      `npx artillery report ${jsonReportPath} --output ${htmlReportPath}`,
-      { stdio: "inherit" },
-    );
+    execSync(`npx artillery report ${jsonReportPath} --output ${htmlReportPath}`, {
+      stdio: "inherit",
+    });
 
     print(`✓ HTML report generated: ${htmlReportPath}`, "green");
   } catch {
@@ -195,10 +191,7 @@ function analyzeResults(reportPath) {
 
     if (summary.rates) {
       print("\nThroughput:", "cyan");
-      print(
-        `  Requests/sec: ${summary.rates["http.request_rate"] || "N/A"}`,
-        "blue",
-      );
+      print(`  Requests/sec: ${summary.rates["http.request_rate"] || "N/A"}`, "blue");
     }
 
     // Performance verdict
@@ -206,9 +199,7 @@ function analyzeResults(reportPath) {
     const p95 = summary.latency?.p95 || 0;
     const p99 = summary.latency?.p99 || 0;
     const errorRate =
-      ((summary.counters["http.codes.500"] || 0) /
-        (summary.counters["vusers.created"] || 1)) *
-      100;
+      ((summary.counters["http.codes.500"] || 0) / (summary.counters["vusers.created"] || 1)) * 100;
 
     if (p95 < 2000 && p99 < 5000 && errorRate < 1) {
       print("✓ EXCELLENT - All metrics within targets", "green");
@@ -219,18 +210,9 @@ function analyzeResults(reportPath) {
     }
 
     print("\nTargets:", "cyan");
-    print(
-      `  p95 < 2000ms: ${p95 < 2000 ? "✓" : "✗"}`,
-      p95 < 2000 ? "green" : "red",
-    );
-    print(
-      `  p99 < 5000ms: ${p99 < 5000 ? "✓" : "✗"}`,
-      p99 < 5000 ? "green" : "red",
-    );
-    print(
-      `  Error rate < 1%: ${errorRate < 1 ? "✓" : "✗"}`,
-      errorRate < 1 ? "green" : "red",
-    );
+    print(`  p95 < 2000ms: ${p95 < 2000 ? "✓" : "✗"}`, p95 < 2000 ? "green" : "red");
+    print(`  p99 < 5000ms: ${p99 < 5000 ? "✓" : "✗"}`, p99 < 5000 ? "green" : "red");
+    print(`  Error rate < 1%: ${errorRate < 1 ? "✓" : "✗"}`, errorRate < 1 ? "green" : "red");
   } catch (error) {
     print("⚠ Could not analyze results", "yellow");
     print(error.message, "red");
@@ -293,14 +275,8 @@ function main() {
     print("\nUsage:", "yellow");
     print("  node scripts/load-test.js [smoke|full]", "yellow");
     print("\nExamples:", "yellow");
-    print(
-      "  node scripts/load-test.js smoke  # Quick 10-second test",
-      "yellow",
-    );
-    print(
-      "  node scripts/load-test.js full   # Full 7-minute load test",
-      "yellow",
-    );
+    print("  node scripts/load-test.js smoke  # Quick 10-second test", "yellow");
+    print("  node scripts/load-test.js full   # Full 7-minute load test", "yellow");
     process.exit(1);
   }
 }

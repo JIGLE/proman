@@ -61,10 +61,7 @@ export function OnboardingChecklist({
     }
   }, []);
 
-  const completedCount = useMemo(
-    () => steps.filter((s) => s.completed).length,
-    [steps],
-  );
+  const completedCount = useMemo(() => steps.filter((s) => s.completed).length, [steps]);
   const totalSteps = steps.length;
   const allComplete = completedCount === totalSteps;
   const progress = totalSteps > 0 ? (completedCount / totalSteps) * 100 : 0;
@@ -140,9 +137,7 @@ export function OnboardingChecklist({
               {allComplete ? `🎉 ${t("setupComplete")}` : t("gettingStarted")}
             </h3>
             <p className="text-xs text-[var(--color-muted-foreground)]">
-              {allComplete
-                ? t("allSet")
-                : `${completedCount} of ${totalSteps} ${t("complete")}`}
+              {allComplete ? t("allSet") : `${completedCount} of ${totalSteps} ${t("complete")}`}
             </p>
           </div>
         </div>
@@ -154,9 +149,7 @@ export function OnboardingChecklist({
                 key={step.id}
                 className={cn(
                   "h-1.5 w-1.5 rounded-full transition-colors",
-                  step.completed
-                    ? "bg-[var(--color-success)]"
-                    : "bg-[var(--color-muted)]",
+                  step.completed ? "bg-[var(--color-success)]" : "bg-[var(--color-muted)]",
                 )}
               />
             ))}
@@ -332,8 +325,7 @@ export function getDefaultOnboardingSteps(config: {
     {
       id: "property",
       label: "Add your first property",
-      description:
-        "Start by adding a property — apartment, house, or commercial building.",
+      description: "Start by adding a property — apartment, house, or commercial building.",
       completed: config.hasProperties,
       icon: Building2,
       action: config.onAddProperty,

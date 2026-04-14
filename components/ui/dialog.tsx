@@ -76,10 +76,7 @@ const DialogHeader = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLDivElement>): React.ReactElement => (
-  <div
-    className={cn("flex flex-col space-y-2 text-left", className)}
-    {...props}
-  />
+  <div className={cn("flex flex-col space-y-2 text-left", className)} {...props} />
 );
 DialogHeader.displayName = "DialogHeader";
 
@@ -124,15 +121,9 @@ const DialogDescription = React.forwardRef<
 ));
 DialogDescription.displayName = DialogPrimitive.Description.displayName;
 
-export type DialogContentProps = React.ComponentPropsWithoutRef<
-  typeof DialogPrimitive.Content
->;
-export type DialogOverlayProps = React.ComponentPropsWithoutRef<
-  typeof DialogPrimitive.Overlay
->;
-export type DialogTitleProps = React.ComponentPropsWithoutRef<
-  typeof DialogPrimitive.Title
->;
+export type DialogContentProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>;
+export type DialogOverlayProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>;
+export type DialogTitleProps = React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>;
 export type DialogDescriptionProps = React.ComponentPropsWithoutRef<
   typeof DialogPrimitive.Description
 >;

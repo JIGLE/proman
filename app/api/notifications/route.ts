@@ -40,10 +40,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const { searchParams } = new URL(request.url);
 
     const unreadOnly = searchParams.get("unread") === "true";
-    const limit = Math.min(
-      parseInt(searchParams.get("limit") || "50", 10),
-      100,
-    );
+    const limit = Math.min(parseInt(searchParams.get("limit") || "50", 10), 100);
     const offset = parseInt(searchParams.get("offset") || "0", 10);
 
     const where: Record<string, unknown> = { userId };
@@ -70,10 +67,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     console.error("Error fetching notifications:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch notifications" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch notifications" }, { status: 500 });
   }
 }
 
@@ -104,9 +98,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(notification, { status: 201 });
   } catch (error) {
     console.error("Error creating notification:", error);
-    return NextResponse.json(
-      { error: "Failed to create notification" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create notification" }, { status: 500 });
   }
 }

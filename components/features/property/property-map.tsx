@@ -7,18 +7,13 @@ import { MapPin } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 
 // Dynamically import map components to avoid SSR issues
-const MapContainer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.MapContainer),
-  { ssr: false },
-);
-const TileLayer = dynamic(
-  () => import("react-leaflet").then((mod) => mod.TileLayer),
-  { ssr: false },
-);
-const Marker = dynamic(
-  () => import("react-leaflet").then((mod) => mod.Marker),
-  { ssr: false },
-);
+const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), {
+  ssr: false,
+});
+const TileLayer = dynamic(() => import("react-leaflet").then((mod) => mod.TileLayer), {
+  ssr: false,
+});
+const Marker = dynamic(() => import("react-leaflet").then((mod) => mod.Marker), { ssr: false });
 const Popup = dynamic(() => import("react-leaflet").then((mod) => mod.Popup), {
   ssr: false,
 });
@@ -47,9 +42,7 @@ export default function PropertyMap() {
   const { data: session } = useSession();
   const [properties, setProperties] = useState<PropertyMarker[]>([]);
   const [loading, setLoading] = useState(true);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([
-    38.7223, -9.1393,
-  ]); // Lisbon default
+  const [mapCenter, setMapCenter] = useState<[number, number]>([38.7223, -9.1393]); // Lisbon default
 
   useEffect(() => {
     // Only fetch properties if authenticated
@@ -125,19 +118,12 @@ export default function PropertyMap() {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
             {properties.map((property) => (
-              <Marker
-                key={property.id}
-                position={[property.latitude, property.longitude]}
-              >
+              <Marker key={property.id} position={[property.latitude, property.longitude]}>
                 <Popup>
                   <div className="p-2">
-                    <h3 className="font-semibold text-gray-900">
-                      {property.name}
-                    </h3>
+                    <h3 className="font-semibold text-gray-900">{property.name}</h3>
                     <p className="text-sm text-gray-600">{property.address}</p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Status: {property.status}
-                    </p>
+                    <p className="text-xs text-gray-500 mt-1">Status: {property.status}</p>
                   </div>
                 </Popup>
               </Marker>

@@ -94,17 +94,10 @@ export interface UseMultiStepFormReturn<T extends Record<string, unknown>> {
  * Hook for managing multi-step forms with validation and persistence
  */
 export function useMultiStepForm<T extends Record<string, unknown>>(
-  options: UseMultiStepFormOptions<T>
+  options: UseMultiStepFormOptions<T>,
 ): UseMultiStepFormReturn<T> {
-  const {
-    steps,
-    schema,
-    stepSchemas,
-    initialData,
-    onComplete,
-    onStepChange,
-    persistence,
-  } = options;
+  const { steps, schema, stepSchemas, initialData, onComplete, onStepChange, persistence } =
+    options;
 
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<T>(initialData);
@@ -148,7 +141,7 @@ export function useMultiStepForm<T extends Record<string, unknown>>(
         try {
           const { data, timestamp, step } = JSON.parse(saved);
           const ttl = persistence.ttl || 24 * 60 * 60 * 1000; // 24 hours default
-          
+
           if (Date.now() - timestamp < ttl) {
             setFormData(data);
             setCurrentStep(step);
@@ -165,14 +158,17 @@ export function useMultiStepForm<T extends Record<string, unknown>>(
 
   // Save to persistence when data changes
   useEffect(() => {
-    if (persistence && Object.keys(formData).some((k) => formData[k as keyof T] !== initialData[k as keyof T])) {
+    if (
+      persistence &&
+      Object.keys(formData).some((k) => formData[k as keyof T] !== initialData[k as keyof T])
+    ) {
       localStorage.setItem(
         persistence.key,
         JSON.stringify({
           data: formData,
           step: currentStep,
           timestamp: Date.now(),
-        })
+        }),
       );
       setHasDraft(true);
     }
@@ -200,7 +196,7 @@ export function useMultiStepForm<T extends Record<string, unknown>>(
   const validateStep = useCallback(async (): Promise<boolean> => {
     // Use step schema if available
     const stepSchema = stepSchemas?.[currentStep];
-    
+
     // Use custom step validation if provided
     if (currentStepConfig.validate) {
       const customErrors = currentStepConfig.validate(formData);
@@ -232,7 +228,7 @@ export function useMultiStepForm<T extends Record<string, unknown>>(
       for (const field of currentStepConfig.fields) {
         stepData[field] = formData[field];
       }
-      
+
       // Clear step errors
       setAllErrors((prev) => {
         const newErrors = { ...prev };
@@ -241,7 +237,7 @@ export function useMultiStepForm<T extends Record<string, unknown>>(
         }
         return newErrors;
       });
-      
+
       return true;
     } catch {
       return false;
@@ -285,12 +281,15 @@ export function useMultiStepForm<T extends Record<string, unknown>>(
     }
   }, [currentStep, onStepChange, formData]);
 
-  const goToStep = useCallback((step: number) => {
-    if (step >= 0 && step < totalSteps && visitedSteps.has(step)) {
-      setCurrentStep(step);
-      onStepChange?.(step, formData);
-    }
-  }, [totalSteps, visitedSteps, onStepChange, formData]);
+  const goToStep = useCallback(
+    (step: number) => {
+      if (step >= 0 && step < totalSteps && visitedSteps.has(step)) {
+        setCurrentStep(step);
+        onStepChange?.(step, formData);
+      }
+    },
+    [totalSteps, visitedSteps, onStepChange, formData],
+  );
 
   const handleSubmit = useCallback(async () => {
     const isValid = await validateForm();
@@ -328,7 +327,7 @@ export function useMultiStepForm<T extends Record<string, unknown>>(
 
   const isStepCompleted = useCallback(
     (stepIndex: number) => completedSteps.has(stepIndex),
-    [completedSteps]
+    [completedSteps],
   );
 
   return {

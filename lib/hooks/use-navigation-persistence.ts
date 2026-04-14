@@ -129,41 +129,33 @@ export function useRecentItems() {
   }, []);
 
   // Add item to recent list
-  const addRecentItem = useCallback(
-    (item: Omit<RecentItem, "timestamp">) => {
-      setRecentItems((prev) => {
-        // Remove existing entry for same item
-        const filtered = prev.filter(
-          (i) => !(i.id === item.id && i.type === item.type)
-        );
+  const addRecentItem = useCallback((item: Omit<RecentItem, "timestamp">) => {
+    setRecentItems((prev) => {
+      // Remove existing entry for same item
+      const filtered = prev.filter((i) => !(i.id === item.id && i.type === item.type));
 
-        // Add new entry at the beginning
-        const newItems = [
-          { ...item, timestamp: Date.now() },
-          ...filtered,
-        ].slice(0, MAX_RECENT_ITEMS);
+      // Add new entry at the beginning
+      const newItems = [{ ...item, timestamp: Date.now() }, ...filtered].slice(0, MAX_RECENT_ITEMS);
 
-        // Persist
-        if (typeof window !== "undefined") {
-          try {
-            localStorage.setItem(RECENT_ITEMS_KEY, JSON.stringify(newItems));
-          } catch (error) {
-            console.error("Failed to save recent items:", error);
-          }
+      // Persist
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem(RECENT_ITEMS_KEY, JSON.stringify(newItems));
+        } catch (error) {
+          console.error("Failed to save recent items:", error);
         }
+      }
 
-        return newItems;
-      });
-    },
-    []
-  );
+      return newItems;
+    });
+  }, []);
 
   // Get recent items by type
   const getRecentByType = useCallback(
     (type: RecentItem["type"]) => {
       return recentItems.filter((item) => item.type === type);
     },
-    [recentItems]
+    [recentItems],
   );
 
   // Clear all recent items
@@ -241,9 +233,7 @@ export function useFavorites() {
   // Remove from favorites
   const removeFavorite = useCallback((id: string, type: FavoriteItem["type"]) => {
     setFavorites((prev) => {
-      const newFavorites = prev.filter(
-        (f) => !(f.id === id && f.type === type)
-      );
+      const newFavorites = prev.filter((f) => !(f.id === id && f.type === type));
 
       // Persist
       if (typeof window !== "undefined") {
@@ -261,16 +251,14 @@ export function useFavorites() {
   // Toggle favorite
   const toggleFavorite = useCallback(
     (item: FavoriteItem) => {
-      const exists = favorites.some(
-        (f) => f.id === item.id && f.type === item.type
-      );
+      const exists = favorites.some((f) => f.id === item.id && f.type === item.type);
       if (exists) {
         removeFavorite(item.id, item.type);
       } else {
         addFavorite(item);
       }
     },
-    [favorites, addFavorite, removeFavorite]
+    [favorites, addFavorite, removeFavorite],
   );
 
   // Check if item is favorited
@@ -278,7 +266,7 @@ export function useFavorites() {
     (id: string, type: FavoriteItem["type"]) => {
       return favorites.some((f) => f.id === id && f.type === type);
     },
-    [favorites]
+    [favorites],
   );
 
   // Get favorites by type
@@ -286,7 +274,7 @@ export function useFavorites() {
     (type: FavoriteItem["type"]) => {
       return favorites.filter((f) => f.type === type);
     },
-    [favorites]
+    [favorites],
   );
 
   return {

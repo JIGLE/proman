@@ -3,13 +3,7 @@
 import { useEffect } from "react";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card";
 import { useTranslations } from "next-intl";
 
 export default function Error({

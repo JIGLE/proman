@@ -50,9 +50,9 @@ scenarios:
           expect:
             - statusCode: 200
             - contentType: text/html
-      
+
       - think: 2
-      
+
       - get:
           url: "/api/monitoring/health"
           expect:
@@ -68,9 +68,9 @@ scenarios:
           url: "/auth/login"
           expect:
             - statusCode: 200
-      
+
       - think: 3
-      
+
       # Attempt login (will fail without actual credentials, but tests the endpoint)
       - post:
           url: "/api/auth/callback/credentials"
@@ -82,7 +82,7 @@ scenarios:
               as: "loginError"
           expect:
             - statusCode: [200, 401]
-      
+
       - think: 2
 
   # Scenario 3: Property listing and details
@@ -97,9 +97,9 @@ scenarios:
           capture:
             - json: "$.data[0].id"
               as: "propertyId"
-      
+
       - think: 2
-      
+
       # Get specific property (if available)
       - get:
           url: "/api/properties/{{ propertyId }}"
@@ -116,9 +116,9 @@ scenarios:
           expect:
             - statusCode: 200
             - contentType: json
-      
+
       - think: 1
-      
+
       - get:
           url: "/api/monitoring/health"
           expect:
@@ -133,9 +133,9 @@ scenarios:
           url: "/api/properties?search=apartment&page=1&limit=20"
           expect:
             - statusCode: [200, 401]
-      
+
       - think: 2
-      
+
       - get:
           url: "/api/properties?status=active&sort=createdAt"
           expect:

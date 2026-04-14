@@ -20,24 +20,26 @@ Settings     → User preferences, Integrations
 ```
 
 **Rules:**
+
 - ❌ **NEVER** add a new top-level sidebar item without removing/merging another
 - ❌ **NEVER** create a sidebar item for a feature with <3 sub-pages
 - ✅ New features must fit into existing sections
 
 ### Navigation Depth
 
-| Section | Max Depth | Example |
-|---------|-----------|---------|
-| Home | 1 | Home |
-| Assets | 3 | Assets → Property → Unit |
-| People | 3 | People → Tenant → Lease |
-| Maintenance | 2 | Maintenance → Ticket |
-| Correspondence | 2 | Correspondence → Template |
-| Finance | 3 | Finance → Income → Receipt |
-| Insights | 2 | Insights → Report |
-| Settings | 2 | Settings → Category |
+| Section        | Max Depth | Example                    |
+| -------------- | --------- | -------------------------- |
+| Home           | 1         | Home                       |
+| Assets         | 3         | Assets → Property → Unit   |
+| People         | 3         | People → Tenant → Lease    |
+| Maintenance    | 2         | Maintenance → Ticket       |
+| Correspondence | 2         | Correspondence → Template  |
+| Finance        | 3         | Finance → Income → Receipt |
+| Insights       | 2         | Insights → Report          |
+| Settings       | 2         | Settings → Category        |
 
 **Rules:**
+
 - ❌ **NEVER** exceed 3 levels of navigation depth
 - ✅ If deeper access needed, use modals/drawers instead of new pages
 
@@ -46,23 +48,28 @@ Settings     → User preferences, Integrations
 ## Page Types
 
 ### 1. Dashboard Page
+
 **Purpose:** High-level overview with actionable insights
 
 **Required Sections:**
+
 - Header: Title + date range selector (if applicable)
 - KPI Row: 3-6 metric cards with trends
 - Attention Panel: Items requiring action
 - Quick Actions: Primary CTAs
 
 **Forbidden:**
+
 - ❌ Data tables with >10 rows (use "View All" link)
 - ❌ Forms (use dialogs)
 - ❌ Multiple date range selectors
 
 ### 2. List View Page
+
 **Purpose:** Browse, search, and manage multiple entities
 
 **Required Sections:**
+
 - Header: `<PageHeader>` with title + primary "Add" action
 - Toolbar: Search + filters + view toggle + bulk actions
 - Content: Sortable table/card grid
@@ -70,53 +77,64 @@ Settings     → User preferences, Integrations
 - Empty State: `<EmptyState>` when no data
 
 **Required Features:**
+
 - ✅ Search input (if >10 items)
 - ✅ Sortable columns
 - ✅ Pagination (25/50/100)
 - ✅ Mobile card view (<768px)
 
 **Forbidden:**
+
 - ❌ More than 5 visible filter options
 - ❌ Inline editing of complex fields
 - ❌ Nested tables
 
 ### 3. Detail View Page
+
 **Purpose:** View and edit single entity with related data
 
 **Required Sections:**
+
 - Header: Entity name + breadcrumb + status + Edit/Delete actions
 - Tabs: 3-6 tabs for different aspects
 - Content: Tab-specific content
 
 **Forbidden:**
+
 - ❌ Mixing read-only and edit mode in same view
 - ❌ More than 6 tabs
 - ❌ Forms that navigate away
 
 ### 4. Form Page
+
 **Purpose:** Create or modify entity
 
 **When to Use:**
+
 - **Dialog:** <8 fields, quick action
 - **Page:** 8-15 fields, needs context
 - **Wizard:** >15 fields OR multiple entity relationships
 
 **Required:**
+
 - ✅ Zod schema validation
 - ✅ Inline field errors
 - ✅ Loading state on submit
 - ✅ Cancel button that returns to origin
 
 ### 5. Wizard Page
+
 **Purpose:** Multi-step complex data entry
 
 **Required:**
+
 - ✅ Step indicator (1 of N)
 - ✅ Back/Next buttons
 - ✅ Draft persistence (24h TTL)
 - ✅ "Resume Draft" banner
 
 **Rules:**
+
 - ❌ Max 6 steps
 - ❌ Max 10 fields per step
 
@@ -125,6 +143,7 @@ Settings     → User preferences, Integrations
 ## Component Usage
 
 ### Page Header
+
 ```tsx
 import { PageHeader } from "@/components/ui/page-header";
 
@@ -135,15 +154,14 @@ import { PageHeader } from "@/components/ui/page-header";
   primaryAction={{
     label: "Add Property",
     icon: <Plus className="h-4 w-4" />,
-    onClick: handleAdd
+    onClick: handleAdd,
   }}
-  secondaryActions={[
-    { label: "Export", onClick: handleExport }
-  ]}
-/>
+  secondaryActions={[{ label: "Export", onClick: handleExport }]}
+/>;
 ```
 
 ### Empty State
+
 ```tsx
 import { EmptyState } from "@/components/ui/page-header";
 
@@ -152,30 +170,36 @@ import { EmptyState } from "@/components/ui/page-header";
   title="No properties yet"
   description="Get started by adding your first property"
   action={{ label: "Add Property", onClick: handleAdd }}
-/>
+/>;
 ```
 
 ### Form Dialog (Simple Forms)
+
 ```tsx
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 
 const dialog = useFormDialog<FormData>({
   schema: zodSchema,
   initialData: defaultValues,
-  onSubmit: async (data, isEdit) => { /* save */ },
-  successMessage: { create: "Created!", update: "Updated!" }
+  onSubmit: async (data, isEdit) => {
+    /* save */
+  },
+  successMessage: { create: "Created!", update: "Updated!" },
 });
 ```
 
 ### Multi-Step Wizard (Complex Forms)
+
 ```tsx
 import { useMultiStepForm } from "@/lib/hooks/use-multi-step-form";
 
 const wizard = useMultiStepForm<FormData>({
   steps: stepConfig,
   schema: zodSchema,
-  onComplete: async (data) => { /* save */ },
-  persistence: { key: "draft-key", ttl: 24 * 60 * 60 * 1000 }
+  onComplete: async (data) => {
+    /* save */
+  },
+  persistence: { key: "draft-key", ttl: 24 * 60 * 60 * 1000 },
 });
 ```
 
@@ -184,18 +208,21 @@ const wizard = useMultiStepForm<FormData>({
 ## Action Button Hierarchy
 
 ### Positioning
+
 1. **Primary action:** Top-right, blue solid button
 2. **Secondary actions:** Top-right, outline buttons
 3. **Row actions:** Inline icons or dropdown menu
 4. **Bulk actions:** Sticky bar when items selected
 
 ### Colors
+
 - **Primary:** Blue solid (`variant="default"`)
 - **Secondary:** Gray outline (`variant="outline"`)
 - **Destructive:** Red outline (`variant="destructive"`)
 - **Success:** Green for confirmed actions
 
 ### Rules
+
 - ❌ **NEVER** multiple primary actions on same page
 - ❌ **NEVER** destructive actions without confirmation dialog
 - ✅ Primary action always rightmost
@@ -205,7 +232,9 @@ const wizard = useMultiStepForm<FormData>({
 ## Cross-Domain Navigation
 
 ### Context Preservation
+
 When navigating between sections, use `returnTo` parameter:
+
 ```tsx
 // Navigating from Property to Tenant
 router.push(`/people/${tenantId}?returnTo=/assets/${propertyId}`);
@@ -218,7 +247,9 @@ const handleBack = () => {
 ```
 
 ### Inline Entity Creation
+
 When creating related entities, use dialogs to prevent context loss:
+
 ```tsx
 import { useInlineCreate, InlineCreateTrigger } from "@/lib/hooks/use-inline-create";
 
@@ -236,30 +267,32 @@ const inlineCreateTenant = useInlineCreate<TenantFormData, Tenant>({
   },
   dialogTitle: "Create New Tenant",
   renderForm: ({ formData, formErrors, updateFormData }) => (
-    <TenantFormFields 
-      data={formData} 
-      errors={formErrors}
-      onChange={updateFormData}
-    />
+    <TenantFormFields data={formData} errors={formErrors} onChange={updateFormData} />
   ),
 });
 
 // In the Select component
 <Select value={selectedTenantId}>
   <SelectContent>
-    {tenants.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
-    <InlineCreateTrigger 
-      label="Create New Tenant" 
-      onClick={inlineCreateTenant.open} 
-    />
+    {tenants.map((t) => (
+      <SelectItem key={t.id} value={t.id}>
+        {t.name}
+      </SelectItem>
+    ))}
+    <InlineCreateTrigger label="Create New Tenant" onClick={inlineCreateTenant.open} />
   </SelectContent>
-</Select>
+</Select>;
 
-{/* Render the dialog */}
-{inlineCreateTenant.dialog}
+{
+  /* Render the dialog */
+}
+{
+  inlineCreateTenant.dialog;
+}
 ```
 
 **Rules:**
+
 - ✅ Max 2 levels of inline creation
 - ❌ Never navigate away from form without save/cancel
 
@@ -268,20 +301,22 @@ const inlineCreateTenant = useInlineCreate<TenantFormData, Tenant>({
 ## Mobile Responsive Patterns
 
 ### Breakpoints
+
 - **Mobile:** <768px (base styles)
 - **Tablet:** 768px-1024px (`md:`)
 - **Desktop:** >1024px (`lg:`)
 
 ### Required Behaviors
 
-| Component | Mobile | Tablet | Desktop |
-|-----------|--------|--------|---------|
-| Sidebar | Hidden | Icons only | Expanded |
-| Tables | Cards | Scroll | Full |
-| Forms | 1 column | 1 column | 2 columns |
-| Dialogs | Full-screen | 80% width | Max 600px |
+| Component | Mobile      | Tablet     | Desktop   |
+| --------- | ----------- | ---------- | --------- |
+| Sidebar   | Hidden      | Icons only | Expanded  |
+| Tables    | Cards       | Scroll     | Full      |
+| Forms     | 1 column    | 1 column   | 2 columns |
+| Dialogs   | Full-screen | 80% width  | Max 600px |
 
 ### Mobile-First CSS
+
 ```tsx
 // ✅ Correct: Mobile-first
 <div className="flex flex-col md:flex-row">
@@ -312,6 +347,7 @@ Before submitting any UI PR:
 ## Anti-Patterns
 
 ### ❌ DON'T
+
 ```tsx
 // Custom form state
 const [formData, setFormData] = useState({});
@@ -320,6 +356,7 @@ const [errors, setErrors] = useState({});
 ```
 
 ### ✅ DO
+
 ```tsx
 // Use provided hooks
 const dialog = useFormDialog({ schema, onSubmit });
@@ -328,20 +365,20 @@ const dialog = useFormDialog({ schema, onSubmit });
 ---
 
 ### ❌ DON'T
+
 ```tsx
 // Delete without confirmation
 onClick={() => deleteProperty(id)}
 ```
 
 ### ✅ DO
+
 ```tsx
 // Confirm destructive actions
 <AlertDialog>
   <AlertDialogTrigger>Delete</AlertDialogTrigger>
   <AlertDialogContent>
-    <AlertDialogAction onClick={() => deleteProperty(id)}>
-      Confirm Delete
-    </AlertDialogAction>
+    <AlertDialogAction onClick={() => deleteProperty(id)}>Confirm Delete</AlertDialogAction>
   </AlertDialogContent>
 </AlertDialog>
 ```
@@ -349,12 +386,14 @@ onClick={() => deleteProperty(id)}
 ---
 
 ### ❌ DON'T
+
 ```tsx
 // Desktop-only table
 <table className="w-full">
 ```
 
 ### ✅ DO
+
 ```tsx
 // Responsive with mobile fallback
 <div className="hidden md:block">
@@ -370,6 +409,7 @@ onClick={() => deleteProperty(id)}
 ## Questions?
 
 Contact the UX team before implementing:
+
 - New page layouts
 - New navigation items
 - New form patterns

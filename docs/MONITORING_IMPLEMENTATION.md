@@ -16,6 +16,7 @@ Comprehensive production-ready monitoring and observability stack implemented ac
 **Purpose**: Track application performance metrics and Web Vitals
 
 **Features**:
+
 - ✅ **Performance Timer**: Measure operation duration with start/end
 - ✅ **Async/Sync Wrappers**: `measureAsync()` and `measureSync()` decorators
 - ✅ **Web Vitals Tracking**: LCP, FID, CLS (Core Web Vitals)
@@ -24,17 +25,18 @@ Comprehensive production-ready monitoring and observability stack implemented ac
 - ✅ **Smart Logging**: Auto-log slow operations (API >1s, DB >500ms)
 
 **Key Functions**:
+
 ```typescript
 // Record a metric
-recordMetric('api.users.get', 245, 'ms', { userId: '123' });
+recordMetric("api.users.get", 245, "ms", { userId: "123" });
 
 // Time an operation
-const timer = new PerformanceTimer('db.query.users');
+const timer = new PerformanceTimer("db.query.users");
 // ... perform operation
 timer.end(true); // Records duration
 
 // Measure async function
-const result = await measureAsync('api.properties.fetch', async () => {
+const result = await measureAsync("api.properties.fetch", async () => {
   return await fetchProperties();
 });
 
@@ -43,6 +45,7 @@ trackWebVitals(); // Auto-tracks LCP, FID, CLS
 ```
 
 **Metrics Collected**:
+
 - API response times
 - Database query duration
 - Page load performance
@@ -55,6 +58,7 @@ trackWebVitals(); // Auto-tracks LCP, FID, CLS
 **Purpose**: Centralized error tracking with severity classification
 
 **Features**:
+
 - ✅ **Error Context Enrichment**: User, request, component, action metadata
 - ✅ **Severity Classification**: Auto-categorize (low/medium/high/critical)
 - ✅ **Error Store**: Keeps last 50 errors for debugging
@@ -63,33 +67,42 @@ trackWebVitals(); // Auto-tracks LCP, FID, CLS
 - ✅ **Statistics**: Error counts by severity/component
 
 **Severity Rules**:
+
 - **Critical**: Authentication, authorization, database errors
 - **High**: API errors, validation failures in critical flows (payments)
 - **Medium**: General validation, network/fetch errors
 - **Low**: All other errors
 
 **Key Functions**:
+
 ```typescript
 // Track an error
-trackError(new Error('Payment failed'), {
-  user: { id: '123', email: 'user@example.com' },
-  request: { url: '/api/payments', method: 'POST' },
-  component: 'PaymentForm',
-  action: 'processPayment',
-  metadata: { amount: 500, currency: 'EUR' }
-}, false); // false = unhandled
+trackError(
+  new Error("Payment failed"),
+  {
+    user: { id: "123", email: "user@example.com" },
+    request: { url: "/api/payments", method: "POST" },
+    component: "PaymentForm",
+    action: "processPayment",
+    metadata: { amount: 500, currency: "EUR" },
+  },
+  false,
+); // false = unhandled
 
 // Create reusable error handler
 const handleError = createErrorHandler({
-  component: 'PropertyList',
-  user: { id: currentUser.id }
+  component: "PropertyList",
+  user: { id: currentUser.id },
 });
 handleError(error); // Automatically includes base context
 
 // Wrap async operations
-await withErrorTracking(async () => {
-  await riskyOperation();
-}, { component: 'DataSync' });
+await withErrorTracking(
+  async () => {
+    await riskyOperation();
+  },
+  { component: "DataSync" },
+);
 
 // Get error statistics
 const stats = getErrorStats();
@@ -97,6 +110,7 @@ const stats = getErrorStats();
 ```
 
 **Integration Points**:
+
 - **Sentry**: Auto-sends errors if `window.Sentry` detected
 - **LogRocket**: Auto-sends if `window.LogRocket` detected
 - **Custom Endpoint**: Use `NEXT_PUBLIC_MONITORING_ENDPOINT` env var
@@ -108,6 +122,7 @@ const stats = getErrorStats();
 **Purpose**: Business and system metrics collection
 
 **Features**:
+
 - ✅ **Counter Metrics**: Increment/decrement (user logins, API calls)
 - ✅ **Gauge Metrics**: Current values (active connections, memory usage)
 - ✅ **Histogram Metrics**: Distribution with percentiles (p50, p95, p99)
@@ -118,24 +133,27 @@ const stats = getErrorStats();
 **Metric Types**:
 
 1. **Counters** (increment only, never decrease):
+
    ```typescript
-   metrics.increment('user.login', 1, { userId: '123' });
-   metrics.increment('api.request', 1, { endpoint: '/properties', method: 'GET' });
+   metrics.increment("user.login", 1, { userId: "123" });
+   metrics.increment("api.request", 1, { endpoint: "/properties", method: "GET" });
    ```
 
 2. **Gauges** (current value at a point in time):
+
    ```typescript
-   metrics.gauge('system.memory.used', 512, { unit: 'MB' });
-   metrics.gauge('db.connections.active', 5);
+   metrics.gauge("system.memory.used", 512, { unit: "MB" });
+   metrics.gauge("db.connections.active", 5);
    ```
 
 3. **Histograms** (track distribution of values):
    ```typescript
-   metrics.histogram('api.response_time', 245, { endpoint: '/tenants' });
+   metrics.histogram("api.response_time", 245, { endpoint: "/tenants" });
    // Auto-calculates: min, max, avg, p50, p95, p99
    ```
 
 **Pre-built Helpers**:
+
 ```typescript
 // User metrics
 userMetrics.login(userId);
@@ -152,18 +170,19 @@ tenantMetrics.added(propertyId);
 tenantMetrics.removed(propertyId);
 
 // API metrics
-apiMetrics.request('/properties', 'GET');
-apiMetrics.success('/properties', 'GET');
-apiMetrics.error('/properties', 'POST', '500');
-apiMetrics.responseTime('/properties', 234);
+apiMetrics.request("/properties", "GET");
+apiMetrics.success("/properties", "GET");
+apiMetrics.error("/properties", "POST", "500");
+apiMetrics.responseTime("/properties", 234);
 
 // Database metrics
-dbMetrics.query('Property', 'findMany');
-dbMetrics.queryTime('Property', 123);
-dbMetrics.error('Property', 'create');
+dbMetrics.query("Property", "findMany");
+dbMetrics.queryTime("Property", 123);
+dbMetrics.error("Property", "create");
 ```
 
 **Prometheus Export**:
+
 ```typescript
 const prometheusFormat = metrics.exportPrometheus();
 // Output:
@@ -182,6 +201,7 @@ const prometheusFormat = metrics.exportPrometheus();
 **Purpose**: Automatic API request/response tracking
 
 **Features**:
+
 - ✅ **Auto-timing**: Records API response time
 - ✅ **Success/Error Tracking**: Increments counters
 - ✅ **Request Logging**: With context (route, method, user agent)
@@ -189,9 +209,10 @@ const prometheusFormat = metrics.exportPrometheus();
 - ✅ **Route Pattern Extraction**: Normalizes `/api/properties/123` → `/properties/:id`
 
 **Usage**:
+
 ```typescript
 // Wrap your API handler
-import { withMonitoring } from '@/lib/middleware/monitoring';
+import { withMonitoring } from "@/lib/middleware/monitoring";
 
 export const GET = withMonitoring(async (request: NextRequest) => {
   // Your handler code
@@ -200,13 +221,14 @@ export const GET = withMonitoring(async (request: NextRequest) => {
 });
 
 // Or create custom middleware
-const loggerMiddleware = createMonitoringMiddleware('users.create', {
-  logBody: true,    // Log request body
+const loggerMiddleware = createMonitoringMiddleware("users.create", {
+  logBody: true, // Log request body
   logHeaders: true, // Log headers
 });
 ```
 
 **What It Tracks**:
+
 - Request count per endpoint
 - Success/error rates by endpoint
 - Response time percentiles
@@ -217,19 +239,21 @@ const loggerMiddleware = createMonitoringMiddleware('users.create', {
 ### 5. Updated Error Boundary (`components/shared/error-boundary.tsx`)
 
 **Changes**:
+
 - ✅ **Auto-tracking**: Errors caught by boundary automatically tracked
 - ✅ **Error IDs**: Displays unique error ID for support
 - ✅ **Component Context**: Accepts `component` prop for categorization
 - ✅ **Enhanced Hook**: `useErrorHandler()` now tracks errors
 
 **Usage**:
+
 ```tsx
 <ErrorBoundary component="PropertyList">
   <PropertyListContent />
-</ErrorBoundary>
+</ErrorBoundary>;
 
 // Or use the hook
-const handleError = useErrorHandler('PaymentForm');
+const handleError = useErrorHandler("PaymentForm");
 try {
   await processPayment();
 } catch (error) {
@@ -242,12 +266,15 @@ try {
 ### 6. Monitoring API Endpoints
 
 #### **GET /api/monitoring/metrics**
+
 Returns application metrics in JSON or Prometheus format
 
 **Parameters**:
+
 - `format`: `json` (default) or `prometheus`
 
 **Response (JSON)**:
+
 ```json
 {
   "timestamp": "2026-02-04T10:30:00.000Z",
@@ -265,6 +292,7 @@ Returns application metrics in JSON or Prometheus format
 ```
 
 **Prometheus Format**:
+
 ```
 GET /api/monitoring/metrics?format=prometheus
 
@@ -275,9 +303,11 @@ api_request 5234
 ```
 
 #### **GET /api/monitoring/health**
+
 Health check endpoint for load balancers
 
 **Response**:
+
 ```json
 {
   "status": "healthy",
@@ -296,17 +326,21 @@ Health check endpoint for load balancers
 ```
 
 **Status Codes**:
+
 - `200`: All checks healthy
 - `503`: One or more checks unhealthy
 
 #### **GET /api/monitoring/errors**
+
 Recent errors (development only)
 
 **Parameters**:
+
 - `count`: Number of errors to return (default: 10)
 - `stats`: `true` to return only statistics
 
 **Response**:
+
 ```json
 {
   "timestamp": "2026-02-04T10:30:00.000Z",
@@ -329,9 +363,10 @@ Recent errors (development only)
 **Purpose**: Client-side Web Vitals tracking
 
 **Usage**:
+
 ```tsx
 // In app/layout.tsx
-import { WebVitalsTracker } from '@/components/monitoring/web-vitals-tracker';
+import { WebVitalsTracker } from "@/components/monitoring/web-vitals-tracker";
 
 export default function RootLayout({ children }) {
   return (
@@ -346,6 +381,7 @@ export default function RootLayout({ children }) {
 ```
 
 **Metrics Tracked**:
+
 - **LCP** (Largest Contentful Paint): <2.5s good
 - **FID** (First Input Delay): <100ms good
 - **CLS** (Cumulative Layout Shift): <0.1 good
@@ -359,7 +395,7 @@ export default function RootLayout({ children }) {
 
 ```tsx
 // app/layout.tsx
-import { WebVitalsTracker } from '@/components/monitoring/web-vitals-tracker';
+import { WebVitalsTracker } from "@/components/monitoring/web-vitals-tracker";
 
 export default function RootLayout({ children }) {
   return (
@@ -377,15 +413,15 @@ export default function RootLayout({ children }) {
 
 ```typescript
 // app/api/properties/route.ts
-import { withMonitoring } from '@/lib/middleware/monitoring';
-import { withErrorHandler } from '@/lib/utils/error-handling';
+import { withMonitoring } from "@/lib/middleware/monitoring";
+import { withErrorHandler } from "@/lib/utils/error-handling";
 
 export const GET = withMonitoring(
   withErrorHandler(async (request: NextRequest) => {
     // Your handler code
     const properties = await prisma.property.findMany();
     return NextResponse.json({ data: properties });
-  })
+  }),
 );
 ```
 
@@ -393,23 +429,23 @@ export const GET = withMonitoring(
 
 ```typescript
 // In your service/handler code
-import { propertyMetrics, userMetrics } from '@/lib/monitoring/metrics';
+import { propertyMetrics, userMetrics } from "@/lib/monitoring/metrics";
 
 async function createProperty(data: PropertyData, userId: string) {
   const property = await prisma.property.create({ data });
-  
+
   // Track the business event
   propertyMetrics.created(userId);
-  
+
   return property;
 }
 
 async function login(credentials: Credentials) {
   const user = await authenticate(credentials);
-  
+
   // Track login
   userMetrics.login(user.id);
-  
+
   return user;
 }
 ```
@@ -418,15 +454,19 @@ async function login(credentials: Credentials) {
 
 ```typescript
 // Wrap expensive operations
-import { measureAsync, PerformanceTimer } from '@/lib/monitoring/performance';
+import { measureAsync, PerformanceTimer } from "@/lib/monitoring/performance";
 
 // Option 1: Wrapper function
-const data = await measureAsync('complex.calculation', async () => {
-  return await complexCalculation();
-}, { userId: '123' });
+const data = await measureAsync(
+  "complex.calculation",
+  async () => {
+    return await complexCalculation();
+  },
+  { userId: "123" },
+);
 
 // Option 2: Manual timer
-const timer = new PerformanceTimer('data.export');
+const timer = new PerformanceTimer("data.export");
 try {
   const result = await exportData();
   timer.end(true);
@@ -441,7 +481,7 @@ try {
 
 ```tsx
 // Around error-prone components
-import { ErrorBoundary } from '@/shared';
+import { ErrorBoundary } from "@/shared";
 
 export default function Page() {
   return (
@@ -459,14 +499,16 @@ export default function Page() {
 ### Sentry Setup
 
 1. **Install Sentry**:
+
    ```bash
    npm install @sentry/nextjs
    ```
 
 2. **Initialize**:
+
    ```typescript
    // app/layout.tsx or instrumentation.ts
-   import * as Sentry from '@sentry/nextjs';
+   import * as Sentry from "@sentry/nextjs";
 
    Sentry.init({
      dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
@@ -480,16 +522,18 @@ export default function Page() {
 ### LogRocket Setup
 
 1. **Install LogRocket**:
+
    ```bash
    npm install logrocket
    ```
 
 2. **Initialize**:
+
    ```typescript
    // app/layout.tsx
-   import LogRocket from 'logrocket';
+   import LogRocket from "logrocket";
 
-   if (process.env.NODE_ENV === 'production') {
+   if (process.env.NODE_ENV === "production") {
      LogRocket.init(process.env.NEXT_PUBLIC_LOGROCKET_APP_ID);
    }
    ```
@@ -499,6 +543,7 @@ export default function Page() {
 ### Custom Monitoring Endpoint
 
 Set environment variable:
+
 ```env
 NEXT_PUBLIC_MONITORING_ENDPOINT=https://your-monitoring-service.com/api/errors
 ```
@@ -527,16 +572,19 @@ NEXT_PUBLIC_MONITORING_ENDPOINT=https://monitoring.example.com/api/errors
 ### Development
 
 1. **Metrics Dashboard**:
+
    ```
    GET http://localhost:3000/api/monitoring/metrics
    ```
 
 2. **Health Check**:
+
    ```
    GET http://localhost:3000/api/monitoring/health
    ```
 
 3. **Recent Errors**:
+
    ```
    GET http://localhost:3000/api/monitoring/errors?count=20
    ```
@@ -549,14 +597,16 @@ NEXT_PUBLIC_MONITORING_ENDPOINT=https://monitoring.example.com/api/errors
 ### Production
 
 1. **Prometheus Scraping**:
+
    ```
    GET https://your-app.com/api/monitoring/metrics?format=prometheus
    ```
-   
+
    Configure Prometheus to scrape this endpoint every 15s
 
 2. **Health Check**:
    Use for load balancer health checks:
+
    ```
    GET https://your-app.com/api/monitoring/health
    ```
@@ -571,32 +621,32 @@ NEXT_PUBLIC_MONITORING_ENDPOINT=https://monitoring.example.com/api/errors
 
 ```typescript
 // Test performance tracking
-import { PerformanceTimer, getMetrics } from '@/lib/monitoring/performance';
+import { PerformanceTimer, getMetrics } from "@/lib/monitoring/performance";
 
-const timer = new PerformanceTimer('test.operation');
+const timer = new PerformanceTimer("test.operation");
 // ... do something
 timer.end(true);
 
 const metrics = getMetrics();
-console.log(metrics.averages['test.operation']); // Average duration
+console.log(metrics.averages["test.operation"]); // Average duration
 
 // Test error tracking
-import { trackError, getRecentErrors } from '@/lib/monitoring/error-tracker';
+import { trackError, getRecentErrors } from "@/lib/monitoring/error-tracker";
 
-trackError(new Error('Test error'), {
-  component: 'TestComponent',
-  severity: 'medium'
+trackError(new Error("Test error"), {
+  component: "TestComponent",
+  severity: "medium",
 });
 
 const errors = getRecentErrors(5);
 console.log(errors); // Last 5 errors
 
 // Test metrics
-import { metrics } from '@/lib/monitoring/metrics';
+import { metrics } from "@/lib/monitoring/metrics";
 
-metrics.increment('test.counter');
-metrics.gauge('test.gauge', 42);
-metrics.histogram('test.histogram', 123);
+metrics.increment("test.counter");
+metrics.gauge("test.gauge", 42);
+metrics.histogram("test.histogram", 123);
 
 console.log(metrics.getCounters());
 console.log(metrics.getGauges());

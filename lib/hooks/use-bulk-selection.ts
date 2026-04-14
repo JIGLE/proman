@@ -39,7 +39,7 @@ export interface UseBulkSelectionReturn<T extends { id: string }> {
  * Supports single select, multi-select, select all, and range selection
  */
 export function useBulkSelection<T extends { id: string }>(
-  options: UseBulkSelectionOptions = {}
+  options: UseBulkSelectionOptions = {},
 ): UseBulkSelectionReturn<T> {
   const { maxSelection, onSelectionChange } = options;
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -49,13 +49,10 @@ export function useBulkSelection<T extends { id: string }>(
       setSelectedIds(newSelection);
       onSelectionChange?.(newSelection);
     },
-    [onSelectionChange]
+    [onSelectionChange],
   );
 
-  const isSelected = useCallback(
-    (id: string) => selectedIds.has(id),
-    [selectedIds]
-  );
+  const isSelected = useCallback((id: string) => selectedIds.has(id), [selectedIds]);
 
   const toggleSelection = useCallback(
     (id: string) => {
@@ -70,7 +67,7 @@ export function useBulkSelection<T extends { id: string }>(
       }
       updateSelection(newSelection);
     },
-    [selectedIds, maxSelection, updateSelection]
+    [selectedIds, maxSelection, updateSelection],
   );
 
   const selectMultiple = useCallback(
@@ -84,7 +81,7 @@ export function useBulkSelection<T extends { id: string }>(
       }
       updateSelection(newSelection);
     },
-    [selectedIds, maxSelection, updateSelection]
+    [selectedIds, maxSelection, updateSelection],
   );
 
   const selectAll = useCallback(
@@ -94,7 +91,7 @@ export function useBulkSelection<T extends { id: string }>(
         : items.map((item) => item.id);
       updateSelection(new Set(idsToSelect));
     },
-    [maxSelection, updateSelection]
+    [maxSelection, updateSelection],
   );
 
   const clearSelection = useCallback(() => {
@@ -106,7 +103,7 @@ export function useBulkSelection<T extends { id: string }>(
       if (items.length === 0) return false;
       return items.every((item) => selectedIds.has(item.id));
     },
-    [selectedIds]
+    [selectedIds],
   );
 
   const isPartiallySelected = useCallback(
@@ -115,14 +112,14 @@ export function useBulkSelection<T extends { id: string }>(
       const selectedCount = items.filter((item) => selectedIds.has(item.id)).length;
       return selectedCount > 0 && selectedCount < items.length;
     },
-    [selectedIds]
+    [selectedIds],
   );
 
   const getSelectedItems = useCallback(
     (items: T[]) => {
       return items.filter((item) => selectedIds.has(item.id));
     },
-    [selectedIds]
+    [selectedIds],
   );
 
   const toggleRange = useCallback(
@@ -135,13 +132,11 @@ export function useBulkSelection<T extends { id: string }>(
       const startIndex = Math.min(fromIndex, toIndex);
       const endIndex = Math.max(fromIndex, toIndex);
 
-      const rangeIds = items
-        .slice(startIndex, endIndex + 1)
-        .map((item) => item.id);
+      const rangeIds = items.slice(startIndex, endIndex + 1).map((item) => item.id);
 
       selectMultiple(rangeIds);
     },
-    [selectMultiple]
+    [selectMultiple],
   );
 
   const selectedCount = useMemo(() => selectedIds.size, [selectedIds]);

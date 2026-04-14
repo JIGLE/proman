@@ -8,13 +8,12 @@ import {
   Home,
   Menu,
   X,
-  Mail,
   Hammer,
   Settings,
   LogOut,
   Search,
   Wallet,
-  BarChart3,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { signOut, useSession } from "next-auth/react";
@@ -30,32 +29,40 @@ interface MobileNavProps {
 }
 
 // Primary navigation items for bottom bar (4 items for optimal thumb reach)
-// Aligned with new IA: Home, Assets, People, More
+// Aligned with new IA: Dashboard, Properties, Tenants, More
 const primaryNavItems = [
-  { id: "home", label: "Home", icon: Home, href: "/overview" },
-  { id: "assets", label: "Assets", icon: Building2, href: "/properties" },
-  { id: "people", label: "People", icon: Users, href: "/tenants" },
+  { id: "home", label: "Dashboard", icon: Home, href: "/overview" },
+  { id: "assets", label: "Properties", icon: Building2, href: "/properties" },
+  { id: "people", label: "Tenants", icon: Users, href: "/tenants" },
   { id: "more", label: "More", icon: Menu, href: null },
 ];
 
 // Secondary items in the "More" menu - aligned with new IA
 const secondaryNavItems = [
-  { id: "maintenance", label: "Maintenance", icon: Hammer, href: "/maintenance" },
-  { id: "correspondence", label: "Correspondence", icon: Mail, href: "/correspondence" },
+  { id: "leases", label: "Leases", icon: FileText, href: "/leases" },
   { id: "finance", label: "Finance", icon: Wallet, href: "/financials" },
-  { id: "analytics", label: "Analytics", icon: BarChart3, href: "/analytics" },
+  { id: "maintenance", label: "Maintenance", icon: Hammer, href: "/maintenance" },
   { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
 ];
 
-export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchClick }: MobileNavProps): React.ReactElement {
+export function MobileBottomNav({
+  activeTab: _activeTab,
+  onTabChange,
+  onSearchClick,
+}: MobileNavProps): React.ReactElement {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const { data: session } = useSession();
   const pathname = usePathname();
   const user = session?.user;
-  const initials = user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U';
-  
+  const initials =
+    user?.name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase() || "U";
+
   // Extract locale from pathname
-  const currentLocale = pathname.split('/')[1] || 'en';
+  const currentLocale = pathname.split("/")[1] || "en";
 
   const handleNavClick = (id: string, _href: string | null) => {
     if (id === "more") {
@@ -72,13 +79,13 @@ export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchCl
     return pathname.includes(href);
   };
 
-  const isActiveInSecondary = secondaryNavItems.some(item => isItemActive(item.href));
+  const isActiveInSecondary = secondaryNavItems.some((item) => isItemActive(item.href));
 
   return (
     <>
       {/* More Menu Overlay */}
       {showMoreMenu && (
-        <div 
+        <div
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
           onClick={() => setShowMoreMenu(false)}
         />
@@ -89,7 +96,7 @@ export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchCl
         className={cn(
           "fixed bottom-16 left-0 right-0 z-50 bg-[var(--color-card)] border-t border-[var(--color-border)] rounded-t-2xl transition-transform duration-300 ease-out md:hidden",
           "max-h-[70vh] overflow-y-auto",
-          showMoreMenu ? "translate-y-0" : "translate-y-full pointer-events-none"
+          showMoreMenu ? "translate-y-0" : "translate-y-full pointer-events-none",
         )}
       >
         {/* Handle bar */}
@@ -102,7 +109,7 @@ export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchCl
           <div className="px-4 py-3 border-b border-[var(--color-border)]">
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10 ring-2 ring-[var(--color-border)]">
-                <AvatarImage src={user?.image || ''} alt={user?.name || 'User'} />
+                <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
                 <AvatarFallback className="bg-accent-primary text-white text-sm font-semibold">
                   {initials}
                 </AvatarFallback>
@@ -125,7 +132,7 @@ export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchCl
           {secondaryNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = isItemActive(item.href);
-            
+
             return (
               <Link
                 key={item.id}
@@ -136,7 +143,7 @@ export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchCl
                   "active:scale-95 touch-manipulation",
                   isActive
                     ? "bg-accent-primary/20 text-accent-primary"
-                    : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-hover)] hover:text-[var(--color-foreground)]"
+                    : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-hover)] hover:text-[var(--color-foreground)]",
                 )}
               >
                 <Icon className="h-5 w-5" />
@@ -159,7 +166,7 @@ export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchCl
       </div>
 
       {/* Bottom Navigation Bar */}
-      <nav 
+      <nav
         className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
         role="navigation"
         aria-label="Mobile navigation"
@@ -169,13 +176,12 @@ export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchCl
           <div className="relative flex items-center justify-around h-16 px-2">
             {primaryNavItems.map((item, index) => {
               const Icon = item.icon;
-              const isActive = item.id === "more" 
-                ? (showMoreMenu || isActiveInSecondary)
-                : isItemActive(item.href);
-              
+              const isActive =
+                item.id === "more" ? showMoreMenu || isActiveInSecondary : isItemActive(item.href);
+
               // Create gap for FAB button after second item (between Assets and People)
               const marginClass = index === 2 ? "ml-16" : "";
-              
+
               // For "more" button, use button element; for others use Link
               if (item.id === "more") {
                 return (
@@ -189,30 +195,34 @@ export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchCl
                       marginClass,
                       isActive
                         ? "text-accent-primary"
-                        : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+                        : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
                     )}
                     aria-label={item.label}
                   >
-                    <div className={cn(
-                      "p-1.5 rounded-lg transition-colors",
-                      isActive && "bg-accent-primary/20"
-                    )}>
+                    <div
+                      className={cn(
+                        "p-1.5 rounded-lg transition-colors",
+                        isActive && "bg-accent-primary/20",
+                      )}
+                    >
                       {showMoreMenu ? (
                         <X className="h-5 w-5" aria-hidden="true" />
                       ) : (
                         <Icon className="h-5 w-5" aria-hidden="true" />
                       )}
                     </div>
-                    <span className={cn(
-                      "text-[10px] font-medium transition-colors",
-                      isActive ? "text-accent-primary" : "text-[var(--color-muted-foreground)]"
-                    )}>
+                    <span
+                      className={cn(
+                        "text-[10px] font-medium transition-colors",
+                        isActive ? "text-accent-primary" : "text-[var(--color-muted-foreground)]",
+                      )}
+                    >
                       {item.label}
                     </span>
                   </button>
                 );
               }
-              
+
               return (
                 <Link
                   key={item.id}
@@ -225,21 +235,25 @@ export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchCl
                     marginClass,
                     isActive
                       ? "text-accent-primary"
-                      : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+                      : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
                   )}
                   aria-label={item.label}
                   aria-current={isActive ? "page" : undefined}
                 >
-                  <div className={cn(
-                    "p-1.5 rounded-lg transition-colors",
-                    isActive && "bg-accent-primary/20"
-                  )}>
+                  <div
+                    className={cn(
+                      "p-1.5 rounded-lg transition-colors",
+                      isActive && "bg-accent-primary/20",
+                    )}
+                  >
                     <Icon className="h-5 w-5" aria-hidden="true" />
                   </div>
-                  <span className={cn(
-                    "text-[10px] font-medium transition-colors",
-                    isActive ? "text-accent-primary" : "text-[var(--color-muted-foreground)]"
-                  )}>
+                  <span
+                    className={cn(
+                      "text-[10px] font-medium transition-colors",
+                      isActive ? "text-accent-primary" : "text-[var(--color-muted-foreground)]",
+                    )}
+                  >
                     {item.label}
                   </span>
                 </Link>
@@ -259,7 +273,7 @@ export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchCl
                   "transition-all duration-200 active:scale-90",
                   "ring-4 ring-[var(--color-background)]",
                   "focus-visible:ring-4 focus-visible:ring-accent-primary/50 focus-visible:outline-none",
-                  "hover:shadow-xl hover:shadow-accent-primary/60"
+                  "hover:shadow-xl hover:shadow-accent-primary/60",
                 )}
                 aria-label="Open search"
                 title="Search (⌘K)"
@@ -269,9 +283,9 @@ export function MobileBottomNav({ activeTab: _activeTab, onTabChange, onSearchCl
             )}
           </div>
           {/* iOS safe area padding */}
-          <div 
+          <div
             className="bg-[var(--color-background)]"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+            style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
           />
         </div>
       </nav>
@@ -288,7 +302,11 @@ interface MobileHeaderProps {
   showMenu?: boolean;
 }
 
-export function MobileHeader({ title, onMenuClick, showMenu }: MobileHeaderProps): React.ReactElement {
+export function MobileHeader({
+  title,
+  onMenuClick,
+  showMenu,
+}: MobileHeaderProps): React.ReactElement {
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-[var(--color-background)]/95 backdrop-blur border-b border-[var(--color-border)] md:hidden">
       <div className="flex items-center gap-3">

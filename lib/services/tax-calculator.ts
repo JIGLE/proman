@@ -107,14 +107,8 @@ export class TaxCalculator {
   /**
    * Calculate tax for Portugal - Rendimentos Prediais (Categoria F)
    */
-  private static calculatePortugalTax(
-    input: TaxCalculationInput,
-  ): TaxCalculationResult {
-    const {
-      annualRentalIncome,
-      deductibleExpenses,
-      yearsOfOwnership = 1,
-    } = input;
+  private static calculatePortugalTax(input: TaxCalculationInput): TaxCalculationResult {
+    const { annualRentalIncome, deductibleExpenses, yearsOfOwnership = 1 } = input;
     const warnings: string[] = [];
 
     // ── Renda Acessível: flat 10% rate ──
@@ -145,10 +139,7 @@ export class TaxCalculator {
 
     // ── Standard progressive brackets (Categoria F — Rendimentos Prediais) ──
     // Deductible expenses capped at 15% of gross income
-    const maxDeductible = Math.min(
-      annualRentalIncome * 0.15,
-      deductibleExpenses,
-    );
+    const maxDeductible = Math.min(annualRentalIncome * 0.15, deductibleExpenses);
     const taxableIncome = Math.max(0, annualRentalIncome - maxDeductible);
 
     let taxAmount = 0;
@@ -156,8 +147,7 @@ export class TaxCalculator {
     let remaining = taxableIncome;
 
     for (const bracket of PT_TAX_BRACKETS_2026) {
-      const bracketWidth =
-        bracket.max === Infinity ? remaining : bracket.max - bracket.min;
+      const bracketWidth = bracket.max === Infinity ? remaining : bracket.max - bracket.min;
       const taxableInBracket = Math.min(remaining, bracketWidth);
       if (taxableInBracket <= 0) break;
       taxAmount += taxableInBracket * bracket.rate;
@@ -177,10 +167,7 @@ export class TaxCalculator {
       taxAmount: finalTaxAmount,
       quarterlyPayment: finalTaxAmount / 4,
       annualSettlement: finalTaxAmount,
-      effectiveRate:
-        annualRentalIncome > 0
-          ? (finalTaxAmount / annualRentalIncome) * 100
-          : 0,
+      effectiveRate: annualRentalIncome > 0 ? (finalTaxAmount / annualRentalIncome) * 100 : 0,
       deductions: {
         total: deductibleExpenses + taxableIncome * ownershipBonus,
         breakdown: {
@@ -198,9 +185,7 @@ export class TaxCalculator {
    * Calculate tax for Spain - IRPF Inmuebles Urbanos
    * Includes Ley de Vivienda stressed-zone deductions (Art. 23 LIRPF modified 2024)
    */
-  private static calculateSpainTax(
-    input: TaxCalculationInput,
-  ): TaxCalculationResult {
+  private static calculateSpainTax(input: TaxCalculationInput): TaxCalculationResult {
     const {
       annualRentalIncome,
       deductibleExpenses,
@@ -221,8 +206,7 @@ export class TaxCalculator {
     }
 
     // ── Total deductions (general expenses) ──
-    const totalDeductions =
-      deductibleExpenses + mortgageInterest + communityFees;
+    const totalDeductions = deductibleExpenses + mortgageInterest + communityFees;
     const maxDeductible = annualRentalIncome * 0.5;
     const actualDeductions = Math.min(totalDeductions, maxDeductible);
     const netRentalIncome = Math.max(0, annualRentalIncome - actualDeductions);
@@ -236,11 +220,7 @@ export class TaxCalculator {
       if (input.isRentReducedVsPrior) {
         stressedZoneReduction = ES_STRESSED_ZONE_DEDUCTIONS.REDUCED_RENT;
         appliedTier = "reduced_rent_90pct";
-      } else if (
-        input.tenantAge &&
-        input.tenantAge >= 18 &&
-        input.tenantAge <= 35
-      ) {
+      } else if (input.tenantAge && input.tenantAge >= 18 && input.tenantAge <= 35) {
         stressedZoneReduction = ES_STRESSED_ZONE_DEDUCTIONS.YOUNG_TENANT;
         appliedTier = "young_tenant_70pct";
       } else if (input.isRehabilitatedProperty) {
@@ -264,8 +244,7 @@ export class TaxCalculator {
     let remaining = taxableIncome;
 
     for (const bracket of ES_TAX_BRACKETS_2026) {
-      const bracketWidth =
-        bracket.max === Infinity ? remaining : bracket.max - bracket.min;
+      const bracketWidth = bracket.max === Infinity ? remaining : bracket.max - bracket.min;
       const taxableInBracket = Math.min(remaining, bracketWidth);
       if (taxableInBracket <= 0) break;
       taxAmount += taxableInBracket * bracket.rate;
@@ -281,8 +260,7 @@ export class TaxCalculator {
       taxAmount,
       quarterlyPayment: taxAmount / 4,
       annualSettlement: taxAmount,
-      effectiveRate:
-        annualRentalIncome > 0 ? (taxAmount / annualRentalIncome) * 100 : 0,
+      effectiveRate: annualRentalIncome > 0 ? (taxAmount / annualRentalIncome) * 100 : 0,
       deductions: {
         total: actualDeductions + netRentalIncome * stressedZoneReduction,
         breakdown: {
@@ -306,12 +284,8 @@ export class TaxCalculator {
    * - ≥5 urban residential units in a zona tensionada, OR
    * - ≥10 urban residential units (or >1,500m² residential) anywhere
    */
-  static isGrandesTenedores(
-    totalUnits: number,
-    unitsInStressedZones: number,
-  ): boolean {
-    if (unitsInStressedZones >= ES_GRANDES_TENEDORES_THRESHOLD_STRESSED)
-      return true;
+  static isGrandesTenedores(totalUnits: number, unitsInStressedZones: number): boolean {
+    if (unitsInStressedZones >= ES_GRANDES_TENEDORES_THRESHOLD_STRESSED) return true;
     if (totalUnits >= ES_GRANDES_TENEDORES_THRESHOLD_GENERAL) return true;
     return false;
   }
@@ -447,8 +421,7 @@ export class TaxCalculator {
   ): number {
     const annualEstimate = this.calculateTax({
       country,
-      regime:
-        country === "Portugal" ? "portugal_rendimentos" : "spain_inmuebles",
+      regime: country === "Portugal" ? "portugal_rendimentos" : "spain_inmuebles",
       annualRentalIncome: quarterlyIncome * 4,
       deductibleExpenses: quarterlyExpenses * 4,
     });

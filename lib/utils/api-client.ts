@@ -39,10 +39,7 @@ export async function apiFetch<T = unknown>(
   // Determine if using signature 1 (options object) or signature 2 (separate params)
   let options: ApiClientOptions;
 
-  if (
-    typeof csrfTokenOrOptions === "object" ||
-    csrfTokenOrOptions === undefined
-  ) {
+  if (typeof csrfTokenOrOptions === "object" || csrfTokenOrOptions === undefined) {
     // Signature 1: apiFetch(url, options)
     options = csrfTokenOrOptions || {};
   } else {
@@ -73,9 +70,7 @@ export async function apiFetch<T = unknown>(
     requestHeaders["X-CSRF-Token"] = csrfToken;
   } else if (requiresCsrf && !csrfToken) {
     // Fail fast for state-changing requests without CSRF token
-    const error = new Error(
-      "CSRF token not available. Please refresh the page and try again.",
-    );
+    const error = new Error("CSRF token not available. Please refresh the page and try again.");
     const typedError = error as Error & { status: number };
     typedError.status = 403; // Use 403 Forbidden for CSRF failure
     logger.error("CSRF token missing for state-changing request", {
@@ -99,15 +94,12 @@ export async function apiFetch<T = unknown>(
         error: response.statusText,
       }))) as ApiResponse;
 
-      const errorMessage =
-        errorData.error || errorData.message || "API request failed";
+      const errorMessage = errorData.error || errorData.message || "API request failed";
       const error = new Error(errorMessage);
       const typedError = error as Error & { status: number; detail?: string };
       typedError.status = response.status;
       if ((errorData as ApiResponse & { detail?: string }).detail) {
-        typedError.detail = (
-          errorData as ApiResponse & { detail?: string }
-        ).detail;
+        typedError.detail = (errorData as ApiResponse & { detail?: string }).detail;
       }
 
       // For 503 (service unavailable), retry once after a short delay
@@ -129,14 +121,10 @@ export async function apiFetch<T = unknown>(
     // Return data field if present, otherwise return entire response
     return (data.data !== undefined ? data.data : data) as T;
   } catch (error) {
-    logger.error(
-      "API request failed",
-      error instanceof Error ? error : new Error(String(error)),
-      {
-        url,
-        method: httpVerb,
-      },
-    );
+    logger.error("API request failed", error instanceof Error ? error : new Error(String(error)), {
+      url,
+      method: httpVerb,
+    });
     throw error;
   }
 }
@@ -172,11 +160,7 @@ export class ApiClient {
   /**
    * POST request with CSRF protection
    */
-  async post<T = unknown>(
-    url: string,
-    body?: unknown,
-    options?: RequestInit,
-  ): Promise<T> {
+  async post<T = unknown>(url: string, body?: unknown, options?: RequestInit): Promise<T> {
     return apiFetch<T>(url, {
       ...options,
       method: "POST",
@@ -188,11 +172,7 @@ export class ApiClient {
   /**
    * PUT request with CSRF protection
    */
-  async put<T = unknown>(
-    url: string,
-    body?: unknown,
-    options?: RequestInit,
-  ): Promise<T> {
+  async put<T = unknown>(url: string, body?: unknown, options?: RequestInit): Promise<T> {
     return apiFetch<T>(url, {
       ...options,
       method: "PUT",
@@ -204,11 +184,7 @@ export class ApiClient {
   /**
    * PATCH request with CSRF protection
    */
-  async patch<T = unknown>(
-    url: string,
-    body?: unknown,
-    options?: RequestInit,
-  ): Promise<T> {
+  async patch<T = unknown>(url: string, body?: unknown, options?: RequestInit): Promise<T> {
     return apiFetch<T>(url, {
       ...options,
       method: "PATCH",

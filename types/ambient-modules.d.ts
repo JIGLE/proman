@@ -30,10 +30,7 @@ declare module "next-auth/react" {
     options?: Record<string, unknown>,
     authorizationParams?: Record<string, string>,
   ): Promise<unknown>;
-  export function signOut(options?: {
-    callbackUrl?: string;
-    redirect?: boolean;
-  }): Promise<void>;
+  export function signOut(options?: { callbackUrl?: string; redirect?: boolean }): Promise<void>;
   export function getCsrfToken(): Promise<string>;
   export function getProviders(): Promise<Record<string, unknown> | null>;
 }
@@ -48,12 +45,7 @@ declare module "next-auth/next" {
 }
 
 declare module "framer-motion" {
-  import type {
-    ComponentType,
-    HTMLAttributes,
-    SVGAttributes,
-    ReactNode,
-  } from "react";
+  import type { ComponentType, HTMLAttributes, SVGAttributes, ReactNode } from "react";
 
   type MotionProps = HTMLAttributes<HTMLElement> & {
     initial?: Record<string, unknown> | string | boolean;
@@ -119,20 +111,10 @@ declare module "framer-motion" {
     get: () => number;
     set: (v: number) => void;
   };
-  export function useTransform(
-    value: unknown,
-    input: number[],
-    output: number[],
-  ): unknown;
-  export function useSpring(
-    value: unknown,
-    config?: Record<string, unknown>,
-  ): unknown;
+  export function useTransform(value: unknown, input: number[], output: number[]): unknown;
+  export function useSpring(value: unknown, config?: Record<string, unknown>): unknown;
   export function useAnimation(): unknown;
-  export function useInView(
-    ref: unknown,
-    options?: Record<string, unknown>,
-  ): boolean;
+  export function useInView(ref: unknown, options?: Record<string, unknown>): boolean;
 }
 
 declare module "next-intl" {
@@ -143,16 +125,10 @@ declare module "next-intl" {
   export function useMessages(): Record<string, unknown>;
   export function useNow(): Date;
   export function useTimeZone(): string;
-  export function hasLocale(
-    locales: readonly string[],
-    locale: string,
-  ): boolean;
+  export function hasLocale(locales: readonly string[], locale: string): boolean;
   export function useFormatter(): {
     number: (value: number, options?: Intl.NumberFormatOptions) => string;
-    dateTime: (
-      value: Date | number,
-      options?: Intl.DateTimeFormatOptions,
-    ) => string;
+    dateTime: (value: Date | number, options?: Intl.DateTimeFormatOptions) => string;
     relativeTime: (value: Date | number, now?: Date | number) => string;
     list: (value: Iterable<string>, options?: Intl.ListFormatOptions) => string;
   };
@@ -181,10 +157,7 @@ declare module "next-intl/server" {
   ): unknown;
   export function getFormatter(): Promise<{
     number: (value: number, options?: Intl.NumberFormatOptions) => string;
-    dateTime: (
-      value: Date | number,
-      options?: Intl.DateTimeFormatOptions,
-    ) => string;
+    dateTime: (value: Date | number, options?: Intl.DateTimeFormatOptions) => string;
     relativeTime: (value: Date | number, now?: Date | number) => string;
     list: (value: Iterable<string>, options?: Intl.ListFormatOptions) => string;
   }>;
@@ -205,21 +178,14 @@ declare module "next-intl/navigation" {
 }
 
 declare module "next-intl/plugin" {
-  function createNextIntlPlugin(
-    requestConfigPath?: string,
-  ): (config: unknown) => unknown;
+  function createNextIntlPlugin(requestConfigPath?: string): (config: unknown) => unknown;
   export default createNextIntlPlugin;
 }
 
 declare module "jspdf" {
   class jsPDF {
     constructor(options?: Record<string, unknown>);
-    text(
-      text: string | string[],
-      x: number,
-      y: number,
-      options?: Record<string, unknown>,
-    ): jsPDF;
+    text(text: string | string[], x: number, y: number, options?: Record<string, unknown>): jsPDF;
     setFontSize(size: number): jsPDF;
     setFont(fontName: string, fontStyle?: string): jsPDF;
     addPage(format?: string, orientation?: string): jsPDF;
@@ -290,11 +256,7 @@ declare module "stripe" {
       [key: string]: unknown;
     }
     namespace webhooks {
-      function constructEvent(
-        body: string | Buffer,
-        sig: string,
-        secret: string,
-      ): Event;
+      function constructEvent(body: string | Buffer, sig: string, secret: string): Event;
     }
     interface PaymentIntentCreateParams {
       amount: number;
@@ -312,9 +274,7 @@ declare module "stripe" {
   class Stripe {
     constructor(apiKey: string, config?: Record<string, unknown>);
     paymentIntents: {
-      create(
-        params: Stripe.PaymentIntentCreateParams,
-      ): Promise<Stripe.PaymentIntent>;
+      create(params: Stripe.PaymentIntentCreateParams): Promise<Stripe.PaymentIntent>;
       retrieve(id: string): Promise<Stripe.PaymentIntent>;
       [key: string]: unknown;
     };
@@ -328,9 +288,7 @@ declare module "stripe" {
       [key: string]: unknown;
     };
     setupIntents: {
-      create(
-        params: Record<string, unknown>,
-      ): Promise<{
+      create(params: Record<string, unknown>): Promise<{
         id: string;
         client_secret?: string;
         [key: string]: unknown;

@@ -5,6 +5,7 @@
 **WCAG Level**: AA Compliance
 
 ## Overview
+
 Comprehensive accessibility improvements to meet WCAG 2.1 AA standards for the ProMan property management application.
 
 ---
@@ -12,9 +13,11 @@ Comprehensive accessibility improvements to meet WCAG 2.1 AA standards for the P
 ## 🎯 Improvements Implemented
 
 ### 1. ARIA Live Regions ✅
+
 **File**: `lib/contexts/toast-context.tsx`
 
 **Changes**:
+
 - Added `role="alert"` for error toasts (assertive)
 - Added `role="status"` for success/info/warning toasts (polite)
 - Added `aria-live="assertive"` for errors
@@ -28,9 +31,11 @@ Comprehensive accessibility improvements to meet WCAG 2.1 AA standards for the P
 ---
 
 ### 2. Skip Navigation Links ✅
+
 **File**: `app/[locale]/(main)/layout.tsx`
 
 **Changes**:
+
 - Added `SkipLink` components at the top of the main layout
 - Two skip links:
   - Skip to main content (#main-content)
@@ -44,11 +49,14 @@ Comprehensive accessibility improvements to meet WCAG 2.1 AA standards for the P
 ---
 
 ### 3. Enhanced Loading States ✅
+
 **Files**:
+
 - `app/[locale]/page.tsx`
 - `app/[locale]/(main)/overview/page.tsx`
 
 **Changes**:
+
 - Added `role="status"` to loading containers
 - Added `aria-live="polite"` for screen reader announcements
 - Added `aria-hidden="true"` to decorative loading spinners
@@ -63,6 +71,7 @@ Comprehensive accessibility improvements to meet WCAG 2.1 AA standards for the P
 ## 📊 Existing Accessibility Features (Already Implemented)
 
 ### Form Labels ✅
+
 - All form inputs have associated `<Label>` components with `htmlFor` attributes
 - Examples found in:
   - `tenant-detail-modal.tsx` (name, email, phone, rent, dates, etc.)
@@ -70,6 +79,7 @@ Comprehensive accessibility improvements to meet WCAG 2.1 AA standards for the P
   - `owner-detail-modal.tsx`
 
 ### ARIA Labels on Navigation ✅
+
 **File**: `components/layouts/sidebar.tsx`
 
 - Navigation items have `aria-label` attributes
@@ -79,6 +89,7 @@ Comprehensive accessibility improvements to meet WCAG 2.1 AA standards for the P
 - Navigation lists have `role="list"`
 
 ### Focus Management ✅
+
 - All interactive elements have `focus-visible` styles with 2px ring
 - Consistent focus ring color: `var(--color-focus)`
 - Focus offset for better visibility: `ring-offset-2`
@@ -91,9 +102,11 @@ Comprehensive accessibility improvements to meet WCAG 2.1 AA standards for the P
   - `components/ui/switch.tsx`
 
 ### Screen Reader Only Content ✅
+
 **File**: `components/ui/accessibility.tsx`
 
 Provides utility components:
+
 - `SkipLink` - Skip navigation links
 - `SkipLinks` - Multiple skip links
 - `VisuallyHidden` - Content visible only to screen readers
@@ -101,12 +114,14 @@ Provides utility components:
 - `useAnnounce` - Hook for programmatic announcements
 
 Used throughout the app:
+
 - Dialog close buttons have `sr-only` "Close" text
 - Search clear buttons have `sr-only` "Clear search" text
 - Icon-only buttons have `sr-only` descriptive text
 - Action menus have `sr-only` "More actions" text
 
 ### Modal/Dialog Accessibility ✅
+
 **File**: `components/ui/dialog.tsx`
 
 - Proper `role="dialog"` on modal containers
@@ -116,6 +131,7 @@ Used throughout the app:
 - Keyboard shortcuts component has proper ARIA attributes
 
 ### Keyboard Navigation ✅
+
 - All interactive elements keyboard accessible (buttons, links, inputs)
 - Tab order follows logical document flow
 - Escape key closes modals
@@ -127,19 +143,24 @@ Used throughout the app:
 ## 🎨 Color Contrast
 
 ### Current Status
+
 The app uses a dark theme with the following color variables:
+
 - Background: `--color-background` (zinc-950)
 - Foreground: `--color-foreground` (zinc-50)
 - Muted: `--color-muted-foreground` (zinc-400)
 - Border: `--color-border` (zinc-700)
 
 ### WCAG AA Requirements
+
 - Normal text (< 18pt): 4.5:1 contrast ratio
 - Large text (≥ 18pt): 3:1 contrast ratio
 - UI components: 3:1 contrast ratio
 
 ### Design System Colors
+
 Based on the component analysis:
+
 - **Primary text on dark background**: zinc-50 on zinc-950 = ~19:1 ✅ (Excellent)
 - **Muted text**: zinc-400 on zinc-950 = ~8:1 ✅ (Good)
 - **Borders**: zinc-700 on zinc-950 = ~3.5:1 ✅ (Meets 3:1 for UI components)
@@ -154,26 +175,32 @@ Based on the component analysis:
 ## 📝 Recommendations for Future Enhancements
 
 ### 1. Form Validation Accessibility
+
 **Priority**: Medium
 
 Add to form inputs:
+
 ```tsx
 <Input
   aria-required="true"
   aria-invalid={hasError}
   aria-describedby={hasError ? "error-id" : undefined}
-/>
-{hasError && (
-  <span id="error-id" role="alert" className="text-red-500 text-sm">
-    {errorMessage}
-  </span>
-)}
+/>;
+{
+  hasError && (
+    <span id="error-id" role="alert" className="text-red-500 text-sm">
+      {errorMessage}
+    </span>
+  );
+}
 ```
 
 ### 2. Data Table Accessibility
+
 **Priority**: Medium
 
 For responsive tables, add:
+
 - Proper `<table>` semantic structure (not just divs)
 - `<caption>` for table descriptions
 - `scope="col"` on header cells
@@ -181,21 +208,24 @@ For responsive tables, add:
 - `aria-sort="ascending|descending"` on sorted columns
 
 ### 3. Automated Accessibility Testing
+
 **Priority**: High
 
 Add to CI/CD:
+
 ```bash
 npm install --save-dev @axe-core/playwright pa11y
 ```
 
 Create test file `tests/accessibility.spec.ts`:
-```typescript
-import { test, expect } from '@playwright/test';
-import AxeBuilder from '@axe-core/playwright';
 
-test.describe('Accessibility Tests', () => {
-  test('Overview page should not have accessibility violations', async ({ page }) => {
-    await page.goto('/en/overview');
+```typescript
+import { test, expect } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
+
+test.describe("Accessibility Tests", () => {
+  test("Overview page should not have accessibility violations", async ({ page }) => {
+    await page.goto("/en/overview");
     const accessibilityScanResults = await new AxeBuilder({ page }).analyze();
     expect(accessibilityScanResults.violations).toEqual([]);
   });
@@ -203,18 +233,22 @@ test.describe('Accessibility Tests', () => {
 ```
 
 ### 4. Heading Hierarchy
+
 **Priority**: Low
 
 Verify all pages have proper heading structure:
+
 - One `<h1>` per page (page title)
 - `<h2>` for major sections
 - `<h3>` for subsections
 - No skipped levels (e.g., h1 → h3)
 
 ### 5. Focus Trap in Modals
+
 **Priority**: Low (Radix UI handles this)
 
 The app uses Radix UI Dialog primitives which automatically:
+
 - Trap focus within modals
 - Return focus to trigger element on close
 - No additional implementation needed ✅
@@ -224,6 +258,7 @@ The app uses Radix UI Dialog primitives which automatically:
 ## 🧪 Testing Checklist
 
 ### Manual Testing
+
 - [x] Keyboard navigation (Tab, Shift+Tab, Enter, Escape)
 - [x] Screen reader testing (NVDA/JAWS on Windows, VoiceOver on Mac)
 - [x] Focus indicators visible on all interactive elements
@@ -234,6 +269,7 @@ The app uses Radix UI Dialog primitives which automatically:
 - [ ] Data tables navigable with screen readers (future enhancement)
 
 ### Automated Testing
+
 - [ ] Install axe-core/playwright
 - [ ] Run accessibility scans on all major pages
 - [ ] Integrate into CI/CD pipeline
@@ -244,6 +280,7 @@ The app uses Radix UI Dialog primitives which automatically:
 ## 📈 Accessibility Score
 
 **Before**: 7.5/10
+
 - ✅ Semantic HTML
 - ✅ Form labels
 - ✅ Keyboard navigation
@@ -252,6 +289,7 @@ The app uses Radix UI Dialog primitives which automatically:
 - ⚠️ Loading states not announced
 
 **After**: 9.5/10
+
 - ✅ Semantic HTML
 - ✅ Form labels with htmlFor
 - ✅ Keyboard navigation with focus indicators
@@ -290,6 +328,7 @@ The app uses Radix UI Dialog primitives which automatically:
 ## 🎉 Summary
 
 The ProMan application now meets **WCAG 2.1 AA compliance** for accessibility with:
+
 - ✅ Complete keyboard navigation support
 - ✅ Proper ARIA labels and landmarks
 - ✅ Screen reader announcements for dynamic content
@@ -300,6 +339,7 @@ The ProMan application now meets **WCAG 2.1 AA compliance** for accessibility wi
 - ✅ Focus management in modals
 
 **Remaining Tasks** (Optional enhancements for AAA compliance):
+
 - Form validation error announcements (Medium priority)
 - Data table semantic improvements (Medium priority)
 - Automated accessibility testing setup (High priority)

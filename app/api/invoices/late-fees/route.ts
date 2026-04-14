@@ -1,8 +1,12 @@
-import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { invoiceService, type LateFeeConfig } from '@/lib/services/invoice-service';
-import { z } from 'zod';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { invoiceService, type LateFeeConfig } from "@/lib/services/invoice-service";
+import { z } from "zod";
 
 // Validation schema for late fee configuration
 const lateFeeConfigSchema = z.object({
@@ -24,22 +28,23 @@ async function handlePost(request: NextRequest): Promise<Response> {
     const body = await request.json();
 
     // Validate and use custom config if provided, otherwise use defaults
-    const config: LateFeeConfig = body && Object.keys(body).length > 0
-      ? lateFeeConfigSchema.parse(body)
-      : {
-          enabled: true,
-          gracePeriodDays: 5,
-          percentageRate: 5,
-          flatFee: 0,
-          maxPercentage: 25,
-        };
+    const config: LateFeeConfig =
+      body && Object.keys(body).length > 0
+        ? lateFeeConfigSchema.parse(body)
+        : {
+            enabled: true,
+            gracePeriodDays: 5,
+            percentageRate: 5,
+            flatFee: 0,
+            maxPercentage: 25,
+          };
 
     const updatedInvoices = await invoiceService.applyLateFees(userId, config);
 
     return createSuccessResponse({
       message: `Applied late fees to ${updatedInvoices.length} invoices`,
       count: updatedInvoices.length,
-      invoices: updatedInvoices.map(inv => ({
+      invoices: updatedInvoices.map((inv) => ({
         id: inv.id,
         number: inv.number,
         originalAmount: inv.originalAmount,
@@ -53,9 +58,9 @@ async function handlePost(request: NextRequest): Promise<Response> {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
-        request
+        request,
       );
     }
     return createErrorResponse(error as Error, 500, request);

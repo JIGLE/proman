@@ -31,9 +31,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 
     // Google OAuth
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? "✓ Set" : "✗ Missing",
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET
-      ? "✓ Set"
-      : "✗ Missing",
+    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? "✓ Set" : "✗ Missing",
 
     // Database
     DATABASE_URL: process.env.DATABASE_URL ? "✓ Set" : "✗ Missing",
@@ -49,11 +47,7 @@ export async function GET(request: Request): Promise<NextResponse> {
 
   // Check if Google credentials look valid (basic format check)
   const googleClientId = process.env.GOOGLE_CLIENT_ID;
-  if (
-    googleClientId &&
-    googleClientId.length > 10 &&
-    !googleClientId.includes("dummy")
-  ) {
+  if (googleClientId && googleClientId.length > 10 && !googleClientId.includes("dummy")) {
     envStatus.GOOGLE_CLIENT_ID = "✓ Set (appears valid)";
   } else if (googleClientId === "dummy-client-id") {
     envStatus.GOOGLE_CLIENT_ID = "⚠️ Using dummy value";

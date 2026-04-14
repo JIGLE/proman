@@ -97,13 +97,13 @@ bash scripts/helm-package.sh
 
 See [.env.example](../.env.example) for the complete list. Key production variables:
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `DATABASE_URL` | Yes | SQLite connection string (e.g., `file:/data/proman.sqlite`) |
-| `NEXTAUTH_URL` | Yes | Public URL of the application |
-| `NEXTAUTH_SECRET` | Yes | Session signing secret (min 32 chars) |
-| `NODE_ENV` | Yes | Set to `production` |
-| `INIT_SECRET` | Recommended | Protects the DB init endpoint |
+| Variable          | Required    | Description                                                 |
+| ----------------- | ----------- | ----------------------------------------------------------- |
+| `DATABASE_URL`    | Yes         | SQLite connection string (e.g., `file:/data/proman.sqlite`) |
+| `NEXTAUTH_URL`    | Yes         | Public URL of the application                               |
+| `NEXTAUTH_SECRET` | Yes         | Session signing secret (min 32 chars)                       |
+| `NODE_ENV`        | Yes         | Set to `production`                                         |
+| `INIT_SECRET`     | Recommended | Protects the DB init endpoint                               |
 
 ## Health Checks
 
@@ -115,6 +115,7 @@ The application exposes:
 ## Persistent Storage
 
 ProMan requires a writable volume mounted at `/data` for:
+
 - SQLite database file
 - Release cache (`latest-release.json`)
 

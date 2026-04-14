@@ -191,11 +191,7 @@ export const logger = {
   /**
    * Log errors with optional Error object
    */
-  error: (
-    message: string,
-    error?: Error | unknown,
-    context?: LogContext,
-  ): void => {
+  error: (message: string, error?: Error | unknown, context?: LogContext): void => {
     const err = error instanceof Error ? error : undefined;
     const entry = createLogEntry("error", message, context, err);
     outputLog(entry);
@@ -212,17 +208,12 @@ export const logger = {
    * Create a child logger with preset context
    */
   child: (baseContext: string | LogContext) => {
-    const ctx =
-      typeof baseContext === "string"
-        ? { component: baseContext }
-        : baseContext;
+    const ctx = typeof baseContext === "string" ? { component: baseContext } : baseContext;
     return {
       debug: (message: string, context?: LogContext) =>
         logger.debug(message, { ...ctx, ...context }),
-      info: (message: string, context?: LogContext) =>
-        logger.info(message, { ...ctx, ...context }),
-      warn: (message: string, context?: LogContext) =>
-        logger.warn(message, { ...ctx, ...context }),
+      info: (message: string, context?: LogContext) => logger.info(message, { ...ctx, ...context }),
+      warn: (message: string, context?: LogContext) => logger.warn(message, { ...ctx, ...context }),
       error: (message: string, error?: Error | unknown, context?: LogContext) =>
         logger.error(message, error, { ...ctx, ...context }),
     };

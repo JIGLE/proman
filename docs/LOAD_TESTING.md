@@ -16,6 +16,7 @@ Comprehensive load testing infrastructure for ProMan using Artillery, enabling p
 **Purpose**: Realistic load testing scenarios with multiple user flows
 
 **Load Phases**:
+
 1. **Warm-up** (1 min): Ramp 1→10 users/sec
 2. **Sustained Load** (3 min): 25 users/sec
 3. **Peak Load** (2 min): Ramp 25→50 users/sec
@@ -24,6 +25,7 @@ Comprehensive load testing infrastructure for ProMan using Artillery, enabling p
 **Total Duration**: ~7 minutes
 
 **Performance Thresholds**:
+
 - p95 response time: <2000ms
 - p99 response time: <5000ms
 - Error rate: <1%
@@ -56,6 +58,7 @@ Comprehensive load testing infrastructure for ProMan using Artillery, enabling p
    - Think time: 2 seconds
 
 **Realistic User Behavior**:
+
 - Think times between requests (1-3 seconds)
 - Weighted scenarios (common flows get more traffic)
 - CSV data for parameterization
@@ -67,6 +70,7 @@ Comprehensive load testing infrastructure for ProMan using Artillery, enabling p
 **Purpose**: Automated load testing with analysis
 
 **Features**:
+
 - ✅ **Prerequisite Checks**: Verifies Artillery and app running
 - ✅ **Smoke Test**: Quick 10-second validation (5 users)
 - ✅ **Full Load Test**: Complete 7-minute scenario suite
@@ -75,6 +79,7 @@ Comprehensive load testing infrastructure for ProMan using Artillery, enabling p
 - ✅ **Pass/Fail Verdicts**: Based on performance thresholds
 
 **Usage**:
+
 ```bash
 # Smoke test (quick validation)
 npm run load:smoke
@@ -87,6 +92,7 @@ TARGET_URL=https://staging.proman.com npm run load:test
 ```
 
 **Output Example**:
+
 ```
 🚀 ProMan Load Testing Suite
 Target: http://localhost:3000
@@ -132,12 +138,14 @@ Targets:
 **Purpose**: Find system breaking points through gradual load increase
 
 **Features**:
+
 - ✅ **Progressive Load**: Ramps from 10→300 requests/sec
 - ✅ **Breaking Point Detection**: Identifies when system fails
 - ✅ **Limit Analysis**: Shows max throughput and error thresholds
 - ✅ **Scaling Recommendations**: Suggests infrastructure improvements
 
 **Load Phases**:
+
 1. Ramp 10→50 req/sec (1 min)
 2. Ramp 50→100 req/sec (1 min)
 3. Ramp 100→200 req/sec (1 min)
@@ -146,11 +154,13 @@ Targets:
 **Total Duration**: 4 minutes
 
 **Usage**:
+
 ```bash
 npm run load:stress
 ```
 
 **Output Example**:
+
 ```
 💪 ProMan Stress Testing
 Target: http://localhost:3000
@@ -188,11 +198,13 @@ Recommendations:
 **Purpose**: Parameterized data for realistic testing
 
 **Contents**:
+
 - User credentials (10 test users)
 - Property names for creation tests
 - CSV format for Artillery consumption
 
 **Usage in Tests**:
+
 ```yaml
 payload:
   path: "test-data.csv"
@@ -220,6 +232,7 @@ Added to `package.json`:
 ```
 
 **Script Descriptions**:
+
 - **load:smoke**: Quick 10-second smoke test (5 users)
 - **load:test**: Full 7-minute load test with realistic scenarios
 - **load:stress**: 4-minute stress test finding breaking points
@@ -258,6 +271,7 @@ Artillery and js-yaml are now in devDependencies and will be installed automatic
 ### Running Tests
 
 **1. Smoke Test** (Quick Validation)
+
 ```bash
 # Start your application
 npm run dev
@@ -270,6 +284,7 @@ Duration: ~10 seconds
 Purpose: Verify basic functionality
 
 **2. Load Test** (Realistic Scenarios)
+
 ```bash
 # Start your application
 npm run dev  # or npm start for production mode
@@ -282,6 +297,7 @@ Duration: ~7 minutes
 Purpose: Validate performance under realistic load
 
 **3. Stress Test** (Find Limits)
+
 ```bash
 # Start your application
 npm run dev
@@ -310,21 +326,25 @@ TARGET_URL=https://proman.com npm run load:test
 ### Key Metrics
 
 **Response Time Percentiles**:
+
 - **p50 (Median)**: 50% of requests faster than this
 - **p95**: 95% of requests faster than this (target: <2000ms)
 - **p99**: 99% of requests faster than this (target: <5000ms)
 
 **Targets**:
+
 - ✅ **Excellent**: p95 <2s, p99 <5s, errors <1%
 - ⚠ **Acceptable**: p95 <3s, p99 <7s, errors <5%
 - ❌ **Poor**: Above acceptable thresholds
 
 **Throughput**:
+
 - Requests/second the system can handle
 - Higher is better
 - Use for capacity planning
 
 **Error Rate**:
+
 - Percentage of failed requests
 - Target: <1%
 - Includes 500, 502, 503 errors
@@ -332,11 +352,13 @@ TARGET_URL=https://proman.com npm run load:test
 ### Reports
 
 **JSON Reports**: `load-tests/reports/load-test-*.json`
+
 - Raw data for analysis
 - Can be processed by CI/CD
 - Includes all metrics
 
 **HTML Reports**: `load-tests/reports/load-test-*.html`
+
 - Visual charts and graphs
 - Easy to share with team
 - Auto-generated after each test
@@ -386,7 +408,7 @@ phases:
 ```yaml
 scenarios:
   - name: "Create property flow"
-    weight: 10  # 10% of traffic
+    weight: 10 # 10% of traffic
     flow:
       - post:
           url: "/api/properties"
@@ -395,7 +417,7 @@ scenarios:
             address: "123 Test St"
           expect:
             - statusCode: [200, 201]
-      
+
       - think: 2
 ```
 
@@ -404,9 +426,9 @@ scenarios:
 ```yaml
 ensure:
   # Stricter thresholds
-  p95: 1000   # 1 second
-  p99: 2000   # 2 seconds
-  maxErrorRate: 0.5  # 0.5%
+  p95: 1000 # 1 second
+  p99: 2000 # 2 seconds
+  maxErrorRate: 0.5 # 0.5%
 ```
 
 ### Add Authentication
@@ -423,7 +445,7 @@ flow:
       capture:
         - json: "$.token"
           as: "authToken"
-  
+
   - get:
       url: "/api/properties"
       headers:
@@ -437,17 +459,20 @@ flow:
 ### Expected Performance (Development Mode)
 
 **Smoke Test** (5 concurrent users):
+
 - p95: 150-300ms
 - p99: 300-500ms
 - Error rate: 0%
 
 **Load Test** (25-50 concurrent users):
+
 - p95: 800-1500ms
 - p99: 1500-3000ms
 - Error rate: <1%
 - Throughput: 15-25 req/sec
 
 **Stress Test** (up to 300 req/sec):
+
 - Breaking point: ~150-200 req/sec (SQLite limitation)
 - Error rate at peak: 5-10%
 - p99 at peak: 5000-10000ms
@@ -455,12 +480,14 @@ flow:
 ### Expected Performance (Production Mode)
 
 **Load Test** (25-50 concurrent users):
+
 - p95: 400-800ms (2x faster than dev)
 - p99: 800-1500ms
 - Error rate: <0.5%
 - Throughput: 30-50 req/sec
 
 **Stress Test** (with PostgreSQL/MySQL):
+
 - Breaking point: ~500+ req/sec
 - Error rate at peak: <5%
 - p99 at peak: 2000-5000ms
@@ -472,6 +499,7 @@ flow:
 ### Before Load Testing
 
 1. **Use Production Build**:
+
    ```bash
    npm run build
    npm start  # Not npm run dev
@@ -503,6 +531,7 @@ flow:
    - Monitor database connections
 
 2. **Observe Metrics**:
+
    ```bash
    # Real-time metrics
    curl http://localhost:3000/api/monitoring/metrics
@@ -537,10 +566,12 @@ flow:
 ### Issue: High Error Rate
 
 **Symptoms**:
+
 - Error rate >5%
 - Many 500/502/503 responses
 
 **Solutions**:
+
 ```bash
 # Check rate limiting
 # Increase limits in lib/middleware/rate-limit.ts
@@ -555,14 +586,17 @@ flow:
 ### Issue: Slow Response Times
 
 **Symptoms**:
+
 - p95 >2000ms
 - p99 >5000ms
 
 **Solutions**:
+
 1. **Enable Query Logging**:
+
    ```typescript
    // In prisma client
-   log: ['query', 'info', 'warn', 'error']
+   log: ["query", "info", "warn", "error"];
    ```
 
 2. **Add Indexes**:
@@ -578,10 +612,12 @@ flow:
 ### Issue: Memory Leaks
 
 **Symptoms**:
+
 - Memory usage grows over time
 - Process crashes during test
 
 **Solutions**:
+
 ```bash
 # Enable memory monitoring
 node --trace-warnings --max-old-space-size=4096 scripts/load-test.js
@@ -594,10 +630,12 @@ node --trace-warnings --max-old-space-size=4096 scripts/load-test.js
 ### Issue: Database Lock Errors (SQLite)
 
 **Symptoms**:
+
 - "database is locked" errors
 - High error rate in stress test
 
 **Solutions**:
+
 1. **SQLite Limitations**:
    - SQLite doesn't handle high concurrency well
    - Expected behavior for stress tests
@@ -647,35 +685,35 @@ Add to `.github/workflows/load-test.yml`:
 name: Load Test
 
 on:
-  workflow_dispatch:  # Manual trigger only
+  workflow_dispatch: # Manual trigger only
     inputs:
       target_url:
-        description: 'Target URL to test'
+        description: "Target URL to test"
         required: true
-        default: 'https://staging.proman.com'
+        default: "https://staging.proman.com"
 
 jobs:
   load-test:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          cache: 'npm'
-      
+          node-version: "22"
+          cache: "npm"
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run load test
         env:
           TARGET_URL: ${{ github.event.inputs.target_url }}
         run: npm run load:test
-      
+
       - name: Upload reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -690,16 +728,19 @@ jobs:
 ## 📚 Additional Resources
 
 **Artillery Documentation**:
+
 - [Getting Started](https://www.artillery.io/docs/get-started)
 - [Test Script Reference](https://www.artillery.io/docs/reference)
 - [Plugins](https://www.artillery.io/docs/plugins)
 
 **Performance Testing**:
+
 - [Web Performance Optimization](https://web.dev/performance/)
 - [Database Performance Tuning](https://www.postgresql.org/docs/current/performance-tips.html)
 - [Node.js Performance Best Practices](https://nodejs.org/en/docs/guides/simple-profiling/)
 
 **Load Testing Best Practices**:
+
 - [Google SRE Book - Load Testing](https://sre.google/sre-book/load-balancing-frontend/)
 - [Microsoft - Performance Testing Guidance](https://learn.microsoft.com/en-us/azure/architecture/framework/scalability/performance-test)
 
@@ -708,6 +749,7 @@ jobs:
 ## 🎯 Next Steps
 
 1. **Run Initial Baseline**:
+
    ```bash
    npm run load:test
    # Save results as baseline
@@ -719,6 +761,7 @@ jobs:
    - Optimize queries
 
 3. **Retest After Changes**:
+
    ```bash
    npm run load:test
    # Compare with baseline

@@ -44,9 +44,7 @@ describe("auth options", () => {
 
     process.env.DATABASE_URL = "file:./dev.db";
     // Mock the logger to spy on warn calls
-    const warnSpy = vi
-      .spyOn(loggerModule.logger, "warn")
-      .mockImplementation(() => {});
+    const warnSpy = vi.spyOn(loggerModule.logger, "warn").mockImplementation(() => {});
 
     const mod = await import("@/lib/services/auth/auth");
     const { getAuthOptions } = mod as typeof import("@/lib/services/auth/auth");

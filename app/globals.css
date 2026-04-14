@@ -106,12 +106,9 @@
   --z-toast: 250;
 
   /* Shadows — subtle glow for depth */
-  --shadow-card:
-    0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-  --shadow-card-hover:
-    0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(99, 102, 241, 0.15) inset;
-  --shadow-modal:
-    0 25px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(99, 102, 241, 0.15) inset;
+  --shadow-modal: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.15);
 }
 
@@ -189,12 +186,9 @@
   --color-inner-border-hover: rgba(0, 0, 0, 0.1);
   --color-inner-border-active: rgba(79, 70, 229, 0.25);
 
-  --shadow-card:
-    0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04) inset;
-  --shadow-card-hover:
-    0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(79, 70, 229, 0.1) inset;
-  --shadow-modal:
-    0 25px 50px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06) inset;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04) inset;
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(79, 70, 229, 0.1) inset;
+  --shadow-modal: 0 25px 50px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06) inset;
   --shadow-glow: 0 0 20px rgba(79, 70, 229, 0.08);
 }
 
@@ -272,12 +266,9 @@
   --color-inner-border-hover: rgba(255, 255, 255, 0.08);
   --color-inner-border-active: rgba(99, 102, 241, 0.25);
 
-  --shadow-card:
-    0 1px 3px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-  --shadow-card-hover:
-    0 4px 12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(99, 102, 241, 0.12) inset;
-  --shadow-modal:
-    0 25px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(99, 102, 241, 0.12) inset;
+  --shadow-modal: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
   --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.12);
 }
 
@@ -303,13 +294,7 @@ body {
   min-height: 100vh;
   background-color: var(--color-background);
   color: var(--color-foreground);
-  font-family: var(
-    --font-jakarta,
-    "Plus Jakarta Sans",
-    "Inter",
-    system-ui,
-    sans-serif
-  );
+  font-family: var(--font-jakarta, "Plus Jakarta Sans", "Inter", system-ui, sans-serif);
   font-feature-settings:
     "rlig" 1,
     "calt" 1;
@@ -459,11 +444,7 @@ body {
 }
 
 .text-gradient {
-  background: linear-gradient(
-    135deg,
-    var(--color-primary),
-    var(--color-accent-secondary)
-  );
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent-secondary));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -624,12 +605,7 @@ body {
 
 .animate-shimmer {
   animation: shimmer 2s infinite linear;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    rgba(255, 255, 255, 0.05),
-    transparent
-  );
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
   background-size: 200px 100%;
 }
 

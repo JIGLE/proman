@@ -114,9 +114,7 @@ export class PaymentService {
     }
 
     // Check if tenant already has a Stripe customer ID
-    const existingMethod = tenant.paymentMethods.find(
-      (m) => m.stripeCustomerId,
-    );
+    const existingMethod = tenant.paymentMethods.find((m) => m.stripeCustomerId);
     if (existingMethod?.stripeCustomerId) {
       return existingMethod.stripeCustomerId;
     }
@@ -212,8 +210,7 @@ export class PaymentService {
       }
 
       const stripe = getStripeInstance();
-      const paymentIntent =
-        await stripe.paymentIntents.create(paymentIntentParams);
+      const paymentIntent = await stripe.paymentIntents.create(paymentIntentParams);
 
       // Create transaction record
       const transaction = await prisma.paymentTransaction.create({
@@ -263,10 +260,7 @@ export class PaymentService {
 
       return result;
     } catch (error: unknown) {
-      const message =
-        error instanceof Error
-          ? error.message
-          : "Payment intent creation failed";
+      const message = error instanceof Error ? error.message : "Payment intent creation failed";
       console.error("Payment intent error:", error);
       return { success: false, error: message };
     }
@@ -313,9 +307,7 @@ export class PaymentService {
   /**
    * Process Stripe webhook events
    */
-  public async processStripeWebhook(
-    event: Stripe.Event,
-  ): Promise<ProcessWebhookResult> {
+  public async processStripeWebhook(event: Stripe.Event): Promise<ProcessWebhookResult> {
     const prisma: PrismaClient = getPrismaClient();
 
     try {
@@ -340,8 +332,7 @@ export class PaymentService {
           return { success: true }; // Ignore unhandled events
       }
     } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Webhook processing failed";
+      const message = error instanceof Error ? error.message : "Webhook processing failed";
       console.error("Webhook processing error:", error);
       return { success: false, error: message };
     }
@@ -497,46 +488,44 @@ export class PaymentService {
     description: string;
     icon: string;
   } {
-    const methods: Record<
-      PaymentMethodType,
-      { name: string; description: string; icon: string }
-    > = {
-      card: {
-        name: "Credit/Debit Card",
-        description: "Pay securely with Visa, Mastercard, or American Express",
-        icon: "credit-card",
-      },
-      sepa_debit: {
-        name: "SEPA Direct Debit",
-        description: "Automatic payments from your European bank account",
-        icon: "bank",
-      },
-      multibanco: {
-        name: "Multibanco",
-        description: "Pay at any Multibanco ATM or via home banking (Portugal)",
-        icon: "building",
-      },
-      mbway: {
-        name: "MB WAY",
-        description: "Instant payment via MB WAY app (Portugal)",
-        icon: "smartphone",
-      },
-      bank_transfer: {
-        name: "Bank Transfer",
-        description: "Manual bank transfer to our account",
-        icon: "arrow-right-left",
-      },
-      cash: {
-        name: "Cash",
-        description: "Pay in cash (in-person only)",
-        icon: "banknote",
-      },
-      other: {
-        name: "Other",
-        description: "Alternative payment method",
-        icon: "circle-help",
-      },
-    };
+    const methods: Record<PaymentMethodType, { name: string; description: string; icon: string }> =
+      {
+        card: {
+          name: "Credit/Debit Card",
+          description: "Pay securely with Visa, Mastercard, or American Express",
+          icon: "credit-card",
+        },
+        sepa_debit: {
+          name: "SEPA Direct Debit",
+          description: "Automatic payments from your European bank account",
+          icon: "bank",
+        },
+        multibanco: {
+          name: "Multibanco",
+          description: "Pay at any Multibanco ATM or via home banking (Portugal)",
+          icon: "building",
+        },
+        mbway: {
+          name: "MB WAY",
+          description: "Instant payment via MB WAY app (Portugal)",
+          icon: "smartphone",
+        },
+        bank_transfer: {
+          name: "Bank Transfer",
+          description: "Manual bank transfer to our account",
+          icon: "arrow-right-left",
+        },
+        cash: {
+          name: "Cash",
+          description: "Pay in cash (in-person only)",
+          icon: "banknote",
+        },
+        other: {
+          name: "Other",
+          description: "Alternative payment method",
+          icon: "circle-help",
+        },
+      };
 
     return methods[type] || methods.other;
   }
@@ -568,9 +557,7 @@ export class PaymentService {
   /**
    * Get transaction by ID
    */
-  public async getTransaction(
-    transactionId: string,
-  ): Promise<PaymentTransaction | null> {
+  public async getTransaction(transactionId: string): Promise<PaymentTransaction | null> {
     const prisma: PrismaClient = getPrismaClient();
     return prisma.paymentTransaction.findUnique({
       where: { id: transactionId },

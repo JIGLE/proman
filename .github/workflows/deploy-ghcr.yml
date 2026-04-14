@@ -2,43 +2,43 @@ name: Deploy to GHCR
 
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       version:
-        description: 'Version tag (e.g., 1.0.0) - defaults to package.json version'
+        description: "Version tag (e.g., 1.0.0) - defaults to package.json version"
         required: false
-        default: ''
+        default: ""
       platforms:
-        description: 'Build platforms'
+        description: "Build platforms"
         required: false
-        default: 'linux/amd64'
+        default: "linux/amd64"
         type: choice
         options:
-          - 'linux/amd64'
-          - 'linux/amd64,linux/arm64'
+          - "linux/amd64"
+          - "linux/amd64,linux/arm64"
       dry_run:
-        description: 'Dry run (no push to registry)'
+        description: "Dry run (no push to registry)"
         required: false
         default: false
         type: boolean
       deploy_k8s:
-        description: 'Also update a Kubernetes deployment with the new image (requires secret KUBECONFIG)'
+        description: "Also update a Kubernetes deployment with the new image (requires secret KUBECONFIG)"
         required: false
         default: false
         type: boolean
       kube_namespace:
-        description: 'Kubernetes namespace to update'
+        description: "Kubernetes namespace to update"
         required: false
-        default: 'ix-app'
+        default: "ix-app"
       kube_deployment:
-        description: 'Kubernetes deployment name to update'
+        description: "Kubernetes deployment name to update"
         required: false
-        default: 'proman'
+        default: "proman"
       kube_container:
-        description: 'Container name inside the deployment to update'
+        description: "Container name inside the deployment to update"
         required: false
-        default: 'proman'
+        default: "proman"
 
 permissions:
   contents: read

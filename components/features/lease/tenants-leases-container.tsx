@@ -6,7 +6,7 @@ import { TenantsView } from "@/components/features/tenant/tenants-view";
 import { LeasesView } from "./leases-view";
 
 export function TenantsLeasesContainer() {
-  const [activeTab, setActiveTab] = useTabPersistence('tenants', 'tenants');
+  const [activeTab, setActiveTab] = useTabPersistence("tenants", "tenants");
 
   return (
     <div className="space-y-6">

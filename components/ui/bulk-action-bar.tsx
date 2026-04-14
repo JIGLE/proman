@@ -93,7 +93,7 @@ export function BulkActionBar({
           "flex items-center gap-3 px-4 py-3 rounded-xl",
           "bg-[var(--color-card)] border border-[var(--color-border)]",
           "shadow-lg backdrop-blur-sm",
-          className
+          className,
         )}
       >
         {/* Selection toggle */}
@@ -138,7 +138,7 @@ export function BulkActionBar({
               className={cn(
                 "h-8 px-3 gap-2",
                 action.variant === "destructive" &&
-                  "text-[var(--color-error)] hover:text-[var(--color-error)] hover:bg-[var(--color-error)]/10"
+                  "text-[var(--color-error)] hover:text-[var(--color-error)] hover:bg-[var(--color-error)]/10",
               )}
             >
               {action.icon}
@@ -157,14 +157,12 @@ export function BulkActionBar({
               <DropdownMenuContent align="end" className="w-48">
                 {menuActions.map((action, index) => (
                   <React.Fragment key={action.id}>
-                    {index > 0 && action.variant === "destructive" && (
-                      <DropdownMenuSeparator />
-                    )}
+                    {index > 0 && action.variant === "destructive" && <DropdownMenuSeparator />}
                     <DropdownMenuItem
                       onClick={() => handleAction(action)}
                       disabled={loadingAction !== null}
                       className={cn(
-                        action.variant === "destructive" && "text-[var(--color-error)]"
+                        action.variant === "destructive" && "text-[var(--color-error)]",
                       )}
                     >
                       {action.icon}

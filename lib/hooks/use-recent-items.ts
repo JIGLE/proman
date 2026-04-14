@@ -33,10 +33,7 @@ export function useRecentItems() {
     setItems((prev) => {
       // Remove existing duplicate
       const filtered = prev.filter((i) => i.id !== item.id);
-      const updated = [
-        { ...item, timestamp: Date.now() },
-        ...filtered,
-      ].slice(0, MAX_RECENT);
+      const updated = [{ ...item, timestamp: Date.now() }, ...filtered].slice(0, MAX_RECENT);
 
       try {
         localStorage.setItem(RECENT_ITEMS_KEY, JSON.stringify(updated));

@@ -60,9 +60,7 @@ setup("authenticate", async ({ page }) => {
 
     await devLoginButton.click();
 
-    console.log(
-      "[auth.setup] Clicked sign in button, waiting for navigation...",
-    );
+    console.log("[auth.setup] Clicked sign in button, waiting for navigation...");
 
     // Wait for successful navigation to authenticated route
     try {
@@ -77,12 +75,8 @@ setup("authenticate", async ({ page }) => {
   } else {
     // Fallback to generic detection (original logic)
     // Look for email input
-    const emailInput = page
-      .getByLabel(/email/i)
-      .or(page.locator('input[type="email"]'));
-    const passwordInput = page
-      .getByLabel(/password/i)
-      .or(page.locator('input[type="password"]'));
+    const emailInput = page.getByLabel(/email/i).or(page.locator('input[type="email"]'));
+    const passwordInput = page.getByLabel(/password/i).or(page.locator('input[type="password"]'));
 
     // Fill credentials if inputs exist
     if (await emailInput.isVisible()) {
@@ -103,9 +97,7 @@ setup("authenticate", async ({ page }) => {
         await page.waitForURL(/\/(en|pt)/, { timeout: 10000 });
       } catch {
         // Auth may have failed - continue anyway with empty state
-        console.log(
-          "Auth login did not redirect - continuing with unauthenticated state",
-        );
+        console.log("Auth login did not redirect - continuing with unauthenticated state");
       }
     }
   }

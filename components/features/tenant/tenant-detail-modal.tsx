@@ -1,15 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Mail,
-  Phone,
-  MapPin,
-  Calendar,
-  DollarSign,
-  Edit,
-  Trash2,
-} from "lucide-react";
+import { Mail, Phone, MapPin, Calendar, DollarSign, Edit, Trash2 } from "lucide-react";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import {
   Dialog,
@@ -99,9 +91,7 @@ export function TenantDetailModal({
 
   if (!tenant) return null;
 
-  function getPaymentStatusBadge(
-    paymentStatus: string,
-  ): import("react").ReactNode {
+  function getPaymentStatusBadge(paymentStatus: string): import("react").ReactNode {
     if (paymentStatus === "paid") {
       return <Badge>Paid</Badge>;
     }
@@ -208,9 +198,7 @@ export function TenantDetailModal({
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
 
@@ -221,9 +209,7 @@ export function TenantDetailModal({
                     id="email"
                     type="email"
                     value={formData.email}
-                    onChange={(e) =>
-                      setFormData({ ...formData, email: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -231,9 +217,7 @@ export function TenantDetailModal({
                   <Input
                     id="phone"
                     value={formData.phone}
-                    onChange={(e) =>
-                      setFormData({ ...formData, phone: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   />
                 </div>
               </div>
@@ -242,9 +226,7 @@ export function TenantDetailModal({
                 <Label htmlFor="property">Property</Label>
                 <Select
                   value={formData.propertyId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, propertyId: value })
-                  }
+                  onValueChange={(value) => setFormData({ ...formData, propertyId: value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select property" />
@@ -283,9 +265,7 @@ export function TenantDetailModal({
                     id="leaseStart"
                     type="date"
                     value={formData.leaseStart}
-                    onChange={(e) =>
-                      setFormData({ ...formData, leaseStart: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, leaseStart: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
@@ -294,9 +274,7 @@ export function TenantDetailModal({
                     id="leaseEnd"
                     type="date"
                     value={formData.leaseEnd}
-                    onChange={(e) =>
-                      setFormData({ ...formData, leaseEnd: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, leaseEnd: e.target.value })}
                   />
                 </div>
               </div>
@@ -329,9 +307,7 @@ export function TenantDetailModal({
                   id="notes"
                   rows={3}
                   value={formData.notes}
-                  onChange={(e) =>
-                    setFormData({ ...formData, notes: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                 />
               </div>
 
@@ -349,31 +325,23 @@ export function TenantDetailModal({
               <div className="grid grid-cols-2 gap-6">
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Contact Information
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Contact Information</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="flex items-center gap-2 text-sm">
                       <Mail className="h-4 w-4 text-zinc-500" />
-                      <span className="text-[var(--color-foreground)]">
-                        {tenant.email}
-                      </span>
+                      <span className="text-[var(--color-foreground)]">{tenant.email}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Phone className="h-4 w-4 text-zinc-500" />
-                      <span className="text-[var(--color-foreground)]">
-                        {tenant.phone}
-                      </span>
+                      <span className="text-[var(--color-foreground)]">{tenant.phone}</span>
                     </div>
                   </CardContent>
                 </Card>
 
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Property
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Property</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-start gap-2">
@@ -391,9 +359,7 @@ export function TenantDetailModal({
               {/* Financial Details */}
               <Card className="bg-zinc-800 border-zinc-700">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">
-                    Financial Details
-                  </CardTitle>
+                  <CardTitle className="text-sm text-zinc-400">Financial Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <div className="flex items-center justify-between">
@@ -410,9 +376,7 @@ export function TenantDetailModal({
               {/* Lease Information */}
               <Card className="bg-zinc-800 border-zinc-700">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">
-                    Lease Period
-                  </CardTitle>
+                  <CardTitle className="text-sm text-zinc-400">Lease Period</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
@@ -438,14 +402,10 @@ export function TenantDetailModal({
               {tenant.notes && (
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Notes
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Notes</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-[var(--color-foreground)]">
-                      {tenant.notes}
-                    </p>
+                    <p className="text-sm text-[var(--color-foreground)]">{tenant.notes}</p>
                   </CardContent>
                 </Card>
               )}
@@ -460,10 +420,7 @@ export function TenantDetailModal({
                   <Trash2 className="w-4 h-4" />
                   Delete Tenant
                 </Button>
-                <Button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-1"
-                >
+                <Button onClick={() => setIsEditing(true)} className="flex items-center gap-1">
                   <Edit className="w-4 h-4" />
                   Edit Tenant
                 </Button>

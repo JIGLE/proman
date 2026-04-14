@@ -85,8 +85,7 @@ export function OwnerDetailModal({
     confirmDialog.confirm(
       {
         title: "Delete Owner",
-        description:
-          "This owner will be permanently removed. This action cannot be undone.",
+        description: "This owner will be permanently removed. This action cannot be undone.",
         confirmLabel: "Delete Owner",
         variant: "destructive",
       },
@@ -157,18 +156,14 @@ export function OwnerDetailModal({
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Owner Info
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Owner Info</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -177,9 +172,7 @@ export function OwnerDetailModal({
                         id="email"
                         type="email"
                         value={formData.email}
-                        onChange={(e) =>
-                          setFormData({ ...formData, email: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
@@ -187,9 +180,7 @@ export function OwnerDetailModal({
                       <Input
                         id="phone"
                         value={formData.phone}
-                        onChange={(e) =>
-                          setFormData({ ...formData, phone: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                       />
                     </div>
                   </CardContent>
@@ -197,9 +188,7 @@ export function OwnerDetailModal({
 
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Address
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Address</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -207,9 +196,7 @@ export function OwnerDetailModal({
                       <Input
                         id="address"
                         value={formData.address}
-                        onChange={(e) =>
-                          setFormData({ ...formData, address: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       />
                     </div>
                   </CardContent>
@@ -219,18 +206,14 @@ export function OwnerDetailModal({
               <div className="space-y-2">
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Notes
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Notes</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Textarea
                       id="notes"
                       rows={3}
                       value={formData.notes}
-                      onChange={(e) =>
-                        setFormData({ ...formData, notes: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                     />
                   </CardContent>
                 </Card>
@@ -248,17 +231,13 @@ export function OwnerDetailModal({
               {owner.address && (
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Address
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Address</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-start gap-2">
                       <MapPin className="h-4 w-4 text-zinc-500 mt-1" />
                       <div className="text-sm">
-                        <p className="text-[var(--color-foreground)]">
-                          {owner.address}
-                        </p>
+                        <p className="text-[var(--color-foreground)]">{owner.address}</p>
                       </div>
                     </div>
                   </CardContent>
@@ -298,14 +277,10 @@ export function OwnerDetailModal({
               {owner.notes && (
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Notes
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Notes</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-[var(--color-foreground)]">
-                      {owner.notes}
-                    </p>
+                    <p className="text-sm text-[var(--color-foreground)]">{owner.notes}</p>
                   </CardContent>
                 </Card>
               )}
@@ -320,10 +295,7 @@ export function OwnerDetailModal({
                   <Trash2 className="w-4 h-4" />
                   Delete Owner
                 </Button>
-                <Button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-1"
-                >
+                <Button onClick={() => setIsEditing(true)} className="flex items-center gap-1">
                   <Edit className="w-4 h-4" />
                   Edit Owner
                 </Button>

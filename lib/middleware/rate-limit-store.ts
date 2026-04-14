@@ -147,9 +147,7 @@ export class RedisRateLimitStore implements RateLimitStore {
 
       const url = redisUrl || process.env.REDIS_URL;
       if (!url) {
-        throw new Error(
-          "Redis URL not configured. Set REDIS_URL environment variable.",
-        );
+        throw new Error("Redis URL not configured. Set REDIS_URL environment variable.");
       }
 
       this.client = redis.createClient({ url });
@@ -211,14 +209,10 @@ export class RedisRateLimitStore implements RateLimitStore {
 
       return entry;
     } catch (error) {
-      logger.error(
-        "Redis GET error",
-        error instanceof Error ? error : new Error(String(error)),
-        {
-          component: "RedisRateLimitStore",
-          key,
-        },
-      );
+      logger.error("Redis GET error", error instanceof Error ? error : new Error(String(error)), {
+        component: "RedisRateLimitStore",
+        key,
+      });
       return null;
     }
   }
@@ -234,14 +228,10 @@ export class RedisRateLimitStore implements RateLimitStore {
 
       await client.setEx(`ratelimit:${key}`, ttl, JSON.stringify(entry));
     } catch (error) {
-      logger.error(
-        "Redis SET error",
-        error instanceof Error ? error : new Error(String(error)),
-        {
-          component: "RedisRateLimitStore",
-          key,
-        },
-      );
+      logger.error("Redis SET error", error instanceof Error ? error : new Error(String(error)), {
+        component: "RedisRateLimitStore",
+        key,
+      });
     }
   }
 
@@ -300,8 +290,7 @@ export class RedisRateLimitStore implements RateLimitStore {
  * Automatically selects appropriate store based on environment
  */
 export function createRateLimitStore(): RateLimitStore {
-  const useRedis =
-    process.env.REDIS_URL && process.env.NODE_ENV === "production";
+  const useRedis = process.env.REDIS_URL && process.env.NODE_ENV === "production";
 
   if (useRedis) {
     logger.info("Using Redis rate limit store for production", {

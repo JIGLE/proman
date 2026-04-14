@@ -1,14 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
-import {
-  createErrorResponse,
-  createSuccessResponse,
-} from "@/lib/utils/error-handling";
-import {
-  emailService,
-  EMAIL_TEMPLATES,
-  EmailTemplate,
-} from "@/lib/services/email/email-service";
+import { createErrorResponse, createSuccessResponse } from "@/lib/utils/error-handling";
+import { emailService, EMAIL_TEMPLATES, EmailTemplate } from "@/lib/services/email/email-service";
 import { z } from "zod";
 
 const sendEmailSchema = z.object({
@@ -36,14 +29,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     const authResult = await requireAuth(request);
     if (authResult instanceof NextResponse) return authResult;
 
-    const templates = Object.values(EMAIL_TEMPLATES).map(
-      (template: EmailTemplate) => ({
-        id: template.id,
-        name: template.name,
-        subject: template.subject,
-        variables: template.variables,
-      }),
-    );
+    const templates = Object.values(EMAIL_TEMPLATES).map((template: EmailTemplate) => ({
+      id: template.id,
+      name: template.name,
+      subject: template.subject,
+      variables: template.variables,
+    }));
 
     return createSuccessResponse(templates);
   } catch (error) {
@@ -52,9 +43,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 }
 
 // POST /api/email/send - Send a single email
-export async function POST(
-  request: NextRequest,
-): Promise<Response | NextResponse> {
+export async function POST(request: NextRequest): Promise<Response | NextResponse> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -63,11 +52,7 @@ export async function POST(
     const validatedData = sendEmailSchema.parse(body);
 
     if (!emailService.isReady()) {
-      return createErrorResponse(
-        new Error("Email service not configured"),
-        503,
-        request,
-      );
+      return createErrorResponse(new Error("Email service not configured"), 503, request);
     }
 
     const result = await emailService.sendTemplatedEmail(
@@ -88,20 +73,14 @@ export async function POST(
     }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return createErrorResponse(
-        new Error("Invalid request data"),
-        400,
-        request,
-      );
+      return createErrorResponse(new Error("Invalid request data"), 400, request);
     }
     return createErrorResponse(error as Error, 500, request);
   }
 }
 
 // PUT /api/email/bulk - Send bulk emails
-export async function PUT(
-  request: NextRequest,
-): Promise<Response | NextResponse> {
+export async function PUT(request: NextRequest): Promise<Response | NextResponse> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -110,11 +89,7 @@ export async function PUT(
     const validatedData = bulkEmailSchema.parse(body);
 
     if (!emailService.isReady()) {
-      return createErrorResponse(
-        new Error("Email service not configured"),
-        503,
-        request,
-      );
+      return createErrorResponse(new Error("Email service not configured"), 503, request);
     }
 
     const result = await emailService.sendBulkEmails(
@@ -132,11 +107,7 @@ export async function PUT(
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return createErrorResponse(
-        new Error("Invalid request data"),
-        400,
-        request,
-      );
+      return createErrorResponse(new Error("Invalid request data"), 400, request);
     }
     return createErrorResponse(error as Error, 500, request);
   }

@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
-import {
-  createErrorResponse,
-  createSuccessResponse,
-} from "@/lib/utils/error-handling";
+import { createErrorResponse, createSuccessResponse } from "@/lib/utils/error-handling";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { z } from "zod";
 
@@ -22,9 +19,7 @@ const querySchema = z.object({
 });
 
 // GET /api/email/logs - Get email logs with pagination and filtering
-export async function GET(
-  request: NextRequest,
-): Promise<Response | NextResponse> {
+export async function GET(request: NextRequest): Promise<Response | NextResponse> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -81,11 +76,7 @@ export async function GET(
     });
   } catch (error) {
     if (error instanceof z.ZodError) {
-      return createErrorResponse(
-        new Error("Invalid query parameters"),
-        400,
-        request,
-      );
+      return createErrorResponse(new Error("Invalid query parameters"), 400, request);
     }
     return createErrorResponse(error as Error, 500, request);
   }

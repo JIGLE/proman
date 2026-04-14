@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # Production deployment (from registry)
@@ -39,28 +39,28 @@ services:
     environment:
       # Database
       DATABASE_URL: file:./dev.db
-      
+
       # NextAuth Configuration
       NEXTAUTH_URL: http://localhost:3000
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-in-production}
-      
+
       # Google OAuth (configure in Google Cloud Console)
       GOOGLE_ID: ${GOOGLE_ID:-}
       GOOGLE_SECRET: ${GOOGLE_SECRET:-}
-      
+
       # Email Configuration (SendGrid)
       SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
       SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL:-noreply@example.com}
       SENDGRID_WEBHOOK_PUBLIC_KEY: ${SENDGRID_WEBHOOK_PUBLIC_KEY:-}
-      
+
       # Debug Endpoints (safe for local dev)
       DEBUG_MODE: "true"
       INIT_SECRET: ${INIT_SECRET:-dev-init-secret}
-      
+
       # Application Settings
       NODE_ENV: development
       NEXT_PUBLIC_APP_VERSION: 1.7.0
-      
+
     volumes:
       # Hot reload for development
       - .:/app

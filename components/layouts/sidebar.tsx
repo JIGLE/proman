@@ -13,12 +13,9 @@ import {
   Home,
   Settings,
   LogOut,
-  Mail,
   Hammer,
   Wallet,
-  LightbulbIcon,
   FileText,
-  UserCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
@@ -26,10 +23,8 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSelector } from "@/components/shared/language-selector";
-import {
-  NotificationCenter,
-  useNotifications,
-} from "@/components/ui/notification-center";
+import { NotificationCenter, useNotifications } from "@/components/ui/notification-center";
+import { useDemoMode } from "@/lib/contexts/demo-context";
 
 // ── Nav Item Type ──────────────────────────────────────
 export interface SidebarNavItem {
@@ -38,7 +33,6 @@ export interface SidebarNavItem {
   labelKey: string; // i18n key under "navigation.*"
   label: string; // fallback display label
   href: string;
-  feature?: string; // env var gate (e.g. NEXT_PUBLIC_ENABLE_INSIGHTS)
 }
 
 export interface SidebarNavGroup {
@@ -49,13 +43,13 @@ export interface SidebarNavGroup {
 // ── Default navigation config ──────────────────────────
 const NAV_CONFIG: SidebarNavGroup[] = [
   {
-    group: "Main",
+    group: "Portfolio",
     items: [
       {
         key: "home",
         icon: Home,
-        labelKey: "navigation.home",
-        label: "Home",
+        labelKey: "navigation.dashboard",
+        label: "Dashboard",
         href: "/overview",
       },
       {
@@ -73,42 +67,16 @@ const NAV_CONFIG: SidebarNavGroup[] = [
         href: "/tenants",
       },
       {
-        key: "contracts",
+        key: "leases",
         icon: FileText,
-        labelKey: "navigation.contracts",
-        label: "Contracts",
-        href: "/contracts",
+        labelKey: "navigation.leases",
+        label: "Leases",
+        href: "/leases",
       },
     ],
   },
   {
     group: "Operations",
-    items: [
-      {
-        key: "maintenance",
-        icon: Hammer,
-        labelKey: "navigation.maintenance",
-        label: "Maintenance",
-        href: "/maintenance",
-      },
-      {
-        key: "contacts",
-        icon: UserCircle,
-        labelKey: "navigation.contacts",
-        label: "Contacts",
-        href: "/contacts",
-      },
-      {
-        key: "correspondence",
-        icon: Mail,
-        labelKey: "navigation.messages",
-        label: "Messages",
-        href: "/correspondence",
-      },
-    ],
-  },
-  {
-    group: "Analytics",
     items: [
       {
         key: "finance",
@@ -118,12 +86,11 @@ const NAV_CONFIG: SidebarNavGroup[] = [
         href: "/financials",
       },
       {
-        key: "insights",
-        icon: LightbulbIcon,
-        labelKey: "navigation.insights",
-        label: "Insights",
-        href: "/insights",
-        feature: "NEXT_PUBLIC_ENABLE_INSIGHTS",
+        key: "maintenance",
+        icon: Hammer,
+        labelKey: "navigation.maintenance",
+        label: "Maintenance",
+        href: "/maintenance",
       },
     ],
   },
@@ -142,6 +109,7 @@ interface SidebarFooterProps {
   onToggleCollapsed: () => void;
   locale: string;
   user?: { name?: string | null; email?: string | null; image?: string | null };
+  isDemo?: boolean;
 }
 
 function SidebarFooter({
@@ -149,6 +117,7 @@ function SidebarFooter({
   onToggleCollapsed,
   locale,
   user,
+  isDemo,
 }: SidebarFooterProps): React.ReactElement {
   const initials =
     user?.name
@@ -171,19 +140,19 @@ function SidebarFooter({
             <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
               {user?.name}
             </p>
-            <p className="text-xs text-[var(--color-muted-foreground)] truncate">
-              {user?.email}
-            </p>
+            <p className="text-xs text-[var(--color-muted-foreground)] truncate">{user?.email}</p>
           </div>
         </div>
         <div className="flex items-center justify-between gap-1 px-1">
           <LanguageSelector compact />
           <ThemeToggle variant="button" size="sm" className="h-8 w-8" />
-          <Link href={`/${locale}/settings`} title="Settings">
-            <div className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
-              <Settings className="h-4 w-4" />
-            </div>
-          </Link>
+          {!isDemo && (
+            <Link href={`/${locale}/settings`} title="Settings">
+              <div className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
+                <Settings className="h-4 w-4" />
+              </div>
+            </Link>
+          )}
           <Button
             variant="ghost"
             size="sm"
@@ -224,6 +193,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   const [collapsed, setCollapsed] = useState(false);
   const { data: session } = useSession();
   const pathname = usePathname();
+  const { isDemoMode } = useDemoMode();
 
   useEffect(() => {
     try {
@@ -236,26 +206,11 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
     }
   }, []);
 
-  const insightsEnabled = process.env.NEXT_PUBLIC_ENABLE_INSIGHTS !== "false";
+  // Build menu from config
+  const menuItems = NAV_CONFIG;
 
-  // Build menu from config, filtering by feature flags
-  const menuItems = NAV_CONFIG.map((group) => ({
-    ...group,
-    items: group.items.filter((item) => {
-      if (!item.feature) return true;
-      if (item.feature === "NEXT_PUBLIC_ENABLE_INSIGHTS")
-        return insightsEnabled;
-      return true;
-    }),
-  })).filter((group) => group.items.length > 0);
-
-  const {
-    notifications,
-    markAsRead,
-    markAllAsRead,
-    deleteNotification,
-    clearAll,
-  } = useNotifications();
+  const { notifications, markAsRead, markAllAsRead, deleteNotification, clearAll } =
+    useNotifications();
 
   const handleToggleCollapsed = useCallback(() => {
     setCollapsed((prev) => {
@@ -332,11 +287,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
         className="flex-1 min-w-0 overflow-y-auto overflow-x-hidden px-2 py-3"
       >
         {menuItems.map((group, groupIndex) => (
-          <div
-            key={group.group}
-            role="group"
-            className={cn("space-y-1", groupIndex > 0 && "mt-4")}
-          >
+          <div key={group.group} role="group" className={cn("space-y-1", groupIndex > 0 && "mt-4")}>
             {!collapsed && (
               <div className="px-3 py-2">
                 <h3 className="text-[10px] font-semibold text-[var(--color-muted-foreground)] uppercase tracking-widest">
@@ -372,9 +323,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                       )}
                     >
                       <Icon className="h-[18px] w-[18px] shrink-0" />
-                      {!collapsed && (
-                        <span className="truncate">{item.label}</span>
-                      )}
+                      {!collapsed && <span className="truncate">{item.label}</span>}
                     </div>
                   </Link>
                 );
@@ -396,6 +345,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
             onToggleCollapsed={handleToggleCollapsed}
             locale={currentLocale}
             user={user}
+            isDemo={isDemoMode}
           />
         </div>
       )}

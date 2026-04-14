@@ -65,13 +65,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     return NextResponse.json(data);
   } catch (error) {
-    logger.error(
-      "Failed to retrieve metrics",
-      error instanceof Error ? error : undefined,
-    );
-    return NextResponse.json(
-      { error: "Failed to retrieve metrics" },
-      { status: 500 },
-    );
+    logger.error("Failed to retrieve metrics", error instanceof Error ? error : undefined);
+    return NextResponse.json({ error: "Failed to retrieve metrics" }, { status: 500 });
   }
 }

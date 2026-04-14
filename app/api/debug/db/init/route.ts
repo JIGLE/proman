@@ -15,9 +15,7 @@ const RATE_LIMIT_WINDOW = 3600000; // 1 hour
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
   const timestamps = initRequestTimestamps.get(ip) || [];
-  const recentTimestamps = timestamps.filter(
-    (t) => now - t < RATE_LIMIT_WINDOW,
-  );
+  const recentTimestamps = timestamps.filter((t) => now - t < RATE_LIMIT_WINDOW);
 
   if (recentTimestamps.length >= MAX_INIT_REQUESTS) {
     return true;
@@ -28,20 +26,10 @@ function isRateLimited(ip: string): boolean {
   return false;
 }
 
-function verifyHmacSignature(
-  payload: string,
-  signature: string,
-  secret: string,
-): boolean {
+function verifyHmacSignature(payload: string, signature: string, secret: string): boolean {
   try {
-    const expectedSignature = crypto
-      .createHmac("sha256", secret)
-      .update(payload)
-      .digest("hex");
-    return crypto.timingSafeEqual(
-      Buffer.from(signature),
-      Buffer.from(expectedSignature),
-    );
+    const expectedSignature = crypto.createHmac("sha256", secret).update(payload).digest("hex");
+    return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expectedSignature));
   } catch {
     return false;
   }
@@ -69,10 +57,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     console.error(
       "[db/init] Production deployment without INIT_SECRET — this endpoint is disabled for security",
     );
-    return NextResponse.json(
-      { ok: false, error: "not available" },
-      { status: 403 },
-    );
+    return NextResponse.json({ ok: false, error: "not available" }, { status: 403 });
   }
 
   // Get client IP for rate limiting
@@ -95,8 +80,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     const signature = request.headers.get("x-signature") || "";
 
     // Accept either Bearer token or HMAC signature (Bearer for backwards compatibility)
-    const isBearerValid =
-      auth.startsWith("Bearer ") && auth.slice(7) === initSecret;
+    const isBearerValid = auth.startsWith("Bearer ") && auth.slice(7) === initSecret;
 
     let isSignatureValid = false;
     if (signature && auth) {
@@ -113,10 +97,7 @@ export async function POST(request: Request): Promise<NextResponse> {
 
     if (!isBearerValid && !isSignatureValid) {
       console.warn(`[db/init] Unauthorized attempt from IP: ${ip}`);
-      return NextResponse.json(
-        { ok: false, error: "unauthorized" },
-        { status: 401 },
-      );
+      return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
     }
   }
 

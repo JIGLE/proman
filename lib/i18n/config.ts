@@ -23,16 +23,7 @@ export const localeNames: Record<Locale, string> = {
 };
 
 // Coming soon languages (for display in selector)
-export const upcomingLocales = [
-  "fr",
-  "de",
-  "it",
-  "nl",
-  "pl",
-  "ru",
-  "zh",
-  "ja",
-] as const;
+export const upcomingLocales = ["fr", "de", "it", "nl", "pl", "ru", "zh", "ja"] as const;
 export const upcomingLocaleNames: Record<string, string> = {
   es: "Español",
   fr: "Français",
@@ -58,9 +49,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
   const requested = await requestLocale;
 
   // Validate and fallback to default if needed
-  const locale = hasLocale(locales, requested ?? "")
-    ? requested!
-    : defaultLocale;
+  const locale = hasLocale(locales, requested ?? "") ? requested! : defaultLocale;
 
   return {
     locale,

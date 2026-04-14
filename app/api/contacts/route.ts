@@ -15,10 +15,7 @@ export async function GET(request: NextRequest) {
 
     // In mock mode, use mock contact service
     if (isMockMode) {
-      const contacts = await contactService.getAll(
-        "mock-user",
-        type || undefined,
-      );
+      const contacts = await contactService.getAll("mock-user", type || undefined);
       return NextResponse.json({ data: contacts });
     }
 
@@ -34,10 +31,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: contacts });
   } catch (error) {
     console.error("Failed to get contacts:", error);
-    return NextResponse.json(
-      { error: "Failed to load contacts" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to load contacts" }, { status: 500 });
   }
 }
 
@@ -87,9 +81,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data: contact }, { status: 201 });
   } catch (error) {
     console.error("Failed to create contact:", error);
-    return NextResponse.json(
-      { error: "Failed to create contact" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create contact" }, { status: 500 });
   }
 }

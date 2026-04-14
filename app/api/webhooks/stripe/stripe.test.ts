@@ -88,9 +88,7 @@ describe("Stripe Webhook Handler", () => {
     });
 
     it("STRIPE-003: Should check webhook secret configured", async () => {
-      mockGetSecret
-        .mockReturnValueOnce("sk_test_123")
-        .mockReturnValueOnce(null);
+      mockGetSecret.mockReturnValueOnce("sk_test_123").mockReturnValueOnce(null);
       mockRateLimit.mockResolvedValue(null);
       mockRequest.text = vi.fn().mockResolvedValue("{}");
 

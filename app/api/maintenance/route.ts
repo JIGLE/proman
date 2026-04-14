@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  requireAuth,
-  handleOptions,
-} from "@/lib/services/auth/auth-middleware";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { maintenanceSchema } from "@/lib/utils/validation";
 import { isMockMode } from "@/lib/config/data-mode";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
+    const demo = handleDemoGet(request, "maintenance");
+    if (demo.response) return demo.response;
+
     // In mock mode, return empty array
     if (isMockMode) {
       return NextResponse.json([]);
@@ -42,15 +43,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(transformedTickets);
   } catch (error) {
     console.error("Error fetching maintenance tickets:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch tickets" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch tickets" }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    const demo = handleDemoMutation(request, "maintenance");
+    if (demo.response) return demo.response;
+
     // In mock mode, reject write operations
     if (isMockMode) {
       return NextResponse.json(
@@ -86,10 +87,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     console.error("Error creating ticket:", error);
-    return NextResponse.json(
-      { error: "Failed to create ticket" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create ticket" }, { status: 500 });
   }
 }
 

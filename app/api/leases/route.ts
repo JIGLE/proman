@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  requireAuth,
-  handleOptions,
-} from "@/lib/services/auth/auth-middleware";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { leaseSchema } from "@/lib/utils/validation";
 import { isMockMode } from "@/lib/config/data-mode";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
+    const demo = handleDemoGet(request, "leases");
+    if (demo.response) return demo.response;
+
     // In mock mode, return empty array
     if (isMockMode) {
       return NextResponse.json([]);
@@ -41,15 +42,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(leases);
   } catch (error) {
     console.error("Error fetching leases:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch leases" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch leases" }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    const demo = handleDemoMutation(request, "leases");
+    if (demo.response) return demo.response;
+
     const authResult = await requireAuth(request);
     if (authResult instanceof Response) return authResult as NextResponse;
 
@@ -100,10 +101,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(lease);
   } catch (error) {
     console.error("Error creating lease:", error);
-    return NextResponse.json(
-      { error: "Failed to create lease" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create lease" }, { status: 500 });
   }
 }
 

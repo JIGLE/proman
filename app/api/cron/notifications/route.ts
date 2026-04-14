@@ -17,10 +17,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   // Verify cron secret to prevent unauthorized triggers
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
-    return NextResponse.json(
-      { error: "CRON_SECRET not configured" },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: "CRON_SECRET not configured" }, { status: 503 });
   }
 
   const authHeader = request.headers.get("authorization");
@@ -38,10 +35,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     console.error("Notification cron failed:", error);
-    return NextResponse.json(
-      { error: "Notification automation failed" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Notification automation failed" }, { status: 500 });
   }
 }
 

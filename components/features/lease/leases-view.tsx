@@ -17,13 +17,7 @@ import {
   Download,
 } from "lucide-react";
 import { useCurrency } from "@/lib/contexts/currency-context";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +39,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { SearchFilter } from "@/components/ui/search-filter";
 import { ExportButton } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
@@ -73,12 +68,7 @@ interface SortableHeaderProps {
   onSort: (column: keyof Lease) => void;
 }
 
-function SortableHeader({
-  column,
-  label,
-  sortDirection,
-  onSort,
-}: SortableHeaderProps) {
+function SortableHeader({ column, label, sortDirection, onSort }: SortableHeaderProps) {
   return (
     <button
       onClick={() => onSort(column)}
@@ -324,22 +314,18 @@ export function LeasesView(): React.ReactElement {
   const filteredLeases = useMemo(() => {
     return leases.filter((lease) => {
       // Search filter (tenant name, property name)
-      const tenantName =
-        tenants.find((t) => t.id === lease.tenantId)?.name || "";
-      const propertyName =
-        properties.find((p) => p.id === lease.propertyId)?.name || "";
+      const tenantName = tenants.find((t) => t.id === lease.tenantId)?.name || "";
+      const propertyName = properties.find((p) => p.id === lease.propertyId)?.name || "";
       const matchesSearch =
         searchQuery.length === 0 ||
         tenantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         propertyName.toLowerCase().includes(searchQuery.toLowerCase());
 
       // Status filter
-      const matchesStatus =
-        statusFilter === "all" || lease.status === statusFilter;
+      const matchesStatus = statusFilter === "all" || lease.status === statusFilter;
 
       // Tax regime filter
-      const matchesTaxRegime =
-        taxRegimeFilter === "all" || lease.taxRegime === taxRegimeFilter;
+      const matchesTaxRegime = taxRegimeFilter === "all" || lease.taxRegime === taxRegimeFilter;
 
       return matchesSearch && matchesStatus && matchesTaxRegime;
     });
@@ -376,26 +362,22 @@ export function LeasesView(): React.ReactElement {
                 {
                   key: "tenantId",
                   label: "Tenant",
-                  format: (value) =>
-                    tenants.find((t) => t.id === value)?.name || "Unknown",
+                  format: (value) => tenants.find((t) => t.id === value)?.name || "Unknown",
                 },
                 {
                   key: "propertyId",
                   label: "Property",
-                  format: (value) =>
-                    properties.find((p) => p.id === value)?.name || "Unknown",
+                  format: (value) => properties.find((p) => p.id === value)?.name || "Unknown",
                 },
                 {
                   key: "startDate",
                   label: "Start Date",
-                  format: (value) =>
-                    new Date(value as string).toLocaleDateString(),
+                  format: (value) => new Date(value as string).toLocaleDateString(),
                 },
                 {
                   key: "endDate",
                   label: "End Date",
-                  format: (value) =>
-                    new Date(value as string).toLocaleDateString(),
+                  format: (value) => new Date(value as string).toLocaleDateString(),
                 },
                 {
                   key: "monthlyRent",
@@ -425,10 +407,7 @@ export function LeasesView(): React.ReactElement {
               }}
             >
               <DialogTrigger asChild>
-                <Button
-                  onClick={() => setWizardOpen(true)}
-                  className="flex items-center gap-2"
-                >
+                <Button onClick={() => setWizardOpen(true)} className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
                   Add Lease
                 </Button>
@@ -485,35 +464,23 @@ export function LeasesView(): React.ReactElement {
                         <Label htmlFor="propertyId">Property *</Label>
                         <Select
                           value={wizard.formData.propertyId}
-                          onValueChange={(value) =>
-                            wizard.updateFormData({ propertyId: value })
-                          }
+                          onValueChange={(value) => wizard.updateFormData({ propertyId: value })}
                         >
                           <SelectTrigger
-                            className={
-                              wizard.stepErrors.propertyId
-                                ? "border-red-500"
-                                : ""
-                            }
+                            className={wizard.stepErrors.propertyId ? "border-red-500" : ""}
                           >
                             <SelectValue placeholder="Select a property..." />
                           </SelectTrigger>
                           <SelectContent>
                             {properties.length === 0 ? (
                               <div className="p-4 text-center text-sm text-zinc-400">
-                                No properties available. Create a property
-                                first.
+                                No properties available. Create a property first.
                               </div>
                             ) : (
                               properties.map((property) => (
-                                <SelectItem
-                                  key={property.id}
-                                  value={property.id}
-                                >
+                                <SelectItem key={property.id} value={property.id}>
                                   <div className="flex flex-col">
-                                    <span className="font-medium">
-                                      {property.name}
-                                    </span>
+                                    <span className="font-medium">{property.name}</span>
                                     <span className="text-xs text-zinc-400">
                                       {property.address}
                                     </span>
@@ -524,9 +491,7 @@ export function LeasesView(): React.ReactElement {
                           </SelectContent>
                         </Select>
                         {wizard.stepErrors.propertyId && (
-                          <p className="text-sm text-red-400">
-                            {wizard.stepErrors.propertyId}
-                          </p>
+                          <p className="text-sm text-red-400">{wizard.stepErrors.propertyId}</p>
                         )}
                       </div>
                     </StepContent>
@@ -542,14 +507,10 @@ export function LeasesView(): React.ReactElement {
                         <Label htmlFor="tenantId">Tenant *</Label>
                         <Select
                           value={wizard.formData.tenantId}
-                          onValueChange={(value) =>
-                            wizard.updateFormData({ tenantId: value })
-                          }
+                          onValueChange={(value) => wizard.updateFormData({ tenantId: value })}
                         >
                           <SelectTrigger
-                            className={
-                              wizard.stepErrors.tenantId ? "border-red-500" : ""
-                            }
+                            className={wizard.stepErrors.tenantId ? "border-red-500" : ""}
                           >
                             <SelectValue placeholder="Select a tenant..." />
                           </SelectTrigger>
@@ -562,12 +523,8 @@ export function LeasesView(): React.ReactElement {
                               tenants.map((tenant) => (
                                 <SelectItem key={tenant.id} value={tenant.id}>
                                   <div className="flex flex-col">
-                                    <span className="font-medium">
-                                      {tenant.name}
-                                    </span>
-                                    <span className="text-xs text-zinc-400">
-                                      {tenant.email}
-                                    </span>
+                                    <span className="font-medium">{tenant.name}</span>
+                                    <span className="text-xs text-zinc-400">{tenant.email}</span>
                                   </div>
                                 </SelectItem>
                               ))
@@ -575,9 +532,7 @@ export function LeasesView(): React.ReactElement {
                           </SelectContent>
                         </Select>
                         {wizard.stepErrors.tenantId && (
-                          <p className="text-sm text-red-400">
-                            {wizard.stepErrors.tenantId}
-                          </p>
+                          <p className="text-sm text-red-400">{wizard.stepErrors.tenantId}</p>
                         )}
                       </div>
                     </StepContent>
@@ -601,16 +556,10 @@ export function LeasesView(): React.ReactElement {
                                 startDate: e.target.value,
                               })
                             }
-                            className={
-                              wizard.stepErrors.startDate
-                                ? "border-red-500"
-                                : ""
-                            }
+                            className={wizard.stepErrors.startDate ? "border-red-500" : ""}
                           />
                           {wizard.stepErrors.startDate && (
-                            <p className="text-sm text-red-400">
-                              {wizard.stepErrors.startDate}
-                            </p>
+                            <p className="text-sm text-red-400">{wizard.stepErrors.startDate}</p>
                           )}
                         </div>
 
@@ -620,26 +569,18 @@ export function LeasesView(): React.ReactElement {
                             id="endDate"
                             type="date"
                             value={wizard.formData.endDate}
-                            onChange={(e) =>
-                              wizard.updateFormData({ endDate: e.target.value })
-                            }
-                            className={
-                              wizard.stepErrors.endDate ? "border-red-500" : ""
-                            }
+                            onChange={(e) => wizard.updateFormData({ endDate: e.target.value })}
+                            className={wizard.stepErrors.endDate ? "border-red-500" : ""}
                           />
                           {wizard.stepErrors.endDate && (
-                            <p className="text-sm text-red-400">
-                              {wizard.stepErrors.endDate}
-                            </p>
+                            <p className="text-sm text-red-400">{wizard.stepErrors.endDate}</p>
                           )}
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="monthlyRent">
-                            Monthly Rent ({currencySymbol}) *
-                          </Label>
+                          <Label htmlFor="monthlyRent">Monthly Rent ({currencySymbol}) *</Label>
                           <Input
                             id="monthlyRent"
                             type="number"
@@ -651,23 +592,15 @@ export function LeasesView(): React.ReactElement {
                                 monthlyRent: parseFloat(e.target.value) || 0,
                               })
                             }
-                            className={
-                              wizard.stepErrors.monthlyRent
-                                ? "border-red-500"
-                                : ""
-                            }
+                            className={wizard.stepErrors.monthlyRent ? "border-red-500" : ""}
                           />
                           {wizard.stepErrors.monthlyRent && (
-                            <p className="text-sm text-red-400">
-                              {wizard.stepErrors.monthlyRent}
-                            </p>
+                            <p className="text-sm text-red-400">{wizard.stepErrors.monthlyRent}</p>
                           )}
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="deposit">
-                            Security Deposit ({currencySymbol}) *
-                          </Label>
+                          <Label htmlFor="deposit">Security Deposit ({currencySymbol}) *</Label>
                           <Input
                             id="deposit"
                             type="number"
@@ -679,14 +612,10 @@ export function LeasesView(): React.ReactElement {
                                 deposit: parseFloat(e.target.value) || 0,
                               })
                             }
-                            className={
-                              wizard.stepErrors.deposit ? "border-red-500" : ""
-                            }
+                            className={wizard.stepErrors.deposit ? "border-red-500" : ""}
                           />
                           {wizard.stepErrors.deposit && (
-                            <p className="text-sm text-red-400">
-                              {wizard.stepErrors.deposit}
-                            </p>
+                            <p className="text-sm text-red-400">{wizard.stepErrors.deposit}</p>
                           )}
                         </div>
                       </div>
@@ -717,9 +646,7 @@ export function LeasesView(): React.ReactElement {
                         </div>
 
                         <div className="space-y-2">
-                          <Label htmlFor="renewalNoticeDays">
-                            Renewal Notice (Days)
-                          </Label>
+                          <Label htmlFor="renewalNoticeDays">Renewal Notice (Days)</Label>
                           <Input
                             id="renewalNoticeDays"
                             type="number"
@@ -727,8 +654,7 @@ export function LeasesView(): React.ReactElement {
                             value={wizard.formData.renewalNoticeDays}
                             onChange={(e) =>
                               wizard.updateFormData({
-                                renewalNoticeDays:
-                                  parseInt(e.target.value) || 60,
+                                renewalNoticeDays: parseInt(e.target.value) || 60,
                               })
                             }
                           />
@@ -744,9 +670,7 @@ export function LeasesView(): React.ReactElement {
                       description="Upload contract and add additional information"
                     >
                       <div className="space-y-2">
-                        <Label htmlFor="contractFile">
-                          Lease Contract (PDF)
-                        </Label>
+                        <Label htmlFor="contractFile">Lease Contract (PDF)</Label>
                         <div className="flex items-center gap-2">
                           <Input
                             id="contractFile"
@@ -760,9 +684,7 @@ export function LeasesView(): React.ReactElement {
                             className="flex items-center gap-2 px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-md cursor-pointer hover:bg-zinc-700 transition-colors"
                           >
                             <Upload className="w-4 h-4" />
-                            {contractFile
-                              ? contractFile.name
-                              : "Choose PDF file"}
+                            {contractFile ? contractFile.name : "Choose PDF file"}
                           </Label>
                           {contractFile && (
                             <span className="text-sm text-zinc-400">
@@ -780,19 +702,13 @@ export function LeasesView(): React.ReactElement {
                         <Textarea
                           id="notes"
                           value={wizard.formData.notes}
-                          onChange={(e) =>
-                            wizard.updateFormData({ notes: e.target.value })
-                          }
+                          onChange={(e) => wizard.updateFormData({ notes: e.target.value })}
                           placeholder="Add any special terms, conditions, or notes about this lease..."
                           rows={6}
-                          className={
-                            wizard.stepErrors.notes ? "border-red-500" : ""
-                          }
+                          className={wizard.stepErrors.notes ? "border-red-500" : ""}
                         />
                         {wizard.stepErrors.notes && (
-                          <p className="text-sm text-red-400">
-                            {wizard.stepErrors.notes}
-                          </p>
+                          <p className="text-sm text-red-400">{wizard.stepErrors.notes}</p>
                         )}
                       </div>
                     </StepContent>
@@ -870,28 +786,17 @@ export function LeasesView(): React.ReactElement {
         {/* Leases List */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredLeases.length === 0 ? (
-            <Card className="col-span-full bg-zinc-900 border-zinc-800">
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <FileText className="h-12 w-12 text-zinc-600 mb-4" />
-                <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
-                  {leases.length === 0 ? "No Leases Yet" : "No leases found"}
-                </h3>
-                <p className="text-zinc-400 text-center mb-4">
-                  {leases.length === 0
-                    ? "Create your first lease agreement to get started with lease management."
-                    : "Try adjusting your search or filters"}
-                </p>
-                {leases.length === 0 && (
-                  <Button
-                    onClick={dialog.openDialog}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Add Your First Lease
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
+            <div className="col-span-full">
+              <EmptyStateIllustration
+                type={leases.length === 0 ? "leases" : "generic"}
+                title={leases.length === 0 ? undefined : "No leases found"}
+                description={
+                  leases.length === 0 ? undefined : "Try adjusting your search or filters"
+                }
+                onAction={leases.length === 0 ? dialog.openDialog : undefined}
+                actionLabel={leases.length === 0 ? "Add First Lease" : undefined}
+              />
+            </div>
           ) : (
             sortedLeases.map((lease: Lease) => (
               <Card
@@ -902,9 +807,7 @@ export function LeasesView(): React.ReactElement {
                   <div className="absolute inset-0 flex items-center justify-center">
                     <FileText className="h-16 w-16 text-zinc-700" />
                   </div>
-                  <div className="absolute top-3 right-3">
-                    {getStatusBadge(lease.status)}
-                  </div>
+                  <div className="absolute top-3 right-3">{getStatusBadge(lease.status)}</div>
                 </div>
                 <CardHeader>
                   <CardTitle className="text-[var(--color-foreground)] flex items-center gap-2">
@@ -926,9 +829,7 @@ export function LeasesView(): React.ReactElement {
                   <div className="flex items-center gap-4 text-sm text-zinc-400">
                     <div className="flex items-center gap-1">
                       <Calendar className="h-4 w-4" />
-                      <span>
-                        {new Date(lease.startDate).toLocaleDateString()}
-                      </span>
+                      <span>{new Date(lease.startDate).toLocaleDateString()}</span>
                     </div>
                     <span>to</span>
                     <span>{new Date(lease.endDate).toLocaleDateString()}</span>

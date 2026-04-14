@@ -11,13 +11,7 @@ import {
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "@/components/ui/button";
 import {
@@ -42,10 +36,7 @@ import { useApp } from "@/lib/contexts/app-context";
 import { expenseSchema, ExpenseFormData } from "@/lib/utils/validation";
 import { useToast } from "@/lib/contexts/toast-context";
 import { cn } from "@/lib/utils/utils";
-import {
-  TaxCalculator,
-  TaxCalculationResult,
-} from "@/lib/services/tax-calculator";
+import { TaxCalculator, TaxCalculationResult } from "@/lib/services/tax-calculator";
 import { getExpenseCategoryColor } from "@/lib/design-tokens";
 
 export function FinancialsView(): React.ReactElement {
@@ -57,9 +48,7 @@ export function FinancialsView(): React.ReactElement {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [timeRange, setTimeRange] = useState("all"); // all, month, year
-  const [selectedCountry, setSelectedCountry] = useState<"Portugal" | "Spain">(
-    "Portugal",
-  );
+  const [selectedCountry, setSelectedCountry] = useState<"Portugal" | "Spain">("Portugal");
 
   const [formData, setFormData] = useState<ExpenseFormData>({
     propertyId: "",
@@ -68,9 +57,7 @@ export function FinancialsView(): React.ReactElement {
     category: "",
     description: "",
   });
-  const [formErrors, setFormErrors] = useState<
-    Partial<Record<keyof ExpenseFormData, string>>
-  >({});
+  const [formErrors, setFormErrors] = useState<Partial<Record<keyof ExpenseFormData, string>>>({});
 
   // Enhanced Calculations with trends
   const metrics = useMemo(() => {
@@ -90,81 +77,46 @@ export function FinancialsView(): React.ReactElement {
     if (timeRange === "month") {
       filteredReceipts = receipts.filter((r) => {
         const date = new Date(r.date);
-        return (
-          date.getMonth() === currentMonth && date.getFullYear() === currentYear
-        );
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
       });
       filteredExpenses = expenses.filter((e) => {
         const date = new Date(e.date);
-        return (
-          date.getMonth() === currentMonth && date.getFullYear() === currentYear
-        );
+        return date.getMonth() === currentMonth && date.getFullYear() === currentYear;
       });
 
       // Previous month for trend
       previousReceipts = receipts.filter((r) => {
         const date = new Date(r.date);
-        return (
-          date.getMonth() === previousMonth &&
-          date.getFullYear() === previousYear
-        );
+        return date.getMonth() === previousMonth && date.getFullYear() === previousYear;
       });
       previousExpenses = expenses.filter((e) => {
         const date = new Date(e.date);
-        return (
-          date.getMonth() === previousMonth &&
-          date.getFullYear() === previousYear
-        );
+        return date.getMonth() === previousMonth && date.getFullYear() === previousYear;
       });
     } else if (timeRange === "year") {
-      filteredReceipts = receipts.filter(
-        (r) => new Date(r.date).getFullYear() === currentYear,
-      );
-      filteredExpenses = expenses.filter(
-        (e) => new Date(e.date).getFullYear() === currentYear,
-      );
+      filteredReceipts = receipts.filter((r) => new Date(r.date).getFullYear() === currentYear);
+      filteredExpenses = expenses.filter((e) => new Date(e.date).getFullYear() === currentYear);
 
       // Previous year for trend
-      previousReceipts = receipts.filter(
-        (r) => new Date(r.date).getFullYear() === currentYear - 1,
-      );
-      previousExpenses = expenses.filter(
-        (e) => new Date(e.date).getFullYear() === currentYear - 1,
-      );
+      previousReceipts = receipts.filter((r) => new Date(r.date).getFullYear() === currentYear - 1);
+      previousExpenses = expenses.filter((e) => new Date(e.date).getFullYear() === currentYear - 1);
     }
 
-    const totalIncome = filteredReceipts.reduce(
-      (sum, receipt) => sum + receipt.amount,
-      0,
-    );
-    const totalExpenses = filteredExpenses.reduce(
-      (sum, expense) => sum + expense.amount,
-      0,
-    );
+    const totalIncome = filteredReceipts.reduce((sum, receipt) => sum + receipt.amount, 0);
+    const totalExpenses = filteredExpenses.reduce((sum, expense) => sum + expense.amount, 0);
     const netProfit = totalIncome - totalExpenses;
 
     // Previous period totals
-    const prevIncome = previousReceipts.reduce(
-      (sum, receipt) => sum + receipt.amount,
-      0,
-    );
-    const prevExpenses = previousExpenses.reduce(
-      (sum, expense) => sum + expense.amount,
-      0,
-    );
+    const prevIncome = previousReceipts.reduce((sum, receipt) => sum + receipt.amount, 0);
+    const prevExpenses = previousExpenses.reduce((sum, expense) => sum + expense.amount, 0);
     const prevNetProfit = prevIncome - prevExpenses;
 
     // Calculate trends
-    const incomeTrend =
-      prevIncome > 0 ? ((totalIncome - prevIncome) / prevIncome) * 100 : 0;
+    const incomeTrend = prevIncome > 0 ? ((totalIncome - prevIncome) / prevIncome) * 100 : 0;
     const expensesTrend =
-      prevExpenses > 0
-        ? ((totalExpenses - prevExpenses) / prevExpenses) * 100
-        : 0;
+      prevExpenses > 0 ? ((totalExpenses - prevExpenses) / prevExpenses) * 100 : 0;
     const profitTrend =
-      prevNetProfit !== 0
-        ? ((netProfit - prevNetProfit) / Math.abs(prevNetProfit)) * 100
-        : 0;
+      prevNetProfit !== 0 ? ((netProfit - prevNetProfit) / Math.abs(prevNetProfit)) * 100 : 0;
 
     // Group expenses by category
     const expensesByCategory = filteredExpenses.reduce(
@@ -204,8 +156,7 @@ export function FinancialsView(): React.ReactElement {
       expensesByCategory,
       monthlyRevenue,
       totalProperties: properties.length,
-      avgRevenuePerProperty:
-        properties.length > 0 ? totalIncome / properties.length : 0,
+      avgRevenuePerProperty: properties.length > 0 ? totalIncome / properties.length : 0,
       filteredReceipts,
       filteredExpenses,
     };
@@ -220,8 +171,7 @@ export function FinancialsView(): React.ReactElement {
     }),
   );
 
-  const getCategoryColor = (category: string) =>
-    getExpenseCategoryColor(category);
+  const getCategoryColor = (category: string) => getExpenseCategoryColor(category);
 
   // Tax Calculations
   const taxCalculation = useMemo((): TaxCalculationResult | null => {
@@ -233,10 +183,7 @@ export function FinancialsView(): React.ReactElement {
     try {
       return TaxCalculator.calculateTax({
         country: selectedCountry,
-        regime:
-          selectedCountry === "Portugal"
-            ? "portugal_rendimentos"
-            : "spain_inmuebles",
+        regime: selectedCountry === "Portugal" ? "portugal_rendimentos" : "spain_inmuebles",
         annualRentalIncome: annualIncome,
         deductibleExpenses: annualExpenses,
       });
@@ -341,15 +288,11 @@ export function FinancialsView(): React.ReactElement {
                     <Label htmlFor="property">Property</Label>
                     <Select
                       value={formData.propertyId}
-                      onValueChange={(val) =>
-                        setFormData({ ...formData, propertyId: val })
-                      }
+                      onValueChange={(val) => setFormData({ ...formData, propertyId: val })}
                     >
                       <SelectTrigger
                         id="property"
-                        className={
-                          formErrors.propertyId ? "border-red-500" : ""
-                        }
+                        className={formErrors.propertyId ? "border-red-500" : ""}
                       >
                         <SelectValue placeholder="Select property" />
                       </SelectTrigger>
@@ -362,18 +305,14 @@ export function FinancialsView(): React.ReactElement {
                       </SelectContent>
                     </Select>
                     {formErrors.propertyId && (
-                      <p className="text-xs text-red-500">
-                        {formErrors.propertyId}
-                      </p>
+                      <p className="text-xs text-red-500">{formErrors.propertyId}</p>
                     )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="category">Category</Label>
                     <Select
                       value={formData.category}
-                      onValueChange={(val) =>
-                        setFormData({ ...formData, category: val })
-                      }
+                      onValueChange={(val) => setFormData({ ...formData, category: val })}
                     >
                       <SelectTrigger
                         id="category"
@@ -390,9 +329,7 @@ export function FinancialsView(): React.ReactElement {
                       </SelectContent>
                     </Select>
                     {formErrors.category && (
-                      <p className="text-xs text-red-500">
-                        {formErrors.category}
-                      </p>
+                      <p className="text-xs text-red-500">{formErrors.category}</p>
                     )}
                   </div>
                 </div>
@@ -414,9 +351,7 @@ export function FinancialsView(): React.ReactElement {
                       className={formErrors.amount ? "border-red-500" : ""}
                     />
                     {formErrors.amount && (
-                      <p className="text-xs text-red-500">
-                        {formErrors.amount}
-                      </p>
+                      <p className="text-xs text-red-500">{formErrors.amount}</p>
                     )}
                   </div>
                   <div className="space-y-2">
@@ -425,14 +360,10 @@ export function FinancialsView(): React.ReactElement {
                       id="date"
                       type="date"
                       value={formData.date}
-                      onChange={(e) =>
-                        setFormData({ ...formData, date: e.target.value })
-                      }
+                      onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                       className={formErrors.date ? "border-red-500" : ""}
                     />
-                    {formErrors.date && (
-                      <p className="text-xs text-red-500">{formErrors.date}</p>
-                    )}
+                    {formErrors.date && <p className="text-xs text-red-500">{formErrors.date}</p>}
                   </div>
                 </div>
 
@@ -441,19 +372,13 @@ export function FinancialsView(): React.ReactElement {
                   <Textarea
                     id="description"
                     value={formData.description || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Details about the expense..."
                   />
                 </div>
 
                 <div className="flex justify-end gap-2 pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
@@ -470,25 +395,19 @@ export function FinancialsView(): React.ReactElement {
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Total Income
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-zinc-400">Total Income</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-[var(--color-foreground)]">
               {formatCurrency(metrics.totalIncome)}
             </div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">
-              From rent and deposits
-            </p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">From rent and deposits</p>
           </CardContent>
         </Card>
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Total Expenses
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-zinc-400">Total Expenses</CardTitle>
             <TrendingDown className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
@@ -502,14 +421,9 @@ export function FinancialsView(): React.ReactElement {
         </Card>
         <Card className="bg-zinc-900 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Net Income
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-zinc-400">Net Income</CardTitle>
             <DollarSign
-              className={cn(
-                "h-4 w-4",
-                metrics.netProfit >= 0 ? "text-green-500" : "text-red-500",
-              )}
+              className={cn("h-4 w-4", metrics.netProfit >= 0 ? "text-green-500" : "text-red-500")}
             />
           </CardHeader>
           <CardContent>
@@ -536,15 +450,11 @@ export function FinancialsView(): React.ReactElement {
                   <Calculator className="h-5 w-5" />
                   Tax Calculation - {selectedCountry}
                 </CardTitle>
-                <CardDescription>
-                  Estimated tax liability for rental income
-                </CardDescription>
+                <CardDescription>Estimated tax liability for rental income</CardDescription>
               </div>
               <Select
                 value={selectedCountry}
-                onValueChange={(value: "Portugal" | "Spain") =>
-                  setSelectedCountry(value)
-                }
+                onValueChange={(value: "Portugal" | "Spain") => setSelectedCountry(value)}
               >
                 <SelectTrigger className="w-32">
                   <SelectValue />
@@ -559,25 +469,19 @@ export function FinancialsView(): React.ReactElement {
           <CardContent>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-zinc-400">
-                  Gross Income
-                </Label>
+                <Label className="text-sm font-medium text-zinc-400">Gross Income</Label>
                 <div className="text-lg font-semibold text-[var(--color-foreground)]">
                   {formatCurrency(taxCalculation.grossIncome)}
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-zinc-400">
-                  Taxable Income
-                </Label>
+                <Label className="text-sm font-medium text-zinc-400">Taxable Income</Label>
                 <div className="text-lg font-semibold text-[var(--color-foreground)]">
                   {formatCurrency(taxCalculation.taxableIncome)}
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-zinc-400">
-                  Tax Amount
-                </Label>
+                <Label className="text-sm font-medium text-zinc-400">Tax Amount</Label>
                 <div className="text-lg font-semibold text-red-400">
                   {formatCurrency(taxCalculation.taxAmount)}
                 </div>
@@ -589,17 +493,13 @@ export function FinancialsView(): React.ReactElement {
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-zinc-400">
-                  Quarterly Payment
-                </Label>
+                <Label className="text-sm font-medium text-zinc-400">Quarterly Payment</Label>
                 <div className="text-base font-semibold text-yellow-400">
                   {formatCurrency(taxCalculation.quarterlyPayment)}
                 </div>
               </div>
               <div className="space-y-2">
-                <Label className="text-sm font-medium text-zinc-400">
-                  Annual Settlement
-                </Label>
+                <Label className="text-sm font-medium text-zinc-400">Annual Settlement</Label>
                 <div className="text-base font-semibold text-orange-400">
                   {formatCurrency(taxCalculation.annualSettlement)}
                 </div>
@@ -607,22 +507,16 @@ export function FinancialsView(): React.ReactElement {
             </div>
 
             <div className="mt-4">
-              <Label className="text-sm font-medium text-zinc-400">
-                Deductions Applied
-              </Label>
+              <Label className="text-sm font-medium text-zinc-400">Deductions Applied</Label>
               <div className="mt-2 space-y-1">
-                {Object.entries(taxCalculation.deductions.breakdown).map(
-                  ([key, value]) => (
-                    <div key={key} className="flex justify-between text-sm">
-                      <span className="text-zinc-400 capitalize">
-                        {key.replace(/([A-Z])/g, " $1").toLowerCase()}
-                      </span>
-                      <span className="text-zinc-50">
-                        {formatCurrency(value)}
-                      </span>
-                    </div>
-                  ),
-                )}
+                {Object.entries(taxCalculation.deductions.breakdown).map(([key, value]) => (
+                  <div key={key} className="flex justify-between text-sm">
+                    <span className="text-zinc-400 capitalize">
+                      {key.replace(/([A-Z])/g, " $1").toLowerCase()}
+                    </span>
+                    <span className="text-zinc-50">{formatCurrency(value)}</span>
+                  </div>
+                ))}
                 <div className="border-t border-zinc-700 pt-1 mt-2 flex justify-between font-medium">
                   <span className="text-zinc-300">Total Deductions</span>
                   <span className="text-green-400">
@@ -634,10 +528,9 @@ export function FinancialsView(): React.ReactElement {
 
             <div className="mt-4 p-3 bg-zinc-800 rounded-md">
               <p className="text-xs text-zinc-400">
-                <strong>Note:</strong> This is an estimate based on{" "}
-                {selectedCountry} tax regulations for 2024. Consult a tax
-                professional for accurate calculations and compliance with
-                current laws.
+                <strong>Note:</strong> This is an estimate based on {selectedCountry} tax
+                regulations for 2024. Consult a tax professional for accurate calculations and
+                compliance with current laws.
               </p>
             </div>
           </CardContent>
@@ -654,18 +547,13 @@ export function FinancialsView(): React.ReactElement {
           <CardContent>
             <div className="space-y-4">
               {metrics.filteredReceipts.slice(0, 5).map((receipt) => (
-                <div
-                  key={receipt.id}
-                  className="flex items-center justify-between"
-                >
+                <div key={receipt.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-green-900/20 rounded-full">
                       <DollarSign className="w-4 h-4 text-green-500" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-zinc-200">
-                        {receipt.propertyName}
-                      </p>
+                      <p className="text-sm font-medium text-zinc-200">{receipt.propertyName}</p>
                       <p className="text-xs text-zinc-500">
                         {new Date(receipt.date).toLocaleDateString()}
                       </p>
@@ -677,9 +565,7 @@ export function FinancialsView(): React.ReactElement {
                 </div>
               ))}
               {metrics.filteredReceipts.length === 0 && (
-                <p className="text-sm text-zinc-500 text-center py-4">
-                  No income records found
-                </p>
+                <p className="text-sm text-zinc-500 text-center py-4">No income records found</p>
               )}
             </div>
           </CardContent>
@@ -694,23 +580,16 @@ export function FinancialsView(): React.ReactElement {
           <CardContent>
             <div className="space-y-4">
               {metrics.filteredExpenses.slice(0, 5).map((expense) => (
-                <div
-                  key={expense.id}
-                  className="flex items-center justify-between"
-                >
+                <div key={expense.id} className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
                     <div className="p-2 bg-red-900/20 rounded-full">
                       <FileText className="w-4 h-4 text-red-500" />
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-zinc-200">
-                        {expense.category}
-                      </p>
+                      <p className="text-sm font-medium text-zinc-200">{expense.category}</p>
                       <p className="text-xs text-zinc-500">
-                        {expense.propertyName
-                          ? expense.propertyName
-                          : "Unknown Property"}{" "}
-                        • {new Date(expense.date).toLocaleDateString()}
+                        {expense.propertyName ? expense.propertyName : "Unknown Property"} •{" "}
+                        {new Date(expense.date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
@@ -720,9 +599,7 @@ export function FinancialsView(): React.ReactElement {
                 </div>
               ))}
               {metrics.filteredExpenses.length === 0 && (
-                <p className="text-sm text-zinc-500 text-center py-4">
-                  No expense records found
-                </p>
+                <p className="text-sm text-zinc-500 text-center py-4">No expense records found</p>
               )}
             </div>
           </CardContent>

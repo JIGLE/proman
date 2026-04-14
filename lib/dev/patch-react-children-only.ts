@@ -7,9 +7,7 @@ try {
     React &&
     typeof React.Children?.only === "function"
   ) {
-    const original = React.Children.only as (
-      child: React.ReactNode,
-    ) => React.ReactElement;
+    const original = React.Children.only as (child: React.ReactNode) => React.ReactElement;
     let __didWarnReactChildrenOnly = false;
     (
       React.Children as unknown as {
@@ -20,10 +18,7 @@ try {
         return original(child);
       } catch {
         if (!__didWarnReactChildrenOnly) {
-          console.error(
-            "[dev] React.Children.only error (server) — child:",
-            child,
-          );
+          console.error("[dev] React.Children.only error (server) — child:", child);
           console.error(new Error("React.Children.only server stack").stack);
           __didWarnReactChildrenOnly = true;
         }

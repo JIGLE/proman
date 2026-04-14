@@ -1,13 +1,27 @@
-import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { documentService, type DocumentFilter, type DocumentType } from '@/lib/services/document-service';
-import { sanitizeForDatabase } from '@/lib/utils/sanitize';
-import { z } from 'zod';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import {
+  documentService,
+  type DocumentFilter,
+  type DocumentType,
+} from "@/lib/services/document-service";
+import { sanitizeForDatabase } from "@/lib/utils/sanitize";
+import { z } from "zod";
 
 // Validation schemas
 const documentTypeSchema = z.enum([
-  'contract', 'invoice', 'receipt', 'photo', 'floor_plan', 'certificate', 'other'
+  "contract",
+  "invoice",
+  "receipt",
+  "photo",
+  "floor_plan",
+  "certificate",
+  "other",
 ]);
 
 const createDocumentSchema = z.object({
@@ -32,25 +46,25 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
   try {
     const filters: DocumentFilter = {};
-    
-    const type = searchParams.get('type');
+
+    const type = searchParams.get("type");
     if (type && documentTypeSchema.safeParse(type).success) {
       filters.type = type as DocumentType;
     }
-    
-    const propertyId = searchParams.get('propertyId');
+
+    const propertyId = searchParams.get("propertyId");
     if (propertyId) filters.propertyId = sanitizeForDatabase(propertyId);
-    
-    const unitId = searchParams.get('unitId');
+
+    const unitId = searchParams.get("unitId");
     if (unitId) filters.unitId = sanitizeForDatabase(unitId);
-    
-    const ownerId = searchParams.get('ownerId');
+
+    const ownerId = searchParams.get("ownerId");
     if (ownerId) filters.ownerId = sanitizeForDatabase(ownerId);
-    
-    const tenantId = searchParams.get('tenantId');
+
+    const tenantId = searchParams.get("tenantId");
     if (tenantId) filters.tenantId = sanitizeForDatabase(tenantId);
-    
-    const search = searchParams.get('search');
+
+    const search = searchParams.get("search");
     if (search) filters.search = sanitizeForDatabase(search);
 
     const documents = await documentService.getAll(userId, filters);
@@ -89,9 +103,9 @@ async function handlePost(request: NextRequest): Promise<Response> {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
-        request
+        request,
       );
     }
     return createErrorResponse(error as Error, 500, request);

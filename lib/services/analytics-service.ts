@@ -169,18 +169,13 @@ class AnalyticsService {
       });
 
       const totalProperties = properties.length;
-      const totalUnits = properties.reduce(
-        (sum, p) => sum + (p.units?.length || 0),
-        0,
-      );
+      const totalUnits = properties.reduce((sum, p) => sum + (p.units?.length || 0), 0);
       const occupiedUnits = properties.reduce(
-        (sum, p) =>
-          sum + (p.units?.filter((u) => u.status === "occupied").length || 0),
+        (sum, p) => sum + (p.units?.filter((u) => u.status === "occupied").length || 0),
         0,
       );
       const vacantUnits = totalUnits - occupiedUnits;
-      const occupancyRate =
-        totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
+      const occupancyRate = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
 
       // Get tenant counts
       const tenants = await prisma.tenant.findMany({
@@ -188,9 +183,7 @@ class AnalyticsService {
       });
       const totalTenants = tenants.length;
       // Active tenants are those whose lease hasn't ended yet
-      const activeTenants = tenants.filter(
-        (t) => new Date(t.leaseEnd) >= now,
-      ).length;
+      const activeTenants = tenants.filter((t) => new Date(t.leaseEnd) >= now).length;
 
       // Get receipt/invoice data for revenue
       const receipts = await prisma.receipt.findMany({
@@ -210,10 +203,7 @@ class AnalyticsService {
       });
 
       const monthlyRevenue = receipts.reduce((sum, r) => sum + r.amount, 0);
-      const yearlyRevenue = yearlyReceipts.reduce(
-        (sum, r) => sum + r.amount,
-        0,
-      );
+      const yearlyRevenue = yearlyReceipts.reduce((sum, r) => sum + r.amount, 0);
 
       // Get expenses
       const expenses = await prisma.expense.findMany({
@@ -236,10 +226,7 @@ class AnalyticsService {
         },
       });
       const overduePayments = overdueReceipts.length;
-      const overdueAmount = overdueReceipts.reduce(
-        (sum, r) => sum + r.amount,
-        0,
-      );
+      const overdueAmount = overdueReceipts.reduce((sum, r) => sum + r.amount, 0);
 
       // Calculate average rent
       const activeLeases = await prisma.lease.findMany({
@@ -250,8 +237,7 @@ class AnalyticsService {
       });
       const averageRent =
         activeLeases.length > 0
-          ? activeLeases.reduce((sum, l) => sum + l.monthlyRent, 0) /
-            activeLeases.length
+          ? activeLeases.reduce((sum, l) => sum + l.monthlyRent, 0) / activeLeases.length
           : 0;
 
       // Calculate collection rate
@@ -261,9 +247,7 @@ class AnalyticsService {
           date: { gte: startOfMonth },
         },
       });
-      const paidReceipts = allMonthlyReceipts.filter(
-        (r) => r.status === "paid",
-      );
+      const paidReceipts = allMonthlyReceipts.filter((r) => r.status === "paid");
       const collectionRate =
         allMonthlyReceipts.length > 0
           ? (paidReceipts.length / allMonthlyReceipts.length) * 100
@@ -295,10 +279,7 @@ class AnalyticsService {
   /**
    * Get revenue by month for the specified number of months
    */
-  async getRevenueByMonth(
-    userId: string,
-    months: number = 12,
-  ): Promise<RevenueByMonth[]> {
+  async getRevenueByMonth(userId: string, months: number = 12): Promise<RevenueByMonth[]> {
     const prisma = getPrisma();
     if (!isPrismaAvailable() || !prisma) {
       return this.getMockRevenueByMonth(months);
@@ -310,11 +291,7 @@ class AnalyticsService {
     try {
       for (let i = months - 1; i >= 0; i--) {
         const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const endDate = new Date(
-          targetDate.getFullYear(),
-          targetDate.getMonth() + 1,
-          0,
-        );
+        const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
 
         const receipts = await prisma.receipt.findMany({
           where: {
@@ -390,22 +367,17 @@ class AnalyticsService {
 
       return properties.map((property) => {
         const totalUnits = property.units?.length || 0;
-        const occupiedUnits =
-          property.units?.filter((u) => u.status === "occupied").length || 0;
-        const occupancyRate =
-          totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
+        const occupiedUnits = property.units?.filter((u) => u.status === "occupied").length || 0;
+        const occupancyRate = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
 
-        const yearlyRevenue =
-          property.receipts?.reduce((sum, r) => sum + r.amount, 0) || 0;
+        const yearlyRevenue = property.receipts?.reduce((sum, r) => sum + r.amount, 0) || 0;
         const monthlyRevenue = yearlyRevenue / 12;
-        const expenses =
-          property.expenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
+        const expenses = property.expenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
         const netIncome = yearlyRevenue - expenses;
 
         // ROI calculation (simplified - assumes property value from purchase price or estimated value)
         const propertyValue =
-          (property as { purchasePrice?: number }).purchasePrice ||
-          yearlyRevenue * 10;
+          (property as { purchasePrice?: number }).purchasePrice || yearlyRevenue * 10;
         const roi = propertyValue > 0 ? (netIncome / propertyValue) * 100 : 0;
 
         return {
@@ -431,10 +403,7 @@ class AnalyticsService {
   /**
    * Get upcoming lease expirations
    */
-  async getLeaseExpirations(
-    userId: string,
-    daysAhead: number = 90,
-  ): Promise<LeaseExpiration[]> {
+  async getLeaseExpirations(userId: string, daysAhead: number = 90): Promise<LeaseExpiration[]> {
     const prisma = getPrisma();
     if (!isPrismaAvailable() || !prisma) {
       return [];
@@ -514,9 +483,7 @@ class AnalyticsService {
 
       const total = requests.length;
       const pending = requests.filter((r) => r.status === "open").length;
-      const inProgress = requests.filter(
-        (r) => r.status === "in_progress",
-      ).length;
+      const inProgress = requests.filter((r) => r.status === "in_progress").length;
       const completed = requests.filter(
         (r) => r.status === "resolved" || r.status === "closed",
       ).length;
@@ -524,8 +491,7 @@ class AnalyticsService {
 
       // Calculate average resolution time for completed requests
       const completedRequests = requests.filter(
-        (r) =>
-          (r.status === "resolved" || r.status === "closed") && r.resolvedAt,
+        (r) => (r.status === "resolved" || r.status === "closed") && r.resolvedAt,
       );
       let averageResolutionDays = 0;
 
@@ -533,12 +499,7 @@ class AnalyticsService {
         const totalDays = completedRequests.reduce((sum, r) => {
           const created = new Date(r.createdAt);
           const resolved = new Date(r.resolvedAt!);
-          return (
-            sum +
-            Math.ceil(
-              (resolved.getTime() - created.getTime()) / (1000 * 60 * 60 * 24),
-            )
-          );
+          return sum + Math.ceil((resolved.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
         }, 0);
         averageResolutionDays = totalDays / completedRequests.length;
       }
@@ -567,10 +528,7 @@ class AnalyticsService {
   /**
    * Get occupancy trend over time
    */
-  async getOccupancyTrend(
-    userId: string,
-    months: number = 12,
-  ): Promise<OccupancyTrend[]> {
+  async getOccupancyTrend(userId: string, months: number = 12): Promise<OccupancyTrend[]> {
     const prisma = getPrisma();
     if (!isPrismaAvailable() || !prisma) {
       return this.getMockOccupancyTrend(months);
@@ -584,17 +542,12 @@ class AnalyticsService {
         include: { units: true },
       });
 
-      const totalUnits = properties.reduce(
-        (sum, p) => sum + (p.units?.length || 0),
-        0,
-      );
+      const totalUnits = properties.reduce((sum, p) => sum + (p.units?.length || 0), 0);
       const occupiedUnits = properties.reduce(
-        (sum, p) =>
-          sum + (p.units?.filter((u) => u.status === "occupied").length || 0),
+        (sum, p) => sum + (p.units?.filter((u) => u.status === "occupied").length || 0),
         0,
       );
-      const currentOccupancy =
-        totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
+      const currentOccupancy = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
 
       const result: OccupancyTrend[] = [];
       const now = new Date();
@@ -607,14 +560,9 @@ class AnalyticsService {
         result.push({
           month: targetDate.toLocaleString("default", { month: "short" }),
           year: targetDate.getFullYear(),
-          occupancyRate: Math.min(
-            100,
-            Math.max(0, currentOccupancy + variation),
-          ),
+          occupancyRate: Math.min(100, Math.max(0, currentOccupancy + variation)),
           totalUnits,
-          occupiedUnits: Math.round(
-            (totalUnits * (currentOccupancy + variation)) / 100,
-          ),
+          occupiedUnits: Math.round((totalUnits * (currentOccupancy + variation)) / 100),
         });
       }
 
@@ -637,10 +585,7 @@ class AnalyticsService {
   /**
    * Get recent activities
    */
-  async getRecentActivities(
-    userId: string,
-    limit: number = 10,
-  ): Promise<Activity[]> {
+  async getRecentActivities(userId: string, limit: number = 10): Promise<Activity[]> {
     const prisma = getPrisma();
     if (!isPrismaAvailable() || !prisma) {
       return [];
@@ -708,10 +653,7 @@ class AnalyticsService {
 
       // Sort by timestamp and limit
       return activities
-        .sort(
-          (a, b) =>
-            new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
-        )
+        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
         .slice(0, limit);
     } catch (error) {
       console.error("Error fetching recent activities:", error);

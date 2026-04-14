@@ -240,8 +240,7 @@ export function trackWebVitals(): void {
     const fidObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       entries.forEach((entry) => {
-        const processingStart =
-          (entry as PerformanceEventTiming).processingStart || 0;
+        const processingStart = (entry as PerformanceEventTiming).processingStart || 0;
         const fid = processingStart - entry.startTime;
 
         recordMetric("web-vitals-fid", fid, "ms", {
@@ -267,12 +266,7 @@ export function trackWebVitals(): void {
       });
 
       recordMetric("web-vitals-cls", clsValue, "score", {
-        rating:
-          clsValue < 0.1
-            ? "good"
-            : clsValue < 0.25
-              ? "needs-improvement"
-              : "poor",
+        rating: clsValue < 0.1 ? "good" : clsValue < 0.25 ? "needs-improvement" : "poor",
       });
     });
 
@@ -289,8 +283,7 @@ export function trackWebVitals(): void {
       setTimeout(() => {
         const timing = window.performance.timing;
         const loadTime = timing.loadEventEnd - timing.navigationStart;
-        const domReady =
-          timing.domContentLoadedEventEnd - timing.navigationStart;
+        const domReady = timing.domContentLoadedEventEnd - timing.navigationStart;
         const firstPaint = timing.responseEnd - timing.fetchStart;
 
         recordMetric("page-load-total", loadTime, "ms");

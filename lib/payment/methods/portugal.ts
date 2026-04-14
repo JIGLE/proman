@@ -1,20 +1,20 @@
 // Portugal-specific payment methods
 // Supports: Multibanco, MB WAY, SEPA Direct Debit
 
-import { paymentService, PaymentIntentResult, CreatePaymentIntentParams } from '../payment-service';
-import { getPrismaClient } from '@/lib/services/database/database';
-import type { PrismaClient } from '@prisma/client';
+import { paymentService, PaymentIntentResult, CreatePaymentIntentParams } from "../payment-service";
+import { getPrismaClient } from "@/lib/services/database/database";
+import type { PrismaClient } from "@prisma/client";
 
 export interface MultibancoDetails {
-  entity: string;       // 5-digit entity number
-  reference: string;    // Payment reference
-  amount: number;       // Amount in cents
-  expiresAt: Date;      // Expiration date
+  entity: string; // 5-digit entity number
+  reference: string; // Payment reference
+  amount: number; // Amount in cents
+  expiresAt: Date; // Expiration date
 }
 
 export interface MBWayRequest {
-  phoneNumber: string;  // Portuguese phone number (9 digits)
-  amount: number;       // Amount in cents
+  phoneNumber: string; // Portuguese phone number (9 digits)
+  amount: number; // Amount in cents
   description?: string;
 }
 
@@ -45,23 +45,23 @@ export class PortugalPaymentService {
     tenantId: string,
     amount: number, // in cents
     invoiceId?: string,
-    description?: string
+    description?: string,
   ): Promise<PaymentIntentResult> {
     const params: CreatePaymentIntentParams = {
       amount,
-      currency: 'EUR',
+      currency: "EUR",
       tenantId,
       invoiceId,
-      paymentMethodType: 'multibanco',
-      description: description || 'Rent payment via Multibanco',
+      paymentMethodType: "multibanco",
+      description: description || "Rent payment via Multibanco",
       metadata: {
-        country: 'PT',
-        method: 'multibanco',
+        country: "PT",
+        method: "multibanco",
       },
     };
 
     const result = await paymentService.createPaymentIntent(params);
-    
+
     return result;
   }
 
@@ -70,7 +70,7 @@ export class PortugalPaymentService {
    */
   public async getMultibancoDetails(transactionId: string): Promise<MultibancoDetails | null> {
     const prisma: PrismaClient = getPrismaClient();
-    
+
     const transaction = await prisma.paymentTransaction.findUnique({
       where: { id: transactionId },
     });
@@ -92,7 +92,7 @@ export class PortugalPaymentService {
    * Reference is typically 9 digits, displayed as XXX XXX XXX
    */
   public formatMultibancoReference(reference: string): string {
-    const clean = reference.replace(/\s/g, '');
+    const clean = reference.replace(/\s/g, "");
     if (clean.length !== 9) return reference;
     return `${clean.slice(0, 3)} ${clean.slice(3, 6)} ${clean.slice(6, 9)}`;
   }
@@ -102,7 +102,7 @@ export class PortugalPaymentService {
    * Must be 9 digits starting with 9
    */
   public validatePortuguesePhone(phone: string): boolean {
-    const clean = phone.replace(/\D/g, '');
+    const clean = phone.replace(/\D/g, "");
     return /^9\d{8}$/.test(clean);
   }
 
@@ -116,7 +116,7 @@ export class PortugalPaymentService {
     if (!this.validatePortuguesePhone(request.phoneNumber)) {
       return {
         success: false,
-        error: 'Invalid Portuguese phone number. Must be 9 digits starting with 9.',
+        error: "Invalid Portuguese phone number. Must be 9 digits starting with 9.",
       };
     }
 
@@ -126,12 +126,13 @@ export class PortugalPaymentService {
     // 1. SIBS merchant account
     // 2. API credentials (client_id, client_secret)
     // 3. Webhook endpoint for payment confirmation
-    
-    console.warn('MB WAY integration requires SIBS API - returning placeholder response');
+
+    console.warn("MB WAY integration requires SIBS API - returning placeholder response");
 
     return {
       success: false,
-      error: 'MB WAY integration not yet configured. Contact administrator to set up SIBS API credentials.',
+      error:
+        "MB WAY integration not yet configured. Contact administrator to set up SIBS API credentials.",
     };
   }
 
@@ -141,14 +142,14 @@ export class PortugalPaymentService {
   public async createSEPAMandate(
     tenantId: string,
     iban: string,
-    accountHolderName: string
+    accountHolderName: string,
   ): Promise<{ success: boolean; mandateId?: string; error?: string }> {
     const prisma: PrismaClient = getPrismaClient();
-    
+
     try {
       // Validate IBAN format for Portugal (starts with PT50)
       if (!this.validatePortugueseIBAN(iban)) {
-        return { success: false, error: 'Invalid Portuguese IBAN. Must start with PT.' };
+        return { success: false, error: "Invalid Portuguese IBAN. Must start with PT." };
       }
 
       const stripe = paymentService.getStripeClient();
@@ -157,10 +158,10 @@ export class PortugalPaymentService {
       // Create a SetupIntent for SEPA Direct Debit
       const setupIntent = await stripe.setupIntents.create({
         customer: customerId,
-        payment_method_types: ['sepa_debit'],
+        payment_method_types: ["sepa_debit"],
         metadata: {
           tenantId,
-          country: 'PT',
+          country: "PT",
         },
       });
 
@@ -168,10 +169,10 @@ export class PortugalPaymentService {
       await prisma.paymentMethod.create({
         data: {
           tenantId,
-          type: 'sepa_debit',
-          provider: 'stripe',
+          type: "sepa_debit",
+          provider: "stripe",
           stripeCustomerId: customerId,
-          country: 'PT',
+          country: "PT",
           iban: this.maskIBAN(iban),
           ibanLast4: iban.slice(-4),
           accountHolder: accountHolderName,
@@ -184,7 +185,7 @@ export class PortugalPaymentService {
         mandateId: setupIntent.id,
       };
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to create SEPA mandate';
+      const message = error instanceof Error ? error.message : "Failed to create SEPA mandate";
       return { success: false, error: message };
     }
   }
@@ -194,7 +195,7 @@ export class PortugalPaymentService {
    * Format: PT50 XXXX XXXX XXXX XXXX XXXX X (25 characters)
    */
   public validatePortugueseIBAN(iban: string): boolean {
-    const clean = iban.replace(/\s/g, '').toUpperCase();
+    const clean = iban.replace(/\s/g, "").toUpperCase();
     return /^PT50\d{21}$/.test(clean);
   }
 
@@ -202,7 +203,7 @@ export class PortugalPaymentService {
    * Mask IBAN for display (show first 4 and last 4 characters)
    */
   public maskIBAN(iban: string): string {
-    const clean = iban.replace(/\s/g, '').toUpperCase();
+    const clean = iban.replace(/\s/g, "").toUpperCase();
     if (clean.length < 8) return clean;
     return `${clean.slice(0, 4)}****${clean.slice(-4)}`;
   }
@@ -212,23 +213,23 @@ export class PortugalPaymentService {
    * Used for tax compliance/invoicing
    */
   public validateNIF(nif: string): boolean {
-    const clean = nif.replace(/\D/g, '');
-    
+    const clean = nif.replace(/\D/g, "");
+
     if (clean.length !== 9) return false;
-    
+
     // First digit must be 1, 2, 3, 5, 6, 7, 8, or 9
     const firstDigit = parseInt(clean[0]);
     if (![1, 2, 3, 5, 6, 7, 8, 9].includes(firstDigit)) return false;
-    
+
     // Calculate check digit
     let sum = 0;
     for (let i = 0; i < 8; i++) {
       sum += parseInt(clean[i]) * (9 - i);
     }
-    
+
     const checkDigit = 11 - (sum % 11);
     const expectedCheckDigit = checkDigit >= 10 ? 0 : checkDigit;
-    
+
     return parseInt(clean[8]) === expectedCheckDigit;
   }
 
@@ -237,9 +238,9 @@ export class PortugalPaymentService {
    */
   public formatAmountPT(amountCents: number): string {
     const euros = amountCents / 100;
-    return new Intl.NumberFormat('pt-PT', {
-      style: 'currency',
-      currency: 'EUR',
+    return new Intl.NumberFormat("pt-PT", {
+      style: "currency",
+      currency: "EUR",
     }).format(euros);
   }
 }

@@ -3,7 +3,7 @@
  * Validates request size, content type, and structure
  */
 
-import { NextRequest } from 'next/server';
+import { NextRequest } from "next/server";
 
 export interface RequestValidationConfig {
   maxBodySize?: number; // bytes
@@ -13,9 +13,9 @@ export interface RequestValidationConfig {
 
 const DEFAULT_MAX_BODY_SIZE = 10 * 1024 * 1024; // 10MB
 const DEFAULT_ALLOWED_CONTENT_TYPES = [
-  'application/json',
-  'application/x-www-form-urlencoded',
-  'multipart/form-data',
+  "application/json",
+  "application/x-www-form-urlencoded",
+  "multipart/form-data",
 ];
 
 /**
@@ -23,21 +23,21 @@ const DEFAULT_ALLOWED_CONTENT_TYPES = [
  */
 export async function validateRequestSize(
   request: NextRequest,
-  maxSize: number = DEFAULT_MAX_BODY_SIZE
+  maxSize: number = DEFAULT_MAX_BODY_SIZE,
 ): Promise<Response | null> {
-  const contentLength = request.headers.get('content-length');
-  
+  const contentLength = request.headers.get("content-length");
+
   if (contentLength && parseInt(contentLength, 10) > maxSize) {
     return new Response(
       JSON.stringify({
-        error: 'Request too large',
+        error: "Request too large",
         message: `Request body exceeds maximum size of ${maxSize} bytes`,
         maxSize,
       }),
       {
         status: 413,
-        headers: { 'Content-Type': 'application/json' },
-      }
+        headers: { "Content-Type": "application/json" },
+      },
     );
   }
 
@@ -50,42 +50,42 @@ export async function validateRequestSize(
 export function validateContentType(
   request: NextRequest,
   allowedTypes: string[] = DEFAULT_ALLOWED_CONTENT_TYPES,
-  required: boolean = false
+  required: boolean = false,
 ): Response | null {
-  const contentType = request.headers.get('content-type');
+  const contentType = request.headers.get("content-type");
 
   if (!contentType) {
     if (required) {
       return new Response(
         JSON.stringify({
-          error: 'Missing Content-Type',
-          message: 'Content-Type header is required',
+          error: "Missing Content-Type",
+          message: "Content-Type header is required",
         }),
         {
           status: 400,
-          headers: { 'Content-Type': 'application/json' },
-        }
+          headers: { "Content-Type": "application/json" },
+        },
       );
     }
     return null;
   }
 
   // Check if content type matches any allowed type (considering charset etc)
-  const matches = allowedTypes.some(type => 
-    contentType.toLowerCase().includes(type.toLowerCase())
+  const matches = allowedTypes.some((type) =>
+    contentType.toLowerCase().includes(type.toLowerCase()),
   );
 
   if (!matches) {
     return new Response(
       JSON.stringify({
-        error: 'Invalid Content-Type',
-        message: `Content-Type must be one of: ${allowedTypes.join(', ')}`,
+        error: "Invalid Content-Type",
+        message: `Content-Type must be one of: ${allowedTypes.join(", ")}`,
         received: contentType,
       }),
       {
         status: 415,
-        headers: { 'Content-Type': 'application/json' },
-      }
+        headers: { "Content-Type": "application/json" },
+      },
     );
   }
 
@@ -97,7 +97,7 @@ export function validateContentType(
  */
 export async function validateRequest(
   request: NextRequest,
-  config: RequestValidationConfig = {}
+  config: RequestValidationConfig = {},
 ): Promise<Response | null> {
   const {
     maxBodySize = DEFAULT_MAX_BODY_SIZE,
@@ -107,7 +107,7 @@ export async function validateRequest(
 
   // Skip validation for methods without body
   const method = request.method.toUpperCase();
-  if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {
+  if (method === "GET" || method === "HEAD" || method === "OPTIONS") {
     return null;
   }
 
@@ -127,12 +127,12 @@ export async function validateRequest(
  */
 export function withRequestValidation(
   handler: (request: NextRequest) => Promise<Response>,
-  config?: RequestValidationConfig
+  config?: RequestValidationConfig,
 ) {
   return async (request: NextRequest): Promise<Response> => {
     const validationError = await validateRequest(request, config);
     if (validationError) return validationError;
-    
+
     return handler(request);
   };
 }
@@ -142,7 +142,7 @@ export function withRequestValidation(
  */
 export const JSON_ONLY_VALIDATION: RequestValidationConfig = {
   maxBodySize: 1 * 1024 * 1024, // 1MB for JSON
-  allowedContentTypes: ['application/json'],
+  allowedContentTypes: ["application/json"],
   requireContentType: true,
 };
 
@@ -151,6 +151,6 @@ export const JSON_ONLY_VALIDATION: RequestValidationConfig = {
  */
 export const FILE_UPLOAD_VALIDATION: RequestValidationConfig = {
   maxBodySize: 50 * 1024 * 1024, // 50MB for files
-  allowedContentTypes: ['multipart/form-data'],
+  allowedContentTypes: ["multipart/form-data"],
   requireContentType: true,
 };

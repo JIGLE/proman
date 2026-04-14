@@ -6,9 +6,7 @@ import { defineConfig } from "prisma/config";
 const schemaPath = "prisma/schema.prisma";
 
 const defaultUrl =
-  process.env["NODE_ENV"] === "production"
-    ? "file:./data/proman.db"
-    : "file:./dev.db";
+  process.env["NODE_ENV"] === "production" ? "file:./data/proman.db" : "file:./dev.db";
 
 export default defineConfig({
   schema: schemaPath,

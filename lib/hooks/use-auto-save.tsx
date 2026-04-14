@@ -33,14 +33,7 @@ export function useAutoSave<T extends Record<string, unknown>>(
   data: T,
   options: UseAutoSaveOptions,
 ) {
-  const {
-    key,
-    delay = 2000,
-    enabled = true,
-    onSave,
-    onRestore,
-    excludeFields = [],
-  } = options;
+  const { key, delay = 2000, enabled = true, onSave, onRestore, excludeFields = [] } = options;
 
   const [isSaving, setIsSaving] = React.useState(false);
   const [lastSaved, setLastSaved] = React.useState<Date | null>(null);
@@ -193,9 +186,7 @@ export function useFormPersistence<T extends Record<string, unknown>>(
 
     try {
       const dataToSave = fields
-        ? Object.fromEntries(
-            Object.entries(formData).filter(([k]) => fields.includes(k)),
-          )
+        ? Object.fromEntries(Object.entries(formData).filter(([k]) => fields.includes(k)))
         : formData;
 
       const persistData = {
@@ -310,13 +301,7 @@ export function AutoSaveStatus({
   };
 
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 text-xs",
-        getStatusColor(),
-        className,
-      )}
-    >
+    <div className={cn("flex items-center gap-2 text-xs", getStatusColor(), className)}>
       {isSaving && (
         <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-current"></div>
       )}
@@ -333,12 +318,7 @@ export interface FormRecoveryProps {
   className?: string;
 }
 
-export function FormRecovery({
-  onRestore,
-  onDiscard,
-  lastSaved,
-  className,
-}: FormRecoveryProps) {
+export function FormRecovery({ onRestore, onDiscard, lastSaved, className }: FormRecoveryProps) {
   return (
     <div
       className={cn(

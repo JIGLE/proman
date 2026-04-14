@@ -4,6 +4,7 @@ about: Create a new release with a short checklist to ensure stabilty and reprod
 ---
 
 # Release checklist
+
 - [ ] Bump package version (package.json & package-lock.json)
 - [ ] Run `npm test` and `npm run type-check` locally
 - [ ] Run `npm run lint` and fix issues
@@ -15,4 +16,5 @@ about: Create a new release with a short checklist to ensure stabilty and reprod
 - [ ] Deploy to a staging environment and smoke-test sign-in & critical flows
 
 Notes:
+
 - If the scheduled DRY_RUN uncovers packaging issues, fix them on a branch and re-run the workflow manually before tagging for release.

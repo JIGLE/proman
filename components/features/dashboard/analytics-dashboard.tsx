@@ -4,12 +4,7 @@ import * as React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  LineChart,
-  BarChart,
-  DonutChart,
-  AreaChart,
-} from "@/components/ui/charts";
+import { LineChart, BarChart, DonutChart, AreaChart } from "@/components/ui/charts";
 import { ChartWidget, ListWidget } from "@/components/ui/dashboard-widgets";
 import {
   KPICard,
@@ -65,8 +60,7 @@ const MONTH_LABELS = [
   "Nov",
   "Dec",
 ];
-const getMonthLabel = (date: Date): string =>
-  MONTH_LABELS[date.getMonth()] || "";
+const getMonthLabel = (date: Date): string => MONTH_LABELS[date.getMonth()] || "";
 
 export type AnalyticsDashboardProps = Record<string, never>;
 
@@ -103,12 +97,9 @@ export function AnalyticsDashboard(): React.ReactElement {
     const totalProperties = properties.length;
     // Each property counts as 1 unit (simplification for now)
     const totalUnits = totalProperties;
-    const occupiedUnits = properties.filter(
-      (p) => p.status === "occupied",
-    ).length;
+    const occupiedUnits = properties.filter((p) => p.status === "occupied").length;
     const vacantUnits = totalUnits - occupiedUnits;
-    const occupancyRate =
-      totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
+    const occupancyRate = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
 
     const totalTenants = tenants.length;
     // Consider tenants with current or future lease end date as active
@@ -120,10 +111,7 @@ export function AnalyticsDashboard(): React.ReactElement {
     const monthlyReceipts = receipts.filter(
       (r) => r.status === "paid" && new Date(r.date) >= startOfMonth,
     );
-    const monthlyRevenue = monthlyReceipts.reduce(
-      (sum, r) => sum + r.amount,
-      0,
-    );
+    const monthlyRevenue = monthlyReceipts.reduce((sum, r) => sum + r.amount, 0);
 
     const yearlyReceipts = receipts.filter(
       (r) => r.status === "paid" && new Date(r.date) >= startOfYear,
@@ -131,9 +119,7 @@ export function AnalyticsDashboard(): React.ReactElement {
     const yearlyRevenue = yearlyReceipts.reduce((sum, r) => sum + r.amount, 0);
 
     // Calculate expenses from actual data
-    const yearlyExpenses = expenses.filter(
-      (e) => new Date(e.date) >= startOfYear,
-    );
+    const yearlyExpenses = expenses.filter((e) => new Date(e.date) >= startOfYear);
     const totalExpenses = yearlyExpenses.reduce((sum, e) => sum + e.amount, 0);
     const netIncome = yearlyRevenue - totalExpenses;
 
@@ -150,13 +136,10 @@ export function AnalyticsDashboard(): React.ReactElement {
     const activeLeases = leases?.filter((l) => l.status === "active") || [];
     const averageRent =
       activeLeases.length > 0
-        ? activeLeases.reduce((sum, l) => sum + (l.monthlyRent || 0), 0) /
-          activeLeases.length
+        ? activeLeases.reduce((sum, l) => sum + (l.monthlyRent || 0), 0) / activeLeases.length
         : 0;
 
-    const allMonthlyReceipts = receipts.filter(
-      (r) => new Date(r.date) >= startOfMonth,
-    );
+    const allMonthlyReceipts = receipts.filter((r) => new Date(r.date) >= startOfMonth);
     const collectionRate =
       allMonthlyReceipts.length > 0
         ? (monthlyReceipts.length / allMonthlyReceipts.length) * 100
@@ -188,11 +171,7 @@ export function AnalyticsDashboard(): React.ReactElement {
 
     for (let i = 5; i >= 0; i--) {
       const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const endDate = new Date(
-        targetDate.getFullYear(),
-        targetDate.getMonth() + 1,
-        0,
-      );
+      const endDate = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
 
       const monthReceipts = receipts.filter((r) => {
         const date = new Date(r.date);
@@ -205,10 +184,7 @@ export function AnalyticsDashboard(): React.ReactElement {
       });
 
       const revenue = monthReceipts.reduce((sum, r) => sum + r.amount, 0);
-      const monthExpenseTotal = monthExpenses.reduce(
-        (sum, e) => sum + e.amount,
-        0,
-      );
+      const monthExpenseTotal = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
 
       result.push({
         month: getMonthLabel(targetDate),
@@ -269,27 +245,17 @@ export function AnalyticsDashboard(): React.ReactElement {
       // Each property counts as 1 unit
       const totalUnitsCount = 1;
       const occupiedUnitsCount = property.status === "occupied" ? 1 : 0;
-      const occupancyRate =
-        totalUnitsCount > 0 ? (occupiedUnitsCount / totalUnitsCount) * 100 : 0;
+      const occupancyRate = totalUnitsCount > 0 ? (occupiedUnitsCount / totalUnitsCount) * 100 : 0;
 
       const propertyReceipts = receipts.filter(
         (r) => r.propertyId === property.id && r.status === "paid",
       );
-      const yearlyRevenue = propertyReceipts.reduce(
-        (sum, r) => sum + r.amount,
-        0,
-      );
+      const yearlyRevenue = propertyReceipts.reduce((sum, r) => sum + r.amount, 0);
       const monthlyRevenue = yearlyRevenue / 12;
-      const propertyExpenses = expenses.filter(
-        (e) => e.propertyId === property.id,
-      );
-      const expenseTotal = propertyExpenses.reduce(
-        (sum, e) => sum + e.amount,
-        0,
-      );
+      const propertyExpenses = expenses.filter((e) => e.propertyId === property.id);
+      const expenseTotal = propertyExpenses.reduce((sum, e) => sum + e.amount, 0);
       const netIncome = yearlyRevenue - expenseTotal;
-      const roi =
-        yearlyRevenue > 0 ? (netIncome / (yearlyRevenue * 10)) * 100 : 0;
+      const roi = yearlyRevenue > 0 ? (netIncome / (yearlyRevenue * 10)) * 100 : 0;
 
       return {
         propertyId: property.id,
@@ -356,10 +322,7 @@ export function AnalyticsDashboard(): React.ReactElement {
   const netIncomeChartData = revenueByMonth.map((m) => ({
     label: m.month,
     value: m.netIncome,
-    color:
-      m.netIncome >= 0
-        ? tokens.chartStatus.positive
-        : tokens.chartStatus.negative,
+    color: m.netIncome >= 0 ? tokens.chartStatus.positive : tokens.chartStatus.negative,
   }));
 
   const propertyTypeData = properties.reduce<Record<string, number>>(
@@ -371,13 +334,11 @@ export function AnalyticsDashboard(): React.ReactElement {
     {} as Record<string, number>,
   );
 
-  const propertyTypeChartData = Object.entries(propertyTypeData).map(
-    ([type, count]) => ({
-      label: type.charAt(0).toUpperCase() + type.slice(1),
-      value: count as number,
-      color: getPropertyTypeColor(type),
-    }),
-  );
+  const propertyTypeChartData = Object.entries(propertyTypeData).map(([type, count]) => ({
+    label: type.charAt(0).toUpperCase() + type.slice(1),
+    value: count as number,
+    color: getPropertyTypeColor(type),
+  }));
 
   const handleRefresh = () => {
     setIsLoading(true);
@@ -405,15 +366,8 @@ export function AnalyticsDashboard(): React.ReactElement {
         </div>
 
         <div className="flex items-center gap-3">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isLoading}
-          >
-            <RefreshCw
-              className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
-            />
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button variant="outline" size="sm">
@@ -532,13 +486,7 @@ export function AnalyticsDashboard(): React.ReactElement {
               <ChartWidget
                 title="Revenue Trend"
                 subtitle="Monthly revenue for the last 6 months"
-                chart={
-                  <LineChart
-                    data={revenueChartData}
-                    height={200}
-                    showValues={false}
-                  />
-                }
+                chart={<LineChart data={revenueChartData} height={200} showValues={false} />}
                 onRefresh={handleRefresh}
               />
             </div>
@@ -565,14 +513,10 @@ export function AnalyticsDashboard(): React.ReactElement {
                     <div className="flex items-center gap-3">
                       <span className="text-lg">{activity.icon}</span>
                       <div className="space-y-1">
-                        <p className="text-sm font-medium text-zinc-300">
-                          {activity.message}
-                        </p>
+                        <p className="text-sm font-medium text-zinc-300">{activity.message}</p>
                         <div className="flex items-center gap-2 text-xs text-zinc-500">
                           <span>{activity.type}</span>
-                          {activity.amount && (
-                            <span>• {formatCurrency(activity.amount)}</span>
-                          )}
+                          {activity.amount && <span>• {formatCurrency(activity.amount)}</span>}
                         </div>
                       </div>
                     </div>
@@ -641,13 +585,7 @@ export function AnalyticsDashboard(): React.ReactElement {
             <ChartWidget
               title="Revenue vs Expenses"
               subtitle="Monthly comparison for the last 6 months"
-              chart={
-                <BarChart
-                  data={revenueChartData}
-                  height={250}
-                  showTrend={false}
-                />
-              }
+              chart={<BarChart data={revenueChartData} height={250} showTrend={false} />}
             />
             <ChartWidget
               title="Net Income Trend"
@@ -667,12 +605,9 @@ export function AnalyticsDashboard(): React.ReactElement {
             />
             <KPICard
               title="Expiring (30 days)"
-              value={
-                leaseExpirations.filter((l) => l.status === "critical").length
-              }
+              value={leaseExpirations.filter((l) => l.status === "critical").length}
               variant={
-                leaseExpirations.filter((l) => l.status === "critical").length >
-                0
+                leaseExpirations.filter((l) => l.status === "critical").length > 0
                   ? "warning"
                   : "default"
               }
@@ -680,19 +615,14 @@ export function AnalyticsDashboard(): React.ReactElement {
             />
             <KPICard
               title="Expiring (60 days)"
-              value={
-                leaseExpirations.filter((l) => l.status === "warning").length
-              }
+              value={leaseExpirations.filter((l) => l.status === "warning").length}
               icon={<Calendar className="h-5 w-5 text-yellow-400" />}
             />
             <KPICard
               title="Expired"
-              value={
-                leaseExpirations.filter((l) => l.status === "expired").length
-              }
+              value={leaseExpirations.filter((l) => l.status === "expired").length}
               variant={
-                leaseExpirations.filter((l) => l.status === "expired").length >
-                0
+                leaseExpirations.filter((l) => l.status === "expired").length > 0
                   ? "danger"
                   : "default"
               }
@@ -730,10 +660,7 @@ export function AnalyticsDashboard(): React.ReactElement {
             />
           </div>
 
-          <PropertyPerformanceTable
-            data={propertyPerformance}
-            formatCurrency={formatCurrency}
-          />
+          <PropertyPerformanceTable data={propertyPerformance} formatCurrency={formatCurrency} />
         </TabsContent>
       </Tabs>
     </div>

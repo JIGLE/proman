@@ -7,24 +7,28 @@ ProMan now implements **strict Content Security Policy (CSP) with nonce-based in
 ## What Changed
 
 ### Before (Unsafe CSP)
+
 ```http
-Content-Security-Policy: script-src 'self' 'unsafe-inline' 'unsafe-eval' ...; 
+Content-Security-Policy: script-src 'self' 'unsafe-inline' 'unsafe-eval' ...;
                         style-src 'self' 'unsafe-inline' ...
 ```
 
 **Problems:**
+
 - ❌ `unsafe-inline` allows ANY inline script/style
 - ❌ `unsafe-eval` allows `eval()` and similar dangerous functions
 - ❌ Vulnerable to XSS attacks via injected inline scripts
 - ❌ CSP score: 6/10 (weak protection)
 
 ### After (Nonce-Based CSP)
+
 ```http
-Content-Security-Policy: script-src 'self' 'nonce-abc123xyz' ...; 
+Content-Security-Policy: script-src 'self' 'nonce-abc123xyz' ...;
                         style-src 'self' 'nonce-abc123xyz' ...
 ```
 
 **Benefits:**
+
 - ✅ Only scripts/styles with matching nonce execute
 - ✅ `unsafe-eval` only in dev mode (removed in production)
 - ✅ XSS attacks blocked - injected scripts can't get valid nonce
@@ -76,26 +80,28 @@ const styleAttr = await getStyleNonce(); // Returns 'nonce="abc123"' or ''
 **File**: [app/layout.tsx](app/layout.tsx)
 
 Root layout retrieves nonce and:
+
 1. Makes nonce available to client-side code via `window.__CSP_NONCE__`
 2. Passes nonce to provider hierarchy
 
 ```tsx
 export default async function RootLayout({ children }) {
   const nonce = await getNonce();
-  
+
   return (
     <html lang="en">
       <body>
         {/* Make nonce available to client code */}
         {nonce && (
-          <script nonce={nonce} dangerouslySetInnerHTML={{
-            __html: `window.__CSP_NONCE__ = "${nonce}";`
-          }} />
+          <script
+            nonce={nonce}
+            dangerouslySetInnerHTML={{
+              __html: `window.__CSP_NONCE__ = "${nonce}";`,
+            }}
+          />
         )}
-        
-        <ClientProviders nonce={nonce}>
-          {children}
-        </ClientProviders>
+
+        <ClientProviders nonce={nonce}>{children}</ClientProviders>
       </body>
     </html>
   );
@@ -118,6 +124,7 @@ interface ClientProvidersProps {
 ## CSP Directives
 
 ### Production CSP (Strict)
+
 ```
 default-src 'self'
 script-src 'self' 'nonce-{NONCE}' https://accounts.google.com https://apis.google.com
@@ -136,7 +143,9 @@ upgrade-insecure-requests
 ```
 
 ### Development CSP (Relaxed)
+
 Same as production but includes `'unsafe-eval'` for Next.js dev mode:
+
 ```
 script-src 'self' 'nonce-{NONCE}' https://accounts.google.com https://apis.google.com 'unsafe-eval'
 ```
@@ -148,16 +157,19 @@ script-src 'self' 'nonce-{NONCE}' https://accounts.google.com https://apis.googl
 ### Server Component - Inline Script with Nonce
 
 ```tsx
-import { getNonce } from '@/lib/utils/csp-nonce';
+import { getNonce } from "@/lib/utils/csp-nonce";
 
 export default async function MyPage() {
   const nonce = await getNonce();
-  
+
   return (
     <div>
-      <script nonce={nonce} dangerouslySetInnerHTML={{
-        __html: `console.log('This script has a valid nonce');`
-      }} />
+      <script
+        nonce={nonce}
+        dangerouslySetInnerHTML={{
+          __html: `console.log('This script has a valid nonce');`,
+        }}
+      />
     </div>
   );
 }
@@ -166,11 +178,11 @@ export default async function MyPage() {
 ### Server Component - Inline Style with Nonce
 
 ```tsx
-import { getNonce } from '@/lib/utils/csp-nonce';
+import { getNonce } from "@/lib/utils/csp-nonce";
 
 export default async function MyPage() {
   const nonce = await getNonce();
-  
+
   return (
     <div>
       <style nonce={nonce}>{`
@@ -186,20 +198,20 @@ export default async function MyPage() {
 ### Client Component - Access Nonce
 
 ```tsx
-'use client';
+"use client";
 
-import { useEffect } from 'react';
+import { useEffect } from "react";
 
 export default function MyClientComponent() {
   useEffect(() => {
     // Access nonce from window (if needed for dynamic script injection)
     const nonce = (window as any).__CSP_NONCE__;
-    
+
     if (nonce) {
-      console.log('CSP nonce available:', nonce);
+      console.log("CSP nonce available:", nonce);
     }
   }, []);
-  
+
   return <div>Client Component</div>;
 }
 ```
@@ -209,9 +221,12 @@ export default function MyClientComponent() {
 ### XSS Protection
 
 **Attack Scenario**: Attacker injects malicious script
+
 ```html
 <!-- Injected by attacker -->
-<script>alert('XSS')</script>
+<script>
+  alert("XSS");
+</script>
 ```
 
 **Without nonce-based CSP**: ❌ Script executes (with `unsafe-inline`)
@@ -219,9 +234,10 @@ export default function MyClientComponent() {
 **With nonce-based CSP**: ✅ Script blocked (no valid nonce)
 
 ### CSP Violation Report
+
 ```
-[CSP] Refused to execute inline script because it violates the following 
-Content Security Policy directive: "script-src 'self' 'nonce-abc123xyz'". 
+[CSP] Refused to execute inline script because it violates the following
+Content Security Policy directive: "script-src 'self' 'nonce-abc123xyz'".
 Either the 'unsafe-inline' keyword, a hash, or a nonce is required.
 ```
 
@@ -236,35 +252,42 @@ Either the 'unsafe-inline' keyword, a hash, or a nonce is required.
 ## Performance Impact
 
 ### Nonce Generation
+
 - **Time**: <0.1ms per request (Web Crypto API)
 - **Overhead**: Negligible (16 bytes = 22 base64 characters)
 - **Runtime**: Edge middleware (fastest possible)
 
 ### CSP Header Size
+
 - **Before**: ~350 bytes
 - **After**: ~370 bytes (+20 bytes for nonce)
 - **Impact**: 0.02KB increase (negligible)
 
 ### Browser Processing
+
 - **Modern browsers**: Native CSP support (no overhead)
 - **Legacy browsers**: Graceful degradation (ignore CSP)
 
 ## Compatibility
 
 ### Browser Support
+
 - ✅ Chrome/Edge 90+
 - ✅ Firefox 85+
 - ✅ Safari 15.4+
 - ✅ All modern browsers (>95% global support)
 
 ### Framework Compatibility
+
 - ✅ Next.js 14/15 (App Router)
 - ✅ React 18/19
 - ✅ Edge runtime (Vercel, Cloudflare, etc.)
 - ✅ Node.js runtime (traditional hosting)
 
 ### Third-Party Scripts
+
 External scripts (with `src` attribute) work normally:
+
 ```tsx
 <script src="https://cdn.example.com/script.js" />
 <!-- ✅ No nonce needed - allowed via script-src 'self' -->
@@ -275,33 +298,42 @@ External scripts (with `src` attribute) work normally:
 ### Updating Inline Scripts
 
 **Before** (with unsafe-inline):
+
 ```tsx
-<script dangerouslySetInnerHTML={{
-  __html: `console.log('Hello');`
-}} />
+<script
+  dangerouslySetInnerHTML={{
+    __html: `console.log('Hello');`,
+  }}
+/>
 ```
 
 **After** (with nonce):
+
 ```tsx
 const nonce = await getNonce();
 
-<script nonce={nonce} dangerouslySetInnerHTML={{
-  __html: `console.log('Hello');`
-}} />
+<script
+  nonce={nonce}
+  dangerouslySetInnerHTML={{
+    __html: `console.log('Hello');`,
+  }}
+/>;
 ```
 
 ### Updating Inline Styles
 
 **Before** (with unsafe-inline):
+
 ```tsx
 <style>{`.my-class { color: red; }`}</style>
 ```
 
 **After** (with nonce):
+
 ```tsx
 const nonce = await getNonce();
 
-<style nonce={nonce}>{`.my-class { color: red; }`}</style>
+<style nonce={nonce}>{`.my-class { color: red; }`}</style>;
 ```
 
 ### Dynamic Script Injection
@@ -309,17 +341,17 @@ const nonce = await getNonce();
 If you need to inject scripts dynamically:
 
 ```tsx
-'use client';
+"use client";
 
 function injectScript() {
   const nonce = (window as any).__CSP_NONCE__;
-  const script = document.createElement('script');
-  
+  const script = document.createElement("script");
+
   // Set nonce attribute
   if (nonce) {
-    script.setAttribute('nonce', nonce);
+    script.setAttribute("nonce", nonce);
   }
-  
+
   script.textContent = 'console.log("Dynamic script");';
   document.body.appendChild(script);
 }
@@ -328,6 +360,7 @@ function injectScript() {
 ## Testing CSP
 
 ### Browser DevTools
+
 1. Open Developer Tools (F12)
 2. Go to Console tab
 3. Look for CSP violations:
@@ -336,6 +369,7 @@ function injectScript() {
    ```
 
 ### Manual Testing
+
 ```bash
 # Fetch page and check CSP header
 curl -I https://yourapp.com | grep -i "content-security-policy"
@@ -345,12 +379,13 @@ Content-Security-Policy: script-src 'self' 'nonce-abc123xyz' ...
 ```
 
 ### Automated Testing
+
 ```typescript
 // Test that nonce is present
-test('CSP nonce is generated', async () => {
-  const response = await fetch('/');
-  const csp = response.headers.get('content-security-policy');
-  
+test("CSP nonce is generated", async () => {
+  const response = await fetch("/");
+  const csp = response.headers.get("content-security-policy");
+
   expect(csp).toContain("'nonce-");
   expect(csp).not.toContain("'unsafe-inline'");
 });
@@ -365,13 +400,14 @@ test('CSP nonce is generated', async () => {
 **Cause**: Missing nonce attribute
 
 **Solution**:
+
 ```tsx
 // ❌ Wrong - no nonce
-<script dangerouslySetInnerHTML={{ __html: '...' }} />
+<script dangerouslySetInnerHTML={{ __html: "..." }} />;
 
 // ✅ Correct - with nonce
 const nonce = await getNonce();
-<script nonce={nonce} dangerouslySetInnerHTML={{ __html: '...' }} />
+<script nonce={nonce} dangerouslySetInnerHTML={{ __html: "..." }} />;
 ```
 
 ### Issue: CSP errors in dev mode
@@ -385,13 +421,15 @@ const nonce = await getNonce();
 **Symptoms**: External scripts from CDNs not loading
 
 **Solution**: Add domain to `script-src` directive in [middleware.ts](middleware.ts):
+
 ```typescript
-"script-src 'self' 'nonce-${nonce}' https://cdn.example.com ..."
+"script-src 'self' 'nonce-${nonce}' https://cdn.example.com ...";
 ```
 
 ## Security Checklist
 
 Production deployment:
+
 - [x] Nonce-based CSP enabled
 - [x] `unsafe-inline` removed from `script-src` and `style-src`
 - [x] `unsafe-eval` only in development mode
@@ -405,12 +443,14 @@ Production deployment:
 ## Related Files
 
 ### Created/Modified:
+
 - [lib/utils/csp-nonce.ts](lib/utils/csp-nonce.ts) - Nonce utility functions
 - [middleware.ts](middleware.ts) - Nonce generation and CSP header
 - [app/layout.tsx](app/layout.tsx) - Nonce integration in root layout
 - [components/shared/client-providers.tsx](components/shared/client-providers.tsx) - Nonce prop support
 
 ### Related Documentation:
+
 - [docs/WEEK_2_SECURITY_COMPLETE.md](WEEK_2_SECURITY_COMPLETE.md) - Week 2 security overview
 - [docs/CSRF_INTEGRATION.md](CSRF_INTEGRATION.md) - CSRF protection details
 

@@ -3,16 +3,12 @@ import { test, expect } from "@playwright/test";
 // ─── Rent Receipts (Portugal) ────────────────────────────────────────────────
 
 test.describe("Compliance: Rent Receipts (PT)", () => {
-  test("GET /api/compliance/rent-receipts requires authentication", async ({
-    request,
-  }) => {
+  test("GET /api/compliance/rent-receipts requires authentication", async ({ request }) => {
     const response = await request.get("/api/compliance/rent-receipts");
     expect([401, 403, 302].includes(response.status())).toBeTruthy();
   });
 
-  test("POST /api/compliance/rent-receipts requires authentication", async ({
-    request,
-  }) => {
+  test("POST /api/compliance/rent-receipts requires authentication", async ({ request }) => {
     const response = await request.post("/api/compliance/rent-receipts", {
       data: {
         leaseId: "lease_123",
@@ -27,9 +23,7 @@ test.describe("Compliance: Rent Receipts (PT)", () => {
     expect([401, 403, 302].includes(response.status())).toBeTruthy();
   });
 
-  test("GET /api/compliance/rent-receipts endpoint exists (not 404)", async ({
-    request,
-  }) => {
+  test("GET /api/compliance/rent-receipts endpoint exists (not 404)", async ({ request }) => {
     const response = await request.get("/api/compliance/rent-receipts");
     expect(response.status()).not.toBe(404);
   });
@@ -38,16 +32,12 @@ test.describe("Compliance: Rent Receipts (PT)", () => {
 // ─── NRUA Registration (Spain) ───────────────────────────────────────────────
 
 test.describe("Compliance: NRUA Registration (ES)", () => {
-  test("GET /api/compliance/nrua requires authentication", async ({
-    request,
-  }) => {
+  test("GET /api/compliance/nrua requires authentication", async ({ request }) => {
     const response = await request.get("/api/compliance/nrua");
     expect([401, 403, 302].includes(response.status())).toBeTruthy();
   });
 
-  test("POST /api/compliance/nrua requires authentication", async ({
-    request,
-  }) => {
+  test("POST /api/compliance/nrua requires authentication", async ({ request }) => {
     const response = await request.post("/api/compliance/nrua", {
       data: {
         leaseId: "lease_123",
@@ -61,9 +51,7 @@ test.describe("Compliance: NRUA Registration (ES)", () => {
     expect([401, 403, 302].includes(response.status())).toBeTruthy();
   });
 
-  test("GET /api/compliance/nrua endpoint exists (not 404)", async ({
-    request,
-  }) => {
+  test("GET /api/compliance/nrua endpoint exists (not 404)", async ({ request }) => {
     const response = await request.get("/api/compliance/nrua");
     expect(response.status()).not.toBe(404);
   });
@@ -72,9 +60,7 @@ test.describe("Compliance: NRUA Registration (ES)", () => {
 // ─── Ley de Vivienda Rent Cap ─────────────────────────────────────────────────
 
 test.describe("Compliance: Rent Cap Validation (ES)", () => {
-  test("POST /api/compliance/rent-cap requires authentication", async ({
-    request,
-  }) => {
+  test("POST /api/compliance/rent-cap requires authentication", async ({ request }) => {
     const response = await request.post("/api/compliance/rent-cap", {
       data: {
         propertyId: "prop_123",
@@ -88,9 +74,7 @@ test.describe("Compliance: Rent Cap Validation (ES)", () => {
     expect([401, 403, 302].includes(response.status())).toBeTruthy();
   });
 
-  test("POST /api/compliance/rent-cap endpoint exists (not 404)", async ({
-    request,
-  }) => {
+  test("POST /api/compliance/rent-cap endpoint exists (not 404)", async ({ request }) => {
     const response = await request.post("/api/compliance/rent-cap", {
       data: {},
     });
@@ -101,9 +85,7 @@ test.describe("Compliance: Rent Cap Validation (ES)", () => {
 // ─── Lease Template Generation ────────────────────────────────────────────────
 
 test.describe("Compliance: Lease Template Generation", () => {
-  test("POST /api/leases/generate-template requires authentication", async ({
-    request,
-  }) => {
+  test("POST /api/leases/generate-template requires authentication", async ({ request }) => {
     const response = await request.post("/api/leases/generate-template", {
       data: {
         country: "PT",
@@ -124,9 +106,7 @@ test.describe("Compliance: Lease Template Generation", () => {
     expect([401, 403, 302].includes(response.status())).toBeTruthy();
   });
 
-  test("POST /api/leases/generate-template endpoint exists (not 404)", async ({
-    request,
-  }) => {
+  test("POST /api/leases/generate-template endpoint exists (not 404)", async ({ request }) => {
     const response = await request.post("/api/leases/generate-template", {
       data: {},
     });
@@ -137,16 +117,12 @@ test.describe("Compliance: Lease Template Generation", () => {
 // ─── SEPA Mandates ────────────────────────────────────────────────────────────
 
 test.describe("Compliance: SEPA DD Mandates", () => {
-  test("GET /api/payments/sepa-mandates requires authentication", async ({
-    request,
-  }) => {
+  test("GET /api/payments/sepa-mandates requires authentication", async ({ request }) => {
     const response = await request.get("/api/payments/sepa-mandates");
     expect([401, 403, 302].includes(response.status())).toBeTruthy();
   });
 
-  test("POST /api/payments/sepa-mandates requires authentication", async ({
-    request,
-  }) => {
+  test("POST /api/payments/sepa-mandates requires authentication", async ({ request }) => {
     const response = await request.post("/api/payments/sepa-mandates", {
       data: {
         tenantId: "tenant_123",
@@ -158,9 +134,7 @@ test.describe("Compliance: SEPA DD Mandates", () => {
     expect([401, 403, 302].includes(response.status())).toBeTruthy();
   });
 
-  test("GET /api/payments/sepa-mandates endpoint exists (not 404)", async ({
-    request,
-  }) => {
+  test("GET /api/payments/sepa-mandates endpoint exists (not 404)", async ({ request }) => {
     const response = await request.get("/api/payments/sepa-mandates");
     expect(response.status()).not.toBe(404);
   });
@@ -169,16 +143,12 @@ test.describe("Compliance: SEPA DD Mandates", () => {
 // ─── Notification Cron ────────────────────────────────────────────────────────
 
 test.describe("Compliance: Notification Cron", () => {
-  test("POST /api/cron/notifications rejects missing auth", async ({
-    request,
-  }) => {
+  test("POST /api/cron/notifications rejects missing auth", async ({ request }) => {
     const response = await request.post("/api/cron/notifications");
     expect([401, 503].includes(response.status())).toBeTruthy();
   });
 
-  test("POST /api/cron/notifications rejects wrong token", async ({
-    request,
-  }) => {
+  test("POST /api/cron/notifications rejects wrong token", async ({ request }) => {
     const response = await request.post("/api/cron/notifications", {
       headers: { Authorization: "Bearer wrong-token-12345" },
     });
@@ -186,9 +156,7 @@ test.describe("Compliance: Notification Cron", () => {
     expect([401, 503].includes(response.status())).toBeTruthy();
   });
 
-  test("POST /api/cron/notifications endpoint exists (not 404)", async ({
-    request,
-  }) => {
+  test("POST /api/cron/notifications endpoint exists (not 404)", async ({ request }) => {
     const response = await request.post("/api/cron/notifications");
     expect(response.status()).not.toBe(404);
   });

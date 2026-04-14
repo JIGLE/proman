@@ -15,6 +15,7 @@ All health check endpoints are now live and ready for external monitoring.
 **Purpose**: Combined application health check with database and email status
 
 **Response**:
+
 ```json
 {
   "status": "ok",
@@ -36,6 +37,7 @@ All health check endpoints are now live and ready for external monitoring.
 ```
 
 **Monitoring**: HTTP GET every 30s
+
 - Expected: 200 OK
 - Alert on: 3 consecutive failures OR response time > 5s
 - UptimeRobot/Pingdom recommended
@@ -45,6 +47,7 @@ All health check endpoints are now live and ready for external monitoring.
 **Purpose**: Detailed database health with latency tracking
 
 **Response**:
+
 ```json
 {
   "status": "healthy",
@@ -62,6 +65,7 @@ All health check endpoints are now live and ready for external monitoring.
 ```
 
 **Monitoring**: HTTP GET every 60s
+
 - Expected: 200 OK, query_latency_ms < 100ms
 - Alert on: status !== "healthy" OR latency > 500ms
 - Grafana/Prometheus for trend analysis
@@ -71,6 +75,7 @@ All health check endpoints are now live and ready for external monitoring.
 **Purpose**: Email service configuration verification
 
 **Response**:
+
 ```json
 {
   "status": "healthy",
@@ -83,6 +88,7 @@ All health check endpoints are now live and ready for external monitoring.
 ```
 
 **Monitoring**: HTTP GET every 300s (5 min)
+
 - Expected: 200 OK, configured: true
 - Alert on: configured: false
 
@@ -93,10 +99,12 @@ All health check endpoints are now live and ready for external monitoring.
 **Implementation Status**: ✅ IMPLEMENTED (in-memory metrics, resets on restart)
 
 **Formats Supported**:
+
 1. **Prometheus text format** (default): `Accept: text/plain`
 2. **JSON format**: `Accept: application/json`
 
 **Response (Prometheus format)**:
+
 ```
 # HELP http_requests_total Total HTTP requests
 # TYPE http_requests_total counter
@@ -124,6 +132,7 @@ process_uptime_seconds 3600.5
 ```
 
 **Response (JSON format)**:
+
 ```json
 {
   "metrics": {
@@ -140,16 +149,18 @@ process_uptime_seconds 3600.5
 ```
 
 **Prometheus Configuration**:
+
 ```yaml
 scrape_configs:
-  - job_name: 'proman'
+  - job_name: "proman"
     scrape_interval: 15s
     static_configs:
-      - targets: ['proman.example:3000']
-    metrics_path: '/api/metrics'
+      - targets: ["proman.example:3000"]
+    metrics_path: "/api/metrics"
 ```
 
 **Note**: Current implementation stores metrics in-memory. For production with multiple instances, consider:
+
 - Redis for centralized metrics storage
 - Installing `prom-client` package for advanced metrics
 - Application Performance Monitoring (APM) tools like Datadog, New Relic
@@ -236,16 +247,16 @@ scrape_configs:
 
 ```typescript
 // Error: System failures, unhandled exceptions
-logger.error('Database connection failed', { error, context })
+logger.error("Database connection failed", { error, context });
 
 // Warn: Recoverable issues, retry attempts
-logger.warn('Email send retry attempt 2/3', { recipient, error })
+logger.warn("Email send retry attempt 2/3", { recipient, error });
 
 // Info: Business events, important state changes
-logger.info('Property created', { propertyId, userId })
+logger.info("Property created", { propertyId, userId });
 
 // Debug: Development/troubleshooting (disabled in production)
-logger.debug('Cache hit', { key, ttl })
+logger.debug("Cache hit", { key, ttl });
 ```
 
 ### Structured Logging Format
@@ -275,7 +286,7 @@ logger.debug('Cache hit', { key, ttl })
 ### Critical Logs to Alert On
 
 1. **Unhandled Exceptions**
-   - Pattern: `level: "error"` + `message: "unhandled"` 
+   - Pattern: `level: "error"` + `message: "unhandled"`
    - Action: Immediate page (potential data loss)
 
 2. **Authentication Failures**
@@ -370,6 +381,7 @@ For early-stage deployment:
 ### Main Operations Dashboard
 
 **Panels**:
+
 1. Request rate (last 24h)
 2. Error rate by endpoint
 3. Response time percentiles (p50, p95, p99)
@@ -380,6 +392,7 @@ For early-stage deployment:
 ### Database Health Dashboard
 
 **Panels**:
+
 1. Connection pool usage
 2. Query duration histogram
 3. Slow queries (> 1s) count
@@ -390,6 +403,7 @@ For early-stage deployment:
 ### Email Service Dashboard
 
 **Panels**:
+
 1. Emails sent/delivered/bounced (hourly)
 2. Retry rate trend
 3. Template usage breakdown
@@ -404,6 +418,7 @@ For early-stage deployment:
 **Alert**: `db_connections_active = 0` OR `status: "error"`
 
 **Steps**:
+
 1. Check database service status: `kubectl get pods -n production`
 2. Verify network connectivity: `nc -zv db-host 5432`
 3. Check connection pool config: Max connections exceeded?
@@ -415,6 +430,7 @@ For early-stage deployment:
 **Alert**: `http_errors_5xx_total > 1%` for 5 minutes
 
 **Steps**:
+
 1. Check recent deployments: Bad release?
 2. Review error logs: Common error pattern?
 3. Check dependencies: Database, email service healthy?
@@ -426,6 +442,7 @@ For early-stage deployment:
 **Alert**: `email_delivery_rate < 95%`
 
 **Steps**:
+
 1. Check SendGrid status: https://status.sendgrid.com/
 2. Verify API key validity: Not expired/revoked?
 3. Check bounce reasons: Invalid addresses? Spam flags?
@@ -451,7 +468,7 @@ HEALTH_CHECK_CACHE_TTL=60000
 
 ```typescript
 // lib/monitoring/sentry.ts
-import * as Sentry from '@sentry/nextjs';
+import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
   dsn: process.env.SENTRY_DSN,
@@ -472,14 +489,14 @@ Sentry.init({
 
 ```typescript
 // app/api/metrics/route.ts
-import { collectDefaultMetrics, register } from 'prom-client';
+import { collectDefaultMetrics, register } from "prom-client";
 
 collectDefaultMetrics();
 
 export async function GET() {
   const metrics = await register.metrics();
   return new Response(metrics, {
-    headers: { 'Content-Type': register.contentType },
+    headers: { "Content-Type": register.contentType },
   });
 }
 ```
@@ -487,6 +504,7 @@ export async function GET() {
 ### 4. UptimeRobot Configuration
 
 **Monitors to create**:
+
 1. Main site: `https://proman.app` (HTTP 200, every 5 min)
 2. API health: `https://proman.app/api/health` (every 1 min)
 3. DB health: `https://proman.app/api/health/db` (every 5 min)
@@ -507,6 +525,7 @@ SENDGRID_API_KEY=invalid npm start
 ```
 
 Verify:
+
 - Alert fires within expected timeframe
 - Correct channels notified
 - Runbook instructions are clear

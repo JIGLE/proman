@@ -1,13 +1,7 @@
 import { FileX, Home } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/ui/card";
 import { getTranslations } from "next-intl/server";
 
 export default async function NotFound() {

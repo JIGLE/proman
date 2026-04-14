@@ -1,13 +1,20 @@
 /**
- * Proxy for Next.js 16+ locale routing and URL redirects
+ * Proxy for Next.js 16+ locale routing, demo mode, and URL redirects
  * Handles:
- * - Locale prefix enforcement (always use /en or /pt)
+ * - Locale prefix enforcement (always use /en, /pt, or /es)
+ * - Demo mode: /demo entry redirect + route blocking for demo sessions
  * - Backward compatibility redirects from old tab-based URLs
  * - Security headers (CSP, HSTS, X-Frame-Options, etc.)
  */
 
 import { NextRequest, NextResponse } from "next/server";
 import { locales, defaultLocale } from "./lib/i18n/config";
+
+/** Cookie name for demo mode (must match lib/demo/demo-mode.ts) */
+const DEMO_COOKIE_NAME = "proman_demo";
+
+/** Paths blocked during demo mode */
+const DEMO_BLOCKED_PATTERNS = ["/settings", "/api/user", "/api/debug"];
 
 /**
  * Generate CSP nonce (Edge-compatible version)
@@ -30,10 +37,7 @@ function applySecurityHeaders(response: NextResponse, nonce: string): void {
 
   // HSTS: Force HTTPS for 1 year (production only)
   if (process.env.NODE_ENV === "production") {
-    headers.set(
-      "Strict-Transport-Security",
-      "max-age=31536000; includeSubDomains; preload",
-    );
+    headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
   }
 
   // X-Frame-Options: Prevent clickjacking
@@ -49,10 +53,7 @@ function applySecurityHeaders(response: NextResponse, nonce: string): void {
   headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
 
   // Permissions-Policy: Disable unnecessary features
-  headers.set(
-    "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), interest-cohort=()",
-  );
+  headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(), interest-cohort=()");
 
   // Content-Security-Policy with nonces (strict CSP)
   const isDev = process.env.NODE_ENV === "development";
@@ -93,11 +94,52 @@ export function proxy(request: NextRequest) {
     return response;
   }
 
+  // ── Handle /demo entry point ────────────────────────
+  // Redirect /demo → /[defaultLocale]/demo for locale routing
+  if (pathname === "/demo") {
+    const url = request.nextUrl.clone();
+    url.pathname = `/${defaultLocale}/demo`;
+    const response = NextResponse.redirect(url);
+    applySecurityHeaders(response, nonce);
+    return response;
+  }
+
+  // ── Demo mode route blocking ────────────────────────
+  const cookieHeader = request.headers.get("cookie") || "";
+  const isDemo = cookieHeader.includes(`${DEMO_COOKIE_NAME}=1`);
+  if (isDemo) {
+    // Strip locale prefix to check the actual route
+    const pathWithoutLocale = pathname.replace(/^\/(pt|en|es)/, "") || "/";
+
+    const isBlocked = DEMO_BLOCKED_PATTERNS.some(
+      (pattern) => pathWithoutLocale === pattern || pathWithoutLocale.startsWith(pattern + "/"),
+    );
+
+    if (isBlocked) {
+      // For API routes, return 403 JSON
+      if (pathWithoutLocale.startsWith("/api/")) {
+        const response = NextResponse.json(
+          { error: "This feature is not available in demo mode" },
+          { status: 403 },
+        );
+        applySecurityHeaders(response, nonce);
+        return response;
+      }
+      // For page routes, redirect to overview
+      const url = request.nextUrl.clone();
+      const locale = pathname.split("/")[1] || defaultLocale;
+      url.pathname = `/${locale}/overview`;
+      const response = NextResponse.redirect(url);
+      applySecurityHeaders(response, nonce);
+      return response;
+    }
+  }
+
   // Handle old tab-based URL redirects (backward compatibility)
   const tab = searchParams.get("tab");
   if (tab) {
     // Extract locale from pathname (e.g., /en, /pt, or root)
-    const localeMatch = pathname.match(/^\/(en|pt)/);
+    const localeMatch = pathname.match(/^\/(en|pt|es)/);
     const locale = localeMatch ? localeMatch[1] : defaultLocale;
 
     // Map old tab names to new routes
@@ -141,7 +183,7 @@ export function proxy(request: NextRequest) {
   // Handle old subtab-based URLs for financials
   const subtab = searchParams.get("subtab");
   if (subtab && pathname.includes("financials")) {
-    const localeMatch = pathname.match(/^\/(en|pt)/);
+    const localeMatch = pathname.match(/^\/(en|pt|es)/);
     const locale = localeMatch ? localeMatch[1] : defaultLocale;
 
     const subtabRouteMap: Record<string, string> = {
@@ -174,10 +216,7 @@ export function proxy(request: NextRequest) {
     response = NextResponse.next();
   } else if (pathname === "/") {
     // If path is just /, redirect to /en
-    response = NextResponse.redirect(
-      new URL(`/${defaultLocale}`, request.url),
-      { status: 307 },
-    );
+    response = NextResponse.redirect(new URL(`/${defaultLocale}`, request.url), { status: 307 });
   } else {
     // For any other path without locale, prepend default locale
     // This handles /path -> /en/path

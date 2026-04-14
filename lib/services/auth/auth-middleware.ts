@@ -3,6 +3,7 @@ import type { Session } from "next-auth";
 import { getAuthOptions } from "@/lib/services/auth/auth";
 import { isMockMode } from "@/lib/config/data-mode";
 import { isDevAuthEnabled } from "@/lib/services/auth/dev-session";
+import { isDemoRequest, DEMO_USER } from "@/lib/demo/demo-mode";
 
 // Authentication middleware for API routes
 export async function requireAuth(_request: NextRequest): Promise<
@@ -13,11 +14,18 @@ export async function requireAuth(_request: NextRequest): Promise<
   | NextResponse
 > {
   try {
+    // Demo mode: return synthetic demo user without requiring a real session
+    if (isDemoRequest(_request)) {
+      const demoSession = {
+        user: { ...DEMO_USER },
+        expires: new Date(Date.now() + 3600_000).toISOString(),
+      } as Session;
+      return { session: demoSession, userId: DEMO_USER.id };
+    }
+
     // Import next-auth lazily so tests can mock getServerSession before we call it
     const mod = await import("next-auth/next").catch(() => import("next-auth"));
-    type GetServerSession = (
-      opts?: ReturnType<typeof getAuthOptions>,
-    ) => Promise<Session | null>;
+    type GetServerSession = (opts?: ReturnType<typeof getAuthOptions>) => Promise<Session | null>;
     const maybe = mod as { getServerSession?: GetServerSession };
     const getServerSession = maybe.getServerSession;
 
@@ -25,13 +33,10 @@ export async function requireAuth(_request: NextRequest): Promise<
     const session = (await getServerSession?.(getAuthOptions())) ?? null;
 
     if (!session) {
-      return new NextResponse(
-        JSON.stringify({ error: "Authentication required" }),
-        {
-          status: 401,
-          headers: { "Content-Type": "application/json" },
-        },
-      );
+      return new NextResponse(JSON.stringify({ error: "Authentication required" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     // In dev auth mode, use session data directly without database lookup
@@ -53,15 +58,13 @@ export async function requireAuth(_request: NextRequest): Promise<
       // Find user in database — separate DB errors from "not found"
       let user;
       try {
-        const { getPrismaClient } =
-          await import("@/lib/services/database/database");
+        const { getPrismaClient } = await import("@/lib/services/database/database");
         const prisma = getPrismaClient();
         user = await prisma.user.findUnique({
           where: { email: session.user.email },
         });
       } catch (dbError: unknown) {
-        const msg =
-          dbError instanceof Error ? dbError.message : String(dbError);
+        const msg = dbError instanceof Error ? dbError.message : String(dbError);
         console.error("requireAuth: database error during user lookup:", msg);
 
         if (msg.includes("no such table") || msg.includes("SQLITE_ERROR")) {
@@ -88,8 +91,7 @@ export async function requireAuth(_request: NextRequest): Promise<
         // Do not auto-create users — they must register via a proper auth flow
         return new NextResponse(
           JSON.stringify({
-            error:
-              "User account not found. Please sign up or contact an administrator.",
+            error: "User account not found. Please sign up or contact an administrator.",
           }),
           {
             status: 401,
@@ -106,13 +108,10 @@ export async function requireAuth(_request: NextRequest): Promise<
       return { session, userId: session.user.id };
     }
 
-    return new NextResponse(
-      JSON.stringify({ error: "Authentication required" }),
-      {
-        status: 401,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return new NextResponse(JSON.stringify({ error: "Authentication required" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
   } catch (error: unknown) {
     const errMsg = error instanceof Error ? error.message : String(error);
     const errName = error instanceof Error ? error.name : "UnknownError";
@@ -184,8 +183,7 @@ export async function requireOwnership(
 // CORS headers for API responses
 export function corsHeaders(): Record<string, string> {
   return {
-    "Access-Control-Allow-Origin":
-      process.env.NEXTAUTH_URL || "http://localhost:3000",
+    "Access-Control-Allow-Origin": process.env.NEXTAUTH_URL || "http://localhost:3000",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Allow-Credentials": "true",
@@ -207,13 +205,10 @@ export async function requireAdmin(request: NextRequest) {
   }
   const { session } = authResult;
   if (session.user.role !== "ADMIN") {
-    return new NextResponse(
-      JSON.stringify({ error: "Forbidden: Admin access required" }),
-      {
-        status: 403,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    return new NextResponse(JSON.stringify({ error: "Forbidden: Admin access required" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
   }
   return authResult;
 }

@@ -5,9 +5,7 @@ import React, { useEffect } from "react";
 export default function DevDebug(): null {
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const original = React.Children.only as (
-      child: React.ReactNode,
-    ) => React.ReactElement;
+    const original = React.Children.only as (child: React.ReactNode) => React.ReactElement;
     (
       React.Children as unknown as {
         only: (child: React.ReactNode) => React.ReactElement;

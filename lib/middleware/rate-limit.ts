@@ -98,9 +98,7 @@ export async function rateLimit(
   const store = getRateLimitStore();
 
   // Get client identifier
-  const identifier = config.identifier
-    ? config.identifier(request)
-    : getClientIdentifier(request);
+  const identifier = config.identifier ? config.identifier(request) : getClientIdentifier(request);
 
   // Create a unique key for this client + endpoint combination
   const url = new URL(request.url);
@@ -196,9 +194,7 @@ export async function getRateLimitStatus(
   reset: number;
 }> {
   const store = getRateLimitStore();
-  const identifier = config.identifier
-    ? config.identifier(request)
-    : getClientIdentifier(request);
+  const identifier = config.identifier ? config.identifier(request) : getClientIdentifier(request);
 
   const url = new URL(request.url);
   const key = `${identifier}:${url.pathname}`;

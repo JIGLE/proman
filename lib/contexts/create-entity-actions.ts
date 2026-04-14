@@ -61,20 +61,12 @@ export function createEntityActions<T extends { id: string }>(
   const add = async (data: Partial<T>): Promise<T> => {
     if (requireAuth && !userId) throw new Error("User not authenticated");
     try {
-      const res = await apiFetch<T | { data: T }>(
-        endpoint,
-        csrfToken,
-        "POST",
-        data,
-      );
+      const res = await apiFetch<T | { data: T }>(endpoint, csrfToken, "POST", data);
       const created = (res as { data: T }).data ?? (res as T);
-      setItems(
-        prependNew ? [created, ...getItems()] : [...getItems(), created],
-      );
+      setItems(prependNew ? [created, ...getItems()] : [...getItems(), created]);
       return created;
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : `Failed to add ${entityName}`;
+      const msg = err instanceof Error ? err.message : `Failed to add ${entityName}`;
       showError(msg);
       throw err;
     }
@@ -83,18 +75,12 @@ export function createEntityActions<T extends { id: string }>(
   const update = async (id: string, data: Partial<T>): Promise<T> => {
     if (requireAuth && !userId) throw new Error("User not authenticated");
     try {
-      const res = await apiFetch<T | { data: T }>(
-        `${endpoint}/${id}`,
-        csrfToken,
-        "PUT",
-        data,
-      );
+      const res = await apiFetch<T | { data: T }>(`${endpoint}/${id}`, csrfToken, "PUT", data);
       const updated = (res as { data: T }).data ?? (res as T);
       setItems(getItems().map((item) => (item.id === id ? updated : item)));
       return updated;
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : `Failed to update ${entityName}`;
+      const msg = err instanceof Error ? err.message : `Failed to update ${entityName}`;
       showError(msg);
       throw err;
     }
@@ -110,8 +96,7 @@ export function createEntityActions<T extends { id: string }>(
     } catch (err) {
       // Rollback on failure
       setItems(previous);
-      const msg =
-        err instanceof Error ? err.message : `Failed to delete ${entityName}`;
+      const msg = err instanceof Error ? err.message : `Failed to delete ${entityName}`;
       showError(msg);
       throw err;
     }

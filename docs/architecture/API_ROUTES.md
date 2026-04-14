@@ -11,6 +11,7 @@ API routes are organized by domain following Next.js App Router conventions. All
 Most routes require authentication via NextAuth.js. Protected routes will return `401 Unauthorized` if not authenticated.
 
 ### Auth Routes
+
 - `POST /api/auth/[...nextauth]` - NextAuth.js authentication handlers
 - `GET /api/auth/error` - Authentication error pages
 - `GET /api/auth/signin` - Sign-in page
@@ -18,6 +19,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 ## Core Resources
 
 ### Properties
+
 - `GET /api/properties` - List all properties
 - `POST /api/properties` - Create a new property
 - `GET /api/properties/[id]` - Get property details
@@ -25,6 +27,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 - `DELETE /api/properties/[id]` - Delete property
 
 ### Units
+
 - `GET /api/units` - List all units
 - `POST /api/units` - Create a new unit
 - `GET /api/units/[id]` - Get unit details
@@ -32,6 +35,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 - `DELETE /api/units/[id]` - Delete unit
 
 ### Tenants
+
 - `GET /api/tenants` - List all tenants
 - `POST /api/tenants` - Create a new tenant
 - `GET /api/tenants/[id]` - Get tenant details
@@ -40,6 +44,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 - `POST /api/tenants/[id]/portal-link` - Generate tenant portal access link
 
 ### Owners
+
 - `GET /api/owners` - List all owners
 - `POST /api/owners` - Create a new owner
 - `GET /api/owners/[id]` - Get owner details
@@ -47,6 +52,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 - `DELETE /api/owners/[id]` - Delete owner
 
 ### Leases
+
 - `GET /api/leases` - List all leases
 - `POST /api/leases` - Create a new lease
 - `GET /api/leases/[id]` - Get lease details
@@ -56,6 +62,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 ## Financial
 
 ### Invoices
+
 - `GET /api/invoices` - List all invoices
 - `POST /api/invoices` - Create a new invoice
 - `GET /api/invoices/[id]` - Get invoice details
@@ -67,6 +74,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 - `POST /api/invoices/late-fees` - Apply late fees to overdue invoices
 
 ### Payments
+
 - `GET /api/payments` - List all payments
 - `POST /api/payments` - Record a new payment
 - `GET /api/payments/[id]` - Get payment details
@@ -75,6 +83,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 - `GET /api/payments/methods` - Get available payment methods
 
 ### Receipts
+
 - `GET /api/receipts` - List all receipts
 - `POST /api/receipts` - Create a new receipt
 - `GET /api/receipts/[id]` - Get receipt details
@@ -82,6 +91,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 - `DELETE /api/receipts/[id]` - Delete receipt
 
 ### Expenses
+
 - `GET /api/expenses` - List all expenses
 - `POST /api/expenses` - Create a new expense
 - `GET /api/expenses/[id]` - Get expense details
@@ -91,6 +101,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 ## Communication
 
 ### Correspondence
+
 - `GET /api/correspondence` - List all correspondence
 - `POST /api/correspondence` - Create correspondence
 - `GET /api/correspondence/[id]` - Get correspondence details
@@ -101,6 +112,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 - `GET /api/correspondence/templates/[id]` - Get template details
 
 ### Email
+
 - `POST /api/email` - Send email
 - `GET /api/email/logs` - Get email logs
 - `GET /api/email/metrics` - Get email metrics
@@ -108,6 +120,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 ## Operations
 
 ### Maintenance
+
 - `GET /api/maintenance` - List all maintenance requests
 - `POST /api/maintenance` - Create maintenance request
 - `GET /api/maintenance/[id]` - Get maintenance details
@@ -115,6 +128,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 - `DELETE /api/maintenance/[id]` - Delete maintenance request
 
 ### Documents
+
 - `GET /api/documents` - List all documents
 - `POST /api/documents` - Upload a document
 - `GET /api/documents/[id]` - Get document details
@@ -126,50 +140,60 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 ## Analytics & Reporting
 
 ### Analytics
+
 - `GET /api/analytics` - Get analytics data
 - `GET /api/analytics/dashboard` - Dashboard analytics
 - `GET /api/analytics/revenue` - Revenue analytics
 - `GET /api/analytics/occupancy` - Occupancy analytics
 
 ### Reports
+
 - `GET /api/reports` - List available reports
 - `POST /api/reports` - Generate a report
 - `GET /api/reports/[id]` - Get report details
 
 ### Metrics
+
 - `GET /api/metrics` - Get application metrics
 - `GET /api/metrics/performance` - Performance metrics
 
 ## Tax & Compliance
 
 ### Tax
+
 - `POST /api/tax/saft-pt` - Generate SAF-T PT (Portuguese tax format)
 - `GET /api/tax/saft-pt/download` - Download SAF-T PT file
 
 ## Integrations
 
 ### Webhooks
+
 - `POST /api/webhooks/sendgrid` - SendGrid webhook handler
 - `POST /api/webhooks/stripe` - Stripe webhook handler
 
 ### Tenant Portal
+
 - `GET /api/tenant-portal/[token]` - Get tenant portal data
 - `POST /api/tenant-portal/[token]/pay` - Process tenant portal payment
 
 ## System
 
 ### Health
+
 - `GET /api/health` - Overall system health check
 - `GET /api/health/db` - Database health check
 - `GET /api/health/email` - Email service health check
 
 ### Info
+
 - `GET /api/info` - Get API version and info
 
 ### Admin
+
 - `POST /api/admin/database` - Database admin operations (backup, restore, etc.)
 
 ### Debug (Development Only)
+
 - `GET /api/debug/auth` - Debug authentication state
 - `POST /api/debug/auth-reset` - Reset authentication
 - `GET /api/debug/db` - Database debug info
@@ -177,6 +201,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 - `GET /api/debug/env-check` - Environment variable check
 
 ### User Data
+
 - `GET /api/user/export-data` - Export user data (GDPR compliance)
 - `DELETE /api/user/delete-data` - Delete user data (GDPR compliance)
 
@@ -185,6 +210,7 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 All API routes follow consistent response formats:
 
 ### Success Response
+
 ```json
 {
   "data": { ... },
@@ -193,6 +219,7 @@ All API routes follow consistent response formats:
 ```
 
 ### Error Response
+
 ```json
 {
   "error": "Error message",
@@ -204,6 +231,7 @@ All API routes follow consistent response formats:
 ## Rate Limiting
 
 All public-facing API routes are protected by rate limiting:
+
 - Default: 100 requests per 15 minutes per IP
 - Webhook endpoints: No rate limiting
 - Protected routes: 1000 requests per hour per authenticated user
@@ -224,6 +252,7 @@ CORS is configured to allow requests from the application domain only.
 ## Testing
 
 API routes have co-located test files:
+
 - Unit tests: `*.test.ts` files alongside route handlers
 - Integration tests: Located in `e2e/` directory
 - Load tests: Run via Artillery (see `scripts/load-test.yml`)

@@ -16,8 +16,8 @@ export async function POST(request: NextRequest) {
     // Log deletion BEFORE deleting (so we have the userId reference)
     await logAudit({
       userId,
-      action: 'DELETE_PERSONAL_DATA',
-      details: { 
+      action: "DELETE_PERSONAL_DATA",
+      details: {
         requestedAt: new Date().toISOString(),
         email: userEmail,
       },

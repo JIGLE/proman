@@ -1,6 +1,6 @@
 /**
  * Barrel export for all validation schemas
- * 
+ *
  * Centralized exports for easy importing:
  * import { propertySchema, tenantSchema } from '@/lib/schemas';
  */
@@ -13,7 +13,7 @@ export {
   type Property,
   type CreateProperty,
   type UpdateProperty,
-} from './property.schema';
+} from "./property.schema";
 
 // Tenant schemas
 export {
@@ -23,7 +23,7 @@ export {
   type Tenant,
   type CreateTenant,
   type UpdateTenant,
-} from './tenant.schema';
+} from "./tenant.schema";
 
 // Lease schemas
 export {
@@ -33,7 +33,7 @@ export {
   type Lease,
   type CreateLease,
   type UpdateLease,
-} from './lease.schema';
+} from "./lease.schema";
 
 // Invoice schemas
 export {
@@ -43,7 +43,7 @@ export {
   type Invoice,
   type CreateInvoice,
   type UpdateInvoice,
-} from './invoice.schema';
+} from "./invoice.schema";
 
 // Payment schemas
 export {
@@ -53,7 +53,7 @@ export {
   type Payment,
   type CreatePayment,
   type UpdatePayment,
-} from './payment.schema';
+} from "./payment.schema";
 
 // Receipt schemas
 export {
@@ -63,7 +63,7 @@ export {
   type Receipt,
   type CreateReceipt,
   type UpdateReceipt,
-} from './receipt.schema';
+} from "./receipt.schema";
 
 // Maintenance schemas
 export {
@@ -73,4 +73,4 @@ export {
   type Maintenance,
   type CreateMaintenance,
   type UpdateMaintenance,
-} from './maintenance.schema';
+} from "./maintenance.schema";

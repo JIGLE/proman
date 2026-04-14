@@ -19,10 +19,7 @@ interface ConfirmDialogState extends ConfirmDialogOptions {
 
 export interface UseConfirmDialogReturn {
   state: ConfirmDialogState;
-  confirm: (
-    options: ConfirmDialogOptions,
-    onConfirm: () => Promise<void>,
-  ) => void;
+  confirm: (options: ConfirmDialogOptions, onConfirm: () => Promise<void>) => void;
   cancel: () => void;
   /** Internal — called by ConfirmationDialog when user clicks confirm */
   handleConfirm: () => Promise<void>;
@@ -42,22 +39,19 @@ export function useConfirmDialog(): UseConfirmDialogReturn {
   const [state, setState] = useState<ConfirmDialogState>(defaultState);
   const onConfirmRef = useRef<(() => Promise<void>) | null>(null);
 
-  const confirm = useCallback(
-    (options: ConfirmDialogOptions, onConfirm: () => Promise<void>) => {
-      onConfirmRef.current = onConfirm;
-      setState({
-        isOpen: true,
-        isLoading: false,
-        title: options.title,
-        description: options.description,
-        confirmLabel: options.confirmLabel ?? "Confirm",
-        cancelLabel: options.cancelLabel ?? "Cancel",
-        variant: options.variant ?? "default",
-        count: options.count,
-      });
-    },
-    [],
-  );
+  const confirm = useCallback((options: ConfirmDialogOptions, onConfirm: () => Promise<void>) => {
+    onConfirmRef.current = onConfirm;
+    setState({
+      isOpen: true,
+      isLoading: false,
+      title: options.title,
+      description: options.description,
+      confirmLabel: options.confirmLabel ?? "Confirm",
+      cancelLabel: options.cancelLabel ?? "Cancel",
+      variant: options.variant ?? "default",
+      count: options.count,
+    });
+  }, []);
 
   const cancel = useCallback(() => {
     setState(defaultState);

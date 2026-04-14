@@ -3,10 +3,14 @@ import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { isMockMode } from "@/lib/config/data-mode";
 import { leaseService } from "@/lib/services/database/database.mock";
+import { handleDemoGet } from "@/lib/demo/demo-api-handler";
 
 // GET /api/contracts - List all leases (contracts)
 export async function GET(request: NextRequest) {
   try {
+    const demo = handleDemoGet(request, "leases");
+    if (demo.response) return demo.response;
+
     const authResult = await requireAuth(request);
     if (authResult instanceof Response) return authResult;
 
@@ -18,9 +22,7 @@ export async function GET(request: NextRequest) {
     if (isMockMode) {
       const leases = await leaseService.getAll(userId);
       // Filter by status if provided
-      const filteredLeases = status
-        ? leases.filter((l) => l.status === status)
-        : leases;
+      const filteredLeases = status ? leases.filter((l) => l.status === status) : leases;
       // Transform to match frontend contract shape
       const contracts = filteredLeases.map((lease) => ({
         id: lease.id,
@@ -57,9 +59,7 @@ export async function GET(request: NextRequest) {
       unitName: lease.unit?.number || null,
       tenantName: lease.tenant?.name || "Unknown Tenant",
       startDate:
-        lease.startDate instanceof Date
-          ? lease.startDate.toISOString()
-          : String(lease.startDate),
+        lease.startDate instanceof Date ? lease.startDate.toISOString() : String(lease.startDate),
       endDate:
         lease.endDate instanceof Date
           ? lease.endDate.toISOString()
@@ -74,10 +74,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: contracts });
   } catch (error) {
     console.error("Failed to get contracts:", error);
-    return NextResponse.json(
-      { error: "Failed to load contracts" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to load contracts" }, { status: 500 });
   }
 }
 
@@ -135,9 +132,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data: contract }, { status: 201 });
   } catch (error) {
     console.error("Failed to create contract:", error);
-    return NextResponse.json(
-      { error: "Failed to create contract" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create contract" }, { status: 500 });
   }
 }

@@ -54,8 +54,7 @@ function MagneticGridCard<T extends string>({
   index: number;
   onAction: (id: T) => void;
 }) {
-  const { ref, onMouseMove, onMouseLeave } =
-    useMagneticHover<HTMLButtonElement>();
+  const { ref, onMouseMove, onMouseLeave } = useMagneticHover<HTMLButtonElement>();
   const Icon = action.icon;
 
   return (
@@ -86,9 +85,7 @@ function MagneticGridCard<T extends string>({
         <span className="text-sm font-medium text-[var(--color-foreground)] mb-1">
           {action.label}
         </span>
-        <span className="text-xs text-[var(--color-muted-foreground)]">
-          {action.description}
-        </span>
+        <span className="text-xs text-[var(--color-muted-foreground)]">{action.description}</span>
         {action.shortcut && (
           <kbd className="absolute top-2 right-2 hidden md:inline-flex h-5 items-center px-1.5 rounded border border-[var(--color-border)] bg-[var(--color-background)] text-[10px] font-mono text-[var(--color-muted-foreground)] opacity-0 group-hover:opacity-100 transition-opacity">
             {action.shortcut}
@@ -115,11 +112,7 @@ export function QuickActions<T extends string = string>({
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className={cn("h-9 w-9 p-0", className)}
-          >
+          <Button variant="ghost" size="sm" className={cn("h-9 w-9 p-0", className)}>
             <MoreHorizontal className="h-4 w-4" />
             <span className="sr-only">More actions</span>
           </Button>
@@ -128,10 +121,7 @@ export function QuickActions<T extends string = string>({
           {overflowActions.map((action) => {
             const Icon = action.icon;
             return (
-              <DropdownMenuItem
-                key={action.id}
-                onClick={() => onAction(action.id)}
-              >
+              <DropdownMenuItem key={action.id} onClick={() => onAction(action.id)}>
                 <Icon className={cn("h-4 w-4 mr-2", action.color)} />
                 {action.label}
               </DropdownMenuItem>
@@ -144,12 +134,7 @@ export function QuickActions<T extends string = string>({
 
   if (variant === "horizontal") {
     return (
-      <div
-        className={cn(
-          "flex gap-2 overflow-x-auto pb-2 scrollbar-hide",
-          className,
-        )}
-      >
+      <div className={cn("flex gap-2 overflow-x-auto pb-2 scrollbar-hide", className)}>
         {actions.map((action, index) => {
           const Icon = action.icon;
           return (
@@ -181,12 +166,7 @@ export function QuickActions<T extends string = string>({
 
   if (variant === "compact") {
     return (
-      <Card
-        className={cn(
-          "bg-[var(--color-card)] border-[var(--color-border)]",
-          className,
-        )}
-      >
+      <Card className={cn("bg-[var(--color-card)] border-[var(--color-border)]", className)}>
         <CardHeader className="pb-3">
           <CardTitle className="text-sm font-medium text-[var(--color-foreground)] flex items-center gap-2">
             <Sparkles className="h-4 w-4 text-[var(--color-accent)]" />
@@ -203,11 +183,7 @@ export function QuickActions<T extends string = string>({
                   variant="ghost"
                   size="sm"
                   onClick={() => onAction(action.id)}
-                  className={cn(
-                    "h-8 px-2",
-                    action.bgColor,
-                    "border border-transparent",
-                  )}
+                  className={cn("h-8 px-2", action.bgColor, "border border-transparent")}
                 >
                   <Icon className={cn("h-3.5 w-3.5 mr-1.5", action.color)} />
                   <span className="text-xs">{action.label}</span>
@@ -222,12 +198,7 @@ export function QuickActions<T extends string = string>({
 
   // Default grid variant
   return (
-    <Card
-      className={cn(
-        "bg-[var(--color-card)] border-[var(--color-border)]",
-        className,
-      )}
-    >
+    <Card className={cn("bg-[var(--color-card)] border-[var(--color-border)]", className)}>
       <CardHeader>
         <CardTitle className="text-[var(--color-foreground)] flex items-center gap-2">
           <Plus className="h-5 w-5 text-[var(--color-accent)]" />
@@ -237,12 +208,7 @@ export function QuickActions<T extends string = string>({
       <CardContent>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           {actions.map((action, index) => (
-            <MagneticGridCard
-              key={action.id}
-              action={action}
-              index={index}
-              onAction={onAction}
-            />
+            <MagneticGridCard key={action.id} action={action} index={index} onAction={onAction} />
           ))}
         </div>
       </CardContent>
@@ -288,19 +254,12 @@ export function AttentionNeeded({
 }: AttentionNeededProps): React.ReactElement {
   if (items.length === 0) {
     return (
-      <Card
-        className={cn(
-          "bg-[var(--color-card)] border-[var(--color-border)]",
-          className,
-        )}
-      >
+      <Card className={cn("bg-[var(--color-card)] border-[var(--color-border)]", className)}>
         <CardContent className="py-8 text-center">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-green-500/10 mb-3">
             <Sparkles className="h-6 w-6 text-green-400" />
           </div>
-          <p className="text-sm font-medium text-[var(--color-foreground)]">
-            All caught up!
-          </p>
+          <p className="text-sm font-medium text-[var(--color-foreground)]">All caught up!</p>
           <p className="text-xs text-[var(--color-muted-foreground)] mt-1">
             No items need your attention right now.
           </p>
@@ -310,12 +269,7 @@ export function AttentionNeeded({
   }
 
   return (
-    <Card
-      className={cn(
-        "bg-[var(--color-card)] border-[var(--color-border)]",
-        className,
-      )}
-    >
+    <Card className={cn("bg-[var(--color-card)] border-[var(--color-border)]", className)}>
       <CardHeader className="flex flex-row items-center justify-between pb-3">
         <CardTitle className="text-sm font-medium text-[var(--color-foreground)] flex items-center gap-2">
           <span className="relative flex h-2 w-2">
@@ -328,12 +282,7 @@ export function AttentionNeeded({
           </span>
         </CardTitle>
         {onViewAll && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onViewAll}
-            className="text-xs"
-          >
+          <Button variant="ghost" size="sm" onClick={onViewAll} className="text-xs">
             View All
           </Button>
         )}

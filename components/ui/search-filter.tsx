@@ -5,13 +5,7 @@ import { debounce } from "./debounce";
 import { Search, X } from "lucide-react";
 import { Input } from "./input";
 import { Button } from "./button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "./select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 import { cn } from "@/lib/utils/utils";
 
 export interface FilterOption {

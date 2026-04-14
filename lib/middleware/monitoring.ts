@@ -19,10 +19,7 @@ function getRoutePattern(pathname: string): string {
   let route = pathname.replace(/^\/api/, "");
 
   // Replace UUIDs and IDs with placeholder
-  route = route.replace(
-    /\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi,
-    "/:id",
-  );
+  route = route.replace(/\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/gi, "/:id");
   route = route.replace(/\/\d+/g, "/:id");
 
   return route || "/";
@@ -32,15 +29,9 @@ function getRoutePattern(pathname: string): string {
  * Wrap API handler with monitoring
  */
 export function withMonitoring<T = unknown>(
-  handler: (
-    request: NextRequest,
-    context?: T,
-  ) => Promise<Response | NextResponse>,
+  handler: (request: NextRequest, context?: T) => Promise<Response | NextResponse>,
 ): (request: NextRequest, context?: T) => Promise<Response | NextResponse> {
-  return async (
-    request: NextRequest,
-    context?: T,
-  ): Promise<Response | NextResponse> => {
+  return async (request: NextRequest, context?: T): Promise<Response | NextResponse> => {
     const timer = new PerformanceTimer("api.request");
     const method = request.method;
     const pathname = new URL(request.url).pathname;
@@ -77,8 +68,7 @@ export function withMonitoring<T = unknown>(
       apiMetrics.responseTime(route, duration);
 
       // Log response
-      const logLevel =
-        statusCode >= 500 ? "error" : statusCode >= 400 ? "warn" : "info";
+      const logLevel = statusCode >= 500 ? "error" : statusCode >= 400 ? "warn" : "info";
       requestLogger[logLevel]("API request completed", {
         statusCode,
         duration: `${duration.toFixed(2)}ms`,
@@ -111,13 +101,9 @@ export function withMonitoring<T = unknown>(
       }
 
       // Log error
-      requestLogger.error(
-        "API request failed",
-        error instanceof Error ? error : undefined,
-        {
-          duration: `${duration.toFixed(2)}ms`,
-        },
-      );
+      requestLogger.error("API request failed", error instanceof Error ? error : undefined, {
+        duration: `${duration.toFixed(2)}ms`,
+      });
 
       // Re-throw to let error handler deal with it
       throw error;
@@ -197,13 +183,9 @@ export function createMonitoringMiddleware(
         );
       }
 
-      requestLogger.error(
-        "Request failed",
-        error instanceof Error ? error : undefined,
-        {
-          duration: `${duration.toFixed(2)}ms`,
-        },
-      );
+      requestLogger.error("Request failed", error instanceof Error ? error : undefined, {
+        duration: `${duration.toFixed(2)}ms`,
+      });
 
       throw error;
     }

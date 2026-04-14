@@ -179,8 +179,7 @@ export interface NoticeTemplateData {
 // Storage Configuration
 // ============================================================================
 
-const STORAGE_BASE_PATH =
-  process.env.DOCUMENT_STORAGE_PATH || "./uploads/documents";
+const STORAGE_BASE_PATH = process.env.DOCUMENT_STORAGE_PATH || "./uploads/documents";
 const MAX_FILE_SIZE = parseInt(process.env.MAX_DOCUMENT_SIZE || "10485760", 10); // 10MB default
 const ALLOWED_MIME_TYPES = [
   "application/pdf",
@@ -223,11 +222,7 @@ function generateFileName(originalName: string, userId: string): string {
 /**
  * Get storage path for a document
  */
-function getStoragePath(
-  userId: string,
-  fileName: string,
-  type: DocumentType,
-): string {
+function getStoragePath(userId: string, fileName: string, type: DocumentType): string {
   const yearMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
   return join(STORAGE_BASE_PATH, userId, type, yearMonth, fileName);
 }
@@ -240,9 +235,7 @@ function validateFile(mimeType: string, fileSize: number): void {
     throw new Error(`File type not allowed: ${mimeType}`);
   }
   if (fileSize > MAX_FILE_SIZE) {
-    throw new Error(
-      `File size exceeds maximum allowed: ${fileSize} > ${MAX_FILE_SIZE}`,
-    );
+    throw new Error(`File size exceeds maximum allowed: ${fileSize} > ${MAX_FILE_SIZE}`);
   }
 }
 
@@ -420,11 +413,7 @@ export const documentService = {
   /**
    * Update document metadata
    */
-  async update(
-    userId: string,
-    id: string,
-    data: UpdateDocumentData,
-  ): Promise<Document | null> {
+  async update(userId: string, id: string, data: UpdateDocumentData): Promise<Document | null> {
     const prisma = getPrismaClient();
 
     // Check if document exists and belongs to user

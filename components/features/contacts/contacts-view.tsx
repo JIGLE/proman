@@ -1,34 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import {
-  Wrench,
-  Plus,
-  Search,
-  Star,
-  Phone,
-  Mail,
-  Building2,
-  Tag,
-  Loader2,
-} from "lucide-react";
+import { Wrench, Plus, Search, Star, Phone, Mail, Building2, Tag, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/utils/api-client";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  formatCurrency as formatCurrencyUtil,
-  type Currency,
-} from "@/lib/utils/currency";
+import { formatCurrency as formatCurrencyUtil, type Currency } from "@/lib/utils/currency";
 
 interface MaintenanceContact {
   id: string;
@@ -51,8 +32,7 @@ const typeLabels: Record<string, string> = {
 };
 
 const typeColors: Record<string, string> = {
-  contractor:
-    "bg-[var(--color-info-muted)] text-[var(--color-info)] border-[var(--color-info)]/20",
+  contractor: "bg-[var(--color-info-muted)] text-[var(--color-info)] border-[var(--color-info)]/20",
   vendor: "bg-purple-500/10 text-purple-600 border-purple-500/20",
   internal:
     "bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]/20",
@@ -104,9 +84,7 @@ export function ContactsView(): React.ReactElement {
     const matchesSearch =
       contact.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       contact.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      contact.specialties.some((s) =>
-        s.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
+      contact.specialties.some((s) => s.toLowerCase().includes(searchQuery.toLowerCase()));
 
     if (activeTab === "all") return matchesSearch;
     return matchesSearch && contact.type === activeTab;
@@ -159,9 +137,7 @@ export function ContactsView(): React.ReactElement {
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Contacts
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Total Contacts</CardTitle>
             <Wrench className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -174,9 +150,7 @@ export function ContactsView(): React.ReactElement {
             <div className="h-2 w-2 rounded-full bg-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {stats.contractors}
-            </div>
+            <div className="text-2xl font-bold text-blue-600">{stats.contractors}</div>
           </CardContent>
         </Card>
         <Card>
@@ -185,22 +159,16 @@ export function ContactsView(): React.ReactElement {
             <div className="h-2 w-2 rounded-full bg-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-600">
-              {stats.vendors}
-            </div>
+            <div className="text-2xl font-bold text-purple-600">{stats.vendors}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Internal Staff
-            </CardTitle>
+            <CardTitle className="text-sm font-medium">Internal Staff</CardTitle>
             <div className="h-2 w-2 rounded-full bg-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
-              {stats.internal}
-            </div>
+            <div className="text-2xl font-bold text-green-600">{stats.internal}</div>
           </CardContent>
         </Card>
       </div>
@@ -234,10 +202,7 @@ export function ContactsView(): React.ReactElement {
           </div>
         ) : (
           filteredContacts.map((contact) => (
-            <Card
-              key={contact.id}
-              className="hover:shadow-md transition-shadow"
-            >
+            <Card key={contact.id} className="hover:shadow-md transition-shadow">
               <CardHeader className="pb-3">
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -247,9 +212,7 @@ export function ContactsView(): React.ReactElement {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <CardTitle className="text-base">
-                        {contact.name}
-                      </CardTitle>
+                      <CardTitle className="text-base">{contact.name}</CardTitle>
                       {contact.company && (
                         <CardDescription className="flex items-center gap-1">
                           <Building2 className="h-3 w-3" />
@@ -267,11 +230,7 @@ export function ContactsView(): React.ReactElement {
                 {/* Specialties */}
                 <div className="flex flex-wrap gap-1">
                   {contact.specialties.map((specialty) => (
-                    <Badge
-                      key={specialty}
-                      variant="secondary"
-                      className="text-xs"
-                    >
+                    <Badge key={specialty} variant="secondary" className="text-xs">
                       <Tag className="h-3 w-3 mr-1" />
                       {specialty}
                     </Badge>
@@ -283,10 +242,7 @@ export function ContactsView(): React.ReactElement {
                   {contact.email && (
                     <div className="flex items-center gap-2">
                       <Mail className="h-3.5 w-3.5" />
-                      <a
-                        href={`mailto:${contact.email}`}
-                        className="hover:text-foreground"
-                      >
+                      <a href={`mailto:${contact.email}`} className="hover:text-foreground">
                         {contact.email}
                       </a>
                     </div>
@@ -294,10 +250,7 @@ export function ContactsView(): React.ReactElement {
                   {contact.phone && (
                     <div className="flex items-center gap-2">
                       <Phone className="h-3.5 w-3.5" />
-                      <a
-                        href={`tel:${contact.phone}`}
-                        className="hover:text-foreground"
-                      >
+                      <a href={`tel:${contact.phone}`} className="hover:text-foreground">
                         {contact.phone}
                       </a>
                     </div>
@@ -319,18 +272,14 @@ export function ContactsView(): React.ReactElement {
                   {contact.rating && (
                     <div className="flex items-center gap-1">
                       <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
-                      <span className="text-sm font-medium">
-                        {contact.rating}
-                      </span>
+                      <span className="text-sm font-medium">{contact.rating}</span>
                     </div>
                   )}
                 </div>
 
                 {/* Notes */}
                 {contact.notes && (
-                  <p className="text-xs text-muted-foreground italic">
-                    "{contact.notes}"
-                  </p>
+                  <p className="text-xs text-muted-foreground italic">"{contact.notes}"</p>
                 )}
               </CardContent>
             </Card>

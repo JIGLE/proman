@@ -2,13 +2,13 @@
 // - Provide globalThis.fetch if not present (vitest/node may not have it)
 // - Provide TextEncoder/TextDecoder if missing
 
-import { TextEncoder, TextDecoder } from 'util';
+import { TextEncoder, TextDecoder } from "util";
 
 if (!(globalThis as any).fetch) {
   // lightweight node-fetch like shim using undici if available
   try {
     // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const { fetch } = require('undici');
+    const { fetch } = require("undici");
     (globalThis as any).fetch = fetch;
   } catch (e) {
     // leave undefined — tests that need fetch should mock it explicitly

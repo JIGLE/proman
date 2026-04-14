@@ -22,9 +22,7 @@ describe("DevAuthProvider", () => {
     // Stub global fetch to prevent next-auth client logs or attempts to call relative URLs
     _oldFetch = globalThis.fetch;
     globalThis.fetch = ((_: RequestInfo | URL, __?: RequestInit) =>
-      Promise.resolve(
-        new Response("{}"),
-      )) as unknown as typeof globalThis.fetch;
+      Promise.resolve(new Response("{}"))) as unknown as typeof globalThis.fetch;
   });
 
   afterEach(() => {
@@ -41,8 +39,7 @@ describe("DevAuthProvider", () => {
   });
 
   it("provides a dev session when enabled in development", async () => {
-    (process.env as NodeJS.ProcessEnv & { NODE_ENV?: string }).NODE_ENV =
-      "development";
+    (process.env as NodeJS.ProcessEnv & { NODE_ENV?: string }).NODE_ENV = "development";
     process.env.NEXT_PUBLIC_DEV_AUTH = "true";
 
     const { DevAuthProvider } = await import("./dev-auth");
@@ -59,8 +56,7 @@ describe("DevAuthProvider", () => {
   });
 
   it("does not inject dev session when not enabled", async () => {
-    (process.env as NodeJS.ProcessEnv & { NODE_ENV?: string }).NODE_ENV =
-      "production";
+    (process.env as NodeJS.ProcessEnv & { NODE_ENV?: string }).NODE_ENV = "production";
     delete process.env.NEXT_PUBLIC_DEV_AUTH;
 
     const { DevAuthProvider } = await import("./dev-auth");

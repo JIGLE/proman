@@ -30,7 +30,7 @@ export function SkipLink({
         "focus:outline-none focus:shadow-lg",
         "transition-all duration-200",
         "font-medium text-sm",
-        className
+        className,
       )}
     >
       {children}
@@ -72,10 +72,7 @@ interface VisuallyHiddenProps {
   as?: React.ElementType;
 }
 
-export function VisuallyHidden({
-  children,
-  as: Component = "span",
-}: VisuallyHiddenProps) {
+export function VisuallyHidden({ children, as: Component = "span" }: VisuallyHiddenProps) {
   return <Component className="sr-only">{children}</Component>;
 }
 
@@ -161,7 +158,7 @@ export function FocusTrap({ children, active = true, className }: FocusTrapProps
     if (!container) return;
 
     const focusableElements = container.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
@@ -221,11 +218,7 @@ export function Main({ children, label = "Main content", className }: LandmarkPr
 
 export function Navigation({ children, label = "Main navigation", className }: LandmarkProps) {
   return (
-    <nav
-      id="main-navigation"
-      aria-label={label}
-      className={className}
-    >
+    <nav id="main-navigation" aria-label={label} className={className}>
       {children}
     </nav>
   );

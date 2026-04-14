@@ -78,10 +78,7 @@ test("Critical Path: Record new payment", async ({ page }) => {
 
   // Listen for API responses
   page.on("response", (response) => {
-    if (
-      response.url().includes("/api/payments") ||
-      response.url().includes("/api/receipts")
-    ) {
+    if (response.url().includes("/api/payments") || response.url().includes("/api/receipts")) {
       console.log("API Response:", response.status(), response.statusText());
     }
   });
@@ -123,9 +120,7 @@ test("Critical Path: Record new payment", async ({ page }) => {
   }
 
   // Verify payment appears in list (look for amount or success message)
-  const successIndicator = page
-    .locator("text=/1200|payment recorded|success/i")
-    .first();
+  const successIndicator = page.locator("text=/1200|payment recorded|success/i").first();
   await expect(successIndicator).toBeVisible({ timeout: 5000 });
 
   console.log("✓ Payment recorded successfully");

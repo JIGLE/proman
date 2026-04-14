@@ -1,10 +1,17 @@
-import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { correspondenceService } from '@/lib/services/database';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { correspondenceService } from "@/lib/services/database";
 
 // GET /api/correspondence/[id] - Get a specific correspondence
-async function handleGet(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+async function handleGet(
+  request: NextRequest,
+  context?: { params?: Record<string, string> | Promise<Record<string, string>> },
+): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -13,16 +20,16 @@ async function handleGet(request: NextRequest, context?: { params?: Record<strin
   let id: string | undefined;
   if (context?.params) {
     const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
-    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    const resolved = maybe instanceof Promise ? await maybe : maybe;
     id = resolved?.id;
   }
-  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
+  if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
 
   try {
     const correspondence = await correspondenceService.getById(userId, id);
 
     if (!correspondence) {
-      return createErrorResponse(new Error('Correspondence not found'), 404, request);
+      return createErrorResponse(new Error("Correspondence not found"), 404, request);
     }
 
     return createSuccessResponse(correspondence);
@@ -32,7 +39,10 @@ async function handleGet(request: NextRequest, context?: { params?: Record<strin
 }
 
 // DELETE /api/correspondence/[id] - Delete a specific correspondence
-async function handleDelete(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+async function handleDelete(
+  request: NextRequest,
+  context?: { params?: Record<string, string> | Promise<Record<string, string>> },
+): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -41,20 +51,20 @@ async function handleDelete(request: NextRequest, context?: { params?: Record<st
   let id: string | undefined;
   if (context?.params) {
     const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
-    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    const resolved = maybe instanceof Promise ? await maybe : maybe;
     id = resolved?.id;
   }
-  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
+  if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
 
   try {
     // First check if correspondence exists and user owns it
     const existingCorrespondence = await correspondenceService.getById(userId, id);
     if (!existingCorrespondence) {
-      return createErrorResponse(new Error('Correspondence not found'), 404, request);
+      return createErrorResponse(new Error("Correspondence not found"), 404, request);
     }
 
     await correspondenceService.delete(userId, id);
-    return createSuccessResponse({ message: 'Correspondence deleted successfully' });
+    return createSuccessResponse({ message: "Correspondence deleted successfully" });
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);
   }

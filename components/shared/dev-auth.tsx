@@ -59,8 +59,7 @@ function extendDevSessionExpiry(): Session {
 
 export function DevAuthProvider({ children }: { children: React.ReactNode }) {
   const enabled =
-    process.env.NODE_ENV === "development" &&
-    process.env.NEXT_PUBLIC_DEV_AUTH === "true";
+    process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_DEV_AUTH === "true";
 
   const isWindow = typeof window !== "undefined";
 

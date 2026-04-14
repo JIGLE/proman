@@ -16,46 +16,42 @@ npm install -D @axe-core/playwright
 
 ```typescript
 // e2e/accessibility.spec.ts
-import { test, expect } from '@playwright/test'
-import AxeBuilder from '@axe-core/playwright'
+import { test, expect } from "@playwright/test";
+import AxeBuilder from "@axe-core/playwright";
 
-test.describe('Accessibility', () => {
-  test('dashboard page has no critical a11y violations', async ({ page }) => {
-    await page.goto('/')
-
-    const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
-      .analyze()
-
-    expect(results.violations.filter(v => v.impact === 'critical')).toEqual([])
-  })
-
-  test('login page has no critical a11y violations', async ({ page }) => {
-    await page.goto('/auth/signin')
+test.describe("Accessibility", () => {
+  test("dashboard page has no critical a11y violations", async ({ page }) => {
+    await page.goto("/");
 
     const results = await new AxeBuilder({ page })
-      .withTags(['wcag2a', 'wcag2aa'])
-      .analyze()
+      .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+      .analyze();
 
-    expect(results.violations.filter(v => v.impact === 'critical')).toEqual([])
-  })
+    expect(results.violations.filter((v) => v.impact === "critical")).toEqual([]);
+  });
 
-  test('properties page has no critical a11y violations', async ({ page }) => {
-    await page.goto('/')
+  test("login page has no critical a11y violations", async ({ page }) => {
+    await page.goto("/auth/signin");
+
+    const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
+
+    expect(results.violations.filter((v) => v.impact === "critical")).toEqual([]);
+  });
+
+  test("properties page has no critical a11y violations", async ({ page }) => {
+    await page.goto("/");
     // Navigate to properties if accessible
-    const propertiesLink = page.getByRole('link', { name: /properties/i })
+    const propertiesLink = page.getByRole("link", { name: /properties/i });
     if (await propertiesLink.isVisible()) {
-      await propertiesLink.click()
-      await page.waitForLoadState('networkidle')
+      await propertiesLink.click();
+      await page.waitForLoadState("networkidle");
 
-      const results = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa'])
-        .analyze()
+      const results = await new AxeBuilder({ page }).withTags(["wcag2a", "wcag2aa"]).analyze();
 
-      expect(results.violations.filter(v => v.impact === 'critical')).toEqual([])
+      expect(results.violations.filter((v) => v.impact === "critical")).toEqual([]);
     }
-  })
-})
+  });
+});
 ```
 
 ### Reporting Violations
@@ -64,13 +60,13 @@ For detailed reports, log violations:
 
 ```typescript
 if (results.violations.length > 0) {
-  console.log('Accessibility violations:')
-  results.violations.forEach(v => {
-    console.log(`  [${v.impact}] ${v.id}: ${v.description}`)
-    v.nodes.forEach(n => {
-      console.log(`    ${n.html}`)
-    })
-  })
+  console.log("Accessibility violations:");
+  results.violations.forEach((v) => {
+    console.log(`  [${v.impact}] ${v.id}: ${v.description}`);
+    v.nodes.forEach((n) => {
+      console.log(`    ${n.html}`);
+    });
+  });
 }
 ```
 
@@ -88,5 +84,6 @@ if (results.violations.length > 0) {
 ## Existing Documentation
 
 See also:
+
 - [Accessibility Improvements](ACCESSIBILITY_IMPROVEMENTS.md)
 - [Accessibility Quick Reference](ACCESSIBILITY_QUICK_REFERENCE.md)

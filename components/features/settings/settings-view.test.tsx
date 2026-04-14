@@ -5,8 +5,7 @@ import { SettingsView } from "./settings-view";
 // Mock next-intl - must include NextIntlClientProvider
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
-  NextIntlClientProvider: ({ children }: { children: React.ReactNode }) =>
-    children,
+  NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock next/navigation

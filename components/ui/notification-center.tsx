@@ -163,12 +163,7 @@ function NotificationItem({
             {notification.title}
           </p>
           {notification.priority !== "low" && (
-            <Badge
-              className={cn(
-                "text-[10px] px-1.5 py-0",
-                priorityColors[notification.priority],
-              )}
-            >
+            <Badge className={cn("text-[10px] px-1.5 py-0", priorityColors[notification.priority])}>
               {notification.priority}
             </Badge>
           )}
@@ -275,9 +270,7 @@ export function NotificationCenter({
           {/* Header */}
           <div className="flex items-center justify-between p-3 border-b border-[var(--color-border)] flex-none">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-[var(--color-foreground)]">
-                Notifications
-              </h3>
+              <h3 className="font-semibold text-[var(--color-foreground)]">Notifications</h3>
               {unreadCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
                   {unreadCount} new
@@ -337,9 +330,7 @@ export function NotificationCenter({
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <Bell className="h-10 w-10 text-[var(--color-muted-foreground)] mb-3" />
                   <p className="text-sm font-medium text-[var(--color-foreground)]">
-                    {filter === "unread"
-                      ? "No unread notifications"
-                      : "No notifications"}
+                    {filter === "unread" ? "No unread notifications" : "No notifications"}
                   </p>
                   <p className="text-xs text-[var(--color-muted-foreground)]">
                     {filter === "unread"
@@ -445,9 +436,7 @@ function mapDbToUi(n: DbNotification): Notification {
     read: n.read,
     timestamp: new Date(n.createdAt),
     actionUrl:
-      n.entityType && n.entityId
-        ? `/${n.entityType.toLowerCase()}s/${n.entityId}`
-        : undefined,
+      n.entityType && n.entityId ? `/${n.entityType.toLowerCase()}s/${n.entityId}` : undefined,
     metadata: n.payload ? JSON.parse(n.payload) : undefined,
   };
 }
@@ -502,18 +491,15 @@ export function useNotifications() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type:
-              Object.entries(dbTypeToUiType).find(
-                ([, v]) => v === notification.type,
-              )?.[0] ?? "other",
+              Object.entries(dbTypeToUiType).find(([, v]) => v === notification.type)?.[0] ??
+              "other",
             title: notification.title,
             message: notification.message,
           }),
         });
         if (res.ok) {
           const created = await res.json();
-          setNotifications((prev) =>
-            prev.map((n) => (n.id === tempId ? mapDbToUi(created) : n)),
-          );
+          setNotifications((prev) => prev.map((n) => (n.id === tempId ? mapDbToUi(created) : n)));
           return created.id;
         }
       } catch {
@@ -525,9 +511,7 @@ export function useNotifications() {
   );
 
   const markAsRead = useCallback((id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n)),
-    );
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, read: true } : n)));
     // Fire and forget API call
     fetch(`/api/notifications/${id}`, {
       method: "PUT",
@@ -538,9 +522,7 @@ export function useNotifications() {
 
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    fetch("/api/notifications/mark-all-read", { method: "PUT" }).catch(
-      () => {},
-    );
+    fetch("/api/notifications/mark-all-read", { method: "PUT" }).catch(() => {});
   }, []);
 
   const deleteNotification = useCallback((id: string) => {

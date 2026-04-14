@@ -1,13 +1,11 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { NextRequest } from "next/server";
 
-const { requireAdminMock, logAuditMock, getPrismaClientMock } = vi.hoisted(
-  () => ({
-    requireAdminMock: vi.fn(),
-    logAuditMock: vi.fn(),
-    getPrismaClientMock: vi.fn(),
-  }),
-);
+const { requireAdminMock, logAuditMock, getPrismaClientMock } = vi.hoisted(() => ({
+  requireAdminMock: vi.fn(),
+  logAuditMock: vi.fn(),
+  getPrismaClientMock: vi.fn(),
+}));
 
 vi.mock("@/lib/services/auth/auth-middleware", () => ({
   requireAdmin: requireAdminMock,
@@ -65,16 +63,13 @@ describe("GET /api/admin/database", () => {
       session: { user: { role: "ADMIN" } },
     });
 
-    const request = new NextRequest(
-      "http://localhost/api/admin/database?view=all",
-      {
-        method: "GET",
-        headers: {
-          "x-forwarded-for": "203.0.113.10",
-          "user-agent": "vitest-agent",
-        },
+    const request = new NextRequest("http://localhost/api/admin/database?view=all", {
+      method: "GET",
+      headers: {
+        "x-forwarded-for": "203.0.113.10",
+        "user-agent": "vitest-agent",
       },
-    );
+    });
 
     const response = await GET(request);
     expect(response.status).toBe(200);

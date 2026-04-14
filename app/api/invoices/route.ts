@@ -1,29 +1,37 @@
-import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { invoiceService } from '@/lib/services/invoice-service';
-import { sanitizeForDatabase, sanitizeNumber } from '@/lib/utils/sanitize';
-import { z } from 'zod';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { invoiceService } from "@/lib/services/invoice-service";
+import { sanitizeForDatabase, sanitizeNumber } from "@/lib/utils/sanitize";
+import { z } from "zod";
 
 // Validation schemas
 const createInvoiceSchema = z.object({
   tenantId: z.string().optional(),
   propertyId: z.string().optional(),
   ownerId: z.string().optional(),
-  amount: z.number().min(0.01, 'Amount must be greater than 0'),
-  dueDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
+  amount: z.number().min(0.01, "Amount must be greater than 0"),
+  dueDate: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date"),
   description: z.string().max(500).optional(),
-  lineItems: z.array(z.object({
-    description: z.string(),
-    quantity: z.number().min(1),
-    unitPrice: z.number().min(0),
-    total: z.number().min(0),
-  })).optional(),
+  lineItems: z
+    .array(
+      z.object({
+        description: z.string(),
+        quantity: z.number().min(1),
+        unitPrice: z.number().min(0),
+        total: z.number().min(0),
+      }),
+    )
+    .optional(),
   notes: z.string().max(1000).optional(),
 });
 
 const _batchInvoiceSchema = z.object({
-  dueDate: z.string().refine((date) => !isNaN(Date.parse(date)), 'Invalid date'),
+  dueDate: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date"),
   month: z.string().optional(),
 });
 
@@ -79,9 +87,9 @@ async function handlePost(request: NextRequest): Promise<Response> {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
-        request
+        request,
       );
     }
     return createErrorResponse(error as Error, 500, request);

@@ -19,10 +19,7 @@ export async function GET(request: NextRequest) {
   const tenantId = url.searchParams.get("tenantId");
 
   if (!tenantId) {
-    return NextResponse.json(
-      { error: "tenantId is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "tenantId is required" }, { status: 400 });
   }
 
   const prisma = getPrismaClient();
@@ -81,10 +78,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (!paymentService.isReady()) {
-    return NextResponse.json(
-      { error: "Payment service not configured" },
-      { status: 503 },
-    );
+    return NextResponse.json({ error: "Payment service not configured" }, { status: 503 });
   }
 
   const prisma = getPrismaClient();
@@ -126,8 +120,7 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error: unknown) {
-    const message =
-      error instanceof Error ? error.message : "Failed to create SEPA mandate";
+    const message = error instanceof Error ? error.message : "Failed to create SEPA mandate";
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
@@ -140,10 +133,7 @@ export async function DELETE(request: NextRequest) {
   const mandateId = url.searchParams.get("id");
 
   if (!mandateId) {
-    return NextResponse.json(
-      { error: "Mandate id is required" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Mandate id is required" }, { status: 400 });
   }
 
   const prisma = getPrismaClient();

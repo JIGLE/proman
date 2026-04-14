@@ -1,54 +1,57 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 
-type Theme = 'light' | 'dark' | 'dark-oled' | 'system';
+type Theme = "light" | "dark" | "dark-oled" | "system";
 
 interface ThemeContextType {
   theme: Theme;
-  resolvedTheme: 'light' | 'dark' | 'dark-oled';
+  resolvedTheme: "light" | "dark" | "dark-oled";
   setTheme: (theme: Theme) => void;
   toggleTheme: () => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const THEME_STORAGE_KEY = 'proman-theme';
+const THEME_STORAGE_KEY = "proman-theme";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }): React.ReactElement {
-  const [theme, setThemeState] = useState<Theme>('dark');
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark' | 'dark-oled'>('dark');
+  const [theme, setThemeState] = useState<Theme>("dark");
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark" | "dark-oled">("dark");
   const [_mounted, setMounted] = useState(false);
 
   // Get system preference
-  const getSystemTheme = useCallback((): 'light' | 'dark' => {
-    if (typeof window !== 'undefined') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  const getSystemTheme = useCallback((): "light" | "dark" => {
+    if (typeof window !== "undefined") {
+      return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
     }
-    return 'dark';
+    return "dark";
   }, []);
 
   // Resolve the actual theme based on preference
-  const resolveTheme = useCallback((themePreference: Theme): 'light' | 'dark' | 'dark-oled' => {
-    if (themePreference === 'system') {
-      return getSystemTheme();
-    }
-    return themePreference;
-  }, [getSystemTheme]);
+  const resolveTheme = useCallback(
+    (themePreference: Theme): "light" | "dark" | "dark-oled" => {
+      if (themePreference === "system") {
+        return getSystemTheme();
+      }
+      return themePreference;
+    },
+    [getSystemTheme],
+  );
 
   // Apply theme to document
-  const applyTheme = useCallback((resolved: 'light' | 'dark' | 'dark-oled') => {
+  const applyTheme = useCallback((resolved: "light" | "dark" | "dark-oled") => {
     const root = document.documentElement;
-    root.classList.remove('light', 'dark', 'dark-oled');
+    root.classList.remove("light", "dark", "dark-oled");
     root.classList.add(resolved);
-    root.setAttribute('data-theme', resolved);
+    root.setAttribute("data-theme", resolved);
     setResolvedTheme(resolved);
   }, []);
 
   // Initialize theme from storage
   useEffect(() => {
     const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
-    const initialTheme = stored || 'dark';
+    const initialTheme = stored || "dark";
     setThemeState(initialTheme);
     applyTheme(resolveTheme(initialTheme));
     setMounted(true);
@@ -56,26 +59,29 @@ export function ThemeProvider({ children }: { children: React.ReactNode }): Reac
 
   // Listen for system theme changes
   useEffect(() => {
-    if (theme !== 'system') return;
+    if (theme !== "system") return;
 
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
     const handleChange = () => {
       applyTheme(getSystemTheme());
     };
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, [theme, applyTheme, getSystemTheme]);
 
-  const setTheme = useCallback((newTheme: Theme) => {
-    setThemeState(newTheme);
-    localStorage.setItem(THEME_STORAGE_KEY, newTheme);
-    applyTheme(resolveTheme(newTheme));
-  }, [applyTheme, resolveTheme]);
+  const setTheme = useCallback(
+    (newTheme: Theme) => {
+      setThemeState(newTheme);
+      localStorage.setItem(THEME_STORAGE_KEY, newTheme);
+      applyTheme(resolveTheme(newTheme));
+    },
+    [applyTheme, resolveTheme],
+  );
 
   const toggleTheme = useCallback(() => {
     // Cycle through: light → dark → dark-oled → light
-    const themeOrder: Array<'light' | 'dark' | 'dark-oled'> = ['light', 'dark', 'dark-oled'];
+    const themeOrder: Array<"light" | "dark" | "dark-oled"> = ["light", "dark", "dark-oled"];
     const currentIndex = themeOrder.indexOf(resolvedTheme);
     const nextIndex = (currentIndex + 1) % themeOrder.length;
     setTheme(themeOrder[nextIndex]);
@@ -91,7 +97,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }): Reac
 export function useTheme(): ThemeContextType {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error("useTheme must be used within a ThemeProvider");
   }
   return context;
 }

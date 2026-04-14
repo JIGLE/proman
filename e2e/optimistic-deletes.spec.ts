@@ -9,31 +9,23 @@ import { test, expect } from "@playwright/test";
  */
 
 test.describe("Optimistic Delete – API Level", () => {
-  test("DELETE non-existent property returns 404 or auth error", async ({
-    request,
-  }) => {
+  test("DELETE non-existent property returns 404 or auth error", async ({ request }) => {
     const res = await request.delete("/api/properties/does-not-exist-123");
     // Without auth: 401/403. With auth but missing: 404
     expect([401, 403, 404]).toContain(res.status());
   });
 
-  test("DELETE non-existent tenant returns 404 or auth error", async ({
-    request,
-  }) => {
+  test("DELETE non-existent tenant returns 404 or auth error", async ({ request }) => {
     const res = await request.delete("/api/tenants/does-not-exist-123");
     expect([401, 403, 404]).toContain(res.status());
   });
 
-  test("DELETE non-existent lease returns 404 or auth error", async ({
-    request,
-  }) => {
+  test("DELETE non-existent lease returns 404 or auth error", async ({ request }) => {
     const res = await request.delete("/api/leases/does-not-exist-123");
     expect([401, 403, 404]).toContain(res.status());
   });
 
-  test("DELETE non-existent receipt returns 404 or auth error", async ({
-    request,
-  }) => {
+  test("DELETE non-existent receipt returns 404 or auth error", async ({ request }) => {
     const res = await request.delete("/api/receipts/does-not-exist-123");
     expect([401, 403, 404]).toContain(res.status());
   });
@@ -42,9 +34,7 @@ test.describe("Optimistic Delete – API Level", () => {
 test.describe("No Native confirm() Calls", () => {
   test.use({ storageState: "playwright/.auth/user.json" });
 
-  test("no native confirm() dialogs appear in properties view", async ({
-    page,
-  }) => {
+  test("no native confirm() dialogs appear in properties view", async ({ page }) => {
     let nativeDialogAppeared = false;
     page.on("dialog", (dialog) => {
       nativeDialogAppeared = true;
@@ -75,9 +65,7 @@ test.describe("No Native confirm() Calls", () => {
     expect(nativeDialogAppeared).toBe(false);
   });
 
-  test("no native confirm() dialogs appear in tenants view", async ({
-    page,
-  }) => {
+  test("no native confirm() dialogs appear in tenants view", async ({ page }) => {
     let nativeDialogAppeared = false;
     page.on("dialog", (dialog) => {
       nativeDialogAppeared = true;

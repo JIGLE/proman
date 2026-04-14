@@ -51,13 +51,7 @@ describe("Receipts API - List and Create", () => {
   });
 
   it("should validate payment method is valid", async () => {
-    const validMethods = [
-      "cash",
-      "check",
-      "bank_transfer",
-      "credit_card",
-      "debit_card",
-    ];
+    const validMethods = ["cash", "check", "bank_transfer", "credit_card", "debit_card"];
     expect(validMethods.length).toBe(5);
   });
 

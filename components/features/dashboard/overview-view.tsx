@@ -1,13 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Building2,
   Users,
@@ -32,11 +26,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LineChart, DonutChart } from "@/components/ui/charts";
-import {
-  DashboardGrid,
-  ChartWidget,
-  ListWidget,
-} from "@/components/ui/dashboard-widgets";
+import { DashboardGrid, ChartWidget, ListWidget } from "@/components/ui/dashboard-widgets";
 import { AttentionNeeded } from "@/components/ui/quick-actions";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { useApp } from "@/lib/contexts/app-context";
@@ -88,6 +78,8 @@ interface StatCardProps {
   changeLabel?: string;
   icon: React.ElementType;
   accent?: string;
+  /** Make this card visually larger / more prominent */
+  hero?: boolean;
 }
 
 function StatCard({
@@ -96,12 +88,18 @@ function StatCard({
   change,
   icon: Icon,
   accent = "text-[var(--color-primary)]",
+  hero = false,
 }: StatCardProps) {
   return (
-    <div className="card-elevated rounded-xl p-5 group">
+    <div className={cn("card-elevated rounded-xl group", hero ? "p-6" : "p-5")}>
       <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[var(--color-secondary)]">
-          <Icon className={cn("h-5 w-5", accent)} />
+        <div
+          className={cn(
+            "flex items-center justify-center rounded-lg bg-[var(--color-secondary)]",
+            hero ? "w-12 h-12" : "w-10 h-10",
+          )}
+        >
+          <Icon className={cn(hero ? "h-6 w-6" : "h-5 w-5", accent)} />
         </div>
         {change !== undefined && (
           <div
@@ -125,10 +123,20 @@ function StatCard({
           </div>
         )}
       </div>
-      <p className="text-2xl font-bold tracking-tight text-[var(--color-foreground)]">
+      <p
+        className={cn(
+          "font-bold tracking-tight text-[var(--color-foreground)]",
+          hero ? "text-3xl" : "text-2xl",
+        )}
+      >
         {value}
       </p>
-      <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
+      <p
+        className={cn(
+          "text-[var(--color-muted-foreground)] mt-1",
+          hero ? "text-sm font-medium" : "text-sm",
+        )}
+      >
         {title}
       </p>
     </div>
@@ -175,12 +183,7 @@ function QuickActionHero({
           primary ? "bg-white/20" : "bg-[var(--color-secondary)]",
         )}
       >
-        <Icon
-          className={cn(
-            "h-5 w-5",
-            primary ? "text-white" : "text-[var(--color-primary)]",
-          )}
-        />
+        <Icon className={cn("h-5 w-5", primary ? "text-white" : "text-[var(--color-primary)]")} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
@@ -259,8 +262,7 @@ function PropertyRow({
             {property.name}
           </p>
           <p className="text-xs text-[var(--color-muted-foreground)]">
-            {property.bedrooms} bed · {property.bathrooms} bath ·{" "}
-            {formatCurrency(property.rent)}/mo
+            {property.bedrooms} bed · {property.bathrooms} bath · {formatCurrency(property.rent)}/mo
           </p>
         </div>
       </div>
@@ -364,31 +366,17 @@ export function OverviewView({
         description: "Refresh data",
       },
     ],
-    [
-      onAddProperty,
-      onAddTenant,
-      onAddLease,
-      onRecordPayment,
-      onCreateTicket,
-      handleRefresh,
-      t,
-    ],
+    [onAddProperty, onAddTenant, onAddLease, onRecordPayment, onCreateTicket, handleRefresh, t],
   );
 
   useKeyboardShortcuts({ shortcuts });
 
   // ─── Computed stats ──────────────────────────────────
   const totalProperties = properties.length;
-  const occupiedProperties = properties.filter(
-    (p) => p.status === "occupied",
-  ).length;
-  const vacantProperties = properties.filter(
-    (p) => p.status === "vacant",
-  ).length;
+  const occupiedProperties = properties.filter((p) => p.status === "occupied").length;
+  const vacantProperties = properties.filter((p) => p.status === "vacant").length;
   const activeTenants = tenants.length;
-  const overduePayments = tenants.filter(
-    (t) => t.paymentStatus === "overdue",
-  ).length;
+  const overduePayments = tenants.filter((t) => t.paymentStatus === "overdue").length;
   const openTickets = maintenance.filter(
     (m) => m.status === "open" || m.status === "in_progress",
   ).length;
@@ -397,8 +385,7 @@ export function OverviewView({
     .filter((r) => r.status === "paid" && r.type === "rent")
     .reduce((sum, r) => sum + r.amount, 0);
 
-  const occupancyRate =
-    totalProperties > 0 ? (occupiedProperties / totalProperties) * 100 : 0;
+  const occupancyRate = totalProperties > 0 ? (occupiedProperties / totalProperties) * 100 : 0;
 
   // Monthly revenue trend (last 6 months)
   const monthlyTrend = useMemo(() => {
@@ -473,10 +460,7 @@ export function OverviewView({
   const recentProperties = useMemo(
     () =>
       [...properties]
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
-        )
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
         .slice(0, 5),
     [properties],
   );
@@ -492,10 +476,7 @@ export function OverviewView({
               title: "Overdue Payments",
               description: `${overduePayments} tenant${overduePayments > 1 ? "s have" : " has"} overdue payments`,
               count: overduePayments,
-              urgency: (overduePayments > 3 ? "high" : "medium") as
-                | "high"
-                | "medium"
-                | "low",
+              urgency: (overduePayments > 3 ? "high" : "medium") as "high" | "medium" | "low",
               actionLabel: "View",
             },
           ]
@@ -508,10 +489,7 @@ export function OverviewView({
               title: "Vacant Properties",
               description: `${vacantProperties} propert${vacantProperties > 1 ? "ies are" : "y is"} currently vacant`,
               count: vacantProperties,
-              urgency: (vacantProperties > 2 ? "medium" : "low") as
-                | "high"
-                | "medium"
-                | "low",
+              urgency: (vacantProperties > 2 ? "medium" : "low") as "high" | "medium" | "low",
               actionLabel: "View",
             },
           ]
@@ -524,10 +502,7 @@ export function OverviewView({
               title: "Open Tickets",
               description: `${openTickets} maintenance ticket${openTickets > 1 ? "s" : ""} pending`,
               count: openTickets,
-              urgency: (openTickets > 3 ? "high" : "low") as
-                | "high"
-                | "medium"
-                | "low",
+              urgency: (openTickets > 3 ? "high" : "low") as "high" | "medium" | "low",
               actionLabel: "View",
             },
           ]
@@ -601,9 +576,7 @@ export function OverviewView({
                     .map((shortcut) => (
                       <div
                         key={
-                          shortcut.key +
-                          (shortcut.ctrl ? "c" : "") +
-                          (shortcut.shift ? "s" : "")
+                          shortcut.key + (shortcut.ctrl ? "c" : "") + (shortcut.shift ? "s" : "")
                         }
                         className="flex items-center justify-between"
                       >
@@ -618,9 +591,7 @@ export function OverviewView({
                       </div>
                     ))}
                   <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]">
-                    <span className="text-[var(--color-muted-foreground)]">
-                      Toggle this panel
-                    </span>
+                    <span className="text-[var(--color-muted-foreground)]">Toggle this panel</span>
                     <kbd className="px-2 py-1 bg-[var(--color-muted)] rounded text-xs font-mono">
                       /
                     </kbd>
@@ -674,9 +645,7 @@ export function OverviewView({
             disabled={isRefreshing}
             title="Refresh data (Shift+R)"
           >
-            <RefreshCw
-              className={cn("h-4 w-4", isRefreshing && "animate-spin")}
-            />
+            <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
           </Button>
         </div>
       </div>
@@ -695,10 +664,129 @@ export function OverviewView({
         />
       )}
 
-      {/* ─── Attention Needed ─── */}
-      {attentionItems.length > 0 && <AttentionNeeded items={attentionItems} />}
+      {/* ─── Attention Needed + Charts (Row 2: data-dense) ─── */}
+      {hasProperties && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Charts - takes 2 columns */}
+          <div className="lg:col-span-2 space-y-6">
+            <DashboardGrid columns={2} gap={6}>
+              {hasPayments && (
+                <ChartWidget
+                  title={t("charts.revenueTrend")}
+                  subtitle={t("charts.revenueTrend")}
+                  chart={<LineChart data={monthlyTrend} height={200} showValues={false} />}
+                />
+              )}
 
-      {/* ─── Quick Actions — HERO SECTION ─── */}
+              <ChartWidget
+                title={t("charts.propertyDistribution")}
+                subtitle={t("dashboard.portfolioBreakdown")}
+                chart={
+                  propertyTypeData.length > 0 ? (
+                    <DonutChart data={propertyTypeData} height={200} />
+                  ) : (
+                    <div className="flex items-center justify-center h-[200px] text-[var(--color-muted-foreground)]">
+                      <p className="text-sm">{t("dashboard.noPropertyData")}</p>
+                    </div>
+                  )
+                }
+              />
+            </DashboardGrid>
+          </div>
+
+          {/* Attention + Activity - sidebar column */}
+          <div className="space-y-6">
+            {attentionItems.length > 0 && <AttentionNeeded items={attentionItems} />}
+
+            {/* Recent Activities (compact) */}
+            <ListWidget
+              title={t("dashboard.recentActivities")}
+              subtitle={
+                hasActivities
+                  ? t("dashboard.latestPortfolioUpdates")
+                  : t("dashboard.activityFeedPlaceholder")
+              }
+              items={recentActivities}
+              renderItem={(activity) => (
+                <div className="flex items-center justify-between py-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg">{activity.icon}</span>
+                    <div className="space-y-1">
+                      <p className="text-sm font-medium text-[var(--color-foreground)]">
+                        {activity.message}
+                      </p>
+                      <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
+                        <span>{activity.type}</span>
+                        {activity.amount && <span>· {formatCurrency(activity.amount)}</span>}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              emptyState={
+                <div className="flex flex-col items-center py-6 text-center">
+                  <div className="rounded-full bg-[var(--color-secondary)] p-3 mb-3">
+                    <TrendingUp className="h-5 w-5 text-[var(--color-primary)]" />
+                  </div>
+                  <p className="text-sm text-[var(--color-muted-foreground)]">
+                    {hasProperties
+                      ? t("dashboard.addTenantsToSeeActivity")
+                      : t("dashboard.addPropertiesToStart")}
+                  </p>
+                </div>
+              }
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ─── Quick Actions (demoted from hero position) ─── */}
+
+      {/* ─── Stats Grid (promoted above Quick Actions for visual hierarchy) ─── */}
+      {hasProperties ? (
+        <section>
+          <h2 className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wider mb-4">
+            {t("dashboard.portfolioOverview")}
+          </h2>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+            <StatCard
+              title={t("dashboard.monthlyRevenue")}
+              value={formatCurrency(monthlyRevenue)}
+              icon={DollarSign}
+              accent="text-emerald-400"
+              hero
+            />
+            <StatCard
+              title={t("dashboard.occupancyRate")}
+              value={`${occupancyRate.toFixed(1)}%`}
+              icon={TrendingUp}
+              accent="text-amber-400"
+              hero
+            />
+            <StatCard
+              title={t("dashboard.totalProperties")}
+              value={totalProperties}
+              icon={Building2}
+            />
+            <StatCard
+              title={t("dashboard.activeTenants")}
+              value={activeTenants}
+              icon={Users}
+              accent="text-purple-400"
+            />
+          </div>
+        </section>
+      ) : (
+        <EmptyStateIllustration
+          type="properties"
+          title={t("dashboard.startManagingPortfolio")}
+          description={t("dashboard.startManagingPortfolioDesc")}
+          onAction={onAddProperty}
+          actionLabel={t("dashboard.addYourFirstProperty")}
+        />
+      )}
+
+      {/* ─── Quick Actions ─── */}
       <section>
         <div className="flex items-center gap-2 mb-4">
           <Zap className="h-4 w-4 text-[var(--color-primary)]" />
@@ -753,81 +841,6 @@ export function OverviewView({
         </div>
       </section>
 
-      {/* ─── Stats Grid ─── */}
-      {hasProperties ? (
-        <section>
-          <h2 className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wider mb-4">
-            {t("dashboard.portfolioOverview")}
-          </h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              title={t("dashboard.totalProperties")}
-              value={totalProperties}
-              icon={Building2}
-            />
-            <StatCard
-              title={t("dashboard.activeTenants")}
-              value={activeTenants}
-              icon={Users}
-              accent="text-purple-400"
-            />
-            <StatCard
-              title={t("dashboard.monthlyRevenue")}
-              value={formatCurrency(monthlyRevenue)}
-              icon={DollarSign}
-              accent="text-emerald-400"
-            />
-            <StatCard
-              title={t("dashboard.occupancyRate")}
-              value={`${occupancyRate.toFixed(1)}%`}
-              icon={TrendingUp}
-              accent="text-amber-400"
-            />
-          </div>
-        </section>
-      ) : (
-        <EmptyStateIllustration
-          type="properties"
-          title={t("dashboard.startManagingPortfolio")}
-          description={t("dashboard.startManagingPortfolioDesc")}
-          onAction={onAddProperty}
-          actionLabel={t("dashboard.addYourFirstProperty")}
-        />
-      )}
-
-      {/* ─── Charts ─── */}
-      {hasProperties && (
-        <DashboardGrid columns={2} gap={6}>
-          {hasPayments && (
-            <ChartWidget
-              title={t("charts.revenueTrend")}
-              subtitle={t("charts.revenueTrend")}
-              chart={
-                <LineChart
-                  data={monthlyTrend}
-                  height={200}
-                  showValues={false}
-                />
-              }
-            />
-          )}
-
-          <ChartWidget
-            title={t("charts.propertyDistribution")}
-            subtitle={t("dashboard.portfolioBreakdown")}
-            chart={
-              propertyTypeData.length > 0 ? (
-                <DonutChart data={propertyTypeData} height={200} />
-              ) : (
-                <div className="flex items-center justify-center h-[200px] text-[var(--color-muted-foreground)]">
-                  <p className="text-sm">{t("dashboard.noPropertyData")}</p>
-                </div>
-              )
-            }
-          />
-        </DashboardGrid>
-      )}
-
       {/* ─── Recent Properties ─── */}
       {hasProperties && (
         <section>
@@ -869,53 +882,6 @@ export function OverviewView({
         </section>
       )}
 
-      {/* ─── Recent Activities ─── */}
-      <DashboardGrid columns={1} gap={6}>
-        <ListWidget
-          title={t("dashboard.recentActivities")}
-          subtitle={
-            hasActivities
-              ? t("dashboard.latestPortfolioUpdates")
-              : t("dashboard.activityFeedPlaceholder")
-          }
-          items={recentActivities}
-          renderItem={(activity) => (
-            <div className="flex items-center justify-between py-2">
-              <div className="flex items-center gap-3">
-                <span className="text-lg">{activity.icon}</span>
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-[var(--color-foreground)]">
-                    {activity.message}
-                  </p>
-                  <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
-                    <span>{activity.type}</span>
-                    {activity.amount && (
-                      <span>· {formatCurrency(activity.amount)}</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <span className="text-xs text-[var(--color-muted-foreground)]">
-                {new Date(activity.timestamp).toLocaleDateString()}
-              </span>
-            </div>
-          )}
-          emptyState={
-            <div className="flex flex-col items-center py-8 text-center">
-              <div className="rounded-full bg-[var(--color-secondary)] p-3 mb-3">
-                <TrendingUp className="h-6 w-6 text-[var(--color-primary)]" />
-              </div>
-              <p className="font-medium mb-1">{t("dashboard.noActivity")}</p>
-              <p className="text-sm text-[var(--color-muted-foreground)] max-w-xs">
-                {hasProperties
-                  ? t("dashboard.addTenantsToSeeActivity")
-                  : t("dashboard.addPropertiesToStart")}
-              </p>
-            </div>
-          }
-        />
-      </DashboardGrid>
-
       {/* ─── Achievements ─── */}
       {isOnboardingComplete && (
         <motion.div
@@ -929,9 +895,7 @@ export function OverviewView({
                 <Trophy className="h-5 w-5 text-yellow-500" />
                 {t("dashboard.achievements")}
               </CardTitle>
-              <CardDescription>
-                {t("dashboard.achievementsDescription")}
-              </CardDescription>
+              <CardDescription>{t("dashboard.achievementsDescription")}</CardDescription>
             </CardHeader>
             <CardContent>
               <AchievementGrid
@@ -950,17 +914,12 @@ export function OverviewView({
         <Card className="card-elevated">
           <CardHeader>
             <CardTitle>{t("dashboard.recentPayments")}</CardTitle>
-            <CardDescription>
-              {t("dashboard.latestTenantPayments")}
-            </CardDescription>
+            <CardDescription>{t("dashboard.latestTenantPayments")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {recentPayments.length > 0 ? (
               recentPayments.map((payment) => (
-                <div
-                  key={payment.id}
-                  className="flex items-center justify-between"
-                >
+                <div key={payment.id} className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-[var(--color-foreground)]">
                       {payment.tenantName}
@@ -993,17 +952,12 @@ export function OverviewView({
         <Card className="card-elevated">
           <CardHeader>
             <CardTitle>{t("dashboard.propertyStatus")}</CardTitle>
-            <CardDescription>
-              {t("dashboard.currentPropertyConditions")}
-            </CardDescription>
+            <CardDescription>{t("dashboard.currentPropertyConditions")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {propertyStatus.length > 0 ? (
               propertyStatus.map((property) => (
-                <div
-                  key={property.id}
-                  className="flex items-center justify-between"
-                >
+                <div key={property.id} className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-[var(--color-foreground)]">
                       {property.name}

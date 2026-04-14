@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 
 /**
  * Assets View - Unified view for managing physical properties
- * 
+ *
  * Information Architecture:
  * - Purpose: Manage physical properties (buildings)
  * - Belongs here: Properties list/details, Map view
@@ -19,26 +19,26 @@ import { Button } from "@/components/ui/button";
  * - Links to: People (view tenants/owners), Maintenance (create ticket for property)
  */
 export function AssetsView(): React.ReactElement {
-  const [activeTab, setActiveTab] = useTabPersistence('assets', 'map');
+  const [activeTab, setActiveTab] = useTabPersistence("assets", "map");
   const { state } = useApp();
   const { properties } = state;
   const propertiesViewRef = useRef<PropertiesViewRef>(null);
 
   // Export columns for properties
   const propertyColumns = [
-    { key: 'name', label: 'Name' },
-    { key: 'address', label: 'Address' },
-    { key: 'type', label: 'Type' },
-    { key: 'status', label: 'Status' },
-    { key: 'bedrooms', label: 'Bedrooms' },
-    { key: 'bathrooms', label: 'Bathrooms' },
-    { key: 'rent', label: 'Rent' }
+    { key: "name", label: "Name" },
+    { key: "address", label: "Address" },
+    { key: "type", label: "Type" },
+    { key: "status", label: "Status" },
+    { key: "bedrooms", label: "Bedrooms" },
+    { key: "bathrooms", label: "Bathrooms" },
+    { key: "rent", label: "Rent" },
   ];
 
   // Get export data based on active tab
   const getExportData = (): { data: unknown[]; columns: ExportColumn[] } => {
     switch (activeTab) {
-      case 'properties':
+      case "properties":
         return { data: properties, columns: propertyColumns };
       default:
         return { data: [], columns: [] };
@@ -69,7 +69,7 @@ export function AssetsView(): React.ReactElement {
             />
           </div>
         </div>
-        
+
         {/* Portfolio Statistics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
@@ -81,21 +81,25 @@ export function AssetsView(): React.ReactElement {
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Occupied</div>
             <div className="text-2xl font-bold text-green-500">
-              {properties.filter(p => p.status === 'occupied').length}
+              {properties.filter((p) => p.status === "occupied").length}
             </div>
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Vacant</div>
             <div className="text-2xl font-bold text-amber-500">
-              {properties.filter(p => p.status === 'vacant').length}
+              {properties.filter((p) => p.status === "vacant").length}
             </div>
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Occupancy Rate</div>
             <div className="text-2xl font-bold text-blue-500">
-              {properties.length > 0 
-                ? Math.round((properties.filter(p => p.status === 'occupied').length / properties.length) * 100)
-                : 0}%
+              {properties.length > 0
+                ? Math.round(
+                    (properties.filter((p) => p.status === "occupied").length / properties.length) *
+                      100,
+                  )
+                : 0}
+              %
             </div>
           </div>
         </div>
@@ -117,8 +121,8 @@ export function AssetsView(): React.ReactElement {
               </span>
             </TabsTrigger>
           </TabsList>
-          {activeTab === 'properties' && (
-            <Button 
+          {activeTab === "properties" && (
+            <Button
               onClick={() => propertiesViewRef.current?.openDialog()}
               className="flex items-center gap-2"
             >

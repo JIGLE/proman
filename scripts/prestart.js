@@ -51,9 +51,7 @@ if (dbUrl.startsWith("file:")) {
     );
   }
 } else {
-  console.log(
-    "[prestart] DATABASE_URL does not indicate sqlite; skipping sqlite ensure step.",
-  );
+  console.log("[prestart] DATABASE_URL does not indicate sqlite; skipping sqlite ensure step.");
 }
 
 console.log("[prestart] Prestart checks complete.");

@@ -112,9 +112,6 @@ export async function GET(request: NextRequest) {
     return Response.json({ tables, data });
   } catch (error) {
     console.error("Database view error:", error);
-    return Response.json(
-      { error: "Access denied or server error" },
-      { status: 500 },
-    );
+    return Response.json({ error: "Access denied or server error" }, { status: 500 });
   }
 }

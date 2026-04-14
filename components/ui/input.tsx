@@ -1,13 +1,13 @@
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils/utils"
+import { cn } from "@/lib/utils/utils";
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {}
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, value, onChange, readOnly, ...props }, ref) => {
-    const controlledWithoutOnChange = value !== undefined && onChange === undefined && readOnly === undefined
+    const controlledWithoutOnChange =
+      value !== undefined && onChange === undefined && readOnly === undefined;
 
     return (
       <input
@@ -19,7 +19,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-2 focus-visible:border-[var(--color-focus)]",
           "hover:border-[var(--color-border-hover)] hover:shadow-md",
           "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[var(--color-surface-disabled)]",
-          className
+          className,
         )}
         ref={ref}
         value={value}
@@ -27,9 +27,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         readOnly={controlledWithoutOnChange ? true : readOnly}
         {...props}
       />
-    )
-  }
-)
-Input.displayName = "Input"
+    );
+  },
+);
+Input.displayName = "Input";
 
-export { Input }
+export { Input };

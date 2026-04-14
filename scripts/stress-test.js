@@ -37,10 +37,7 @@ function printSection(title) {
 function runStressTest(targetUrl) {
   printSection("STRESS TEST - Finding Breaking Points");
 
-  print(
-    "This test will gradually increase load until the system breaks",
-    "blue",
-  );
+  print("This test will gradually increase load until the system breaks", "blue");
   print("Target URL: " + targetUrl, "blue");
   print("", "reset");
 
@@ -82,22 +79,13 @@ function runStressTest(targetUrl) {
     scenarios: [
       {
         name: "Stress test main endpoints",
-        flow: [
-          { get: { url: "/" } },
-          { get: { url: "/api/monitoring/health" } },
-          { think: 1 },
-        ],
+        flow: [{ get: { url: "/" } }, { get: { url: "/api/monitoring/health" } }, { think: 1 }],
       },
     ],
   };
 
   // Write temporary config
-  const configPath = path.join(
-    __dirname,
-    "..",
-    "load-tests",
-    "stress-test.yml",
-  );
+  const configPath = path.join(__dirname, "..", "load-tests", "stress-test.yml");
   const reportPath = path.join(
     __dirname,
     "..",
@@ -170,10 +158,7 @@ function analyzeStressResults(reportPath) {
     print(`  Total Requests: ${totalRequests}`, "blue");
     print(`  Successful: ${successful}`, "green");
     print(`  Errors: ${errors}`, errors > 0 ? "red" : "green");
-    print(
-      `  Error Rate: ${errorRate.toFixed(2)}%`,
-      errorRate > 5 ? "red" : "green",
-    );
+    print(`  Error Rate: ${errorRate.toFixed(2)}%`, errorRate > 5 ? "red" : "green");
 
     print("\nResponse Times at Peak:", "cyan");
     print(`  Median: ${summary.latency?.median || "N/A"} ms`, "blue");
@@ -183,10 +168,7 @@ function analyzeStressResults(reportPath) {
 
     if (summary.rates) {
       print("\nThroughput:", "cyan");
-      print(
-        `  Max Requests/sec: ${summary.rates["http.request_rate"] || "N/A"}`,
-        "blue",
-      );
+      print(`  Max Requests/sec: ${summary.rates["http.request_rate"] || "N/A"}`, "blue");
     }
 
     print("\nRecommendations:", "cyan");

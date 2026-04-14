@@ -32,12 +32,9 @@ vi.mock("@/lib/services/database/database", () => ({
 
 describe("Correspondence API - List and Create", () => {
   it("should get all correspondence for authenticated user", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/correspondence",
-      {
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/correspondence", {
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
     expect(request.headers.get("Authorization")).toBe("Bearer valid-token");
   });
 
@@ -253,20 +250,13 @@ describe("Correspondence API - Templates", () => {
   });
 
   it("should support template variables", async () => {
-    const variables = [
-      "{{tenantName}}",
-      "{{propertyName}}",
-      "{{amount}}",
-      "{{dueDate}}",
-    ];
+    const variables = ["{{tenantName}}", "{{propertyName}}", "{{amount}}", "{{dueDate}}"];
     expect(Array.isArray(variables)).toBe(true);
   });
 
   it("should render template with variables", async () => {
     const template = "Dear {{tenantName}}, your rent is due on {{dueDate}}";
-    const rendered = template
-      .replace("{{tenantName}}", "John")
-      .replace("{{dueDate}}", "Feb 1");
+    const rendered = template.replace("{{tenantName}}", "John").replace("{{dueDate}}", "Feb 1");
     expect(rendered).toContain("John");
   });
 

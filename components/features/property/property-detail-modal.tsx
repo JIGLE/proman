@@ -1,17 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Building2,
-  MapPin,
-  Bed,
-  Bath,
-  Edit,
-  Trash2,
-  Plus,
-  CheckCircle,
-  X,
-} from "lucide-react";
+import { Building2, MapPin, Bed, Bath, Edit, Trash2, Plus, CheckCircle, X } from "lucide-react";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import {
   Dialog,
@@ -116,9 +106,7 @@ export function PropertyDetailModal({
       maintenance: "bg-orange-600/20 text-orange-400 border-orange-600/30",
     };
     return (
-      <Badge className={colors[status]}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </Badge>
+      <Badge className={colors[status]}>{status.charAt(0).toUpperCase() + status.slice(1)}</Badge>
     );
   };
 
@@ -218,9 +206,7 @@ export function PropertyDetailModal({
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Basic Info
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Basic Info</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -228,9 +214,7 @@ export function PropertyDetailModal({
                       <Input
                         id="name"
                         value={formData.name}
-                        onChange={(e) =>
-                          setFormData({ ...formData, name: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       />
                     </div>
                     <div className="space-y-2">
@@ -252,9 +236,7 @@ export function PropertyDetailModal({
 
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Financial
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Financial</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -290,9 +272,7 @@ export function PropertyDetailModal({
                         <SelectContent>
                           <SelectItem value="vacant">Vacant</SelectItem>
                           <SelectItem value="occupied">Occupied</SelectItem>
-                          <SelectItem value="maintenance">
-                            Maintenance
-                          </SelectItem>
+                          <SelectItem value="maintenance">Maintenance</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -303,9 +283,7 @@ export function PropertyDetailModal({
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Address
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Address</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -313,9 +291,7 @@ export function PropertyDetailModal({
                       <Input
                         id="address"
                         value={formData.address}
-                        onChange={(e) =>
-                          setFormData({ ...formData, address: e.target.value })
-                        }
+                        onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -337,9 +313,7 @@ export function PropertyDetailModal({
                         <Input
                           id="city"
                           value={formData.city}
-                          onChange={(e) =>
-                            setFormData({ ...formData, city: e.target.value })
-                          }
+                          onChange={(e) => setFormData({ ...formData, city: e.target.value })}
                         />
                       </div>
                     </div>
@@ -383,9 +357,7 @@ export function PropertyDetailModal({
 
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Physical Details
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Physical Details</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -460,9 +432,7 @@ export function PropertyDetailModal({
               <div className="grid grid-cols-2 gap-6">
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Location
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Location</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-start gap-2">
@@ -482,9 +452,7 @@ export function PropertyDetailModal({
 
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Property Details
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Property Details</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="flex items-center justify-between text-sm">
@@ -497,17 +465,13 @@ export function PropertyDetailModal({
                       <span className="text-zinc-400 flex items-center gap-1">
                         <Bed className="h-4 w-4" /> Bedrooms
                       </span>
-                      <span className="text-[var(--color-foreground)]">
-                        {property.bedrooms}
-                      </span>
+                      <span className="text-[var(--color-foreground)]">{property.bedrooms}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-zinc-400 flex items-center gap-1">
                         <Bath className="h-4 w-4" /> Bathrooms
                       </span>
-                      <span className="text-[var(--color-foreground)]">
-                        {property.bathrooms}
-                      </span>
+                      <span className="text-[var(--color-foreground)]">{property.bathrooms}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm pt-2 border-t border-zinc-700">
                       <span className="text-zinc-400">Monthly Rent</span>
@@ -523,14 +487,10 @@ export function PropertyDetailModal({
               {property.description && (
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">
-                      Description
-                    </CardTitle>
+                    <CardTitle className="text-sm text-zinc-400">Description</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-[var(--color-foreground)]">
-                      {property.description}
-                    </p>
+                    <p className="text-sm text-[var(--color-foreground)]">{property.description}</p>
                   </CardContent>
                 </Card>
               )}
@@ -540,20 +500,14 @@ export function PropertyDetailModal({
                 <Card className="bg-zinc-800 border-zinc-700">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-sm text-zinc-400">
-                        Building Units
-                      </CardTitle>
+                      <CardTitle className="text-sm text-zinc-400">Building Units</CardTitle>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setShowUnits(!showUnits)}
                         className="flex items-center gap-1"
                       >
-                        {showUnits ? (
-                          <X className="h-3 w-3" />
-                        ) : (
-                          <Plus className="h-3 w-3" />
-                        )}
+                        {showUnits ? <X className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
                         {showUnits ? "Hide" : "Show"} Units
                       </Button>
                     </div>
@@ -576,10 +530,7 @@ export function PropertyDetailModal({
                   <Trash2 className="w-4 h-4" />
                   Delete Property
                 </Button>
-                <Button
-                  onClick={() => setIsEditing(true)}
-                  className="flex items-center gap-1"
-                >
+                <Button onClick={() => setIsEditing(true)} className="flex items-center gap-1">
                   <Edit className="w-4 h-4" />
                   Edit Property
                 </Button>

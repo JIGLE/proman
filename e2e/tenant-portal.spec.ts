@@ -55,16 +55,13 @@ test.describe("Tenant Portal API", () => {
   });
 
   test("payment initiation should require valid token", async ({ request }) => {
-    const response = await request.post(
-      "/api/tenant-portal/invalid-token/pay",
-      {
-        data: {
-          invoiceId: "inv_123",
-          amount: 100,
-          paymentMethod: "card",
-        },
+    const response = await request.post("/api/tenant-portal/invalid-token/pay", {
+      data: {
+        invoiceId: "inv_123",
+        amount: 100,
+        paymentMethod: "card",
       },
-    );
+    });
 
     // Should be unauthorized
     expect([401, 403, 404].includes(response.status())).toBeTruthy();

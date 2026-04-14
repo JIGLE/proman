@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { CheckCircle, Star, Trophy, Target } from "lucide-react";
 
 interface AchievementBadgeProps {
-  type: 'occupancy' | 'payments' | 'lease' | 'property';
+  type: "occupancy" | "payments" | "lease" | "property";
   earned: boolean;
   title: string;
   description: string;
@@ -14,17 +14,17 @@ export function AchievementBadge({
   earned,
   title,
   description,
-  className = ""
+  className = "",
 }: AchievementBadgeProps) {
   const getIcon = () => {
     switch (type) {
-      case 'occupancy':
+      case "occupancy":
         return <Target className="h-4 w-4" />;
-      case 'payments':
+      case "payments":
         return <CheckCircle className="h-4 w-4" />;
-      case 'lease':
+      case "lease":
         return <Trophy className="h-4 w-4" />;
-      case 'property':
+      case "property":
         return <Star className="h-4 w-4" />;
       default:
         return <Star className="h-4 w-4" />;
@@ -32,19 +32,23 @@ export function AchievementBadge({
   };
 
   const getColors = () => {
-    if (!earned) return { bg: 'bg-zinc-800', border: 'border-zinc-700', text: 'text-zinc-500' };
+    if (!earned) return { bg: "bg-zinc-800", border: "border-zinc-700", text: "text-zinc-500" };
 
     switch (type) {
-      case 'occupancy':
-        return { bg: 'bg-progress/10', border: 'border-progress/30', text: 'text-progress' };
-      case 'payments':
-        return { bg: 'bg-success/10', border: 'border-success/30', text: 'text-success' };
-      case 'lease':
-        return { bg: 'bg-warning/10', border: 'border-warning/30', text: 'text-warning' };
-      case 'property':
-        return { bg: 'bg-accent-primary/10', border: 'border-accent-primary/30', text: 'text-accent-primary' };
+      case "occupancy":
+        return { bg: "bg-progress/10", border: "border-progress/30", text: "text-progress" };
+      case "payments":
+        return { bg: "bg-success/10", border: "border-success/30", text: "text-success" };
+      case "lease":
+        return { bg: "bg-warning/10", border: "border-warning/30", text: "text-warning" };
+      case "property":
+        return {
+          bg: "bg-accent-primary/10",
+          border: "border-accent-primary/30",
+          text: "text-accent-primary",
+        };
       default:
-        return { bg: 'bg-zinc-800', border: 'border-zinc-700', text: 'text-zinc-500' };
+        return { bg: "bg-zinc-800", border: "border-zinc-700", text: "text-zinc-500" };
     }
   };
 
@@ -92,32 +96,32 @@ export function AchievementGrid({
   totalPayments,
   totalProperties,
   overduePayments,
-  className = ""
+  className = "",
 }: AchievementGridProps) {
   const achievements = [
     {
-      type: 'occupancy' as const,
+      type: "occupancy" as const,
       earned: occupancyRate >= 90,
-      title: 'Full Occupancy',
-      description: '90% or higher occupancy rate',
+      title: "Full Occupancy",
+      description: "90% or higher occupancy rate",
     },
     {
-      type: 'payments' as const,
+      type: "payments" as const,
       earned: overduePayments === 0 && totalPayments > 0,
-      title: 'Perfect Payments',
-      description: 'No overdue payments this month',
+      title: "Perfect Payments",
+      description: "No overdue payments this month",
     },
     {
-      type: 'property' as const,
+      type: "property" as const,
       earned: totalProperties >= 10,
-      title: 'Property Manager',
-      description: 'Manage 10+ properties',
+      title: "Property Manager",
+      description: "Manage 10+ properties",
     },
     {
-      type: 'lease' as const,
+      type: "lease" as const,
       earned: totalProperties > 0 && overduePayments === 0,
-      title: 'Lease Master',
-      description: 'All leases performing well',
+      title: "Lease Master",
+      description: "All leases performing well",
     },
   ];
 

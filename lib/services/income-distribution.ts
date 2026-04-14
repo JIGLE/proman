@@ -6,11 +6,7 @@
  * Includes audit trail for recalculations
  */
 
-import {
-  TaxCalculator,
-  TaxCalculationInput,
-  TaxCalculationResult,
-} from "./tax-calculator";
+import { TaxCalculator, TaxCalculationInput, TaxCalculationResult } from "./tax-calculator";
 import { getPrismaClient } from "@/lib/services/database/database";
 
 export type TaxMode = "pre-tax" | "post-tax";
@@ -82,18 +78,14 @@ export interface DistributionResult {
 function validateOwnerPercentages(owners: OwnerShareConfig[]): void {
   const total = owners.reduce((sum, o) => sum + o.percentage, 0);
   if (Math.abs(total - 100) > 0.01) {
-    throw new Error(
-      `Owner percentages must sum to 100, got ${total.toFixed(2)}`,
-    );
+    throw new Error(`Owner percentages must sum to 100, got ${total.toFixed(2)}`);
   }
 }
 
 /**
  * Calculate income distribution for multiple owners
  */
-export function calculateDistribution(
-  input: DistributionInput,
-): DistributionResult {
+export function calculateDistribution(input: DistributionInput): DistributionResult {
   validateOwnerPercentages(input.owners);
 
   const netIncome = input.totalIncome - input.totalExpenses;
@@ -104,10 +96,7 @@ export function calculateDistribution(
     // Calculate tax for this owner's share
     const taxInput: TaxCalculationInput = {
       country: owner.taxCountry,
-      regime:
-        owner.taxCountry === "Portugal"
-          ? "portugal_rendimentos"
-          : "spain_inmuebles",
+      regime: owner.taxCountry === "Portugal" ? "portugal_rendimentos" : "spain_inmuebles",
       annualRentalIncome: grossShare,
       deductibleExpenses: 0, // Expenses already deducted from total
     };
@@ -300,21 +289,20 @@ export async function getAnnualTaxSummary(
   }
 
   const prisma = getPrismaClient();
-  const shares: ShareWithDistribution[] =
-    await prisma.incomeDistributionShare.findMany({
-      where: {
-        ownerId,
-        distribution: {
-          periodStart: {
-            gte: new Date(`${year}-01-01`),
-            lt: new Date(`${year + 1}-01-01`),
-          },
+  const shares: ShareWithDistribution[] = await prisma.incomeDistributionShare.findMany({
+    where: {
+      ownerId,
+      distribution: {
+        periodStart: {
+          gte: new Date(`${year}-01-01`),
+          lt: new Date(`${year + 1}-01-01`),
         },
       },
-      include: {
-        distribution: true,
-      },
-    });
+    },
+    include: {
+      distribution: true,
+    },
+  });
 
   const distributions = shares.map((s: ShareWithDistribution) => ({
     propertyId: s.distribution.propertyId,
@@ -331,14 +319,8 @@ export async function getAnnualTaxSummary(
       (sum: number, s: ShareWithDistribution) => sum + s.grossShare,
       0,
     ),
-    totalTaxPaid: shares.reduce(
-      (sum: number, s: ShareWithDistribution) => sum + s.taxAmount,
-      0,
-    ),
-    totalNetIncome: shares.reduce(
-      (sum: number, s: ShareWithDistribution) => sum + s.netShare,
-      0,
-    ),
+    totalTaxPaid: shares.reduce((sum: number, s: ShareWithDistribution) => sum + s.taxAmount, 0),
+    totalNetIncome: shares.reduce((sum: number, s: ShareWithDistribution) => sum + s.netShare, 0),
     distributions,
   };
 }

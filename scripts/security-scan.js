@@ -97,10 +97,7 @@ function runNpmAudit() {
     };
 
     // Display summary
-    print(
-      `Total vulnerabilities: ${metadata.vulnerabilities?.total || 0}`,
-      "blue",
-    );
+    print(`Total vulnerabilities: ${metadata.vulnerabilities?.total || 0}`, "blue");
     if (counts.critical > 0) print(`  Critical: ${counts.critical}`, "red");
     if (counts.high > 0) print(`  High: ${counts.high}`, "red");
     if (counts.moderate > 0) print(`  Moderate: ${counts.moderate}`, "yellow");
@@ -133,10 +130,7 @@ function runNpmAudit() {
         const audit = JSON.parse(error.stdout);
         const metadata = audit.metadata || {};
 
-        print(
-          `Found ${metadata.vulnerabilities?.total || 0} vulnerabilities:`,
-          "yellow",
-        );
+        print(`Found ${metadata.vulnerabilities?.total || 0} vulnerabilities:`, "yellow");
         if (metadata.vulnerabilities?.critical)
           print(`  Critical: ${metadata.vulnerabilities.critical}`, "red");
         if (metadata.vulnerabilities?.high)
@@ -176,8 +170,7 @@ function checkForSecrets() {
   const secretPatterns = [
     {
       name: "API Key",
-      pattern:
-        /['"]?[a-zA-Z0-9_-]*api[_-]?key['"]?\s*[:=]\s*['"][a-zA-Z0-9_-]{20,}['"]/gi,
+      pattern: /['"]?[a-zA-Z0-9_-]*api[_-]?key['"]?\s*[:=]\s*['"][a-zA-Z0-9_-]{20,}['"]/gi,
     },
     {
       name: "Password in Code",
@@ -190,8 +183,7 @@ function checkForSecrets() {
     { name: "AWS Key", pattern: /AKIA[0-9A-Z]{16}/gi },
     {
       name: "Generic Secret",
-      pattern:
-        /['"]?[a-zA-Z0-9_-]*secret['"]?\s*[:=]\s*['"][a-zA-Z0-9_-]{10,}['"]/gi,
+      pattern: /['"]?[a-zA-Z0-9_-]*secret['"]?\s*[:=]\s*['"][a-zA-Z0-9_-]{10,}['"]/gi,
     },
   ];
 
@@ -344,12 +336,9 @@ function checkSecurityHeaders() {
   requiredHeaders.forEach(({ name, severity }) => {
     if (!content.includes(name)) {
       print(`  ⚠ Missing: ${name}`, "yellow");
-      addFinding(
-        severity,
-        "Security Headers",
-        `Missing security header: ${name}`,
-        { header: name },
-      );
+      addFinding(severity, "Security Headers", `Missing security header: ${name}`, {
+        header: name,
+      });
       missing++;
     }
   });
@@ -391,10 +380,7 @@ function checkOutdatedDependencies() {
             const latestMajor = parseInt(latest.split(".")[0], 10);
 
             if (latestMajor > currentMajor) {
-              print(
-                `  ⚠ ${pkg}: ${current} → ${latest} (major update available)`,
-                "yellow",
-              );
+              print(`  ⚠ ${pkg}: ${current} → ${latest} (major update available)`, "yellow");
               addFinding(
                 SEVERITY.LOW,
                 "Outdated Dependency",

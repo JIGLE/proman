@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  requireAuth,
-  handleOptions,
-} from "@/lib/services/auth/auth-middleware";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
 
 export async function PUT(
@@ -56,10 +53,7 @@ export async function PUT(
     return NextResponse.json(lease);
   } catch (error) {
     console.error("Error updating lease:", error);
-    return NextResponse.json(
-      { error: "Failed to update lease" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to update lease" }, { status: 500 });
   }
 }
 
@@ -85,10 +79,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Error deleting lease:", error);
-    return NextResponse.json(
-      { error: "Failed to delete lease" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to delete lease" }, { status: 500 });
   }
 }
 

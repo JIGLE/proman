@@ -53,10 +53,7 @@ interface InvoicesViewProps {
   properties: Array<{ id: string; name: string }>;
 }
 
-export function InvoicesView({
-  tenants,
-  properties,
-}: InvoicesViewProps): React.ReactElement {
+export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.ReactElement {
   const { success, error } = useToast();
   const { formatCurrency } = useCurrency();
   const { token: csrfToken } = useCsrf();
@@ -75,9 +72,7 @@ export function InvoicesView({
     tenantId: "",
     propertyId: "",
     amount: 0,
-    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-      .toISOString()
-      .split("T")[0],
+    dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     description: "",
     notes: "",
   });
@@ -103,10 +98,7 @@ export function InvoicesView({
   const fetchInvoices = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await apiFetch<{ data: Invoice[] } | Invoice[]>(
-        "/api/invoices",
-        csrfToken,
-      );
+      const data = await apiFetch<{ data: Invoice[] } | Invoice[]>("/api/invoices", csrfToken);
       setInvoices(Array.isArray(data) ? data : data.data || []);
     } catch (err) {
       console.error("Failed to fetch invoices:", err);
@@ -177,8 +169,7 @@ export function InvoicesView({
       resetForm();
       fetchInvoices();
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "Failed to create invoice";
+      const msg = err instanceof Error ? err.message : "Failed to create invoice";
       error(msg);
     } finally {
       setIsSubmitting(false);
@@ -204,10 +195,7 @@ export function InvoicesView({
       setIsBatchDialogOpen(false);
       fetchInvoices();
     } catch (err) {
-      const msg =
-        err instanceof Error
-          ? err.message
-          : "Failed to generate batch invoices";
+      const msg = err instanceof Error ? err.message : "Failed to generate batch invoices";
       error(msg);
     } finally {
       setIsSubmitting(false);
@@ -234,8 +222,7 @@ export function InvoicesView({
       setIsLateFeeDialogOpen(false);
       fetchInvoices();
     } catch (err) {
-      const msg =
-        err instanceof Error ? err.message : "Failed to apply late fees";
+      const msg = err instanceof Error ? err.message : "Failed to apply late fees";
       error(msg);
     } finally {
       setIsSubmitting(false);
@@ -258,8 +245,7 @@ export function InvoicesView({
     confirmDialog.confirm(
       {
         title: "Delete Invoice",
-        description:
-          "This invoice will be permanently removed. This action cannot be undone.",
+        description: "This invoice will be permanently removed. This action cannot be undone.",
         confirmLabel: "Delete Invoice",
         variant: "destructive",
       },
@@ -276,9 +262,7 @@ export function InvoicesView({
       tenantId: "",
       propertyId: "",
       amount: 0,
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-        .toISOString()
-        .split("T")[0],
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
       description: "",
       notes: "",
     });
@@ -305,11 +289,7 @@ export function InvoicesView({
           </Badge>
         );
       case "cancelled":
-        return (
-          <Badge className="bg-zinc-500/20 text-zinc-400 border-zinc-500/30">
-            Cancelled
-          </Badge>
-        );
+        return <Badge className="bg-zinc-500/20 text-zinc-400 border-zinc-500/30">Cancelled</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -320,9 +300,7 @@ export function InvoicesView({
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
-            Invoices
-          </h2>
+          <h2 className="text-3xl font-bold tracking-tight text-zinc-50">Invoices</h2>
           <p className="text-zinc-400">Manage billing and track payments</p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -338,10 +316,7 @@ export function InvoicesView({
             </SelectContent>
           </Select>
 
-          <Button
-            variant="outline"
-            onClick={() => setIsLateFeeDialogOpen(true)}
-          >
+          <Button variant="outline" onClick={() => setIsLateFeeDialogOpen(true)}>
             <AlertTriangle className="w-4 h-4 mr-2" />
             Apply Late Fees
           </Button>
@@ -361,18 +336,13 @@ export function InvoicesView({
             <DialogContent className="sm:max-w-[500px]">
               <DialogHeader>
                 <DialogTitle>Create Invoice</DialogTitle>
-                <DialogDescription>
-                  Generate a new invoice for a tenant
-                </DialogDescription>
+                <DialogDescription>Generate a new invoice for a tenant</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleCreateInvoice} className="space-y-4">
                 <div className="grid gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="tenantId">Tenant</Label>
-                    <Select
-                      value={formData.tenantId}
-                      onValueChange={handleTenantChange}
-                    >
+                    <Select value={formData.tenantId} onValueChange={handleTenantChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select tenant" />
                       </SelectTrigger>
@@ -390,9 +360,7 @@ export function InvoicesView({
                     <Label htmlFor="propertyId">Property</Label>
                     <Select
                       value={formData.propertyId}
-                      onValueChange={(v) =>
-                        setFormData((prev) => ({ ...prev, propertyId: v }))
-                      }
+                      onValueChange={(v) => setFormData((prev) => ({ ...prev, propertyId: v }))}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select property" />
@@ -473,11 +441,7 @@ export function InvoicesView({
                 </div>
 
                 <div className="flex justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
+                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                     Cancel
                   </Button>
                   <Button type="submit" disabled={isSubmitting}>
@@ -494,52 +458,40 @@ export function InvoicesView({
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="bg-zinc-900/50 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Pending
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-zinc-400">Pending</CardTitle>
             <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-zinc-50">
               {formatCurrency(summary.totalPending)}
             </div>
-            <p className="text-xs text-zinc-500">
-              {summary.countPending} invoices
-            </p>
+            <p className="text-xs text-zinc-500">{summary.countPending} invoices</p>
           </CardContent>
         </Card>
 
         <Card className="bg-zinc-900/50 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Paid
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-zinc-400">Paid</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-zinc-50">
               {formatCurrency(summary.totalPaid)}
             </div>
-            <p className="text-xs text-zinc-500">
-              {summary.countPaid} invoices
-            </p>
+            <p className="text-xs text-zinc-500">{summary.countPaid} invoices</p>
           </CardContent>
         </Card>
 
         <Card className="bg-zinc-900/50 border-zinc-800">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">
-              Overdue
-            </CardTitle>
+            <CardTitle className="text-sm font-medium text-zinc-400">Overdue</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-400">
               {formatCurrency(summary.totalOverdue)}
             </div>
-            <p className="text-xs text-zinc-500">
-              {summary.countOverdue} invoices
-            </p>
+            <p className="text-xs text-zinc-500">{summary.countOverdue} invoices</p>
           </CardContent>
         </Card>
       </div>
@@ -550,24 +502,18 @@ export function InvoicesView({
           <div className="flex items-center justify-between">
             <CardTitle className="text-zinc-50">Invoice List</CardTitle>
             <Button variant="ghost" size="sm" onClick={fetchInvoices}>
-              <RefreshCw
-                className={cn("h-4 w-4", isLoading && "animate-spin")}
-              />
+              <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             </Button>
           </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-zinc-400">
-              Loading invoices...
-            </div>
+            <div className="text-center py-8 text-zinc-400">Loading invoices...</div>
           ) : filteredInvoices.length === 0 ? (
             <div className="text-center py-8 text-zinc-400">
               <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
               <p>No invoices found</p>
-              <p className="text-sm">
-                Create your first invoice to get started
-              </p>
+              <p className="text-sm">Create your first invoice to get started</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -582,15 +528,11 @@ export function InvoicesView({
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-zinc-50">
-                          {invoice.number}
-                        </span>
+                        <span className="font-medium text-zinc-50">{invoice.number}</span>
                         {getStatusBadge(invoice.status)}
                       </div>
                       <div className="text-sm text-zinc-400">
-                        {invoice.tenantName ||
-                          invoice.propertyName ||
-                          "No details"}
+                        {invoice.tenantName || invoice.propertyName || "No details"}
                         {invoice.description && ` • ${invoice.description}`}
                       </div>
                     </div>
@@ -613,11 +555,8 @@ export function InvoicesView({
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        {invoice.status === "pending" ||
-                        invoice.status === "overdue" ? (
-                          <DropdownMenuItem
-                            onClick={() => handleMarkPaid(invoice.id)}
-                          >
+                        {invoice.status === "pending" || invoice.status === "overdue" ? (
+                          <DropdownMenuItem onClick={() => handleMarkPaid(invoice.id)}>
                             <CheckCircle className="h-4 w-4 mr-2" />
                             Mark as Paid
                           </DropdownMenuItem>
@@ -644,9 +583,7 @@ export function InvoicesView({
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>Batch Generate Invoices</DialogTitle>
-            <DialogDescription>
-              Generate rent invoices for all active tenants
-            </DialogDescription>
+            <DialogDescription>Generate rent invoices for all active tenants</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -670,10 +607,7 @@ export function InvoicesView({
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsBatchDialogOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setIsBatchDialogOpen(false)}>
                 Cancel
               </Button>
               <Button onClick={handleBatchGenerate} disabled={isSubmitting}>
@@ -689,9 +623,7 @@ export function InvoicesView({
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
             <DialogTitle>Apply Late Fees</DialogTitle>
-            <DialogDescription>
-              Configure and apply late fees to overdue invoices
-            </DialogDescription>
+            <DialogDescription>Configure and apply late fees to overdue invoices</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
@@ -707,9 +639,7 @@ export function InvoicesView({
                   }))
                 }
               />
-              <p className="text-xs text-zinc-500">
-                Days after due date before late fee applies
-              </p>
+              <p className="text-xs text-zinc-500">Days after due date before late fee applies</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -749,22 +679,14 @@ export function InvoicesView({
             <div className="rounded-lg bg-zinc-800/50 p-3 text-sm">
               <p className="text-zinc-400">
                 This will apply a{" "}
-                <span className="text-zinc-50">
-                  {lateFeeConfig.percentageRate}%
-                </span>{" "}
-                late fee to all pending invoices that are more than{" "}
-                <span className="text-zinc-50">
-                  {lateFeeConfig.gracePeriodDays} days
-                </span>{" "}
-                overdue.
+                <span className="text-zinc-50">{lateFeeConfig.percentageRate}%</span> late fee to
+                all pending invoices that are more than{" "}
+                <span className="text-zinc-50">{lateFeeConfig.gracePeriodDays} days</span> overdue.
               </p>
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsLateFeeDialogOpen(false)}
-              >
+              <Button variant="outline" onClick={() => setIsLateFeeDialogOpen(false)}>
                 Cancel
               </Button>
               <Button onClick={handleApplyLateFees} disabled={isSubmitting}>

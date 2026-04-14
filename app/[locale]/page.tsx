@@ -25,6 +25,7 @@ export default async function LandingPage({ params }: Props) {
   }
 
   const t = await getTranslations("landing");
+  const tFooter = await getTranslations("footer");
 
   const features = [
     {
@@ -112,7 +113,7 @@ export default async function LandingPage({ params }: Props) {
       {/* Footer */}
       <footer className="py-8 px-4 border-t border-zinc-800 mt-auto">
         <div className="max-w-6xl mx-auto text-center text-sm text-zinc-500">
-          &copy; {new Date().getFullYear()} Proman. All rights reserved.
+          {tFooter("copyright", { year: new Date().getFullYear().toString() })}
         </div>
       </footer>
     </div>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
-import { 
+import {
   getAnnualTaxSummary,
   generatePortugalTaxForm,
   generateSpainTaxForm,
@@ -18,10 +18,7 @@ export async function GET(request: NextRequest) {
     const country = searchParams.get("country");
 
     if (!ownerId) {
-      return NextResponse.json(
-        { error: "ownerId is required" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "ownerId is required" }, { status: 400 });
     }
 
     const taxYear = year ? parseInt(year) : new Date().getFullYear() - 1;
@@ -35,15 +32,12 @@ export async function GET(request: NextRequest) {
       taxForm = generateSpainTaxForm(summary);
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       data: summary,
       taxForm,
     });
   } catch (error) {
     console.error("Failed to get tax summary:", error);
-    return NextResponse.json(
-      { error: "Failed to load tax summary" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to load tax summary" }, { status: 500 });
   }
 }

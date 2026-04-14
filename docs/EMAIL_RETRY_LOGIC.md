@@ -10,10 +10,10 @@ The ProMan email service implements robust retry logic with exponential backoff 
 
 ```typescript
 const DEFAULT_RETRY_CONFIG = {
-  maxRetries: 3,              // Maximum retry attempts
-  baseDelayMs: 1000,          // Initial retry delay (1 second)
-  maxDelayMs: 30000,          // Maximum retry delay (30 seconds)
-  backoffMultiplier: 2,       // Exponential multiplier
+  maxRetries: 3, // Maximum retry attempts
+  baseDelayMs: 1000, // Initial retry delay (1 second)
+  maxDelayMs: 30000, // Maximum retry delay (30 seconds)
+  backoffMultiplier: 2, // Exponential multiplier
 };
 ```
 
@@ -42,10 +42,10 @@ capped_delay = min(delay, maxDelayMs)
 ### Example Retry Delays (Default Config)
 
 | Attempt | Base Delay | With Jitter (±10%) | Actual Delay |
-|---------|------------|-------------------|--------------|
-| 1       | 1000ms     | 900-1100ms        | ~1s          |
-| 2       | 2000ms     | 1800-2200ms       | ~2s          |
-| 3       | 4000ms     | 3600-4400ms       | ~4s          |
+| ------- | ---------- | ------------------ | ------------ |
+| 1       | 1000ms     | 900-1100ms         | ~1s          |
+| 2       | 2000ms     | 1800-2200ms        | ~2s          |
+| 3       | 4000ms     | 3600-4400ms        | ~4s          |
 
 **Total retry time**: ~7 seconds before final failure
 
@@ -96,6 +96,7 @@ model EmailLog {
 ### Retry Count Tracking
 
 The `retryCount` field indicates how many attempts were made:
+
 - `0` = First attempt succeeded
 - `1` = Failed once, succeeded on retry
 - `3` = Maximum retries exhausted (final failure)
@@ -107,12 +108,12 @@ The `retryCount` field indicates how many attempts were made:
 ```typescript
 const result = await emailService.sendEmail(
   {
-    to: 'tenant@example.com',
-    from: 'landlord@proman.app',
-    subject: 'Rent Reminder',
-    html: '<p>Your rent is due...</p>',
+    to: "tenant@example.com",
+    from: "landlord@proman.app",
+    subject: "Rent Reminder",
+    html: "<p>Your rent is due...</p>",
   },
-  userId
+  userId,
 );
 
 if (result.success) {
@@ -128,7 +129,7 @@ if (result.success) {
 const result = await emailService.sendEmail(
   emailData,
   userId,
-  { skipRetry: true }  // Only attempt once
+  { skipRetry: true }, // Only attempt once
 );
 ```
 
@@ -137,6 +138,7 @@ const result = await emailService.sendEmail(
 ### SendGrid Rate Limits
 
 SendGrid free tier: **100 emails/day**
+
 - Consider implementing application-level rate limiting
 - Queue emails during peak usage
 - Monitor daily send volume
@@ -150,6 +152,7 @@ SendGrid free tier: **100 emails/day**
 ### Environment Variables
 
 Required:
+
 ```bash
 SENDGRID_API_KEY=SG.xxx...
 FROM_EMAIL=noreply@yourdomain.com
@@ -162,11 +165,13 @@ FROM_EMAIL=noreply@yourdomain.com
 **Symptoms**: Most emails require 2+ attempts
 
 **Causes**:
+
 - Network instability
 - SendGrid API degradation
 - Rate limiting (too many concurrent sends)
 
 **Solutions**:
+
 - Increase `baseDelayMs` to space out retries
 - Implement request queuing
 - Upgrade SendGrid plan for higher rate limits
@@ -176,12 +181,14 @@ FROM_EMAIL=noreply@yourdomain.com
 **Symptoms**: Emails consistently fail after 3 retries
 
 **Causes**:
+
 - Invalid API key (check `SENDGRID_API_KEY`)
 - Invalid email addresses
 - Template not found
 - Permanent SendGrid account issue
 
 **Solutions**:
+
 - Verify SendGrid account status
 - Check API key validity
 - Validate email addresses before sending
@@ -192,13 +199,14 @@ FROM_EMAIL=noreply@yourdomain.com
 ### Unit Test Example
 
 ```typescript
-describe('Email Retry Logic', () => {
-  it('should retry on rate limit errors', async () => {
+describe("Email Retry Logic", () => {
+  it("should retry on rate limit errors", async () => {
     // Mock SendGrid to fail twice, then succeed
-    const sendStub = jest.fn()
-      .mockRejectedValueOnce(new Error('Rate limit exceeded'))
-      .mockRejectedValueOnce(new Error('429'))
-      .mockResolvedValueOnce({ messageId: 'test-123' });
+    const sendStub = jest
+      .fn()
+      .mockRejectedValueOnce(new Error("Rate limit exceeded"))
+      .mockRejectedValueOnce(new Error("429"))
+      .mockResolvedValueOnce({ messageId: "test-123" });
 
     const result = await emailService.sendEmail(emailData, userId);
 
@@ -214,6 +222,7 @@ describe('Email Retry Logic', () => {
 ### Worst Case Scenario
 
 With default config (3 retries):
+
 - **Best case**: 0ms retry delay (first attempt succeeds)
 - **Average case**: ~3.5s additional latency (1-2 retries)
 - **Worst case**: ~7s total retry time before final failure

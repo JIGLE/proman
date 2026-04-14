@@ -80,10 +80,7 @@ export function DashboardWidget({
       )}
     >
       <CardHeader
-        className={cn(
-          "flex flex-row items-start justify-between space-y-0",
-          sizeClasses[size],
-        )}
+        className={cn("flex flex-row items-start justify-between space-y-0", sizeClasses[size])}
       >
         <div className="space-y-1 flex-1">
           <div className="flex items-center gap-2">
@@ -97,9 +94,7 @@ export function DashboardWidget({
             </CardTitle>
           </div>
 
-          {subtitle && (
-            <p className="text-body-small text-zinc-400">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-body-small text-zinc-400">{subtitle}</p>}
 
           {value && (
             <div className="space-y-2">
@@ -184,12 +179,7 @@ export function DashboardWidget({
                 <p className="text-sm text-red-400 mb-2">Error loading data</p>
                 <p className="text-xs text-zinc-500">{error}</p>
                 {onRefresh && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onRefresh}
-                    className="mt-2"
-                  >
+                  <Button variant="outline" size="sm" onClick={onRefresh} className="mt-2">
                     Try Again
                   </Button>
                 )}
@@ -298,12 +288,7 @@ export function ListWidget<T>({
           ))}
 
           {hasMore && onSeeMore && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onSeeMore}
-              className="w-full mt-4"
-            >
+            <Button variant="ghost" size="sm" onClick={onSeeMore} className="w-full mt-4">
               Show {items.length - 5} more items
             </Button>
           )}
@@ -321,12 +306,7 @@ interface DashboardGridProps {
   className?: string;
 }
 
-export function DashboardGrid({
-  children,
-  columns = 3,
-  gap = 6,
-  className,
-}: DashboardGridProps) {
+export function DashboardGrid({ children, columns = 3, gap = 6, className }: DashboardGridProps) {
   const gridClasses = {
     1: "grid-cols-1",
     2: "grid-cols-1 sm:grid-cols-2",
@@ -344,10 +324,7 @@ export function DashboardGrid({
   };
 
   return (
-    <div
-      className={cn("grid", gridClasses[columns], gapClasses[gap], className)}
-      role="region"
-    >
+    <div className={cn("grid", gridClasses[columns], gapClasses[gap], className)} role="region">
       {children}
     </div>
   );

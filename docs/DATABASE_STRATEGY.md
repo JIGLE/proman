@@ -6,13 +6,13 @@ This document covers ProMan's database approach, migration workflow, and backup/
 
 ProMan uses **SQLite** by default for simplicity and self-hosted deployments. For production at scale, consider migrating to PostgreSQL or MySQL.
 
-| Aspect | SQLite | PostgreSQL |
-|--------|--------|------------|
-| Setup complexity | Zero — single file | Requires separate server |
-| Concurrent writes | Limited (single writer) | Full concurrency |
-| Backup | File copy | `pg_dump` or streaming |
-| Scaling | Single node only | Horizontal read replicas |
-| Recommended for | Single-tenant, low traffic | Multi-tenant, production |
+| Aspect            | SQLite                     | PostgreSQL               |
+| ----------------- | -------------------------- | ------------------------ |
+| Setup complexity  | Zero — single file         | Requires separate server |
+| Concurrent writes | Limited (single writer)    | Full concurrency         |
+| Backup            | File copy                  | `pg_dump` or streaming   |
+| Scaling           | Single node only           | Horizontal read replicas |
+| Recommended for   | Single-tenant, low traffic | Multi-tenant, production |
 
 ## Migration Strategy
 
@@ -121,7 +121,7 @@ kind: CronJob
 metadata:
   name: proman-backup
 spec:
-  schedule: "0 2 * * *"  # Daily at 2 AM
+  schedule: "0 2 * * *" # Daily at 2 AM
   jobTemplate:
     spec:
       template:
@@ -171,6 +171,7 @@ kubectl scale deployment proman --replicas=1
 ## Schema Reference
 
 See `prisma/schema.prisma` for the full data model. Key models:
+
 - `User` — authentication and user profiles
 - `Property` — property listings
 - `Tenant` — tenant records

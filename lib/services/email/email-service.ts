@@ -251,10 +251,7 @@ export class EmailService {
         this.isInitialized = true;
       }
     } catch (err) {
-      log.error(
-        "Failed to load SendGrid client dynamically:",
-        err && (err as Error).message,
-      );
+      log.error("Failed to load SendGrid client dynamically:", err && (err as Error).message);
       this.sendGridClient = undefined;
       this.isInitialized = false;
     }
@@ -265,8 +262,7 @@ export class EmailService {
    */
   private calculateBackoffDelay(attempt: number): number {
     const delay =
-      this.retryConfig.baseDelayMs *
-      Math.pow(this.retryConfig.backoffMultiplier, attempt);
+      this.retryConfig.baseDelayMs * Math.pow(this.retryConfig.backoffMultiplier, attempt);
     // Add jitter (10% randomization) to prevent thundering herd
     const jitter = delay * 0.1 * (randomInt(1000) / 1000);
     return Math.min(delay + jitter, this.retryConfig.maxDelayMs);
@@ -392,9 +388,7 @@ export class EmailService {
       };
     }
 
-    const maxAttempts = options?.skipRetry
-      ? 1
-      : this.retryConfig.maxRetries + 1;
+    const maxAttempts = options?.skipRetry ? 1 : this.retryConfig.maxRetries + 1;
     let lastError: string = "";
     let attempts = 0;
 
@@ -406,11 +400,8 @@ export class EmailService {
 
         // Log successful email
         await this.logEmail({
-          to: Array.isArray(emailData.to)
-            ? emailData.to.join(", ")
-            : emailData.to,
-          from:
-            emailData.from || process.env.FROM_EMAIL || "noreply@proman.app",
+          to: Array.isArray(emailData.to) ? emailData.to.join(", ") : emailData.to,
+          from: emailData.from || process.env.FROM_EMAIL || "noreply@proman.app",
           subject: emailData.subject,
           templateId: emailData.templateId,
           status: "sent",
@@ -531,9 +522,7 @@ export class EmailService {
             results.success++;
           } else {
             results.failed++;
-            results.errors.push(
-              `Failed to send to ${emailData.email}: ${result.error}`,
-            );
+            results.errors.push(`Failed to send to ${emailData.email}: ${result.error}`);
           }
         } catch (error: unknown) {
           results.failed++;
@@ -608,10 +597,7 @@ export class EmailService {
   /**
    * Get email delivery statistics (simple)
    */
-  public async getEmailStats(
-    userId: string,
-    days = 30,
-  ): Promise<Record<string, number>> {
+  public async getEmailStats(userId: string, days = 30): Promise<Record<string, number>> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -630,10 +616,7 @@ export class EmailService {
       });
 
       return stats.reduce(
-        (
-          acc: Record<string, number>,
-          stat: { status: string; _count: { id: number } },
-        ) => {
+        (acc: Record<string, number>, stat: { status: string; _count: { id: number } }) => {
           acc[stat.status] = stat._count.id;
           return acc;
         },
@@ -652,10 +635,7 @@ export class EmailService {
   /**
    * Get comprehensive email delivery metrics
    */
-  public async getEmailMetrics(
-    userId: string,
-    days = 30,
-  ): Promise<EmailMetrics> {
+  public async getEmailMetrics(userId: string, days = 30): Promise<EmailMetrics> {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
@@ -687,12 +667,9 @@ export class EmailService {
 
       // Calculate rates (avoid division by zero)
       const totalAttempted = totalSent + totalFailed;
-      const deliveryRate =
-        totalAttempted > 0 ? (totalDelivered / totalAttempted) * 100 : 0;
-      const openRate =
-        totalDelivered > 0 ? (totalOpened / totalDelivered) * 100 : 0;
-      const bounceRate =
-        totalAttempted > 0 ? (totalBounced / totalAttempted) * 100 : 0;
+      const deliveryRate = totalAttempted > 0 ? (totalDelivered / totalAttempted) * 100 : 0;
+      const openRate = totalDelivered > 0 ? (totalOpened / totalDelivered) * 100 : 0;
+      const bounceRate = totalAttempted > 0 ? (totalBounced / totalAttempted) * 100 : 0;
 
       return {
         totalSent,

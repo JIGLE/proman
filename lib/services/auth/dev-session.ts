@@ -25,8 +25,5 @@ export function createDevSession(): Session {
  * Requires both NODE_ENV=development and NEXT_PUBLIC_DEV_AUTH=true.
  */
 export function isDevAuthEnabled(): boolean {
-  return (
-    process.env.NODE_ENV === "development" &&
-    process.env.NEXT_PUBLIC_DEV_AUTH === "true"
-  );
+  return process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_DEV_AUTH === "true";
 }

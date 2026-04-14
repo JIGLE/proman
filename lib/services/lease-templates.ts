@@ -144,9 +144,7 @@ const CSS = `
  * Generate Portuguese Contrato de Arrendamento Urbano
  * Compliant with NRAU (Lei n.º 6/2006) and subsequent amendments
  */
-export function generatePortugueseLease(
-  data: IberianLeaseTemplateData,
-): string {
+export function generatePortugueseLease(data: IberianLeaseTemplateData): string {
   const fd = formatDatePT;
   const fe = formatEuro;
 
@@ -468,10 +466,7 @@ export function generateIberianLease(data: IberianLeaseTemplateData): string {
 function calculateMonths(startStr: string, endStr: string): number {
   const start = new Date(startStr);
   const end = new Date(endStr);
-  return (
-    (end.getFullYear() - start.getFullYear()) * 12 +
-    (end.getMonth() - start.getMonth())
-  );
+  return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
 }
 
 // Helper: number to words in Portuguese (simplified for amounts up to €99,999)
@@ -479,18 +474,7 @@ function numberToWordsPT(amount: number): string {
   const euros = Math.floor(amount);
   const cents = Math.round((amount - euros) * 100);
 
-  const units = [
-    "",
-    "um",
-    "dois",
-    "três",
-    "quatro",
-    "cinco",
-    "seis",
-    "sete",
-    "oito",
-    "nove",
-  ];
+  const units = ["", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];
   const teens = [
     "dez",
     "onze",
@@ -549,8 +533,7 @@ function numberToWordsPT(amount: number): string {
     if (n >= 1000) {
       const thousands = Math.floor(n / 1000);
       const remainder = n % 1000;
-      const tWord =
-        thousands === 1 ? "mil" : `${convertBelow1000(thousands)} mil`;
+      const tWord = thousands === 1 ? "mil" : `${convertBelow1000(thousands)} mil`;
       if (remainder === 0) return tWord;
       return `${tWord} e ${convertBelow1000(remainder)}`;
     }
@@ -569,18 +552,7 @@ function numberToWordsES(amount: number): string {
   const euros = Math.floor(amount);
   const cents = Math.round((amount - euros) * 100);
 
-  const units = [
-    "",
-    "uno",
-    "dos",
-    "tres",
-    "cuatro",
-    "cinco",
-    "seis",
-    "siete",
-    "ocho",
-    "nueve",
-  ];
+  const units = ["", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve"];
   const teens = [
     "diez",
     "once",
@@ -652,8 +624,7 @@ function numberToWordsES(amount: number): string {
     if (n >= 1000) {
       const thousands = Math.floor(n / 1000);
       const remainder = n % 1000;
-      const tWord =
-        thousands === 1 ? "mil" : `${convertBelow1000(thousands)} mil`;
+      const tWord = thousands === 1 ? "mil" : `${convertBelow1000(thousands)} mil`;
       if (remainder === 0) return tWord;
       return `${tWord} ${convertBelow1000(remainder)}`;
     }

@@ -201,10 +201,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {editingUnit ? "Edit Unit" : "Add Unit"}
               </h2>
-              <button
-                onClick={closeModal}
-                className="text-gray-500 hover:text-gray-700"
-              >
+              <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
                 <X className="w-5 h-5" />
               </button>
             </div>
@@ -216,9 +213,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                 <input
                   type="text"
                   value={formData.number}
-                  onChange={(e) =>
-                    setFormData({ ...formData, number: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, number: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="e.g. 1A, 2B"
                 />
@@ -231,9 +226,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                   <input
                     type="number"
                     value={formData.floor}
-                    onChange={(e) =>
-                      setFormData({ ...formData, floor: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, floor: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
@@ -244,9 +237,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                   <input
                     type="number"
                     value={formData.sizeSqM}
-                    onChange={(e) =>
-                      setFormData({ ...formData, sizeSqM: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, sizeSqM: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
@@ -259,9 +250,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                   <input
                     type="number"
                     value={formData.bedrooms}
-                    onChange={(e) =>
-                      setFormData({ ...formData, bedrooms: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, bedrooms: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
@@ -272,9 +261,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                   <input
                     type="number"
                     value={formData.bathrooms}
-                    onChange={(e) =>
-                      setFormData({ ...formData, bathrooms: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, bathrooms: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
@@ -305,9 +292,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                 </label>
                 <textarea
                   value={formData.notes}
-                  onChange={(e) =>
-                    setFormData({ ...formData, notes: e.target.value })
-                  }
+                  onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                   rows={2}
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 />
@@ -377,8 +362,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
 
               <div className="space-y-2 mb-4">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-medium">Property:</span>{" "}
-                  {unit.property.name}
+                  <span className="font-medium">Property:</span> {unit.property.name}
                 </p>
                 {unit.floor !== null && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -399,8 +383,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                 )}
                 {unit.leases.length > 0 && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <span className="font-medium">Tenant:</span>{" "}
-                    {unit.leases[0].tenant.name}
+                    <span className="font-medium">Tenant:</span> {unit.leases[0].tenant.name}
                   </p>
                 )}
               </div>

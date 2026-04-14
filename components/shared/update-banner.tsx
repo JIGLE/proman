@@ -75,26 +75,17 @@ export function UpdateBanner(): React.ReactElement | null {
     <div className="bg-yellow-50 border border-yellow-200 text-yellow-900 p-3 rounded-md mb-4 mx-4">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <strong className="block">
-            New release available: {latest.name || latest.tag_name}
-          </strong>
+          <strong className="block">New release available: {latest.name || latest.tag_name}</strong>
           <p className="text-sm mt-1">
             A new version of ProMan is available.{" "}
-            <a
-              className="underline"
-              href={latest.html_url || "#"}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a className="underline" href={latest.html_url || "#"} target="_blank" rel="noreferrer">
               View release notes
             </a>
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/docs/TRUENAS_DEPLOYMENT.md">
-            <a className="text-sm px-3 py-1 rounded bg-white/60 border">
-              Upgrade docs
-            </a>
+            <a className="text-sm px-3 py-1 rounded bg-white/60 border">Upgrade docs</a>
           </Link>
           <button
             className="text-sm text-muted-foreground"

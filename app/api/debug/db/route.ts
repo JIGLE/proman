@@ -17,10 +17,7 @@ export async function GET(): Promise<NextResponse> {
 
   const dbUrl = process.env.DATABASE_URL || "";
   if (!dbUrl) {
-    return NextResponse.json(
-      { ok: false, error: "DATABASE_URL not set" },
-      { status: 400 },
-    );
+    return NextResponse.json({ ok: false, error: "DATABASE_URL not set" }, { status: 400 });
   }
 
   type DebugDBInfo = {
@@ -121,9 +118,7 @@ export async function GET(): Promise<NextResponse> {
     info.ok = true;
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    info.database.error = info.database.error
-      ? `${info.database.error}; ${message}`
-      : message;
+    info.database.error = info.database.error ? `${info.database.error}; ${message}` : message;
   }
 
   return NextResponse.json(info);

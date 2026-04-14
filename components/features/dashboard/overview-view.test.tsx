@@ -4,8 +4,7 @@ import { OverviewView } from "./overview-view";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
-  NextIntlClientProvider: ({ children }: { children: React.ReactNode }) =>
-    children,
+  NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
 // Mock next-auth

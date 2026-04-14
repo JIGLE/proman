@@ -114,8 +114,7 @@ endobj
 `;
 
   // Object 4: Font
-  const font =
-    "4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n";
+  const font = "4 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n";
 
   // Object 5: Content Stream
   const streamLength = Buffer.byteLength(streamContent, "utf8");
@@ -160,8 +159,7 @@ startxref
 ${offset}
 %%EOF`;
 
-  const pdfContent =
-    header + catalog + pages + page + font + stream + xref + trailer;
+  const pdfContent = header + catalog + pages + page + font + stream + xref + trailer;
 
   return Buffer.from(pdfContent, "utf8");
 }
@@ -187,15 +185,9 @@ export const pdfGenerator = {
       let puppeteer:
         | {
             default?: {
-              launch: (opts: {
-                headless: boolean;
-                args: string[];
-              }) => Promise<{
+              launch: (opts: { headless: boolean; args: string[] }) => Promise<{
                 newPage: () => Promise<{
-                  setContent: (
-                    content: string,
-                    options: { waitUntil: string },
-                  ) => Promise<void>;
+                  setContent: (content: string, options: { waitUntil: string }) => Promise<void>;
                   pdf: (opts: Record<string, unknown>) => Promise<Buffer>;
                 }>;
                 close: () => Promise<void>;
@@ -263,11 +255,7 @@ export const pdfGenerator = {
   /**
    * Generate PDF from plain text
    */
-  async generateFromText(
-    text: string,
-    fileName: string,
-    title?: string,
-  ): Promise<PDFResult> {
+  async generateFromText(text: string, fileName: string, title?: string): Promise<PDFResult> {
     const pdfBuffer = createSimplePDF(text, title || fileName);
 
     return {
@@ -345,10 +333,7 @@ export const documentExport = {
   ): Promise<PDFResult> {
     const { generateIberianLease } = await import("./lease-templates");
     const html = generateIberianLease(leaseData);
-    const prefix =
-      leaseData.country === "PT"
-        ? "Contrato_Arrendamento"
-        : "Contrato_Arrendamiento";
+    const prefix = leaseData.country === "PT" ? "Contrato_Arrendamento" : "Contrato_Arrendamiento";
     const fileName = `${prefix}_${leaseData.tenantName.replace(/\s+/g, "_")}_${leaseData.startDate}`;
 
     return pdfGenerator.generateFromHTML(html, fileName, options);

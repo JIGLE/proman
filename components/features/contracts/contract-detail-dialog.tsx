@@ -1,25 +1,10 @@
 "use client";
 
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Calendar,
-  Building2,
-  User,
-  DollarSign,
-  Edit,
-  Trash2,
-} from "lucide-react";
-import {
-  formatCurrency as formatCurrencyUtil,
-  type Currency,
-} from "@/lib/utils/currency";
+import { Calendar, Building2, User, DollarSign, Edit, Trash2 } from "lucide-react";
+import { formatCurrency as formatCurrencyUtil, type Currency } from "@/lib/utils/currency";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 
@@ -48,8 +33,7 @@ const statusColors: Record<string, string> = {
     "bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]/20",
   expiring:
     "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20",
-  expired:
-    "bg-[var(--color-error-muted)] text-[var(--color-error)] border-[var(--color-error)]/20",
+  expired: "bg-[var(--color-error-muted)] text-[var(--color-error)] border-[var(--color-error)]/20",
   terminated: "bg-gray-500/10 text-gray-600 border-gray-500/20",
 };
 
@@ -76,9 +60,7 @@ export function ContractDetailDialog({
     if (!lease.endDate) return null;
     const end = new Date(lease.endDate);
     const now = new Date();
-    const diff = Math.ceil(
-      (end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
-    );
+    const diff = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     return diff;
   };
 
@@ -94,14 +76,9 @@ export function ContractDetailDialog({
                 <DialogTitle className="text-2xl font-bold text-[var(--color-foreground)]">
                   Contract Details
                 </DialogTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Lease ID: {lease.id}
-                </p>
+                <p className="text-sm text-muted-foreground mt-1">Lease ID: {lease.id}</p>
               </div>
-              <Badge
-                variant="outline"
-                className={`${statusColors[lease.status]} shrink-0`}
-              >
+              <Badge variant="outline" className={`${statusColors[lease.status]} shrink-0`}>
                 {lease.status.charAt(0).toUpperCase() + lease.status.slice(1)}
               </Badge>
             </div>
@@ -119,9 +96,7 @@ export function ContractDetailDialog({
                   {lease.propertyName}
                 </div>
                 {lease.unitName && (
-                  <div className="text-sm text-muted-foreground">
-                    {lease.unitName}
-                  </div>
+                  <div className="text-sm text-muted-foreground">{lease.unitName}</div>
                 )}
               </div>
 
@@ -144,17 +119,13 @@ export function ContractDetailDialog({
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <div className="text-xs text-muted-foreground mb-1">
-                    Start Date
-                  </div>
+                  <div className="text-xs text-muted-foreground mb-1">Start Date</div>
                   <div className="text-base font-medium text-[var(--color-foreground)]">
                     {formatDate(lease.startDate)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-xs text-muted-foreground mb-1">
-                    End Date
-                  </div>
+                  <div className="text-xs text-muted-foreground mb-1">End Date</div>
                   <div className="text-base font-medium text-[var(--color-foreground)]">
                     {lease.endDate ? formatDate(lease.endDate) : "Open-ended"}
                   </div>
@@ -164,9 +135,7 @@ export function ContractDetailDialog({
                 <div className="mt-3 p-3 rounded-lg bg-zinc-800/50">
                   <div className="text-sm">
                     {daysRemaining > 0 ? (
-                      <span className="text-amber-400">
-                        {daysRemaining} days remaining
-                      </span>
+                      <span className="text-amber-400">{daysRemaining} days remaining</span>
                     ) : (
                       <span className="text-red-400">
                         Expired {Math.abs(daysRemaining)} days ago

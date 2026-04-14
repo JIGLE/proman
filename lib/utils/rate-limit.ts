@@ -3,15 +3,15 @@
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const RATE_LIMIT_MAX_REQUESTS = process.env.NODE_ENV === 'development' ? 10000 : 100; // Higher limit for local stress testing
+const RATE_LIMIT_MAX_REQUESTS = process.env.NODE_ENV === "development" ? 10000 : 100; // Higher limit for local stress testing
 
 export function getClientIP(request: Request): string {
-  const forwarded = request.headers.get('x-forwarded-for');
-  const realIP = request.headers.get('x-real-ip');
-  const clientIP = request.headers.get('x-client-ip');
+  const forwarded = request.headers.get("x-forwarded-for");
+  const realIP = request.headers.get("x-real-ip");
+  const clientIP = request.headers.get("x-client-ip");
 
   if (forwarded) {
-    return forwarded.split(',')[0].trim();
+    return forwarded.split(",")[0].trim();
   }
   if (realIP) {
     return realIP;
@@ -21,7 +21,7 @@ export function getClientIP(request: Request): string {
   }
 
   // For development, use a default IP
-  return '127.0.0.1';
+  return "127.0.0.1";
 }
 
 export function isRateLimited(ip: string): boolean {
@@ -48,7 +48,10 @@ export function _resetRateLimitMap(): void {
 }
 
 export function _setRateLimitForIP(ip: string, count: number, ttlMs?: number): void {
-  rateLimitMap.set(ip, { count, resetTime: Date.now() + (typeof ttlMs === 'number' ? ttlMs : RATE_LIMIT_WINDOW) });
+  rateLimitMap.set(ip, {
+    count,
+    resetTime: Date.now() + (typeof ttlMs === "number" ? ttlMs : RATE_LIMIT_WINDOW),
+  });
 }
 
 export function checkRateLimit(request: Request): Response | null {
@@ -57,16 +60,16 @@ export function checkRateLimit(request: Request): Response | null {
   if (isRateLimited(clientIP)) {
     return new Response(
       JSON.stringify({
-        error: 'Too many requests',
-        message: 'Rate limit exceeded. Please try again later.',
+        error: "Too many requests",
+        message: "Rate limit exceeded. Please try again later.",
       }),
       {
         status: 429,
         headers: {
-          'Content-Type': 'application/json',
-          'Retry-After': '60',
+          "Content-Type": "application/json",
+          "Retry-After": "60",
         },
-      }
+      },
     );
   }
 
@@ -74,10 +77,9 @@ export function checkRateLimit(request: Request): Response | null {
 }
 
 // Higher-order function to wrap API handlers with rate limiting
-export function withRateLimit<
-  T extends Request,
-  A extends readonly unknown[] = readonly unknown[]
->(handler: (request: T, ...args: A) => Promise<Response>) {
+export function withRateLimit<T extends Request, A extends readonly unknown[] = readonly unknown[]>(
+  handler: (request: T, ...args: A) => Promise<Response>,
+) {
   return async (request: T, ...args: A): Promise<Response> => {
     const rateLimitResponse = checkRateLimit(request as Request);
     if (rateLimitResponse) return rateLimitResponse;

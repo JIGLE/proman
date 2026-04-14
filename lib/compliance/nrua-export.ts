@@ -22,10 +22,7 @@ export interface NRUAExportData {
   monthlyRent: number;
   contractStartDate: string; // ISO date
   contractEndDate?: string;
-  contractType:
-    | "VIVIENDA_HABITUAL"
-    | "VIVIENDA_TEMPORAL"
-    | "VIVIENDA_TURISTICA";
+  contractType: "VIVIENDA_HABITUAL" | "VIVIENDA_TEMPORAL" | "VIVIENDA_TURISTICA";
   isZonaTensionada: boolean;
   propertyAddress: string;
   propertySurfaceM2?: number;
@@ -134,10 +131,8 @@ export async function exportLeaseToNRUA(
   });
 
   if (!lease) return { success: false, errors: ["Lease not found"] };
-  if (!lease.tenant)
-    return { success: false, errors: ["Tenant not found on lease"] };
-  if (!lease.property)
-    return { success: false, errors: ["Property not found on lease"] };
+  if (!lease.tenant) return { success: false, errors: ["Tenant not found on lease"] };
+  if (!lease.property) return { success: false, errors: ["Property not found on lease"] };
 
   if (!validateNifNie(landlordNif)) errors.push("Invalid landlord NIF/NIE");
   // Tenant NIF is optional — foreign tenants may not have one
@@ -151,15 +146,13 @@ export async function exportLeaseToNRUA(
     tenantNif: "", // populated below
     tenantName: lease.tenant.name,
     propertyReference:
-      ((lease.property as Record<string, unknown>)
-        .cadasterReference as string) || "",
+      ((lease.property as Record<string, unknown>).cadasterReference as string) || "",
     municipalityCode: "",
     monthlyRent: lease.monthlyRent,
     contractStartDate: lease.startDate.toISOString().split("T")[0],
     contractEndDate: lease.endDate.toISOString().split("T")[0],
     contractType: "VIVIENDA_HABITUAL",
-    isZonaTensionada:
-      ((lease as Record<string, unknown>).isZonaTensionada as boolean) || false,
+    isZonaTensionada: ((lease as Record<string, unknown>).isZonaTensionada as boolean) || false,
     propertyAddress: lease.property.address,
   };
 
@@ -206,16 +199,10 @@ export function validateNRUAData(data: NRUAExportData): {
   }
   if (!data.tenantName) errors.push("Tenant name is required");
   if (!data.propertyAddress) errors.push("Property address is required");
-  if (!data.monthlyRent || data.monthlyRent <= 0)
-    errors.push("Monthly rent must be positive");
+  if (!data.monthlyRent || data.monthlyRent <= 0) errors.push("Monthly rent must be positive");
   if (!data.contractStartDate) errors.push("Contract start date is required");
-  if (
-    data.propertyReference &&
-    !validateCadasterReference(data.propertyReference)
-  ) {
-    errors.push(
-      "Invalid referencia catastral format (must be 14 or 20 alphanumeric characters)",
-    );
+  if (data.propertyReference && !validateCadasterReference(data.propertyReference)) {
+    errors.push("Invalid referencia catastral format (must be 14 or 20 alphanumeric characters)");
   }
 
   return { valid: errors.length === 0, errors };

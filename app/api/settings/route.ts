@@ -7,12 +7,12 @@ export async function GET(request: NextRequest) {
   try {
     const authResult = await requireAuth(request);
     if (authResult instanceof Response) return authResult;
-    
+
     const { userId } = authResult;
 
     // In mock mode, return default settings
     if (isMockMode) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         data: {
           userId,
           theme: "system",
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
           emailNotifications: true,
           taxReminderNotifications: true,
           distributionNotifications: true,
-        }
+        },
       });
     }
 
@@ -34,10 +34,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data: settings });
   } catch (error) {
     console.error("Failed to get settings:", error);
-    return NextResponse.json(
-      { error: "Failed to load settings" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to load settings" }, { status: 500 });
   }
 }
 
@@ -45,14 +42,14 @@ export async function POST(request: NextRequest) {
   try {
     const authResult = await requireAuth(request);
     if (authResult instanceof Response) return authResult;
-    
+
     const { userId } = authResult;
 
     const data = await request.json();
 
     // In mock mode, just echo back the settings
     if (isMockMode) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         data: {
           userId,
           theme: data.theme || "system",
@@ -62,7 +59,7 @@ export async function POST(request: NextRequest) {
           emailNotifications: data.emailNotifications ?? true,
           taxReminderNotifications: data.taxReminderNotifications ?? true,
           distributionNotifications: data.distributionNotifications ?? true,
-        }
+        },
       });
     }
 
@@ -93,9 +90,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ data: settings });
   } catch (error) {
     console.error("Failed to save settings:", error);
-    return NextResponse.json(
-      { error: "Failed to save settings" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Failed to save settings" }, { status: 500 });
   }
 }

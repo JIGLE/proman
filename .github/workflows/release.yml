@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version_type:
-        description: 'Version bump type'
+        description: "Version bump type"
         required: true
         type: choice
         options:
@@ -12,11 +12,11 @@ on:
           - minor
           - major
       release_notes:
-        description: 'Release notes (optional - will generate from commits if empty)'
+        description: "Release notes (optional - will generate from commits if empty)"
         required: false
-        default: ''
+        default: ""
       prerelease:
-        description: 'Mark as pre-release'
+        description: "Mark as pre-release"
         required: false
         type: boolean
         default: false
@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      ENABLE_RELEASE_NOTIFY: 'false'
+      ENABLE_RELEASE_NOTIFY: "false"
     outputs:
       version: ${{ steps.version.outputs.new_version }}
       tag: ${{ steps.version.outputs.tag }}
@@ -53,8 +53,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '22'
-          cache: 'npm'
+          node-version: "22"
+          cache: "npm"
 
       - name: Configure Git
         run: |
@@ -66,15 +66,15 @@ jobs:
         run: |
           CURRENT_VERSION=$(node -p "require('./package.json').version")
           echo "Current version: $CURRENT_VERSION"
-          
+
           IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
-          
+
           case "${{ github.event.inputs.version_type }}" in
             major) NEW_VERSION="$((MAJOR + 1)).0.0" ;;
             minor) NEW_VERSION="${MAJOR}.$((MINOR + 1)).0" ;;
             patch) NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))" ;;
           esac
-          
+
           echo "New version: $NEW_VERSION"
           echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
           echo "tag=v${NEW_VERSION}" >> $GITHUB_OUTPUT
@@ -129,27 +129,27 @@ jobs:
         id: changelog
         run: |
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
+
           if [ -z "$LATEST_TAG" ]; then
             COMMITS=$(git log --oneline --pretty=format:"- %s" | head -20)
           else
             COMMITS=$(git log ${LATEST_TAG}..HEAD --oneline --pretty=format:"- %s")
           fi
-          
+
           if [ -n "${{ github.event.inputs.release_notes }}" ]; then
             NOTES="${{ github.event.inputs.release_notes }}"
           else
             NOTES="$COMMITS"
           fi
-          
+
           cat > release_notes.md << EOF
           ## What's Changed in v${{ steps.version.outputs.new_version }}
-          
+
           $NOTES
-          
+
           **Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG:-HEAD~10}...v${{ steps.version.outputs.new_version }}
           EOF
-          
+
           cat release_notes.md
 
       - name: Package Helm chart
@@ -254,7 +254,7 @@ jobs:
             echo "Webhook secrets not configured, skipping notification"
             exit 0
           fi
-          
+
           PAYLOAD='{"tag_name": "v${{ steps.version.outputs.new_version }}", "name":"v${{ steps.version.outputs.new_version }}", "html_url": "https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.new_version }}" }'
           # Compute HMAC-SHA256 signature (hex) and send as X-Hub-Signature-256 header
           SIG_HEX=$(printf '%s' "$PAYLOAD" | openssl dgst -sha256 -hmac "$UPDATE_WEBHOOK_SECRET" -hex | sed 's/^.* //') || true

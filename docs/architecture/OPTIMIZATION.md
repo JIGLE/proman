@@ -13,11 +13,13 @@ ProMan has been optimized to achieve smaller Docker images while maintaining ful
 **Change**: Upgraded from `node:20-bullseye-slim` to `node:22-alpine`
 
 **Impact**:
+
 - **Size Reduction**: ~15-20 MB (2-3%)
 - **Security**: Smaller attack surface with Alpine's minimal package set
 - **Performance**: Alpine is faster to pull and start
 
 **Details**:
+
 ```dockerfile
 # Before
 FROM node:20-bullseye-slim AS builder
@@ -30,6 +32,7 @@ RUN apk add --no-cache python3 make g++ pkgconfig
 ```
 
 **Why this works**:
+
 - Alpine is 87MB vs Bullseye-slim's ~190MB
 - Includes only essential packages (musl libc instead of glibc)
 - Still supports native modules like better-sqlite3 with proper build tools
@@ -39,16 +42,19 @@ RUN apk add --no-cache python3 make g++ pkgconfig
 **Change**: Removed `recharts` package (confirmed zero usage in codebase)
 
 **Impact**:
+
 - **Size Reduction**: ~5-6 MB (0.7%)
 - **Removed Dependencies**: 36 transitive packages
 - **Build Speed**: Slightly faster npm ci
 
 **Details**:
+
 ```bash
 npm uninstall recharts
 ```
 
 **Verification**:
+
 - Grep search: Zero imports of recharts in any component
 - No charts functionality currently implemented
 - Safe to remove without breaking changes
@@ -58,6 +64,7 @@ npm uninstall recharts
 **Tool**: `@next/bundle-analyzer` (dev dependency)
 
 **How to Use**:
+
 ```bash
 # Analyze bundle and open interactive report
 ANALYZE=true npm run build
@@ -68,17 +75,17 @@ npm run build
 ```
 
 **Implementation**:
+
 ```typescript
 // next.config.ts
 webpack: (config, { isServer }) => {
-  if (process.env.ANALYZE === 'true') {
-    const BundleAnalyzerPlugin = require('@next/bundle-analyzer')
-      .BundleAnalyzerPlugin;
+  if (process.env.ANALYZE === "true") {
+    const BundleAnalyzerPlugin = require("@next/bundle-analyzer").BundleAnalyzerPlugin;
     config.plugins?.push(
       new BundleAnalyzerPlugin({
         enabled: true,
         openAnalyzer: !isServer,
-      })
+      }),
     );
   }
   return config;
@@ -86,6 +93,7 @@ webpack: (config, { isServer }) => {
 ```
 
 **What it shows**:
+
 - Package sizes in the final bundle
 - Imported modules and their dependencies
 - Opportunities for code splitting
@@ -96,6 +104,7 @@ webpack: (config, { isServer }) => {
 **Change**: Enhanced GitHub Actions with GHA cache backend
 
 **Configuration**:
+
 ```yaml
 # .github/workflows/release-publish.yml
 cache-from: type=gha
@@ -103,6 +112,7 @@ cache-to: type=gha,mode=max
 ```
 
 **Impact**:
+
 - **Build Speed**: 30-50% faster on subsequent builds
 - **Layer Reuse**: Dependencies layer cached across builds
 - **Cost Savings**: Less bandwidth and compute on GitHub Actions
@@ -110,6 +120,7 @@ cache-to: type=gha,mode=max
 ### 5. Next.js Package Import Optimization (✅ Already Enabled)
 
 **Configuration**:
+
 ```typescript
 // next.config.ts
 experimental: {
@@ -118,6 +129,7 @@ experimental: {
 ```
 
 **Impact**:
+
 - **Size Reduction**: ~2-3% for UI packages
 - **How it works**: Tree-shakes icon and component imports automatically
 - **Removed**: recharts from list (no longer needed)
@@ -125,6 +137,7 @@ experimental: {
 ## Current Image Size Breakdown
 
 **Estimated Final Image Size**:
+
 ```
 Base Image (node:22-alpine):      ~87 MB
 node_modules directory:           ~450 MB (after optimizations)
@@ -157,23 +170,27 @@ Compressed (gzip):                ~140-150 MB
 ### Phase 2: Code & Bundle Optimization (Medium Effort)
 
 #### 1. Enable Next.js Image Optimization
+
 - **Effort**: 2-3 hours
 - **Impact**: 5-10% smaller asset payloads
 - **Trade-off**: Adds image processing overhead in container
 - **Action**: Enable `images.unoptimized: false` and configure image formats
 
 #### 2. Code Splitting Analysis
+
 - **Effort**: 2-3 hours
 - **Impact**: 3-5% smaller initial bundle
 - **Action**: Use bundle analyzer to identify large chunks, implement dynamic imports
 
 #### 3. Evaluate Framer Motion Alternatives
+
 - **Current Size**: 70KB gzipped
 - **Usage**: Heavy (5+ components for animations)
 - **Alternatives**: Tailwind CSS animations, CSS transitions
 - **Action**: Only if aggressive optimization needed
 
 #### 4. Dependency Audit
+
 - **Effort**: 4 hours
 - **Impact**: 2-5% per major dependency removed
 - **Tools**: npm audit, npm ls, bundlesize
@@ -182,21 +199,24 @@ Compressed (gzip):                ~140-150 MB
 ### Phase 3: Advanced Refactoring (Complex)
 
 #### 1. Kubernetes-Native Prisma Migrations
+
 - **Effort**: 6-8 hours
 - **Impact**: -15-20 MB (2-3% per image)
 - **How**: Run Prisma migrations in separate init container
-- **Benefits**: 
+- **Benefits**:
   - Main app container smaller
   - Clearer separation of concerns
   - Better migration error handling
 - **Drawback**: More complex Kubernetes manifest
 
 #### 2. Multi-Stage Build Optimization
+
 - **Effort**: 4-6 hours
 - **Impact**: Cache layer reuse, faster builds
 - **Action**: Separate builder → dependencies → app stages
 
 #### 3. Node Modules Pruning
+
 - **Effort**: 8-10 hours
 - **Impact**: -20-30 MB (3-5%)
 - **How**: Remove dev dependencies from production, use npm prune
@@ -213,6 +233,7 @@ GitHub Actions workflow now generates image build summary:
 ```
 
 Includes:
+
 - Version and registry location
 - Supported platforms (amd64, arm64)
 - Optimization details applied
@@ -248,12 +269,12 @@ cat .next/analyze/client.html | grep "Total size"
 
 ### Build Time Improvements
 
-| Stage | Before | After | Improvement |
-|-------|--------|-------|-------------|
-| Dependency Installation | ~45s | ~40s | -5s (11%) |
-| Next.js Build | ~35s | ~33s | -2s (6%) |
-| Docker Build | ~120s | ~60s | -60s (50%) with caching |
-| Total CI Time | ~3.5min | ~2min | -45% with cache hit |
+| Stage                   | Before  | After | Improvement             |
+| ----------------------- | ------- | ----- | ----------------------- |
+| Dependency Installation | ~45s    | ~40s  | -5s (11%)               |
+| Next.js Build           | ~35s    | ~33s  | -2s (6%)                |
+| Docker Build            | ~120s   | ~60s  | -60s (50%) with caching |
+| Total CI Time           | ~3.5min | ~2min | -45% with cache hit     |
 
 ### Runtime Impact
 
@@ -323,6 +344,7 @@ Previous version remains available in GHCR registry.
 ## Support & Questions
 
 For optimization-related questions:
+
 1. Review bundle analyzer output locally
 2. Check GitHub Actions build logs
 3. Compare image sizes with previous releases

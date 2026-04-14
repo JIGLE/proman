@@ -5,6 +5,7 @@ This document provides guidance for adding Storybook to the ProMan project for c
 ## What is Storybook?
 
 Storybook is an open-source tool for building UI components in isolation. It enables:
+
 - Component documentation with live examples
 - Interactive component playground
 - Visual regression testing
@@ -20,6 +21,7 @@ npx storybook@latest init
 ```
 
 This will:
+
 1. Detect Next.js and configure automatically
 2. Add required dependencies
 3. Create `.storybook` configuration directory
@@ -32,47 +34,47 @@ This will:
 Ensure `.storybook/main.ts` includes:
 
 ```typescript
-import type { StorybookConfig } from '@storybook/nextjs'
-import path from 'path'
+import type { StorybookConfig } from "@storybook/nextjs";
+import path from "path";
 
 const config: StorybookConfig = {
   stories: [
-    '../components/**/*.stories.@(js|jsx|ts|tsx)',
-    '../stories/**/*.stories.@(js|jsx|ts|tsx)',
+    "../components/**/*.stories.@(js|jsx|ts|tsx)",
+    "../stories/**/*.stories.@(js|jsx|ts|tsx)",
   ],
   addons: [
-    '@storybook/addon-links',
-    '@storybook/addon-essentials',
-    '@storybook/addon-interactions',
-    '@storybook/addon-a11y', // Accessibility testing
+    "@storybook/addon-links",
+    "@storybook/addon-essentials",
+    "@storybook/addon-interactions",
+    "@storybook/addon-a11y", // Accessibility testing
   ],
   framework: {
-    name: '@storybook/nextjs',
+    name: "@storybook/nextjs",
     options: {},
   },
   docs: {
-    autodocs: 'tag',
+    autodocs: "tag",
   },
   webpackFinal: async (config) => {
     // Add path aliases to match tsconfig.json
-    config.resolve = config.resolve || {}
+    config.resolve = config.resolve || {};
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': path.resolve(__dirname, '../'),
-      '@/ui': path.resolve(__dirname, '../components/ui'),
-      '@/features': path.resolve(__dirname, '../components/features'),
-      '@/shared': path.resolve(__dirname, '../components/shared'),
-      '@/layouts': path.resolve(__dirname, '../components/layouts'),
-      '@/services': path.resolve(__dirname, '../lib/services'),
-      '@/hooks': path.resolve(__dirname, '../lib/hooks'),
-      '@/utils': path.resolve(__dirname, '../lib/utils'),
-      '@/schemas': path.resolve(__dirname, '../lib/schemas'),
-    }
-    return config
+      "@": path.resolve(__dirname, "../"),
+      "@/ui": path.resolve(__dirname, "../components/ui"),
+      "@/features": path.resolve(__dirname, "../components/features"),
+      "@/shared": path.resolve(__dirname, "../components/shared"),
+      "@/layouts": path.resolve(__dirname, "../components/layouts"),
+      "@/services": path.resolve(__dirname, "../lib/services"),
+      "@/hooks": path.resolve(__dirname, "../lib/hooks"),
+      "@/utils": path.resolve(__dirname, "../lib/utils"),
+      "@/schemas": path.resolve(__dirname, "../lib/schemas"),
+    };
+    return config;
   },
-}
+};
 
-export default config
+export default config;
 ```
 
 ### 2. Preview Configuration
@@ -116,58 +118,58 @@ export default preview
 Create `components/ui/button.stories.tsx`:
 
 ```typescript
-import type { Meta, StoryObj } from '@storybook/react'
-import { Button } from './button'
+import type { Meta, StoryObj } from "@storybook/react";
+import { Button } from "./button";
 
 const meta = {
-  title: 'UI/Button',
+  title: "UI/Button",
   component: Button,
   parameters: {
-    layout: 'centered',
+    layout: "centered",
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     variant: {
-      control: 'select',
-      options: ['default', 'destructive', 'outline', 'secondary', 'ghost', 'link'],
+      control: "select",
+      options: ["default", "destructive", "outline", "secondary", "ghost", "link"],
     },
     size: {
-      control: 'select',
-      options: ['default', 'sm', 'lg', 'icon'],
+      control: "select",
+      options: ["default", "sm", "lg", "icon"],
     },
   },
-} satisfies Meta<typeof Button>
+} satisfies Meta<typeof Button>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 export const Primary: Story = {
   args: {
-    children: 'Button',
-    variant: 'default',
+    children: "Button",
+    variant: "default",
   },
-}
+};
 
 export const Secondary: Story = {
   args: {
-    children: 'Button',
-    variant: 'secondary',
+    children: "Button",
+    variant: "secondary",
   },
-}
+};
 
 export const Destructive: Story = {
   args: {
-    children: 'Delete',
-    variant: 'destructive',
+    children: "Delete",
+    variant: "destructive",
   },
-}
+};
 
 export const Outline: Story = {
   args: {
-    children: 'Button',
-    variant: 'outline',
+    children: "Button",
+    variant: "outline",
   },
-}
+};
 ```
 
 ### Feature Component Story
@@ -175,39 +177,39 @@ export const Outline: Story = {
 Create `components/features/property/property-list.stories.tsx`:
 
 ```typescript
-import type { Meta, StoryObj } from '@storybook/react'
-import { PropertiesView } from './property-list'
+import type { Meta, StoryObj } from "@storybook/react";
+import { PropertiesView } from "./property-list";
 
 const meta = {
-  title: 'Features/Property/PropertiesView',
+  title: "Features/Property/PropertiesView",
   component: PropertiesView,
   parameters: {
-    layout: 'fullscreen',
+    layout: "fullscreen",
   },
-  tags: ['autodocs'],
-} satisfies Meta<typeof PropertiesView>
+  tags: ["autodocs"],
+} satisfies Meta<typeof PropertiesView>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 export const Empty: Story = {
   args: {},
-}
+};
 
 export const WithData: Story = {
   args: {},
   parameters: {
     mockData: [
       {
-        id: '1',
-        name: 'Sunset Apartments',
-        address: '123 Main St',
+        id: "1",
+        name: "Sunset Apartments",
+        address: "123 Main St",
         units: 10,
         occupied: 8,
       },
     ],
   },
-}
+};
 ```
 
 ## Story Organization
@@ -263,11 +265,11 @@ Use JSDoc comments for component props:
 ```typescript
 interface ButtonProps {
   /** The button variant style */
-  variant?: 'default' | 'destructive' | 'outline'
+  variant?: "default" | "destructive" | "outline";
   /** The button size */
-  size?: 'default' | 'sm' | 'lg'
+  size?: "default" | "sm" | "lg";
   /** Click handler */
-  onClick?: () => void
+  onClick?: () => void;
 }
 ```
 
@@ -307,23 +309,25 @@ export const WithIcon: Story = {
 Use MSW (Mock Service Worker) for API mocking:
 
 ```typescript
-import { rest } from 'msw'
+import { rest } from "msw";
 
 export const WithApiData: Story = {
   parameters: {
     msw: {
       handlers: [
-        rest.get('/api/properties', (req, res, ctx) => {
+        rest.get("/api/properties", (req, res, ctx) => {
           return res(
             ctx.json({
-              data: [/* mock data */],
-            })
-          )
+              data: [
+                /* mock data */
+              ],
+            }),
+          );
         }),
       ],
     },
   },
-}
+};
 ```
 
 ### 4. Accessibility Testing
@@ -333,14 +337,14 @@ Include accessibility checks:
 ```typescript
 export const AccessibleButton: Story = {
   args: {
-    children: 'Accessible Button',
-    'aria-label': 'Submit form',
+    children: "Accessible Button",
+    "aria-label": "Submit form",
   },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    await expect(canvas.getByRole('button')).toBeInTheDocument()
+    const canvas = within(canvasElement);
+    await expect(canvas.getByRole("button")).toBeInTheDocument();
   },
-}
+};
 ```
 
 ## CI/CD Integration
@@ -364,7 +368,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v3
         with:
-          node-version: '20'
+          node-version: "20"
       - run: npm ci
       - run: npm run build-storybook
       - uses: actions/upload-artifact@v3
@@ -386,6 +390,7 @@ npx chromatic --project-token=<your-token>
 Deploy Storybook as static site:
 
 ### Vercel
+
 ```bash
 # Build command
 npm run build-storybook
@@ -395,6 +400,7 @@ storybook-static
 ```
 
 ### Netlify
+
 ```toml
 [build]
   command = "npm run build-storybook"
@@ -403,45 +409,45 @@ storybook-static
 
 ## Component Documentation Template
 
-```typescript
-import type { Meta, StoryObj } from '@storybook/react'
-import { ComponentName } from './component-name'
+````typescript
+import type { Meta, StoryObj } from "@storybook/react";
+import { ComponentName } from "./component-name";
 
 /**
  * ComponentName provides [description].
- * 
+ *
  * ## Usage
- * 
+ *
  * ```tsx
  * <ComponentName prop="value" />
  * ```
- * 
+ *
  * ## Features
  * - Feature 1
  * - Feature 2
  */
 const meta = {
-  title: 'Category/ComponentName',
+  title: "Category/ComponentName",
   component: ComponentName,
   parameters: {
-    layout: 'centered',
+    layout: "centered",
     docs: {
       description: {
-        component: 'Detailed component description...',
+        component: "Detailed component description...",
       },
     },
   },
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   argTypes: {
     // Define prop types and controls
   },
-} satisfies Meta<typeof ComponentName>
+} satisfies Meta<typeof ComponentName>;
 
-export default meta
-type Story = StoryObj<typeof meta>
+export default meta;
+type Story = StoryObj<typeof meta>;
 
 // Define your stories...
-```
+````
 
 ## Further Resources
 

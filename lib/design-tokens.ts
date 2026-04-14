@@ -94,7 +94,5 @@ export function getPropertyTypeColor(type: string): string {
 
 /** Return the chart color for an expense category. */
 export function getExpenseCategoryColor(category: string): string {
-  return (
-    tokens.chartExpenseCategory[category] || tokens.chartExpenseCategory.other
-  );
+  return tokens.chartExpenseCategory[category] || tokens.chartExpenseCategory.other;
 }

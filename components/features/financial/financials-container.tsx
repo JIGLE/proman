@@ -9,14 +9,23 @@ import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { FinancialsView } from "./financials-view";
 import { PaymentMatrixView } from "./payment-matrix-view";
 import { ReceiptsView, ReceiptsViewRef } from "./receipts-view";
-import { TrendingUp, TrendingDown, DollarSign, LayoutGrid, Receipt, Grid3X3 } from "lucide-react";
+import { ReportsView } from "@/components/features/report/reports-view";
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  LayoutGrid,
+  Receipt,
+  Grid3X3,
+  FileBarChart,
+} from "lucide-react";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { ExportButton } from "@/components/ui/export-button";
 
 /**
  * Finance Container - Unified view for money flow management
- * 
+ *
  * Information Architecture:
  * - Purpose: Money flow management (income, expenses, invoicing)
  * - Belongs here: Recording transactions, invoice generation, payment status, expense categorization
@@ -24,7 +33,7 @@ import { ExportButton } from "@/components/ui/export-button";
  * - Links to: People (tenant payments), Assets (property expenses), Maintenance (maintenance costs)
  */
 export function FinancialsContainer() {
-  const [activeTab, setActiveTab] = useTabPersistence('finance', 'overview');
+  const [activeTab, setActiveTab] = useTabPersistence("finance", "overview");
   const { state } = useApp();
   const { receipts, expenses } = state;
   const { formatCurrency } = useCurrency();
@@ -33,11 +42,10 @@ export function FinancialsContainer() {
   // Calculate summary metrics for the financial summary bar
   const metrics = useMemo(() => {
     const totalRevenue = receipts
-      .filter(r => r.type === 'rent' || r.type === 'deposit')
+      .filter((r) => r.type === "rent" || r.type === "deposit")
       .reduce((sum, r) => sum + r.amount, 0);
-    
-    const totalExpenses = expenses
-      .reduce((sum, e) => sum + e.amount, 0);
+
+    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
 
     const netIncome = totalRevenue - totalExpenses;
 
@@ -49,9 +57,7 @@ export function FinancialsContainer() {
       {/* Page Header - Consistent with page type inventory */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-foreground)]">
-            Finance
-          </h1>
+          <h1 className="text-2xl font-bold text-[var(--color-foreground)]">Finance</h1>
           <p className="text-sm text-[var(--color-muted-foreground)]">
             Track income, expenses, and cash flow
           </p>
@@ -61,10 +67,10 @@ export function FinancialsContainer() {
             data={receipts}
             filename="finance-export"
             columns={[
-              { key: 'type', label: 'Type' },
-              { key: 'amount', label: 'Amount' },
-              { key: 'date', label: 'Date' },
-              { key: 'description', label: 'Description' }
+              { key: "type", label: "Type" },
+              { key: "amount", label: "Amount" },
+              { key: "date", label: "Date" },
+              { key: "description", label: "Description" },
             ]}
           />
         </div>
@@ -78,7 +84,9 @@ export function FinancialsContainer() {
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-[var(--color-foreground)]">{formatCurrency(metrics.totalRevenue)}</div>
+            <div className="text-2xl font-bold text-[var(--color-foreground)]">
+              {formatCurrency(metrics.totalRevenue)}
+            </div>
             <p className="text-xs text-[var(--color-muted-foreground)]">All income sources</p>
           </CardContent>
         </Card>
@@ -89,7 +97,9 @@ export function FinancialsContainer() {
             <TrendingDown className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-[var(--color-foreground)]">{formatCurrency(metrics.totalExpenses)}</div>
+            <div className="text-2xl font-bold text-[var(--color-foreground)]">
+              {formatCurrency(metrics.totalExpenses)}
+            </div>
             <p className="text-xs text-[var(--color-muted-foreground)]">All expenses</p>
           </CardContent>
         </Card>
@@ -100,11 +110,13 @@ export function FinancialsContainer() {
             <DollarSign className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${metrics.netIncome >= 0 ? 'text-green-500' : 'text-red-500'}`}>
+            <div
+              className={`text-2xl font-bold ${metrics.netIncome >= 0 ? "text-green-500" : "text-red-500"}`}
+            >
               {formatCurrency(metrics.netIncome)}
             </div>
             <p className="text-xs text-[var(--color-muted-foreground)]">
-              {metrics.netIncome >= 0 ? 'Profit' : 'Loss'}
+              {metrics.netIncome >= 0 ? "Profit" : "Loss"}
             </p>
           </CardContent>
         </Card>
@@ -113,7 +125,7 @@ export function FinancialsContainer() {
       {/* Tabs Navigation - Aligned with Finance sub-sections per IA */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center gap-2">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
+          <TabsList className="grid w-full max-w-xl grid-cols-4">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <LayoutGrid className="h-4 w-4" />
               <span className="hidden sm:inline">Overview</span>
@@ -126,9 +138,13 @@ export function FinancialsContainer() {
               <Grid3X3 className="h-4 w-4" />
               <span className="hidden sm:inline">Matrix</span>
             </TabsTrigger>
+            <TabsTrigger value="reports" className="flex items-center gap-2">
+              <FileBarChart className="h-4 w-4" />
+              <span className="hidden sm:inline">Reports</span>
+            </TabsTrigger>
           </TabsList>
-          {activeTab === 'receipts' && (
-            <Button 
+          {activeTab === "receipts" && (
+            <Button
               onClick={() => receiptsViewRef.current?.openDialog()}
               className="flex items-center gap-2"
             >
@@ -148,6 +164,10 @@ export function FinancialsContainer() {
 
         <TabsContent value="payments" className="mt-0">
           <PaymentMatrixView />
+        </TabsContent>
+
+        <TabsContent value="reports" className="mt-0">
+          <ReportsView />
         </TabsContent>
       </Tabs>
     </div>

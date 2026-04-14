@@ -30,11 +30,11 @@ export interface PaginatedResponse<T> {
 export function parsePaginationParams(
   searchParams: URLSearchParams,
   defaultLimit = 50,
-  maxLimit = 100
+  maxLimit = 100,
 ): PaginationParams {
-  const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
-  const requestedLimit = parseInt(searchParams.get('limit') || String(defaultLimit), 10);
-  
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const requestedLimit = parseInt(searchParams.get("limit") || String(defaultLimit), 10);
+
   // Clamp limit between 1 and maxLimit
   const limit = Math.max(1, Math.min(maxLimit, requestedLimit));
   const skip = (page - 1) * limit;
@@ -51,7 +51,7 @@ export function parsePaginationParams(
 export function createPaginatedResponse<T>(
   data: T[],
   total: number,
-  params: PaginationParams
+  params: PaginationParams,
 ): PaginatedResponse<T> {
   const totalPages = Math.ceil(total / params.limit);
 
@@ -74,7 +74,7 @@ export function createPaginatedResponse<T>(
 export function getPaginationFromRequest(
   request: Request,
   defaultLimit = 50,
-  maxLimit = 100
+  maxLimit = 100,
 ): PaginationParams {
   const url = new URL(request.url);
   return parsePaginationParams(url.searchParams, defaultLimit, maxLimit);

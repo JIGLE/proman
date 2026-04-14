@@ -1,16 +1,24 @@
-import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { propertyService } from '@/lib/services/database';
-import { sanitizeForDatabase, sanitizeNumber } from '@/lib/utils/sanitize';
-import { withRateLimit } from '@/lib/utils/rate-limit';
-import { propertySchema } from '@/lib/schemas/property.schema';
-import { getPaginationFromRequest, createPaginatedResponse } from '@/lib/utils/pagination';
-import { getPrismaClient } from '@/lib/services/database/database';
-import { ZodError } from 'zod';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { propertyService } from "@/lib/services/database";
+import { sanitizeForDatabase, sanitizeNumber } from "@/lib/utils/sanitize";
+import { withRateLimit } from "@/lib/utils/rate-limit";
+import { propertySchema } from "@/lib/schemas/property.schema";
+import { getPaginationFromRequest, createPaginatedResponse } from "@/lib/utils/pagination";
+import { getPrismaClient } from "@/lib/services/database/database";
+import { ZodError } from "zod";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 
 // GET /api/properties - Get all properties for the authenticated user (with pagination)
 async function handleGet(request: NextRequest): Promise<Response> {
+  const demo = handleDemoGet(request, "properties");
+  if (demo.response) return demo.response;
+
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -19,7 +27,7 @@ async function handleGet(request: NextRequest): Promise<Response> {
   try {
     // Check if pagination is requested
     const url = new URL(request.url);
-    const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
+    const usePagination = url.searchParams.has("page") || url.searchParams.has("limit");
 
     if (usePagination) {
       // Paginated response
@@ -31,7 +39,7 @@ async function handleGet(request: NextRequest): Promise<Response> {
           where: { userId },
           skip: pagination.skip,
           take: pagination.limit,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
         }),
         prisma.property.count({ where: { userId } }),
       ]);
@@ -49,6 +57,9 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
 // POST /api/properties - Create a new property
 async function handlePost(request: NextRequest): Promise<Response> {
+  const demo = handleDemoMutation(request, "properties");
+  if (demo.response) return demo.response;
+
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -59,14 +70,18 @@ async function handlePost(request: NextRequest): Promise<Response> {
 
     // Validate with shared schema
     const validatedData = propertySchema.parse(body);
-    
+
     // Sanitize input
     const sanitizedData = {
       ...validatedData,
       name: sanitizeForDatabase(validatedData.name),
       address: sanitizeForDatabase(validatedData.address),
-      description: validatedData.description ? sanitizeForDatabase(validatedData.description) : undefined,
-      streetAddress: validatedData.streetAddress ? sanitizeForDatabase(validatedData.streetAddress) : undefined,
+      description: validatedData.description
+        ? sanitizeForDatabase(validatedData.description)
+        : undefined,
+      streetAddress: validatedData.streetAddress
+        ? sanitizeForDatabase(validatedData.streetAddress)
+        : undefined,
       city: validatedData.city ? sanitizeForDatabase(validatedData.city) : undefined,
       bedrooms: sanitizeNumber(validatedData.bedrooms, 0, 0, 20),
       bathrooms: sanitizeNumber(validatedData.bathrooms, 0, 0, 20),
@@ -78,9 +93,9 @@ async function handlePost(request: NextRequest): Promise<Response> {
   } catch (error) {
     if (error instanceof ZodError) {
       return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
-        request
+        request,
       );
     }
     return createErrorResponse(error as Error, 500, request);

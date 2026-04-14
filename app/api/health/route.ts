@@ -45,9 +45,7 @@ export async function GET(): Promise<NextResponse> {
     const dbLatency = Date.now() - dbStart;
 
     // Check email service configuration
-    const emailConfigured = !!(
-      process.env.SENDGRID_API_KEY && process.env.FROM_EMAIL
-    );
+    const emailConfigured = !!(process.env.SENDGRID_API_KEY && process.env.FROM_EMAIL);
 
     return NextResponse.json(
       {

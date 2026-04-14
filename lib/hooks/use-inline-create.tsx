@@ -1,20 +1,26 @@
 "use client";
 
-import * as React from 'react';
-import { useState, useCallback, createContext, useContext } from 'react';
-import { ZodSchema, ZodError } from 'zod';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import * as React from "react";
+import { useState, useCallback, createContext, useContext } from "react";
+import { ZodSchema, ZodError } from "zod";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 /**
  * Inline Entity Creation Hook
- * 
+ *
  * Implements Rule 6 from UI/UX plan:
  * - Max 2 levels of inline creation
  * - Never navigate away from parent form
  * - Entity created inline, automatically selected
- * 
+ *
  * Usage:
  * ```tsx
  * const inlineCreate = useInlineCreate<TenantFormData, Tenant>({
@@ -26,7 +32,7 @@ import { Plus } from 'lucide-react';
  *   dialogTitle: "Create Tenant",
  *   dialogDescription: "Add a new tenant without leaving the current form",
  * });
- * 
+ *
  * // In your form:
  * <Select value={selectedTenant}>
  *   <SelectTrigger>
@@ -39,7 +45,7 @@ import { Plus } from 'lucide-react';
  *     </Button>
  *   </SelectContent>
  * </Select>
- * 
+ *
  * {inlineCreate.dialog}
  * ```
  */
@@ -113,60 +119,61 @@ export function useInlineCreate<TForm extends Record<string, unknown>, TEntity>(
   }, []);
 
   const updateFormData = useCallback((updates: Partial<TForm>) => {
-    setFormData(prev => ({ ...prev, ...updates }));
+    setFormData((prev) => ({ ...prev, ...updates }));
     // Clear errors for updated fields
-    setFormErrors(prev => {
+    setFormErrors((prev) => {
       const newErrors = { ...prev };
-      Object.keys(updates).forEach(key => {
+      Object.keys(updates).forEach((key) => {
         delete newErrors[key as keyof TForm];
       });
       return newErrors;
     });
   }, []);
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    try {
-      setIsSubmitting(true);
-      
-      // Validate
-      const validatedData = await schema.parseAsync(formData);
-      
-      // Submit
-      const entity = await onSubmit(validatedData);
-      
-      // Store and notify
-      setCreatedEntity(entity);
-      onCreated?.(entity);
-      
-      // Close dialog
-      close();
-    } catch (err) {
-      if (err instanceof ZodError) {
-        const errors: Partial<Record<keyof TForm, string>> = {};
-        err.issues.forEach((issue) => {
-          const field = issue.path[0] as keyof TForm;
-          if (field) {
-            errors[field] = issue.message;
-          }
-        });
-        setFormErrors(errors);
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault();
+
+      try {
+        setIsSubmitting(true);
+
+        // Validate
+        const validatedData = await schema.parseAsync(formData);
+
+        // Submit
+        const entity = await onSubmit(validatedData);
+
+        // Store and notify
+        setCreatedEntity(entity);
+        onCreated?.(entity);
+
+        // Close dialog
+        close();
+      } catch (err) {
+        if (err instanceof ZodError) {
+          const errors: Partial<Record<keyof TForm, string>> = {};
+          err.issues.forEach((issue) => {
+            const field = issue.path[0] as keyof TForm;
+            if (field) {
+              errors[field] = issue.message;
+            }
+          });
+          setFormErrors(errors);
+        }
+        console.error("Inline create error:", err);
+      } finally {
+        setIsSubmitting(false);
       }
-      console.error('Inline create error:', err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [schema, formData, onSubmit, onCreated, close]);
+    },
+    [schema, formData, onSubmit, onCreated, close],
+  );
 
   const dialog = (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{dialogTitle}</DialogTitle>
-          {dialogDescription && (
-            <DialogDescription>{dialogDescription}</DialogDescription>
-          )}
+          {dialogDescription && <DialogDescription>{dialogDescription}</DialogDescription>}
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           {renderForm({
@@ -180,7 +187,7 @@ export function useInlineCreate<TForm extends Record<string, unknown>, TEntity>(
               Cancel
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? 'Creating...' : 'Create'}
+              {isSubmitting ? "Creating..." : "Create"}
             </Button>
           </div>
         </form>

@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     // Log this export action for GDPR compliance
     await logAudit({
       userId: session.user.id,
-      action: 'EXPORT_PERSONAL_DATA',
+      action: "EXPORT_PERSONAL_DATA",
       details: { exportedAt: new Date().toISOString() },
     });
 

@@ -175,13 +175,10 @@ describe("SendGrid Webhook Handler", () => {
     it("should reject missing signature headers", async () => {
       process.env.SENDGRID_WEBHOOK_PUBLIC_KEY = "test-public-key";
 
-      const request = new NextRequest(
-        "http://localhost/api/webhooks/sendgrid",
-        {
-          method: "POST",
-          body: JSON.stringify([]),
-        },
-      );
+      const request = new NextRequest("http://localhost/api/webhooks/sendgrid", {
+        method: "POST",
+        body: JSON.stringify([]),
+      });
 
       const response = await POST(request);
 

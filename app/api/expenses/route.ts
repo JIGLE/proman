@@ -1,14 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  requireAuth,
-  handleOptions,
-} from "@/lib/services/auth/auth-middleware";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { expenseSchema } from "@/lib/utils/validation";
 import { isMockMode } from "@/lib/config/data-mode";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
+    const demo = handleDemoGet(request, "expenses");
+    if (demo.response) return demo.response;
+
     // In mock mode, return empty array
     if (isMockMode) {
       return NextResponse.json([]);
@@ -40,15 +41,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(transformedExpenses);
   } catch (error) {
     console.error("Error fetching expenses:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch expenses" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch expenses" }, { status: 500 });
   }
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
+    const demo = handleDemoMutation(request, "expenses");
+    if (demo.response) return demo.response;
+
     const authResult = await requireAuth(request);
     if (authResult instanceof Response) return authResult as NextResponse;
 
@@ -79,10 +80,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     console.error("Error creating expense:", error);
-    return NextResponse.json(
-      { error: "Failed to create expense" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to create expense" }, { status: 500 });
   }
 }
 

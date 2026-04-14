@@ -1,15 +1,7 @@
 "use client";
 
 import { useState, forwardRef, useImperativeHandle } from "react";
-import {
-  FileText,
-  Download,
-  Calendar,
-  Plus,
-  Edit,
-  Trash2,
-  DollarSign,
-} from "lucide-react";
+import { FileText, Download, Calendar, Plus, Edit, Trash2, DollarSign } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "@/components/ui/button";
@@ -33,6 +25,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { useApp } from "@/lib/contexts/app-context";
 import { Receipt } from "@/lib/types";
 import { receiptSchema, ReceiptFormData } from "@/lib/utils/validation";
@@ -105,8 +98,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
       confirmDialog.confirm(
         {
           title: "Delete Receipt",
-          description:
-            "This receipt will be permanently removed. This action cannot be undone.",
+          description: "This receipt will be permanently removed. This action cannot be undone.",
           confirmLabel: "Delete Receipt",
           variant: "destructive",
         },
@@ -130,11 +122,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
         // Receipt details
         doc.setFontSize(12);
         doc.text(`Receipt #: ${receipt.id}`, 20, 40);
-        doc.text(
-          `Date: ${new Date(receipt.date).toLocaleDateString()}`,
-          20,
-          50,
-        );
+        doc.text(`Date: ${new Date(receipt.date).toLocaleDateString()}`, 20, 50);
 
         // Separator
         doc.setLineWidth(0.5);
@@ -152,11 +140,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
         doc.text("PAYMENT DETAILS", 20, 115);
         doc.setFontSize(11);
         doc.text(`Amount: ${formatCurrency(receipt.amount)}`, 20, 125);
-        doc.text(
-          `Type: ${receipt.type.charAt(0).toUpperCase() + receipt.type.slice(1)}`,
-          20,
-          135,
-        );
+        doc.text(`Type: ${receipt.type.charAt(0).toUpperCase() + receipt.type.slice(1)}`, 20, 135);
         if (receipt.description) {
           doc.text(`Description: ${receipt.description}`, 20, 145);
         }
@@ -183,11 +167,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
         maintenance: "bg-orange-600/20 text-orange-400",
         other: "bg-gray-600/20 text-gray-400",
       };
-      return (
-        <Badge className={colors[type]}>
-          {type.charAt(0).toUpperCase() + type.slice(1)}
-        </Badge>
-      );
+      return <Badge className={colors[type]}>{type.charAt(0).toUpperCase() + type.slice(1)}</Badge>;
     };
 
     return (
@@ -205,15 +185,9 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                   Manage payment receipts and generate PDFs
                 </p>
               </div>
-              <Dialog
-                open={dialog.isOpen}
-                onOpenChange={(open) => !open && dialog.closeDialog()}
-              >
+              <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
                 <DialogTrigger asChild>
-                  <Button
-                    onClick={dialog.openDialog}
-                    className="flex items-center gap-2"
-                  >
+                  <Button onClick={dialog.openDialog} className="flex items-center gap-2">
                     <Plus className="w-4 h-4" />
                     Add Receipt
                   </Button>
@@ -235,14 +209,10 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                         <Label htmlFor="tenant">Tenant</Label>
                         <Select
                           value={dialog.formData.tenantId}
-                          onValueChange={(value) =>
-                            dialog.updateFormData({ tenantId: value })
-                          }
+                          onValueChange={(value) => dialog.updateFormData({ tenantId: value })}
                         >
                           <SelectTrigger
-                            className={
-                              dialog.formErrors.tenantId ? "border-red-500" : ""
-                            }
+                            className={dialog.formErrors.tenantId ? "border-red-500" : ""}
                           >
                             <SelectValue placeholder="Select tenant" />
                           </SelectTrigger>
@@ -255,25 +225,17 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                           </SelectContent>
                         </Select>
                         {dialog.formErrors.tenantId && (
-                          <p className="text-sm text-red-500">
-                            {dialog.formErrors.tenantId}
-                          </p>
+                          <p className="text-sm text-red-500">{dialog.formErrors.tenantId}</p>
                         )}
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="property">Property</Label>
                         <Select
                           value={dialog.formData.propertyId}
-                          onValueChange={(value) =>
-                            dialog.updateFormData({ propertyId: value })
-                          }
+                          onValueChange={(value) => dialog.updateFormData({ propertyId: value })}
                         >
                           <SelectTrigger
-                            className={
-                              dialog.formErrors.propertyId
-                                ? "border-red-500"
-                                : ""
-                            }
+                            className={dialog.formErrors.propertyId ? "border-red-500" : ""}
                           >
                             <SelectValue placeholder="Select property" />
                           </SelectTrigger>
@@ -286,9 +248,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                           </SelectContent>
                         </Select>
                         {dialog.formErrors.propertyId && (
-                          <p className="text-sm text-red-500">
-                            {dialog.formErrors.propertyId}
-                          </p>
+                          <p className="text-sm text-red-500">{dialog.formErrors.propertyId}</p>
                         )}
                       </div>
                     </div>
@@ -307,15 +267,11 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                               amount: parseFloat(e.target.value) || 0,
                             })
                           }
-                          className={
-                            dialog.formErrors.amount ? "border-red-500" : ""
-                          }
+                          className={dialog.formErrors.amount ? "border-red-500" : ""}
                           required
                         />
                         {dialog.formErrors.amount && (
-                          <p className="text-sm text-red-500">
-                            {dialog.formErrors.amount}
-                          </p>
+                          <p className="text-sm text-red-500">{dialog.formErrors.amount}</p>
                         )}
                       </div>
                       <div className="space-y-2">
@@ -324,18 +280,12 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                           id="date"
                           type="date"
                           value={dialog.formData.date}
-                          onChange={(e) =>
-                            dialog.updateFormData({ date: e.target.value })
-                          }
-                          className={
-                            dialog.formErrors.date ? "border-red-500" : ""
-                          }
+                          onChange={(e) => dialog.updateFormData({ date: e.target.value })}
+                          className={dialog.formErrors.date ? "border-red-500" : ""}
                           required
                         />
                         {dialog.formErrors.date && (
-                          <p className="text-sm text-red-500">
-                            {dialog.formErrors.date}
-                          </p>
+                          <p className="text-sm text-red-500">{dialog.formErrors.date}</p>
                         )}
                       </div>
                       <div className="space-y-2">
@@ -346,58 +296,38 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                             dialog.updateFormData({ type: value })
                           }
                         >
-                          <SelectTrigger
-                            className={
-                              dialog.formErrors.type ? "border-red-500" : ""
-                            }
-                          >
+                          <SelectTrigger className={dialog.formErrors.type ? "border-red-500" : ""}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="rent">Rent</SelectItem>
                             <SelectItem value="deposit">Deposit</SelectItem>
-                            <SelectItem value="maintenance">
-                              Maintenance
-                            </SelectItem>
+                            <SelectItem value="maintenance">Maintenance</SelectItem>
                             <SelectItem value="other">Other</SelectItem>
                           </SelectContent>
                         </Select>
                         {dialog.formErrors.type && (
-                          <p className="text-sm text-red-500">
-                            {dialog.formErrors.type}
-                          </p>
+                          <p className="text-sm text-red-500">{dialog.formErrors.type}</p>
                         )}
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="description">
-                        Description (Optional)
-                      </Label>
+                      <Label htmlFor="description">Description (Optional)</Label>
                       <Textarea
                         id="description"
                         value={dialog.formData.description}
-                        onChange={(e) =>
-                          dialog.updateFormData({ description: e.target.value })
-                        }
-                        className={
-                          dialog.formErrors.description ? "border-red-500" : ""
-                        }
+                        onChange={(e) => dialog.updateFormData({ description: e.target.value })}
+                        className={dialog.formErrors.description ? "border-red-500" : ""}
                         rows={3}
                       />
                       {dialog.formErrors.description && (
-                        <p className="text-sm text-red-500">
-                          {dialog.formErrors.description}
-                        </p>
+                        <p className="text-sm text-red-500">{dialog.formErrors.description}</p>
                       )}
                     </div>
 
                     <div className="flex justify-end gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={dialog.closeDialog}
-                      >
+                      <Button type="button" variant="outline" onClick={dialog.closeDialog}>
                         Cancel
                       </Button>
                       <Button type="submit" disabled={dialog.isSubmitting}>
@@ -415,30 +345,10 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
 
             <div className="grid gap-4">
               {receipts.length === 0 ? (
-                <Card className="bg-zinc-900 border-zinc-800">
-                  <CardContent className="p-8 text-center">
-                    <FileText className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
-                      No receipts yet
-                    </h3>
-                    <p className="text-zinc-400 mb-4">
-                      Get started by creating your first payment receipt
-                    </p>
-                    <Button
-                      onClick={dialog.openDialog}
-                      className="flex items-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Create Your First Receipt
-                    </Button>
-                  </CardContent>
-                </Card>
+                <EmptyStateIllustration type="receipts" onAction={dialog.openDialog} />
               ) : (
                 receipts.map((receipt) => (
-                  <Card
-                    key={receipt.id}
-                    className="bg-zinc-900 border-zinc-800"
-                  >
+                  <Card key={receipt.id} className="bg-zinc-900 border-zinc-800">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -458,9 +368,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                             <div className="flex items-center gap-4 text-sm text-zinc-400 mt-1">
                               <div className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
-                                <span>
-                                  {new Date(receipt.date).toLocaleDateString()}
-                                </span>
+                                <span>{new Date(receipt.date).toLocaleDateString()}</span>
                               </div>
                               <div className="flex items-center gap-1">
                                 <DollarSign className="w-4 h-4" />
@@ -478,9 +386,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                             className="flex items-center gap-1"
                           >
                             <Download className="w-3 h-3" />
-                            {generatingPdf === receipt.id
-                              ? "Generating..."
-                              : "PDF"}
+                            {generatingPdf === receipt.id ? "Generating..." : "PDF"}
                           </Button>
                           <Button
                             variant="outline"
@@ -503,9 +409,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                         </div>
                       </div>
                       {receipt.description && (
-                        <p className="text-sm text-zinc-400 mt-4">
-                          {receipt.description}
-                        </p>
+                        <p className="text-sm text-zinc-400 mt-4">{receipt.description}</p>
                       )}
                     </CardContent>
                   </Card>

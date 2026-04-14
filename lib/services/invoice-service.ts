@@ -1,4 +1,4 @@
-import { getPrismaClient } from './database/database';
+import { getPrismaClient } from "./database/database";
 
 // Invoice number format: INV-{YEAR}-{SEQUENCE}
 // Example: INV-2026-00001
@@ -10,7 +10,7 @@ export interface Invoice {
   amount: number;
   dueDate: string;
   paidDate?: string;
-  status: 'pending' | 'paid' | 'overdue' | 'cancelled';
+  status: "pending" | "paid" | "overdue" | "cancelled";
   description?: string;
   metadata?: InvoiceMetadata;
   propertyId?: string;
@@ -62,9 +62,9 @@ export interface BatchInvoiceResult {
 export interface LateFeeConfig {
   enabled: boolean;
   gracePeriodDays: number;
-  percentageRate: number;  // e.g., 5 for 5%
-  flatFee?: number;        // Optional flat fee in addition to percentage
-  maxPercentage?: number;  // Cap on total late fees
+  percentageRate: number; // e.g., 5 for 5%
+  flatFee?: number; // Optional flat fee in addition to percentage
+  maxPercentage?: number; // Cap on total late fees
 }
 
 const DEFAULT_LATE_FEE_CONFIG: LateFeeConfig = {
@@ -83,7 +83,7 @@ async function generateInvoiceNumber(_userId: string): Promise<string> {
   const prisma = getPrismaClient();
   const currentYear = new Date().getFullYear();
   const yearPrefix = `INV-${currentYear}-`;
-  
+
   // Find the highest invoice number for this year
   const lastInvoice = await prisma.invoice.findFirst({
     where: {
@@ -92,23 +92,23 @@ async function generateInvoiceNumber(_userId: string): Promise<string> {
       },
     },
     orderBy: {
-      number: 'desc',
+      number: "desc",
     },
   });
-  
+
   let nextSequence = 1;
-  
+
   if (lastInvoice) {
     const lastNumber = lastInvoice.number;
-    const sequencePart = lastNumber.replace(yearPrefix, '');
+    const sequencePart = lastNumber.replace(yearPrefix, "");
     const parsedSequence = parseInt(sequencePart, 10);
     if (!isNaN(parsedSequence)) {
       nextSequence = parsedSequence + 1;
     }
   }
-  
+
   // Pad to 5 digits
-  const paddedSequence = nextSequence.toString().padStart(5, '0');
+  const paddedSequence = nextSequence.toString().padStart(5, "0");
   return `${yearPrefix}${paddedSequence}`;
 }
 
@@ -118,39 +118,39 @@ async function generateInvoiceNumber(_userId: string): Promise<string> {
 export function calculateLateFee(
   originalAmount: number,
   dueDate: Date,
-  config: LateFeeConfig = DEFAULT_LATE_FEE_CONFIG
+  config: LateFeeConfig = DEFAULT_LATE_FEE_CONFIG,
 ): { lateFee: number; daysOverdue: number } {
   if (!config.enabled) {
     return { lateFee: 0, daysOverdue: 0 };
   }
-  
+
   const now = new Date();
   const due = new Date(dueDate);
   const timeDiff = now.getTime() - due.getTime();
   const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-  
+
   // Check if within grace period
   if (daysDiff <= config.gracePeriodDays) {
     return { lateFee: 0, daysOverdue: 0 };
   }
-  
+
   const daysOverdue = daysDiff - config.gracePeriodDays;
-  
+
   // Calculate percentage-based late fee
   let percentageFee = originalAmount * (config.percentageRate / 100);
-  
+
   // Add flat fee if configured
   let totalFee = percentageFee + (config.flatFee || 0);
-  
+
   // Apply maximum cap if configured
   if (config.maxPercentage) {
     const maxFee = originalAmount * (config.maxPercentage / 100);
     totalFee = Math.min(totalFee, maxFee);
   }
-  
+
   // Round to 2 decimal places
   totalFee = Math.round(totalFee * 100) / 100;
-  
+
   return { lateFee: totalFee, daysOverdue };
 }
 
@@ -165,28 +165,24 @@ export const invoiceService = {
     const prisma = getPrismaClient();
     const invoices = await prisma.invoice.findMany({
       where: {
-        OR: [
-          { property: { userId } },
-          { tenant: { userId } },
-          { owner: { userId } },
-        ],
+        OR: [{ property: { userId } }, { tenant: { userId } }, { owner: { userId } }],
       },
       include: {
         property: { select: { name: true } },
         tenant: { select: { name: true } },
         owner: { select: { name: true } },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
-    
-    return invoices.map(inv => ({
+
+    return invoices.map((inv) => ({
       id: inv.id,
       userId,
       number: inv.number,
       amount: inv.amount,
-      dueDate: inv.dueDate.toISOString().split('T')[0],
-      paidDate: inv.paidDate?.toISOString().split('T')[0],
-      status: inv.status as Invoice['status'],
+      dueDate: inv.dueDate.toISOString().split("T")[0],
+      paidDate: inv.paidDate?.toISOString().split("T")[0],
+      status: inv.status as Invoice["status"],
       description: inv.description || undefined,
       metadata: inv.metadata ? JSON.parse(inv.metadata) : undefined,
       propertyId: inv.propertyId || undefined,
@@ -208,11 +204,7 @@ export const invoiceService = {
     const invoice = await prisma.invoice.findFirst({
       where: {
         id,
-        OR: [
-          { property: { userId } },
-          { tenant: { userId } },
-          { owner: { userId } },
-        ],
+        OR: [{ property: { userId } }, { tenant: { userId } }, { owner: { userId } }],
       },
       include: {
         property: { select: { name: true } },
@@ -220,17 +212,17 @@ export const invoiceService = {
         owner: { select: { name: true } },
       },
     });
-    
+
     if (!invoice) return null;
-    
+
     return {
       id: invoice.id,
       userId,
       number: invoice.number,
       amount: invoice.amount,
-      dueDate: invoice.dueDate.toISOString().split('T')[0],
-      paidDate: invoice.paidDate?.toISOString().split('T')[0],
-      status: invoice.status as Invoice['status'],
+      dueDate: invoice.dueDate.toISOString().split("T")[0],
+      paidDate: invoice.paidDate?.toISOString().split("T")[0],
+      status: invoice.status as Invoice["status"],
       description: invoice.description || undefined,
       metadata: invoice.metadata ? JSON.parse(invoice.metadata) : undefined,
       propertyId: invoice.propertyId || undefined,
@@ -250,19 +242,19 @@ export const invoiceService = {
   async create(userId: string, data: CreateInvoiceData): Promise<Invoice> {
     const prisma = getPrismaClient();
     const invoiceNumber = await generateInvoiceNumber(userId);
-    
+
     const metadata: InvoiceMetadata = {
       lineItems: data.lineItems,
       notes: data.notes,
     };
-    
+
     const invoice = await prisma.invoice.create({
       data: {
         userId,
         number: invoiceNumber,
         amount: data.amount,
         dueDate: new Date(data.dueDate),
-        status: 'pending',
+        status: "pending",
         description: data.description || null,
         metadata: JSON.stringify(metadata),
         propertyId: data.propertyId || null,
@@ -275,14 +267,14 @@ export const invoiceService = {
         owner: { select: { name: true } },
       },
     });
-    
+
     return {
       id: invoice.id,
       userId,
       number: invoice.number,
       amount: invoice.amount,
-      dueDate: invoice.dueDate.toISOString().split('T')[0],
-      status: invoice.status as Invoice['status'],
+      dueDate: invoice.dueDate.toISOString().split("T")[0],
+      status: invoice.status as Invoice["status"],
       description: invoice.description || undefined,
       metadata,
       propertyId: invoice.propertyId || undefined,
@@ -302,18 +294,18 @@ export const invoiceService = {
   async update(
     userId: string,
     id: string,
-    data: Partial<CreateInvoiceData> & { status?: Invoice['status']; paidDate?: string }
+    data: Partial<CreateInvoiceData> & { status?: Invoice["status"]; paidDate?: string },
   ): Promise<Invoice> {
     const prisma = getPrismaClient();
-    
+
     // Verify ownership
     const existing = await this.getById(userId, id);
     if (!existing) {
-      throw new Error('Invoice not found');
+      throw new Error("Invoice not found");
     }
-    
+
     const updateData: Record<string, unknown> = {};
-    
+
     if (data.amount !== undefined) updateData.amount = data.amount;
     if (data.dueDate) updateData.dueDate = new Date(data.dueDate);
     if (data.description !== undefined) updateData.description = data.description;
@@ -322,7 +314,7 @@ export const invoiceService = {
     if (data.propertyId !== undefined) updateData.propertyId = data.propertyId;
     if (data.tenantId !== undefined) updateData.tenantId = data.tenantId;
     if (data.ownerId !== undefined) updateData.ownerId = data.ownerId;
-    
+
     if (data.lineItems || data.notes) {
       const existingMetadata = existing.metadata || {};
       updateData.metadata = JSON.stringify({
@@ -331,7 +323,7 @@ export const invoiceService = {
         notes: data.notes || existingMetadata.notes,
       });
     }
-    
+
     const invoice = await prisma.invoice.update({
       where: { id },
       data: updateData,
@@ -341,15 +333,15 @@ export const invoiceService = {
         owner: { select: { name: true } },
       },
     });
-    
+
     return {
       id: invoice.id,
       userId,
       number: invoice.number,
       amount: invoice.amount,
-      dueDate: invoice.dueDate.toISOString().split('T')[0],
-      paidDate: invoice.paidDate?.toISOString().split('T')[0],
-      status: invoice.status as Invoice['status'],
+      dueDate: invoice.dueDate.toISOString().split("T")[0],
+      paidDate: invoice.paidDate?.toISOString().split("T")[0],
+      status: invoice.status as Invoice["status"],
       description: invoice.description || undefined,
       metadata: invoice.metadata ? JSON.parse(invoice.metadata) : undefined,
       propertyId: invoice.propertyId || undefined,
@@ -370,22 +362,22 @@ export const invoiceService = {
     userId: string,
     id: string,
     paymentMethod?: string,
-    referenceNumber?: string
+    referenceNumber?: string,
   ): Promise<Invoice> {
     const existing = await this.getById(userId, id);
     if (!existing) {
-      throw new Error('Invoice not found');
+      throw new Error("Invoice not found");
     }
-    
+
     const _metadata: InvoiceMetadata = {
       ...existing.metadata,
       paymentMethod,
       referenceNumber,
     };
-    
+
     return this.update(userId, id, {
-      status: 'paid',
-      paidDate: new Date().toISOString().split('T')[0],
+      status: "paid",
+      paidDate: new Date().toISOString().split("T")[0],
     });
   },
 
@@ -394,23 +386,19 @@ export const invoiceService = {
    */
   async applyLateFees(
     userId: string,
-    config: LateFeeConfig = DEFAULT_LATE_FEE_CONFIG
+    config: LateFeeConfig = DEFAULT_LATE_FEE_CONFIG,
   ): Promise<Invoice[]> {
     const prisma = getPrismaClient();
     const now = new Date();
-    
+
     // Find all pending invoices that are past due
     const overdueInvoices = await prisma.invoice.findMany({
       where: {
-        status: 'pending',
+        status: "pending",
         dueDate: {
           lt: now,
         },
-        OR: [
-          { property: { userId } },
-          { tenant: { userId } },
-          { owner: { userId } },
-        ],
+        OR: [{ property: { userId } }, { tenant: { userId } }, { owner: { userId } }],
       },
       include: {
         property: { select: { name: true } },
@@ -418,26 +406,22 @@ export const invoiceService = {
         owner: { select: { name: true } },
       },
     });
-    
+
     const updatedInvoices: Invoice[] = [];
-    
+
     for (const invoice of overdueInvoices) {
-      const existingMetadata: InvoiceMetadata = invoice.metadata 
-        ? JSON.parse(invoice.metadata) 
+      const existingMetadata: InvoiceMetadata = invoice.metadata
+        ? JSON.parse(invoice.metadata)
         : {};
-      
+
       // Skip if late fee already applied
       if (existingMetadata.lateFeeApplied) {
         continue;
       }
-      
+
       const originalAmount = invoice.amount;
-      const { lateFee, daysOverdue } = calculateLateFee(
-        originalAmount,
-        invoice.dueDate,
-        config
-      );
-      
+      const { lateFee, daysOverdue } = calculateLateFee(originalAmount, invoice.dueDate, config);
+
       if (lateFee > 0) {
         const newMetadata: InvoiceMetadata = {
           ...existingMetadata,
@@ -446,12 +430,12 @@ export const invoiceService = {
           lateFeeAmount: lateFee,
           daysOverdue,
         };
-        
+
         const updated = await prisma.invoice.update({
           where: { id: invoice.id },
           data: {
             amount: originalAmount + lateFee,
-            status: 'overdue',
+            status: "overdue",
             metadata: JSON.stringify(newMetadata),
           },
           include: {
@@ -460,15 +444,15 @@ export const invoiceService = {
             owner: { select: { name: true } },
           },
         });
-        
+
         updatedInvoices.push({
           id: updated.id,
           userId,
           number: updated.number,
           amount: updated.amount,
-          dueDate: updated.dueDate.toISOString().split('T')[0],
-          paidDate: updated.paidDate?.toISOString().split('T')[0],
-          status: updated.status as Invoice['status'],
+          dueDate: updated.dueDate.toISOString().split("T")[0],
+          paidDate: updated.paidDate?.toISOString().split("T")[0],
+          status: updated.status as Invoice["status"],
           description: updated.description || undefined,
           metadata: newMetadata,
           propertyId: updated.propertyId || undefined,
@@ -486,11 +470,11 @@ export const invoiceService = {
         // Just mark as overdue without late fee (within grace period)
         await prisma.invoice.update({
           where: { id: invoice.id },
-          data: { status: 'overdue' },
+          data: { status: "overdue" },
         });
       }
     }
-    
+
     return updatedInvoices;
   },
 
@@ -500,9 +484,9 @@ export const invoiceService = {
   async delete(userId: string, id: string): Promise<void> {
     const existing = await this.getById(userId, id);
     if (!existing) {
-      throw new Error('Invoice not found');
+      throw new Error("Invoice not found");
     }
-    
+
     await getPrismaClient().invoice.delete({
       where: { id },
     });
@@ -514,19 +498,19 @@ export const invoiceService = {
   async generateBatchRentInvoices(
     userId: string,
     dueDate: string,
-    month?: string // Optional: for description "Rent for January 2026"
+    month?: string, // Optional: for description "Rent for January 2026"
   ): Promise<BatchInvoiceResult> {
     const prisma = getPrismaClient();
     const result: BatchInvoiceResult = {
       success: [],
       failed: [],
     };
-    
+
     // Get all active leases for the user
     const activeLeases = await prisma.lease.findMany({
       where: {
         userId,
-        status: 'active',
+        status: "active",
         startDate: { lte: new Date() },
         endDate: { gte: new Date() },
       },
@@ -535,12 +519,14 @@ export const invoiceService = {
         property: true,
       },
     });
-    
-    const monthLabel = month || new Date(dueDate).toLocaleDateString('en-US', {
-      month: 'long',
-      year: 'numeric',
-    });
-    
+
+    const monthLabel =
+      month ||
+      new Date(dueDate).toLocaleDateString("en-US", {
+        month: "long",
+        year: "numeric",
+      });
+
     for (const lease of activeLeases) {
       try {
         const invoice = await this.create(userId, {
@@ -558,23 +544,27 @@ export const invoiceService = {
             },
           ],
         });
-        
+
         result.success.push(invoice);
       } catch (error) {
         result.failed.push({
           tenantId: lease.tenantId,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : "Unknown error",
         });
       }
     }
-    
+
     return result;
   },
 
   /**
    * Get invoices summary for reporting
    */
-  async getSummary(userId: string, startDate?: string, endDate?: string): Promise<{
+  async getSummary(
+    userId: string,
+    startDate?: string,
+    endDate?: string,
+  ): Promise<{
     totalPending: number;
     totalPaid: number;
     totalOverdue: number;
@@ -582,7 +572,7 @@ export const invoiceService = {
     invoiceCount: { pending: number; paid: number; overdue: number; cancelled: number };
   }> {
     const prisma = getPrismaClient();
-    
+
     const dateFilter: Record<string, unknown> = {};
     if (startDate) {
       dateFilter.gte = new Date(startDate);
@@ -590,51 +580,45 @@ export const invoiceService = {
     if (endDate) {
       dateFilter.lte = new Date(endDate);
     }
-    
+
     const invoices = await prisma.invoice.findMany({
       where: {
         ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {}),
-        OR: [
-          { property: { userId } },
-          { tenant: { userId } },
-          { owner: { userId } },
-        ],
+        OR: [{ property: { userId } }, { tenant: { userId } }, { owner: { userId } }],
       },
     });
-    
+
     let totalPending = 0;
     let totalPaid = 0;
     let totalOverdue = 0;
     let totalLateFees = 0;
     const invoiceCount = { pending: 0, paid: 0, overdue: 0, cancelled: 0 };
-    
+
     for (const invoice of invoices) {
-      const metadata: InvoiceMetadata = invoice.metadata 
-        ? JSON.parse(invoice.metadata) 
-        : {};
-      
+      const metadata: InvoiceMetadata = invoice.metadata ? JSON.parse(invoice.metadata) : {};
+
       switch (invoice.status) {
-        case 'pending':
+        case "pending":
           totalPending += invoice.amount;
           invoiceCount.pending++;
           break;
-        case 'paid':
+        case "paid":
           totalPaid += invoice.amount;
           invoiceCount.paid++;
           break;
-        case 'overdue':
+        case "overdue":
           totalOverdue += invoice.amount;
           invoiceCount.overdue++;
           if (metadata.lateFeeAmount) {
             totalLateFees += metadata.lateFeeAmount;
           }
           break;
-        case 'cancelled':
+        case "cancelled":
           invoiceCount.cancelled++;
           break;
       }
     }
-    
+
     return {
       totalPending: Math.round(totalPending * 100) / 100,
       totalPaid: Math.round(totalPaid * 100) / 100,
@@ -659,30 +643,27 @@ export const batchReceiptService = {
   }> {
     const prisma = getPrismaClient();
     const result = { created: 0, skipped: 0, errors: [] as string[] };
-    
+
     // Get all paid invoices with tenants and properties
     const paidInvoices = await prisma.invoice.findMany({
       where: {
-        status: 'paid',
+        status: "paid",
         tenantId: { not: null },
         propertyId: { not: null },
-        OR: [
-          { property: { userId } },
-          { tenant: { userId } },
-        ],
+        OR: [{ property: { userId } }, { tenant: { userId } }],
       },
       include: {
         tenant: true,
         property: true,
       },
     });
-    
+
     for (const invoice of paidInvoices) {
       if (!invoice.tenantId || !invoice.propertyId || !invoice.paidDate) {
         result.skipped++;
         continue;
       }
-      
+
       // Check if receipt already exists for this invoice
       const existingReceipt = await prisma.receipt.findFirst({
         where: {
@@ -692,12 +673,12 @@ export const batchReceiptService = {
           date: invoice.paidDate,
         },
       });
-      
+
       if (existingReceipt) {
         result.skipped++;
         continue;
       }
-      
+
       try {
         await prisma.receipt.create({
           data: {
@@ -706,8 +687,8 @@ export const batchReceiptService = {
             propertyId: invoice.propertyId,
             amount: invoice.amount,
             date: invoice.paidDate,
-            type: 'rent',
-            status: 'paid',
+            type: "rent",
+            status: "paid",
             description: `Payment for Invoice ${invoice.number}`,
           },
         });
@@ -715,12 +696,12 @@ export const batchReceiptService = {
       } catch (error) {
         result.errors.push(
           `Failed to create receipt for invoice ${invoice.number}: ${
-            error instanceof Error ? error.message : 'Unknown error'
-          }`
+            error instanceof Error ? error.message : "Unknown error"
+          }`,
         );
       }
     }
-    
+
     return result;
   },
 };

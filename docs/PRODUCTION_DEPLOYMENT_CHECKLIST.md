@@ -15,24 +15,28 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
 ### 1. Code Quality & Testing
 
 - [ ] **TypeScript Compilation**: Zero errors
+
   ```bash
   npm run type-check
   # Expected: No errors
   ```
 
 - [ ] **Linting**: No warnings or errors
+
   ```bash
   npm run lint -- --max-warnings 0
   # Expected: Clean exit
   ```
 
 - [ ] **Unit Tests**: All passing
+
   ```bash
   npm test
   # Expected: All tests pass
   ```
 
 - [ ] **E2E Tests**: All critical flows passing
+
   ```bash
   npm run test:e2e
   # Expected: All tests pass
@@ -49,12 +53,14 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
 ### 2. Security Hardening
 
 - [ ] **Security Scan**: No critical/high issues
+
   ```bash
   npm run security:scan
   # Expected: 0 critical/high findings
   ```
 
 - [ ] **NPM Audit**: No high/critical vulnerabilities
+
   ```bash
   npm run security:audit
   # Expected: 0 high/critical vulnerabilities
@@ -111,10 +117,12 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
 ### 3. Performance Optimization
 
 - [ ] **Database Indexes**: All created
+
   ```bash
   npm run prisma:migrate:deploy
   # Expected: 26 performance indexes active
   ```
+
   - ✅ User queries: email, createdAt
   - ✅ Property queries: userId, status, createdAt, name
   - ✅ Tenant queries: propertyId, leaseStart/End
@@ -137,10 +145,12 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
   - [ ] HTTP caching headers set
 
 - [ ] **Bundle Size**: Optimized
+
   ```bash
   npm run build
   # Check .next/analyze/ for bundle sizes
   ```
+
   - [ ] Code splitting enabled
   - [ ] Tree shaking working
   - [ ] Dynamic imports for heavy components
@@ -151,10 +161,12 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
   - ✅ Lazy loading enabled
 
 - [ ] **Load Testing**: Performance validated
+
   ```bash
   npm run load:test
   # Expected: p95 <2s, p99 <5s, errors <1%
   ```
+
   - [ ] Baseline metrics documented
   - [ ] No performance regressions
   - [ ] System handles expected load
@@ -181,10 +193,12 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
   - ✅ System metrics tracked (requests, errors, latency)
 
 - [ ] **Health Checks**: Configured
+
   ```bash
   curl https://your-domain.com/api/monitoring/health
   # Expected: {"status":"healthy"}
   ```
+
   - ✅ `/api/monitoring/health` endpoint
   - ✅ Database health check
   - ✅ Memory usage check
@@ -208,13 +222,14 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
 ### 5. Environment Configuration
 
 - [ ] **Environment Variables**: All set
+
   ```bash
   # Required variables:
   DATABASE_URL=postgresql://...
   NEXTAUTH_URL=https://your-domain.com
   NEXTAUTH_SECRET=<generated-secret>
   JWT_SECRET=<generated-secret>
-  
+
   # Optional but recommended:
   REDIS_URL=redis://...
   NEXT_PUBLIC_MONITORING_ENDPOINT=https://...
@@ -247,6 +262,7 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
 ### 6. Infrastructure & Deployment
 
 - [ ] **Build Process**: Verified
+
   ```bash
   npm run build
   # Expected: Clean build, no errors
@@ -292,6 +308,7 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
 ### 7. Data & Compliance
 
 - [ ] **Database Migrations**: Applied
+
   ```bash
   npm run prisma:migrate:deploy
   # Expected: All migrations applied successfully
@@ -372,6 +389,7 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
 ### 10. Final Checks
 
 - [ ] **Smoke Tests**: Post-deployment validation
+
   ```bash
   # After deployment:
   npm run load:smoke
@@ -400,12 +418,14 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
 ### Pre-Deployment
 
 1. **Final Code Freeze**
+
    ```bash
    git tag v0.9.3
    git push origin v0.9.3
    ```
 
 2. **Run Full Test Suite**
+
    ```bash
    npm run verify:ci
    npm run test:e2e
@@ -414,6 +434,7 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
    ```
 
 3. **Build Production Bundle**
+
    ```bash
    npm run build
    ```
@@ -427,33 +448,37 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
 ### Deployment Steps
 
 1. **Put Site in Maintenance Mode** (if applicable)
+
    ```bash
    # Display maintenance page
    touch .maintenance
    ```
 
 2. **Deploy Code**
+
    ```bash
    # Pull latest code
    git pull origin main
-   
+
    # Install dependencies
    npm ci --production
-   
+
    # Build application
    npm run build
    ```
 
 3. **Run Migrations**
+
    ```bash
    npm run prisma:migrate:deploy
    ```
 
 4. **Restart Application**
+
    ```bash
    # Using PM2
    pm2 restart proman
-   
+
    # Or systemd
    sudo systemctl restart proman
    ```
@@ -466,10 +491,11 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
 ### Post-Deployment
 
 1. **Smoke Tests**
+
    ```bash
    # Health check
    curl https://your-domain.com/api/monitoring/health
-   
+
    # Test critical paths
    npm run load:smoke
    ```
@@ -497,11 +523,13 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
 If critical issues are discovered:
 
 1. **Stop Application**
+
    ```bash
    pm2 stop proman
    ```
 
 2. **Revert Code**
+
    ```bash
    git revert HEAD
    # or
@@ -509,11 +537,13 @@ If critical issues are discovered:
    ```
 
 3. **Restore Database** (if migrations ran)
+
    ```bash
    psql proman_production < backup-YYYYMMDD-HHMMSS.sql
    ```
 
 4. **Rebuild and Restart**
+
    ```bash
    npm run build
    pm2 start proman
@@ -544,21 +574,25 @@ Deployment is successful when:
 ## 🎯 Post-Launch Monitoring (First 24 Hours)
 
 ### Hour 1
+
 - [ ] Monitor error rates every 5 minutes
 - [ ] Watch response times
 - [ ] Check for any anomalies
 
 ### Hours 2-8
+
 - [ ] Monitor error rates hourly
 - [ ] Review error logs
 - [ ] Check system resources
 
 ### Hours 9-24
+
 - [ ] Monitor every 2-4 hours
 - [ ] Collect user feedback
 - [ ] Document any issues
 
 ### Day 2-7
+
 - [ ] Daily monitoring
 - [ ] Performance comparison with baseline
 - [ ] User satisfaction survey
@@ -578,17 +612,17 @@ Deployment is successful when:
 
 ## 🏁 Deployment Sign-Off
 
-**Deployment Lead**: _________________  
-**Date**: _________________  
-**Signature**: _________________
+**Deployment Lead**: **\*\*\*\***\_**\*\*\*\***  
+**Date**: **\*\*\*\***\_**\*\*\*\***  
+**Signature**: **\*\*\*\***\_**\*\*\*\***
 
-**QA Lead**: _________________  
-**Date**: _________________  
-**Signature**: _________________
+**QA Lead**: **\*\*\*\***\_**\*\*\*\***  
+**Date**: **\*\*\*\***\_**\*\*\*\***  
+**Signature**: **\*\*\*\***\_**\*\*\*\***
 
-**DevOps Lead**: _________________  
-**Date**: _________________  
-**Signature**: _________________
+**DevOps Lead**: **\*\*\*\***\_**\*\*\*\***  
+**Date**: **\*\*\*\***\_**\*\*\*\***  
+**Signature**: **\*\*\*\***\_**\*\*\*\***
 
 ---
 

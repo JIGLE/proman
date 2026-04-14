@@ -1,11 +1,16 @@
-import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/utils/error-handling';
-import { tenantService } from '@/lib/services/database';
-import { sanitizeForDatabase, sanitizeEmail, sanitizeNumber } from '@/lib/utils/sanitize';
-import { getPaginationFromRequest, createPaginatedResponse } from '@/lib/utils/pagination';
-import { getPrismaClient } from '@/lib/services/database/database';
-import { z } from 'zod';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { tenantService } from "@/lib/services/database";
+import { sanitizeForDatabase, sanitizeEmail, sanitizeNumber } from "@/lib/utils/sanitize";
+import { getPaginationFromRequest, createPaginatedResponse } from "@/lib/utils/pagination";
+import { getPrismaClient } from "@/lib/services/database/database";
+import { z } from "zod";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 
 // Validation schemas
 const createTenantSchema = z.object({
@@ -16,7 +21,7 @@ const createTenantSchema = z.object({
   rent: z.number().min(0),
   leaseStart: z.string().datetime(),
   leaseEnd: z.string().datetime(),
-  paymentStatus: z.enum(['paid', 'overdue', 'pending']).default('pending'),
+  paymentStatus: z.enum(["paid", "overdue", "pending"]).default("pending"),
   notes: z.string().max(1000).optional(),
 });
 
@@ -24,6 +29,9 @@ const _updateTenantSchema = createTenantSchema.partial();
 
 // GET /api/tenants - Get all tenants for the authenticated user (with pagination)
 async function handleGet(request: NextRequest): Promise<Response> {
+  const demo = handleDemoGet(request, "tenants");
+  if (demo.response) return demo.response;
+
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -32,7 +40,7 @@ async function handleGet(request: NextRequest): Promise<Response> {
   try {
     // Check if pagination is requested
     const url = new URL(request.url);
-    const usePagination = url.searchParams.has('page') || url.searchParams.has('limit');
+    const usePagination = url.searchParams.has("page") || url.searchParams.has("limit");
 
     if (usePagination) {
       // Paginated response
@@ -44,7 +52,7 @@ async function handleGet(request: NextRequest): Promise<Response> {
           where: { userId },
           skip: pagination.skip,
           take: pagination.limit,
-          orderBy: { createdAt: 'desc' },
+          orderBy: { createdAt: "desc" },
         }),
         prisma.tenant.count({ where: { userId } }),
       ]);
@@ -62,6 +70,9 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
 // POST /api/tenants - Create a new tenant
 async function handlePost(request: NextRequest): Promise<Response> {
+  const demo = handleDemoMutation(request, "tenants");
+  if (demo.response) return demo.response;
+
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -89,9 +100,9 @@ async function handlePost(request: NextRequest): Promise<Response> {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
-        request
+        request,
       );
     }
     return createErrorResponse(error as Error, 500, request);

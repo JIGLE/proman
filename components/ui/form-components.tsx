@@ -34,20 +34,16 @@ export function FormField({
 
   // Inject aria-describedby into the first child element (the input)
   const describedBy =
-    [hasError ? errorId : null, hint && !hasError ? hintId : null]
-      .filter(Boolean)
-      .join(" ") || undefined;
+    [hasError ? errorId : null, hint && !hasError ? hintId : null].filter(Boolean).join(" ") ||
+    undefined;
 
   const enhancedChildren = describedBy
     ? React.Children.map(children, (child, index) =>
         index === 0 && React.isValidElement(child)
-          ? React.cloneElement(
-              child as React.ReactElement<Record<string, unknown>>,
-              {
-                "aria-describedby": describedBy,
-                "aria-invalid": hasError || undefined,
-              },
-            )
+          ? React.cloneElement(child as React.ReactElement<Record<string, unknown>>, {
+              "aria-describedby": describedBy,
+              "aria-invalid": hasError || undefined,
+            })
           : child,
       )
     : children;
@@ -74,21 +70,14 @@ export function FormField({
       {enhancedChildren}
 
       {error && (
-        <div
-          id={errorId}
-          role="alert"
-          className="flex items-center gap-1 text-destructive text-xs"
-        >
+        <div id={errorId} role="alert" className="flex items-center gap-1 text-destructive text-xs">
           <AlertCircle className="w-3 h-3" />
           <span>{error}</span>
         </div>
       )}
 
       {hint && !error && (
-        <div
-          id={hintId}
-          className="flex items-center gap-1 text-muted-foreground text-xs"
-        >
+        <div id={hintId} className="flex items-center gap-1 text-muted-foreground text-xs">
           <Info className="w-3 h-3" />
           <span>{hint}</span>
         </div>
@@ -136,16 +125,12 @@ export function FormSection({
               )}
             </div>
           )}
-          {subtitle && (
-            <p className="text-sm text-muted-foreground">{subtitle}</p>
-          )}
+          {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
         </div>
       )}
 
       {(!collapsible || !isCollapsed) && (
-        <div className="space-y-4 border-l-2 border-border pl-4">
-          {children}
-        </div>
+        <div className="space-y-4 border-l-2 border-border pl-4">{children}</div>
       )}
     </div>
   );
@@ -158,12 +143,7 @@ export interface FormGridProps {
   gap?: "sm" | "md" | "lg";
 }
 
-export function FormGrid({
-  columns = 2,
-  children,
-  className,
-  gap = "md",
-}: FormGridProps) {
+export function FormGrid({ columns = 2, children, className, gap = "md" }: FormGridProps) {
   const gridClasses = {
     1: "grid-cols-1",
     2: "grid-cols-1 md:grid-cols-2",
@@ -178,11 +158,7 @@ export function FormGrid({
   };
 
   return (
-    <div
-      className={cn("grid", gridClasses[columns], gapClasses[gap], className)}
-    >
-      {children}
-    </div>
+    <div className={cn("grid", gridClasses[columns], gapClasses[gap], className)}>{children}</div>
   );
 }
 
@@ -267,27 +243,19 @@ export function FormProgress({
                   className={cn(
                     "w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-200",
                     {
-                      "bg-primary text-primary-foreground":
-                        isCompleted || isCurrent,
+                      "bg-primary text-primary-foreground": isCompleted || isCurrent,
                       "bg-muted text-muted-foreground": isUpcoming,
                       "ring-2 ring-primary ring-offset-2": isCurrent,
                     },
                   )}
                 >
-                  {isCompleted ? (
-                    <Check className="w-5 h-5" />
-                  ) : (
-                    <span>{index + 1}</span>
-                  )}
+                  {isCompleted ? <Check className="w-5 h-5" /> : <span>{index + 1}</span>}
                 </div>
                 <span
-                  className={cn(
-                    "text-xs text-center max-w-[80px] leading-tight",
-                    {
-                      "text-foreground font-medium": isCurrent,
-                      "text-muted-foreground": !isCurrent,
-                    },
-                  )}
+                  className={cn("text-xs text-center max-w-[80px] leading-tight", {
+                    "text-foreground font-medium": isCurrent,
+                    "text-muted-foreground": !isCurrent,
+                  })}
                 >
                   {step}
                 </span>
@@ -309,9 +277,7 @@ export function FormProgress({
   }
 
   return (
-    <div
-      className={cn("flex items-center justify-center space-x-2", className)}
-    >
+    <div className={cn("flex items-center justify-center space-x-2", className)}>
       {steps.map((step, index) => {
         const isCompleted = index < currentStep;
         const isCurrent = index === currentStep;

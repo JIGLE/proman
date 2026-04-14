@@ -6,10 +6,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
-import {
-  createRentReceipt,
-  listRentReceipts,
-} from "@/lib/compliance/rent-receipts-pt";
+import { createRentReceipt, listRentReceipts } from "@/lib/compliance/rent-receipts-pt";
 import type { RentReceiptInput } from "@/lib/compliance/rent-receipts-pt";
 
 export async function GET(request: NextRequest) {
@@ -25,10 +22,7 @@ export async function GET(request: NextRequest) {
     ? parseInt(url.searchParams.get("year")!, 10)
     : undefined;
   const page = parseInt(url.searchParams.get("page") || "1", 10);
-  const limit = Math.min(
-    parseInt(url.searchParams.get("limit") || "50", 10),
-    100,
-  );
+  const limit = Math.min(parseInt(url.searchParams.get("limit") || "50", 10), 100);
 
   const result = await listRentReceipts(userId, {
     tenantId,

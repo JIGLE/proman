@@ -40,10 +40,7 @@ const isProd = process.env.NODE_ENV === "production";
 const oauthEnabled = process.env.ENABLE_OAUTH === "true";
 
 // Always required
-requireVar(
-  "NEXTAUTH_URL",
-  "Full URL where the app is hosted (e.g. https://your.domain.com)",
-);
+requireVar("NEXTAUTH_URL", "Full URL where the app is hosted (e.g. https://your.domain.com)");
 
 // Required in production
 if (isProd) {
@@ -51,30 +48,17 @@ if (isProd) {
     "NEXTAUTH_SECRET",
     "Session signing secret (min 32 chars). Generate: openssl rand -base64 32",
   );
-  requireVar(
-    "DATABASE_URL",
-    "Database connection string (e.g. file:/data/proman.sqlite)",
-  );
+  requireVar("DATABASE_URL", "Database connection string (e.g. file:/data/proman.sqlite)");
 }
 
 // NEXTAUTH_SECRET length check
 if (process.env.NEXTAUTH_SECRET && process.env.NEXTAUTH_SECRET.length < 32) {
-  warnings.push(
-    "  ⚠ NEXTAUTH_SECRET — should be at least 32 characters for security",
-  );
+  warnings.push("  ⚠ NEXTAUTH_SECRET — should be at least 32 characters for security");
 }
 
 // OAuth credentials
-requireVarIf(
-  oauthEnabled,
-  "GOOGLE_CLIENT_ID",
-  "Required when ENABLE_OAUTH=true",
-);
-requireVarIf(
-  oauthEnabled,
-  "GOOGLE_CLIENT_SECRET",
-  "Required when ENABLE_OAUTH=true",
-);
+requireVarIf(oauthEnabled, "GOOGLE_CLIENT_ID", "Required when ENABLE_OAUTH=true");
+requireVarIf(oauthEnabled, "GOOGLE_CLIENT_SECRET", "Required when ENABLE_OAUTH=true");
 
 // Non-critical services
 warnVar("SENDGRID_API_KEY", "Email sending will be disabled");
@@ -82,10 +66,7 @@ warnVar("FROM_EMAIL", "Defaults to noreply@proman.app");
 
 // CSRF secret recommended in production
 if (isProd) {
-  warnVar(
-    "CSRF_SECRET",
-    "CSRF protection secret; falls back to NEXTAUTH_SECRET",
-  );
+  warnVar("CSRF_SECRET", "CSRF protection secret; falls back to NEXTAUTH_SECRET");
 }
 
 // ── output ───────────────────────────────────────────────────────────────
@@ -104,9 +85,7 @@ if (errors.length > 0) {
   console.log("Errors:");
   errors.forEach((e) => console.log(e));
   console.log("");
-  console.error(
-    `❌ ${errors.length} required variable(s) missing. Fix the above before starting.`,
-  );
+  console.error(`❌ ${errors.length} required variable(s) missing. Fix the above before starting.`);
   process.exit(1);
 }
 

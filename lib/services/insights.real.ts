@@ -4,11 +4,7 @@
  */
 
 import { getPrismaClient } from "./database/database";
-import type {
-  InsightTotals,
-  TimeSeriesPoint,
-  InsightsOverview,
-} from "./insights.types";
+import type { InsightTotals, TimeSeriesPoint, InsightsOverview } from "./insights.types";
 
 /**
  * Get insights overview from real database
@@ -33,9 +29,7 @@ export async function getInsightsOverview(): Promise<InsightsOverview> {
 
   const totalProperties = properties.length;
   const totalUnits = totalProperties; // Simplified: 1 unit per property
-  const occupiedUnits = properties.filter(
-    (p) => p.status === "occupied",
-  ).length;
+  const occupiedUnits = properties.filter((p) => p.status === "occupied").length;
   const occupancyRate = totalUnits > 0 ? occupiedUnits / totalUnits : 0;
 
   // OPTIMIZED: Single query for all receipt periods instead of 3 separate queries
@@ -47,12 +41,8 @@ export async function getInsightsOverview(): Promise<InsightsOverview> {
     select: { amount: true, date: true },
   });
 
-  const monthlyReceipts = allPeriodReceipts.filter(
-    (r) => new Date(r.date) >= startOfMonth,
-  );
-  const yearlyReceipts = allPeriodReceipts.filter(
-    (r) => new Date(r.date) >= startOfYear,
-  );
+  const monthlyReceipts = allPeriodReceipts.filter((r) => new Date(r.date) >= startOfMonth);
+  const yearlyReceipts = allPeriodReceipts.filter((r) => new Date(r.date) >= startOfYear);
   const lastYearReceipts = allPeriodReceipts.filter((r) => {
     const d = new Date(r.date);
     return d >= lastYearStart && d <= lastYearEnd;
@@ -60,21 +50,13 @@ export async function getInsightsOverview(): Promise<InsightsOverview> {
 
   const monthlyRevenue = monthlyReceipts.reduce((sum, r) => sum + r.amount, 0);
   const yearlyRevenue = yearlyReceipts.reduce((sum, r) => sum + r.amount, 0);
-  const lastYearRevenue = lastYearReceipts.reduce(
-    (sum, r) => sum + r.amount,
-    0,
-  );
+  const lastYearRevenue = lastYearReceipts.reduce((sum, r) => sum + r.amount, 0);
 
   // Calculate expenses (simplified: 30% of revenue)
   const monthlyExpenses = monthlyRevenue * 0.3;
-  const profitMargin =
-    monthlyRevenue > 0
-      ? (monthlyRevenue - monthlyExpenses) / monthlyRevenue
-      : 0;
+  const profitMargin = monthlyRevenue > 0 ? (monthlyRevenue - monthlyExpenses) / monthlyRevenue : 0;
   const yoyGrowth =
-    lastYearRevenue > 0
-      ? ((yearlyRevenue - lastYearRevenue) / lastYearRevenue) * 100
-      : 0;
+    lastYearRevenue > 0 ? ((yearlyRevenue - lastYearRevenue) / lastYearRevenue) * 100 : 0;
 
   const totals: InsightTotals = {
     properties: totalProperties,
@@ -124,16 +106,8 @@ export async function getInsightsOverview(): Promise<InsightsOverview> {
   // Group receipts by month in memory (much faster than 6 separate queries)
   for (let i = 5; i >= 0; i--) {
     const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const monthStart = new Date(
-      targetDate.getFullYear(),
-      targetDate.getMonth(),
-      1,
-    );
-    const monthEnd = new Date(
-      targetDate.getFullYear(),
-      targetDate.getMonth() + 1,
-      0,
-    );
+    const monthStart = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1);
+    const monthEnd = new Date(targetDate.getFullYear(), targetDate.getMonth() + 1, 0);
 
     const monthReceipts = allRecentReceipts.filter((r) => {
       const receiptDate = new Date(r.date);

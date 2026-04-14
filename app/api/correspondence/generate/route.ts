@@ -1,17 +1,11 @@
 import { NextRequest } from "next/server";
-import {
-  requireAuth,
-  handleOptions,
-} from "@/lib/services/auth/auth-middleware";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
 import {
   createErrorResponse,
   createSuccessResponse,
   withErrorHandler,
 } from "@/lib/utils/error-handling";
-import {
-  templateService,
-  correspondenceService,
-} from "@/lib/services/database";
+import { templateService, correspondenceService } from "@/lib/services/database";
 import { sanitizeForDatabase } from "@/lib/utils/sanitize";
 import { z } from "zod";
 
@@ -23,10 +17,7 @@ const generateCorrespondenceSchema = z.object({
 });
 
 // Template variable substitution function
-function substituteVariables(
-  template: string,
-  variables: Record<string, string> = {},
-): string {
+function substituteVariables(template: string, variables: Record<string, string> = {}): string {
   let result = template;
 
   // Common variables that can be substituted
@@ -72,14 +63,8 @@ async function handlePost(request: NextRequest): Promise<Response> {
     }
 
     // Substitute variables in subject and body
-    const processedSubject = substituteVariables(
-      template.subject,
-      validatedData.variables,
-    );
-    const processedContent = substituteVariables(
-      template.content,
-      validatedData.variables,
-    );
+    const processedSubject = substituteVariables(template.subject, validatedData.variables);
+    const processedContent = substituteVariables(template.content, validatedData.variables);
 
     // Create correspondence record
     const correspondence = await correspondenceService.create(userId, {
@@ -104,9 +89,7 @@ async function handlePost(request: NextRequest): Promise<Response> {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(
-        new Error(
-          `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-        ),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
         request,
       );

@@ -94,6 +94,66 @@
     "generic": {
       "title": "Nada aqui ainda",
       "description": "Comece por adicionar o seu primeiro item."
+    },
+    "leases": {
+      "title": "Nenhum contrato ainda",
+      "description": "Crie contratos de arrendamento para formalizar as relações com inquilinos.",
+      "action": "Adicionar Primeiro Contrato"
+    },
+    "maintenance": {
+      "title": "Sem pedidos de manutenção",
+      "description": "Crie um novo pedido para acompanhar solicitações de manutenção.",
+      "action": "Criar Pedido"
+    },
+    "correspondence": {
+      "title": "Nenhum modelo ainda",
+      "description": "Crie modelos de correspondência para agilizar as comunicações.",
+      "action": "Criar Modelo"
+    },
+    "reports": {
+      "title": "Nenhum relatório disponível",
+      "description": "Os relatórios são gerados a partir dos dados dos imóveis e finanças."
+    },
+    "owners": {
+      "title": "Nenhum proprietário ainda",
+      "description": "Adicione proprietários para acompanhar a co-propriedade.",
+      "action": "Adicionar Primeiro Proprietário"
+    },
+    "receipts": {
+      "title": "Nenhum recibo ainda",
+      "description": "Crie recibos de pagamento para manter o registo dos pagamentos recebidos.",
+      "action": "Criar Primeiro Recibo"
+    },
+    "expenses": {
+      "title": "Nenhuma despesa registada",
+      "description": "Registe despesas dos imóveis para monitorizar custos."
+    },
+    "invoices": {
+      "title": "Nenhuma fatura ainda",
+      "description": "Crie faturas para inquilinos para formalizar as obrigações de pagamento.",
+      "action": "Criar Fatura"
+    },
+    "contracts": {
+      "title": "Nenhum contrato encontrado",
+      "description": "Os contratos são criados a partir dos contratos de arrendamento."
+    },
+    "documents": {
+      "title": "Nenhum documento ainda",
+      "description": "Carregue documentos para manter os registos organizados.",
+      "action": "Carregar Documento"
+    },
+    "contacts": {
+      "title": "Nenhum contacto encontrado",
+      "description": "Os contactos são preenchidos a partir dos inquilinos e proprietários."
+    },
+    "units": {
+      "title": "Nenhuma unidade ainda",
+      "description": "Adicione unidades a este imóvel para acompanhar os espaços individuais.",
+      "action": "Adicionar Primeira Unidade"
+    },
+    "noResults": {
+      "title": "Nenhum resultado encontrado",
+      "description": "Tente ajustar a sua pesquisa ou filtros."
     }
   },
   "actions": {
@@ -520,5 +580,29 @@
       "expired": "Expirado",
       "terminated": "Terminado"
     }
+  },
+  "demo": {
+    "banner": "Modo Demo – As alterações não são guardadas",
+    "exitButton": "Sair do Demo",
+    "preparing": "A preparar o ambiente de demonstração...",
+    "title": "Proman Demo",
+    "readOnly": "Esta funcionalidade é apenas de leitura no modo demo",
+    "changesNotSaved": "Modo demo: as alterações não são guardadas"
+  },
+  "loading": {
+    "default": "A carregar...",
+    "application": "A carregar a aplicação...",
+    "signingIn": "A iniciar sessão...",
+    "pleaseWait": "Por favor aguarde..."
+  },
+  "rateLimit": {
+    "tooManyRequests": "Demasiados pedidos. Por favor tente novamente em {retryAfter} segundos."
+  },
+  "footer": {
+    "copyright": "© {year} Proman. Todos os direitos reservados."
+  },
+  "pageHeader": {
+    "filter": "Filtrar",
+    "export": "Exportar"
   }
 }

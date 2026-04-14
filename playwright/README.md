@@ -32,12 +32,12 @@ npx playwright test --project=chromium
 
 The Playwright config is at `../playwright.config.ts`. Key settings:
 
-| Setting | Local | CI |
-|---------|-------|----|
-| Retries | 0 | 2 |
-| Workers | auto | 1 |
-| Trace | on-first-retry | on-first-retry |
-| Screenshots | on-failure | on-failure |
+| Setting     | Local          | CI             |
+| ----------- | -------------- | -------------- |
+| Retries     | 0              | 2              |
+| Workers     | auto           | 1              |
+| Trace       | on-first-retry | on-first-retry |
+| Screenshots | on-failure     | on-failure     |
 
 ## Writing Tests
 
@@ -70,5 +70,6 @@ npx playwright show-trace trace.zip
 ## CI Behavior
 
 E2E tests do **not** run on every push. To trigger them:
+
 1. Manually dispatch the CI workflow with `run_e2e=true`, or
 2. Add the `run-e2e` label to a Pull Request.

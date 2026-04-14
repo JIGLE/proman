@@ -1,9 +1,9 @@
 "use client";
 
-import { createContext, useContext, ReactNode } from 'react';
-import toast, { Toaster, Toast } from 'react-hot-toast';
-import { motion, AnimatePresence } from 'framer-motion';
-import { CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react';
+import { createContext, useContext, ReactNode } from "react";
+import toast, { Toaster, Toast } from "react-hot-toast";
+import { motion, AnimatePresence } from "framer-motion";
+import { CheckCircle, XCircle, AlertTriangle, Info } from "lucide-react";
 
 interface ToastContextType {
   success: (message: string) => void;
@@ -15,35 +15,43 @@ interface ToastContextType {
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 // Custom animated toast component
-const AnimatedToast = ({ t, message, type }: { t: Toast; message: string; type: 'success' | 'error' | 'info' | 'warning' }) => {
+const AnimatedToast = ({
+  t,
+  message,
+  type,
+}: {
+  t: Toast;
+  message: string;
+  type: "success" | "error" | "info" | "warning";
+}) => {
   const getConfig = () => {
     switch (type) {
-      case 'success':
+      case "success":
         return {
           icon: CheckCircle,
-          bgColor: 'var(--color-success)',
-          textColor: 'var(--color-success-foreground)',
+          bgColor: "var(--color-success)",
+          textColor: "var(--color-success-foreground)",
           duration: 4000,
         };
-      case 'error':
+      case "error":
         return {
           icon: XCircle,
-          bgColor: 'var(--color-destructive)',
-          textColor: 'var(--color-destructive-foreground)',
+          bgColor: "var(--color-destructive)",
+          textColor: "var(--color-destructive-foreground)",
           duration: 5000,
         };
-      case 'warning':
+      case "warning":
         return {
           icon: AlertTriangle,
-          bgColor: 'var(--color-warning)',
-          textColor: 'var(--color-warning-foreground)',
+          bgColor: "var(--color-warning)",
+          textColor: "var(--color-warning-foreground)",
           duration: 4500,
         };
       default:
         return {
           icon: Info,
-          bgColor: 'var(--color-info)',
-          textColor: 'var(--color-info-foreground)',
+          bgColor: "var(--color-info)",
+          textColor: "var(--color-info-foreground)",
           duration: 4000,
         };
     }
@@ -55,8 +63,8 @@ const AnimatedToast = ({ t, message, type }: { t: Toast; message: string; type: 
   return (
     <AnimatePresence>
       <motion.div
-        role={type === 'error' ? 'alert' : 'status'}
-        aria-live={type === 'error' ? 'assertive' : 'polite'}
+        role={type === "error" ? "alert" : "status"}
+        aria-live={type === "error" ? "assertive" : "polite"}
         aria-atomic="true"
         initial={{ x: 400, opacity: 0, scale: 0.8 }}
         animate={{ x: 0, opacity: 1, scale: 1 }}
@@ -64,14 +72,14 @@ const AnimatedToast = ({ t, message, type }: { t: Toast; message: string; type: 
         transition={{
           type: "spring",
           stiffness: 300,
-          damping: 30
+          damping: 30,
         }}
         className="relative overflow-hidden rounded-lg border shadow-lg backdrop-blur-sm"
         style={{
-          backgroundColor: config.bgColor + '15',
-          borderColor: config.bgColor + '30',
+          backgroundColor: config.bgColor + "15",
+          borderColor: config.bgColor + "30",
           color: config.textColor,
-          minWidth: '320px',
+          minWidth: "320px",
         }}
       >
         {/* Progress bar */}
@@ -94,9 +102,7 @@ const AnimatedToast = ({ t, message, type }: { t: Toast; message: string; type: 
             <Icon className="h-5 w-5 flex-shrink-0" />
           </motion.div>
 
-          <div className="flex-1 text-sm font-medium leading-tight">
-            {message}
-          </div>
+          <div className="flex-1 text-sm font-medium leading-tight">{message}</div>
 
           <motion.button
             onClick={() => toast.dismiss(t.id)}
@@ -123,18 +129,22 @@ const AnimatedToast = ({ t, message, type }: { t: Toast; message: string; type: 
 
 export function ToastProvider({ children }: { children: ReactNode }): React.ReactElement {
   const value: ToastContextType = {
-    success: (message: string) => toast.custom((t) => <AnimatedToast t={t} message={message} type="success" />, {
-      duration: 4000,
-    }),
-    error: (message: string) => toast.custom((t) => <AnimatedToast t={t} message={message} type="error" />, {
-      duration: 5000,
-    }),
-    info: (message: string) => toast.custom((t) => <AnimatedToast t={t} message={message} type="info" />, {
-      duration: 4000,
-    }),
-    warning: (message: string) => toast.custom((t) => <AnimatedToast t={t} message={message} type="warning" />, {
-      duration: 4500,
-    }),
+    success: (message: string) =>
+      toast.custom((t) => <AnimatedToast t={t} message={message} type="success" />, {
+        duration: 4000,
+      }),
+    error: (message: string) =>
+      toast.custom((t) => <AnimatedToast t={t} message={message} type="error" />, {
+        duration: 5000,
+      }),
+    info: (message: string) =>
+      toast.custom((t) => <AnimatedToast t={t} message={message} type="info" />, {
+        duration: 4000,
+      }),
+    warning: (message: string) =>
+      toast.custom((t) => <AnimatedToast t={t} message={message} type="warning" />, {
+        duration: 4500,
+      }),
   };
 
   return (
@@ -153,7 +163,7 @@ export function ToastProvider({ children }: { children: ReactNode }): React.Reac
 export function useToast(): ToastContextType {
   const context = useContext(ToastContext);
   if (context === undefined) {
-    throw new Error('useToast must be used within a ToastProvider');
+    throw new Error("useToast must be used within a ToastProvider");
   }
   return context;
 }

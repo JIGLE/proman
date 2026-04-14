@@ -16,9 +16,7 @@ interface CurrencyContextType {
   isLoading: boolean;
 }
 
-const CurrencyContext = createContext<CurrencyContextType | undefined>(
-  undefined,
-);
+const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);
 
 export function useCurrency() {
   const context = useContext(CurrencyContext);

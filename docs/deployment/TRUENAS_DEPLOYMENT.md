@@ -13,6 +13,7 @@ This guide covers deploying ProMan as a custom application on TrueNAS SCALE usin
 ## Architecture
 
 ProMan runs as a Kubernetes deployment with:
+
 - **App Container**: Next.js application (Node.js)
 - **Database**: SQLite with persistent PVC (Persistent Volume Claim)
 - **Service**: NodePort for external access (port 3000)
@@ -104,11 +105,11 @@ service:
   type: NodePort
   port: 3000
   targetPort: 3000
-  nodePort: 30000  # Accessible at http://your-truenas-ip:30000
+  nodePort: 30000 # Accessible at http://your-truenas-ip:30000
 
 persistence:
   enabled: true
-  storageClass: "default"  # TrueNAS storage class
+  storageClass: "default" # TrueNAS storage class
   size: 10Gi
   mountPath: /app/data
 
@@ -187,6 +188,7 @@ curl http://your-truenas-ip:30000/api/health
 ```
 
 Expected response:
+
 ```json
 {
   "status": "healthy",
@@ -210,23 +212,24 @@ metadata:
 spec:
   ingressClassName: traefik
   tls:
-  - hosts:
-    - proman.your-domain.com
-    secretName: proman-tls
+    - hosts:
+        - proman.your-domain.com
+      secretName: proman-tls
   rules:
-  - host: proman.your-domain.com
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: proman
-            port:
-              number: 3000
+    - host: proman.your-domain.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: proman
+                port:
+                  number: 3000
 ```
 
 Apply with:
+
 ```bash
 kubectl apply -f ingress.yaml
 ```
@@ -416,6 +419,7 @@ helm rollback proman 1 -n proman
 ## Support
 
 For issues or questions:
+
 1. Check the troubleshooting section above
 2. Review ProMan GitHub issues
 3. Check TrueNAS community forums

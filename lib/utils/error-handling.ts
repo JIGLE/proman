@@ -27,9 +27,7 @@ export class AuthorizationError extends Error {
 
 export class ResourceNotFoundError extends Error {
   constructor(resource: string, id?: string) {
-    super(
-      id ? `${resource} with id '${id}' not found` : `${resource} not found`,
-    );
+    super(id ? `${resource} with id '${id}' not found` : `${resource} not found`);
     this.name = "ResourceNotFoundError";
   }
 }
@@ -53,11 +51,7 @@ export class DatabaseError extends Error {
 
 // Logger utility
 export class Logger {
-  static log(
-    level: "info" | "warn" | "error",
-    message: string,
-    data?: unknown,
-  ): void {
+  static log(level: "info" | "warn" | "error", message: string, data?: unknown): void {
     const timestamp = new Date().toISOString();
     const logEntry: Record<string, unknown> = {
       timestamp,
@@ -132,8 +126,7 @@ export function createErrorResponse(
   return new NextResponse(
     JSON.stringify({
       error: message,
-      ...(error instanceof ValidationError &&
-        error.field && { field: error.field }),
+      ...(error instanceof ValidationError && error.field && { field: error.field }),
     }),
     {
       status,
@@ -145,10 +138,7 @@ export function createErrorResponse(
 }
 
 // Success response utility
-export function createSuccessResponse(
-  data: unknown,
-  statusCode: number = 200,
-): NextResponse {
+export function createSuccessResponse(data: unknown, statusCode: number = 200): NextResponse {
   return new NextResponse(JSON.stringify({ data }), {
     status: statusCode,
     headers: {
@@ -159,21 +149,14 @@ export function createSuccessResponse(
 
 // Async error wrapper for API routes (generic to allow typed context)
 export function withErrorHandler<C = unknown>(
-  handler: (
-    request: NextRequest,
-    context?: C,
-  ) => Promise<Response | NextResponse>,
+  handler: (request: NextRequest, context?: C) => Promise<Response | NextResponse>,
 ): (request: NextRequest, context?: C) => Promise<Response | NextResponse> {
-  return async (
-    request: NextRequest,
-    context?: C,
-  ): Promise<Response | NextResponse> => {
+  return async (request: NextRequest, context?: C): Promise<Response | NextResponse> => {
     try {
       return await handler(request, context);
     } catch (error: unknown) {
       // If it's an Error, use it, otherwise wrap in a generic Error
-      const err =
-        error instanceof Error ? error : new Error(JSON.stringify(error));
+      const err = error instanceof Error ? error : new Error(JSON.stringify(error));
       return createErrorResponse(err, 500, request);
     }
   };

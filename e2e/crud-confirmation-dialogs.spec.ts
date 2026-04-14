@@ -87,9 +87,7 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
     await expect(dialog).toBeVisible({ timeout: 3000 });
 
     // Should show destructive confirmation content
-    await expect(
-      dialog.getByText(/permanently removed|cannot be undone/i),
-    ).toBeVisible();
+    await expect(dialog.getByText(/permanently removed|cannot be undone/i)).toBeVisible();
 
     // Cancel button should close without deleting
     await dialog.getByRole("button", { name: /cancel/i }).click();
@@ -122,9 +120,7 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
 
     const dialog = page.getByRole("alertdialog");
     await expect(dialog).toBeVisible({ timeout: 3000 });
-    await expect(
-      dialog.getByText(/permanently removed|cannot be undone/i),
-    ).toBeVisible();
+    await expect(dialog.getByText(/permanently removed|cannot be undone/i)).toBeVisible();
 
     // Cancel
     await dialog.getByRole("button", { name: /cancel/i }).click();
@@ -140,9 +136,7 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
     let dialogOpened = false;
 
     for (const section of sections) {
-      const link = page
-        .getByRole("link", { name: new RegExp(section, "i") })
-        .first();
+      const link = page.getByRole("link", { name: new RegExp(section, "i") }).first();
       if (!(await link.isVisible().catch(() => false))) continue;
 
       await link.click();
@@ -179,9 +173,7 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
 test.describe("Form Validation – Authenticated", () => {
   test.use({ storageState: "playwright/.auth/user.json" });
 
-  test("property form validates required fields on change", async ({
-    page,
-  }) => {
+  test("property form validates required fields on change", async ({ page }) => {
     await page.goto("/en");
     await page.waitForLoadState("networkidle");
 
@@ -211,9 +203,7 @@ test.describe("Form Validation – Authenticated", () => {
       await page.waitForTimeout(500);
 
       // Look for validation error
-      const errorText = page.locator(
-        '.text-red-400, .text-destructive, [role="alert"]',
-      );
+      const errorText = page.locator('.text-red-400, .text-destructive, [role="alert"]');
       // Error should appear after clearing required field
       const hasError = (await errorText.count()) > 0;
       // Note: validation behavior depends on schema config

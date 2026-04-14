@@ -1,8 +1,5 @@
 import { NextRequest } from "next/server";
-import {
-  handleOptions,
-  requireAuth,
-} from "@/lib/services/auth/auth-middleware";
+import { handleOptions, requireAuth } from "@/lib/services/auth/auth-middleware";
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -11,6 +8,7 @@ import {
 import { templateService } from "@/lib/services/database";
 import { sanitizeForDatabase } from "@/lib/utils/sanitize";
 import { z } from "zod";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 
 // Validation schemas
 const createTemplateSchema = z.object({
@@ -32,6 +30,9 @@ const _updateTemplateSchema = createTemplateSchema.partial();
 
 // GET /api/correspondence/templates - Get all correspondence templates
 async function handleGet(request: NextRequest): Promise<Response> {
+  const demo = handleDemoGet(request, "templates");
+  if (demo.response) return demo.response;
+
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -45,6 +46,9 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
 // POST /api/correspondence/templates - Create a new correspondence template
 async function handlePost(request: NextRequest): Promise<Response> {
+  const demo = handleDemoMutation(request, "templates");
+  if (demo.response) return demo.response;
+
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
   try {
@@ -66,9 +70,7 @@ async function handlePost(request: NextRequest): Promise<Response> {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(
-        new Error(
-          `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
-        ),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
         request,
       );

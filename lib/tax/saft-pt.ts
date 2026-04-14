@@ -192,10 +192,7 @@ export function validateNIF(nif: string): boolean {
  * Generate ATCUD (Código Único do Documento)
  * Format: [Series Validation Code]-[Sequential Number]
  */
-export function generateATCUD(
-  seriesCode: string,
-  sequentialNumber: number,
-): string {
+export function generateATCUD(seriesCode: string, sequentialNumber: number): string {
   // In production, the series code is obtained from AT registration
   // For now, we use a placeholder format
   return `${seriesCode}-${sequentialNumber}`;
@@ -216,9 +213,7 @@ function getSigningKey(): crypto.KeyObject | null {
 
   const keyPath = process.env.SAFT_SIGNING_KEY_PATH;
   if (!keyPath) {
-    console.warn(
-      "[SAF-T] SAFT_SIGNING_KEY_PATH not set — using HMAC fallback (not AT-certified)",
-    );
+    console.warn("[SAF-T] SAFT_SIGNING_KEY_PATH not set — using HMAC fallback (not AT-certified)");
     _signingKey = null;
     return null;
   }
@@ -228,10 +223,7 @@ function getSigningKey(): crypto.KeyObject | null {
     _signingKey = crypto.createPrivateKey(pem);
     return _signingKey;
   } catch (err) {
-    console.error(
-      "[SAF-T] Failed to load signing key:",
-      err instanceof Error ? err.message : err,
-    );
+    console.error("[SAF-T] Failed to load signing key:", err instanceof Error ? err.message : err);
     _signingKey = null;
     return null;
   }
@@ -299,10 +291,7 @@ function escapeXML(str: string): string {
 /**
  * Generate SAF-T PT XML export
  */
-export async function generateSAFTPT(
-  userId: string,
-  options: SAFTExportOptions,
-): Promise<string> {
+export async function generateSAFTPT(userId: string, options: SAFTExportOptions): Promise<string> {
   const prisma = getPrismaClient();
   const { fiscalYear, startMonth = 1, endMonth = 12, companyInfo } = options;
 
@@ -342,8 +331,7 @@ export async function generateSAFTPT(
   for (const invoice of invoices) {
     if (invoice.tenant && !customersMap.has(invoice.tenant.id)) {
       // Use property address if available, otherwise use default
-      const propertyAddress =
-        invoice.property?.address || "Morada desconhecida";
+      const propertyAddress = invoice.property?.address || "Morada desconhecida";
 
       customersMap.set(invoice.tenant.id, {
         customerID: invoice.tenant.id,
@@ -408,11 +396,8 @@ export async function generateSAFTPT(
       const netTotal = grossTotal - taxAmount;
 
       const invoiceStatus =
-        inv.status === "cancelled"
-          ? INVOICE_STATUS.CANCELLED
-          : INVOICE_STATUS.NORMAL;
-      const invoiceType =
-        inv.amount >= 0 ? DOCUMENT_TYPES.INVOICE : DOCUMENT_TYPES.CREDIT_NOTE;
+        inv.status === "cancelled" ? INVOICE_STATUS.CANCELLED : INVOICE_STATUS.NORMAL;
+      const invoiceType = inv.amount >= 0 ? DOCUMENT_TYPES.INVOICE : DOCUMENT_TYPES.CREDIT_NOTE;
 
       // Parse metadata for line items
       let lineItems: SAFTLine[] = [];
@@ -445,8 +430,7 @@ export async function generateSAFTPT(
                 taxCode: TAX_CODES.EXEMPT,
                 taxPercentage: 0,
               },
-              taxExemptionReason:
-                "M07 - Isento nos termos do art.º 9.º do CIVA",
+              taxExemptionReason: "M07 - Isento nos termos do art.º 9.º do CIVA",
               taxExemptionCode: "M07",
             }),
           );
@@ -545,17 +529,11 @@ function buildSAFTXML(data: {
 
   // Calculate totals
   const totalDebit = invoices.reduce((sum, inv) => {
-    return (
-      sum +
-      inv.lines.reduce((lineSum, line) => lineSum + (line.debitAmount || 0), 0)
-    );
+    return sum + inv.lines.reduce((lineSum, line) => lineSum + (line.debitAmount || 0), 0);
   }, 0);
 
   const totalCredit = invoices.reduce((sum, inv) => {
-    return (
-      sum +
-      inv.lines.reduce((lineSum, line) => lineSum + (line.creditAmount || 0), 0)
-    );
+    return sum + inv.lines.reduce((lineSum, line) => lineSum + (line.creditAmount || 0), 0);
   }, 0);
 
   let xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -725,17 +703,11 @@ export function validateSAFTData(options: SAFTExportOptions): {
     errors.push("Valid Portuguese postal code is required (format: XXXX-XXX)");
   }
 
-  if (
-    options.fiscalYear < 2000 ||
-    options.fiscalYear > new Date().getFullYear() + 1
-  ) {
+  if (options.fiscalYear < 2000 || options.fiscalYear > new Date().getFullYear() + 1) {
     errors.push("Invalid fiscal year");
   }
 
-  if (
-    options.startMonth &&
-    (options.startMonth < 1 || options.startMonth > 12)
-  ) {
+  if (options.startMonth && (options.startMonth < 1 || options.startMonth > 12)) {
     errors.push("Invalid start month");
   }
 
@@ -743,11 +715,7 @@ export function validateSAFTData(options: SAFTExportOptions): {
     errors.push("Invalid end month");
   }
 
-  if (
-    options.startMonth &&
-    options.endMonth &&
-    options.startMonth > options.endMonth
-  ) {
+  if (options.startMonth && options.endMonth && options.startMonth > options.endMonth) {
     errors.push("Start month cannot be after end month");
   }
 

@@ -10,8 +10,7 @@ import { Button } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 
 const isDemoEnabled =
-  process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true" ||
-  process.env.NODE_ENV !== "production";
+  process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true" || process.env.NODE_ENV !== "production";
 
 function SignInContent() {
   const { data: session, status } = useSession();
@@ -21,12 +20,8 @@ function SignInContent() {
     if (status === "authenticated") {
       // Detect locale from browser or default to 'pt'
       const browserLang =
-        typeof navigator !== "undefined"
-          ? navigator.language?.split("-")[0]
-          : "pt";
-      const locale = ["pt", "en", "es"].includes(browserLang)
-        ? browserLang
-        : "pt";
+        typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "pt";
+      const locale = ["pt", "en", "es"].includes(browserLang) ? browserLang : "pt";
       router.push(`/${locale}/overview`);
     }
   }, [status, router]);
@@ -64,9 +59,7 @@ function SignInContent() {
               </svg>
             </div>
 
-            <h1 className="text-2xl font-bold text-zinc-50 mb-2">
-              Welcome to ProMan
-            </h1>
+            <h1 className="text-2xl font-bold text-zinc-50 mb-2">Welcome to ProMan</h1>
             <p className="text-zinc-400 mb-8">
               Sign in to access your property management dashboard
             </p>
@@ -80,12 +73,8 @@ function SignInContent() {
                     e.preventDefault();
                     const formData = new FormData(e.currentTarget);
                     const browserLang =
-                      typeof navigator !== "undefined"
-                        ? navigator.language?.split("-")[0]
-                        : "pt";
-                    const locale = ["pt", "en", "es"].includes(browserLang)
-                      ? browserLang
-                      : "pt";
+                      typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "pt";
+                    const locale = ["pt", "en", "es"].includes(browserLang) ? browserLang : "pt";
                     signIn("credentials", {
                       email: formData.get("email"),
                       password: formData.get("password"),
@@ -119,21 +108,13 @@ function SignInContent() {
                   type="button"
                   className="w-full h-10 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white"
                   onClick={() => {
-                    const form = document.getElementById(
-                      "demo-login-form",
-                    ) as HTMLFormElement | null;
-                    if (form) {
-                      (
-                        form.elements.namedItem("email") as HTMLInputElement
-                      ).value = "demo@proman.local";
-                      (
-                        form.elements.namedItem("password") as HTMLInputElement
-                      ).value = "demo123";
-                      form.requestSubmit();
-                    }
+                    const browserLang =
+                      typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "pt";
+                    const locale = ["pt", "en", "es"].includes(browserLang) ? browserLang : "pt";
+                    router.push(`/${locale}/demo`);
                   }}
                 >
-                  Demo Login
+                  Try Demo Mode
                 </Button>
               </>
             )}
@@ -150,12 +131,8 @@ function SignInContent() {
             <Button
               onClick={() => {
                 const browserLang =
-                  typeof navigator !== "undefined"
-                    ? navigator.language?.split("-")[0]
-                    : "pt";
-                const locale = ["pt", "en", "es"].includes(browserLang)
-                  ? browserLang
-                  : "pt";
+                  typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "pt";
+                const locale = ["pt", "en", "es"].includes(browserLang) ? browserLang : "pt";
                 signIn("google", { callbackUrl: `/${locale}/overview` });
               }}
               variant="outline"
@@ -184,9 +161,7 @@ function SignInContent() {
 
             {isDemoEnabled && process.env.NODE_ENV !== "production" && (
               <div className="mt-6 text-center">
-                <p className="text-xs text-zinc-500">
-                  Demo mode active — enter any credentials
-                </p>
+                <p className="text-xs text-zinc-500">Demo mode active — enter any credentials</p>
               </div>
             )}
           </div>

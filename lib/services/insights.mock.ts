@@ -3,7 +3,7 @@
  * Read-only fixtures for local development without DATABASE_URL
  */
 
-import type { InsightTotals, TimeSeriesPoint, InsightsOverview } from './insights.types';
+import type { InsightTotals, TimeSeriesPoint, InsightsOverview } from "./insights.types";
 
 // Fixed mock data - read-only
 const MOCK_TOTALS: InsightTotals = Object.freeze({
@@ -39,8 +39,8 @@ const MOCK_OCCUPANCY_TREND: readonly TimeSeriesPoint[] = Object.freeze([
  */
 export async function getInsightsOverview(): Promise<InsightsOverview> {
   // Simulate async behavior
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
+  await new Promise((resolve) => setTimeout(resolve, 100));
+
   return {
     totals: { ...MOCK_TOTALS },
     revenueTrend: [...MOCK_REVENUE_TREND],

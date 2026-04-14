@@ -94,6 +94,66 @@
     "generic": {
       "title": "Nada aquí aún",
       "description": "Empieza añadiendo tu primer elemento."
+    },
+    "leases": {
+      "title": "Sin contratos aún",
+      "description": "Crea contratos de arrendamiento para formalizar las relaciones con los inquilinos.",
+      "action": "Añadir Primer Contrato"
+    },
+    "maintenance": {
+      "title": "Sin solicitudes de mantenimiento",
+      "description": "Crea una nueva solicitud para gestionar las peticiones de mantenimiento.",
+      "action": "Crear Solicitud"
+    },
+    "correspondence": {
+      "title": "Sin plantillas aún",
+      "description": "Crea plantillas de correspondencia para agilizar las comunicaciones.",
+      "action": "Crear Plantilla"
+    },
+    "reports": {
+      "title": "Sin informes disponibles",
+      "description": "Los informes se generan a partir de los datos de inmuebles y finanzas."
+    },
+    "owners": {
+      "title": "Sin propietarios aún",
+      "description": "Añade propietarios para gestionar la copropiedad.",
+      "action": "Añadir Primer Propietario"
+    },
+    "receipts": {
+      "title": "Sin recibos aún",
+      "description": "Crea recibos de pago para registrar los pagos recibidos.",
+      "action": "Crear Primer Recibo"
+    },
+    "expenses": {
+      "title": "Sin gastos registrados",
+      "description": "Registra los gastos de los inmuebles para controlar los costes."
+    },
+    "invoices": {
+      "title": "Sin facturas aún",
+      "description": "Crea facturas para los inquilinos para formalizar las obligaciones de pago.",
+      "action": "Crear Factura"
+    },
+    "contracts": {
+      "title": "Sin contratos encontrados",
+      "description": "Los contratos se crean a partir de los contratos de arrendamiento."
+    },
+    "documents": {
+      "title": "Sin documentos aún",
+      "description": "Sube documentos para mantener los registros organizados.",
+      "action": "Subir Documento"
+    },
+    "contacts": {
+      "title": "Sin contactos encontrados",
+      "description": "Los contactos se generan a partir de los inquilinos y propietarios."
+    },
+    "units": {
+      "title": "Sin unidades aún",
+      "description": "Añade unidades a este inmueble para gestionar los espacios individuales.",
+      "action": "Añadir Primera Unidad"
+    },
+    "noResults": {
+      "title": "Sin resultados",
+      "description": "Prueba a ajustar la búsqueda o los filtros."
     }
   },
   "actions": {
@@ -520,5 +580,29 @@
       "expired": "Vencido",
       "terminated": "Terminado"
     }
+  },
+  "demo": {
+    "banner": "Modo Demo – Los cambios no se guardan",
+    "exitButton": "Salir del Demo",
+    "preparing": "Preparando el entorno de demostración...",
+    "title": "Proman Demo",
+    "readOnly": "Esta funcionalidad es solo de lectura en modo demo",
+    "changesNotSaved": "Modo demo: los cambios no se guardan"
+  },
+  "loading": {
+    "default": "Cargando...",
+    "application": "Cargando la aplicación...",
+    "signingIn": "Iniciando sesión...",
+    "pleaseWait": "Por favor espere..."
+  },
+  "rateLimit": {
+    "tooManyRequests": "Demasiadas solicitudes. Por favor intente de nuevo en {retryAfter} segundos."
+  },
+  "footer": {
+    "copyright": "© {year} Proman. Todos los derechos reservados."
+  },
+  "pageHeader": {
+    "filter": "Filtrar",
+    "export": "Exportar"
   }
 }

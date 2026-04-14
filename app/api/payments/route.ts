@@ -1,19 +1,31 @@
 // Payment API - Create payment intents and manage payments
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/services/auth/auth-middleware';
-import { createSuccessResponse, createErrorResponse, ValidationError } from '@/lib/utils/error-handling';
-import { paymentService } from '@/lib/payment/payment-service';
-import { getPrismaClient } from '@/lib/services/database/database';
-import { isMockMode } from '@/lib/config/data-mode';
-import { rateLimit, RateLimits } from '@/lib/middleware/rate-limit';
-import { z } from 'zod';
-import type { PrismaClient, PaymentMethodType } from '@prisma/client';
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth } from "@/lib/services/auth/auth-middleware";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  ValidationError,
+} from "@/lib/utils/error-handling";
+import { paymentService } from "@/lib/payment/payment-service";
+import { getPrismaClient } from "@/lib/services/database/database";
+import { isMockMode } from "@/lib/config/data-mode";
+import { rateLimit, RateLimits } from "@/lib/middleware/rate-limit";
+import { z } from "zod";
+import type { PrismaClient, PaymentMethodType } from "@prisma/client";
 
 const createPaymentIntentSchema = z.object({
   tenantId: z.string().min(1),
   amount: z.number().positive(), // Amount in cents
-  currency: z.string().default('EUR'),
-  paymentMethodType: z.enum(['card', 'sepa_debit', 'multibanco', 'mbway', 'bank_transfer', 'cash', 'other']),
+  currency: z.string().default("EUR"),
+  paymentMethodType: z.enum([
+    "card",
+    "sepa_debit",
+    "multibanco",
+    "mbway",
+    "bank_transfer",
+    "cash",
+    "other",
+  ]),
   invoiceId: z.string().optional(),
   description: z.string().optional(),
 });
@@ -36,22 +48,22 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
     }
     const prisma: PrismaClient = getPrismaClient();
     const { searchParams } = new URL(request.url);
-    
-    const tenantId = searchParams.get('tenantId');
-    const status = searchParams.get('status');
-    const limit = parseInt(searchParams.get('limit') || '20');
-    const offset = parseInt(searchParams.get('offset') || '0');
+
+    const tenantId = searchParams.get("tenantId");
+    const status = searchParams.get("status");
+    const limit = parseInt(searchParams.get("limit") || "20");
+    const offset = parseInt(searchParams.get("offset") || "0");
 
     // Build query based on filters
     const where: Record<string, unknown> = {};
-    
+
     if (tenantId) {
       // Verify user owns this tenant
       const tenant = await prisma.tenant.findFirst({
         where: { id: tenantId, userId: authResult.userId },
       });
       if (!tenant) {
-        return createErrorResponse(new ValidationError('Tenant not found'), 404, request);
+        return createErrorResponse(new ValidationError("Tenant not found"), 404, request);
       }
       where.tenantId = tenantId;
     } else {
@@ -60,7 +72,7 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
         where: { userId: authResult.userId },
         select: { id: true },
       });
-      where.tenantId = { in: userTenants.map(t => t.id) };
+      where.tenantId = { in: userTenants.map((t) => t.id) };
     }
 
     if (status) {
@@ -70,7 +82,7 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
     const [transactions, total] = await Promise.all([
       prisma.paymentTransaction.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { createdAt: "desc" },
         take: limit,
         skip: offset,
         include: {
@@ -91,11 +103,11 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
       },
     });
   } catch (error: unknown) {
-    console.error('Payment list error:', error);
+    console.error("Payment list error:", error);
     return createErrorResponse(
-      error instanceof Error ? error : new Error('Failed to list payments'), 
-      500, 
-      request
+      error instanceof Error ? error : new Error("Failed to list payments"),
+      500,
+      request,
     );
   }
 }
@@ -123,7 +135,7 @@ export async function POST(request: NextRequest): Promise<Response | NextRespons
     });
 
     if (!tenant) {
-      return createErrorResponse(new ValidationError('Tenant not found'), 404, request);
+      return createErrorResponse(new ValidationError("Tenant not found"), 404, request);
     }
 
     // Verify invoice if provided
@@ -132,16 +144,16 @@ export async function POST(request: NextRequest): Promise<Response | NextRespons
         where: { id: validated.invoiceId, tenantId: validated.tenantId },
       });
       if (!invoice) {
-        return createErrorResponse(new ValidationError('Invoice not found'), 404, request);
+        return createErrorResponse(new ValidationError("Invoice not found"), 404, request);
       }
     }
 
     // Check if payment service is configured
     if (!paymentService.isReady()) {
       return createErrorResponse(
-        new Error('Payment service not configured. Please set STRIPE_SECRET_KEY.'),
+        new Error("Payment service not configured. Please set STRIPE_SECRET_KEY."),
         503,
-        request
+        request,
       );
     }
 
@@ -156,20 +168,28 @@ export async function POST(request: NextRequest): Promise<Response | NextRespons
     });
 
     if (!result.success) {
-      return createErrorResponse(new Error(result.error || 'Payment creation failed'), 400, request);
+      return createErrorResponse(
+        new Error(result.error || "Payment creation failed"),
+        400,
+        request,
+      );
     }
 
     return createSuccessResponse(result, 201);
   } catch (error: unknown) {
     if (error instanceof z.ZodError) {
       const zodError = error as z.ZodError;
-      return createErrorResponse(new ValidationError(zodError.issues[0]?.message || 'Validation error'), 400, request);
+      return createErrorResponse(
+        new ValidationError(zodError.issues[0]?.message || "Validation error"),
+        400,
+        request,
+      );
     }
-    console.error('Payment creation error:', error);
+    console.error("Payment creation error:", error);
     return createErrorResponse(
-      error instanceof Error ? error : new Error('Failed to create payment'), 
-      500, 
-      request
+      error instanceof Error ? error : new Error("Failed to create payment"),
+      500,
+      request,
     );
   }
 }

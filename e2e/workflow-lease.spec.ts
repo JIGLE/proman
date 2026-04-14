@@ -57,11 +57,7 @@ test("Critical Path: Create new lease", async ({ page }) => {
   // Set lease dates
   const today = new Date();
   const startDate = today.toISOString().split("T")[0];
-  const endDate = new Date(
-    today.getFullYear() + 1,
-    today.getMonth(),
-    today.getDate(),
-  )
+  const endDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())
     .toISOString()
     .split("T")[0];
 

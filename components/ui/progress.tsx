@@ -23,10 +23,7 @@ export function ProgressBar({
 }: ProgressBarProps) {
   return (
     <div className={`w-full ${className}`}>
-      <div
-        className="w-full rounded-full overflow-hidden"
-        style={{ height, backgroundColor }}
-      >
+      <div className="w-full rounded-full overflow-hidden" style={{ height, backgroundColor }}>
         <motion.div
           className="h-full rounded-full"
           style={{ backgroundColor: color }}

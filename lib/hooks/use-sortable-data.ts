@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo } from "react";
 
-export type SortDirection = 'asc' | 'desc' | null;
+export type SortDirection = "asc" | "desc" | null;
 
 export interface SortConfig<T> {
   key: keyof T;
@@ -18,7 +18,7 @@ export interface UseSortableDataReturn<T> {
 
 export function useSortableData<T>(
   data: T[],
-  initialSortConfig: SortConfig<T> | null = null
+  initialSortConfig: SortConfig<T> | null = null,
 ): UseSortableDataReturn<T> {
   const [sortConfig, setSortConfig] = useState<SortConfig<T> | null>(initialSortConfig);
 
@@ -37,11 +37,11 @@ export function useSortableData<T>(
       if (bValue == null) return -1;
 
       // Handle different types
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
+      if (typeof aValue === "string" && typeof bValue === "string") {
         return aValue.localeCompare(bValue);
       }
 
-      if (typeof aValue === 'number' && typeof bValue === 'number') {
+      if (typeof aValue === "number" && typeof bValue === "number") {
         return aValue - bValue;
       }
 
@@ -53,17 +53,17 @@ export function useSortableData<T>(
       return String(aValue).localeCompare(String(bValue));
     });
 
-    return sortConfig.direction === 'desc' ? sorted.reverse() : sorted;
+    return sortConfig.direction === "desc" ? sorted.reverse() : sorted;
   }, [data, sortConfig]);
 
   const requestSort = (key: keyof T) => {
-    let direction: SortDirection = 'asc';
-    
+    let direction: SortDirection = "asc";
+
     if (sortConfig && sortConfig.key === key) {
       // Cycle through: asc -> desc -> null
-      if (sortConfig.direction === 'asc') {
-        direction = 'desc';
-      } else if (sortConfig.direction === 'desc') {
+      if (sortConfig.direction === "asc") {
+        direction = "desc";
+      } else if (sortConfig.direction === "desc") {
         direction = null;
       }
     }

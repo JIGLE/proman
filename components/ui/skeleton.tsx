@@ -8,12 +8,7 @@ interface SkeletonProps {
   style?: React.CSSProperties;
 }
 
-export function Skeleton({
-  className = "",
-  variant = "text",
-  width,
-  height,
-}: SkeletonProps) {
+export function Skeleton({ className = "", variant = "text", width, height }: SkeletonProps) {
   const baseClasses =
     "bg-zinc-700 animate-shimmer bg-gradient-to-r from-zinc-700 via-zinc-600 to-zinc-700";
 
@@ -25,15 +20,9 @@ export function Skeleton({
 
   const style: React.CSSProperties = {};
   if (width) style.width = typeof width === "number" ? `${width}px` : width;
-  if (height)
-    style.height = typeof height === "number" ? `${height}px` : height;
+  if (height) style.height = typeof height === "number" ? `${height}px` : height;
 
-  return (
-    <div
-      className={`${baseClasses} ${variantClasses[variant]} ${className}`}
-      style={style}
-    />
-  );
+  return <div className={`${baseClasses} ${variantClasses[variant]} ${className}`} style={style} />;
 }
 
 interface SkeletonCardProps {
@@ -42,11 +31,7 @@ interface SkeletonCardProps {
   className?: string;
 }
 
-export function SkeletonCard({
-  lines = 3,
-  showAvatar = false,
-  className = "",
-}: SkeletonCardProps) {
+export function SkeletonCard({ lines = 3, showAvatar = false, className = "" }: SkeletonCardProps) {
   return (
     <motion.div
       className={`p-4 border border-zinc-800 rounded-lg bg-zinc-900 ${className}`}
@@ -79,11 +64,7 @@ interface TableSkeletonProps {
   className?: string;
 }
 
-export function TableSkeleton({
-  rows = 5,
-  columns = 4,
-  className = "",
-}: TableSkeletonProps) {
+export function TableSkeleton({ rows = 5, columns = 4, className = "" }: TableSkeletonProps) {
   return (
     <motion.div
       className={`space-y-3 ${className}`}

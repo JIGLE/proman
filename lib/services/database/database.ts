@@ -1,13 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { logger } from "@/lib/utils/logger";
-import {
-  Property,
-  Tenant,
-  Receipt,
-  CorrespondenceTemplate,
-  Correspondence,
-} from "@/lib/types";
+import { Property, Tenant, Receipt, CorrespondenceTemplate, Correspondence } from "@/lib/types";
 
 declare global {
   var prisma: PrismaClient | undefined;
@@ -24,9 +18,7 @@ function getPrismaClient(): PrismaClient {
 
       // For SQLite, verify the file exists and is writable before constructing
       if (dbUrl.startsWith("file:")) {
-        const sqlitePath = dbUrl
-          .replace(/^file:\/\//, "")
-          .replace(/^file:/, "");
+        const sqlitePath = dbUrl.replace(/^file:\/\//, "").replace(/^file:/, "");
         const resolvedPath = require("path").resolve(process.cwd(), sqlitePath);
         const fs = require("fs");
         const exists = fs.existsSync(resolvedPath);
@@ -62,9 +54,7 @@ function getPrismaClient(): PrismaClient {
             }
           ).$queryRawUnsafe("SELECT 1");
         } catch {
-          logger.warn(
-            "Database connection check skipped or failed — queries may fail at runtime",
-          );
+          logger.warn("Database connection check skipped or failed — queries may fail at runtime");
         }
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
@@ -284,10 +274,7 @@ export const tenantService = {
 
   async create(
     userId: string,
-    data: Omit<
-      Tenant,
-      "id" | "userId" | "createdAt" | "updatedAt" | "propertyName"
-    >,
+    data: Omit<Tenant, "id" | "userId" | "createdAt" | "updatedAt" | "propertyName">,
   ): Promise<Tenant> {
     const tenant = await getPrismaClient().tenant.create({
       data: {
@@ -321,9 +308,7 @@ export const tenantService = {
   async update(
     userId: string,
     id: string,
-    data: Partial<
-      Omit<Tenant, "id" | "userId" | "createdAt" | "updatedAt" | "propertyName">
-    >,
+    data: Partial<Omit<Tenant, "id" | "userId" | "createdAt" | "updatedAt" | "propertyName">>,
   ): Promise<Tenant> {
     const tenant = await getPrismaClient().tenant.update({
       where: { id, userId },
@@ -399,12 +384,7 @@ export const receiptService = {
     userId: string,
     data: Omit<
       Receipt,
-      | "id"
-      | "userId"
-      | "createdAt"
-      | "updatedAt"
-      | "tenantName"
-      | "propertyName"
+      "id" | "userId" | "createdAt" | "updatedAt" | "tenantName" | "propertyName"
     >,
   ): Promise<Receipt> {
     const receipt = await getPrismaClient().receipt.create({
@@ -436,15 +416,7 @@ export const receiptService = {
     userId: string,
     id: string,
     data: Partial<
-      Omit<
-        Receipt,
-        | "id"
-        | "userId"
-        | "createdAt"
-        | "updatedAt"
-        | "tenantName"
-        | "propertyName"
-      >
+      Omit<Receipt, "id" | "userId" | "createdAt" | "updatedAt" | "tenantName" | "propertyName">
     >,
   ): Promise<Receipt> {
     const receipt = await getPrismaClient().receipt.update({
@@ -527,9 +499,7 @@ export const templateService = {
 
   async update(
     id: string,
-    data: Partial<
-      Omit<CorrespondenceTemplate, "id" | "createdAt" | "updatedAt">
-    >,
+    data: Partial<Omit<CorrespondenceTemplate, "id" | "createdAt" | "updatedAt">>,
   ): Promise<CorrespondenceTemplate> {
     const template = await getPrismaClient().correspondenceTemplate.update({
       where: { id },
@@ -588,10 +558,7 @@ export const correspondenceService = {
 
   async create(
     userId: string,
-    data: Omit<
-      Correspondence,
-      "id" | "userId" | "createdAt" | "updatedAt" | "tenantName"
-    >,
+    data: Omit<Correspondence, "id" | "userId" | "createdAt" | "updatedAt" | "tenantName">,
   ): Promise<Correspondence> {
     const correspondence = await getPrismaClient().correspondence.create({
       data: {
@@ -618,12 +585,7 @@ export const correspondenceService = {
   async update(
     userId: string,
     id: string,
-    data: Partial<
-      Omit<
-        Correspondence,
-        "id" | "userId" | "createdAt" | "updatedAt" | "tenantName"
-      >
-    >,
+    data: Partial<Omit<Correspondence, "id" | "userId" | "createdAt" | "updatedAt" | "tenantName">>,
   ): Promise<Correspondence> {
     const correspondence = await getPrismaClient().correspondence.update({
       where: { id, userId },
@@ -656,8 +618,7 @@ export const correspondenceService = {
 export async function initializeDatabase(): Promise<void> {
   try {
     // Check if we have any templates (indicating database is seeded)
-    const templateCount =
-      await getPrismaClient().correspondenceTemplate.count();
+    const templateCount = await getPrismaClient().correspondenceTemplate.count();
 
     if (templateCount === 0) {
       // Seed initial templates
@@ -715,12 +676,7 @@ Thank you for your prompt attention to this matter.
 
 Best regards,
 Property Management Team`,
-            variables: JSON.stringify([
-              "tenant_name",
-              "property_name",
-              "rent_amount",
-              "due_date",
-            ]),
+            variables: JSON.stringify(["tenant_name", "property_name", "rent_amount", "due_date"]),
           },
         ],
       });
@@ -735,18 +691,14 @@ Property Management Team`,
 // This is intentionally export-only for tests and guarded by an environment check.
 export function setPrismaClientForTests(client: PrismaClient | undefined) {
   if (process.env.NODE_ENV !== "test") {
-    console.debug(
-      "[database] setPrismaClientForTests called outside NODE_ENV=test",
-    );
+    console.debug("[database] setPrismaClientForTests called outside NODE_ENV=test");
   }
   globalForPrisma.prisma = client;
 }
 
 export function resetPrismaClientForTests() {
   if (process.env.NODE_ENV !== "test") {
-    console.debug(
-      "[database] resetPrismaClientForTests called outside NODE_ENV=test",
-    );
+    console.debug("[database] resetPrismaClientForTests called outside NODE_ENV=test");
   }
   // Clear the cached client so subsequent getPrismaClient calls will re-evaluate
   globalForPrisma.prisma = undefined;

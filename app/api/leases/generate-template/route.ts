@@ -55,10 +55,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const result = await documentExport.generateIberianLeasePDF(parsed.data);
 
     if (!result.buffer) {
-      return NextResponse.json(
-        { error: "PDF generation failed" },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: "PDF generation failed" }, { status: 500 });
     }
 
     const pdfBody = new Uint8Array(result.buffer);
@@ -72,9 +69,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     });
   } catch (error) {
     console.error("Error generating lease template:", error);
-    return NextResponse.json(
-      { error: "Failed to generate lease document" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to generate lease document" }, { status: 500 });
   }
 }

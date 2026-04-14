@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  requireAuth,
-  handleOptions,
-} from "@/lib/services/auth/auth-middleware";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { isMockMode } from "@/lib/config/data-mode";
 
@@ -57,10 +54,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(units);
   } catch (error) {
     console.error("Error fetching units:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -71,16 +65,7 @@ export async function POST(request: NextRequest) {
 
     const { userId } = authResult;
     const body = await request.json();
-    const {
-      propertyId,
-      number,
-      floor,
-      sizeSqM,
-      bedrooms,
-      bathrooms,
-      status,
-      notes,
-    } = body;
+    const { propertyId, number, floor, sizeSqM, bedrooms, bathrooms, status, notes } = body;
 
     if (!propertyId || !number) {
       return NextResponse.json(
@@ -100,10 +85,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!property) {
-      return NextResponse.json(
-        { error: "Property not found or access denied" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Property not found or access denied" }, { status: 404 });
     }
 
     // Create unit
@@ -134,22 +116,14 @@ export async function POST(request: NextRequest) {
     console.error("Error creating unit:", error);
 
     // Check for unique constraint violation
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      error.code === "P2002"
-    ) {
+    if (error && typeof error === "object" && "code" in error && error.code === "P2002") {
       return NextResponse.json(
         { error: "A unit with this number already exists for this property" },
         { status: 409 },
       );
     }
 
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 

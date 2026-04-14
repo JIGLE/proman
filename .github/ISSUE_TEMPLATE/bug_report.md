@@ -3,7 +3,7 @@ name: Bug Report
 about: Report a bug to help improve ProMan
 title: "[Bug] "
 labels: bug
-assignees: ''
+assignees: ""
 ---
 
 ## Description
@@ -12,9 +12,9 @@ assignees: ''
 
 ## Steps to Reproduce
 
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ## Expected Behavior
 
