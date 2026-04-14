@@ -1,6 +1,5 @@
 import { ClientProviders } from "@/components/shared/client-providers";
 import DevDebug from "@/components/shared/dev-debug";
-import VersionBadge from "@/components/shared/version-badge";
 import { CurrencyProvider } from "@/lib/contexts/currency-context";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
@@ -21,9 +20,7 @@ export default async function Layout({
   const { locale: requestedLocale } = await params;
 
   // Validate locale and fallback to default
-  const locale = hasLocale(locales, requestedLocale)
-    ? requestedLocale
-    : defaultLocale;
+  const locale = hasLocale(locales, requestedLocale) ? requestedLocale : defaultLocale;
 
   // Enable static rendering for this locale
   setRequestLocale(locale);

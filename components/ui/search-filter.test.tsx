@@ -1,9 +1,8 @@
 /**
  * @vitest-environment jsdom
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { waitFor } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { SearchFilter } from "./search-filter";
 vi.mock("./debounce", () => ({
@@ -54,9 +53,7 @@ describe("SearchFilter", () => {
 
   it("should call onFilterChange when filter selection changes", async () => {
     const user = userEvent.setup();
-    render(
-      <SearchFilter {...defaultProps} onFilterChange={mockOnFilterChange} />,
-    );
+    render(<SearchFilter {...defaultProps} onFilterChange={mockOnFilterChange} />);
     // Use native select as test mode helper to avoid Radix portal complexity
     const nativeSelect = screen.getByTestId("native-select-status");
     await user.selectOptions(nativeSelect as HTMLSelectElement, "active");
@@ -135,9 +132,7 @@ describe("SearchFilter", () => {
     };
     render(<SearchFilter {...propsWithDefaults} />);
     // The default value should be selected in the trigger (not ambiguous with hidden option)
-    expect(screen.getByTestId("select-trigger-status")).toHaveTextContent(
-      "Active",
-    );
+    expect(screen.getByTestId("select-trigger-status")).toHaveTextContent("Active");
   });
 
   it("should handle no filters provided", () => {
@@ -156,9 +151,7 @@ describe("SearchFilter", () => {
   });
 
   it("should apply custom className", () => {
-    const { container } = render(
-      <SearchFilter {...defaultProps} className="custom-class" />,
-    );
+    const { container } = render(<SearchFilter {...defaultProps} className="custom-class" />);
 
     const searchFilterContainer = container.firstChild;
     expect(searchFilterContainer).toHaveClass("custom-class");

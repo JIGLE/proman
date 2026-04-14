@@ -1,14 +1,7 @@
 "use client";
 
+import { useMemo, useState, useCallback, forwardRef, useImperativeHandle } from "react";
 import {
-  useMemo,
-  useState,
-  useCallback,
-  forwardRef,
-  useImperativeHandle,
-} from "react";
-import {
-  User,
   Mail,
   Phone,
   Calendar,
@@ -22,13 +15,7 @@ import {
 } from "lucide-react";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { cn } from "@/lib/utils/utils";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +37,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,10 +45,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { SearchFilter } from "@/components/ui/search-filter";
-import {
-  BulkActionBar,
-  getDefaultBulkActions,
-} from "@/components/ui/bulk-action-bar";
+import { BulkActionBar, getDefaultBulkActions } from "@/components/ui/bulk-action-bar";
 import { TenantDetailModal } from "./tenant-detail-modal";
 import { EditableCell } from "@/components/ui/editable-cell";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -83,12 +68,7 @@ interface SortableHeaderProps {
   onSort: (column: keyof Tenant) => void;
 }
 
-function SortableHeader({
-  column,
-  label,
-  sortDirection,
-  onSort,
-}: SortableHeaderProps) {
+function SortableHeader({ column, label, sortDirection, onSort }: SortableHeaderProps) {
   return (
     <button
       onClick={() => onSort(column)}
@@ -244,14 +224,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
         const csvContent = [
           ["Name", "Email", "Phone", "Property", "Rent", "Status"].join(","),
           ...selectedTenants.map((t) =>
-            [
-              t.name,
-              t.email,
-              t.phone,
-              t.propertyName || "",
-              t.rent,
-              t.paymentStatus,
-            ].join(","),
+            [t.name, t.email, t.phone, t.propertyName || "", t.rent, t.paymentStatus].join(","),
           ),
         ].join("\n");
 
@@ -285,8 +258,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
           tenant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
           tenant.phone.toLowerCase().includes(searchQuery.toLowerCase());
 
-        const matchesProperty =
-          propertyFilter === "all" || tenant.propertyId === propertyFilter;
+        const matchesProperty = propertyFilter === "all" || tenant.propertyId === propertyFilter;
 
         // Handle both active/inactive and payment status filters
         let matchesStatus = true;
@@ -318,10 +290,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
           <LoadingState variant="cards" count={6} />
         ) : (
           <div className="space-y-6">
-            <Dialog
-              open={dialog.isOpen}
-              onOpenChange={(open) => !open && dialog.closeDialog()}
-            >
+            <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogTrigger asChild>
                 <Button onClick={dialog.openDialog} className="hidden">
                   <Plus className="w-4 h-4" />
@@ -334,9 +303,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                     {dialog.editingItem ? "Edit Tenant" : "Add New Tenant"}
                   </DialogTitle>
                   <DialogDescription>
-                    {dialog.editingItem
-                      ? "Update tenant information"
-                      : "Enter tenant details"}
+                    {dialog.editingItem ? "Update tenant information" : "Enter tenant details"}
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={dialog.handleSubmit} className="space-y-4">
@@ -346,18 +313,12 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                       <Input
                         id="name"
                         value={dialog.formData.name}
-                        onChange={(e) =>
-                          dialog.updateFormData({ name: e.target.value })
-                        }
-                        className={
-                          dialog.formErrors.name ? "border-red-500" : ""
-                        }
+                        onChange={(e) => dialog.updateFormData({ name: e.target.value })}
+                        className={dialog.formErrors.name ? "border-red-500" : ""}
                         required
                       />
                       {dialog.formErrors.name && (
-                        <p className="text-sm text-red-500">
-                          {dialog.formErrors.name}
-                        </p>
+                        <p className="text-sm text-red-500">{dialog.formErrors.name}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -366,18 +327,12 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         id="email"
                         type="email"
                         value={dialog.formData.email}
-                        onChange={(e) =>
-                          dialog.updateFormData({ email: e.target.value })
-                        }
-                        className={
-                          dialog.formErrors.email ? "border-red-500" : ""
-                        }
+                        onChange={(e) => dialog.updateFormData({ email: e.target.value })}
+                        className={dialog.formErrors.email ? "border-red-500" : ""}
                         required
                       />
                       {dialog.formErrors.email && (
-                        <p className="text-sm text-red-500">
-                          {dialog.formErrors.email}
-                        </p>
+                        <p className="text-sm text-red-500">{dialog.formErrors.email}</p>
                       )}
                     </div>
                   </div>
@@ -388,32 +343,22 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                       <Input
                         id="phone"
                         value={dialog.formData.phone}
-                        onChange={(e) =>
-                          dialog.updateFormData({ phone: e.target.value })
-                        }
-                        className={
-                          dialog.formErrors.phone ? "border-red-500" : ""
-                        }
+                        onChange={(e) => dialog.updateFormData({ phone: e.target.value })}
+                        className={dialog.formErrors.phone ? "border-red-500" : ""}
                         required
                       />
                       {dialog.formErrors.phone && (
-                        <p className="text-sm text-red-500">
-                          {dialog.formErrors.phone}
-                        </p>
+                        <p className="text-sm text-red-500">{dialog.formErrors.phone}</p>
                       )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="property">Property</Label>
                       <Select
                         value={dialog.formData.propertyId}
-                        onValueChange={(value) =>
-                          dialog.updateFormData({ propertyId: value })
-                        }
+                        onValueChange={(value) => dialog.updateFormData({ propertyId: value })}
                       >
                         <SelectTrigger
-                          className={
-                            dialog.formErrors.propertyId ? "border-red-500" : ""
-                          }
+                          className={dialog.formErrors.propertyId ? "border-red-500" : ""}
                         >
                           <SelectValue placeholder="Select property" />
                         </SelectTrigger>
@@ -426,9 +371,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         </SelectContent>
                       </Select>
                       {dialog.formErrors.propertyId && (
-                        <p className="text-sm text-red-500">
-                          {dialog.formErrors.propertyId}
-                        </p>
+                        <p className="text-sm text-red-500">{dialog.formErrors.propertyId}</p>
                       )}
                     </div>
                   </div>
@@ -446,15 +389,11 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             rent: parseInt(e.target.value) || 0,
                           })
                         }
-                        className={
-                          dialog.formErrors.rent ? "border-red-500" : ""
-                        }
+                        className={dialog.formErrors.rent ? "border-red-500" : ""}
                         required
                       />
                       {dialog.formErrors.rent && (
-                        <p className="text-sm text-red-500">
-                          {dialog.formErrors.rent}
-                        </p>
+                        <p className="text-sm text-red-500">{dialog.formErrors.rent}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -463,18 +402,12 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         id="leaseStart"
                         type="date"
                         value={dialog.formData.leaseStart}
-                        onChange={(e) =>
-                          dialog.updateFormData({ leaseStart: e.target.value })
-                        }
-                        className={
-                          dialog.formErrors.leaseStart ? "border-red-500" : ""
-                        }
+                        onChange={(e) => dialog.updateFormData({ leaseStart: e.target.value })}
+                        className={dialog.formErrors.leaseStart ? "border-red-500" : ""}
                         required
                       />
                       {dialog.formErrors.leaseStart && (
-                        <p className="text-sm text-red-500">
-                          {dialog.formErrors.leaseStart}
-                        </p>
+                        <p className="text-sm text-red-500">{dialog.formErrors.leaseStart}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -483,18 +416,12 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         id="leaseEnd"
                         type="date"
                         value={dialog.formData.leaseEnd}
-                        onChange={(e) =>
-                          dialog.updateFormData({ leaseEnd: e.target.value })
-                        }
-                        className={
-                          dialog.formErrors.leaseEnd ? "border-red-500" : ""
-                        }
+                        onChange={(e) => dialog.updateFormData({ leaseEnd: e.target.value })}
+                        className={dialog.formErrors.leaseEnd ? "border-red-500" : ""}
                         required
                       />
                       {dialog.formErrors.leaseEnd && (
-                        <p className="text-sm text-red-500">
-                          {dialog.formErrors.leaseEnd}
-                        </p>
+                        <p className="text-sm text-red-500">{dialog.formErrors.leaseEnd}</p>
                       )}
                     </div>
                   </div>
@@ -508,11 +435,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                       }
                     >
                       <SelectTrigger
-                        className={
-                          dialog.formErrors.paymentStatus
-                            ? "border-red-500"
-                            : ""
-                        }
+                        className={dialog.formErrors.paymentStatus ? "border-red-500" : ""}
                       >
                         <SelectValue />
                       </SelectTrigger>
@@ -523,9 +446,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                       </SelectContent>
                     </Select>
                     {dialog.formErrors.paymentStatus && (
-                      <p className="text-sm text-red-500">
-                        {dialog.formErrors.paymentStatus}
-                      </p>
+                      <p className="text-sm text-red-500">{dialog.formErrors.paymentStatus}</p>
                     )}
                   </div>
 
@@ -534,27 +455,17 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                     <Textarea
                       id="notes"
                       value={dialog.formData.notes}
-                      onChange={(e) =>
-                        dialog.updateFormData({ notes: e.target.value })
-                      }
+                      onChange={(e) => dialog.updateFormData({ notes: e.target.value })}
                       rows={4}
-                      className={
-                        dialog.formErrors.notes ? "border-red-500" : ""
-                      }
+                      className={dialog.formErrors.notes ? "border-red-500" : ""}
                     />
                     {dialog.formErrors.notes && (
-                      <p className="text-sm text-red-500">
-                        {dialog.formErrors.notes}
-                      </p>
+                      <p className="text-sm text-red-500">{dialog.formErrors.notes}</p>
                     )}
                   </div>
 
                   <div className="flex justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={dialog.closeDialog}
-                    >
+                    <Button type="button" variant="outline" onClick={dialog.closeDialog}>
                       Cancel
                     </Button>
                     <Button type="submit" disabled={dialog.isSubmitting}>
@@ -643,24 +554,11 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
             )}
 
             {filteredTenants.length === 0 ? (
-              <Card className="bg-zinc-900 border-zinc-800">
-                <CardContent className="text-center py-12">
-                  <div className="flex flex-col items-center gap-3">
-                    <User className="w-10 h-10 text-zinc-500" />
-                    <h3 className="text-xl font-semibold text-[var(--color-foreground)]">
-                      No tenants yet
-                    </h3>
-                    <p className="text-[var(--color-muted-foreground)] max-w-sm">
-                      Add your first tenant to start managing leases and
-                      communications.
-                    </p>
-                    <Button onClick={dialog.openDialog}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Add Tenant
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <EmptyStateIllustration
+                type="tenants"
+                onAction={dialog.openDialog}
+                compact={compact}
+              />
             ) : (
               <div
                 className={cn(
@@ -678,8 +576,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                       className={cn(
                         "relative bg-[var(--color-surface)] border border-[var(--color-border)] transition-all duration-200 cursor-pointer",
                         "hover:border-[var(--color-accent-primary)]/40 hover:shadow-lg",
-                        isSelected &&
-                          "border-[var(--color-accent-primary)] shadow-lg",
+                        isSelected && "border-[var(--color-accent-primary)] shadow-lg",
                       )}
                       onClick={() => {
                         setSelectedTenant(tenant);
@@ -691,9 +588,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                           <div className="flex items-start gap-3">
                             <Checkbox
                               checked={isSelected}
-                              onCheckedChange={() =>
-                                bulkSelection.toggleSelection(tenant.id)
-                              }
+                              onCheckedChange={() => bulkSelection.toggleSelection(tenant.id)}
                               className="mt-1"
                             />
                             <div className="flex items-center gap-3">
@@ -715,9 +610,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                               <div>
                                 <CardTitle
                                   className={cn(
-                                    compact
-                                      ? "text-xs font-semibold"
-                                      : "text-xl font-semibold",
+                                    compact ? "text-xs font-semibold" : "text-xl font-semibold",
                                     "text-[var(--color-foreground)]",
                                   )}
                                 >
@@ -818,9 +711,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             </span>
                             <span className="text-xs text-[var(--color-foreground)]">
                               {tenant.leaseStart
-                                ? new Date(
-                                    tenant.leaseStart,
-                                  ).toLocaleDateString()
+                                ? new Date(tenant.leaseStart).toLocaleDateString()
                                 : "—"}{" "}
                               →{" "}
                               {tenant.leaseEnd
@@ -841,9 +732,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         </div>
                       </CardHeader>
 
-                      <CardContent
-                        className={compact ? "space-y-1 p-2" : "space-y-4"}
-                      >
+                      <CardContent className={compact ? "space-y-1 p-2" : "space-y-4"}>
                         <div className="space-y-2">
                           <h4 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wide">
                             Notes
@@ -851,9 +740,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                           <EditableCell
                             value={tenant.notes || ""}
                             type="text"
-                            onSave={(value) =>
-                              handleInlineEdit(tenant.id, "notes", value)
-                            }
+                            onSave={(value) => handleInlineEdit(tenant.id, "notes", value)}
                             placeholder="Add important notes"
                             className="text-sm text-[var(--color-foreground)]"
                           />
@@ -866,9 +753,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                               : ""}
                           </span>
                           <span className="text-xs text-[var(--color-muted-foreground)]">
-                            {tenant.paymentStatus
-                              ? tenant.paymentStatus.toUpperCase()
-                              : ""}
+                            {tenant.paymentStatus ? tenant.paymentStatus.toUpperCase() : ""}
                           </span>
                         </div>
                       </CardContent>
@@ -886,9 +771,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
               onSelectAll={() => bulkSelection.selectAll(sortedTenants)}
               onClearSelection={bulkSelection.clearSelection}
               isAllSelected={bulkSelection.isAllSelected(sortedTenants)}
-              isPartiallySelected={bulkSelection.isPartiallySelected(
-                sortedTenants,
-              )}
+              isPartiallySelected={bulkSelection.isPartiallySelected(sortedTenants)}
               selectedIds={Array.from(bulkSelection.selectedIds)}
             />
           </div>

@@ -19,13 +19,7 @@ import {
   Activity,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -123,6 +117,7 @@ export function SettingsView(): React.ReactElement {
       .then((r) => r.json())
       .then((d) => setAppVersion(d.version || ""))
       .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadSettings = async () => {
@@ -146,10 +141,7 @@ export function SettingsView(): React.ReactElement {
     }
   };
 
-  const updateSetting = <K extends keyof UserSettings>(
-    key: K,
-    value: UserSettings[K],
-  ) => {
+  const updateSetting = <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
     setHasChanges(true);
 
@@ -245,16 +237,9 @@ export function SettingsView(): React.ReactElement {
                 ].map((option) => (
                   <Button
                     key={option.value}
-                    variant={
-                      settings.theme === option.value ? "default" : "outline"
-                    }
+                    variant={settings.theme === option.value ? "default" : "outline"}
                     size="sm"
-                    onClick={() =>
-                      updateSetting(
-                        "theme",
-                        option.value as UserSettings["theme"],
-                      )
-                    }
+                    onClick={() => updateSetting("theme", option.value as UserSettings["theme"])}
                     className="flex-1"
                   >
                     <option.icon className="h-4 w-4 mr-1" />
@@ -300,10 +285,7 @@ export function SettingsView(): React.ReactElement {
               <Select
                 value={settings.defaultCurrency}
                 onValueChange={(value) =>
-                  updateSetting(
-                    "defaultCurrency",
-                    value as UserSettings["defaultCurrency"],
-                  )
+                  updateSetting("defaultCurrency", value as UserSettings["defaultCurrency"])
                 }
               >
                 <SelectTrigger>
@@ -323,9 +305,7 @@ export function SettingsView(): React.ReactElement {
               <Label>Default Tax Country</Label>
               <Select
                 value={settings.defaultTaxCountry || ""}
-                onValueChange={(value) =>
-                  updateSetting("defaultTaxCountry", value || null)
-                }
+                onValueChange={(value) => updateSetting("defaultTaxCountry", value || null)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select country" />
@@ -364,9 +344,7 @@ export function SettingsView(): React.ReactElement {
               </div>
               <Switch
                 checked={settings.emailNotifications}
-                onCheckedChange={(checked) =>
-                  updateSetting("emailNotifications", checked)
-                }
+                onCheckedChange={(checked) => updateSetting("emailNotifications", checked)}
               />
             </div>
 
@@ -379,9 +357,7 @@ export function SettingsView(): React.ReactElement {
               </div>
               <Switch
                 checked={settings.taxReminderNotifications}
-                onCheckedChange={(checked) =>
-                  updateSetting("taxReminderNotifications", checked)
-                }
+                onCheckedChange={(checked) => updateSetting("taxReminderNotifications", checked)}
               />
             </div>
 
@@ -394,9 +370,7 @@ export function SettingsView(): React.ReactElement {
               </div>
               <Switch
                 checked={settings.distributionNotifications}
-                onCheckedChange={(checked) =>
-                  updateSetting("distributionNotifications", checked)
-                }
+                onCheckedChange={(checked) => updateSetting("distributionNotifications", checked)}
               />
             </div>
           </CardContent>
@@ -420,9 +394,7 @@ export function SettingsView(): React.ReactElement {
             </div>
             <div className="space-y-2">
               <Label>Name</Label>
-              <p className="text-sm text-muted-foreground">
-                {session?.user?.name || "Not set"}
-              </p>
+              <p className="text-sm text-muted-foreground">{session?.user?.name || "Not set"}</p>
             </div>
             <div className="pt-2">
               <Button variant="outline" size="sm" disabled>
@@ -525,9 +497,7 @@ export function SettingsView(): React.ReactElement {
                 </div>
               </>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Unable to fetch system information
-              </p>
+              <p className="text-sm text-muted-foreground">Unable to fetch system information</p>
             )}
           </CardContent>
         </Card>

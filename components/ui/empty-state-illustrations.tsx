@@ -12,13 +12,18 @@ import {
   BarChart3,
   Plus,
   ArrowRight,
+  Briefcase,
+  DollarSign,
+  FileSpreadsheet,
+  Contact,
+  Home,
 } from "lucide-react";
 import { Button } from "./button";
 import { cn } from "@/lib/utils/utils";
 
 export interface EmptyStateIllustrationProps {
   /** Which entity type this empty state is for */
-  type:
+  type?:
     | "properties"
     | "tenants"
     | "payments"
@@ -26,7 +31,33 @@ export interface EmptyStateIllustrationProps {
     | "maintenance"
     | "correspondence"
     | "reports"
-    | "generic";
+    | "generic"
+    | "owners"
+    | "receipts"
+    | "expenses"
+    | "invoices"
+    | "contracts"
+    | "documents"
+    | "contacts"
+    | "units";
+  /** Alias for type (backwards compatibility) */
+  entityType?:
+    | "properties"
+    | "tenants"
+    | "payments"
+    | "leases"
+    | "maintenance"
+    | "correspondence"
+    | "reports"
+    | "generic"
+    | "owners"
+    | "receipts"
+    | "expenses"
+    | "invoices"
+    | "contracts"
+    | "documents"
+    | "contacts"
+    | "units";
   /** Title override (defaults based on type) */
   title?: string;
   /** Description override (defaults based on type) */
@@ -127,10 +158,78 @@ const emptyStateConfig: Record<
     gradient: "from-zinc-500/20 to-zinc-400/20",
     accentColor: "text-zinc-400",
   },
+  owners: {
+    icon: Briefcase,
+    title: "No owners yet",
+    description: "Add owners to start tracking shared property ownership and revenue splits.",
+    actionLabel: "Add Owner",
+    gradient: "from-indigo-500/20 to-blue-500/20",
+    accentColor: "text-indigo-400",
+  },
+  receipts: {
+    icon: Receipt,
+    title: "No receipts yet",
+    description: "Create payment receipts to keep a record of rent and other payments received.",
+    actionLabel: "Create Receipt",
+    gradient: "from-amber-500/20 to-orange-500/20",
+    accentColor: "text-amber-400",
+  },
+  expenses: {
+    icon: DollarSign,
+    title: "No expenses recorded",
+    description:
+      "Track property expenses to monitor costs and generate accurate financial reports.",
+    actionLabel: "Add Expense",
+    gradient: "from-red-500/20 to-rose-500/20",
+    accentColor: "text-red-400",
+  },
+  invoices: {
+    icon: FileSpreadsheet,
+    title: "No invoices yet",
+    description: "Create invoices for tenants to formalize payment obligations and track billing.",
+    actionLabel: "Create Invoice",
+    gradient: "from-teal-500/20 to-emerald-500/20",
+    accentColor: "text-teal-400",
+  },
+  contracts: {
+    icon: FileText,
+    title: "No contracts found",
+    description:
+      "Contracts represent formal agreements. Create leases to see associated contracts here.",
+    actionLabel: "View Leases",
+    gradient: "from-violet-500/20 to-purple-500/20",
+    accentColor: "text-violet-400",
+  },
+  documents: {
+    icon: FileText,
+    title: "No documents yet",
+    description:
+      "Upload documents to keep property records, contracts, and correspondence organized.",
+    actionLabel: "Upload Document",
+    gradient: "from-sky-500/20 to-cyan-500/20",
+    accentColor: "text-sky-400",
+  },
+  contacts: {
+    icon: Contact,
+    title: "No contacts found",
+    description: "Contacts are populated from your tenants, owners, and service providers.",
+    actionLabel: "Add Contact",
+    gradient: "from-pink-500/20 to-rose-500/20",
+    accentColor: "text-pink-400",
+  },
+  units: {
+    icon: Home,
+    title: "No units yet",
+    description: "Add units to this property to track individual spaces, tenants, and leases.",
+    actionLabel: "Add Unit",
+    gradient: "from-emerald-500/20 to-green-500/20",
+    accentColor: "text-emerald-400",
+  },
 };
 
 export function EmptyStateIllustration({
   type,
+  entityType,
   title,
   description,
   onAction,
@@ -140,7 +239,8 @@ export function EmptyStateIllustration({
   className,
   compact = false,
 }: EmptyStateIllustrationProps): React.ReactElement {
-  const config = emptyStateConfig[type] || emptyStateConfig.generic;
+  const resolvedType = type || entityType || "generic";
+  const config = emptyStateConfig[resolvedType] || emptyStateConfig.generic;
   const Icon = config.icon;
 
   return (
@@ -151,7 +251,7 @@ export function EmptyStateIllustration({
       className={cn(
         "flex flex-col items-center justify-center text-center",
         compact ? "py-8 px-4" : "py-16 px-6",
-        className
+        className,
       )}
     >
       {/* Animated Icon with gradient background */}
@@ -159,25 +259,17 @@ export function EmptyStateIllustration({
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 0.1, duration: 0.4, ease: "easeOut" }}
-        className={cn(
-          "relative rounded-2xl bg-gradient-to-br p-6 mb-6",
-          config.gradient
-        )}
+        className={cn("relative rounded-2xl bg-gradient-to-br p-6 mb-6", config.gradient)}
       >
         {/* Decorative ring */}
         <div className="absolute inset-0 rounded-2xl border border-[var(--color-border)] opacity-50" />
-        
+
         {/* Floating particles (decorative) */}
         <motion.div
           animate={{ y: [-4, 4, -4] }}
           transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
         >
-          <Icon
-            className={cn(
-              config.accentColor,
-              compact ? "h-10 w-10" : "h-14 w-14"
-            )}
-          />
+          <Icon className={cn(config.accentColor, compact ? "h-10 w-10" : "h-14 w-14")} />
         </motion.div>
 
         {/* Small decorative dots */}
@@ -186,7 +278,7 @@ export function EmptyStateIllustration({
           transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
           className={cn(
             "absolute -top-1 -right-1 h-3 w-3 rounded-full",
-            config.accentColor.replace("text-", "bg-")
+            config.accentColor.replace("text-", "bg-"),
           )}
         />
         <motion.div
@@ -194,7 +286,7 @@ export function EmptyStateIllustration({
           transition={{ duration: 2.5, repeat: Infinity, delay: 1 }}
           className={cn(
             "absolute -bottom-1 -left-1 h-2 w-2 rounded-full",
-            config.accentColor.replace("text-", "bg-")
+            config.accentColor.replace("text-", "bg-"),
           )}
         />
       </motion.div>
@@ -206,7 +298,7 @@ export function EmptyStateIllustration({
         transition={{ delay: 0.2 }}
         className={cn(
           "font-semibold text-[var(--color-foreground)] mb-2",
-          compact ? "text-base" : "text-lg"
+          compact ? "text-base" : "text-lg",
         )}
       >
         {title || config.title}
@@ -219,7 +311,7 @@ export function EmptyStateIllustration({
         transition={{ delay: 0.3 }}
         className={cn(
           "text-[var(--color-muted-foreground)] mb-6 max-w-sm",
-          compact ? "text-xs" : "text-sm"
+          compact ? "text-xs" : "text-sm",
         )}
       >
         {description || config.description}

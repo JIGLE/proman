@@ -3,7 +3,6 @@ import {
   TaxCalculator,
   PT_RENDA_ACESSIVEL_THRESHOLD_2026,
   PT_RENDA_ACESSIVEL_RATE,
-  ES_STRESSED_ZONE_DEDUCTIONS,
   type TaxCalculationInput,
 } from "./tax-calculator";
 
@@ -33,9 +32,7 @@ describe("TaxCalculator", () => {
         deductibleExpenses: 3000,
       };
       const result = TaxCalculator.calculateTax(input);
-      expect(result.deductions.breakdown.maxDeductible).toBeLessThanOrEqual(
-        10000 * 0.15,
-      );
+      expect(result.deductions.breakdown.maxDeductible).toBeLessThanOrEqual(10000 * 0.15);
     });
 
     it("PT-003: Should handle zero rental income", () => {
@@ -167,9 +164,7 @@ describe("TaxCalculator", () => {
         monthlyRent: 2500,
       };
       const result = TaxCalculator.calculateTax(input);
-      expect(
-        result.warnings && result.warnings.some((w) => w.includes("exceeds")),
-      ).toBe(true);
+      expect(result.warnings && result.warnings.some((w) => w.includes("exceeds"))).toBe(true);
       expect(result.taxRate).not.toBe(10);
     });
 
@@ -372,10 +367,7 @@ describe("TaxCalculator", () => {
       };
       const result = TaxCalculator.calculateTax(input);
       expect(result.grandesTenedores).toBe(true);
-      expect(
-        result.warnings &&
-          result.warnings.some((w) => w.includes("gran tenedor")),
-      ).toBe(true);
+      expect(result.warnings && result.warnings.some((w) => w.includes("gran tenedor"))).toBe(true);
     });
   });
 
@@ -469,30 +461,18 @@ describe("TaxCalculator", () => {
 
   describe("Quarterly Estimates", () => {
     it("PT-QE-001: Should calculate quarterly estimate for Portugal", () => {
-      const quarterly = TaxCalculator.calculateQuarterlyEstimate(
-        "Portugal",
-        3000,
-        300,
-      );
+      const quarterly = TaxCalculator.calculateQuarterlyEstimate("Portugal", 3000, 300);
       expect(quarterly).toBeGreaterThan(0);
     });
 
     it("PT-QE-002: Should calculate quarterly estimate for Spain", () => {
-      const quarterly = TaxCalculator.calculateQuarterlyEstimate(
-        "Spain",
-        3000,
-        300,
-      );
+      const quarterly = TaxCalculator.calculateQuarterlyEstimate("Spain", 3000, 300);
       expect(quarterly).toBeGreaterThan(0);
     });
 
     it("PT-QE-003: Should base estimate on annualized income", () => {
       const quarter = 3000;
-      const quarterly = TaxCalculator.calculateQuarterlyEstimate(
-        "Portugal",
-        quarter,
-        300,
-      );
+      const quarterly = TaxCalculator.calculateQuarterlyEstimate("Portugal", quarter, 300);
       const annual = TaxCalculator.calculateTax({
         country: "Portugal",
         regime: "portugal_rendimentos",

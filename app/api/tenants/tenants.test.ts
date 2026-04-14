@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { GET as getTenants, POST as postTenants } from "./route";
 
@@ -63,7 +63,7 @@ vi.mock("@/lib/utils/pagination", () => ({
 vi.mock("@/lib/utils/sanitize", () => ({
   sanitizeForDatabase: (val: any) => val,
   sanitizeEmail: (val: any) => val,
-  sanitizeNumber: (val: any, min: any, minBound: any) => Math.max(val, min),
+  sanitizeNumber: (val: any, min: any, _minBound: any) => Math.max(val, min),
 }));
 
 describe("Tenants API - GET /api/tenants", () => {
@@ -83,34 +83,25 @@ describe("Tenants API - GET /api/tenants", () => {
   });
 
   it("should support pagination with page parameter", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/tenants?page=2",
-      {
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/tenants?page=2", {
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
     const response = await getTenants(request);
     expect(response.status).toBe(200);
   });
 
   it("should support pagination with limit parameter", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/tenants?limit=25",
-      {
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/tenants?limit=25", {
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
     const response = await getTenants(request);
     expect(response.status).toBe(200);
   });
 
   it("should handle both page and limit parameters together", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/tenants?page=1&limit=10",
-      {
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/tenants?page=1&limit=10", {
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
     const response = await getTenants(request);
     expect(response.status).toBe(200);
   });

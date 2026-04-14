@@ -24,6 +24,8 @@ import { useToast } from "./toast-context";
 import { useCsrf } from "./csrf-context";
 import { apiFetch } from "@/lib/utils/api-client";
 import { createEntityActions } from "./create-entity-actions";
+import { isDemoModeClient } from "@/lib/demo/demo-mode";
+import { getDemoData } from "@/lib/demo/demo-data";
 
 interface AppState {
   properties: Property[];
@@ -112,16 +114,10 @@ interface AppContextValue {
   updateReceipt: (id: string, data: Partial<Receipt>) => Promise<void>;
   deleteReceipt: (id: string) => Promise<void>;
   addTemplate: (data: Partial<CorrespondenceTemplate>) => Promise<void>;
-  updateTemplate: (
-    id: string,
-    data: Partial<CorrespondenceTemplate>,
-  ) => Promise<void>;
+  updateTemplate: (id: string, data: Partial<CorrespondenceTemplate>) => Promise<void>;
   deleteTemplate: (id: string) => Promise<void>;
   addCorrespondence: (data: Partial<Correspondence>) => Promise<void>;
-  updateCorrespondence: (
-    id: string,
-    data: Partial<Correspondence>,
-  ) => Promise<void>;
+  updateCorrespondence: (id: string, data: Partial<Correspondence>) => Promise<void>;
   deleteCorrespondence: (id: string) => Promise<void>;
   addOwner: (data: Partial<Owner>) => Promise<void>;
   updateOwner: (id: string, data: Partial<Owner>) => Promise<void>;
@@ -129,10 +125,7 @@ interface AppContextValue {
   addExpense: (data: Partial<Expense>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   addMaintenance: (data: Partial<MaintenanceTicket>) => Promise<void>;
-  updateMaintenance: (
-    id: string,
-    data: Partial<MaintenanceTicket>,
-  ) => Promise<void>;
+  updateMaintenance: (id: string, data: Partial<MaintenanceTicket>) => Promise<void>;
   deleteMaintenance: (id: string) => Promise<void>;
   addLease: (data: Partial<Lease>) => Promise<void>;
   updateLease: (id: string, data: Partial<Lease>) => Promise<void>;
@@ -146,11 +139,7 @@ const AppContext = createContext<AppContextValue | null>(null);
 // Provider
 // ---------------------------------------------------------------------------
 
-export function AppProvider({
-  children,
-}: {
-  children: ReactNode;
-}): React.ReactElement {
+export function AppProvider({ children }: { children: ReactNode }): React.ReactElement {
   const [state, dispatch] = React.useReducer(appReducer, initialState);
   const { data: session } = useSession();
   const { error: showError } = useToast();
@@ -160,6 +149,29 @@ export function AppProvider({
   // --- data loading ---
 
   const loadData = useCallback(async () => {
+    // Demo mode: load bundled demo data — no API calls, no auth needed
+    if (isDemoModeClient()) {
+      dispatch({ type: "SET_LOADING", payload: true });
+      dispatch({ type: "SET_ERROR", payload: null });
+      dispatch({ type: "SET_PROPERTIES", payload: getDemoData<Property>("properties") });
+      dispatch({ type: "SET_TENANTS", payload: getDemoData<Tenant>("tenants") });
+      dispatch({ type: "SET_RECEIPTS", payload: getDemoData<Receipt>("receipts") });
+      dispatch({
+        type: "SET_TEMPLATES",
+        payload: getDemoData<CorrespondenceTemplate>("templates"),
+      });
+      dispatch({
+        type: "SET_CORRESPONDENCE",
+        payload: getDemoData<Correspondence>("correspondence"),
+      });
+      dispatch({ type: "SET_OWNERS", payload: getDemoData<Owner>("owners") });
+      dispatch({ type: "SET_EXPENSES", payload: getDemoData<Expense>("expenses") });
+      dispatch({ type: "SET_MAINTENANCE", payload: getDemoData<MaintenanceTicket>("maintenance") });
+      dispatch({ type: "SET_LEASES", payload: getDemoData<Lease>("leases") });
+      dispatch({ type: "SET_LOADING", payload: false });
+      return;
+    }
+
     // Prevent API calls if not authenticated
     if (!userId) {
       dispatch({ type: "SET_LOADING", payload: false });
@@ -183,10 +195,7 @@ export function AppProvider({
         apiFetch<{ data: Property[] }>("/api/properties", csrfToken),
         apiFetch<{ data: Tenant[] }>("/api/tenants", csrfToken),
         apiFetch<{ data: Receipt[] }>("/api/receipts", csrfToken),
-        apiFetch<{ data: CorrespondenceTemplate[] }>(
-          "/api/correspondence/templates",
-          csrfToken,
-        ),
+        apiFetch<{ data: CorrespondenceTemplate[] }>("/api/correspondence/templates", csrfToken),
         apiFetch<{ data: Correspondence[] }>("/api/correspondence", csrfToken),
         apiFetch<{ data: Owner[] }>("/api/owners", csrfToken),
         apiFetch<{ data: Expense[] }>("/api/expenses", csrfToken),
@@ -208,13 +217,11 @@ export function AppProvider({
       });
       dispatch({
         type: "SET_TEMPLATES",
-        payload: (templatesRes.data ??
-          templatesRes) as CorrespondenceTemplate[],
+        payload: (templatesRes.data ?? templatesRes) as CorrespondenceTemplate[],
       });
       dispatch({
         type: "SET_CORRESPONDENCE",
-        payload: (correspondenceRes.data ??
-          correspondenceRes) as Correspondence[],
+        payload: (correspondenceRes.data ?? correspondenceRes) as Correspondence[],
       });
       dispatch({
         type: "SET_OWNERS",
@@ -233,17 +240,15 @@ export function AppProvider({
         payload: (leasesRes.data ?? leasesRes) as Lease[],
       });
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load data";
+      const errorMessage = err instanceof Error ? err.message : "Failed to load data";
 
       // Check if this is a CSRF error
       const isCsrfError =
-        (err instanceof Error &&
-          (err.message.includes("CSRF") || err.message.includes("csrf"))) ||
+        (err instanceof Error && (err.message.includes("CSRF") || err.message.includes("csrf"))) ||
         (typeof err === "object" &&
           err !== null &&
           "status" in err &&
-          (err as any).status === 403);
+          (err as { status?: number }).status === 403);
 
       // For CSRF errors, suggest refresh
       const displayMessage = isCsrfError
@@ -270,8 +275,7 @@ export function AppProvider({
       createEntityActions<Property>({
         endpoint: "/api/properties",
         getItems: () => state.properties,
-        setItems: (items) =>
-          dispatch({ type: "SET_PROPERTIES", payload: items }),
+        setItems: (items) => dispatch({ type: "SET_PROPERTIES", payload: items }),
         showError,
         csrfToken,
         userId,
@@ -313,8 +317,7 @@ export function AppProvider({
       createEntityActions<CorrespondenceTemplate>({
         endpoint: "/api/correspondence/templates",
         getItems: () => state.templates,
-        setItems: (items) =>
-          dispatch({ type: "SET_TEMPLATES", payload: items }),
+        setItems: (items) => dispatch({ type: "SET_TEMPLATES", payload: items }),
         showError,
         csrfToken,
         userId,
@@ -329,8 +332,7 @@ export function AppProvider({
       createEntityActions<Correspondence>({
         endpoint: "/api/correspondence",
         getItems: () => state.correspondence,
-        setItems: (items) =>
-          dispatch({ type: "SET_CORRESPONDENCE", payload: items }),
+        setItems: (items) => dispatch({ type: "SET_CORRESPONDENCE", payload: items }),
         showError,
         csrfToken,
         userId,
@@ -373,8 +375,7 @@ export function AppProvider({
       createEntityActions<MaintenanceTicket>({
         endpoint: "/api/maintenance",
         getItems: () => state.maintenance,
-        setItems: (items) =>
-          dispatch({ type: "SET_MAINTENANCE", payload: items }),
+        setItems: (items) => dispatch({ type: "SET_MAINTENANCE", payload: items }),
         showError,
         csrfToken,
         userId,
@@ -406,40 +407,31 @@ export function AppProvider({
       state,
       dispatch,
       addProperty: (d) => propertyActions.add(d) as unknown as Promise<void>,
-      updateProperty: (id, d) =>
-        propertyActions.update(id, d) as unknown as Promise<void>,
+      updateProperty: (id, d) => propertyActions.update(id, d) as unknown as Promise<void>,
       deleteProperty: (id) => propertyActions.remove(id),
       addTenant: (d) => tenantActions.add(d) as unknown as Promise<void>,
-      updateTenant: (id, d) =>
-        tenantActions.update(id, d) as unknown as Promise<void>,
+      updateTenant: (id, d) => tenantActions.update(id, d) as unknown as Promise<void>,
       deleteTenant: (id) => tenantActions.remove(id),
       addReceipt: (d) => receiptActions.add(d) as unknown as Promise<void>,
-      updateReceipt: (id, d) =>
-        receiptActions.update(id, d) as unknown as Promise<void>,
+      updateReceipt: (id, d) => receiptActions.update(id, d) as unknown as Promise<void>,
       deleteReceipt: (id) => receiptActions.remove(id),
       addTemplate: (d) => templateActions.add(d) as unknown as Promise<void>,
-      updateTemplate: (id, d) =>
-        templateActions.update(id, d) as unknown as Promise<void>,
+      updateTemplate: (id, d) => templateActions.update(id, d) as unknown as Promise<void>,
       deleteTemplate: (id) => templateActions.remove(id),
-      addCorrespondence: (d) =>
-        correspondenceActions.add(d) as unknown as Promise<void>,
+      addCorrespondence: (d) => correspondenceActions.add(d) as unknown as Promise<void>,
       updateCorrespondence: (id, d) =>
         correspondenceActions.update(id, d) as unknown as Promise<void>,
       deleteCorrespondence: (id) => correspondenceActions.remove(id),
       addOwner: (d) => ownerActions.add(d) as unknown as Promise<void>,
-      updateOwner: (id, d) =>
-        ownerActions.update(id, d) as unknown as Promise<void>,
+      updateOwner: (id, d) => ownerActions.update(id, d) as unknown as Promise<void>,
       deleteOwner: (id) => ownerActions.remove(id),
       addExpense: (d) => expenseActions.add(d) as unknown as Promise<void>,
       deleteExpense: (id) => expenseActions.remove(id),
-      addMaintenance: (d) =>
-        maintenanceActions.add(d) as unknown as Promise<void>,
-      updateMaintenance: (id, d) =>
-        maintenanceActions.update(id, d) as unknown as Promise<void>,
+      addMaintenance: (d) => maintenanceActions.add(d) as unknown as Promise<void>,
+      updateMaintenance: (id, d) => maintenanceActions.update(id, d) as unknown as Promise<void>,
       deleteMaintenance: (id) => maintenanceActions.remove(id),
       addLease: (d) => leaseActions.add(d) as unknown as Promise<void>,
-      updateLease: (id, d) =>
-        leaseActions.update(id, d) as unknown as Promise<void>,
+      updateLease: (id, d) => leaseActions.update(id, d) as unknown as Promise<void>,
       deleteLease: (id) => leaseActions.remove(id),
       refreshData,
     }),
@@ -459,9 +451,7 @@ export function AppProvider({
     ],
   );
 
-  return (
-    <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>
-  );
+  return <AppContext.Provider value={contextValue}>{children}</AppContext.Provider>;
 }
 
 export function useApp(): AppContextValue {

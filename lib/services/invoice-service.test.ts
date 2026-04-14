@@ -2,9 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   invoiceService,
   calculateLateFee,
-  type Invoice,
   type CreateInvoiceData,
-  type LateFeeConfig,
   type InvoiceLineItem,
 } from "./invoice-service";
 import { getPrismaClient } from "./database/database";
@@ -420,9 +418,9 @@ describe("Invoice Service", () => {
 
     it("INV-018: Should throw if invoice not found", async () => {
       mockPrisma.invoice.findFirst.mockResolvedValue(null);
-      await expect(
-        invoiceService.update(userId, "non-existent", { amount: 1000 }),
-      ).rejects.toThrow("Invoice not found");
+      await expect(invoiceService.update(userId, "non-existent", { amount: 1000 })).rejects.toThrow(
+        "Invoice not found",
+      );
     });
 
     it("INV-019: Should update due date", async () => {
@@ -586,20 +584,15 @@ describe("Invoice Service", () => {
         createdAt: now,
         updatedAt: now,
       });
-      await invoiceService.markAsPaid(
-        userId,
-        invoiceId,
-        "bank_transfer",
-        "TXN123",
-      );
+      await invoiceService.markAsPaid(userId, invoiceId, "bank_transfer", "TXN123");
       expect(mockPrisma.invoice.update).toHaveBeenCalled();
     });
 
     it("INV-024: Should throw if invoice not found", async () => {
       mockPrisma.invoice.findFirst.mockResolvedValue(null);
-      await expect(
-        invoiceService.markAsPaid(userId, "non-existent"),
-      ).rejects.toThrow("Invoice not found");
+      await expect(invoiceService.markAsPaid(userId, "non-existent")).rejects.toThrow(
+        "Invoice not found",
+      );
     });
 
     it("INV-025: Should handle optional payment details", async () => {
@@ -720,11 +713,9 @@ describe("Invoice Service", () => {
     });
 
     it("INV-032: Should increment sequence per year", async () => {
-      mockPrisma.invoice.findFirst
-        .mockResolvedValueOnce(null)
-        .mockResolvedValueOnce({
-          number: "INV-2026-00001",
-        });
+      mockPrisma.invoice.findFirst.mockResolvedValueOnce(null).mockResolvedValueOnce({
+        number: "INV-2026-00001",
+      });
       mockPrisma.invoice.create.mockResolvedValue({
         id: invoiceId,
         number: "INV-2026-00002",

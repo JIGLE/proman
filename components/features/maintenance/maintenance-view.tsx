@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import {
-  Hammer,
   Plus,
   AlertCircle,
   Clock,
@@ -49,6 +48,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { SearchFilter } from "@/components/ui/search-filter";
 import { ExportButton } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
@@ -67,12 +67,7 @@ interface SortableHeaderProps {
   onSort: (column: keyof MaintenanceTicket) => void;
 }
 
-function SortableHeader({
-  column,
-  label,
-  sortDirection,
-  onSort,
-}: SortableHeaderProps) {
+function SortableHeader({ column, label, sortDirection, onSort }: SortableHeaderProps) {
   return (
     <button
       onClick={() => onSort(column)}
@@ -133,20 +128,14 @@ export function MaintenanceView(): React.ReactElement {
       const matchesSearch =
         searchQuery.length === 0 ||
         ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (ticket.description || "")
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase()) ||
-        (ticket.assignedTo || "")
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase());
+        (ticket.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (ticket.assignedTo || "").toLowerCase().includes(searchQuery.toLowerCase());
 
       // Status filter
-      const matchesStatus =
-        statusFilter === "all" || ticket.status === statusFilter;
+      const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
 
       // Priority filter
-      const matchesPriority =
-        priorityFilter === "all" || ticket.priority === priorityFilter;
+      const matchesPriority = priorityFilter === "all" || ticket.priority === priorityFilter;
 
       return matchesSearch && matchesStatus && matchesPriority;
     });
@@ -208,9 +197,7 @@ export function MaintenanceView(): React.ReactElement {
         <div className="space-y-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-zinc-50">
-                Maintenance
-              </h2>
+              <h2 className="text-3xl font-bold tracking-tight text-zinc-50">Maintenance</h2>
               <p className="text-zinc-400">Manage work orders and repairs</p>
             </div>
             <div className="flex items-center gap-2">
@@ -223,29 +210,21 @@ export function MaintenanceView(): React.ReactElement {
                   {
                     key: "propertyId",
                     label: "Property",
-                    format: (value) =>
-                      properties.find((p) => p.id === value)?.name || "Unknown",
+                    format: (value) => properties.find((p) => p.id === value)?.name || "Unknown",
                   },
                   { key: "status", label: "Status" },
                   { key: "priority", label: "Priority" },
                   {
                     key: "cost",
                     label: "Cost",
-                    format: (value) =>
-                      value ? formatCurrency(value as number) : "Not set",
+                    format: (value) => (value ? formatCurrency(value as number) : "Not set"),
                   },
                   { key: "assignedTo", label: "Assigned To" },
                 ]}
               />
-              <Dialog
-                open={dialog.isOpen}
-                onOpenChange={(open) => !open && dialog.closeDialog()}
-              >
+              <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
                 <DialogTrigger asChild>
-                  <Button
-                    onClick={dialog.openDialog}
-                    className="flex items-center gap-2"
-                  >
+                  <Button onClick={dialog.openDialog} className="flex items-center gap-2">
                     <Plus className="w-4 h-4" />
                     New Ticket
                   </Button>
@@ -253,13 +232,9 @@ export function MaintenanceView(): React.ReactElement {
                 <DialogContent className="bg-zinc-900 border-zinc-800 sm:max-w-[600px]">
                   <DialogHeader>
                     <DialogTitle>
-                      {dialog.editingItem
-                        ? "Edit Maintenance Ticket"
-                        : "Create Maintenance Ticket"}
+                      {dialog.editingItem ? "Edit Maintenance Ticket" : "Create Maintenance Ticket"}
                     </DialogTitle>
-                    <DialogDescription>
-                      Submit a new maintenance request
-                    </DialogDescription>
+                    <DialogDescription>Submit a new maintenance request</DialogDescription>
                   </DialogHeader>
                   <form onSubmit={dialog.handleSubmit} className="space-y-4">
                     <div className="space-y-2">
@@ -267,18 +242,12 @@ export function MaintenanceView(): React.ReactElement {
                       <Input
                         id="title"
                         value={dialog.formData.title}
-                        onChange={(e) =>
-                          dialog.updateFormData({ title: e.target.value })
-                        }
-                        className={
-                          dialog.formErrors.title ? "border-red-500" : ""
-                        }
+                        onChange={(e) => dialog.updateFormData({ title: e.target.value })}
+                        className={dialog.formErrors.title ? "border-red-500" : ""}
                         placeholder="e.g. Leaking faucet"
                       />
                       {dialog.formErrors.title && (
-                        <p className="text-xs text-red-500">
-                          {dialog.formErrors.title}
-                        </p>
+                        <p className="text-xs text-red-500">{dialog.formErrors.title}</p>
                       )}
                     </div>
 
@@ -287,17 +256,11 @@ export function MaintenanceView(): React.ReactElement {
                         <Label htmlFor="property">Property</Label>
                         <Select
                           value={dialog.formData.propertyId}
-                          onValueChange={(val) =>
-                            dialog.updateFormData({ propertyId: val })
-                          }
+                          onValueChange={(val) => dialog.updateFormData({ propertyId: val })}
                         >
                           <SelectTrigger
                             id="property"
-                            className={
-                              dialog.formErrors.propertyId
-                                ? "border-red-500"
-                                : ""
-                            }
+                            className={dialog.formErrors.propertyId ? "border-red-500" : ""}
                           >
                             <SelectValue placeholder="Select property" />
                           </SelectTrigger>
@@ -310,9 +273,7 @@ export function MaintenanceView(): React.ReactElement {
                           </SelectContent>
                         </Select>
                         {dialog.formErrors.propertyId && (
-                          <p className="text-xs text-red-500">
-                            {dialog.formErrors.propertyId}
-                          </p>
+                          <p className="text-xs text-red-500">{dialog.formErrors.propertyId}</p>
                         )}
                       </div>
                       <div className="space-y-2">
@@ -343,27 +304,19 @@ export function MaintenanceView(): React.ReactElement {
                       <Textarea
                         id="description"
                         value={dialog.formData.description}
-                        onChange={(e) =>
-                          dialog.updateFormData({ description: e.target.value })
-                        }
-                        className={
-                          dialog.formErrors.description ? "border-red-500" : ""
-                        }
+                        onChange={(e) => dialog.updateFormData({ description: e.target.value })}
+                        className={dialog.formErrors.description ? "border-red-500" : ""}
                         placeholder="Detailed description of the issue..."
                         rows={4}
                       />
                       {dialog.formErrors.description && (
-                        <p className="text-xs text-red-500">
-                          {dialog.formErrors.description}
-                        </p>
+                        <p className="text-xs text-red-500">{dialog.formErrors.description}</p>
                       )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="assignedTo">
-                          Assigned To (Optional)
-                        </Label>
+                        <Label htmlFor="assignedTo">Assigned To (Optional)</Label>
                         <Input
                           id="assignedTo"
                           value={dialog.formData.assignedTo || ""}
@@ -385,9 +338,7 @@ export function MaintenanceView(): React.ReactElement {
                           value={dialog.formData.cost || ""}
                           onChange={(e) =>
                             dialog.updateFormData({
-                              cost: e.target.value
-                                ? parseFloat(e.target.value)
-                                : undefined,
+                              cost: e.target.value ? parseFloat(e.target.value) : undefined,
                             })
                           }
                         />
@@ -395,11 +346,7 @@ export function MaintenanceView(): React.ReactElement {
                     </div>
 
                     <div className="flex justify-end gap-2 pt-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={dialog.closeDialog}
-                      >
+                      <Button type="button" variant="outline" onClick={dialog.closeDialog}>
                         Cancel
                       </Button>
                       <Button type="submit" disabled={dialog.isSubmitting}>
@@ -493,21 +440,14 @@ export function MaintenanceView(): React.ReactElement {
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filteredTickets.length === 0 ? (
               <div className="col-span-full">
-                <Card className="bg-zinc-900 border-zinc-800">
-                  <CardContent className="p-8 text-center">
-                    <Hammer className="w-12 h-12 text-zinc-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-zinc-50 mb-2">
-                      {maintenance.length === 0
-                        ? "No maintenance tickets"
-                        : "No tickets found"}
-                    </h3>
-                    <p className="text-zinc-400 mb-4">
-                      {maintenance.length === 0
-                        ? "Create a new ticket to track maintenance requests"
-                        : "Try adjusting your search or filters"}
-                    </p>
-                  </CardContent>
-                </Card>
+                <EmptyStateIllustration
+                  type={maintenance.length === 0 ? "maintenance" : "generic"}
+                  title={maintenance.length === 0 ? undefined : "No tickets found"}
+                  description={
+                    maintenance.length === 0 ? undefined : "Try adjusting your search or filters"
+                  }
+                  onAction={maintenance.length === 0 ? dialog.openDialog : undefined}
+                />
               </div>
             ) : (
               sortedTickets.map((ticket) => (
@@ -516,27 +456,17 @@ export function MaintenanceView(): React.ReactElement {
                     <div className="flex justify-between items-start">
                       <Badge
                         variant="outline"
-                        className={cn(
-                          "capitalize mb-2",
-                          getPriorityColor(ticket.priority),
-                        )}
+                        className={cn("capitalize mb-2", getPriorityColor(ticket.priority))}
                       >
                         {ticket.priority} Priority
                       </Badge>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                          >
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
                             <MoreVertical className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent
-                          align="end"
-                          className="bg-zinc-900 border-zinc-800"
-                        >
+                        <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800">
                           <DropdownMenuItem
                             className="text-zinc-300 focus:bg-zinc-800 cursor-pointer"
                             onClick={() => handleEdit(ticket)}
@@ -556,21 +486,15 @@ export function MaintenanceView(): React.ReactElement {
                       {ticket.title}
                     </CardTitle>
                     <CardDescription className="line-clamp-1">
-                      {ticket.propertyName
-                        ? ticket.propertyName
-                        : "Unknown Property"}
+                      {ticket.propertyName ? ticket.propertyName : "Unknown Property"}
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pb-3">
-                    <p className="text-sm text-zinc-400 line-clamp-3 mb-4">
-                      {ticket.description}
-                    </p>
+                    <p className="text-sm text-zinc-400 line-clamp-3 mb-4">{ticket.description}</p>
                     <div className="flex items-center justify-between text-sm">
                       <div className="flex items-center gap-2 text-zinc-400">
                         {getStatusIcon(ticket.status)}
-                        <span className="capitalize">
-                          {ticket.status.replace("_", " ")}
-                        </span>
+                        <span className="capitalize">{ticket.status.replace("_", " ")}</span>
                       </div>
                       {ticket.cost && (
                         <span className="font-medium text-zinc-300">
@@ -580,12 +504,8 @@ export function MaintenanceView(): React.ReactElement {
                     </div>
                   </CardContent>
                   <CardFooter className="pt-3 border-t border-zinc-800 text-xs text-zinc-500 flex justify-between">
-                    <span>
-                      Created {new Date(ticket.createdAt).toLocaleDateString()}
-                    </span>
-                    {ticket.assignedTo && (
-                      <span>Assigned: {ticket.assignedTo}</span>
-                    )}
+                    <span>Created {new Date(ticket.createdAt).toLocaleDateString()}</span>
+                    {ticket.assignedTo && <span>Assigned: {ticket.assignedTo}</span>}
                   </CardFooter>
                 </Card>
               ))

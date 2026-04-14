@@ -1,10 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { NextRequest } from "next/server";
-import {
-  GET as getPropertyById,
-  PUT as updateProperty,
-  DELETE as deleteProperty,
-} from "./route";
+import { GET as getPropertyById, PUT as updateProperty, DELETE as deleteProperty } from "./route";
 
 // Mock auth middleware
 vi.mock("@/lib/services/auth/auth-middleware", () => ({
@@ -45,7 +41,7 @@ vi.mock("@/lib/services/database", () => ({
 
 // Mock error handling
 vi.mock("@/lib/utils/error-handling", () => ({
-  createErrorResponse: (error: any, status: any, req: any) =>
+  createErrorResponse: (error: any, status: any, _req: any) =>
     new Response(JSON.stringify({ error: error.message }), { status }),
   createSuccessResponse: (data: any, status: any = 200) =>
     new Response(JSON.stringify(data), { status }),
@@ -61,12 +57,9 @@ vi.mock("@/lib/utils/sanitize", () => ({
 
 describe("Properties API - GET /api/properties/[id]", () => {
   it("should return property when authenticated and authorized", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-      {
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123", {
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
 
     const response = await getPropertyById(request, {
       params: { id: "prop-123" },
@@ -75,9 +68,7 @@ describe("Properties API - GET /api/properties/[id]", () => {
   });
 
   it("should return 401 when not authenticated", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123");
     const response = await getPropertyById(request, {
       params: { id: "prop-123" },
     });
@@ -93,12 +84,9 @@ describe("Properties API - GET /api/properties/[id]", () => {
   });
 
   it("should return 404 when property not found", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/nonexistent",
-      {
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/nonexistent", {
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
     const response = await getPropertyById(request, {
       params: { id: "nonexistent" },
     });
@@ -106,12 +94,9 @@ describe("Properties API - GET /api/properties/[id]", () => {
   });
 
   it("should return 404 for non-existent ID", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/fake-id",
-      {
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/fake-id", {
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
     const response = await getPropertyById(request, {
       params: { id: "fake-id" },
     });
@@ -119,12 +104,9 @@ describe("Properties API - GET /api/properties/[id]", () => {
   });
 
   it("should handle promise-based params", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-      {
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123", {
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
     const response = await getPropertyById(request, {
       params: Promise.resolve({ id: "prop-123" }),
     });
@@ -132,12 +114,9 @@ describe("Properties API - GET /api/properties/[id]", () => {
   });
 
   it("should include all property fields in response", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-      {
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123", {
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
     const response = await getPropertyById(request, {
       params: { id: "prop-123" },
     });
@@ -147,14 +126,11 @@ describe("Properties API - GET /api/properties/[id]", () => {
 
 describe("Properties API - PUT /api/properties/[id]", () => {
   it("should update property with valid data", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-      {
-        method: "PUT",
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-        body: JSON.stringify({ name: "456 Oak Ave" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123", {
+      method: "PUT",
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+      body: JSON.stringify({ name: "456 Oak Ave" }),
+    });
 
     const response = await updateProperty(request, {
       params: { id: "prop-123" },
@@ -163,13 +139,10 @@ describe("Properties API - PUT /api/properties/[id]", () => {
   });
 
   it("should return 401 when not authenticated", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-      {
-        method: "PUT",
-        body: JSON.stringify({ name: "456 Oak Ave" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123", {
+      method: "PUT",
+      body: JSON.stringify({ name: "456 Oak Ave" }),
+    });
     const response = await updateProperty(request, {
       params: { id: "prop-123" },
     });
@@ -177,14 +150,11 @@ describe("Properties API - PUT /api/properties/[id]", () => {
   });
 
   it("should return 404 when property not found", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/nonexistent",
-      {
-        method: "PUT",
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-        body: JSON.stringify({ name: "456 Oak Ave" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/nonexistent", {
+      method: "PUT",
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+      body: JSON.stringify({ name: "456 Oak Ave" }),
+    });
     const response = await updateProperty(request, {
       params: { id: "nonexistent" },
     });
@@ -192,14 +162,11 @@ describe("Properties API - PUT /api/properties/[id]", () => {
   });
 
   it("should validate partial updates", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-      {
-        method: "PUT",
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-        body: JSON.stringify({ bedrooms: 3 }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123", {
+      method: "PUT",
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+      body: JSON.stringify({ bedrooms: 3 }),
+    });
 
     const response = await updateProperty(request, {
       params: { id: "prop-123" },
@@ -208,14 +175,11 @@ describe("Properties API - PUT /api/properties/[id]", () => {
   });
 
   it("should sanitize update input", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-      {
-        method: "PUT",
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-        body: JSON.stringify({ name: "123<script>alert('xss')</script>" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123", {
+      method: "PUT",
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+      body: JSON.stringify({ name: "123<script>alert('xss')</script>" }),
+    });
 
     const response = await updateProperty(request, {
       params: { id: "prop-123" },
@@ -224,14 +188,11 @@ describe("Properties API - PUT /api/properties/[id]", () => {
   });
 
   it("should validate bedrooms range on update", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-      {
-        method: "PUT",
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-        body: JSON.stringify({ bedrooms: -5 }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123", {
+      method: "PUT",
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+      body: JSON.stringify({ bedrooms: -5 }),
+    });
 
     const response = await updateProperty(request, {
       params: { id: "prop-123" },
@@ -250,14 +211,11 @@ describe("Properties API - PUT /api/properties/[id]", () => {
   });
 
   it("should allow empty body (no changes)", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-      {
-        method: "PUT",
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-        body: JSON.stringify({}),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123", {
+      method: "PUT",
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+      body: JSON.stringify({}),
+    });
 
     const response = await updateProperty(request, {
       params: { id: "prop-123" },
@@ -268,13 +226,10 @@ describe("Properties API - PUT /api/properties/[id]", () => {
 
 describe("Properties API - DELETE /api/properties/[id]", () => {
   it("should delete property when authenticated", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-      {
-        method: "DELETE",
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123", {
+      method: "DELETE",
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
 
     const response = await deleteProperty(request, {
       params: { id: "prop-123" },
@@ -283,12 +238,9 @@ describe("Properties API - DELETE /api/properties/[id]", () => {
   });
 
   it("should return 401 when not authenticated", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-      {
-        method: "DELETE",
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123", {
+      method: "DELETE",
+    });
     const response = await deleteProperty(request, {
       params: { id: "prop-123" },
     });
@@ -296,13 +248,10 @@ describe("Properties API - DELETE /api/properties/[id]", () => {
   });
 
   it("should return 404 when property not found", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/nonexistent",
-      {
-        method: "DELETE",
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/nonexistent", {
+      method: "DELETE",
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
     const response = await deleteProperty(request, {
       params: { id: "nonexistent" },
     });
@@ -319,13 +268,10 @@ describe("Properties API - DELETE /api/properties/[id]", () => {
   });
 
   it("should cascade delete related records (tenants, leases, invoices)", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-      {
-        method: "DELETE",
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123", {
+      method: "DELETE",
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
 
     const response = await deleteProperty(request, {
       params: { id: "prop-123" },
@@ -334,13 +280,10 @@ describe("Properties API - DELETE /api/properties/[id]", () => {
   });
 
   it("should handle promise-based params", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/prop-123",
-      {
-        method: "DELETE",
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/prop-123", {
+      method: "DELETE",
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
 
     const response = await deleteProperty(request, {
       params: Promise.resolve({ id: "prop-123" }),
@@ -349,13 +292,10 @@ describe("Properties API - DELETE /api/properties/[id]", () => {
   });
 
   it("should prevent deletion of non-owned properties", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties/other-user-prop",
-      {
-        method: "DELETE",
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties/other-user-prop", {
+      method: "DELETE",
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
     const response = await deleteProperty(request, {
       params: { id: "other-user-prop" },
     });

@@ -29,10 +29,7 @@ type Account = {
 import CredentialsProvider from "next-auth/providers/credentials";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { isMockMode } from "@/lib/config/data-mode";
-import {
-  createDevSession,
-  isDevAuthEnabled,
-} from "@/lib/services/auth/dev-session";
+import { createDevSession, isDevAuthEnabled } from "@/lib/services/auth/dev-session";
 
 function createBaseAuthOptions(): NextAuthOptions {
   const secret = process.env.NEXTAUTH_SECRET;
@@ -69,8 +66,7 @@ function createBaseAuthOptions(): NextAuthOptions {
 
   // Credentials provider for demo / self-hosted auth — disabled in production unless ENABLE_DEMO_LOGIN=true
   const enableDemoLogin =
-    process.env.ENABLE_DEMO_LOGIN === "true" ||
-    process.env.NODE_ENV !== "production";
+    process.env.ENABLE_DEMO_LOGIN === "true" || process.env.NODE_ENV !== "production";
   if (enableDemoLogin) {
     providers.push(
       CredentialsProvider({
@@ -81,13 +77,8 @@ function createBaseAuthOptions(): NextAuthOptions {
           email: { label: "Email", type: "email" },
           password: { label: "Password", type: "password" },
         },
-        async authorize(
-          credentials: { email?: string; password?: string } | undefined,
-        ) {
-          if (
-            credentials?.email === "demo@proman.local" &&
-            credentials?.password === "demo123"
-          ) {
+        async authorize(credentials: { email?: string; password?: string } | undefined) {
+          if (credentials?.email === "demo@proman.local" && credentials?.password === "demo123") {
             // In mock mode, return a stable demo user without DB access
             if (isMockMode) {
               logger.debug("Demo auth successful (mock mode)");
@@ -126,10 +117,16 @@ function createBaseAuthOptions(): NextAuthOptions {
               };
             } catch (error) {
               logger.error(
-                "Demo auth error — database may be unavailable",
+                "Demo auth error — database may be unavailable, using synthetic demo user",
                 error instanceof Error ? error : new Error(String(error)),
               );
-              return null;
+              // Return synthetic demo user so demo mode works even when DB is down
+              return {
+                id: "demo-user",
+                email: credentials.email,
+                name: "Demo User",
+                image: null,
+              };
             }
           }
           return null;
@@ -160,7 +157,11 @@ function createBaseAuthOptions(): NextAuthOptions {
         account?: unknown;
       }): Promise<JWT> {
         // If no user yet and dev auth is enabled, inject dev session
-        if (!user && isDevAuthEnabled() && !(token as any).isDevAuth) {
+        if (
+          !user &&
+          isDevAuthEnabled() &&
+          !(token as unknown as Record<string, unknown>).isDevAuth
+        ) {
           const devSession = createDevSession();
           const t = token as JWT & {
             id?: string;

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { GET as getProperties, POST as postProperties } from "./route";
 
@@ -76,12 +76,9 @@ describe("Properties API - GET /api/properties", () => {
   });
 
   it("should support pagination with page and limit parameters", async () => {
-    const request = new NextRequest(
-      "http://localhost:3000/api/properties?page=1&limit=10",
-      {
-        headers: new Headers({ Authorization: "Bearer valid-token" }),
-      },
-    );
+    const request = new NextRequest("http://localhost:3000/api/properties?page=1&limit=10", {
+      headers: new Headers({ Authorization: "Bearer valid-token" }),
+    });
     const response = await getProperties(request);
     expect(response.status).toBe(200);
   });
