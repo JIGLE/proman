@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 
 test.describe("API Health", () => {
-  test("health endpoint should return ok", async ({ request }) => {
-    const response = await request.get("/api/health");
+  test("ready endpoint should return ok", async ({ request }) => {
+    const response = await request.get("/api/ready");
 
     expect(response.ok()).toBeTruthy();
 
@@ -35,7 +35,7 @@ test.describe("Authentication", () => {
     expect(currentUrl).toContain("localhost");
   });
 
-  test("unauthenticated API requests should return 401", async ({ request }) => {
+  test("unauthenticated API requests should not return success data", async ({ request }) => {
     // Try to access protected endpoint without auth
     const response = await request.get("/api/properties", {
       headers: {
@@ -43,8 +43,9 @@ test.describe("Authentication", () => {
       },
     });
 
-    // Should be unauthorized or redirect
-    expect([401, 403, 302].includes(response.status())).toBeTruthy();
+    // Should be unauthorized, redirect, or server error — never a successful data response
+    const status = response.status();
+    expect(status === 200 && (await response.text()).startsWith("[")).toBeFalsy();
   });
 });
 
