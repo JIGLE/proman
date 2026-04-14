@@ -2,15 +2,15 @@ name: CI - Consolidated
 
 on:
   push:
-    branches: [develop, 'feature/**']
+    branches: [develop, "feature/**"]
   pull_request:
     branches: [main]
   workflow_dispatch:
     inputs:
       run_e2e:
-        description: 'Run Playwright E2E after build (true/false)'
+        description: "Run Playwright E2E after build (true/false)"
         required: false
-        default: 'false'
+        default: "false"
 
 permissions:
   contents: read
@@ -20,32 +20,13 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '22'
+  NODE_VERSION: "22"
 
 jobs:
   # ── Parallel gate: lint + test run simultaneously ──
   lint-type:
     name: Lint & Type Check
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Install dependencies
-        run: npm ci
-      - name: Lint
-        run: npm run lint
-      - name: Build
-        run: npm run build
-      - name: Test
-        run: npm test
-      - name: Summary
-        run: |
-          echo "## Build and Test Results" >> $GITHUB_STEP_SUMMARY
-          echo "Lint, build, and test completed for $GITHUB_REF" >> $GITHUB_STEP_SUMMARY
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v6
@@ -54,13 +35,16 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
       - name: Run linter
         run: npm run lint
+
+      - name: Format check
+        run: npx prettier --check .
 
       - name: Type check
         run: npm run type-check
@@ -76,7 +60,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -105,7 +89,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Restore Next.js build cache
         uses: actions/cache@v5
@@ -149,7 +133,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
@@ -209,7 +193,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -278,7 +262,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci

@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    - cron: '0 2 * * *'
+    - cron: "0 2 * * *"
   workflow_dispatch:
 
 concurrency:
@@ -14,21 +14,12 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: '22'
+  NODE_VERSION: "22"
 
 jobs:
   dependency-scan:
     name: Dependency Security Scan
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Run Security Scan
-        run: echo "Run your security scan here" # Replace with actual scan command
-      - name: Summary
-        run: |
-          echo "## Security Scan Results" >> $GITHUB_STEP_SUMMARY
-          echo "Security scan completed for $GITHUB_REF" >> $GITHUB_STEP_SUMMARY
     timeout-minutes: 10
 
     steps:
@@ -38,7 +29,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -55,15 +46,15 @@ jobs:
             echo "No audit report generated"
             exit 0
           fi
-          
+
           VULNERABILITIES=$(cat audit-report.json | jq -r '.metadata.vulnerabilities.total // 0')
           CRITICAL=$(cat audit-report.json | jq -r '.metadata.vulnerabilities.critical // 0')
           HIGH=$(cat audit-report.json | jq -r '.metadata.vulnerabilities.high // 0')
-          
+
           echo "Total vulnerabilities: $VULNERABILITIES"
           echo "Critical: $CRITICAL"
           echo "High: $HIGH"
-          
+
           # Fail on critical vulnerabilities only
           if [ "$CRITICAL" -gt 0 ]; then
             echo "::error::Found $CRITICAL critical severity vulnerabilities"
@@ -91,7 +82,7 @@ jobs:
         uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -138,7 +129,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ['javascript']
+        language: ["javascript"]
 
     steps:
       - uses: actions/checkout@v6
@@ -205,13 +196,13 @@ jobs:
         run: |
           echo "## 🔒 Security Scan Summary" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           echo "### Job Results" >> $GITHUB_STEP_SUMMARY
           echo "- Dependency Scan: ${{ needs.dependency-scan.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- Security Scan: ${{ needs.security-scan.result }}" >> $GITHUB_STEP_SUMMARY
           echo "- CodeQL Analysis: ${{ needs.codeql-analysis.result }}" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
-          
+
           if [ -f npm-audit-report/audit-report.json ]; then
             echo "### 📦 Dependency Audit" >> $GITHUB_STEP_SUMMARY
             TOTAL=$(cat npm-audit-report/audit-report.json | jq -r '.metadata.vulnerabilities.total // 0')
