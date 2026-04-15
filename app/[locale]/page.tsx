@@ -1,11 +1,14 @@
 ﻿import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Building2, Users, Wallet, ArrowRight } from "lucide-react";
+import { Building2, Users, Wallet, ArrowRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { getTranslations } from "next-intl/server";
 
 import pkg from "@/package.json";
+
+const isDemoEnabled =
+  process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true" || process.env.NODE_ENV !== "production";
 
 interface Props {
   params: Promise<{ locale: string }>;
@@ -80,15 +83,29 @@ export default async function LandingPage({ params }: Props) {
           <p className="text-lg sm:text-xl text-zinc-400 max-w-2xl mx-auto mb-10">
             {t("subtitle")}
           </p>
-          <Link href="/auth/signin">
-            <Button
-              size="lg"
-              className="bg-blue-600 hover:bg-blue-700 text-white gap-2 px-8 h-12 text-base"
-            >
-              {t("cta")}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </Link>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+            <Link href="/auth/signin">
+              <Button
+                size="lg"
+                className="bg-blue-600 hover:bg-blue-700 text-white gap-2 px-8 h-12 text-base"
+              >
+                {t("cta")}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
+            {isDemoEnabled && (
+              <Link href={`/${locale}/demo`}>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="border-zinc-700 text-zinc-300 hover:text-zinc-50 hover:border-zinc-500 gap-2 px-8 h-12 text-base"
+                >
+                  <Play className="h-4 w-4" />
+                  {t("demoCta")}
+                </Button>
+              </Link>
+            )}
+          </div>
         </div>
       </section>
 

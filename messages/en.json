@@ -172,6 +172,7 @@
     "hero": "Property Management Simplified",
     "subtitle": "Manage properties, tenants, contracts, and finances in one place.",
     "cta": "Get Started",
+    "demoCta": "Try Demo",
     "features": {
       "properties": {
         "title": "Property Management",

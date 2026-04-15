@@ -172,6 +172,7 @@
     "hero": "Gestión Inmobiliaria Simplificada",
     "subtitle": "Gestiona inmuebles, inquilinos, contratos y finanzas en un solo lugar.",
     "cta": "Empezar",
+    "demoCta": "Probar Demo",
     "features": {
       "properties": {
         "title": "Gestión de Inmuebles",
