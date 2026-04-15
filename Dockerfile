@@ -41,6 +41,7 @@ RUN DATABASE_URL="file:./build.db" \
     NEXTAUTH_SECRET="build-time-placeholder-secret-minimum-32-chars" \
     GOOGLE_CLIENT_ID="build-placeholder" \
     GOOGLE_CLIENT_SECRET="build-placeholder" \
+    NEXT_PUBLIC_ENABLE_DEMO_LOGIN="true" \
     npm run build
 
 # Generate version.json
