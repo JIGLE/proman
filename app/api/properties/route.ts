@@ -57,7 +57,7 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
 // POST /api/properties - Create a new property
 async function handlePost(request: NextRequest): Promise<Response> {
-  const demo = handleDemoMutation(request, "properties");
+  const demo = await handleDemoMutation(request, "properties");
   if (demo.response) return demo.response;
 
   const authResult = await requireAuth(request);

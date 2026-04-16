@@ -13,6 +13,7 @@
 import crypto from "crypto";
 import fs from "fs";
 import { getPrismaClient } from "../services/database/database";
+import { validatePortugueseNIF as validateNIF } from "@/lib/utils/tax-id-validation";
 
 // SAF-T PT Version
 const SAFT_VERSION = "1.04_01";
@@ -171,22 +172,9 @@ export interface SAFTExportOptions {
 
 /**
  * Validate Portuguese NIF (Número de Identificação Fiscal)
+ * Re-exported from shared validation module for backward compatibility.
  */
-export function validateNIF(nif: string): boolean {
-  if (!nif || nif.length !== 9) return false;
-
-  // Must start with valid prefix
-  const validPrefixes = ["1", "2", "3", "5", "6", "7", "8", "9"];
-  if (!validPrefixes.includes(nif.charAt(0))) return false;
-
-  // Check digit calculation
-  const weights = [9, 8, 7, 6, 5, 4, 3, 2, 1];
-  const sum = nif.split("").reduce((acc, digit, index) => {
-    return acc + parseInt(digit) * weights[index];
-  }, 0);
-
-  return sum % 11 === 0;
-}
+export { validatePortugueseNIF as validateNIF } from "@/lib/utils/tax-id-validation";
 
 /**
  * Generate ATCUD (Código Único do Documento)

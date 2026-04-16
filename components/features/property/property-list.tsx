@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
+import { useState, useEffect, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
+import { Building2, MapPin, Bed, Bath, CheckCircle, Wrench } from "lucide-react";
+import { SortableHeader } from "@/components/ui/sortable-header";
+import { getCountryName, resolveCountryCode } from "@/lib/utils/country";
+import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
 import {
-  Building2,
-  MapPin,
-  Bed,
-  Bath,
-  Plus,
-  CheckCircle,
-  Wrench,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-} from "lucide-react";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { motion } from "framer-motion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,22 +35,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { SearchFilter } from "@/components/ui/search-filter";
 import { cn } from "@/lib/utils/utils";
 import { BulkActionBar, getDefaultBulkActions } from "@/components/ui/bulk-action-bar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 import { useApp } from "@/lib/contexts/app-context";
+import { RelationshipBadge } from "@/components/shared/relationship-badge";
 import { Property } from "@/lib/types";
 import { propertySchema, PropertyFormData } from "@/lib/utils/validation";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
-import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
+import { useSortableData } from "@/lib/hooks/use-sortable-data";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { AddressVerificationService, AddressSuggestion } from "@/lib/services/address-verification";
 import PropertyMap from "./property-map";
 import { PropertyDetailModal } from "./property-detail-modal";
+import { PageHeader } from "@/components/shared/page-header";
 
 export type PropertiesViewProps = {
   viewMode?: "list" | "map";
@@ -62,34 +65,13 @@ export type PropertiesViewRef = {
   openDialog: () => void;
 };
 
-interface SortableHeaderProps {
-  column: keyof Property;
-  label: string;
-  sortDirection: SortDirection;
-  onSort: (column: keyof Property) => void;
-}
-
-function SortableHeader({ column, label, sortDirection, onSort }: SortableHeaderProps) {
-  return (
-    <button
-      onClick={() => onSort(column)}
-      className="flex items-center gap-1 text-sm font-medium text-zinc-400 hover:text-zinc-50 transition-colors"
-    >
-      {label}
-      {sortDirection === "asc" && <ArrowUp className="w-3 h-3" />}
-      {sortDirection === "desc" && <ArrowDown className="w-3 h-3" />}
-      {sortDirection === null && <ArrowUpDown className="w-3 h-3 opacity-50" />}
-    </button>
-  );
-}
-
 export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>(
   function PropertiesView(
     { viewMode = "list", onPropertySelect }: PropertiesViewProps,
     ref,
   ): React.ReactElement {
     const { state, addProperty, updateProperty, deleteProperty } = useApp();
-    const { properties, loading } = state;
+    const { properties, tenants, leases, maintenance, loading } = state;
     const { success } = useToast();
     const { formatCurrency } = useCurrency();
     const confirmDialog = useConfirmDialog();
@@ -103,6 +85,17 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
 
+    // Data view mode state with localStorage persistence
+    const [dataViewMode, setDataViewMode] = useState<DataViewMode>("grid");
+    useEffect(() => {
+      const saved = localStorage.getItem("proman-properties-view-mode");
+      if (saved === "grid" || saved === "table") setDataViewMode(saved);
+    }, []);
+    const handleViewModeChange = useCallback((mode: DataViewMode) => {
+      setDataViewMode(mode);
+      localStorage.setItem("proman-properties-view-mode", mode);
+    }, []);
+
     // Search and filter state
     const [searchQuery, setSearchQuery] = useState("");
     const [typeFilter, setTypeFilter] = useState<string>("all");
@@ -115,7 +108,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
       streetAddress: "",
       city: "",
       zipCode: "",
-      country: "Portugal",
+      country: "PT",
       latitude: undefined,
       longitude: undefined,
       addressVerified: false,
@@ -277,7 +270,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
       try {
         const suggestions = await AddressVerificationService.searchAddresses(
           query,
-          dialog.formData.country as "Portugal" | "Spain",
+          getCountryName(dialog.formData.country as "PT" | "ES") as "Portugal" | "Spain",
         );
         setAddressSuggestions(suggestions);
         setShowSuggestions(suggestions.length > 0);
@@ -301,7 +294,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
         streetAddress: verifiedAddress.streetAddress,
         city: verifiedAddress.city,
         zipCode: verifiedAddress.zipCode,
-        country: verifiedAddress.country as "Portugal" | "Spain",
+        country: resolveCountryCode(verifiedAddress.country) as "PT" | "ES",
         latitude: verifiedAddress.latitude,
         longitude: verifiedAddress.longitude,
         addressVerified: verifiedAddress.verified,
@@ -370,6 +363,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
           <LoadingState variant="cards" count={6} />
         ) : (
           <div className="space-y-6">
+            <PageHeader title="Properties" description="Manage your property portfolio" />
             {/* Property Form Dialog */}
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -392,7 +386,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                         className={dialog.formErrors.name ? "border-red-500" : ""}
                       />
                       {dialog.formErrors.name && (
-                        <p className="text-sm text-red-400">{dialog.formErrors.name}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.name}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -415,7 +409,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                         </SelectContent>
                       </Select>
                       {dialog.formErrors.type && (
-                        <p className="text-sm text-red-400">{dialog.formErrors.type}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.type}</p>
                       )}
                     </div>
                   </div>
@@ -467,7 +461,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                         )}
                       </div>
                       {dialog.formErrors.address && (
-                        <p className="text-sm text-red-400">{dialog.formErrors.address}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.address}</p>
                       )}
                     </div>
 
@@ -478,7 +472,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           value={dialog.formData.country}
                           onValueChange={(value) =>
                             dialog.updateFormData({
-                              country: value as "Portugal" | "Spain",
+                              country: value as "PT" | "ES",
                             })
                           }
                         >
@@ -486,8 +480,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Portugal">Portugal</SelectItem>
-                            <SelectItem value="Spain">Spain</SelectItem>
+                            <SelectItem value="PT">Portugal</SelectItem>
+                            <SelectItem value="ES">Spain</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -496,15 +490,13 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                         <Label htmlFor="zipCode">Postal Code</Label>
                         <Input
                           id="zipCode"
-                          placeholder={
-                            dialog.formData.country === "Portugal" ? "1234-567" : "12345"
-                          }
+                          placeholder={dialog.formData.country === "PT" ? "1234-567" : "12345"}
                           value={dialog.formData.zipCode || ""}
                           onChange={(e) => dialog.updateFormData({ zipCode: e.target.value })}
                           className={dialog.formErrors.zipCode ? "border-red-500" : ""}
                         />
                         {dialog.formErrors.zipCode && (
-                          <p className="text-sm text-red-400">{dialog.formErrors.zipCode}</p>
+                          <p className="text-sm text-destructive">{dialog.formErrors.zipCode}</p>
                         )}
                       </div>
                     </div>
@@ -519,7 +511,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           className={dialog.formErrors.city ? "border-red-500" : ""}
                         />
                         {dialog.formErrors.city && (
-                          <p className="text-sm text-red-400">{dialog.formErrors.city}</p>
+                          <p className="text-sm text-destructive">{dialog.formErrors.city}</p>
                         )}
                       </div>
 
@@ -536,7 +528,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           className={dialog.formErrors.streetAddress ? "border-red-500" : ""}
                         />
                         {dialog.formErrors.streetAddress && (
-                          <p className="text-sm text-red-400">{dialog.formErrors.streetAddress}</p>
+                          <p className="text-sm text-destructive">
+                            {dialog.formErrors.streetAddress}
+                          </p>
                         )}
                       </div>
                     </div>
@@ -575,7 +569,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                         className={dialog.formErrors.bedrooms ? "border-red-500" : ""}
                       />
                       {dialog.formErrors.bedrooms && (
-                        <p className="text-sm text-red-400">{dialog.formErrors.bedrooms}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.bedrooms}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -595,7 +589,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                         className={dialog.formErrors.bathrooms ? "border-red-500" : ""}
                       />
                       {dialog.formErrors.bathrooms && (
-                        <p className="text-sm text-red-400">{dialog.formErrors.bathrooms}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.bathrooms}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -613,7 +607,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                         className={dialog.formErrors.rent ? "border-red-500" : ""}
                       />
                       {dialog.formErrors.rent && (
-                        <p className="text-sm text-red-400">{dialog.formErrors.rent}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.rent}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -634,7 +628,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                         </SelectContent>
                       </Select>
                       {dialog.formErrors.status && (
-                        <p className="text-sm text-red-400">{dialog.formErrors.status}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.status}</p>
                       )}
                     </div>
                   </div>
@@ -649,7 +643,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                       className={dialog.formErrors.description ? "border-red-500" : ""}
                     />
                     {dialog.formErrors.description && (
-                      <p className="text-sm text-red-400">{dialog.formErrors.description}</p>
+                      <p className="text-sm text-destructive">{dialog.formErrors.description}</p>
                     )}
                   </div>
 
@@ -662,12 +656,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     >
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={dialog.isSubmitting}>
-                      {dialog.isSubmitting
-                        ? "Saving..."
-                        : dialog.editingItem
-                          ? "Update Property"
-                          : "Add Property"}
+                    <Button type="submit" loading={dialog.isSubmitting}>
+                      {dialog.editingItem ? "Update Property" : "Create Property"}
                     </Button>
                   </div>
                 </form>
@@ -717,272 +707,408 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                   ]}
                 />
 
-                {/* Sortable Column Headers */}
-                {filteredProperties.length > 0 && (
-                  <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
-                    <div className="flex-1">
-                      <SortableHeader
-                        column="name"
-                        label="Property"
-                        sortDirection={getSortDirection("name")}
-                        onSort={requestSort}
-                      />
-                    </div>
-                    <div className="w-32">
-                      <SortableHeader
-                        column="type"
-                        label="Type"
-                        sortDirection={getSortDirection("type")}
-                        onSort={requestSort}
-                      />
-                    </div>
-                    <div className="w-32">
-                      <SortableHeader
-                        column="status"
-                        label="Status"
-                        sortDirection={getSortDirection("status")}
-                        onSort={requestSort}
-                      />
-                    </div>
-                    <div className="w-32">
-                      <SortableHeader
-                        column="rent"
-                        label="Rent"
-                        sortDirection={getSortDirection("rent")}
-                        onSort={requestSort}
-                      />
-                    </div>
-                  </div>
-                )}
+                <div className="flex items-center justify-end">
+                  <DataViewToggle mode={dataViewMode} onChange={handleViewModeChange} />
+                </div>
 
-                <div
-                  className={cn(
-                    "grid",
-                    compact
-                      ? "gap-1 md:grid-cols-4 lg:grid-cols-6"
-                      : "gap-6 md:grid-cols-2 lg:grid-cols-3",
-                  )}
-                >
-                  {filteredProperties.length === 0 ? (
-                    <Card className="bg-zinc-900 border-zinc-800 col-span-full">
-                      <CardContent className="p-8 text-center">
-                        <Building2 className="w-12 h-12 text-[var(--color-muted-foreground)] mx-auto mb-4" />
-                        <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
-                          {properties.length === 0 ? "No properties yet" : "No properties found"}
-                        </h3>
-                        <p className="text-[var(--color-muted-foreground)] mb-4">
-                          {properties.length === 0
-                            ? "Get started by adding your first property"
-                            : "Try adjusting your search or filters"}
-                        </p>
-                        {properties.length === 0 && (
-                          <Button onClick={dialog.openDialog} className="flex items-center gap-2">
-                            <Plus className="w-4 h-4" />
-                            Add Your First Property
-                          </Button>
-                        )}
-                      </CardContent>
-                    </Card>
+                {dataViewMode === "table" ? (
+                  /* Table View */
+                  filteredProperties.length === 0 ? (
+                    <EmptyStateIllustration
+                      type={properties.length === 0 ? "properties" : "generic"}
+                      title={properties.length === 0 ? undefined : "No properties found"}
+                      description={
+                        properties.length === 0 ? undefined : "Try adjusting your search or filters"
+                      }
+                      onAction={properties.length === 0 ? dialog.openDialog : undefined}
+                    />
                   ) : (
-                    buildingGroups.map((building) => (
-                      <div key={building.buildingId} className="space-y-4 col-span-full">
-                        {/* Building Header */}
-                        <motion.div
-                          initial={{ opacity: 0, y: -20 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.4 }}
-                        >
-                          <Card className="bg-zinc-800 border-zinc-700 hover:border-accent-primary/30 transition-colors duration-300">
-                            <CardHeader>
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <motion.div
-                                    className="text-[var(--color-foreground)] flex items-center gap-2"
-                                    initial={{ x: -20, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    transition={{ delay: 0.1 }}
-                                  >
-                                    <Building2 className="h-5 w-5" />
-                                    <CardTitle className="text-lg">
-                                      {building.buildingName}
-                                    </CardTitle>
-                                  </motion.div>
-                                  <motion.div
-                                    className="flex items-start gap-1 mt-1"
-                                    initial={{ x: -20, opacity: 0 }}
-                                    animate={{ x: 0, opacity: 1 }}
-                                    transition={{ delay: 0.2 }}
-                                  >
-                                    <MapPin className="h-4 w-4 shrink-0 mt-0.5 text-zinc-500" />
-                                    <CardDescription className="text-sm">
-                                      {building.buildingAddress}
-                                    </CardDescription>
-                                  </motion.div>
-                                </div>
-                                <motion.div
-                                  className="text-sm text-zinc-400 bg-zinc-700 px-3 py-1 rounded-full"
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  transition={{ delay: 0.3, type: "spring" }}
-                                >
-                                  {building.properties.length} unit
-                                  {building.properties.length !== 1 ? "s" : ""}
-                                </motion.div>
-                              </div>
-                            </CardHeader>
-                          </Card>
-                        </motion.div>
-
-                        {/* Properties in this building */}
-                        <div
-                          className={cn(
-                            "grid grid-cols-1",
-                            compact
-                              ? "md:grid-cols-4 lg:grid-cols-6 gap-1"
-                              : "md:grid-cols-2 lg:grid-cols-3 gap-4",
-                          )}
-                        >
-                          {building.properties.map((property, index) => {
-                            const isSelected = bulkSelection.isSelected(property.id);
-                            return (
-                              <motion.div
-                                key={property.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.1, duration: 0.3 }}
-                                whileHover={{ y: -4 }}
-                                className={cn(
-                                  "group cursor-pointer",
-                                  isSelected &&
-                                    "ring-2 ring-accent-primary border-accent-primary/50",
-                                )}
-                                onClick={() => {
-                                  setSelectedProperty(property);
-                                  setIsDetailModalOpen(true);
-                                  onPropertySelect?.(property.id);
-                                }}
-                              >
-                                <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-accent-primary/10 border-border/50 group-hover:border-accent-primary/30">
-                                  <div
-                                    className={cn(
-                                      compact ? "h-16" : "aspect-video",
-                                      "w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative overflow-hidden",
-                                    )}
-                                  >
-                                    <motion.div
-                                      className="absolute inset-0 flex items-center justify-center"
-                                      whileHover={{ scale: 1.1 }}
-                                      transition={{
-                                        type: "spring",
-                                        stiffness: 300,
-                                      }}
-                                    >
-                                      <Building2 className="h-12 w-12 text-zinc-700 group-hover:text-zinc-600 transition-colors duration-300" />
-                                    </motion.div>
-                                    <div className="absolute top-3 right-3">
-                                      {getStatusBadge(property.status)}
-                                    </div>
-                                    {property.addressVerified && (
-                                      <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        className="absolute bottom-3 right-3 bg-success/20 rounded-full p-1"
-                                      >
-                                        <CheckCircle className="h-4 w-4 text-success" />
-                                      </motion.div>
-                                    )}
-                                  </div>
-                                  <CardHeader>
-                                    <div className="flex items-start justify-between w-full">
-                                      <div className="flex items-start gap-3">
-                                        <Checkbox
-                                          checked={isSelected}
-                                          onCheckedChange={() =>
-                                            bulkSelection.toggleSelection(property.id)
-                                          }
-                                          className="mt-2"
-                                        />
-                                        <div>
-                                          <div
-                                            className={cn(
-                                              "text-[var(--color-foreground)]",
-                                              compact
-                                                ? "text-xs font-medium"
-                                                : "text-base font-semibold",
-                                            )}
-                                          >
-                                            {property.name}
-                                          </div>
-                                          <CardDescription className="flex items-start gap-1">
-                                            <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
-                                            <span className="text-xs">
-                                              {property.streetAddress || "Unit address"}
-                                            </span>
-                                          </CardDescription>
-                                        </div>
-                                      </div>
-                                    </div>
-                                  </CardHeader>
-                                  <CardContent className={compact ? "space-y-1 p-2" : "space-y-3"}>
-                                    <div className="flex items-center justify-between text-sm">
-                                      <span className="text-[var(--color-muted-foreground)]">
-                                        {property.type}
-                                      </span>
-                                      <motion.span
-                                        className="font-semibold text-[var(--color-foreground)]"
-                                        initial={{ scale: 0.9 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ delay: 0.2 }}
-                                      >
-                                        <span className="text-sm font-semibold">
-                                          {formatCurrency(Number(property.rent))}
-                                        </span>
-                                      </motion.span>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-sm text-[var(--color-muted-foreground)]">
-                                      <motion.div
-                                        className="flex items-center gap-1"
-                                        initial={{ x: -10, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.3 }}
-                                      >
-                                        <Bed className="h-4 w-4" />
-                                        <span>{property.bedrooms} bed</span>
-                                      </motion.div>
-                                      <motion.div
-                                        className="flex items-center gap-1"
-                                        initial={{ x: -10, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.4 }}
-                                      >
-                                        <Bath className="h-4 w-4" />
-                                        <span>{property.bathrooms} bath</span>
-                                      </motion.div>
-                                    </div>
-                                    {/* Card actions removed: editing and deleting moved to detail modal */}
-                                  </CardContent>
-                                </Card>
-                              </motion.div>
-                            );
-                          })}
+                    <div className="rounded-lg border border-zinc-800 bg-zinc-900">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-zinc-800 hover:bg-transparent">
+                            <TableHead className="text-zinc-400">
+                              <SortableHeader
+                                sortKey="name"
+                                label="Name"
+                                currentSort={getSortDirection("name")}
+                                onSort={(key) => requestSort(key as keyof Property)}
+                              />
+                            </TableHead>
+                            <TableHead className="text-zinc-400">Address</TableHead>
+                            <TableHead className="text-zinc-400">
+                              <SortableHeader
+                                sortKey="type"
+                                label="Type"
+                                currentSort={getSortDirection("type")}
+                                onSort={(key) => requestSort(key as keyof Property)}
+                              />
+                            </TableHead>
+                            <TableHead className="text-zinc-400">Bedrooms</TableHead>
+                            <TableHead className="text-zinc-400">
+                              <SortableHeader
+                                sortKey="rent"
+                                label="Rent"
+                                currentSort={getSortDirection("rent")}
+                                onSort={(key) => requestSort(key as keyof Property)}
+                              />
+                            </TableHead>
+                            <TableHead className="text-zinc-400">
+                              <SortableHeader
+                                sortKey="status"
+                                label="Status"
+                                currentSort={getSortDirection("status")}
+                                onSort={(key) => requestSort(key as keyof Property)}
+                              />
+                            </TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {sortedProperties.map((property) => (
+                            <TableRow
+                              key={property.id}
+                              className="border-zinc-800 cursor-pointer hover:bg-zinc-800/50"
+                              onClick={() => {
+                                setSelectedProperty(property);
+                                setIsDetailModalOpen(true);
+                                onPropertySelect?.(property.id);
+                              }}
+                            >
+                              <TableCell className="text-sm font-medium text-zinc-100">
+                                {property.name}
+                              </TableCell>
+                              <TableCell className="text-sm text-zinc-400">
+                                {property.address}
+                              </TableCell>
+                              <TableCell className="text-sm text-zinc-400 capitalize">
+                                {property.type}
+                              </TableCell>
+                              <TableCell className="text-sm text-zinc-400">
+                                {property.bedrooms}
+                              </TableCell>
+                              <TableCell className="text-sm font-medium text-zinc-100">
+                                {formatCurrency(Number(property.rent))}
+                              </TableCell>
+                              <TableCell>{getStatusBadge(property.status)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+                  )
+                ) : (
+                  <>
+                    {/* Sortable Column Headers */}
+                    {filteredProperties.length > 0 && (
+                      <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
+                        <div className="flex-1">
+                          <SortableHeader
+                            sortKey="name"
+                            label="Property"
+                            currentSort={getSortDirection("name")}
+                            onSort={(key) => requestSort(key as keyof Property)}
+                          />
+                        </div>
+                        <div className="w-32">
+                          <SortableHeader
+                            sortKey="type"
+                            label="Type"
+                            currentSort={getSortDirection("type")}
+                            onSort={(key) => requestSort(key as keyof Property)}
+                          />
+                        </div>
+                        <div className="w-32">
+                          <SortableHeader
+                            sortKey="status"
+                            label="Status"
+                            currentSort={getSortDirection("status")}
+                            onSort={(key) => requestSort(key as keyof Property)}
+                          />
+                        </div>
+                        <div className="w-32">
+                          <SortableHeader
+                            sortKey="rent"
+                            label="Rent"
+                            currentSort={getSortDirection("rent")}
+                            onSort={(key) => requestSort(key as keyof Property)}
+                          />
                         </div>
                       </div>
-                    ))
-                  )}
+                    )}
 
-                  {/* Bulk Action Bar */}
-                  <BulkActionBar
-                    selectedCount={bulkSelection.selectedCount}
-                    totalCount={sortedProperties.length}
-                    itemLabel="properties"
-                    actions={bulkActions}
-                    onSelectAll={() => bulkSelection.selectAll(sortedProperties)}
-                    onClearSelection={bulkSelection.clearSelection}
-                    isAllSelected={bulkSelection.isAllSelected(sortedProperties)}
-                    isPartiallySelected={bulkSelection.isPartiallySelected(sortedProperties)}
-                    selectedIds={Array.from(bulkSelection.selectedIds)}
-                  />
-                </div>
+                    <div
+                      className={cn(
+                        "grid",
+                        compact
+                          ? "gap-1 md:grid-cols-4 lg:grid-cols-6"
+                          : "gap-6 md:grid-cols-2 lg:grid-cols-3",
+                      )}
+                    >
+                      {filteredProperties.length === 0 ? (
+                        <div className="col-span-full">
+                          <EmptyStateIllustration
+                            type={properties.length === 0 ? "properties" : "generic"}
+                            title={properties.length === 0 ? undefined : "No properties found"}
+                            description={
+                              properties.length === 0
+                                ? undefined
+                                : "Try adjusting your search or filters"
+                            }
+                            onAction={properties.length === 0 ? dialog.openDialog : undefined}
+                          />
+                        </div>
+                      ) : (
+                        buildingGroups.map((building) => (
+                          <div key={building.buildingId} className="space-y-4 col-span-full">
+                            {/* Building Header */}
+                            <motion.div
+                              initial={{ opacity: 0, y: -20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.4 }}
+                            >
+                              <Card className="bg-zinc-800 border-zinc-700 hover:border-accent-primary/30 transition-colors duration-300">
+                                <CardHeader>
+                                  <div className="flex items-center justify-between">
+                                    <div>
+                                      <motion.div
+                                        className="text-[var(--color-foreground)] flex items-center gap-2"
+                                        initial={{ x: -20, opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        transition={{ delay: 0.1 }}
+                                      >
+                                        <Building2 className="h-5 w-5" />
+                                        <CardTitle className="text-lg">
+                                          {building.buildingName}
+                                        </CardTitle>
+                                      </motion.div>
+                                      <motion.div
+                                        className="flex items-start gap-1 mt-1"
+                                        initial={{ x: -20, opacity: 0 }}
+                                        animate={{ x: 0, opacity: 1 }}
+                                        transition={{ delay: 0.2 }}
+                                      >
+                                        <MapPin className="h-4 w-4 shrink-0 mt-0.5 text-zinc-500" />
+                                        <CardDescription className="text-sm">
+                                          {building.buildingAddress}
+                                        </CardDescription>
+                                      </motion.div>
+                                    </div>
+                                    <motion.div
+                                      className="text-sm text-zinc-400 bg-zinc-700 px-3 py-1 rounded-full"
+                                      initial={{ scale: 0 }}
+                                      animate={{ scale: 1 }}
+                                      transition={{ delay: 0.3, type: "spring" }}
+                                    >
+                                      {building.properties.length} unit
+                                      {building.properties.length !== 1 ? "s" : ""}
+                                    </motion.div>
+                                  </div>
+                                </CardHeader>
+                              </Card>
+                            </motion.div>
+
+                            {/* Properties in this building */}
+                            <div
+                              className={cn(
+                                "grid grid-cols-1",
+                                compact
+                                  ? "md:grid-cols-4 lg:grid-cols-6 gap-1"
+                                  : "md:grid-cols-2 lg:grid-cols-3 gap-4",
+                              )}
+                            >
+                              {building.properties.map((property, index) => {
+                                const isSelected = bulkSelection.isSelected(property.id);
+                                return (
+                                  <motion.div
+                                    key={property.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: index * 0.1, duration: 0.3 }}
+                                    whileHover={{ y: -4 }}
+                                    className={cn(
+                                      "group cursor-pointer",
+                                      isSelected &&
+                                        "ring-2 ring-accent-primary border-accent-primary/50",
+                                    )}
+                                    onClick={() => {
+                                      setSelectedProperty(property);
+                                      setIsDetailModalOpen(true);
+                                      onPropertySelect?.(property.id);
+                                    }}
+                                  >
+                                    <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-accent-primary/10 border-border/50 group-hover:border-accent-primary/30">
+                                      <div
+                                        className={cn(
+                                          compact ? "h-16" : "aspect-video",
+                                          "w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative overflow-hidden",
+                                        )}
+                                      >
+                                        <motion.div
+                                          className="absolute inset-0 flex items-center justify-center"
+                                          whileHover={{ scale: 1.1 }}
+                                          transition={{
+                                            type: "spring",
+                                            stiffness: 300,
+                                          }}
+                                        >
+                                          <Building2 className="h-12 w-12 text-zinc-700 group-hover:text-zinc-600 transition-colors duration-300" />
+                                        </motion.div>
+                                        <div className="absolute top-3 right-3">
+                                          {getStatusBadge(property.status)}
+                                        </div>
+                                        {property.addressVerified && (
+                                          <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            className="absolute bottom-3 right-3 bg-success/20 rounded-full p-1"
+                                          >
+                                            <CheckCircle className="h-4 w-4 text-success" />
+                                          </motion.div>
+                                        )}
+                                      </div>
+                                      <CardHeader>
+                                        <div className="flex items-start justify-between w-full">
+                                          <div className="flex items-start gap-3">
+                                            <Checkbox
+                                              checked={isSelected}
+                                              onCheckedChange={() =>
+                                                bulkSelection.toggleSelection(property.id)
+                                              }
+                                              className="mt-2"
+                                            />
+                                            <div>
+                                              <div
+                                                className={cn(
+                                                  "text-[var(--color-foreground)]",
+                                                  compact
+                                                    ? "text-xs font-medium"
+                                                    : "text-base font-semibold",
+                                                )}
+                                              >
+                                                {property.name}
+                                              </div>
+                                              <CardDescription className="flex items-start gap-1">
+                                                <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
+                                                <span className="text-xs">
+                                                  {property.streetAddress || "Unit address"}
+                                                </span>
+                                              </CardDescription>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </CardHeader>
+                                      {/* Relationship badges */}
+                                      <div className="flex flex-wrap gap-1 px-2 pb-1">
+                                        {(() => {
+                                          const propTenants = tenants.filter(
+                                            (t) => t.propertyId === property.id,
+                                          );
+                                          const propLeases = leases.filter(
+                                            (l) =>
+                                              l.propertyId === property.id && l.status === "active",
+                                          );
+                                          const openTickets = maintenance.filter(
+                                            (m) =>
+                                              m.propertyId === property.id &&
+                                              m.status !== "resolved",
+                                          );
+                                          return (
+                                            <>
+                                              {propTenants.length > 0 && (
+                                                <RelationshipBadge
+                                                  variant="tenant"
+                                                  label={
+                                                    propTenants.length === 1 ? "tenant" : "tenants"
+                                                  }
+                                                  count={propTenants.length}
+                                                />
+                                              )}
+                                              {propLeases.length > 0 && (
+                                                <RelationshipBadge
+                                                  variant="lease"
+                                                  label={
+                                                    propLeases.length === 1 ? "lease" : "leases"
+                                                  }
+                                                  count={propLeases.length}
+                                                />
+                                              )}
+                                              {openTickets.length > 0 && (
+                                                <RelationshipBadge
+                                                  variant="maintenance"
+                                                  label={
+                                                    openTickets.length === 1 ? "ticket" : "tickets"
+                                                  }
+                                                  count={openTickets.length}
+                                                />
+                                              )}
+                                            </>
+                                          );
+                                        })()}
+                                      </div>
+                                      <CardContent
+                                        className={compact ? "space-y-1 p-2" : "space-y-3"}
+                                      >
+                                        <div className="flex items-center justify-between text-sm">
+                                          <span className="text-[var(--color-muted-foreground)]">
+                                            {property.type}
+                                          </span>
+                                          <motion.span
+                                            className="font-semibold text-[var(--color-foreground)]"
+                                            initial={{ scale: 0.9 }}
+                                            animate={{ scale: 1 }}
+                                            transition={{ delay: 0.2 }}
+                                          >
+                                            <span className="text-sm font-semibold">
+                                              {formatCurrency(Number(property.rent))}
+                                            </span>
+                                          </motion.span>
+                                        </div>
+                                        <div className="flex items-center gap-4 text-sm text-[var(--color-muted-foreground)]">
+                                          <motion.div
+                                            className="flex items-center gap-1"
+                                            initial={{ x: -10, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.3 }}
+                                          >
+                                            <Bed className="h-4 w-4" />
+                                            <span>{property.bedrooms} bed</span>
+                                          </motion.div>
+                                          <motion.div
+                                            className="flex items-center gap-1"
+                                            initial={{ x: -10, opacity: 0 }}
+                                            animate={{ x: 0, opacity: 1 }}
+                                            transition={{ delay: 0.4 }}
+                                          >
+                                            <Bath className="h-4 w-4" />
+                                            <span>{property.bathrooms} bath</span>
+                                          </motion.div>
+                                        </div>
+                                        {/* Card actions removed: editing and deleting moved to detail modal */}
+                                      </CardContent>
+                                    </Card>
+                                  </motion.div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))
+                      )}
+
+                      {/* Bulk Action Bar */}
+                      <BulkActionBar
+                        selectedCount={bulkSelection.selectedCount}
+                        totalCount={sortedProperties.length}
+                        itemLabel="properties"
+                        actions={bulkActions}
+                        onSelectAll={() => bulkSelection.selectAll(sortedProperties)}
+                        onClearSelection={bulkSelection.clearSelection}
+                        isAllSelected={bulkSelection.isAllSelected(sortedProperties)}
+                        isPartiallySelected={bulkSelection.isPartiallySelected(sortedProperties)}
+                        selectedIds={Array.from(bulkSelection.selectedIds)}
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>

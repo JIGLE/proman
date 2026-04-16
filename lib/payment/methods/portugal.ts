@@ -4,6 +4,7 @@
 import { paymentService, PaymentIntentResult, CreatePaymentIntentParams } from "../payment-service";
 import { getPrismaClient } from "@/lib/services/database/database";
 import type { PrismaClient } from "@prisma/client";
+import { validatePortugueseNIF } from "@/lib/utils/tax-id-validation";
 
 export interface MultibancoDetails {
   entity: string; // 5-digit entity number
@@ -210,27 +211,10 @@ export class PortugalPaymentService {
 
   /**
    * Get NIF (Portuguese tax number) validation
-   * Used for tax compliance/invoicing
+   * Delegates to shared validation module
    */
   public validateNIF(nif: string): boolean {
-    const clean = nif.replace(/\D/g, "");
-
-    if (clean.length !== 9) return false;
-
-    // First digit must be 1, 2, 3, 5, 6, 7, 8, or 9
-    const firstDigit = parseInt(clean[0]);
-    if (![1, 2, 3, 5, 6, 7, 8, 9].includes(firstDigit)) return false;
-
-    // Calculate check digit
-    let sum = 0;
-    for (let i = 0; i < 8; i++) {
-      sum += parseInt(clean[i]) * (9 - i);
-    }
-
-    const checkDigit = 11 - (sum % 11);
-    const expectedCheckDigit = checkDigit >= 10 ? 0 : checkDigit;
-
-    return parseInt(clean[8]) === expectedCheckDigit;
+    return validatePortugueseNIF(nif);
   }
 
   /**

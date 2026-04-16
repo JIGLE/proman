@@ -1,11 +1,26 @@
 "use client";
 
 import { useState, forwardRef, useImperativeHandle } from "react";
-import { FileText, Download, Calendar, Plus, Edit, Trash2, DollarSign } from "lucide-react";
+import {
+  FileText,
+  Download,
+  Calendar,
+  Plus,
+  Edit,
+  Trash2,
+  DollarSign,
+  MoreHorizontal,
+} from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +49,7 @@ import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import jsPDF from "jspdf";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { PageHeader } from "@/components/shared/page-header";
 
 export type ReceiptsViewProps = Record<string, never>;
 
@@ -176,15 +192,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
           <LoadingState variant="cards" count={6} />
         ) : (
           <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <div>
-                <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
-                  Receipts
-                </h2>
-                <p className="text-[var(--color-muted-foreground)]">
-                  Manage payment receipts and generate PDFs
-                </p>
-              </div>
+            <PageHeader title="Receipts" description="Manage payment receipts and generate PDFs">
               <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
                 <DialogTrigger asChild>
                   <Button onClick={dialog.openDialog} className="flex items-center gap-2">
@@ -225,7 +233,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                           </SelectContent>
                         </Select>
                         {dialog.formErrors.tenantId && (
-                          <p className="text-sm text-red-500">{dialog.formErrors.tenantId}</p>
+                          <p className="text-sm text-destructive">{dialog.formErrors.tenantId}</p>
                         )}
                       </div>
                       <div className="space-y-2">
@@ -248,7 +256,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                           </SelectContent>
                         </Select>
                         {dialog.formErrors.propertyId && (
-                          <p className="text-sm text-red-500">{dialog.formErrors.propertyId}</p>
+                          <p className="text-sm text-destructive">{dialog.formErrors.propertyId}</p>
                         )}
                       </div>
                     </div>
@@ -271,7 +279,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                           required
                         />
                         {dialog.formErrors.amount && (
-                          <p className="text-sm text-red-500">{dialog.formErrors.amount}</p>
+                          <p className="text-sm text-destructive">{dialog.formErrors.amount}</p>
                         )}
                       </div>
                       <div className="space-y-2">
@@ -285,7 +293,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                           required
                         />
                         {dialog.formErrors.date && (
-                          <p className="text-sm text-red-500">{dialog.formErrors.date}</p>
+                          <p className="text-sm text-destructive">{dialog.formErrors.date}</p>
                         )}
                       </div>
                       <div className="space-y-2">
@@ -307,7 +315,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                           </SelectContent>
                         </Select>
                         {dialog.formErrors.type && (
-                          <p className="text-sm text-red-500">{dialog.formErrors.type}</p>
+                          <p className="text-sm text-destructive">{dialog.formErrors.type}</p>
                         )}
                       </div>
                     </div>
@@ -322,7 +330,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                         rows={3}
                       />
                       {dialog.formErrors.description && (
-                        <p className="text-sm text-red-500">{dialog.formErrors.description}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.description}</p>
                       )}
                     </div>
 
@@ -330,18 +338,14 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                       <Button type="button" variant="outline" onClick={dialog.closeDialog}>
                         Cancel
                       </Button>
-                      <Button type="submit" disabled={dialog.isSubmitting}>
-                        {dialog.isSubmitting
-                          ? "Saving..."
-                          : dialog.editingItem
-                            ? "Update Receipt"
-                            : "Create Receipt"}
+                      <Button type="submit" loading={dialog.isSubmitting}>
+                        {dialog.editingItem ? "Update Receipt" : "Create Receipt"}
                       </Button>
                     </div>
                   </form>
                 </DialogContent>
               </Dialog>
-            </div>
+            </PageHeader>
 
             <div className="grid gap-4">
               {receipts.length === 0 ? (
@@ -378,34 +382,33 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                           </div>
                         </div>
                         <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => generatePDF(receipt)}
-                            disabled={generatingPdf === receipt.id}
-                            className="flex items-center gap-1"
-                          >
-                            <Download className="w-3 h-3" />
-                            {generatingPdf === receipt.id ? "Generating..." : "PDF"}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleEdit(receipt)}
-                            className="flex items-center gap-1"
-                          >
-                            <Edit className="w-3 h-3" />
-                            Edit
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(receipt.id)}
-                            className="flex items-center gap-1"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            Delete
-                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => generatePDF(receipt)}
+                                disabled={generatingPdf === receipt.id}
+                              >
+                                <Download className="h-4 w-4 mr-2" />
+                                {generatingPdf === receipt.id ? "Generating..." : "Download PDF"}
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEdit(receipt)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Receipt
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDelete(receipt.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Receipt
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </div>
                       {receipt.description && (

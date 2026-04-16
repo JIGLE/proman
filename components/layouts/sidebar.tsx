@@ -16,6 +16,11 @@ import {
   Hammer,
   Wallet,
   FileText,
+  FileBox,
+  Contact,
+  UserCog,
+  BarChart3,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
@@ -91,6 +96,51 @@ const NAV_CONFIG: SidebarNavGroup[] = [
         labelKey: "navigation.maintenance",
         label: "Maintenance",
         href: "/maintenance",
+      },
+    ],
+  },
+  {
+    group: "Management",
+    items: [
+      {
+        key: "documents",
+        icon: FileBox,
+        labelKey: "navigation.documents",
+        label: "Documents",
+        href: "/documents",
+      },
+      {
+        key: "contacts",
+        icon: Contact,
+        labelKey: "navigation.contacts",
+        label: "Contacts",
+        href: "/contacts",
+      },
+      {
+        key: "owners",
+        icon: UserCog,
+        labelKey: "navigation.owners",
+        label: "Owners",
+        href: "/owners",
+      },
+    ],
+  },
+  {
+    group: "Reports",
+    items: [
+      {
+        key: "analytics",
+        icon: BarChart3,
+        labelKey: "navigation.analytics",
+        label: "Analytics",
+        href: "/analytics",
+      },
+      {
+        key: "reports",
+        icon: ClipboardList,
+        labelKey: "navigation.reports",
+        label: "Reports",
+        href: "/reports",
       },
     ],
   },
@@ -229,6 +279,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
 
   return (
     <div
+      data-tour="sidebar"
       className={cn(
         "glass-sidebar relative flex h-screen flex-col transition-all duration-300 min-w-0 overflow-x-hidden",
         collapsed ? "w-16" : "w-60",

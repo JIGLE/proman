@@ -46,7 +46,7 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
 // POST /api/correspondence/templates - Create a new correspondence template
 async function handlePost(request: NextRequest): Promise<Response> {
-  const demo = handleDemoMutation(request, "templates");
+  const demo = await handleDemoMutation(request, "templates");
   if (demo.response) return demo.response;
 
   const authResult = await requireAuth(request);

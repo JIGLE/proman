@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Building2, Plus, Edit2, Trash2, Home, X, Loader2 } from "lucide-react";
+import { Edit2, Trash2, Home, X, Loader2 } from "lucide-react";
 import { useCsrf } from "@/lib/contexts/csrf-context";
 import { useToast } from "@/lib/contexts/toast-context";
 import { apiFetch } from "@/lib/utils/api-client";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 
 interface Unit {
   id: string;
@@ -319,24 +320,17 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
       )}
 
       {filteredUnits.length === 0 ? (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <Building2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-            {propertyId ? "No units in this property" : "No units yet"}
-          </h3>
-          <p className="text-gray-600 dark:text-gray-400 mb-4">
-            {propertyId
+        <EmptyStateIllustration
+          type="units"
+          title={propertyId ? "No units in this property" : "No units yet"}
+          description={
+            propertyId
               ? "This property has no units added yet."
-              : "Start by adding units to your properties"}
-          </p>
-          <button
-            onClick={openAddModal}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4" />
-            Add Your First Unit
-          </button>
-        </div>
+              : "Start by adding units to your properties"
+          }
+          actionLabel="Add Your First Unit"
+          onAction={openAddModal}
+        />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredUnits.map((unit) => (

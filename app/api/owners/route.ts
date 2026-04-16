@@ -1,77 +1,66 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { ownerSchema } from "@/lib/utils/validation";
 import { isMockMode } from "@/lib/config/data-mode";
 import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
+import { createSuccessResponse, withErrorHandler } from "@/lib/utils/error-handling";
+import { withRateLimit } from "@/lib/utils/rate-limit";
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
-  try {
-    const demo = handleDemoGet(request, "owners");
-    if (demo.response) return demo.response;
+async function handleGet(request: NextRequest): Promise<Response> {
+  const demo = handleDemoGet(request, "owners");
+  if (demo.response) return demo.response;
 
-    // In mock mode, return empty array
-    if (isMockMode) {
-      return NextResponse.json([]);
-    }
-    const authResult = await requireAuth(request);
-    if (authResult instanceof Response) return authResult as NextResponse;
+  if (isMockMode) {
+    return createSuccessResponse([]);
+  }
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
 
-    const { userId } = authResult;
-    const prisma = getPrismaClient();
+  const { userId } = authResult;
+  const prisma = getPrismaClient();
 
-    const owners = await prisma.owner.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        properties: {
-          include: {
-            property: true,
-          },
+  const owners = await prisma.owner.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      properties: {
+        include: {
+          property: true,
         },
       },
-    });
+    },
+  });
 
-    return NextResponse.json(owners);
-  } catch (error) {
-    console.error("Error fetching owners:", error);
-    return NextResponse.json({ error: "Failed to fetch owners" }, { status: 500 });
-  }
+  return createSuccessResponse(owners);
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
-  try {
-    const demo = handleDemoMutation(request, "owners");
-    if (demo.response) return demo.response;
+async function handlePost(request: NextRequest): Promise<Response> {
+  const demo = await handleDemoMutation(request, "owners");
+  if (demo.response) return demo.response;
 
-    // In mock mode, reject write operations
-    if (isMockMode) {
-      return NextResponse.json(
-        { error: "Write operations not supported in mock mode" },
-        { status: 403 },
-      );
-    }
-    const authResult = await requireAuth(request);
-    if (authResult instanceof Response) return authResult as NextResponse;
-
-    const { userId } = authResult;
-    const prisma = getPrismaClient();
-
-    const json = await request.json();
-    const body = ownerSchema.parse(json);
-
-    const owner = await prisma.owner.create({
-      data: {
-        ...body,
-        userId,
-      },
-    });
-
-    return NextResponse.json(owner);
-  } catch (error) {
-    console.error("Error creating owner:", error);
-    return NextResponse.json({ error: "Failed to create owner" }, { status: 500 });
+  if (isMockMode) {
+    return createSuccessResponse({ error: "Write operations not supported in mock mode" }, 403);
   }
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
+
+  const { userId } = authResult;
+  const prisma = getPrismaClient();
+
+  const json = await request.json();
+  const body = ownerSchema.parse(json);
+
+  const owner = await prisma.owner.create({
+    data: {
+      ...body,
+      userId,
+    },
+  });
+
+  return createSuccessResponse(owner, 201);
 }
 
+export const GET = withErrorHandler(withRateLimit(handleGet));
+export const POST = withErrorHandler(withRateLimit(handlePost));
 export const OPTIONS = handleOptions;

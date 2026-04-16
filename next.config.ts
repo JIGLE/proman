@@ -8,7 +8,7 @@ const nextConfig: NextConfig = {
   output: "standalone",
   serverExternalPackages: ["redis", "puppeteer"],
   experimental: {
-    optimizePackageImports: ["lucide-react", "@radix-ui/react-slot"],
+    optimizePackageImports: ["lucide-react", "@radix-ui/react-slot", "framer-motion"],
   },
   images: {
     remotePatterns: [{ protocol: "https", hostname: "**" }],

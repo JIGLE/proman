@@ -3,6 +3,8 @@
  * Free geocoding service for Portugal and Spain
  */
 
+import { resolveCountryCode, getCountryName } from "@/lib/utils/country";
+
 export interface AddressSuggestion {
   display_name: string;
   lat: string;
@@ -54,8 +56,9 @@ export class AddressVerificationService {
     country: "Portugal" | "Spain" = "Portugal",
   ): Promise<AddressSuggestion[]> {
     try {
-      const bounds = country === "Portugal" ? PORTUGAL_BOUNDS : SPAIN_BOUNDS;
-      const countryCode = country === "Portugal" ? "pt" : "es";
+      const code = resolveCountryCode(country);
+      const bounds = code === "PT" ? PORTUGAL_BOUNDS : SPAIN_BOUNDS;
+      const countryCode = code === "PT" ? "pt" : "es";
 
       const params = new URLSearchParams({
         q: query,
@@ -92,7 +95,8 @@ export class AddressVerificationService {
    */
   static parseAddressSuggestion(suggestion: AddressSuggestion): VerifiedAddress {
     const address = suggestion.address;
-    const country = address.country === "Portugal" ? "Portugal" : "Spain";
+    const code = resolveCountryCode(address.country === "Portugal" ? "Portugal" : "Spain");
+    const country = getCountryName(code);
 
     // Build street address from components
     const streetParts = [];
@@ -107,13 +111,13 @@ export class AddressVerificationService {
 
     // Validate postal code format
     let zipCode = address.postcode || "";
-    if (country === "Portugal" && zipCode && !/^[0-9]{4}-[0-9]{3}$/.test(zipCode)) {
+    if (code === "PT" && zipCode && !/^[0-9]{4}-[0-9]{3}$/.test(zipCode)) {
       // Try to format Portuguese postal codes
       const digits = zipCode.replace(/\D/g, "");
       if (digits.length === 7) {
         zipCode = `${digits.slice(0, 4)}-${digits.slice(4)}`;
       }
-    } else if (country === "Spain" && zipCode && !/^[0-9]{5}$/.test(zipCode)) {
+    } else if (code === "ES" && zipCode && !/^[0-9]{5}$/.test(zipCode)) {
       zipCode = zipCode.replace(/\D/g, "").slice(0, 5);
     }
 
@@ -132,9 +136,10 @@ export class AddressVerificationService {
    * Validate postal code format
    */
   static validatePostalCode(zipCode: string, country: "Portugal" | "Spain"): boolean {
-    if (country === "Portugal") {
+    const code = resolveCountryCode(country);
+    if (code === "PT") {
       return /^[0-9]{4}-[0-9]{3}$/.test(zipCode);
-    } else if (country === "Spain") {
+    } else if (code === "ES") {
       return /^[0-9]{5}$/.test(zipCode);
     }
     return false;

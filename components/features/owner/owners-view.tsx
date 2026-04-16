@@ -29,6 +29,7 @@ import jsPDF from "jspdf";
 import { OwnerDetailModal } from "./owner-detail-modal";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { PageHeader } from "@/components/shared/page-header";
 
 export type OwnersViewRef = {
   openDialog: () => void;
@@ -192,6 +193,7 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
           <LoadingState variant="cards" count={6} />
         ) : (
           <div className="space-y-6">
+            <PageHeader title="Owners" description="Manage property owners and their portfolios" />
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogTrigger asChild>
                 <Button onClick={dialog.openDialog} className="hidden">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { z } from "zod";
 import {
   FileText,
   Plus,
@@ -38,6 +39,8 @@ import { useCsrf } from "@/lib/contexts/csrf-context";
 import { apiFetch } from "@/lib/utils/api-client";
 import { cn } from "@/lib/utils/utils";
 import { Badge } from "@/components/ui/badge";
+import { LoadingState } from "@/components/ui/loading-state";
+import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +50,18 @@ import {
 import type { Invoice, LateFeeConfig } from "@/lib/services/invoice-service";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { useFormDialog } from "@/lib/hooks/use-form-dialog";
+
+const invoiceFormSchema = z.object({
+  tenantId: z.string().min(1, "Tenant is required"),
+  propertyId: z.string().min(1, "Property is required"),
+  amount: z.number().positive("Amount must be positive"),
+  dueDate: z.string().min(1, "Due date is required"),
+  description: z.string(),
+  notes: z.string(),
+});
+
+type InvoiceFormData = z.infer<typeof invoiceFormSchema>;
 
 interface InvoicesViewProps {
   tenants: Array<{ id: string; name: string; rent: number }>;
@@ -61,20 +76,46 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
 
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isBatchDialogOpen, setIsBatchDialogOpen] = useState(false);
   const [isLateFeeDialogOpen, setIsLateFeeDialogOpen] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isBatchSubmitting, setIsBatchSubmitting] = useState(false);
+  const [isLateFeeSubmitting, setIsLateFeeSubmitting] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Form state
-  const [formData, setFormData] = useState({
+  const initialFormData: InvoiceFormData = {
     tenantId: "",
     propertyId: "",
     amount: 0,
     dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
     description: "",
     notes: "",
+  };
+
+  const dialog = useFormDialog<InvoiceFormData>({
+    schema: invoiceFormSchema,
+    initialData: initialFormData,
+    onSubmit: async (data) => {
+      await apiFetch<{ message?: string }>("/api/invoices", csrfToken, "POST", {
+        ...data,
+        lineItems:
+          data.amount > 0
+            ? [
+                {
+                  description: data.description || "Monthly Rent",
+                  quantity: 1,
+                  unitPrice: data.amount,
+                  total: data.amount,
+                },
+              ]
+            : undefined,
+      });
+      fetchInvoices();
+    },
+    successMessage: {
+      create: "Invoice created successfully!",
+      update: "Invoice updated successfully!",
+    },
+    errorMessage: "Failed to create invoice. Please try again.",
   });
 
   // Batch form state
@@ -136,49 +177,15 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
   // Auto-fill amount when tenant selected
   const handleTenantChange = (tenantId: string) => {
     const tenant = tenants.find((t) => t.id === tenantId);
-    setFormData((prev) => ({
-      ...prev,
+    dialog.updateFormData({
       tenantId,
-      amount: tenant?.rent || prev.amount,
-    }));
-  };
-
-  // Create invoice
-  const handleCreateInvoice = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-
-    try {
-      await apiFetch<{ message?: string }>("/api/invoices", csrfToken, "POST", {
-        ...formData,
-        lineItems:
-          formData.amount > 0
-            ? [
-                {
-                  description: formData.description || "Monthly Rent",
-                  quantity: 1,
-                  unitPrice: formData.amount,
-                  total: formData.amount,
-                },
-              ]
-            : undefined,
-      });
-
-      success("Invoice created successfully!");
-      setIsDialogOpen(false);
-      resetForm();
-      fetchInvoices();
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to create invoice";
-      error(msg);
-    } finally {
-      setIsSubmitting(false);
-    }
+      amount: tenant?.rent || dialog.formData.amount,
+    });
   };
 
   // Generate batch invoices
   const handleBatchGenerate = async () => {
-    setIsSubmitting(true);
+    setIsBatchSubmitting(true);
 
     try {
       const data = await apiFetch<{ successCount: number; message?: string }>(
@@ -198,13 +205,13 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
       const msg = err instanceof Error ? err.message : "Failed to generate batch invoices";
       error(msg);
     } finally {
-      setIsSubmitting(false);
+      setIsBatchSubmitting(false);
     }
   };
 
   // Apply late fees
   const handleApplyLateFees = async () => {
-    setIsSubmitting(true);
+    setIsLateFeeSubmitting(true);
 
     try {
       const data = await apiFetch<{ count: number; message?: string }>(
@@ -225,7 +232,7 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
       const msg = err instanceof Error ? err.message : "Failed to apply late fees";
       error(msg);
     } finally {
-      setIsSubmitting(false);
+      setIsLateFeeSubmitting(false);
     }
   };
 
@@ -255,17 +262,6 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
         fetchInvoices();
       },
     );
-  };
-
-  const resetForm = () => {
-    setFormData({
-      tenantId: "",
-      propertyId: "",
-      amount: 0,
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
-      description: "",
-      notes: "",
-    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -326,9 +322,14 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
             Batch Generate
           </Button>
 
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog
+            open={dialog.isOpen}
+            onOpenChange={(open) => {
+              if (!open) dialog.closeDialog();
+            }}
+          >
             <DialogTrigger asChild>
-              <Button onClick={resetForm}>
+              <Button onClick={dialog.openDialog}>
                 <Plus className="w-4 h-4 mr-2" />
                 New Invoice
               </Button>
@@ -338,11 +339,11 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
                 <DialogTitle>Create Invoice</DialogTitle>
                 <DialogDescription>Generate a new invoice for a tenant</DialogDescription>
               </DialogHeader>
-              <form onSubmit={handleCreateInvoice} className="space-y-4">
+              <form onSubmit={dialog.handleSubmit} className="space-y-4">
                 <div className="grid gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="tenantId">Tenant</Label>
-                    <Select value={formData.tenantId} onValueChange={handleTenantChange}>
+                    <Select value={dialog.formData.tenantId} onValueChange={handleTenantChange}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select tenant" />
                       </SelectTrigger>
@@ -359,8 +360,8 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
                   <div className="space-y-2">
                     <Label htmlFor="propertyId">Property</Label>
                     <Select
-                      value={formData.propertyId}
-                      onValueChange={(v) => setFormData((prev) => ({ ...prev, propertyId: v }))}
+                      value={dialog.formData.propertyId}
+                      onValueChange={(v) => dialog.updateFormData({ propertyId: v })}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select property" />
@@ -382,12 +383,11 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
                         id="amount"
                         type="number"
                         step="0.01"
-                        value={formData.amount}
+                        value={dialog.formData.amount}
                         onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
+                          dialog.updateFormData({
                             amount: parseFloat(e.target.value) || 0,
-                          }))
+                          })
                         }
                       />
                     </div>
@@ -397,12 +397,11 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
                       <Input
                         id="dueDate"
                         type="date"
-                        value={formData.dueDate}
+                        value={dialog.formData.dueDate}
                         onChange={(e) =>
-                          setFormData((prev) => ({
-                            ...prev,
+                          dialog.updateFormData({
                             dueDate: e.target.value,
-                          }))
+                          })
                         }
                       />
                     </div>
@@ -412,12 +411,11 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
                     <Label htmlFor="description">Description</Label>
                     <Input
                       id="description"
-                      value={formData.description}
+                      value={dialog.formData.description}
                       onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
+                        dialog.updateFormData({
                           description: e.target.value,
-                        }))
+                        })
                       }
                       placeholder="e.g., Monthly Rent - February 2026"
                     />
@@ -427,12 +425,11 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
                     <Label htmlFor="notes">Notes (optional)</Label>
                     <Textarea
                       id="notes"
-                      value={formData.notes}
+                      value={dialog.formData.notes}
                       onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
+                        dialog.updateFormData({
                           notes: e.target.value,
-                        }))
+                        })
                       }
                       placeholder="Additional notes..."
                       rows={2}
@@ -441,11 +438,11 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
                 </div>
 
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                  <Button type="button" variant="outline" onClick={dialog.closeDialog}>
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isSubmitting}>
-                    {isSubmitting ? "Creating..." : "Create Invoice"}
+                  <Button type="submit" loading={dialog.isSubmitting}>
+                    Create Invoice
                   </Button>
                 </div>
               </form>
@@ -508,13 +505,9 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8 text-zinc-400">Loading invoices...</div>
+            <LoadingState variant="cards" count={3} />
           ) : filteredInvoices.length === 0 ? (
-            <div className="text-center py-8 text-zinc-400">
-              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
-              <p>No invoices found</p>
-              <p className="text-sm">Create your first invoice to get started</p>
-            </div>
+            <EmptyStateIllustration type="invoices" onAction={() => dialog.openDialog()} />
           ) : (
             <div className="space-y-3">
               {filteredInvoices.map((invoice) => (
@@ -610,8 +603,8 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
               <Button variant="outline" onClick={() => setIsBatchDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleBatchGenerate} disabled={isSubmitting}>
-                {isSubmitting ? "Generating..." : "Generate Invoices"}
+              <Button onClick={handleBatchGenerate} disabled={isBatchSubmitting}>
+                {isBatchSubmitting ? "Generating..." : "Generate Invoices"}
               </Button>
             </div>
           </div>
@@ -689,8 +682,8 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
               <Button variant="outline" onClick={() => setIsLateFeeDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleApplyLateFees} disabled={isSubmitting}>
-                {isSubmitting ? "Applying..." : "Apply Late Fees"}
+              <Button onClick={handleApplyLateFees} disabled={isLateFeeSubmitting}>
+                {isLateFeeSubmitting ? "Applying..." : "Apply Late Fees"}
               </Button>
             </div>
           </div>

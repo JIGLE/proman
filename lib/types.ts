@@ -1,5 +1,16 @@
 "use client";
 
+export interface Building {
+  id: string;
+  userId: string;
+  name: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Property {
   id: string;
   userId: string;
@@ -17,7 +28,7 @@ export interface Property {
   buildingId?: string;
   buildingName?: string;
 
-  type: "apartment" | "house" | "condo" | "townhouse" | "other";
+  type: "apartment" | "house" | "condo" | "townhouse" | "commercial" | "other";
   bedrooms: number;
   bathrooms: number;
   rent: number;
@@ -36,8 +47,11 @@ export interface Tenant {
   phone: string;
   propertyId?: string;
   propertyName?: string;
+  /** @deprecated Derive from active lease's monthlyRent via getActiveLease() */
   rent: number;
+  /** @deprecated Derive from active lease's startDate via getActiveLease() */
   leaseStart: string;
+  /** @deprecated Derive from active lease's endDate via getActiveLease() */
   leaseEnd: string;
   paymentStatus: "paid" | "overdue" | "pending";
   lastPayment?: string;
@@ -137,7 +151,7 @@ export interface Lease {
   contractFileName?: string;
   contractFileSize?: number;
   taxRegime?: string;
-  status: "active" | "expired" | "terminated" | "pending";
+  status: "active" | "expired" | "terminated" | "pending" | "draft";
   autoRenew: boolean;
   renewalNoticeDays: number;
   notes?: string;

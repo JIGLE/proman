@@ -1,3 +1,4 @@
+import { resolveCountryCode } from "@/lib/utils/country";
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import {
@@ -26,10 +27,17 @@ export async function GET(request: NextRequest) {
 
     // Generate tax form data if country specified
     let taxForm = null;
-    if (country === "Portugal" || country === "PT") {
-      taxForm = generatePortugalTaxForm(summary);
-    } else if (country === "Spain" || country === "ES") {
-      taxForm = generateSpainTaxForm(summary);
+    if (country) {
+      try {
+        const code = resolveCountryCode(country);
+        if (code === "PT") {
+          taxForm = generatePortugalTaxForm(summary);
+        } else if (code === "ES") {
+          taxForm = generateSpainTaxForm(summary);
+        }
+      } catch {
+        // Unknown country — skip tax form generation
+      }
     }
 
     return NextResponse.json({

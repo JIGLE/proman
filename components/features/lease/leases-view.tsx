@@ -1,10 +1,9 @@
-import { useState, useMemo } from "react";
+"use client";
+
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   FileText,
   Plus,
-  ArrowUp,
-  ArrowDown,
-  ArrowUpDown,
   Home,
   User,
   DollarSign,
@@ -15,7 +14,24 @@ import {
   Edit,
   Trash2,
   Download,
+  MoreHorizontal,
 } from "lucide-react";
+import { SortableHeader } from "@/components/ui/sortable-header";
+import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +59,7 @@ import { EmptyStateIllustration } from "@/components/ui/empty-state-illustration
 import { SearchFilter } from "@/components/ui/search-filter";
 import { ExportButton } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
+import { RelationshipBadge, daysUntil } from "@/components/shared/relationship-badge";
 import { Lease } from "@/lib/types";
 import { leaseSchema, LeaseFormData } from "@/lib/utils/validation";
 import { useToast } from "@/lib/contexts/toast-context";
@@ -54,33 +71,14 @@ import {
   DraftBanner,
   MultiStepFormStep,
 } from "@/components/ui/multi-step-form";
-import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
-import { LeaseStatus } from "@prisma/client";
+import { useSortableData } from "@/lib/hooks/use-sortable-data";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { PageHeader } from "@/components/shared/page-header";
+import { useRouter } from "next/navigation";
+import { useLocale } from "next-intl";
 
 export type LeasesViewProps = Record<string, never>;
-
-interface SortableHeaderProps {
-  column: keyof Lease;
-  label: string;
-  sortDirection: SortDirection;
-  onSort: (column: keyof Lease) => void;
-}
-
-function SortableHeader({ column, label, sortDirection, onSort }: SortableHeaderProps) {
-  return (
-    <button
-      onClick={() => onSort(column)}
-      className="flex items-center gap-1 text-sm font-medium text-zinc-400 hover:text-zinc-50 transition-colors"
-    >
-      {label}
-      {sortDirection === "asc" && <ArrowUp className="w-3 h-3" />}
-      {sortDirection === "desc" && <ArrowDown className="w-3 h-3" />}
-      {sortDirection === null && <ArrowUpDown className="w-3 h-3 opacity-50" />}
-    </button>
-  );
-}
 
 export function LeasesView(): React.ReactElement {
   const { state, addLease, updateLease, deleteLease } = useApp();
@@ -88,6 +86,8 @@ export function LeasesView(): React.ReactElement {
   const { success, error } = useToast();
   const { formatCurrency, currencySymbol } = useCurrency();
   const confirmDialog = useConfirmDialog();
+  const router = useRouter();
+  const locale = useLocale();
   const [contractFile, setContractFile] = useState<File | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editingLease, setEditingLease] = useState<Lease | null>(null);
@@ -96,6 +96,17 @@ export function LeasesView(): React.ReactElement {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [taxRegimeFilter, setTaxRegimeFilter] = useState<string>("all");
+
+  // Data view mode state with localStorage persistence
+  const [dataViewMode, setDataViewMode] = useState<DataViewMode>("grid");
+  useEffect(() => {
+    const saved = localStorage.getItem("proman-leases-view-mode");
+    if (saved === "grid" || saved === "table") setDataViewMode(saved);
+  }, []);
+  const handleViewModeChange = useCallback((mode: DataViewMode) => {
+    setDataViewMode(mode);
+    localStorage.setItem("proman-leases-view-mode", mode);
+  }, []);
 
   const initialFormData: LeaseFormData = {
     propertyId: "",
@@ -228,7 +239,7 @@ export function LeasesView(): React.ReactElement {
     validation: { validateOnChange: true, debounceValidation: 300 },
   });
 
-  const getStatusBadge = (status: LeaseStatus) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
         return <Badge variant="success">Active</Badge>;
@@ -345,379 +356,397 @@ export function LeasesView(): React.ReactElement {
   return (
     <>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
-              Lease Management
-            </h2>
-            <p className="text-[var(--color-muted-foreground)]">
-              Manage lease agreements and contract documents
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <ExportButton
-              data={sortedLeases}
-              filename="leases"
-              columns={[
-                {
-                  key: "tenantId",
-                  label: "Tenant",
-                  format: (value) => tenants.find((t) => t.id === value)?.name || "Unknown",
-                },
-                {
-                  key: "propertyId",
-                  label: "Property",
-                  format: (value) => properties.find((p) => p.id === value)?.name || "Unknown",
-                },
-                {
-                  key: "startDate",
-                  label: "Start Date",
-                  format: (value) => new Date(value as string).toLocaleDateString(),
-                },
-                {
-                  key: "endDate",
-                  label: "End Date",
-                  format: (value) => new Date(value as string).toLocaleDateString(),
-                },
-                {
-                  key: "monthlyRent",
-                  label: "Monthly Rent",
-                  format: (value) => formatCurrency(value as number),
-                },
-                {
-                  key: "deposit",
-                  label: "Deposit",
-                  format: (value) => formatCurrency(value as number),
-                },
-                { key: "status", label: "Status" },
-                { key: "taxRegime", label: "Tax Regime" },
-              ]}
-            />
+        <PageHeader
+          title="Lease Management"
+          description="Manage lease agreements and contract documents"
+        >
+          <ExportButton
+            data={sortedLeases}
+            filename="leases"
+            columns={[
+              {
+                key: "tenantId",
+                label: "Tenant",
+                format: (value) => tenants.find((t) => t.id === value)?.name || "Unknown",
+              },
+              {
+                key: "propertyId",
+                label: "Property",
+                format: (value) => properties.find((p) => p.id === value)?.name || "Unknown",
+              },
+              {
+                key: "startDate",
+                label: "Start Date",
+                format: (value) => new Date(value as string).toLocaleDateString(),
+              },
+              {
+                key: "endDate",
+                label: "End Date",
+                format: (value) => new Date(value as string).toLocaleDateString(),
+              },
+              {
+                key: "monthlyRent",
+                label: "Monthly Rent",
+                format: (value) => formatCurrency(value as number),
+              },
+              {
+                key: "deposit",
+                label: "Deposit",
+                format: (value) => formatCurrency(value as number),
+              },
+              { key: "status", label: "Status" },
+              { key: "taxRegime", label: "Tax Regime" },
+            ]}
+          />
 
-            {/* Multi-Step Wizard Dialog */}
-            <Dialog
-              open={wizardOpen}
-              onOpenChange={(open) => {
-                setWizardOpen(open);
-                if (!open) {
-                  setEditingLease(null);
-                  setContractFile(null);
-                  wizard.resetForm();
-                }
-              }}
-            >
-              <DialogTrigger asChild>
-                <Button onClick={() => setWizardOpen(true)} className="flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Lease
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-zinc-900 border-zinc-800">
-                <DialogHeader>
-                  <DialogTitle className="text-[var(--color-foreground)]">
-                    {editingLease ? "Edit Lease" : "Create New Lease"}
-                  </DialogTitle>
-                  <DialogDescription>
-                    {editingLease
-                      ? "Update lease agreement details"
-                      : "Follow the steps to create a comprehensive lease agreement"}
-                  </DialogDescription>
-                </DialogHeader>
+          {/* Multi-Step Wizard Dialog */}
+          <Dialog
+            open={wizardOpen}
+            onOpenChange={(open) => {
+              setWizardOpen(open);
+              if (!open) {
+                setEditingLease(null);
+                setContractFile(null);
+                wizard.resetForm();
+              }
+            }}
+          >
+            <DialogTrigger asChild>
+              <Button onClick={() => setWizardOpen(true)} className="flex items-center gap-2">
+                <Plus className="w-4 h-4" />
+                Add Lease
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-zinc-900 border-zinc-800">
+              <DialogHeader>
+                <DialogTitle className="text-[var(--color-foreground)]">
+                  {editingLease ? "Edit Lease" : "Create New Lease"}
+                </DialogTitle>
+                <DialogDescription>
+                  {editingLease
+                    ? "Update lease agreement details"
+                    : "Follow the steps to create a comprehensive lease agreement"}
+                </DialogDescription>
+              </DialogHeader>
 
-                {/* Draft recovery banner */}
-                {wizard.hasDraft && !editingLease && (
-                  <DraftBanner
-                    onRestore={() => {
-                      // Data is auto-loaded in hook
-                    }}
-                    onDiscard={() => {
-                      wizard.clearDraft();
-                      wizard.resetForm();
-                    }}
-                  />
+              {/* Draft recovery banner */}
+              {wizard.hasDraft && !editingLease && (
+                <DraftBanner
+                  onRestore={() => {
+                    // Data is auto-loaded in hook
+                  }}
+                  onDiscard={() => {
+                    wizard.clearDraft();
+                    wizard.resetForm();
+                  }}
+                />
+              )}
+
+              {/* Multi-step form */}
+              <MultiStepFormContainer
+                steps={wizardSteps}
+                currentStep={wizard.currentStep}
+                completedSteps={wizard.visitedSteps}
+                visitedSteps={wizard.visitedSteps}
+                progress={wizard.progress}
+                isSubmitting={wizard.isSubmitting}
+                isFirstStep={wizard.isFirstStep}
+                isLastStep={wizard.isLastStep}
+                onPrevStep={wizard.prevStep}
+                onNextStep={wizard.nextStep}
+                onSubmit={wizard.handleSubmit}
+                onGoToStep={wizard.goToStep}
+                indicatorVariant="pills"
+                submitText={editingLease ? "Update Lease" : "Create Lease"}
+              >
+                {/* Step 1: Property Selection */}
+                {wizard.currentStep === 0 && (
+                  <StepContent
+                    title="Select Property"
+                    description="Choose the property for this lease agreement"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="propertyId">Property *</Label>
+                      <Select
+                        value={wizard.formData.propertyId}
+                        onValueChange={(value) => wizard.updateFormData({ propertyId: value })}
+                      >
+                        <SelectTrigger
+                          className={wizard.stepErrors.propertyId ? "border-red-500" : ""}
+                        >
+                          <SelectValue placeholder="Select a property..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {properties.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-zinc-400">
+                              No properties available. Create a property first.
+                            </div>
+                          ) : (
+                            properties.map((property) => (
+                              <SelectItem key={property.id} value={property.id}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{property.name}</span>
+                                  <span className="text-xs text-zinc-400">{property.address}</span>
+                                </div>
+                              </SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+                      {properties.length === 0 && (
+                        <div className="rounded-lg border border-zinc-800 bg-zinc-800/30 p-4 text-center">
+                          <p className="text-sm text-zinc-400 mb-2">
+                            No properties found. Create a property first.
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push(`/${locale}/properties`)}
+                          >
+                            <Plus className="w-4 h-4 mr-2" /> Go to Properties
+                          </Button>
+                        </div>
+                      )}
+                      {wizard.stepErrors.propertyId && (
+                        <p className="text-sm text-destructive">{wizard.stepErrors.propertyId}</p>
+                      )}
+                    </div>
+                  </StepContent>
                 )}
 
-                {/* Multi-step form */}
-                <MultiStepFormContainer
-                  steps={wizardSteps}
-                  currentStep={wizard.currentStep}
-                  completedSteps={wizard.visitedSteps}
-                  visitedSteps={wizard.visitedSteps}
-                  progress={wizard.progress}
-                  isSubmitting={wizard.isSubmitting}
-                  isFirstStep={wizard.isFirstStep}
-                  isLastStep={wizard.isLastStep}
-                  onPrevStep={wizard.prevStep}
-                  onNextStep={wizard.nextStep}
-                  onSubmit={wizard.handleSubmit}
-                  onGoToStep={wizard.goToStep}
-                  indicatorVariant="pills"
-                  submitText={editingLease ? "Update Lease" : "Create Lease"}
-                >
-                  {/* Step 1: Property Selection */}
-                  {wizard.currentStep === 0 && (
-                    <StepContent
-                      title="Select Property"
-                      description="Choose the property for this lease agreement"
-                    >
-                      <div className="space-y-2">
-                        <Label htmlFor="propertyId">Property *</Label>
-                        <Select
-                          value={wizard.formData.propertyId}
-                          onValueChange={(value) => wizard.updateFormData({ propertyId: value })}
+                {/* Step 2: Tenant Selection */}
+                {wizard.currentStep === 1 && (
+                  <StepContent title="Select Tenant" description="Choose the tenant for this lease">
+                    <div className="space-y-2">
+                      <Label htmlFor="tenantId">Tenant *</Label>
+                      <Select
+                        value={wizard.formData.tenantId}
+                        onValueChange={(value) => wizard.updateFormData({ tenantId: value })}
+                      >
+                        <SelectTrigger
+                          className={wizard.stepErrors.tenantId ? "border-red-500" : ""}
                         >
-                          <SelectTrigger
-                            className={wizard.stepErrors.propertyId ? "border-red-500" : ""}
-                          >
-                            <SelectValue placeholder="Select a property..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {properties.length === 0 ? (
-                              <div className="p-4 text-center text-sm text-zinc-400">
-                                No properties available. Create a property first.
-                              </div>
-                            ) : (
-                              properties.map((property) => (
-                                <SelectItem key={property.id} value={property.id}>
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{property.name}</span>
-                                    <span className="text-xs text-zinc-400">
-                                      {property.address}
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ))
-                            )}
-                          </SelectContent>
-                        </Select>
-                        {wizard.stepErrors.propertyId && (
-                          <p className="text-sm text-red-400">{wizard.stepErrors.propertyId}</p>
-                        )}
-                      </div>
-                    </StepContent>
-                  )}
-
-                  {/* Step 2: Tenant Selection */}
-                  {wizard.currentStep === 1 && (
-                    <StepContent
-                      title="Select Tenant"
-                      description="Choose the tenant for this lease"
-                    >
-                      <div className="space-y-2">
-                        <Label htmlFor="tenantId">Tenant *</Label>
-                        <Select
-                          value={wizard.formData.tenantId}
-                          onValueChange={(value) => wizard.updateFormData({ tenantId: value })}
-                        >
-                          <SelectTrigger
-                            className={wizard.stepErrors.tenantId ? "border-red-500" : ""}
-                          >
-                            <SelectValue placeholder="Select a tenant..." />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {tenants.length === 0 ? (
-                              <div className="p-4 text-center text-sm text-zinc-400">
-                                No tenants available. Create a tenant first.
-                              </div>
-                            ) : (
-                              tenants.map((tenant) => (
-                                <SelectItem key={tenant.id} value={tenant.id}>
-                                  <div className="flex flex-col">
-                                    <span className="font-medium">{tenant.name}</span>
-                                    <span className="text-xs text-zinc-400">{tenant.email}</span>
-                                  </div>
-                                </SelectItem>
-                              ))
-                            )}
-                          </SelectContent>
-                        </Select>
-                        {wizard.stepErrors.tenantId && (
-                          <p className="text-sm text-red-400">{wizard.stepErrors.tenantId}</p>
-                        )}
-                      </div>
-                    </StepContent>
-                  )}
-
-                  {/* Step 3: Lease Terms */}
-                  {wizard.currentStep === 2 && (
-                    <StepContent
-                      title="Lease Terms"
-                      description="Set rental amounts and lease duration"
-                    >
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="startDate">Start Date *</Label>
-                          <Input
-                            id="startDate"
-                            type="date"
-                            value={wizard.formData.startDate}
-                            onChange={(e) =>
-                              wizard.updateFormData({
-                                startDate: e.target.value,
-                              })
-                            }
-                            className={wizard.stepErrors.startDate ? "border-red-500" : ""}
-                          />
-                          {wizard.stepErrors.startDate && (
-                            <p className="text-sm text-red-400">{wizard.stepErrors.startDate}</p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="endDate">End Date *</Label>
-                          <Input
-                            id="endDate"
-                            type="date"
-                            value={wizard.formData.endDate}
-                            onChange={(e) => wizard.updateFormData({ endDate: e.target.value })}
-                            className={wizard.stepErrors.endDate ? "border-red-500" : ""}
-                          />
-                          {wizard.stepErrors.endDate && (
-                            <p className="text-sm text-red-400">{wizard.stepErrors.endDate}</p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="monthlyRent">Monthly Rent ({currencySymbol}) *</Label>
-                          <Input
-                            id="monthlyRent"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={wizard.formData.monthlyRent}
-                            onChange={(e) =>
-                              wizard.updateFormData({
-                                monthlyRent: parseFloat(e.target.value) || 0,
-                              })
-                            }
-                            className={wizard.stepErrors.monthlyRent ? "border-red-500" : ""}
-                          />
-                          {wizard.stepErrors.monthlyRent && (
-                            <p className="text-sm text-red-400">{wizard.stepErrors.monthlyRent}</p>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="deposit">Security Deposit ({currencySymbol}) *</Label>
-                          <Input
-                            id="deposit"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={wizard.formData.deposit}
-                            onChange={(e) =>
-                              wizard.updateFormData({
-                                deposit: parseFloat(e.target.value) || 0,
-                              })
-                            }
-                            className={wizard.stepErrors.deposit ? "border-red-500" : ""}
-                          />
-                          {wizard.stepErrors.deposit && (
-                            <p className="text-sm text-red-400">{wizard.stepErrors.deposit}</p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="taxRegime">Tax Regime</Label>
-                          <Select
-                            value={wizard.formData.taxRegime || ""}
-                            onValueChange={(value) =>
-                              wizard.updateFormData({
-                                taxRegime: value as LeaseFormData["taxRegime"],
-                              })
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select tax regime..." />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="portugal_rendimentos">
-                                Portugal - Rendimentos
+                          <SelectValue placeholder="Select a tenant..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {tenants.length === 0 ? (
+                            <div className="p-4 text-center text-sm text-zinc-400">
+                              No tenants available. Create a tenant first.
+                            </div>
+                          ) : (
+                            tenants.map((tenant) => (
+                              <SelectItem key={tenant.id} value={tenant.id}>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{tenant.name}</span>
+                                  <span className="text-xs text-zinc-400">{tenant.email}</span>
+                                </div>
                               </SelectItem>
-                              <SelectItem value="spain_inmuebles">
-                                Spain - Inmuebles Urbanos
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div className="space-y-2">
-                          <Label htmlFor="renewalNoticeDays">Renewal Notice (Days)</Label>
-                          <Input
-                            id="renewalNoticeDays"
-                            type="number"
-                            min="0"
-                            value={wizard.formData.renewalNoticeDays}
-                            onChange={(e) =>
-                              wizard.updateFormData({
-                                renewalNoticeDays: parseInt(e.target.value) || 60,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                    </StepContent>
-                  )}
-
-                  {/* Step 4: Documents & Notes */}
-                  {wizard.currentStep === 3 && (
-                    <StepContent
-                      title="Documents & Notes"
-                      description="Upload contract and add additional information"
-                    >
-                      <div className="space-y-2">
-                        <Label htmlFor="contractFile">Lease Contract (PDF)</Label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            id="contractFile"
-                            type="file"
-                            accept=".pdf"
-                            onChange={handleFileUpload}
-                            className="hidden"
-                          />
-                          <Label
-                            htmlFor="contractFile"
-                            className="flex items-center gap-2 px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-md cursor-pointer hover:bg-zinc-700 transition-colors"
-                          >
-                            <Upload className="w-4 h-4" />
-                            {contractFile ? contractFile.name : "Choose PDF file"}
-                          </Label>
-                          {contractFile && (
-                            <span className="text-sm text-zinc-400">
-                              {(contractFile.size / 1024 / 1024).toFixed(2)} MB
-                            </span>
+                            ))
                           )}
+                        </SelectContent>
+                      </Select>
+                      {tenants.length === 0 && (
+                        <div className="rounded-lg border border-zinc-800 bg-zinc-800/30 p-4 text-center">
+                          <p className="text-sm text-zinc-400 mb-2">
+                            No tenants found. Create a tenant first.
+                          </p>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push(`/${locale}/tenants`)}
+                          >
+                            <Plus className="w-4 h-4 mr-2" /> Go to Tenants
+                          </Button>
                         </div>
-                        <p className="text-xs text-zinc-500">
-                          Maximum file size: 5MB. PDF format only.
-                        </p>
-                      </div>
+                      )}
+                      {wizard.stepErrors.tenantId && (
+                        <p className="text-sm text-destructive">{wizard.stepErrors.tenantId}</p>
+                      )}
+                    </div>
+                  </StepContent>
+                )}
 
+                {/* Step 3: Lease Terms */}
+                {wizard.currentStep === 2 && (
+                  <StepContent
+                    title="Lease Terms"
+                    description="Set rental amounts and lease duration"
+                  >
+                    <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="notes">Additional Notes</Label>
-                        <Textarea
-                          id="notes"
-                          value={wizard.formData.notes}
-                          onChange={(e) => wizard.updateFormData({ notes: e.target.value })}
-                          placeholder="Add any special terms, conditions, or notes about this lease..."
-                          rows={6}
-                          className={wizard.stepErrors.notes ? "border-red-500" : ""}
+                        <Label htmlFor="startDate">Start Date *</Label>
+                        <Input
+                          id="startDate"
+                          type="date"
+                          value={wizard.formData.startDate}
+                          onChange={(e) =>
+                            wizard.updateFormData({
+                              startDate: e.target.value,
+                            })
+                          }
+                          className={wizard.stepErrors.startDate ? "border-red-500" : ""}
                         />
-                        {wizard.stepErrors.notes && (
-                          <p className="text-sm text-red-400">{wizard.stepErrors.notes}</p>
+                        {wizard.stepErrors.startDate && (
+                          <p className="text-sm text-destructive">{wizard.stepErrors.startDate}</p>
                         )}
                       </div>
-                    </StepContent>
-                  )}
-                </MultiStepFormContainer>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="endDate">End Date *</Label>
+                        <Input
+                          id="endDate"
+                          type="date"
+                          value={wizard.formData.endDate}
+                          onChange={(e) => wizard.updateFormData({ endDate: e.target.value })}
+                          className={wizard.stepErrors.endDate ? "border-red-500" : ""}
+                        />
+                        {wizard.stepErrors.endDate && (
+                          <p className="text-sm text-destructive">{wizard.stepErrors.endDate}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="monthlyRent">Monthly Rent ({currencySymbol}) *</Label>
+                        <Input
+                          id="monthlyRent"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={wizard.formData.monthlyRent}
+                          onChange={(e) =>
+                            wizard.updateFormData({
+                              monthlyRent: parseFloat(e.target.value) || 0,
+                            })
+                          }
+                          className={wizard.stepErrors.monthlyRent ? "border-red-500" : ""}
+                        />
+                        {wizard.stepErrors.monthlyRent && (
+                          <p className="text-sm text-destructive">
+                            {wizard.stepErrors.monthlyRent}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="deposit">Security Deposit ({currencySymbol}) *</Label>
+                        <Input
+                          id="deposit"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={wizard.formData.deposit}
+                          onChange={(e) =>
+                            wizard.updateFormData({
+                              deposit: parseFloat(e.target.value) || 0,
+                            })
+                          }
+                          className={wizard.stepErrors.deposit ? "border-red-500" : ""}
+                        />
+                        {wizard.stepErrors.deposit && (
+                          <p className="text-sm text-destructive">{wizard.stepErrors.deposit}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="taxRegime">Tax Regime</Label>
+                        <Select
+                          value={wizard.formData.taxRegime || ""}
+                          onValueChange={(value) =>
+                            wizard.updateFormData({
+                              taxRegime: value as LeaseFormData["taxRegime"],
+                            })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select tax regime..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="portugal_rendimentos">
+                              Portugal - Rendimentos
+                            </SelectItem>
+                            <SelectItem value="spain_inmuebles">
+                              Spain - Inmuebles Urbanos
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="renewalNoticeDays">Renewal Notice (Days)</Label>
+                        <Input
+                          id="renewalNoticeDays"
+                          type="number"
+                          min="0"
+                          value={wizard.formData.renewalNoticeDays}
+                          onChange={(e) =>
+                            wizard.updateFormData({
+                              renewalNoticeDays: parseInt(e.target.value) || 60,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </StepContent>
+                )}
+
+                {/* Step 4: Documents & Notes */}
+                {wizard.currentStep === 3 && (
+                  <StepContent
+                    title="Documents & Notes"
+                    description="Upload contract and add additional information"
+                  >
+                    <div className="space-y-2">
+                      <Label htmlFor="contractFile">Lease Contract (PDF)</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          id="contractFile"
+                          type="file"
+                          accept=".pdf"
+                          onChange={handleFileUpload}
+                          className="hidden"
+                        />
+                        <Label
+                          htmlFor="contractFile"
+                          className="flex items-center gap-2 px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-md cursor-pointer hover:bg-zinc-700 transition-colors"
+                        >
+                          <Upload className="w-4 h-4" />
+                          {contractFile ? contractFile.name : "Choose PDF file"}
+                        </Label>
+                        {contractFile && (
+                          <span className="text-sm text-zinc-400">
+                            {(contractFile.size / 1024 / 1024).toFixed(2)} MB
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xs text-zinc-500">
+                        Maximum file size: 5MB. PDF format only.
+                      </p>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="notes">Additional Notes</Label>
+                      <Textarea
+                        id="notes"
+                        value={wizard.formData.notes}
+                        onChange={(e) => wizard.updateFormData({ notes: e.target.value })}
+                        placeholder="Add any special terms, conditions, or notes about this lease..."
+                        rows={6}
+                        className={wizard.stepErrors.notes ? "border-red-500" : ""}
+                      />
+                      {wizard.stepErrors.notes && (
+                        <p className="text-sm text-destructive">{wizard.stepErrors.notes}</p>
+                      )}
+                    </div>
+                  </StepContent>
+                )}
+              </MultiStepFormContainer>
+            </DialogContent>
+          </Dialog>
+        </PageHeader>
 
         {/* Search and Filter */}
         <SearchFilter
@@ -753,40 +782,44 @@ export function LeasesView(): React.ReactElement {
           ]}
         />
 
-        {/* Sortable Column Headers */}
-        {filteredLeases.length > 0 && (
-          <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
-            <div className="flex-1">
-              <SortableHeader
-                column="startDate"
-                label="Start Date"
-                sortDirection={getSortDirection("startDate")}
-                onSort={requestSort}
-              />
-            </div>
-            <div className="w-32">
-              <SortableHeader
-                column="monthlyRent"
-                label="Rent"
-                sortDirection={getSortDirection("monthlyRent")}
-                onSort={requestSort}
-              />
-            </div>
-            <div className="w-32">
-              <SortableHeader
-                column="status"
-                label="Status"
-                sortDirection={getSortDirection("status")}
-                onSort={requestSort}
-              />
-            </div>
-          </div>
-        )}
+        <div className="flex items-center justify-end">
+          <DataViewToggle mode={dataViewMode} onChange={handleViewModeChange} />
+        </div>
 
-        {/* Leases List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredLeases.length === 0 ? (
-            <div className="col-span-full">
+        {dataViewMode === "table" ? (
+          /* Table View */
+          filteredLeases.length === 0 ? (
+            leases.length === 0 && (properties.length === 0 || tenants.length === 0) ? (
+              <div className="flex flex-col items-center justify-center py-16 text-center">
+                <FileText className="h-12 w-12 text-zinc-600 mb-4" />
+                <h3 className="text-lg font-semibold text-zinc-200 mb-2">
+                  Get started with leases
+                </h3>
+                <p className="text-sm text-zinc-400 mb-6 max-w-md">
+                  To create your first lease, you&apos;ll need at least one property and one tenant.
+                </p>
+                <div className="flex items-center gap-3">
+                  {properties.length === 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/${locale}/properties`)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" /> Create Property
+                    </Button>
+                  )}
+                  {tenants.length === 0 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => router.push(`/${locale}/tenants`)}
+                    >
+                      <Plus className="w-4 h-4 mr-2" /> Create Tenant
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ) : (
               <EmptyStateIllustration
                 type={leases.length === 0 ? "leases" : "generic"}
                 title={leases.length === 0 ? undefined : "No leases found"}
@@ -796,83 +829,262 @@ export function LeasesView(): React.ReactElement {
                 onAction={leases.length === 0 ? dialog.openDialog : undefined}
                 actionLabel={leases.length === 0 ? "Add First Lease" : undefined}
               />
-            </div>
+            )
           ) : (
-            sortedLeases.map((lease: Lease) => (
-              <Card
-                key={lease.id}
-                className="overflow-hidden transition-all hover:shadow-lg hover:shadow-zinc-900/50"
-              >
-                <div className="aspect-video w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative">
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <FileText className="h-16 w-16 text-zinc-700" />
-                  </div>
-                  <div className="absolute top-3 right-3">{getStatusBadge(lease.status)}</div>
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-zinc-800 hover:bg-transparent">
+                    <TableHead className="text-zinc-400">Property</TableHead>
+                    <TableHead className="text-zinc-400">Tenant</TableHead>
+                    <TableHead className="text-zinc-400">
+                      <SortableHeader
+                        sortKey="startDate"
+                        label="Start"
+                        currentSort={getSortDirection("startDate")}
+                        onSort={(key) => requestSort(key as keyof Lease)}
+                      />
+                    </TableHead>
+                    <TableHead className="text-zinc-400">End</TableHead>
+                    <TableHead className="text-zinc-400">
+                      <SortableHeader
+                        sortKey="monthlyRent"
+                        label="Monthly Rent"
+                        currentSort={getSortDirection("monthlyRent")}
+                        onSort={(key) => requestSort(key as keyof Lease)}
+                      />
+                    </TableHead>
+                    <TableHead className="text-zinc-400">
+                      <SortableHeader
+                        sortKey="status"
+                        label="Status"
+                        currentSort={getSortDirection("status")}
+                        onSort={(key) => requestSort(key as keyof Lease)}
+                      />
+                    </TableHead>
+                    <TableHead className="text-zinc-400 w-24">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sortedLeases.map((lease: Lease) => (
+                    <TableRow key={lease.id} className="border-zinc-800 hover:bg-zinc-800/50">
+                      <TableCell className="text-sm text-zinc-100">
+                        {lease.property?.name}
+                      </TableCell>
+                      <TableCell className="text-sm text-zinc-400">{lease.tenant?.name}</TableCell>
+                      <TableCell className="text-sm text-zinc-400">
+                        {new Date(lease.startDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-sm text-zinc-400">
+                        {new Date(lease.endDate).toLocaleDateString()}
+                      </TableCell>
+                      <TableCell className="text-sm font-medium text-zinc-100">
+                        {formatCurrency(lease.monthlyRent)}
+                      </TableCell>
+                      <TableCell>{getStatusBadge(lease.status)}</TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-7 w-7">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(lease)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Lease
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => handleDelete(lease.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Lease
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )
+        ) : (
+          <>
+            {/* Sortable Column Headers */}
+            {filteredLeases.length > 0 && (
+              <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
+                <div className="flex-1">
+                  <SortableHeader
+                    sortKey="startDate"
+                    label="Start Date"
+                    currentSort={getSortDirection("startDate")}
+                    onSort={(key) => requestSort(key as keyof Lease)}
+                  />
                 </div>
-                <CardHeader>
-                  <CardTitle className="text-[var(--color-foreground)] flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    {lease.tenant?.name}
-                  </CardTitle>
-                  <CardDescription className="flex items-start gap-1">
-                    <Building2 className="h-4 w-4 shrink-0 mt-0.5" />
-                    <span className="text-xs">{lease.property?.name}</span>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-400">Rent</span>
-                    <span className="font-semibold text-[var(--color-foreground)]">
-                      {formatCurrency(lease.monthlyRent)}/mo
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-zinc-400">
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>{new Date(lease.startDate).toLocaleDateString()}</span>
+                <div className="w-32">
+                  <SortableHeader
+                    sortKey="monthlyRent"
+                    label="Rent"
+                    currentSort={getSortDirection("monthlyRent")}
+                    onSort={(key) => requestSort(key as keyof Lease)}
+                  />
+                </div>
+                <div className="w-32">
+                  <SortableHeader
+                    sortKey="status"
+                    label="Status"
+                    currentSort={getSortDirection("status")}
+                    onSort={(key) => requestSort(key as keyof Lease)}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Leases List */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredLeases.length === 0 ? (
+                <div className="col-span-full">
+                  {leases.length === 0 && (properties.length === 0 || tenants.length === 0) ? (
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                      <FileText className="h-12 w-12 text-zinc-600 mb-4" />
+                      <h3 className="text-lg font-semibold text-zinc-200 mb-2">
+                        Get started with leases
+                      </h3>
+                      <p className="text-sm text-zinc-400 mb-6 max-w-md">
+                        To create your first lease, you&apos;ll need at least one property and one
+                        tenant.
+                      </p>
+                      <div className="flex items-center gap-3">
+                        {properties.length === 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push(`/${locale}/properties`)}
+                          >
+                            <Plus className="w-4 h-4 mr-2" /> Create Property
+                          </Button>
+                        )}
+                        {tenants.length === 0 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => router.push(`/${locale}/tenants`)}
+                          >
+                            <Plus className="w-4 h-4 mr-2" /> Create Tenant
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                    <span>to</span>
-                    <span>{new Date(lease.endDate).toLocaleDateString()}</span>
-                  </div>
-                  {lease.contractFile && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-zinc-400">Contract</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDownloadContract(lease)}
-                        className="flex items-center gap-1"
-                      >
-                        <Download className="w-3 h-3" />
-                        Download
-                      </Button>
-                    </div>
+                  ) : (
+                    <EmptyStateIllustration
+                      type={leases.length === 0 ? "leases" : "generic"}
+                      title={leases.length === 0 ? undefined : "No leases found"}
+                      description={
+                        leases.length === 0 ? undefined : "Try adjusting your search or filters"
+                      }
+                      onAction={leases.length === 0 ? dialog.openDialog : undefined}
+                      actionLabel={leases.length === 0 ? "Add First Lease" : undefined}
+                    />
                   )}
-                  <div className="flex gap-2 pt-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(lease)}
-                      className="flex-1 flex items-center gap-1"
-                    >
-                      <Edit className="w-3 h-3" />
-                      Edit
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => handleDelete(lease.id)}
-                      className="flex items-center gap-1"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      Delete
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </div>
+                </div>
+              ) : (
+                sortedLeases.map((lease: Lease) => (
+                  <Card
+                    key={lease.id}
+                    className="overflow-hidden transition-all hover:shadow-lg hover:shadow-zinc-900/50"
+                  >
+                    <div className="aspect-video w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <FileText className="h-16 w-16 text-zinc-700" />
+                      </div>
+                      <div className="absolute top-3 right-3">{getStatusBadge(lease.status)}</div>
+                    </div>
+                    <CardHeader>
+                      <CardTitle className="text-[var(--color-foreground)] flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        {lease.tenant?.name}
+                      </CardTitle>
+                      <CardDescription className="flex items-start gap-1">
+                        <Building2 className="h-4 w-4 shrink-0 mt-0.5" />
+                        <span className="text-xs">{lease.property?.name}</span>
+                      </CardDescription>
+                      {/* Relationship badges */}
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {(() => {
+                          const days = lease.endDate ? daysUntil(lease.endDate) : null;
+                          if (days !== null && days <= 30 && days >= 0) {
+                            return (
+                              <RelationshipBadge variant="expiry" label={`${days}d to expiry`} />
+                            );
+                          }
+                          if (days !== null && days < 0) {
+                            return <RelationshipBadge variant="overdue" label="Expired" />;
+                          }
+                          return null;
+                        })()}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-zinc-400">Rent</span>
+                        <span className="font-semibold text-[var(--color-foreground)]">
+                          {formatCurrency(lease.monthlyRent)}/mo
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-4 text-sm text-zinc-400">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>{new Date(lease.startDate).toLocaleDateString()}</span>
+                        </div>
+                        <span>to</span>
+                        <span>{new Date(lease.endDate).toLocaleDateString()}</span>
+                      </div>
+                      {lease.contractFile && (
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm text-zinc-400">Contract</span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownloadContract(lease)}
+                            className="flex items-center gap-1"
+                          >
+                            <Download className="w-3 h-3" />
+                            Download
+                          </Button>
+                        </div>
+                      )}
+                      <div className="flex gap-2 pt-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" className="flex items-center gap-1">
+                              <MoreHorizontal className="w-4 h-4" />
+                              Actions
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => handleEdit(lease)}>
+                              <Edit className="h-4 w-4 mr-2" />
+                              Edit Lease
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => handleDelete(lease.id)}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Delete Lease
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
+            </div>
+          </>
+        )}
       </div>
       <ConfirmationDialog dialog={confirmDialog} />
     </>

@@ -548,6 +548,147 @@ export const documentService = {
 };
 
 // ============================================================================
+// Document Template Localization
+// ============================================================================
+
+const DOC_STRINGS: Record<string, Record<string, string>> = {
+  en: {
+    leaseTitle: "Residential Lease Agreement",
+    receiptTitle: "RENT RECEIPT",
+    noticeTitle: "NOTICE",
+    landlord: "Landlord",
+    tenant: "Tenant",
+    property: "Property",
+    monthlyRent: "Monthly Rent",
+    deposit: "Security Deposit",
+    leaseStart: "Lease Start",
+    leaseEnd: "Lease End",
+    date: "Date",
+    amount: "Amount",
+    paidBy: "Paid by",
+    receiptFor: "Receipt for",
+    signature: "Signature",
+    // Lease agreement
+    leaseAgreementTitle: "Lease Agreement",
+    leaseIntro: "This Lease Agreement is entered into on",
+    leasePropertySection: "The Landlord agrees to rent to the Tenant the property located at",
+    leaseTerm: "Term",
+    leaseRent: "Rent",
+    leaseSecurityDeposit: "Security Deposit",
+    leaseUtilities: "Utilities",
+    leaseGeneral: "General Provisions",
+    // Notices
+    noticeLatePayment: "NOTICE OF LATE PAYMENT",
+    noticeViolation: "NOTICE OF LEASE VIOLATION",
+    noticeEviction: "NOTICE TO VACATE",
+    noticeRentIncrease: "NOTICE OF RENT INCREASE",
+    noticeRenewal: "LEASE RENEWAL NOTICE",
+    noticeGeneral: "NOTICE",
+    noticeTo: "To",
+    noticeDear: "Dear",
+    noticeQuestions: "If you have any questions, please contact us.",
+    noticeSincerely: "Sincerely",
+    // Receipt
+    receiptPaid: "PAID",
+    receiptNumber: "Receipt #",
+    receiptPaymentMethod: "Payment Method",
+  },
+  pt: {
+    leaseTitle: "Contrato de Arrendamento Habitacional",
+    receiptTitle: "RECIBO DE RENDA",
+    noticeTitle: "NOTIFICAÇÃO",
+    landlord: "Senhorio",
+    tenant: "Inquilino",
+    property: "Imóvel",
+    monthlyRent: "Renda Mensal",
+    deposit: "Caução",
+    leaseStart: "Início do Contrato",
+    leaseEnd: "Fim do Contrato",
+    date: "Data",
+    amount: "Valor",
+    paidBy: "Pago por",
+    receiptFor: "Recibo referente a",
+    signature: "Assinatura",
+    // Lease agreement
+    leaseAgreementTitle: "Contrato de Arrendamento",
+    leaseIntro: "O presente Contrato de Arrendamento é celebrado em",
+    leasePropertySection: "O Senhorio concorda em arrendar ao Inquilino o imóvel sito em",
+    leaseTerm: "Prazo",
+    leaseRent: "Renda",
+    leaseSecurityDeposit: "Caução",
+    leaseUtilities: "Serviços",
+    leaseGeneral: "Disposições Gerais",
+    // Notices
+    noticeLatePayment: "AVISO DE PAGAMENTO EM ATRASO",
+    noticeViolation: "AVISO DE VIOLAÇÃO DO CONTRATO",
+    noticeEviction: "AVISO DE DESPEJO",
+    noticeRentIncrease: "AVISO DE AUMENTO DE RENDA",
+    noticeRenewal: "AVISO DE RENOVAÇÃO",
+    noticeGeneral: "AVISO",
+    noticeTo: "Para",
+    noticeDear: "Caro/a",
+    noticeQuestions: "Se tiver questões, por favor contacte-nos.",
+    noticeSincerely: "Com os melhores cumprimentos",
+    // Receipt
+    receiptPaid: "PAGO",
+    receiptNumber: "Recibo #",
+    receiptPaymentMethod: "Método de Pagamento",
+  },
+  es: {
+    leaseTitle: "Contrato de Arrendamiento de Vivienda",
+    receiptTitle: "RECIBO DE ALQUILER",
+    noticeTitle: "NOTIFICACIÓN",
+    landlord: "Arrendador",
+    tenant: "Arrendatario",
+    property: "Inmueble",
+    monthlyRent: "Renta Mensual",
+    deposit: "Fianza",
+    leaseStart: "Inicio del Contrato",
+    leaseEnd: "Fin del Contrato",
+    date: "Fecha",
+    amount: "Importe",
+    paidBy: "Pagado por",
+    receiptFor: "Recibo correspondiente a",
+    signature: "Firma",
+    // Lease agreement
+    leaseAgreementTitle: "Contrato de Arrendamiento",
+    leaseIntro: "El presente Contrato de Arrendamiento se celebra el",
+    leasePropertySection: "El Arrendador acuerda alquilar al Inquilino la propiedad ubicada en",
+    leaseTerm: "Plazo",
+    leaseRent: "Renta",
+    leaseSecurityDeposit: "Fianza",
+    leaseUtilities: "Suministros",
+    leaseGeneral: "Disposiciones Generales",
+    // Notices
+    noticeLatePayment: "AVISO DE PAGO ATRASADO",
+    noticeViolation: "AVISO DE INCUMPLIMIENTO DEL CONTRATO",
+    noticeEviction: "AVISO DE DESAHUCIO",
+    noticeRentIncrease: "AVISO DE SUBIDA DE RENTA",
+    noticeRenewal: "AVISO DE RENOVACIÓN",
+    noticeGeneral: "AVISO",
+    noticeTo: "Para",
+    noticeDear: "Estimado/a",
+    noticeQuestions: "Si tiene alguna pregunta, por favor contáctenos.",
+    noticeSincerely: "Atentamente",
+    // Receipt
+    receiptPaid: "PAGADO",
+    receiptNumber: "Recibo #",
+    receiptPaymentMethod: "Método de Pago",
+  },
+};
+
+function getDocStrings(locale?: string) {
+  const lang = locale?.substring(0, 2) ?? "en";
+  return DOC_STRINGS[lang] ?? DOC_STRINGS.en;
+}
+
+function getIntlLocale(locale?: string): string {
+  const lang = locale?.substring(0, 2) ?? "en";
+  const localeMap: Record<string, string> = { en: "en-US", pt: "pt-PT", es: "es-ES" };
+  return localeMap[lang] ?? "en-US";
+}
+
+// ============================================================================
 // Document Template Generator
 // ============================================================================
 
@@ -555,26 +696,30 @@ export const templateGenerator = {
   /**
    * Generate a lease agreement document (HTML format)
    */
-  generateLeaseAgreement(data: LeaseTemplateData): string {
-    const currencyFormatter = new Intl.NumberFormat("en-US", {
+  generateLeaseAgreement(data: LeaseTemplateData, locale?: string): string {
+    const intlLocale = getIntlLocale(locale);
+    const s = getDocStrings(locale);
+    const currencyFormatter = new Intl.NumberFormat(intlLocale, {
       style: "currency",
       currency: data.currency || "USD",
     });
 
     const formatDate = (dateStr: string) => {
-      return new Date(dateStr).toLocaleDateString("en-US", {
+      return new Date(dateStr).toLocaleDateString(intlLocale, {
         year: "numeric",
         month: "long",
         day: "numeric",
       });
     };
 
+    const htmlLang = locale?.substring(0, 2) ?? "en";
+
     return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${htmlLang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Residential Lease Agreement</title>
+  <title>${s.leaseTitle}</title>
   <style>
     body {
       font-family: 'Times New Roman', serif;
@@ -628,38 +773,38 @@ export const templateGenerator = {
   </style>
 </head>
 <body>
-  <h1>Residential Lease Agreement</h1>
+  <h1>${s.leaseTitle}</h1>
 
   <div class="parties">
-    <p>This Residential Lease Agreement ("Agreement") is entered into as of 
-    <span class="highlight">${data.signatureDate ? formatDate(data.signatureDate) : "_______________"}</span>, 
+    <p>${s.leaseIntro}
+    <span class="highlight">${data.signatureDate ? formatDate(data.signatureDate) : "_______________"}</span>,
     by and between:</p>
     
-    <p><strong>LANDLORD:</strong> ${data.ownerName}<br>
+    <p><strong>${s.landlord.toUpperCase()}:</strong> ${data.ownerName}<br>
     ${data.ownerAddress ? `Address: ${data.ownerAddress}<br>` : ""}
     ${data.ownerEmail ? `Email: ${data.ownerEmail}<br>` : ""}
     ${data.ownerPhone ? `Phone: ${data.ownerPhone}` : ""}</p>
     
-    <p><strong>TENANT:</strong> ${data.tenantName}<br>
+    <p><strong>${s.tenant.toUpperCase()}:</strong> ${data.tenantName}<br>
     ${data.tenantAddress ? `Current Address: ${data.tenantAddress}<br>` : ""}
     Email: ${data.tenantEmail}<br>
     ${data.tenantPhone ? `Phone: ${data.tenantPhone}` : ""}</p>
   </div>
 
-  <h2>1. Property</h2>
+  <h2>1. ${s.property}</h2>
   <div class="section">
-    <p>The Landlord agrees to rent to the Tenant the property located at:</p>
+    <p>${s.leasePropertySection}:</p>
     <p class="highlight">${data.propertyAddress}${data.unitNumber ? `, Unit ${data.unitNumber}` : ""}</p>
     <p>(hereinafter referred to as the "Premises")</p>
   </div>
 
-  <h2>2. Term</h2>
+  <h2>2. ${s.leaseTerm}</h2>
   <div class="section">
     <p>The lease term shall begin on <span class="highlight">${formatDate(data.startDate)}</span> 
     and end on <span class="highlight">${formatDate(data.endDate)}</span>.</p>
   </div>
 
-  <h2>3. Rent</h2>
+  <h2>3. ${s.leaseRent}</h2>
   <div class="section">
     <p>The Tenant agrees to pay rent in the amount of 
     <span class="highlight">${currencyFormatter.format(data.monthlyRent)}</span> per month.</p>
@@ -667,7 +812,7 @@ export const templateGenerator = {
     ${data.lateFeePercentage ? `<p>A late fee of ${data.lateFeePercentage}% will be charged if rent is not received within ${data.lateFeeGracePeriod || 5} days of the due date.</p>` : ""}
   </div>
 
-  <h2>4. Security Deposit</h2>
+  <h2>4. ${s.leaseSecurityDeposit}</h2>
   <div class="section">
     <p>The Tenant shall pay a security deposit of 
     <span class="highlight">${currencyFormatter.format(data.securityDeposit)}</span> 
@@ -679,7 +824,7 @@ export const templateGenerator = {
   ${
     data.utilities && data.utilities.length > 0
       ? `
-  <h2>5. Utilities</h2>
+  <h2>5. ${s.leaseUtilities}</h2>
   <div class="section">
     <p>The following utilities are included in the rent:</p>
     <ul>
@@ -726,7 +871,7 @@ export const templateGenerator = {
       : ""
   }
 
-  <h2>General Provisions</h2>
+  <h2>${s.leaseGeneral}</h2>
   <div class="section">
     <p>1. The Tenant agrees to maintain the Premises in good condition and to notify the Landlord promptly of any needed repairs.</p>
     <p>2. The Tenant shall not make any alterations to the Premises without the prior written consent of the Landlord.</p>
@@ -737,15 +882,15 @@ export const templateGenerator = {
   <div class="signature-block">
     <div class="signature-line">
       <div class="line"></div>
-      <div class="label">Landlord Signature</div>
+      <div class="label">${s.landlord} ${s.signature}</div>
       <p>${data.ownerName}</p>
-      <p>Date: _______________</p>
+      <p>${s.date}: _______________</p>
     </div>
     <div class="signature-line">
       <div class="line"></div>
-      <div class="label">Tenant Signature</div>
+      <div class="label">${s.tenant} ${s.signature}</div>
       <p>${data.tenantName}</p>
-      <p>Date: _______________</p>
+      <p>${s.date}: _______________</p>
     </div>
   </div>
 </body>
@@ -755,18 +900,22 @@ export const templateGenerator = {
   /**
    * Generate a rent receipt document (HTML format)
    */
-  generateRentReceipt(data: RentReceiptTemplateData): string {
-    const currencyFormatter = new Intl.NumberFormat("en-US", {
+  generateRentReceipt(data: RentReceiptTemplateData, locale?: string): string {
+    const intlLocale = getIntlLocale(locale);
+    const s = getDocStrings(locale);
+    const currencyFormatter = new Intl.NumberFormat(intlLocale, {
       style: "currency",
       currency: data.currency || "USD",
     });
 
+    const htmlLang = locale?.substring(0, 2) ?? "en";
+
     return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${htmlLang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Rent Receipt - ${data.receiptNumber}</title>
+  <title>${s.receiptTitle} - ${data.receiptNumber}</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -841,11 +990,11 @@ export const templateGenerator = {
 </head>
 <body>
   <div class="header">
-    <h1>RENT RECEIPT</h1>
-    <div class="receipt-number">Receipt #${data.receiptNumber}</div>
+    <h1>${s.receiptTitle}</h1>
+    <div class="receipt-number">${s.receiptNumber}${data.receiptNumber}</div>
   </div>
 
-  <div class="stamp">PAID</div>
+  <div class="stamp">${s.receiptPaid}</div>
 
   <div class="amount">
     ${currencyFormatter.format(data.paymentAmount)}
@@ -853,50 +1002,50 @@ export const templateGenerator = {
 
   <div class="details">
     <div class="row">
-      <span class="label">Date Received:</span>
-      <span>${new Date(data.receiptDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
+      <span class="label">${s.date}:</span>
+      <span>${new Date(data.receiptDate).toLocaleDateString(intlLocale, { year: "numeric", month: "long", day: "numeric" })}</span>
     </div>
     <div class="row">
-      <span class="label">Payment Period:</span>
+      <span class="label">${s.receiptFor}:</span>
       <span>${data.paymentPeriod}</span>
     </div>
     ${
       data.paymentMethod
         ? `
     <div class="row">
-      <span class="label">Payment Method:</span>
+      <span class="label">${s.receiptPaymentMethod}:</span>
       <span>${data.paymentMethod}</span>
     </div>
     `
         : ""
     }
     <div class="row">
-      <span class="label">Received From:</span>
+      <span class="label">${s.paidBy}:</span>
       <span>${data.tenantName}</span>
     </div>
     ${
       data.tenantAddress
         ? `
     <div class="row">
-      <span class="label">Tenant Address:</span>
+      <span class="label">${s.tenant}:</span>
       <span>${data.tenantAddress}</span>
     </div>
     `
         : ""
     }
     <div class="row">
-      <span class="label">Property:</span>
+      <span class="label">${s.property}:</span>
       <span>${data.propertyAddress}${data.unitNumber ? `, Unit ${data.unitNumber}` : ""}</span>
     </div>
   </div>
 
   <div class="footer">
-    <p><strong>Received by:</strong> ${data.landlordName}</p>
+    <p><strong>${s.landlord}:</strong> ${data.landlordName}</p>
     ${data.landlordAddress ? `<p>${data.landlordAddress}</p>` : ""}
     ${data.landlordPhone ? `<p>Phone: ${data.landlordPhone}</p>` : ""}
     
     <div class="signature-line">
-      Authorized Signature
+      ${s.signature}
     </div>
   </div>
 </body>
@@ -906,25 +1055,29 @@ export const templateGenerator = {
   /**
    * Generate a notice document (HTML format)
    */
-  generateNotice(data: NoticeTemplateData): string {
+  generateNotice(data: NoticeTemplateData, locale?: string): string {
+    const intlLocale = getIntlLocale(locale);
+    const s = getDocStrings(locale);
     const noticeTitle = {
-      late_payment: "NOTICE OF LATE PAYMENT",
-      lease_violation: "NOTICE OF LEASE VIOLATION",
-      eviction: "NOTICE TO VACATE",
-      rent_increase: "NOTICE OF RENT INCREASE",
-      lease_renewal: "NOTICE OF LEASE RENEWAL",
-      general: "NOTICE TO TENANT",
+      late_payment: s.noticeLatePayment,
+      lease_violation: s.noticeViolation,
+      eviction: s.noticeEviction,
+      rent_increase: s.noticeRentIncrease,
+      lease_renewal: s.noticeRenewal,
+      general: s.noticeGeneral,
     };
 
     const currencyFormatter = data.currency
-      ? new Intl.NumberFormat("en-US", {
+      ? new Intl.NumberFormat(intlLocale, {
           style: "currency",
           currency: data.currency,
         })
       : null;
 
+    const htmlLang = locale?.substring(0, 2) ?? "en";
+
     return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${htmlLang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -985,17 +1138,17 @@ export const templateGenerator = {
   </div>
 
   <div class="date">
-    <p><strong>Date:</strong> ${new Date(data.issueDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
+    <p><strong>${s.date}:</strong> ${new Date(data.issueDate).toLocaleDateString(intlLocale, { year: "numeric", month: "long", day: "numeric" })}</p>
   </div>
 
   <div class="recipient">
-    <p><strong>To:</strong> ${data.recipientName}</p>
+    <p><strong>${s.noticeTo}:</strong> ${data.recipientName}</p>
     <p>${data.recipientAddress}</p>
-    <p><strong>Property:</strong> ${data.propertyAddress}${data.unitNumber ? `, Unit ${data.unitNumber}` : ""}</p>
+    <p><strong>${s.property}:</strong> ${data.propertyAddress}${data.unitNumber ? `, Unit ${data.unitNumber}` : ""}</p>
   </div>
 
   <div class="content">
-    <p>Dear ${data.recipientName},</p>
+    <p>${s.noticeDear} ${data.recipientName},</p>
     
     <p>${data.description}</p>
 
@@ -1003,8 +1156,8 @@ export const templateGenerator = {
       data.amount && currencyFormatter
         ? `
     <div class="important">
-      <p><strong>Amount Due:</strong> ${currencyFormatter.format(data.amount)}</p>
-      ${data.dueDate ? `<p><strong>Due By:</strong> ${new Date(data.dueDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>` : ""}
+      <p><strong>${s.amount}:</strong> ${currencyFormatter.format(data.amount)}</p>
+      ${data.dueDate ? `<p><strong>${s.date}:</strong> ${new Date(data.dueDate).toLocaleDateString(intlLocale, { year: "numeric", month: "long", day: "numeric" })}</p>` : ""}
     </div>
     `
         : ""
@@ -1013,16 +1166,16 @@ export const templateGenerator = {
     ${
       data.dueDate && !data.amount
         ? `
-    <p class="highlight">Please respond by: ${new Date(data.dueDate).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</p>
+    <p class="highlight">${s.date}: ${new Date(data.dueDate).toLocaleDateString(intlLocale, { year: "numeric", month: "long", day: "numeric" })}</p>
     `
         : ""
     }
 
-    <p>If you have any questions regarding this notice, please contact us immediately.</p>
+    <p>${s.noticeQuestions}</p>
   </div>
 
   <div class="signature">
-    <p>Sincerely,</p>
+    <p>${s.noticeSincerely},</p>
     <div class="signature-line">
       <p>${data.senderName}</p>
       ${data.senderTitle ? `<p>${data.senderTitle}</p>` : ""}

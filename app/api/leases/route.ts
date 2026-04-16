@@ -1,66 +1,59 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { withRateLimit } from "@/lib/utils/rate-limit";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { leaseSchema } from "@/lib/utils/validation";
 import { isMockMode } from "@/lib/config/data-mode";
 import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
+import { ZodError } from "zod";
 
-export async function GET(request: NextRequest): Promise<NextResponse> {
-  try {
-    const demo = handleDemoGet(request, "leases");
-    if (demo.response) return demo.response;
+const leaseInclude = {
+  property: { select: { name: true, address: true } },
+  tenant: { select: { name: true, email: true } },
+};
 
-    // In mock mode, return empty array
-    if (isMockMode) {
-      return NextResponse.json([]);
-    }
-    const authResult = await requireAuth(request);
-    if (authResult instanceof Response) return authResult as NextResponse;
+async function handleGet(request: NextRequest): Promise<Response> {
+  const demo = handleDemoGet(request, "leases");
+  if (demo.response) return demo.response;
 
-    const { userId } = authResult;
-    const prisma = getPrismaClient();
-
-    const leases = await prisma.lease.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
-      include: {
-        property: {
-          select: {
-            name: true,
-            address: true,
-          },
-        },
-        tenant: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
-    });
-
-    return NextResponse.json(leases);
-  } catch (error) {
-    console.error("Error fetching leases:", error);
-    return NextResponse.json({ error: "Failed to fetch leases" }, { status: 500 });
+  if (isMockMode) {
+    return createSuccessResponse([]);
   }
+
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
+
+  const { userId } = authResult;
+  const prisma = getPrismaClient();
+
+  const leases = await prisma.lease.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    include: leaseInclude,
+  });
+
+  return createSuccessResponse(leases);
 }
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+async function handlePost(request: NextRequest): Promise<Response> {
+  const demo = await handleDemoMutation(request, "leases");
+  if (demo.response) return demo.response;
+
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
+
+  const { userId } = authResult;
+  const prisma = getPrismaClient();
+
   try {
-    const demo = handleDemoMutation(request, "leases");
-    if (demo.response) return demo.response;
-
-    const authResult = await requireAuth(request);
-    if (authResult instanceof Response) return authResult as NextResponse;
-
-    const { userId } = authResult;
-    const prisma = getPrismaClient();
-
     const json = await request.json();
     const body = leaseSchema.parse(json);
 
-    // Handle contract file upload
     let contractFile: Buffer | undefined;
     let contractFileName: string | undefined;
     let contractFileSize: number | undefined;
@@ -68,7 +61,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     if (json.contractFile) {
       contractFile = Buffer.from(json.contractFile, "base64");
       contractFileSize = contractFile.length;
-      // You might want to extract filename from the upload or generate one
       contractFileName = `lease-contract-${Date.now()}.pdf`;
     }
 
@@ -82,27 +74,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         contractFileName,
         contractFileSize,
       },
-      include: {
-        property: {
-          select: {
-            name: true,
-            address: true,
-          },
-        },
-        tenant: {
-          select: {
-            name: true,
-            email: true,
-          },
-        },
-      },
+      include: leaseInclude,
     });
 
-    return NextResponse.json(lease);
+    return createSuccessResponse(lease, 201);
   } catch (error) {
-    console.error("Error creating lease:", error);
-    return NextResponse.json({ error: "Failed to create lease" }, { status: 500 });
+    if (error instanceof ZodError) {
+      return createErrorResponse(
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
+        400,
+        request,
+      );
+    }
+    return createErrorResponse(error as Error, 500, request);
   }
 }
 
+export const GET = withErrorHandler(withRateLimit(handleGet));
+export const POST = withErrorHandler(withRateLimit(handlePost));
 export const OPTIONS = handleOptions;

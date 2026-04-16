@@ -142,9 +142,10 @@ const AppContext = createContext<AppContextValue | null>(null);
 export function AppProvider({ children }: { children: ReactNode }): React.ReactElement {
   const [state, dispatch] = React.useReducer(appReducer, initialState);
   const { data: session } = useSession();
-  const { error: showError } = useToast();
+  const { error: showError, success: showSuccess } = useToast();
   const { token: csrfToken } = useCsrf();
   const userId = (session?.user as { id?: string } | undefined)?.id;
+  const isDemo = isDemoModeClient();
 
   // --- data loading ---
 
@@ -277,11 +278,13 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         getItems: () => state.properties,
         setItems: (items) => dispatch({ type: "SET_PROPERTIES", payload: items }),
         showError,
+        showSuccess,
         csrfToken,
         userId,
         entityName: "property",
+        isDemo,
       }),
-    [csrfToken, userId, showError, state.properties],
+    [csrfToken, userId, showError, showSuccess, isDemo, state.properties],
   );
 
   const tenantActions = useMemo(
@@ -291,11 +294,13 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         getItems: () => state.tenants,
         setItems: (items) => dispatch({ type: "SET_TENANTS", payload: items }),
         showError,
+        showSuccess,
         csrfToken,
         userId,
         entityName: "tenant",
+        isDemo,
       }),
-    [csrfToken, userId, showError, state.tenants],
+    [csrfToken, userId, showError, showSuccess, isDemo, state.tenants],
   );
 
   const receiptActions = useMemo(
@@ -305,11 +310,13 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         getItems: () => state.receipts,
         setItems: (items) => dispatch({ type: "SET_RECEIPTS", payload: items }),
         showError,
+        showSuccess,
         csrfToken,
         userId,
         entityName: "receipt",
+        isDemo,
       }),
-    [csrfToken, userId, showError, state.receipts],
+    [csrfToken, userId, showError, showSuccess, isDemo, state.receipts],
   );
 
   const templateActions = useMemo(
@@ -319,12 +326,14 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         getItems: () => state.templates,
         setItems: (items) => dispatch({ type: "SET_TEMPLATES", payload: items }),
         showError,
+        showSuccess,
         csrfToken,
         userId,
         entityName: "template",
         requireAuth: false,
+        isDemo,
       }),
-    [csrfToken, userId, showError, state.templates],
+    [csrfToken, userId, showError, showSuccess, isDemo, state.templates],
   );
 
   const correspondenceActions = useMemo(
@@ -334,11 +343,13 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         getItems: () => state.correspondence,
         setItems: (items) => dispatch({ type: "SET_CORRESPONDENCE", payload: items }),
         showError,
+        showSuccess,
         csrfToken,
         userId,
         entityName: "correspondence",
+        isDemo,
       }),
-    [csrfToken, userId, showError, state.correspondence],
+    [csrfToken, userId, showError, showSuccess, isDemo, state.correspondence],
   );
 
   const ownerActions = useMemo(
@@ -348,11 +359,13 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         getItems: () => state.owners,
         setItems: (items) => dispatch({ type: "SET_OWNERS", payload: items }),
         showError,
+        showSuccess,
         csrfToken,
         userId,
         entityName: "owner",
+        isDemo,
       }),
-    [csrfToken, userId, showError, state.owners],
+    [csrfToken, userId, showError, showSuccess, isDemo, state.owners],
   );
 
   const expenseActions = useMemo(
@@ -362,12 +375,14 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         getItems: () => state.expenses,
         setItems: (items) => dispatch({ type: "SET_EXPENSES", payload: items }),
         showError,
+        showSuccess,
         csrfToken,
         userId,
         entityName: "expense",
         prependNew: true,
+        isDemo,
       }),
-    [csrfToken, userId, showError, state.expenses],
+    [csrfToken, userId, showError, showSuccess, isDemo, state.expenses],
   );
 
   const maintenanceActions = useMemo(
@@ -377,12 +392,14 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         getItems: () => state.maintenance,
         setItems: (items) => dispatch({ type: "SET_MAINTENANCE", payload: items }),
         showError,
+        showSuccess,
         csrfToken,
         userId,
         entityName: "ticket",
         prependNew: true,
+        isDemo,
       }),
-    [csrfToken, userId, showError, state.maintenance],
+    [csrfToken, userId, showError, showSuccess, isDemo, state.maintenance],
   );
 
   const leaseActions = useMemo(
@@ -392,12 +409,14 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         getItems: () => state.leases,
         setItems: (items) => dispatch({ type: "SET_LEASES", payload: items }),
         showError,
+        showSuccess,
         csrfToken,
         userId,
         entityName: "lease",
         prependNew: true,
+        isDemo,
       }),
-    [csrfToken, userId, showError, state.leases],
+    [csrfToken, userId, showError, showSuccess, isDemo, state.leases],
   );
 
   // --- context value (backward-compatible shape) ---

@@ -36,8 +36,18 @@ export const ES_STRESSED_ZONE_DEDUCTIONS = {
 export const ES_GRANDES_TENEDORES_THRESHOLD_STRESSED = 5; // 5+ units in stressed zone
 export const ES_GRANDES_TENEDORES_THRESHOLD_GENERAL = 10; // 10+ units outside stressed zone
 
+// Import and re-export country utilities for backward compatibility
+import {
+  type CountryCode,
+  resolveCountryCode,
+  getCountryName,
+  getCountryLocale,
+  COUNTRY_CONFIG,
+} from "@/lib/utils/country";
+export { type CountryCode, resolveCountryCode, getCountryName, getCountryLocale, COUNTRY_CONFIG };
+
 export interface TaxCalculationInput {
-  country: "Portugal" | "Spain";
+  country: CountryCode;
   regime: "portugal_rendimentos" | "spain_inmuebles";
   annualRentalIncome: number;
   deductibleExpenses: number;
@@ -379,10 +389,11 @@ export class TaxCalculator {
    * Main calculation method
    */
   static calculateTax(input: TaxCalculationInput): TaxCalculationResult {
-    if (input.country === "Portugal") {
-      return this.calculatePortugalTax(input);
-    } else if (input.country === "Spain") {
-      return this.calculateSpainTax(input);
+    const country = resolveCountryCode(input.country);
+    if (country === "PT") {
+      return this.calculatePortugalTax({ ...input, country });
+    } else if (country === "ES") {
+      return this.calculateSpainTax({ ...input, country });
     }
 
     throw new Error(`Unsupported country: ${input.country}`);
@@ -392,15 +403,16 @@ export class TaxCalculator {
    * Get tax brackets for a country (for display purposes)
    */
   static getTaxBrackets(
-    country: "Portugal" | "Spain",
+    country: CountryCode | "Portugal" | "Spain",
   ): Array<{ min: number; max: number; rate: number }> {
-    if (country === "Portugal") {
+    const code = resolveCountryCode(country);
+    if (code === "PT") {
       return PT_TAX_BRACKETS_2026.map((b) => ({
         min: b.min,
         max: b.max,
         rate: b.rate * 100,
       }));
-    } else if (country === "Spain") {
+    } else if (code === "ES") {
       return ES_TAX_BRACKETS_2026.map((b) => ({
         min: b.min,
         max: b.max,
@@ -415,13 +427,14 @@ export class TaxCalculator {
    * Estimate quarterly tax payments
    */
   static calculateQuarterlyEstimate(
-    country: "Portugal" | "Spain",
+    country: CountryCode | "Portugal" | "Spain",
     quarterlyIncome: number,
     quarterlyExpenses: number,
   ): number {
+    const code = resolveCountryCode(country);
     const annualEstimate = this.calculateTax({
-      country,
-      regime: country === "Portugal" ? "portugal_rendimentos" : "spain_inmuebles",
+      country: code,
+      regime: code === "PT" ? "portugal_rendimentos" : "spain_inmuebles",
       annualRentalIncome: quarterlyIncome * 4,
       deductibleExpenses: quarterlyExpenses * 4,
     });
@@ -432,8 +445,9 @@ export class TaxCalculator {
   /**
    * Format currency for display
    */
-  static formatCurrency(amount: number, currency: string = "EUR"): string {
-    return new Intl.NumberFormat("en-US", {
+  static formatCurrency(amount: number, currency: string = "EUR", locale?: string): string {
+    const defaultLocale = currency === "EUR" ? "pt-PT" : currency === "GBP" ? "en-GB" : "en-US";
+    return new Intl.NumberFormat(locale ?? defaultLocale, {
       style: "currency",
       currency,
       minimumFractionDigits: 0,

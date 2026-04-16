@@ -1,18 +1,17 @@
 "use client";
 
-import { useMemo, useState, useCallback, forwardRef, useImperativeHandle } from "react";
+import { useMemo, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
+import { Mail, Phone, Calendar, Plus, MoreHorizontal, Trash2, Edit } from "lucide-react";
+import { SortableHeader } from "@/components/ui/sortable-header";
+import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
 import {
-  Mail,
-  Phone,
-  Calendar,
-  Plus,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  MoreHorizontal,
-  Trash2,
-  Edit,
-} from "lucide-react";
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { cn } from "@/lib/utils/utils";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -50,43 +49,19 @@ import { TenantDetailModal } from "./tenant-detail-modal";
 import { EditableCell } from "@/components/ui/editable-cell";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useApp } from "@/lib/contexts/app-context";
+import { RelationshipBadge } from "@/components/shared/relationship-badge";
 import { Tenant } from "@/lib/types";
+import { getActiveLease } from "@/lib/utils/lease-helpers";
 import { tenantSchema, TenantFormData } from "@/lib/utils/validation";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
-import { useSortableData, SortDirection } from "@/lib/hooks/use-sortable-data";
+import { useSortableData } from "@/lib/hooks/use-sortable-data";
 import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { PageHeader } from "@/components/shared/page-header";
 
 export type TenantsViewProps = { density?: "comfortable" | "compact" };
-
-interface SortableHeaderProps {
-  column: keyof Tenant;
-  label: string;
-  sortDirection: SortDirection;
-  onSort: (column: keyof Tenant) => void;
-}
-
-function SortableHeader({ column, label, sortDirection, onSort }: SortableHeaderProps) {
-  return (
-    <button
-      onClick={() => onSort(column)}
-      className={cn(
-        "flex items-center gap-2 text-xs font-semibold text-zinc-400 uppercase tracking-wider",
-        "hover:text-zinc-200 transition-colors group focus-ring",
-        "px-2 py-1 rounded-md hover:bg-[var(--color-surface-hover)]",
-      )}
-    >
-      <span>{label}</span>
-      <span className="opacity-70 group-hover:opacity-100 transition-opacity">
-        {sortDirection === "asc" && <ArrowUp className="w-3 h-3" />}
-        {sortDirection === "desc" && <ArrowDown className="w-3 h-3" />}
-        {sortDirection === null && <ArrowUpDown className="w-3 h-3" />}
-      </span>
-    </button>
-  );
-}
 
 export type TenantsViewRef = {
   openDialog: () => void;
@@ -96,6 +71,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
   function TenantsView(_props, ref): React.ReactElement {
     const { state, addTenant, updateTenant, deleteTenant } = useApp();
     const { tenants, properties, loading } = state;
+    const { leases } = state;
     const { success, error: showError } = useToast();
     const { formatCurrency } = useCurrency();
     const confirmDialog = useConfirmDialog();
@@ -112,6 +88,17 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
 
     // Bulk selection
     const bulkSelection = useBulkSelection<Tenant>();
+
+    // Data view mode state with localStorage persistence
+    const [dataViewMode, setDataViewMode] = useState<DataViewMode>("grid");
+    useEffect(() => {
+      const saved = localStorage.getItem("proman-tenants-view-mode");
+      if (saved === "grid" || saved === "table") setDataViewMode(saved);
+    }, []);
+    const handleViewModeChange = useCallback((mode: DataViewMode) => {
+      setDataViewMode(mode);
+      localStorage.setItem("proman-tenants-view-mode", mode);
+    }, []);
 
     const initialFormData: TenantFormData = {
       name: "",
@@ -290,6 +277,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
           <LoadingState variant="cards" count={6} />
         ) : (
           <div className="space-y-6">
+            <PageHeader title="Tenants" description="Manage your tenants and their information" />
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogTrigger asChild>
                 <Button onClick={dialog.openDialog} className="hidden">
@@ -318,7 +306,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         required
                       />
                       {dialog.formErrors.name && (
-                        <p className="text-sm text-red-500">{dialog.formErrors.name}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.name}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -332,7 +320,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         required
                       />
                       {dialog.formErrors.email && (
-                        <p className="text-sm text-red-500">{dialog.formErrors.email}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.email}</p>
                       )}
                     </div>
                   </div>
@@ -348,7 +336,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         required
                       />
                       {dialog.formErrors.phone && (
-                        <p className="text-sm text-red-500">{dialog.formErrors.phone}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.phone}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -371,7 +359,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         </SelectContent>
                       </Select>
                       {dialog.formErrors.propertyId && (
-                        <p className="text-sm text-red-500">{dialog.formErrors.propertyId}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.propertyId}</p>
                       )}
                     </div>
                   </div>
@@ -393,7 +381,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         required
                       />
                       {dialog.formErrors.rent && (
-                        <p className="text-sm text-red-500">{dialog.formErrors.rent}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.rent}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -407,7 +395,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         required
                       />
                       {dialog.formErrors.leaseStart && (
-                        <p className="text-sm text-red-500">{dialog.formErrors.leaseStart}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.leaseStart}</p>
                       )}
                     </div>
                     <div className="space-y-2">
@@ -421,7 +409,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         required
                       />
                       {dialog.formErrors.leaseEnd && (
-                        <p className="text-sm text-red-500">{dialog.formErrors.leaseEnd}</p>
+                        <p className="text-sm text-destructive">{dialog.formErrors.leaseEnd}</p>
                       )}
                     </div>
                   </div>
@@ -446,7 +434,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                       </SelectContent>
                     </Select>
                     {dialog.formErrors.paymentStatus && (
-                      <p className="text-sm text-red-500">{dialog.formErrors.paymentStatus}</p>
+                      <p className="text-sm text-destructive">{dialog.formErrors.paymentStatus}</p>
                     )}
                   </div>
 
@@ -460,7 +448,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                       className={dialog.formErrors.notes ? "border-red-500" : ""}
                     />
                     {dialog.formErrors.notes && (
-                      <p className="text-sm text-red-500">{dialog.formErrors.notes}</p>
+                      <p className="text-sm text-destructive">{dialog.formErrors.notes}</p>
                     )}
                   </div>
 
@@ -468,12 +456,8 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                     <Button type="button" variant="outline" onClick={dialog.closeDialog}>
                       Cancel
                     </Button>
-                    <Button type="submit" disabled={dialog.isSubmitting}>
-                      {dialog.isSubmitting
-                        ? "Saving..."
-                        : dialog.editingItem
-                          ? "Update Tenant"
-                          : "Add Tenant"}
+                    <Button type="submit" loading={dialog.isSubmitting}>
+                      {dialog.editingItem ? "Update Tenant" : "Create Tenant"}
                     </Button>
                   </div>
                 </form>
@@ -516,251 +500,411 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
               ]}
             />
 
-            {filteredTenants.length > 0 && (
-              <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
-                <div className="flex-1">
-                  <SortableHeader
-                    column="name"
-                    label="Tenant"
-                    sortDirection={getSortDirection("name")}
-                    onSort={requestSort}
-                  />
-                </div>
-                <div className="w-36 text-right">
-                  <SortableHeader
-                    column="rent"
-                    label="Rent"
-                    sortDirection={getSortDirection("rent")}
-                    onSort={requestSort}
-                  />
-                </div>
-                <div className="w-36 text-right">
-                  <SortableHeader
-                    column="paymentStatus"
-                    label="Status"
-                    sortDirection={getSortDirection("paymentStatus")}
-                    onSort={requestSort}
-                  />
-                </div>
-                <div className="w-36 text-right">
-                  <SortableHeader
-                    column="leaseEnd"
-                    label="Lease End"
-                    sortDirection={getSortDirection("leaseEnd")}
-                    onSort={requestSort}
-                  />
-                </div>
-              </div>
-            )}
+            <div className="flex items-center justify-end">
+              <DataViewToggle mode={dataViewMode} onChange={handleViewModeChange} />
+            </div>
 
-            {filteredTenants.length === 0 ? (
-              <EmptyStateIllustration
-                type="tenants"
-                onAction={dialog.openDialog}
-                compact={compact}
-              />
+            {dataViewMode === "table" ? (
+              /* Table View */
+              filteredTenants.length === 0 ? (
+                <EmptyStateIllustration
+                  type="tenants"
+                  onAction={dialog.openDialog}
+                  compact={compact}
+                />
+              ) : (
+                <div className="rounded-lg border border-zinc-800 bg-zinc-900">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-zinc-800 hover:bg-transparent">
+                        <TableHead className="text-zinc-400">
+                          <SortableHeader
+                            sortKey="name"
+                            label="Name"
+                            currentSort={getSortDirection("name")}
+                            onSort={(key) => requestSort(key as keyof Tenant)}
+                          />
+                        </TableHead>
+                        <TableHead className="text-zinc-400">Email</TableHead>
+                        <TableHead className="text-zinc-400">Phone</TableHead>
+                        <TableHead className="text-zinc-400">Property</TableHead>
+                        <TableHead className="text-zinc-400">
+                          <SortableHeader
+                            sortKey="rent"
+                            label="Rent"
+                            currentSort={getSortDirection("rent")}
+                            onSort={(key) => requestSort(key as keyof Tenant)}
+                          />
+                        </TableHead>
+                        <TableHead className="text-zinc-400">
+                          <SortableHeader
+                            sortKey="paymentStatus"
+                            label="Payment Status"
+                            currentSort={getSortDirection("paymentStatus")}
+                            onSort={(key) => requestSort(key as keyof Tenant)}
+                          />
+                        </TableHead>
+                        <TableHead className="text-zinc-400 w-10"></TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {sortedTenants.map((tenant) => (
+                        <TableRow
+                          key={tenant.id}
+                          className="border-zinc-800 cursor-pointer hover:bg-zinc-800/50"
+                          onClick={() => {
+                            setSelectedTenant(tenant);
+                            setIsDetailModalOpen(true);
+                          }}
+                        >
+                          <TableCell className="text-sm font-medium text-zinc-100">
+                            {tenant.name}
+                          </TableCell>
+                          <TableCell className="text-sm text-zinc-400">{tenant.email}</TableCell>
+                          <TableCell className="text-sm text-zinc-400">{tenant.phone}</TableCell>
+                          <TableCell className="text-sm text-zinc-400">
+                            {tenant.propertyName || "Unassigned"}
+                          </TableCell>
+                          {/* Derived from active lease's monthlyRent */}
+                          <TableCell className="text-sm font-medium text-zinc-100">
+                            {formatCurrency(
+                              Number(getActiveLease(tenant.id, leases)?.monthlyRent ?? tenant.rent),
+                            )}
+                          </TableCell>
+                          <TableCell>{getPaymentStatusBadge(tenant.paymentStatus)}</TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 shrink-0"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    dialog.openEditDialog(tenant, (t) => ({
+                                      name: t.name,
+                                      email: t.email,
+                                      phone: t.phone || "",
+                                      propertyId: t.propertyId || "",
+                                      rent: Number(t.rent),
+                                      leaseStart: t.leaseStart || "",
+                                      leaseEnd: t.leaseEnd || "",
+                                      paymentStatus: t.paymentStatus,
+                                      notes: t.notes || "",
+                                    }));
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.location.href = `mailto:${tenant.email}`;
+                                  }}
+                                >
+                                  <Mail className="h-4 w-4 mr-2" />
+                                  Send Email
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(tenant);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )
             ) : (
-              <div
-                className={cn(
-                  "grid",
-                  compact
-                    ? "gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                    : "gap-4 md:grid-cols-2 xl:grid-cols-3",
+              <>
+                {filteredTenants.length > 0 && (
+                  <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
+                    <div className="flex-1">
+                      <SortableHeader
+                        sortKey="name"
+                        label="Tenant"
+                        currentSort={getSortDirection("name")}
+                        onSort={(key) => requestSort(key as keyof Tenant)}
+                      />
+                    </div>
+                    <div className="w-36 text-right">
+                      <SortableHeader
+                        sortKey="rent"
+                        label="Rent"
+                        currentSort={getSortDirection("rent")}
+                        onSort={(key) => requestSort(key as keyof Tenant)}
+                      />
+                    </div>
+                    <div className="w-36 text-right">
+                      <SortableHeader
+                        sortKey="paymentStatus"
+                        label="Status"
+                        currentSort={getSortDirection("paymentStatus")}
+                        onSort={(key) => requestSort(key as keyof Tenant)}
+                      />
+                    </div>
+                    <div className="w-36 text-right">
+                      <SortableHeader
+                        sortKey="leaseEnd"
+                        label="Lease End"
+                        currentSort={getSortDirection("leaseEnd")}
+                        onSort={(key) => requestSort(key as keyof Tenant)}
+                      />
+                    </div>
+                  </div>
                 )}
-              >
-                {sortedTenants.map((tenant) => {
-                  const isSelected = bulkSelection.isSelected(tenant.id);
-                  return (
-                    <Card
-                      key={tenant.id}
-                      className={cn(
-                        "relative bg-[var(--color-surface)] border border-[var(--color-border)] transition-all duration-200 cursor-pointer",
-                        "hover:border-[var(--color-accent-primary)]/40 hover:shadow-lg",
-                        isSelected && "border-[var(--color-accent-primary)] shadow-lg",
-                      )}
-                      onClick={() => {
-                        setSelectedTenant(tenant);
-                        setIsDetailModalOpen(true);
-                      }}
-                    >
-                      <CardHeader className="space-y-4">
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3">
-                            <Checkbox
-                              checked={isSelected}
-                              onCheckedChange={() => bulkSelection.toggleSelection(tenant.id)}
-                              className="mt-1"
-                            />
-                            <div className="flex items-center gap-3">
-                              <div
-                                className={cn(
-                                  compact
-                                    ? "flex h-8 w-8 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30 text-xs"
-                                    : "flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30",
-                                )}
-                              >
-                                <span className="text-sm font-semibold text-accent-primary">
-                                  {tenant.name
-                                    .split(" ")
-                                    .map((n: string) => n[0])
-                                    .join("")
-                                    .toUpperCase()}
+
+                {filteredTenants.length === 0 ? (
+                  <EmptyStateIllustration
+                    type="tenants"
+                    onAction={dialog.openDialog}
+                    compact={compact}
+                  />
+                ) : (
+                  <div
+                    className={cn(
+                      "grid",
+                      compact
+                        ? "gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
+                        : "gap-4 md:grid-cols-2 xl:grid-cols-3",
+                    )}
+                  >
+                    {sortedTenants.map((tenant) => {
+                      const isSelected = bulkSelection.isSelected(tenant.id);
+                      return (
+                        <Card
+                          key={tenant.id}
+                          className={cn(
+                            "relative bg-[var(--color-surface)] border border-[var(--color-border)] transition-all duration-200 cursor-pointer",
+                            "hover:border-[var(--color-accent-primary)]/40 hover:shadow-lg",
+                            isSelected && "border-[var(--color-accent-primary)] shadow-lg",
+                          )}
+                          onClick={() => {
+                            setSelectedTenant(tenant);
+                            setIsDetailModalOpen(true);
+                          }}
+                        >
+                          <CardHeader className="space-y-4">
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="flex items-start gap-3">
+                                <Checkbox
+                                  checked={isSelected}
+                                  onCheckedChange={() => bulkSelection.toggleSelection(tenant.id)}
+                                  className="mt-1"
+                                />
+                                <div className="flex items-center gap-3">
+                                  <div
+                                    className={cn(
+                                      compact
+                                        ? "flex h-8 w-8 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30 text-xs"
+                                        : "flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30",
+                                    )}
+                                  >
+                                    <span className="text-sm font-semibold text-accent-primary">
+                                      {tenant.name
+                                        .split(" ")
+                                        .map((n: string) => n[0])
+                                        .join("")
+                                        .toUpperCase()}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <CardTitle
+                                      className={cn(
+                                        compact ? "text-xs font-semibold" : "text-xl font-semibold",
+                                        "text-[var(--color-foreground)]",
+                                      )}
+                                    >
+                                      {tenant.name}
+                                    </CardTitle>
+                                    <CardDescription className="flex flex-col text-xs text-[var(--color-muted-foreground)]">
+                                      <span className="flex items-center gap-1">
+                                        <Mail className="h-3 w-3" />
+                                        {tenant.email}
+                                      </span>
+                                      <span className="flex items-center gap-1">
+                                        <Phone className="h-3 w-3" />
+                                        {tenant.phone}
+                                      </span>
+                                    </CardDescription>
+                                    {/* Relationship badges */}
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {(() => {
+                                        const prop = properties.find(
+                                          (p) => p.id === tenant.propertyId,
+                                        );
+                                        return prop ? (
+                                          <RelationshipBadge variant="property" label={prop.name} />
+                                        ) : null;
+                                      })()}
+                                      {tenant.paymentStatus === "overdue" && (
+                                        <RelationshipBadge variant="overdue" label="Overdue" />
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 shrink-0"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <MoreHorizontal className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      dialog.openEditDialog(tenant, (t) => ({
+                                        name: t.name,
+                                        email: t.email,
+                                        phone: t.phone || "",
+                                        propertyId: t.propertyId || "",
+                                        rent: Number(t.rent),
+                                        leaseStart: t.leaseStart || "",
+                                        leaseEnd: t.leaseEnd || "",
+                                        paymentStatus: t.paymentStatus,
+                                        notes: t.notes || "",
+                                      }));
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      window.location.href = `mailto:${tenant.email}`;
+                                    }}
+                                  >
+                                    <Mail className="h-4 w-4 mr-2" />
+                                    Send Email
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleDelete(tenant);
+                                    }}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+
+                            <div
+                              className={cn(
+                                "space-y-2 rounded-lg bg-[var(--color-surface-muted)]",
+                                compact ? "p-2" : "p-4",
+                              )}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-[var(--color-muted-foreground)]">
+                                  Monthly Rent
+                                </span>
+                                {/* Derived from active lease's monthlyRent */}
+                                <span className="text-sm font-semibold text-[var(--color-foreground)]">
+                                  {formatCurrency(
+                                    Number(
+                                      getActiveLease(tenant.id, leases)?.monthlyRent ?? tenant.rent,
+                                    ),
+                                  )}
                                 </span>
                               </div>
-                              <div>
-                                <CardTitle
-                                  className={cn(
-                                    compact ? "text-xs font-semibold" : "text-xl font-semibold",
-                                    "text-[var(--color-foreground)]",
-                                  )}
-                                >
-                                  {tenant.name}
-                                </CardTitle>
-                                <CardDescription className="flex flex-col text-xs text-[var(--color-muted-foreground)]">
-                                  <span className="flex items-center gap-1">
-                                    <Mail className="h-3 w-3" />
-                                    {tenant.email}
-                                  </span>
-                                  <span className="flex items-center gap-1">
-                                    <Phone className="h-3 w-3" />
-                                    {tenant.phone}
-                                  </span>
-                                </CardDescription>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-[var(--color-muted-foreground)]">
+                                  Property
+                                </span>
+                                <span className="text-sm font-medium text-[var(--color-foreground)]">
+                                  {tenant.propertyName || "Unassigned"}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm text-[var(--color-muted-foreground)]">
+                                  Lease Period
+                                </span>
+                                {/* Derived from active lease's startDate/endDate */}
+                                <span className="text-xs text-[var(--color-foreground)]">
+                                  {(() => {
+                                    const al = getActiveLease(tenant.id, leases);
+                                    const start = al?.startDate ?? tenant.leaseStart;
+                                    const end = al?.endDate ?? tenant.leaseEnd;
+                                    return (
+                                      <>
+                                        {start ? new Date(start).toLocaleDateString() : "\u2014"}{" "}
+                                        \u2192 {end ? new Date(end).toLocaleDateString() : "\u2014"}
+                                      </>
+                                    );
+                                  })()}
+                                </span>
                               </div>
                             </div>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 shrink-0"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  dialog.openEditDialog(tenant, (t) => ({
-                                    name: t.name,
-                                    email: t.email,
-                                    phone: t.phone || "",
-                                    propertyId: t.propertyId || "",
-                                    rent: Number(t.rent),
-                                    leaseStart: t.leaseStart || "",
-                                    leaseEnd: t.leaseEnd || "",
-                                    paymentStatus: t.paymentStatus,
-                                    notes: t.notes || "",
-                                  }));
-                                }}
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.location.href = `mailto:${tenant.email}`;
-                                }}
-                              >
-                                <Mail className="h-4 w-4 mr-2" />
-                                Send Email
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(tenant);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
 
-                        <div
-                          className={cn(
-                            "space-y-2 rounded-lg bg-[var(--color-surface-muted)]",
-                            compact ? "p-2" : "p-4",
-                          )}
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-[var(--color-muted-foreground)]">
-                              Monthly Rent
-                            </span>
-                            <span className="text-sm font-semibold text-[var(--color-foreground)]">
-                              {formatCurrency(Number(tenant.rent))}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-[var(--color-muted-foreground)]">
-                              Property
-                            </span>
-                            <span className="text-sm font-medium text-[var(--color-foreground)]">
-                              {tenant.propertyName || "Unassigned"}
-                            </span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-[var(--color-muted-foreground)]">
-                              Lease Period
-                            </span>
-                            <span className="text-xs text-[var(--color-foreground)]">
-                              {tenant.leaseStart
-                                ? new Date(tenant.leaseStart).toLocaleDateString()
-                                : "—"}{" "}
-                              →{" "}
-                              {tenant.leaseEnd
-                                ? new Date(tenant.leaseEnd).toLocaleDateString()
-                                : "—"}
-                            </span>
-                          </div>
-                        </div>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="h-4 w-4 text-zinc-500" />
+                                <span className="text-sm text-[var(--color-muted-foreground)]">
+                                  Next payment due
+                                </span>
+                              </div>
+                              {getPaymentStatusBadge(tenant.paymentStatus)}
+                            </div>
+                          </CardHeader>
 
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4 text-zinc-500" />
-                            <span className="text-sm text-[var(--color-muted-foreground)]">
-                              Next payment due
-                            </span>
-                          </div>
-                          {getPaymentStatusBadge(tenant.paymentStatus)}
-                        </div>
-                      </CardHeader>
+                          <CardContent className={compact ? "space-y-1 p-2" : "space-y-4"}>
+                            <div className="space-y-2">
+                              <h4 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                                Notes
+                              </h4>
+                              <EditableCell
+                                value={tenant.notes || ""}
+                                type="text"
+                                onSave={(value) => handleInlineEdit(tenant.id, "notes", value)}
+                                placeholder="Add important notes"
+                                className="text-sm text-[var(--color-foreground)]"
+                              />
+                            </div>
 
-                      <CardContent className={compact ? "space-y-1 p-2" : "space-y-4"}>
-                        <div className="space-y-2">
-                          <h4 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wide">
-                            Notes
-                          </h4>
-                          <EditableCell
-                            value={tenant.notes || ""}
-                            type="text"
-                            onSave={(value) => handleInlineEdit(tenant.id, "notes", value)}
-                            placeholder="Add important notes"
-                            className="text-sm text-[var(--color-foreground)]"
-                          />
-                        </div>
-
-                        <div className="flex items-center justify-between text-xs text-[var(--color-muted-foreground)]">
-                          <span>
-                            {tenant.createdAt
-                              ? new Date(tenant.createdAt).toLocaleDateString()
-                              : ""}
-                          </span>
-                          <span className="text-xs text-[var(--color-muted-foreground)]">
-                            {tenant.paymentStatus ? tenant.paymentStatus.toUpperCase() : ""}
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </div>
+                            <div className="flex items-center justify-between text-xs text-[var(--color-muted-foreground)]">
+                              <span>
+                                {tenant.createdAt
+                                  ? new Date(tenant.createdAt).toLocaleDateString()
+                                  : ""}
+                              </span>
+                              <span className="text-xs text-[var(--color-muted-foreground)]">
+                                {tenant.paymentStatus ? tenant.paymentStatus.toUpperCase() : ""}
+                              </span>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </>
             )}
 
             <BulkActionBar

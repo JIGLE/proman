@@ -5,6 +5,7 @@ import {
   createSuccessResponse,
   withErrorHandler,
 } from "@/lib/utils/error-handling";
+import { withRateLimit } from "@/lib/utils/rate-limit";
 import { receiptService } from "@/lib/services/database";
 import { sanitizeForDatabase, sanitizeNumber } from "@/lib/utils/sanitize";
 import { getPaginationFromRequest, createPaginatedResponse } from "@/lib/utils/pagination";
@@ -68,7 +69,7 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
 // POST /api/receipts - Create a new receipt
 async function handlePost(request: NextRequest): Promise<Response> {
-  const demo = handleDemoMutation(request, "receipts");
+  const demo = await handleDemoMutation(request, "receipts");
   if (demo.response) return demo.response;
 
   const authResult = await requireAuth(request);
@@ -106,6 +107,6 @@ async function handlePost(request: NextRequest): Promise<Response> {
 }
 
 // Main handler
-export const GET = withErrorHandler(handleGet);
-export const POST = withErrorHandler(handlePost);
+export const GET = withErrorHandler(withRateLimit(handleGet));
+export const POST = withErrorHandler(withRateLimit(handlePost));
 export const OPTIONS = handleOptions;

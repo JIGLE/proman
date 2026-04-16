@@ -37,6 +37,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import {
   Upload,
   FileText,
@@ -758,11 +759,11 @@ export function DocumentsView() {
         </CardHeader>
         <CardContent>
           {documents.length === 0 ? (
-            <div className="text-center py-12">
-              <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
-              <h3 className="mt-4 text-lg font-semibold">No documents</h3>
-              <p className="text-muted-foreground">Upload your first document to get started</p>
-            </div>
+            <EmptyStateIllustration
+              type="documents"
+              title="No documents"
+              description="Upload your first document to get started"
+            />
           ) : (
             <div className="space-y-4">
               {documents.map((doc) => {

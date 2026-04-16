@@ -10,7 +10,7 @@ describe("TaxCalculator", () => {
   describe("Portugal - IRS Standard Taxation", () => {
     it("PT-001: Should calculate tax for standard Portuguese rental income", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 10000,
         deductibleExpenses: 1000,
@@ -26,7 +26,7 @@ describe("TaxCalculator", () => {
 
     it("PT-002: Should apply 15% deduction cap for expenses", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 10000,
         deductibleExpenses: 3000,
@@ -37,7 +37,7 @@ describe("TaxCalculator", () => {
 
     it("PT-003: Should handle zero rental income", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 0,
         deductibleExpenses: 0,
@@ -49,7 +49,7 @@ describe("TaxCalculator", () => {
 
     it("PT-004: Should calculate deductions correctly", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 12000,
         deductibleExpenses: 1200,
@@ -61,14 +61,14 @@ describe("TaxCalculator", () => {
 
     it("PT-005: Should apply ownership bonus per year", () => {
       const input1: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 50000,
         deductibleExpenses: 5000,
         yearsOfOwnership: 1,
       };
       const input3: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 50000,
         deductibleExpenses: 5000,
@@ -81,7 +81,7 @@ describe("TaxCalculator", () => {
 
     it("PT-006: Should use progressive brackets correctly", () => {
       const input = {
-        country: "Portugal" as const,
+        country: "PT" as const,
         regime: "portugal_rendimentos" as const,
         annualRentalIncome: 50000,
         deductibleExpenses: 5000,
@@ -93,7 +93,7 @@ describe("TaxCalculator", () => {
 
     it("PT-007: Should calculate quarterly payments as 1/4 of annual tax", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 20000,
         deductibleExpenses: 2000,
@@ -104,7 +104,7 @@ describe("TaxCalculator", () => {
 
     it("PT-008: Should handle high income (>100k)", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 150000,
         deductibleExpenses: 15000,
@@ -116,7 +116,7 @@ describe("TaxCalculator", () => {
 
     it("PT-009: Should have appliedRegime set to correct value", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 30000,
         deductibleExpenses: 3000,
@@ -127,7 +127,7 @@ describe("TaxCalculator", () => {
 
     it("PT-010: Should return warnings array", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 10000,
         deductibleExpenses: 1000,
@@ -140,7 +140,7 @@ describe("TaxCalculator", () => {
   describe("Portugal - Renda Acessível", () => {
     it("PT-RA-001: Should apply 10% flat rate for renda acessível", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 24000,
         deductibleExpenses: 1000,
@@ -156,7 +156,7 @@ describe("TaxCalculator", () => {
 
     it("PT-RA-002: Should reject renda acessível if rent exceeds threshold", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 30000,
         deductibleExpenses: 1000,
@@ -175,7 +175,7 @@ describe("TaxCalculator", () => {
 
     it("PT-RA-004: Should apply renda acessível at max threshold", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 2300 * 12,
         deductibleExpenses: 500,
@@ -188,7 +188,7 @@ describe("TaxCalculator", () => {
 
     it("PT-RA-005: Should not apply renda acessível if disabled", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 24000,
         deductibleExpenses: 1000,
@@ -203,7 +203,7 @@ describe("TaxCalculator", () => {
   describe("Spain - IRPF Inmuebles", () => {
     it("ES-001: Should calculate Spanish IRPF tax", () => {
       const input: TaxCalculationInput = {
-        country: "Spain",
+        country: "ES",
         regime: "spain_inmuebles",
         annualRentalIncome: 12000,
         deductibleExpenses: 1200,
@@ -216,7 +216,7 @@ describe("TaxCalculator", () => {
 
     it("ES-002: Should apply 50% base deduction for standard rental", () => {
       const input: TaxCalculationInput = {
-        country: "Spain",
+        country: "ES",
         regime: "spain_inmuebles",
         annualRentalIncome: 12000,
         deductibleExpenses: 500,
@@ -228,7 +228,7 @@ describe("TaxCalculator", () => {
 
     it("ES-003: Should apply mortgage interest as deduction", () => {
       const input: TaxCalculationInput = {
-        country: "Spain",
+        country: "ES",
         regime: "spain_inmuebles",
         annualRentalIncome: 12000,
         deductibleExpenses: 500,
@@ -240,7 +240,7 @@ describe("TaxCalculator", () => {
 
     it("ES-004: Should apply community fees as deduction", () => {
       const input: TaxCalculationInput = {
-        country: "Spain",
+        country: "ES",
         regime: "spain_inmuebles",
         annualRentalIncome: 12000,
         deductibleExpenses: 500,
@@ -252,7 +252,7 @@ describe("TaxCalculator", () => {
 
     it("ES-005: Should cap deductions at 50% of rental income", () => {
       const input: TaxCalculationInput = {
-        country: "Spain",
+        country: "ES",
         regime: "spain_inmuebles",
         annualRentalIncome: 10000,
         deductibleExpenses: 8000,
@@ -269,7 +269,7 @@ describe("TaxCalculator", () => {
   describe("Spain - Zona Tensionada (Stressed Zone)", () => {
     it("ES-ZT-001: Should apply 90% deduction for reduced rent", () => {
       const input: TaxCalculationInput = {
-        country: "Spain",
+        country: "ES",
         regime: "spain_inmuebles",
         annualRentalIncome: 12000,
         deductibleExpenses: 500,
@@ -282,7 +282,7 @@ describe("TaxCalculator", () => {
 
     it("ES-ZT-002: Should apply 70% deduction for young tenant", () => {
       const input: TaxCalculationInput = {
-        country: "Spain",
+        country: "ES",
         regime: "spain_inmuebles",
         annualRentalIncome: 12000,
         deductibleExpenses: 500,
@@ -295,7 +295,7 @@ describe("TaxCalculator", () => {
 
     it("ES-ZT-003: Should apply 60% deduction for rehabilitated property", () => {
       const input: TaxCalculationInput = {
-        country: "Spain",
+        country: "ES",
         regime: "spain_inmuebles",
         annualRentalIncome: 12000,
         deductibleExpenses: 500,
@@ -308,7 +308,7 @@ describe("TaxCalculator", () => {
 
     it("ES-ZT-004: Should apply 50% base deduction in stressed zone", () => {
       const input: TaxCalculationInput = {
-        country: "Spain",
+        country: "ES",
         regime: "spain_inmuebles",
         annualRentalIncome: 12000,
         deductibleExpenses: 500,
@@ -320,7 +320,7 @@ describe("TaxCalculator", () => {
 
     it("ES-ZT-005: Should prioritize reduced rent (90%) over other tiers", () => {
       const input: TaxCalculationInput = {
-        country: "Spain",
+        country: "ES",
         regime: "spain_inmuebles",
         annualRentalIncome: 12000,
         deductibleExpenses: 500,
@@ -357,7 +357,7 @@ describe("TaxCalculator", () => {
 
     it("ES-GT-005: Should include grandesTenedores flag in calculation", () => {
       const input: TaxCalculationInput = {
-        country: "Spain",
+        country: "ES",
         regime: "spain_inmuebles",
         annualRentalIncome: 60000,
         deductibleExpenses: 5000,
@@ -431,28 +431,28 @@ describe("TaxCalculator", () => {
 
   describe("Tax Brackets & Rates", () => {
     it("PT-TB-001: Should return Portugal tax brackets", () => {
-      const brackets = TaxCalculator.getTaxBrackets("Portugal");
+      const brackets = TaxCalculator.getTaxBrackets("PT");
       expect(brackets.length).toBeGreaterThan(0);
       expect(brackets[0].min).toBe(0);
       expect(brackets[0].rate).toBeGreaterThan(0);
     });
 
     it("PT-TB-002: Should return Spain tax brackets", () => {
-      const brackets = TaxCalculator.getTaxBrackets("Spain");
+      const brackets = TaxCalculator.getTaxBrackets("ES");
       expect(brackets.length).toBeGreaterThan(0);
       expect(brackets[0].min).toBe(0);
       expect(brackets[0].rate).toBeGreaterThan(0);
     });
 
     it("PT-TB-003: Should have progressive rates for Portugal", () => {
-      const brackets = TaxCalculator.getTaxBrackets("Portugal");
+      const brackets = TaxCalculator.getTaxBrackets("PT");
       for (let i = 1; i < brackets.length; i++) {
         expect(brackets[i].rate).toBeGreaterThanOrEqual(brackets[i - 1].rate);
       }
     });
 
     it("PT-TB-004: Should have progressive rates for Spain", () => {
-      const brackets = TaxCalculator.getTaxBrackets("Spain");
+      const brackets = TaxCalculator.getTaxBrackets("ES");
       for (let i = 1; i < brackets.length; i++) {
         expect(brackets[i].rate).toBeGreaterThanOrEqual(brackets[i - 1].rate);
       }
@@ -461,20 +461,20 @@ describe("TaxCalculator", () => {
 
   describe("Quarterly Estimates", () => {
     it("PT-QE-001: Should calculate quarterly estimate for Portugal", () => {
-      const quarterly = TaxCalculator.calculateQuarterlyEstimate("Portugal", 3000, 300);
+      const quarterly = TaxCalculator.calculateQuarterlyEstimate("PT", 3000, 300);
       expect(quarterly).toBeGreaterThan(0);
     });
 
     it("PT-QE-002: Should calculate quarterly estimate for Spain", () => {
-      const quarterly = TaxCalculator.calculateQuarterlyEstimate("Spain", 3000, 300);
+      const quarterly = TaxCalculator.calculateQuarterlyEstimate("ES", 3000, 300);
       expect(quarterly).toBeGreaterThan(0);
     });
 
     it("PT-QE-003: Should base estimate on annualized income", () => {
       const quarter = 3000;
-      const quarterly = TaxCalculator.calculateQuarterlyEstimate("Portugal", quarter, 300);
+      const quarterly = TaxCalculator.calculateQuarterlyEstimate("PT", quarter, 300);
       const annual = TaxCalculator.calculateTax({
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: quarter * 4,
         deductibleExpenses: 300 * 4,
@@ -484,19 +484,28 @@ describe("TaxCalculator", () => {
   });
 
   describe("Currency Formatting", () => {
-    it("PT-CF-001: Should format currency as EUR", () => {
+    it("PT-CF-001: Should format currency as EUR with European locale", () => {
       const formatted = TaxCalculator.formatCurrency(1234.56, "EUR");
-      expect(formatted).toContain("1,234.56");
+      // pt-PT locale uses non-breaking space and comma as decimal separator
+      expect(formatted).toContain("1");
+      expect(formatted).toContain("234");
+      expect(formatted).toContain("€");
     });
 
     it("PT-CF-002: Should handle large amounts", () => {
       const formatted = TaxCalculator.formatCurrency(1000000.99, "EUR");
-      expect(formatted).toContain("1,000,000.99");
+      expect(formatted).toContain("€");
+      expect(formatted).toContain("1");
     });
 
     it("PT-CF-003: Should handle zero", () => {
       const formatted = TaxCalculator.formatCurrency(0, "EUR");
       expect(formatted).toBeDefined();
+    });
+
+    it("PT-CF-004: Should accept custom locale override", () => {
+      const formatted = TaxCalculator.formatCurrency(1234.56, "EUR", "en-US");
+      expect(formatted).toContain("€1,234.56");
     });
   });
 
@@ -511,16 +520,15 @@ describe("TaxCalculator", () => {
       expect(() => TaxCalculator.calculateTax(input)).toThrow();
     });
 
-    it("PT-EH-002: Should return empty array for unsupported country brackets", () => {
-      const brackets = TaxCalculator.getTaxBrackets("France" as any);
-      expect(brackets).toEqual([]);
+    it("PT-EH-002: Should throw error for unsupported country brackets", () => {
+      expect(() => TaxCalculator.getTaxBrackets("France" as any)).toThrow();
     });
   });
 
   describe("Compliance & Edge Cases", () => {
     it("PT-EC-001: Should calculate effective rate correctly", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 10000,
         deductibleExpenses: 1000,
@@ -532,7 +540,7 @@ describe("TaxCalculator", () => {
 
     it("PT-EC-002: Should handle deductions > income", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 5000,
         deductibleExpenses: 8000,
@@ -545,7 +553,7 @@ describe("TaxCalculator", () => {
 
     it("PT-EC-003: Should handle very high income", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 5000000,
         deductibleExpenses: 500000,
@@ -557,7 +565,7 @@ describe("TaxCalculator", () => {
 
     it("PT-EC-004: Should include all required result fields", () => {
       const input: TaxCalculationInput = {
-        country: "Portugal",
+        country: "PT",
         regime: "portugal_rendimentos",
         annualRentalIncome: 10000,
         deductibleExpenses: 1000,

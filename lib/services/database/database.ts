@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, PropertyType } from "@prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { logger } from "@/lib/utils/logger";
 import { Property, Tenant, Receipt, CorrespondenceTemplate, Correspondence } from "@/lib/types";
@@ -150,7 +150,7 @@ export const propertyService = {
         addressVerified: data.addressVerified,
         buildingId: data.buildingId,
         buildingName: data.buildingName,
-        type: data.type,
+        type: data.type as PropertyType,
         bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
         rent: data.rent,
@@ -201,7 +201,7 @@ export const propertyService = {
         addressVerified: data.addressVerified,
         buildingId: data.buildingId,
         buildingName: data.buildingName,
-        type: data.type,
+        type: data.type as PropertyType,
         bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
         rent: data.rent,

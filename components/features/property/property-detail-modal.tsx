@@ -58,7 +58,7 @@ export function PropertyDetailModal({
     streetAddress: "",
     city: "",
     zipCode: "",
-    country: "Portugal",
+    country: "PT",
     latitude: undefined,
     longitude: undefined,
     addressVerified: false,
@@ -81,7 +81,9 @@ export function PropertyDetailModal({
         streetAddress: property.streetAddress || "",
         city: property.city || "",
         zipCode: property.zipCode || "",
-        country: (property.country as "Portugal" | "Spain") || "Portugal",
+        country: (property.country === "Spain" || property.country === "ES" ? "ES" : "PT") as
+          | "PT"
+          | "ES",
         latitude: property.latitude,
         longitude: property.longitude,
         addressVerified: property.addressVerified || false,
@@ -155,7 +157,9 @@ export function PropertyDetailModal({
       streetAddress: property.streetAddress || "",
       city: property.city || "",
       zipCode: property.zipCode || "",
-      country: (property.country as "Portugal" | "Spain") || "Portugal",
+      country: (property.country === "Spain" || property.country === "ES" ? "ES" : "PT") as
+        | "PT"
+        | "ES",
       latitude: property.latitude,
       longitude: property.longitude,
       addressVerified: property.addressVerified || false,
@@ -338,7 +342,7 @@ export function PropertyDetailModal({
                           onValueChange={(value) =>
                             setFormData({
                               ...formData,
-                              country: value as "Portugal" | "Spain",
+                              country: value as "PT" | "ES",
                             })
                           }
                         >
@@ -346,8 +350,8 @@ export function PropertyDetailModal({
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="Portugal">Portugal</SelectItem>
-                            <SelectItem value="Spain">Spain</SelectItem>
+                            <SelectItem value="PT">Portugal</SelectItem>
+                            <SelectItem value="ES">Spain</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

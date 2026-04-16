@@ -68,6 +68,36 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
     [state.expenses, propertyId],
   );
 
+  const totalRevenue = relatedReceipts.reduce((sum, r) => sum + r.amount, 0);
+  const totalExpenses = relatedExpenses.reduce((sum, e) => sum + e.amount, 0);
+  const netOperatingIncome = totalRevenue - totalExpenses;
+  const openTickets = relatedMaintenance.filter(
+    (m) => m.status === "open" || m.status === "in_progress",
+  ).length;
+  const activeLeasesList = relatedLeases.filter((l) => l.status === "active");
+  const activeLeases = activeLeasesList.length;
+
+  // Collection rate: percentage of expected rent actually received
+  const collectionMetrics = useMemo(() => {
+    const totalExpectedRent = activeLeasesList.reduce((sum, l) => {
+      const start = new Date(l.startDate);
+      const end = new Date(l.endDate);
+      const now = new Date();
+      const effectiveEnd = end < now ? end : now;
+      // Count months the lease has been active
+      const months =
+        (effectiveEnd.getFullYear() - start.getFullYear()) * 12 +
+        (effectiveEnd.getMonth() - start.getMonth()) +
+        1;
+      return sum + l.monthlyRent * Math.max(months, 0);
+    }, 0);
+    const paidReceipts = relatedReceipts
+      .filter((r) => r.status === "paid")
+      .reduce((sum, r) => sum + r.amount, 0);
+    const collectionRate = totalExpectedRent > 0 ? (paidReceipts / totalExpectedRent) * 100 : 0;
+    return { totalExpectedRent, paidReceipts, collectionRate };
+  }, [activeLeasesList, relatedReceipts]);
+
   if (!property) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
@@ -79,13 +109,6 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
       </div>
     );
   }
-
-  const totalRevenue = relatedReceipts.reduce((sum, r) => sum + r.amount, 0);
-  const totalExpenses = relatedExpenses.reduce((sum, e) => sum + e.amount, 0);
-  const openTickets = relatedMaintenance.filter(
-    (m) => m.status === "open" || m.status === "in_progress",
-  ).length;
-  const activeLeases = relatedLeases.filter((l) => l.status === "active").length;
 
   return (
     <div className="space-y-6">
@@ -370,29 +393,56 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
 
         {/* Finance Tab */}
         <TabsContent value="finance" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card>
+          {/* P&L Metric Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="bg-zinc-900 border-zinc-800">
               <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">Total Revenue</div>
+                <div className="text-sm text-zinc-400">Rental Income</div>
                 <div className="text-2xl font-bold text-green-500 mt-1">
                   {formatCurrency(totalRevenue)}
                 </div>
+                <p className="text-xs text-zinc-500 mt-1">Total paid receipts</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-zinc-900 border-zinc-800">
               <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">Total Expenses</div>
+                <div className="text-sm text-zinc-400">Total Expenses</div>
                 <div className="text-2xl font-bold text-red-500 mt-1">
                   {formatCurrency(totalExpenses)}
                 </div>
+                <p className="text-xs text-zinc-500 mt-1">All property costs</p>
               </CardContent>
             </Card>
-            <Card>
+            <Card className="bg-zinc-900 border-zinc-800">
               <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">Net Income</div>
-                <div className="text-2xl font-bold mt-1">
-                  {formatCurrency(totalRevenue - totalExpenses)}
+                <div className="text-sm text-zinc-400">Net Operating Income</div>
+                <div
+                  className={cn(
+                    "text-2xl font-bold mt-1",
+                    netOperatingIncome >= 0 ? "text-green-500" : "text-red-500",
+                  )}
+                >
+                  {formatCurrency(netOperatingIncome)}
                 </div>
+                <p className="text-xs text-zinc-500 mt-1">Income minus expenses</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-zinc-900 border-zinc-800">
+              <CardContent className="p-4">
+                <div className="text-sm text-zinc-400">Collection Rate</div>
+                <div
+                  className={cn(
+                    "text-2xl font-bold mt-1",
+                    collectionMetrics.collectionRate >= 90
+                      ? "text-green-500"
+                      : collectionMetrics.collectionRate >= 70
+                        ? "text-yellow-500"
+                        : "text-red-500",
+                  )}
+                >
+                  {collectionMetrics.collectionRate.toFixed(1)}%
+                </div>
+                <p className="text-xs text-zinc-500 mt-1">Of expected rent received</p>
               </CardContent>
             </Card>
           </div>

@@ -7,6 +7,7 @@
  */
 
 import { TaxCalculator, TaxCalculationInput, TaxCalculationResult } from "./tax-calculator";
+import { resolveCountryCode } from "@/lib/utils/country";
 import { getPrismaClient } from "@/lib/services/database/database";
 
 export type TaxMode = "pre-tax" | "post-tax";
@@ -95,8 +96,9 @@ export function calculateDistribution(input: DistributionInput): DistributionRes
 
     // Calculate tax for this owner's share
     const taxInput: TaxCalculationInput = {
-      country: owner.taxCountry,
-      regime: owner.taxCountry === "Portugal" ? "portugal_rendimentos" : "spain_inmuebles",
+      country: resolveCountryCode(owner.taxCountry),
+      regime:
+        resolveCountryCode(owner.taxCountry) === "PT" ? "portugal_rendimentos" : "spain_inmuebles",
       annualRentalIncome: grossShare,
       deductibleExpenses: 0, // Expenses already deducted from total
     };

@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useCallback, useEffect } fr
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import { isDemoModeClient, clearDemoCookieClient, DEMO_USER } from "@/lib/demo/demo-mode";
+import { clearDemoStore } from "@/lib/demo/demo-local-state";
 
 interface DemoContextValue {
   isDemoMode: boolean;
@@ -28,7 +29,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   const exitDemo = useCallback(async () => {
     clearDemoCookieClient();
+    clearDemoStore();
     sessionStorage.removeItem("proman_demo");
+    sessionStorage.removeItem("proman_demo_start");
     setIsDemoMode(false);
     try {
       await signOut({ redirect: false });

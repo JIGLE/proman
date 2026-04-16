@@ -27,6 +27,7 @@ import { Tenant } from "@/lib/types";
 import { useApp } from "@/lib/contexts/app-context";
 import { useToast } from "@/lib/contexts/toast-context";
 import { tenantSchema, TenantFormData } from "@/lib/utils/validation";
+import { getActiveLease } from "@/lib/utils/lease-helpers";
 
 interface TenantDetailModalProps {
   tenant: Tenant | null;
@@ -45,7 +46,7 @@ export function TenantDetailModal({
 }: TenantDetailModalProps) {
   const { formatCurrency } = useCurrency();
   const { updateTenant, deleteTenant, state } = useApp();
-  const { properties } = state;
+  const { properties, leases } = state;
   const { success, error } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<TenantFormData>({
@@ -90,6 +91,12 @@ export function TenantDetailModal({
   }, [tenant]);
 
   if (!tenant) return null;
+
+  // Derive lease values from the active lease when available
+  const activeLease = getActiveLease(tenant.id, leases);
+  const derivedRent = activeLease?.monthlyRent ?? tenant.rent;
+  const derivedLeaseStart = activeLease?.startDate ?? tenant.leaseStart;
+  const derivedLeaseEnd = activeLease?.endDate ?? tenant.leaseEnd;
 
   function getPaymentStatusBadge(paymentStatus: string): import("react").ReactNode {
     if (paymentStatus === "paid") {
@@ -367,7 +374,8 @@ export function TenantDetailModal({
                       <DollarSign className="h-4 w-4" /> Monthly Rent
                     </span>
                     <span className="text-lg font-semibold text-[var(--color-foreground)]">
-                      {formatCurrency(tenant.rent)}
+                      {/* Derived from active lease's monthlyRent */}
+                      {formatCurrency(derivedRent)}
                     </span>
                   </div>
                 </CardContent>
@@ -383,16 +391,18 @@ export function TenantDetailModal({
                     <span className="text-zinc-400 flex items-center gap-1">
                       <Calendar className="h-4 w-4" /> Start Date
                     </span>
+                    {/* Derived from active lease's startDate */}
                     <span className="text-[var(--color-foreground)]">
-                      {new Date(tenant.leaseStart).toLocaleDateString()}
+                      {new Date(derivedLeaseStart).toLocaleDateString()}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-zinc-400 flex items-center gap-1">
                       <Calendar className="h-4 w-4" /> End Date
                     </span>
+                    {/* Derived from active lease's endDate */}
                     <span className="text-[var(--color-foreground)]">
-                      {new Date(tenant.leaseEnd).toLocaleDateString()}
+                      {new Date(derivedLeaseEnd).toLocaleDateString()}
                     </span>
                   </div>
                 </CardContent>

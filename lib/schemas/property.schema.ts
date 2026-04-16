@@ -22,7 +22,7 @@ export const propertySchema = z.object({
     .string()
     .regex(/^(?:[0-9]{4}-[0-9]{3}|[0-9]{5})$/, "Invalid postal code format")
     .optional(),
-  country: z.enum(["Portugal", "Spain"]).default("Portugal"),
+  country: z.enum(["PT", "ES"]).default("PT"),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
   addressVerified: z.boolean().default(false),
@@ -32,7 +32,7 @@ export const propertySchema = z.object({
   buildingName: z.string().max(100, "Building name too long").optional(),
 
   // Property details
-  type: z.enum(["apartment", "house", "condo", "townhouse", "other"]),
+  type: z.enum(["apartment", "house", "condo", "townhouse", "commercial", "other"]),
   bedrooms: z.number().min(0).max(20),
   bathrooms: z.number().min(0).max(20),
   rent: z.number().min(0, "Rent must be positive"),

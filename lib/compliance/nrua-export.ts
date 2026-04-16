@@ -10,6 +10,11 @@
  */
 
 import { getPrismaClient } from "@/lib/services/database/database";
+import { validatePortugueseNIF, validateSpanishNIF } from "@/lib/utils/tax-id-validation";
+
+function validateNifNie(value: string): boolean {
+  return validatePortugueseNIF(value) || validateSpanishNIF(value);
+}
 
 export interface NRUAExportData {
   leaseId: string;
@@ -30,30 +35,9 @@ export interface NRUAExportData {
 
 /**
  * Validate a Spanish NIF/NIE
+ * Re-exported from shared validation module for backward compatibility.
  */
-export function validateNifNie(nif: string): boolean {
-  if (!nif || nif.length !== 9) return false;
-
-  // NIF: 8 digits + letter
-  const nifPattern = /^[0-9]{8}[A-Z]$/;
-  // NIE: X/Y/Z + 7 digits + letter
-  const niePattern = /^[XYZ][0-9]{7}[A-Z]$/;
-
-  const upper = nif.toUpperCase();
-  if (!nifPattern.test(upper) && !niePattern.test(upper)) return false;
-
-  const letters = "TRWAGMYFPDXBNJZSQVHLCKE";
-  let numStr = upper;
-
-  if (upper.startsWith("X")) numStr = "0" + upper.slice(1);
-  else if (upper.startsWith("Y")) numStr = "1" + upper.slice(1);
-  else if (upper.startsWith("Z")) numStr = "2" + upper.slice(1);
-
-  const num = parseInt(numStr.slice(0, 8), 10);
-  const expectedLetter = letters[num % 23];
-
-  return upper.charAt(8) === expectedLetter;
-}
+export { validateSpanishNIF as validateNifNie } from "@/lib/utils/tax-id-validation";
 
 /**
  * Validate a referencia catastral (Spanish cadaster reference)

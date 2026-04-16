@@ -27,6 +27,7 @@ model User {
 
   // App-specific relations
   properties     Property[]
+  buildings      Building[]
   tenants        Tenant[]
   receipts       Receipt[]
   expenses       Expense[]
@@ -37,6 +38,9 @@ model User {
   emailLogs      EmailLog[]
   documents      Document[]
   notifications  Notification[]
+  invoices       Invoice[]
+  maintenanceContacts MaintenanceContact[]
+  rentReceipts   RentReceipt[]
 }
 
 model EmailLog {
@@ -153,6 +157,23 @@ model AuditLog {
   @@map("audit_logs")
 }
 
+model Building {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  address   String?
+  city      String?
+  country   String?  @default("PT")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  properties Property[]
+
+  @@index([userId])
+  @@map("buildings")
+}
+
 model Property {
   id          String   @id @default(cuid())
   userId      String
@@ -162,13 +183,15 @@ model Property {
   streetAddress   String?
   city           String?
   zipCode        String?
-  country        String?  @default("Portugal")
+  country        String?  @default("PT")
   latitude       Float?
   longitude      Float?
   addressVerified Boolean @default(false)
   // Building grouping
   buildingId     String?
   buildingName   String?
+
+  building       Building? @relation(fields: [buildingId], references: [id], onDelete: SetNull)
 
   type        PropertyType
   bedrooms    Int
@@ -202,6 +225,8 @@ model Property {
   documents           Document[]
   invoices            Invoice[]
   incomeDistributions IncomeDistribution[]
+  rentReceipts        RentReceipt[]
+  nruaRegistrations   NRUARegistration[]
 
   // Performance indexes
   @@index([userId])
@@ -237,6 +262,8 @@ model Tenant {
   invoices      Invoice[]
   paymentMethods PaymentMethod[]
   paymentTransactions PaymentTransaction[]
+  rentReceipts        RentReceipt[]
+  nruaRegistrations   NRUARegistration[]
 
   // Performance indexes
   @@index([userId])
@@ -397,6 +424,7 @@ model Lease {
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   unit     Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  nruaRegistrations NRUARegistration[]
 
   @@index([userId])
   @@index([propertyId])
@@ -484,6 +512,7 @@ model Invoice {
   property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
   owner    Owner?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   paymentTransactions PaymentTransaction[]
 
   @@index([userId])
@@ -639,6 +668,7 @@ enum PropertyType {
   house
   condo
   townhouse
+  commercial
   other
 }
 
@@ -713,6 +743,7 @@ enum LeaseStatus {
   expired
   terminated
   pending
+  draft
 }
 
 enum UnitStatus {
@@ -800,6 +831,7 @@ model MaintenanceContact {
 
   // Relations
   tickets MaintenanceTicket[]
+  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("maintenance_contacts")
 }
@@ -956,6 +988,11 @@ model NRUARegistration {
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
+  // Relations
+  lease    Lease    @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
   @@index([leaseId])
   @@index([status])
   @@index([landlordNif])
@@ -1008,6 +1045,11 @@ model RentReceipt {
   xmlPayload        String?  // Stored XML for AT submission
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  // Relations
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([tenantId])

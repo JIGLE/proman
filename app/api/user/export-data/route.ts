@@ -22,6 +22,10 @@ export async function POST(request: NextRequest) {
         maintenanceTickets: true,
         leases: true,
         correspondences: true,
+        owners: true,
+        documents: true,
+        notifications: true,
+        emailLogs: true,
       },
     });
 

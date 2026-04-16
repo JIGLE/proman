@@ -9,6 +9,7 @@ import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { FinancialsView } from "./financials-view";
 import { PaymentMatrixView } from "./payment-matrix-view";
 import { ReceiptsView, ReceiptsViewRef } from "./receipts-view";
+import { RentRollView } from "./rent-roll-view";
 import { ReportsView } from "@/components/features/report/reports-view";
 import {
   TrendingUp,
@@ -18,6 +19,7 @@ import {
   Receipt,
   Grid3X3,
   FileBarChart,
+  ClipboardList,
 } from "lucide-react";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
@@ -125,7 +127,7 @@ export function FinancialsContainer() {
       {/* Tabs Navigation - Aligned with Finance sub-sections per IA */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center gap-2">
-          <TabsList className="grid w-full max-w-xl grid-cols-4">
+          <TabsList className="grid w-full max-w-2xl grid-cols-5">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <LayoutGrid className="h-4 w-4" />
               <span className="hidden sm:inline">Overview</span>
@@ -133,6 +135,10 @@ export function FinancialsContainer() {
             <TabsTrigger value="receipts" className="flex items-center gap-2">
               <Receipt className="h-4 w-4" />
               <span className="hidden sm:inline">Receipts</span>
+            </TabsTrigger>
+            <TabsTrigger value="rent-roll" className="flex items-center gap-2">
+              <ClipboardList className="h-4 w-4" />
+              <span className="hidden sm:inline">Rent Roll</span>
             </TabsTrigger>
             <TabsTrigger value="payments" className="flex items-center gap-2">
               <Grid3X3 className="h-4 w-4" />
@@ -160,6 +166,10 @@ export function FinancialsContainer() {
 
         <TabsContent value="receipts" className="mt-0">
           <ReceiptsView />
+        </TabsContent>
+
+        <TabsContent value="rent-roll" className="mt-0">
+          <RentRollView />
         </TabsContent>
 
         <TabsContent value="payments" className="mt-0">

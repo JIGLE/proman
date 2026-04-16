@@ -23,6 +23,7 @@ import { useApp } from "@/lib/contexts/app-context";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { EntityLink } from "@/components/shared/entity-link";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
+import { getActiveLease as findActiveLease } from "@/lib/utils/lease-helpers";
 
 interface TenantDetailViewProps {
   tenantId: string;
@@ -79,7 +80,8 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
     );
   }
 
-  const activeLease = relatedLeases.find((l) => l.status === "active");
+  // Derive lease data from active lease instead of redundant tenant fields
+  const activeLease = findActiveLease(tenantId, state.leases);
   const totalPaid = relatedReceipts
     .filter((r) => r.status === "paid")
     .reduce((sum, r) => sum + r.amount, 0);
@@ -110,7 +112,10 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
               <Badge variant={PAYMENT_STATUS_VARIANT[tenant.paymentStatus] || "secondary"}>
                 {tenant.paymentStatus}
               </Badge>
-              <span className="text-sm font-medium">{formatCurrency(tenant.rent)}/mo</span>
+              {/* Derived from active lease's monthlyRent */}
+              <span className="text-sm font-medium">
+                {formatCurrency(activeLease?.monthlyRent ?? tenant.rent)}/mo
+              </span>
             </div>
           </div>
         </div>
@@ -194,7 +199,10 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
             <Card>
               <CardContent className="p-4">
                 <div className="text-sm text-[var(--color-muted-foreground)]">Monthly Rent</div>
-                <div className="text-2xl font-bold mt-1">{formatCurrency(tenant.rent)}</div>
+                {/* Derived from active lease's monthlyRent */}
+                <div className="text-2xl font-bold mt-1">
+                  {formatCurrency(activeLease?.monthlyRent ?? tenant.rent)}
+                </div>
               </CardContent>
             </Card>
             <Card>
@@ -208,10 +216,12 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
             <Card>
               <CardContent className="p-4">
                 <div className="text-sm text-[var(--color-muted-foreground)]">Lease Period</div>
+                {/* Derived from active lease's startDate/endDate */}
                 <div className="flex items-center gap-1 mt-1">
                   <Calendar className="h-4 w-4 text-[var(--color-muted-foreground)]" />
                   <span className="text-sm font-medium">
-                    {tenant.leaseStart} — {tenant.leaseEnd}
+                    {activeLease?.startDate ?? tenant.leaseStart} —{" "}
+                    {activeLease?.endDate ?? tenant.leaseEnd}
                   </span>
                 </div>
               </CardContent>

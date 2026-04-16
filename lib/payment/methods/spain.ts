@@ -5,6 +5,7 @@
 import { paymentService, PaymentIntentResult, CreatePaymentIntentParams } from "../payment-service";
 import { getPrismaClient } from "@/lib/services/database/database";
 import type { PrismaClient, PaymentMethod as _PaymentMethod } from "@prisma/client";
+import { validateSpanishNIF } from "@/lib/utils/tax-id-validation";
 
 export interface BizumRequest {
   phoneNumber: string; // Spanish phone number
@@ -198,34 +199,10 @@ export class SpainPaymentService {
 
   /**
    * Validate Spanish NIF/NIE (tax identification)
-   * NIF: 8 digits + letter (Spanish citizens)
-   * NIE: Letter + 7 digits + letter (foreigners)
+   * Delegates to shared validation module
    */
   public validateNIF(nif: string): boolean {
-    const clean = nif.replace(/\s|-/g, "").toUpperCase();
-
-    // NIF pattern: 8 digits + control letter
-    const nifPattern = /^(\d{8})([A-Z])$/;
-    // NIE pattern: X/Y/Z + 7 digits + control letter
-    const niePattern = /^([XYZ])(\d{7})([A-Z])$/;
-
-    const letters = "TRWAGMYFPDXBNJZSQVHLCKE";
-
-    if (nifPattern.test(clean)) {
-      const [, number, letter] = clean.match(nifPattern)!;
-      const expectedLetter = letters[parseInt(number) % 23];
-      return letter === expectedLetter;
-    }
-
-    if (niePattern.test(clean)) {
-      const [, prefix, number, letter] = clean.match(niePattern)!;
-      const prefixMap: Record<string, string> = { X: "0", Y: "1", Z: "2" };
-      const fullNumber = prefixMap[prefix] + number;
-      const expectedLetter = letters[parseInt(fullNumber) % 23];
-      return letter === expectedLetter;
-    }
-
-    return false;
+    return validateSpanishNIF(nif);
   }
 
   /**

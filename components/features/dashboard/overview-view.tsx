@@ -152,6 +152,7 @@ interface QuickActionHeroProps {
   primary?: boolean;
   shortcut?: string;
   testId?: string;
+  dataTour?: string;
 }
 
 function QuickActionHero({
@@ -162,6 +163,7 @@ function QuickActionHero({
   primary,
   shortcut,
   testId,
+  dataTour,
 }: QuickActionHeroProps) {
   return (
     <motion.button
@@ -169,6 +171,7 @@ function QuickActionHero({
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       data-testid={testId}
+      data-tour={dataTour}
       className={cn(
         "relative flex items-start gap-4 p-5 rounded-xl text-left w-full transition-all duration-200",
         "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]",
@@ -744,7 +747,7 @@ export function OverviewView({
 
       {/* ─── Stats Grid (promoted above Quick Actions for visual hierarchy) ─── */}
       {hasProperties ? (
-        <section>
+        <section data-tour="dashboard-stats">
           <h2 className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wider mb-4">
             {t("dashboard.portfolioOverview")}
           </h2>
@@ -787,7 +790,7 @@ export function OverviewView({
       )}
 
       {/* ─── Quick Actions ─── */}
-      <section>
+      <section data-tour="quick-actions">
         <div className="flex items-center gap-2 mb-4">
           <Zap className="h-4 w-4 text-[var(--color-primary)]" />
           <h2 className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wider">
@@ -803,6 +806,7 @@ export function OverviewView({
             primary
             shortcut="⌘P"
             testId="add-property-btn"
+            dataTour="add-property"
           />
           <QuickActionHero
             label={t("quickActions.addTenant")}
@@ -843,7 +847,7 @@ export function OverviewView({
 
       {/* ─── Recent Properties ─── */}
       {hasProperties && (
-        <section>
+        <section data-tour="properties">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wider">
               {t("dashboard.recentProperties")}

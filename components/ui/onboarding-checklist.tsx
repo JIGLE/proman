@@ -108,6 +108,7 @@ export function OnboardingChecklist({
 
   return (
     <motion.div
+      data-tour="onboarding"
       initial={{ opacity: 0, y: -10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
@@ -196,36 +197,56 @@ export function OnboardingChecklist({
             className="overflow-hidden"
           >
             {allComplete ? (
-              /* Completion state */
-              <div className="p-4 text-center">
+              /* Completion state with What's Next? */
+              <div className="p-4">
+                <div className="text-center mb-3">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: [0, 1.3, 1] }}
+                    transition={{
+                      type: "spring",
+                      stiffness: 400,
+                      damping: 15,
+                    }}
+                    className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-success)]/20 mb-3"
+                  >
+                    <CheckCircle2 className="h-6 w-6 text-[var(--color-success)]" />
+                  </motion.div>
+                  <motion.p
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-sm text-[var(--color-foreground)] font-medium"
+                  >
+                    You&apos;re all set!
+                  </motion.p>
+                </div>
+
+                {/* What's Next? suggestions */}
                 <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: [0, 1.3, 1] }}
-                  transition={{
-                    type: "spring",
-                    stiffness: 400,
-                    damping: 15,
-                  }}
-                  className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[var(--color-success)]/20 mb-3"
-                >
-                  <CheckCircle2 className="h-6 w-6 text-[var(--color-success)]" />
-                </motion.div>
-                <motion.p
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="text-sm text-[var(--color-foreground)] font-medium"
-                >
-                  You&apos;re all set!
-                </motion.p>
-                <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.5 }}
-                  className="text-xs text-[var(--color-muted-foreground)] mt-1"
+                  className="border-t border-[var(--color-border)] pt-3 mt-1"
                 >
-                  Your property management dashboard is ready to use.
-                </motion.p>
+                  <p className="text-xs font-semibold text-[var(--color-foreground)] mb-2">
+                    What&apos;s next?
+                  </p>
+                  <ul className="space-y-1.5">
+                    <li className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
+                      <ArrowRight className="h-3 w-3 text-[var(--color-primary)] shrink-0" />
+                      <span>Set up a lease agreement for your tenant</span>
+                    </li>
+                    <li className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
+                      <ArrowRight className="h-3 w-3 text-[var(--color-primary)] shrink-0" />
+                      <span>Create correspondence templates for common emails</span>
+                    </li>
+                    <li className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
+                      <ArrowRight className="h-3 w-3 text-[var(--color-primary)] shrink-0" />
+                      <span>Explore the dashboard for revenue and occupancy insights</span>
+                    </li>
+                  </ul>
+                </motion.div>
               </div>
             ) : (
               /* Step list */

@@ -10,6 +10,8 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatCurrency as formatCurrencyUtil, type Currency } from "@/lib/utils/currency";
+import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
+import { PageHeader } from "@/components/shared/page-header";
 
 interface MaintenanceContact {
   id: string;
@@ -116,22 +118,15 @@ export function ContactsView(): React.ReactElement {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-[var(--color-foreground)] flex items-center gap-2">
-            <Wrench className="h-6 w-6" />
-            Maintenance Contacts
-          </h1>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            Manage contractors, vendors, and internal staff
-          </p>
-        </div>
+      <PageHeader
+        title="Maintenance Contacts"
+        description="Manage contractors, vendors, and internal staff"
+      >
         <Button>
           <Plus className="h-4 w-4 mr-2" />
           Add Contact
         </Button>
-      </div>
+      </PageHeader>
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
@@ -197,8 +192,12 @@ export function ContactsView(): React.ReactElement {
       {/* Contacts Grid */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {filteredContacts.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-muted-foreground">
-            No contacts found
+          <div className="col-span-full">
+            <EmptyStateIllustration
+              type="contacts"
+              title="No contacts found"
+              description="Add maintenance contacts to manage your contractor network"
+            />
           </div>
         ) : (
           filteredContacts.map((contact) => (

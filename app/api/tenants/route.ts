@@ -8,6 +8,7 @@ import {
 import { tenantService } from "@/lib/services/database";
 import { sanitizeForDatabase, sanitizeEmail, sanitizeNumber } from "@/lib/utils/sanitize";
 import { getPaginationFromRequest, createPaginatedResponse } from "@/lib/utils/pagination";
+import { withRateLimit } from "@/lib/utils/rate-limit";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { z } from "zod";
 import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
@@ -70,7 +71,7 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
 // POST /api/tenants - Create a new tenant
 async function handlePost(request: NextRequest): Promise<Response> {
-  const demo = handleDemoMutation(request, "tenants");
+  const demo = await handleDemoMutation(request, "tenants");
   if (demo.response) return demo.response;
 
   const authResult = await requireAuth(request);
@@ -110,6 +111,6 @@ async function handlePost(request: NextRequest): Promise<Response> {
 }
 
 // Main handler
-export const GET = withErrorHandler(handleGet);
-export const POST = withErrorHandler(handlePost);
+export const GET = withErrorHandler(withRateLimit(handleGet));
+export const POST = withErrorHandler(withRateLimit(handlePost));
 export const OPTIONS = handleOptions;

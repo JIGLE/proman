@@ -14,6 +14,11 @@ import {
   Search,
   Wallet,
   FileText,
+  FileBox,
+  Contact,
+  UserCog,
+  BarChart3,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { signOut, useSession } from "next-auth/react";
@@ -42,6 +47,11 @@ const secondaryNavItems = [
   { id: "leases", label: "Leases", icon: FileText, href: "/leases" },
   { id: "finance", label: "Finance", icon: Wallet, href: "/financials" },
   { id: "maintenance", label: "Maintenance", icon: Hammer, href: "/maintenance" },
+  { id: "documents", label: "Documents", icon: FileBox, href: "/documents" },
+  { id: "contacts", label: "Contacts", icon: Contact, href: "/contacts" },
+  { id: "owners", label: "Owners", icon: UserCog, href: "/owners" },
+  { id: "analytics", label: "Analytics", icon: BarChart3, href: "/analytics" },
+  { id: "reports", label: "Reports", icon: ClipboardList, href: "/reports" },
   { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
 ];
 
