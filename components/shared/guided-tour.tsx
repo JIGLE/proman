@@ -141,6 +141,15 @@ export function GuidedTour({
     onComplete();
   }, [storageKey, onComplete]);
 
+  // Auto-dismiss tour after 15 seconds of inactivity to avoid blocking the experience
+  useEffect(() => {
+    if (!isActive) return;
+    const autoDismiss = setTimeout(() => {
+      finish();
+    }, 15000);
+    return () => clearTimeout(autoDismiss);
+  }, [isActive, currentStep, finish]);
+
   const next = useCallback(() => {
     if (currentStep < steps.length - 1) {
       setCurrentStep((s) => s + 1);
@@ -162,13 +171,11 @@ export function GuidedTour({
 
   return (
     <>
-      {/* Overlay with highlight cutout */}
+      {/* Non-blocking overlay with highlight cutout — clicks pass through */}
       <div
-        className="fixed inset-0 z-[9998]"
-        onClick={finish}
+        className="fixed inset-0 z-[9998] pointer-events-none"
         style={{
-          background: "rgba(0,0,0,0.5)",
-          // SVG mask for cutout
+          background: "rgba(0,0,0,0.35)",
           maskImage: `url("data:image/svg+xml,${encodeURIComponent(
             `<svg xmlns='http://www.w3.org/2000/svg' width='${window.innerWidth}' height='${window.innerHeight}'><rect width='100%' height='100%' fill='white'/><rect x='${highlightRect.left - PADDING}' y='${highlightRect.top - PADDING}' width='${highlightRect.width + PADDING * 2}' height='${highlightRect.height + PADDING * 2}' rx='8' fill='black'/></svg>`,
           )}")`,

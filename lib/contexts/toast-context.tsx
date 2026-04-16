@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, ReactNode } from "react";
+import { createContext, useContext, useCallback, useMemo, ReactNode } from "react";
 import toast, { Toaster, Toast } from "react-hot-toast";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle, XCircle, AlertTriangle, Info } from "lucide-react";
@@ -128,24 +128,36 @@ const AnimatedToast = ({
 };
 
 export function ToastProvider({ children }: { children: ReactNode }): React.ReactElement {
-  const value: ToastContextType = {
-    success: (message: string) =>
+  const success = useCallback(
+    (message: string) =>
       toast.custom((t) => <AnimatedToast t={t} message={message} type="success" />, {
         duration: 4000,
       }),
-    error: (message: string) =>
+    [],
+  );
+  const error = useCallback(
+    (message: string) =>
       toast.custom((t) => <AnimatedToast t={t} message={message} type="error" />, {
         duration: 5000,
       }),
-    info: (message: string) =>
+    [],
+  );
+  const info = useCallback(
+    (message: string) =>
       toast.custom((t) => <AnimatedToast t={t} message={message} type="info" />, {
         duration: 4000,
       }),
-    warning: (message: string) =>
+    [],
+  );
+  const warning = useCallback(
+    (message: string) =>
       toast.custom((t) => <AnimatedToast t={t} message={message} type="warning" />, {
         duration: 4500,
       }),
-  };
+    [],
+  );
+
+  const value = useMemo(() => ({ success, error, info, warning }), [success, error, info, warning]);
 
   return (
     <ToastContext.Provider value={value}>

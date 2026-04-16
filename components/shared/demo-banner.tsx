@@ -2,7 +2,15 @@
 
 import { useTranslations } from "next-intl";
 import { useDemoMode } from "@/lib/contexts/demo-context";
-import { AlertTriangle, LogOut, RotateCcw, PlayCircle, Timer } from "lucide-react";
+import {
+  AlertTriangle,
+  LogOut,
+  RotateCcw,
+  PlayCircle,
+  Timer,
+  ChevronUp,
+  ChevronDown,
+} from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { resetDemoStore } from "@/lib/demo/demo-local-state";
 
@@ -31,6 +39,7 @@ export function DemoBanner() {
   const { isDemoMode, exitDemo } = useDemoMode();
   const t = useTranslations();
   const [remaining, setRemaining] = useState(() => getTimeRemaining());
+  const [collapsed, setCollapsed] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -69,56 +78,75 @@ export function DemoBanner() {
       data-tour="demo-banner"
       role="status"
       aria-live="polite"
-      className="sticky top-0 z-50 flex items-center justify-between gap-2 bg-gradient-to-r from-amber-500/90 to-orange-500/90 backdrop-blur-sm px-3 py-1.5 text-xs font-medium text-amber-950 dark:from-amber-600/90 dark:to-orange-600/90 dark:text-amber-50 shadow-sm"
+      className="sticky top-0 z-50 flex items-center justify-between gap-2 bg-gradient-to-r from-amber-500/90 to-orange-500/90 backdrop-blur-sm px-3 py-1 text-xs font-medium text-amber-950 dark:from-amber-600/90 dark:to-orange-600/90 dark:text-amber-50 shadow-sm transition-all duration-200"
     >
       {/* Left: status */}
       <div className="flex items-center gap-2 min-w-0">
         <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-        <span className="truncate">{t("demo.banner")}</span>
+        {!collapsed && <span className="truncate">{t("demo.banner")}</span>}
+        {collapsed && (
+          <span className="text-[10px] font-mono tabular-nums">
+            <Timer className="h-3 w-3 inline mr-1" />
+            {formatTime(remaining)}
+          </span>
+        )}
       </div>
 
       {/* Right: controls */}
       <div className="flex items-center gap-1.5 shrink-0">
-        {/* Session timer */}
-        <span
-          className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-mono tabular-nums ${
-            isLowTime
-              ? "bg-red-900/30 text-red-100 animate-pulse"
-              : "bg-amber-900/15 text-amber-950 dark:text-amber-100"
-          }`}
-          title="Time remaining in demo session"
-        >
-          <Timer className="h-3 w-3" />
-          {formatTime(remaining)}
-        </span>
+        {!collapsed && (
+          <>
+            {/* Session timer */}
+            <span
+              className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-mono tabular-nums ${
+                isLowTime
+                  ? "bg-red-900/30 text-red-100 animate-pulse"
+                  : "bg-amber-900/15 text-amber-950 dark:text-amber-100"
+              }`}
+              title="Time remaining in demo session"
+            >
+              <Timer className="h-3 w-3" />
+              {formatTime(remaining)}
+            </span>
 
-        {/* Restart Tour */}
-        <button
-          onClick={handleRestartTour}
-          className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-amber-900/15 hover:bg-amber-900/25 transition-colors"
-          title="Restart guided tour"
-        >
-          <PlayCircle className="h-3 w-3" />
-          <span className="hidden sm:inline">Tour</span>
-        </button>
+            {/* Restart Tour */}
+            <button
+              onClick={handleRestartTour}
+              className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-amber-900/15 hover:bg-amber-900/25 transition-colors"
+              title="Restart guided tour"
+            >
+              <PlayCircle className="h-3 w-3" />
+              <span className="hidden sm:inline">Tour</span>
+            </button>
 
-        {/* Reset Demo */}
-        <button
-          onClick={handleReset}
-          className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-amber-900/15 hover:bg-amber-900/25 transition-colors"
-          title="Reset demo data to defaults"
-        >
-          <RotateCcw className="h-3 w-3" />
-          <span className="hidden sm:inline">Reset</span>
-        </button>
+            {/* Reset Demo */}
+            <button
+              onClick={handleReset}
+              className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-amber-900/15 hover:bg-amber-900/25 transition-colors"
+              title="Reset demo data to defaults"
+            >
+              <RotateCcw className="h-3 w-3" />
+              <span className="hidden sm:inline">Reset</span>
+            </button>
 
-        {/* Exit Demo */}
+            {/* Exit Demo */}
+            <button
+              onClick={exitDemo}
+              className="inline-flex items-center gap-1 rounded-md bg-amber-900/20 px-2.5 py-0.5 text-[10px] font-semibold hover:bg-amber-900/30 transition-colors"
+            >
+              <LogOut className="h-3 w-3" />
+              {t("demo.exitButton")}
+            </button>
+          </>
+        )}
+
+        {/* Collapse toggle */}
         <button
-          onClick={exitDemo}
-          className="inline-flex items-center gap-1 rounded-md bg-amber-900/20 px-2.5 py-0.5 text-[10px] font-semibold hover:bg-amber-900/30 transition-colors"
+          onClick={() => setCollapsed((c) => !c)}
+          className="inline-flex items-center rounded p-0.5 hover:bg-amber-900/20 transition-colors"
+          title={collapsed ? "Expand demo banner" : "Collapse demo banner"}
         >
-          <LogOut className="h-3 w-3" />
-          {t("demo.exitButton")}
+          {collapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
         </button>
       </div>
     </div>

@@ -1,7 +1,6 @@
 import { Sidebar } from "@/components/layouts/sidebar";
 import { MobileBottomNav } from "@/components/ui/mobile-nav";
 import { SkipLink } from "@/components/ui/accessibility";
-import VersionBadge from "@/components/shared/version-badge";
 import { DemoBanner } from "@/components/shared/demo-banner";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { CommandPalette } from "@/components/shared/command-palette";
@@ -39,11 +38,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       {/* Command Palette (⌘K) */}
       <CommandPalette />
-
-      {/* Version Badge - visible only on authenticated pages */}
-      <div style={{ position: "fixed", right: 12, bottom: 8 }}>
-        <VersionBadge />
-      </div>
 
       {/* Guided Tour Overlay */}
       <AppTour />

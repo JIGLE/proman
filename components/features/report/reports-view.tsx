@@ -118,7 +118,7 @@ export function ReportsView(): React.ReactElement {
     } finally {
       setIsLoading(false);
     }
-  }, [reportType, startDate, endDate, taxYear, error]);
+  }, [reportType, startDate, endDate, taxYear]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Download CSV
   const downloadCSV = async () => {

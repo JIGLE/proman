@@ -21,6 +21,7 @@ import {
   UserCog,
   BarChart3,
   ClipboardList,
+  Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
@@ -307,7 +308,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
               </span>
             </div>
             {/* Notifications (only shown when expanded) */}
-            <div className="mr-2">
+            <div className="mr-1">
               <NotificationCenter
                 notifications={notifications}
                 onMarkAsRead={markAsRead}
@@ -317,6 +318,22 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                 onNotificationClick={() => {}}
               />
             </div>
+            {/* Search / Command Palette trigger */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                // Trigger Cmd+K command palette
+                window.dispatchEvent(
+                  new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }),
+                );
+              }}
+              className="h-8 w-8 p-0 mr-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+              title="Search (⌘K)"
+              aria-label="Open search"
+            >
+              <Search className="h-4 w-4" />
+            </Button>
             <Button
               variant="ghost"
               size="sm"

@@ -148,20 +148,20 @@ export function ScenarioRunner() {
         )}
       </AnimatePresence>
 
-      {/* FAB Button */}
+      {/* FAB Button — subtle outline style */}
       <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
         onClick={() => setIsOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-full bg-[var(--color-primary)] px-4 py-2.5 text-sm font-semibold text-white shadow-lg hover:opacity-90 transition-opacity"
+        className="flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface)]/80 backdrop-blur-sm px-3 py-2 text-xs font-medium text-[var(--color-muted-foreground)] shadow-sm hover:text-[var(--color-foreground)] hover:border-[var(--color-primary)]/50 transition-all"
         disabled={progress?.isRunning}
       >
         {progress?.isRunning ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
         ) : (
-          <Play className="h-4 w-4" />
+          <Play className="h-3.5 w-3.5" />
         )}
-        <span className="hidden sm:inline">Run Scenario</span>
+        <span className="hidden sm:inline">RunScenario</span>
         {isOpen && !progress?.isRunning && <ChevronDown className="h-3 w-3 ml-0.5" />}
       </motion.button>
     </div>

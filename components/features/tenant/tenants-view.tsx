@@ -563,7 +563,9 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                           <TableCell className="text-sm text-zinc-400">{tenant.email}</TableCell>
                           <TableCell className="text-sm text-zinc-400">{tenant.phone}</TableCell>
                           <TableCell className="text-sm text-zinc-400">
-                            {tenant.propertyName || "Unassigned"}
+                            {properties.find((p) => p.id === tenant.propertyId)?.name ||
+                              tenant.propertyName ||
+                              "Unassigned"}
                           </TableCell>
                           {/* Derived from active lease's monthlyRent */}
                           <TableCell className="text-sm font-medium text-zinc-100">
@@ -839,7 +841,9 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                                   Property
                                 </span>
                                 <span className="text-sm font-medium text-[var(--color-foreground)]">
-                                  {tenant.propertyName || "Unassigned"}
+                                  {properties.find((p) => p.id === tenant.propertyId)?.name ||
+                                    tenant.propertyName ||
+                                    "Unassigned"}
                                 </span>
                               </div>
                               <div className="flex items-center justify-between">
@@ -854,8 +858,8 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                                     const end = al?.endDate ?? tenant.leaseEnd;
                                     return (
                                       <>
-                                        {start ? new Date(start).toLocaleDateString() : "\u2014"}{" "}
-                                        \u2192 {end ? new Date(end).toLocaleDateString() : "\u2014"}
+                                        {start ? new Date(start).toLocaleDateString() : "\u2014"} —{" "}
+                                        {end ? new Date(end).toLocaleDateString() : "\u2014"}
                                       </>
                                     );
                                   })()}

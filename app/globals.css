@@ -604,8 +604,8 @@ body {
 }
 
 .animate-shimmer {
-  animation: shimmer 2s infinite linear;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  animation: shimmer 1.5s infinite linear;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
   background-size: 200px 100%;
 }
 

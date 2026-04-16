@@ -171,6 +171,8 @@ export function FinancialsView(): React.ReactElement {
     };
   }, [receipts, expenses, properties, timeRange]);
 
+  const getCategoryColor = (category: string) => getExpenseCategoryColor(category);
+
   // Prepare chart data
   const _expenseCategoryData = Object.entries(metrics.expensesByCategory).map(
     ([category, amount]) => ({
@@ -179,8 +181,6 @@ export function FinancialsView(): React.ReactElement {
       color: getCategoryColor(category),
     }),
   );
-
-  const getCategoryColor = (category: string) => getExpenseCategoryColor(category);
 
   // Tax Calculations
   const taxCalculation = useMemo((): TaxCalculationResult | null => {

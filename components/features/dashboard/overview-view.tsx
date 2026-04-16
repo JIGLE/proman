@@ -653,6 +653,103 @@ export function OverviewView({
         </div>
       </div>
 
+      {/* ─── Stats Grid (HERO — first thing users see) ─── */}
+      {hasProperties ? (
+        <section data-tour="dashboard-stats">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
+            <StatCard
+              title={t("dashboard.monthlyRevenue")}
+              value={formatCurrency(monthlyRevenue)}
+              icon={DollarSign}
+              accent="text-emerald-400"
+              hero
+            />
+            <StatCard
+              title={t("dashboard.occupancyRate")}
+              value={`${occupancyRate.toFixed(1)}%`}
+              icon={TrendingUp}
+              accent="text-amber-400"
+              hero
+            />
+            <StatCard
+              title={t("dashboard.totalProperties")}
+              value={totalProperties}
+              icon={Building2}
+            />
+            <StatCard
+              title={t("dashboard.activeTenants")}
+              value={activeTenants}
+              icon={Users}
+              accent="text-purple-400"
+            />
+          </div>
+        </section>
+      ) : (
+        <EmptyStateIllustration
+          type="properties"
+          title={t("dashboard.startManagingPortfolio")}
+          description={t("dashboard.startManagingPortfolioDesc")}
+          onAction={onAddProperty}
+          actionLabel={t("dashboard.addYourFirstProperty")}
+        />
+      )}
+
+      {/* ─── Quick Actions (promoted — immediate next steps) ─── */}
+      <section data-tour="quick-actions">
+        <div className="flex items-center gap-2 mb-4">
+          <Zap className="h-4 w-4 text-[var(--color-primary)]" />
+          <h2 className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wider">
+            {t("quickActions.title")}
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <QuickActionHero
+            label={t("quickActions.addProperty")}
+            description={t("quickActions.addPropertyDesc")}
+            icon={Building2}
+            onClick={onAddProperty}
+            primary
+            shortcut="⌘P"
+            testId="add-property-btn"
+            dataTour="add-property"
+          />
+          <QuickActionHero
+            label={t("quickActions.addTenant")}
+            description={t("quickActions.addTenantDesc")}
+            icon={Users}
+            onClick={onAddTenant}
+            shortcut="⌘T"
+          />
+          <QuickActionHero
+            label={t("quickActions.recordPayment")}
+            description={t("quickActions.recordPaymentDesc")}
+            icon={DollarSign}
+            onClick={onRecordPayment}
+            shortcut="⌘R"
+            testId="record-payment-btn"
+          />
+          <QuickActionHero
+            label={t("quickActions.createLease")}
+            description={t("quickActions.createLeaseDesc")}
+            icon={FileText}
+            onClick={onAddLease}
+            testId="add-lease-btn"
+          />
+          <QuickActionHero
+            label={t("quickActions.maintenanceTicket")}
+            description={t("quickActions.maintenanceTicketDesc")}
+            icon={Wrench}
+            onClick={onCreateTicket}
+          />
+          <QuickActionHero
+            label={t("quickActions.sendCorrespondence")}
+            description={t("quickActions.sendCorrespondenceDesc")}
+            icon={Mail}
+            onClick={onSendCorrespondence}
+          />
+        </div>
+      </section>
+
       {/* ─── Onboarding ─── */}
       {!isOnboardingComplete && (
         <OnboardingChecklist
@@ -667,7 +764,7 @@ export function OverviewView({
         />
       )}
 
-      {/* ─── Attention Needed + Charts (Row 2: data-dense) ─── */}
+      {/* ─── Attention Needed + Charts ─── */}
       {hasProperties && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Charts - takes 2 columns */}
@@ -742,108 +839,6 @@ export function OverviewView({
           </div>
         </div>
       )}
-
-      {/* ─── Quick Actions (demoted from hero position) ─── */}
-
-      {/* ─── Stats Grid (promoted above Quick Actions for visual hierarchy) ─── */}
-      {hasProperties ? (
-        <section data-tour="dashboard-stats">
-          <h2 className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wider mb-4">
-            {t("dashboard.portfolioOverview")}
-          </h2>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-            <StatCard
-              title={t("dashboard.monthlyRevenue")}
-              value={formatCurrency(monthlyRevenue)}
-              icon={DollarSign}
-              accent="text-emerald-400"
-              hero
-            />
-            <StatCard
-              title={t("dashboard.occupancyRate")}
-              value={`${occupancyRate.toFixed(1)}%`}
-              icon={TrendingUp}
-              accent="text-amber-400"
-              hero
-            />
-            <StatCard
-              title={t("dashboard.totalProperties")}
-              value={totalProperties}
-              icon={Building2}
-            />
-            <StatCard
-              title={t("dashboard.activeTenants")}
-              value={activeTenants}
-              icon={Users}
-              accent="text-purple-400"
-            />
-          </div>
-        </section>
-      ) : (
-        <EmptyStateIllustration
-          type="properties"
-          title={t("dashboard.startManagingPortfolio")}
-          description={t("dashboard.startManagingPortfolioDesc")}
-          onAction={onAddProperty}
-          actionLabel={t("dashboard.addYourFirstProperty")}
-        />
-      )}
-
-      {/* ─── Quick Actions ─── */}
-      <section data-tour="quick-actions">
-        <div className="flex items-center gap-2 mb-4">
-          <Zap className="h-4 w-4 text-[var(--color-primary)]" />
-          <h2 className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wider">
-            {t("quickActions.title")}
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <QuickActionHero
-            label={t("quickActions.addProperty")}
-            description={t("quickActions.addPropertyDesc")}
-            icon={Building2}
-            onClick={onAddProperty}
-            primary
-            shortcut="⌘P"
-            testId="add-property-btn"
-            dataTour="add-property"
-          />
-          <QuickActionHero
-            label={t("quickActions.addTenant")}
-            description={t("quickActions.addTenantDesc")}
-            icon={Users}
-            onClick={onAddTenant}
-            shortcut="⌘T"
-          />
-          <QuickActionHero
-            label={t("quickActions.recordPayment")}
-            description={t("quickActions.recordPaymentDesc")}
-            icon={DollarSign}
-            onClick={onRecordPayment}
-            shortcut="⌘R"
-            testId="record-payment-btn"
-          />
-          <QuickActionHero
-            label={t("quickActions.createLease")}
-            description={t("quickActions.createLeaseDesc")}
-            icon={FileText}
-            onClick={onAddLease}
-            testId="add-lease-btn"
-          />
-          <QuickActionHero
-            label={t("quickActions.maintenanceTicket")}
-            description={t("quickActions.maintenanceTicketDesc")}
-            icon={Wrench}
-            onClick={onCreateTicket}
-          />
-          <QuickActionHero
-            label={t("quickActions.sendCorrespondence")}
-            description={t("quickActions.sendCorrespondenceDesc")}
-            icon={Mail}
-            onClick={onSendCorrespondence}
-          />
-        </div>
-      </section>
 
       {/* ─── Recent Properties ─── */}
       {hasProperties && (
