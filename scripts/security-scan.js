@@ -309,20 +309,24 @@ function checkEnvSecurity() {
 function checkSecurityHeaders() {
   printSection("SECURITY HEADERS - Configuration Check");
 
-  const middlewarePath = path.join(process.cwd(), "middleware.ts");
+  const headerConfigFiles = ["middleware.ts", "proxy.ts"];
+  const existingConfigFile = headerConfigFiles.find((file) =>
+    fs.existsSync(path.join(process.cwd(), file)),
+  );
 
-  if (!fs.existsSync(middlewarePath)) {
-    print("⚠ middleware.ts not found", "yellow");
+  if (!existingConfigFile) {
+    print("⚠ No middleware.ts or proxy.ts found", "yellow");
     addFinding(
       SEVERITY.MODERATE,
       "Security Headers",
-      "No middleware.ts found for security headers",
+      "No middleware.ts or proxy.ts found for security headers",
       null,
     );
     return;
   }
 
-  const content = fs.readFileSync(middlewarePath, "utf-8");
+  const configPath = path.join(process.cwd(), existingConfigFile);
+  const content = fs.readFileSync(configPath, "utf-8");
 
   const requiredHeaders = [
     { name: "X-Frame-Options", severity: SEVERITY.HIGH },
@@ -338,15 +342,16 @@ function checkSecurityHeaders() {
       print(`  ⚠ Missing: ${name}`, "yellow");
       addFinding(severity, "Security Headers", `Missing security header: ${name}`, {
         header: name,
+        file: existingConfigFile,
       });
       missing++;
     }
   });
 
   if (missing === 0) {
-    print("✓ All critical security headers configured", "green");
+    print(`✓ All critical security headers configured in ${existingConfigFile}`, "green");
   } else {
-    print(`Missing ${missing} security headers`, "yellow");
+    print(`Missing ${missing} security headers in ${existingConfigFile}`, "yellow");
   }
 }
 
