@@ -428,8 +428,9 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     [activeTenantId, role, state, userEmail],
   );
 
-  const blockTenantMutation = useCallback(async () => {
+  const blockTenantMutation = useCallback(() => {
     showError("This action is only available in the owner portal.");
+    return Promise.resolve();
   }, [showError]);
 
   // --- context value (backward-compatible shape) ---

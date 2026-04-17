@@ -193,14 +193,13 @@ export function MobileBottomNav({
         {/* Safe area spacer for notched devices */}
         <div className="bg-[var(--color-background)]/95 backdrop-blur-sm border-t border-[var(--color-border)]">
           <div className="relative flex items-center justify-around h-16 px-2">
-            {filteredPrimaryNavItems.map((item, index) => {
+            {filteredPrimaryNavItems.map((item) => {
               const Icon = item.icon;
               const isActive =
                 item.id === "more" ? showMoreMenu || isActiveInSecondary : isItemActive(item.href);
 
-              // Create gap for FAB button after second item (between Assets and People)
-              const marginClass =
-                filteredPrimaryNavItems.length === 4 && index === 2 ? "ml-16" : "";
+              // Keep the centered FAB gap aligned with the people shortcut when it is present
+              const marginClass = item.id === "people" ? "ml-16" : "";
 
               // For "more" button, use button element; for others use Link
               if (item.id === "more") {

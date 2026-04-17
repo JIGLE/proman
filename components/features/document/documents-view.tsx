@@ -55,6 +55,7 @@ import { useDemoMode } from "@/lib/contexts/demo-context";
 import { usePortalAccess } from "@/lib/contexts/portal-access-context";
 import { getDemoData } from "@/lib/demo/demo-data";
 import { filterEntityListForTenant } from "@/lib/portal-access";
+import type { Tenant as AppTenant } from "@/lib/types";
 
 // Types
 interface Document {
@@ -96,12 +97,6 @@ interface DocumentStats {
 interface Property {
   id: string;
   name: string;
-}
-
-interface Tenant {
-  id: string;
-  name: string;
-  propertyId?: string;
 }
 
 interface Owner {
@@ -173,7 +168,7 @@ export function DocumentsView() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [stats, setStats] = useState<DocumentStats | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
-  const [tenants, setTenants] = useState<Tenant[]>([]);
+  const [tenants, setTenants] = useState<AppTenant[]>([]);
   const [owners, setOwners] = useState<Owner[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -284,7 +279,7 @@ export function DocumentsView() {
     try {
       if (isDemoMode) {
         const demoProperties = getDemoData<Property>("properties");
-        const demoTenants = getDemoData<Tenant>("tenants");
+        const demoTenants = getDemoData<AppTenant>("tenants");
         const demoOwners = getDemoData<Owner>("owners");
         const visibleTenants = isTenant
           ? demoTenants.filter((tenant) => tenant.id === activeTenantId)
@@ -301,7 +296,7 @@ export function DocumentsView() {
 
       const [propsData, tenantsData, ownersData] = await Promise.all([
         apiFetch<{ data: Property[] } | Property[]>("/api/properties", csrfToken),
-        apiFetch<{ data: Tenant[] } | Tenant[]>("/api/tenants", csrfToken),
+        apiFetch<{ data: AppTenant[] } | AppTenant[]>("/api/tenants", csrfToken),
         apiFetch<{ data: Owner[] } | Owner[]>("/api/owners", csrfToken),
       ]);
 

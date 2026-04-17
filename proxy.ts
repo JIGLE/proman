@@ -89,6 +89,10 @@ function applySecurityHeaders(response: NextResponse, nonce: string): void {
   headers.set("Content-Security-Policy", cspDirectives);
 }
 
+function matchesPattern(pathname: string, patterns: readonly string[]): boolean {
+  return patterns.some((pattern) => pathname === pattern || pathname.startsWith(pattern + "/"));
+}
+
 export function proxy(request: NextRequest) {
   // Generate unique nonce for this request
   const nonce = generateNonce();
@@ -120,14 +124,9 @@ export function proxy(request: NextRequest) {
     // Strip locale prefix to check the actual route
     const pathWithoutLocale = pathname.replace(/^\/(pt|en|es)/, "") || "/";
 
-    const isBlocked = DEMO_BLOCKED_PATTERNS.some(
-      (pattern) => pathWithoutLocale === pattern || pathWithoutLocale.startsWith(pattern + "/"),
-    );
+    const isBlocked = matchesPattern(pathWithoutLocale, DEMO_BLOCKED_PATTERNS);
     const isTenantBlocked =
-      isTenantDemo &&
-      !DEMO_TENANT_ALLOWED_PATTERNS.some(
-        (pattern) => pathWithoutLocale === pattern || pathWithoutLocale.startsWith(pattern + "/"),
-      );
+      isTenantDemo && !matchesPattern(pathWithoutLocale, DEMO_TENANT_ALLOWED_PATTERNS);
 
     if (isBlocked || isTenantBlocked) {
       // For API routes, return 403 JSON

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Building2, Loader2 } from "lucide-react";
@@ -19,6 +19,14 @@ export default function DemoPage() {
 
   // Extract locale from pathname
   const locale = pathname.split("/")[1] || "pt";
+  const demoRole = useMemo(
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("role") === "tenant"
+        ? "tenant"
+        : DEFAULT_DEMO_ROLE,
+    [],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -27,12 +35,8 @@ export default function DemoPage() {
       try {
         // Step 1: Set demo cookie client-side (no server dependency)
         setDemoCookieClient();
-        const role =
-          new URLSearchParams(window.location.search).get("role") === "tenant"
-            ? "tenant"
-            : DEFAULT_DEMO_ROLE;
-        setDemoRoleClient(role);
-        if (role === "tenant") {
+        setDemoRoleClient(demoRole);
+        if (demoRole === "tenant") {
           setDemoTenantIdClient(DEFAULT_DEMO_TENANT_ID);
         }
         sessionStorage.setItem("proman_demo", "1");
@@ -58,7 +62,7 @@ export default function DemoPage() {
     return () => {
       cancelled = true;
     };
-  }, [locale]);
+  }, [demoRole, locale]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">

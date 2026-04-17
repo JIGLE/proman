@@ -82,7 +82,7 @@ export function resolveTenantContext(
     );
     if (tenantByEmail) return tenantByEmail;
   }
-  return tenants[0] ?? null;
+  return null;
 }
 
 export function filterStateForRole(
