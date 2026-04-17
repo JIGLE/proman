@@ -77,11 +77,13 @@ import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { PageHeader } from "@/components/shared/page-header";
 import { useRouter } from "next/navigation";
 import { useLocale } from "next-intl";
+import { usePortalAccess } from "@/lib/contexts/portal-access-context";
 
 export type LeasesViewProps = Record<string, never>;
 
 export function LeasesView(): React.ReactElement {
   const { state, addLease, updateLease, deleteLease } = useApp();
+  const { canManage, isTenant } = usePortalAccess();
   const { properties, tenants, leases, loading } = state;
   const { success, error } = useToast();
   const { formatCurrency, currencySymbol } = useCurrency();
@@ -272,6 +274,7 @@ export function LeasesView(): React.ReactElement {
   };
 
   const handleEdit = (lease: Lease) => {
+    if (!canManage) return;
     setEditingLease(lease);
     wizard.updateFormData({
       propertyId: lease.propertyId,
@@ -290,6 +293,7 @@ export function LeasesView(): React.ReactElement {
   };
 
   const handleDelete = (id: string) => {
+    if (!canManage) return;
     confirmDialog.confirm(
       {
         title: "Delete Lease",
@@ -399,6 +403,12 @@ export function LeasesView(): React.ReactElement {
             ]}
           />
 
+          {isTenant && (
+            <div className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-xs text-[var(--color-muted-foreground)]">
+              Tenant view: only your lease and related contract history are visible.
+            </div>
+          )}
+
           {/* Multi-Step Wizard Dialog */}
           <Dialog
             open={wizardOpen}
@@ -411,12 +421,14 @@ export function LeasesView(): React.ReactElement {
               }
             }}
           >
-            <DialogTrigger asChild>
-              <Button onClick={() => setWizardOpen(true)} className="flex items-center gap-2">
-                <Plus className="w-4 h-4" />
-                Add Lease
-              </Button>
-            </DialogTrigger>
+            {canManage && (
+              <DialogTrigger asChild>
+                <Button onClick={() => setWizardOpen(true)} className="flex items-center gap-2">
+                  <Plus className="w-4 h-4" />
+                  Add Lease
+                </Button>
+              </DialogTrigger>
+            )}
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-zinc-900 border-zinc-800">
               <DialogHeader>
                 <DialogTitle className="text-[var(--color-foreground)]">
@@ -799,7 +811,7 @@ export function LeasesView(): React.ReactElement {
                   To create your first lease, you&apos;ll need at least one property and one tenant.
                 </p>
                 <div className="flex items-center gap-3">
-                  {properties.length === 0 && (
+                  {canManage && properties.length === 0 && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -808,7 +820,7 @@ export function LeasesView(): React.ReactElement {
                       <Plus className="w-4 h-4 mr-2" /> Create Property
                     </Button>
                   )}
-                  {tenants.length === 0 && (
+                  {canManage && tenants.length === 0 && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -826,8 +838,8 @@ export function LeasesView(): React.ReactElement {
                 description={
                   leases.length === 0 ? undefined : "Try adjusting your search or filters"
                 }
-                onAction={leases.length === 0 ? dialog.openDialog : undefined}
-                actionLabel={leases.length === 0 ? "Add First Lease" : undefined}
+                onAction={canManage && leases.length === 0 ? dialog.openDialog : undefined}
+                actionLabel={canManage && leases.length === 0 ? "Add First Lease" : undefined}
               />
             )
           ) : (
@@ -883,26 +895,28 @@ export function LeasesView(): React.ReactElement {
                       </TableCell>
                       <TableCell>{getStatusBadge(lease.status)}</TableCell>
                       <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(lease)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit Lease
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => handleDelete(lease.id)}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete Lease
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {canManage && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(lease)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Lease
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDelete(lease.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Lease
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </TableCell>
                     </TableRow>
                   ))}
@@ -1056,27 +1070,33 @@ export function LeasesView(): React.ReactElement {
                         </div>
                       )}
                       <div className="flex gap-2 pt-2">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="outline" size="sm" className="flex items-center gap-1">
-                              <MoreHorizontal className="w-4 h-4" />
-                              Actions
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(lease)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit Lease
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => handleDelete(lease.id)}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete Lease
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        {canManage && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="flex items-center gap-1"
+                              >
+                                <MoreHorizontal className="w-4 h-4" />
+                                Actions
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(lease)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Lease
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDelete(lease.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Lease
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
                     </CardContent>
                   </Card>

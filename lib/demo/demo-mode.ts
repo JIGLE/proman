@@ -12,6 +12,8 @@
 
 /** Cookie name used to flag a demo session */
 export const DEMO_COOKIE_NAME = "proman_demo";
+export const DEMO_ROLE_COOKIE_NAME = "proman_demo_role";
+export const DEMO_TENANT_COOKIE_NAME = "proman_demo_tenant";
 
 /** Max age for the demo cookie (1 hour) */
 export const DEMO_COOKIE_MAX_AGE = 60 * 60;
@@ -29,6 +31,8 @@ export const DEMO_CREDENTIALS = {
   email: "demo@proman.local",
   password: "demo123",
 };
+
+export type DemoPortalRole = "owner" | "tenant";
 
 /** Routes that are blocked in demo mode */
 export const DEMO_BLOCKED_PATHS = ["/settings", "/api/user", "/api/debug"] as const;
@@ -121,4 +125,42 @@ export function setDemoCookieClient(): void {
 export function clearDemoCookieClient(): void {
   if (typeof document === "undefined") return;
   document.cookie = `${DEMO_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
+
+function getCookieValue(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie
+    .split(";")
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith(`${name}=`));
+  return match ? decodeURIComponent(match.split("=")[1]) : null;
+}
+
+export function getDemoRoleClient(): DemoPortalRole {
+  const role = getCookieValue(DEMO_ROLE_COOKIE_NAME);
+  return role === "tenant" ? "tenant" : "owner";
+}
+
+export function setDemoRoleClient(role: DemoPortalRole): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${DEMO_ROLE_COOKIE_NAME}=${role}; Path=/; Max-Age=${DEMO_COOKIE_MAX_AGE}; SameSite=Lax`;
+}
+
+export function getDemoTenantIdClient(): string | null {
+  return getCookieValue(DEMO_TENANT_COOKIE_NAME);
+}
+
+export function setDemoTenantIdClient(tenantId: string): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${DEMO_TENANT_COOKIE_NAME}=${encodeURIComponent(tenantId)}; Path=/; Max-Age=${DEMO_COOKIE_MAX_AGE}; SameSite=Lax`;
+}
+
+export function clearDemoRoleClient(): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${DEMO_ROLE_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
+
+export function clearDemoTenantIdClient(): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${DEMO_TENANT_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
 }

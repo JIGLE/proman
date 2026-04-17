@@ -2,6 +2,27 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderWithProviders as render } from "@/tests/helpers/render-with-providers";
 import { act } from "react";
 import { Sidebar } from "./sidebar";
+import type { PortalRole } from "@/lib/portal-access";
+
+interface MockPortalAccess {
+  role: PortalRole;
+  isOwner: boolean;
+  isTenant: boolean;
+  activeTenantId: string | null;
+  canManage: boolean;
+  canAccess: (pathname: string) => boolean;
+  switchDemoRole: () => void;
+}
+
+const mockUsePortalAccess = vi.fn<() => MockPortalAccess>(() => ({
+  role: "owner",
+  isOwner: true,
+  isTenant: false,
+  activeTenantId: null,
+  canManage: true,
+  canAccess: () => true,
+  switchDemoRole: vi.fn(),
+}));
 
 vi.mock("next/navigation", () => ({
   usePathname: () => "/en/overview",
@@ -29,9 +50,22 @@ vi.mock("@/lib/contexts/theme-context", () => ({
   }),
 }));
 
+vi.mock("@/lib/contexts/portal-access-context", () => ({
+  usePortalAccess: () => mockUsePortalAccess(),
+}));
+
 describe("Sidebar", () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    mockUsePortalAccess.mockReturnValue({
+      role: "owner",
+      isOwner: true,
+      isTenant: false,
+      activeTenantId: null,
+      canManage: true,
+      canAccess: () => true,
+      switchDemoRole: vi.fn(),
+    });
     // Ensure no persisted collapsed state by default
     window.localStorage.removeItem("proman.sidebar.collapsed");
   });
@@ -97,5 +131,28 @@ describe("Sidebar", () => {
 
     // Header collapse toggle should be present with Collapse label
     expect(getByLabelText!("Collapse Sidebar")).toBeDefined();
+  });
+
+  it("filters owner-only navigation for tenant mode", async () => {
+    mockUsePortalAccess.mockReturnValue({
+      role: "tenant",
+      isOwner: false,
+      isTenant: true,
+      activeTenantId: "tenant-1",
+      canManage: false,
+      canAccess: (pathname: string) => !pathname.startsWith("/owners"),
+      switchDemoRole: vi.fn(),
+    });
+
+    let queryByText: (text: string) => HTMLElement | null;
+    let getByText: (text: string) => HTMLElement;
+    await act(async () => {
+      ({ queryByText, getByText } = render(<Sidebar activeTab="overview" />));
+    });
+
+    expect(getByText!("Properties")).toBeDefined();
+    expect(getByText!("Documents")).toBeDefined();
+    expect(queryByText!("Owners")).toBeNull();
+    expect(queryByText!("Tenants")).toBeNull();
   });
 });

@@ -12,9 +12,17 @@ import { locales, defaultLocale } from "./lib/i18n/config";
 
 /** Cookie name for demo mode (must match lib/demo/demo-mode.ts) */
 const DEMO_COOKIE_NAME = "proman_demo";
+const DEMO_ROLE_COOKIE_NAME = "proman_demo_role";
 
 /** Paths blocked during demo mode */
 const DEMO_BLOCKED_PATTERNS = ["/settings", "/api/user", "/api/debug"];
+const DEMO_TENANT_ALLOWED_PATTERNS = [
+  "/overview",
+  "/properties",
+  "/leases",
+  "/financials",
+  "/documents",
+];
 
 /**
  * Generate CSP nonce (Edge-compatible version)
@@ -107,6 +115,7 @@ export function proxy(request: NextRequest) {
   // ── Demo mode route blocking ────────────────────────
   const cookieHeader = request.headers.get("cookie") || "";
   const isDemo = cookieHeader.includes(`${DEMO_COOKIE_NAME}=1`);
+  const isTenantDemo = cookieHeader.includes(`${DEMO_ROLE_COOKIE_NAME}=tenant`);
   if (isDemo) {
     // Strip locale prefix to check the actual route
     const pathWithoutLocale = pathname.replace(/^\/(pt|en|es)/, "") || "/";
@@ -114,8 +123,13 @@ export function proxy(request: NextRequest) {
     const isBlocked = DEMO_BLOCKED_PATTERNS.some(
       (pattern) => pathWithoutLocale === pattern || pathWithoutLocale.startsWith(pattern + "/"),
     );
+    const isTenantBlocked =
+      isTenantDemo &&
+      !DEMO_TENANT_ALLOWED_PATTERNS.some(
+        (pattern) => pathWithoutLocale === pattern || pathWithoutLocale.startsWith(pattern + "/"),
+      );
 
-    if (isBlocked) {
+    if (isBlocked || isTenantBlocked) {
       // For API routes, return 403 JSON
       if (pathWithoutLocale.startsWith("/api/")) {
         const response = NextResponse.json(

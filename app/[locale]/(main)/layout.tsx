@@ -7,6 +7,7 @@ import { CommandPalette } from "@/components/shared/command-palette";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { AppTour } from "@/components/shared/app-tour";
 import { ScenarioRunner } from "@/components/shared/scenario-runner";
+import { PortalRouteGuard } from "@/components/shared/portal-route-guard";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -22,6 +23,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       {/* Main Content */}
       <div className="flex flex-1 flex-col overflow-hidden">
+        <PortalRouteGuard />
         {/* Demo Mode Banner */}
         <DemoBanner />
 

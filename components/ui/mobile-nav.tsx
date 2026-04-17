@@ -26,6 +26,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { usePortalAccess } from "@/lib/contexts/portal-access-context";
+import { getAllowedNavKeys } from "@/lib/portal-access";
 
 interface MobileNavProps {
   activeTab?: string;
@@ -63,6 +65,7 @@ export function MobileBottomNav({
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const { data: session } = useSession();
   const pathname = usePathname();
+  const { role } = usePortalAccess();
   const user = session?.user;
   const initials =
     user?.name
@@ -73,6 +76,12 @@ export function MobileBottomNav({
 
   // Extract locale from pathname
   const currentLocale = pathname.split("/")[1] || "en";
+
+  const allowedNavKeys = new Set(getAllowedNavKeys(role));
+  const filteredPrimaryNavItems = primaryNavItems.filter((item) =>
+    item.id === "more" ? true : allowedNavKeys.has(item.id),
+  );
+  const filteredSecondaryNavItems = secondaryNavItems.filter((item) => allowedNavKeys.has(item.id));
 
   const handleNavClick = (id: string, _href: string | null) => {
     if (id === "more") {
@@ -89,7 +98,7 @@ export function MobileBottomNav({
     return pathname.includes(href);
   };
 
-  const isActiveInSecondary = secondaryNavItems.some((item) => isItemActive(item.href));
+  const isActiveInSecondary = filteredSecondaryNavItems.some((item) => isItemActive(item.href));
 
   return (
     <>
@@ -139,7 +148,7 @@ export function MobileBottomNav({
 
         {/* Secondary nav items */}
         <div className="p-2 grid grid-cols-3 gap-1">
-          {secondaryNavItems.map((item) => {
+          {filteredSecondaryNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = isItemActive(item.href);
 
@@ -184,13 +193,14 @@ export function MobileBottomNav({
         {/* Safe area spacer for notched devices */}
         <div className="bg-[var(--color-background)]/95 backdrop-blur-sm border-t border-[var(--color-border)]">
           <div className="relative flex items-center justify-around h-16 px-2">
-            {primaryNavItems.map((item, index) => {
+            {filteredPrimaryNavItems.map((item, index) => {
               const Icon = item.icon;
               const isActive =
                 item.id === "more" ? showMoreMenu || isActiveInSecondary : isItemActive(item.href);
 
               // Create gap for FAB button after second item (between Assets and People)
-              const marginClass = index === 2 ? "ml-16" : "";
+              const marginClass =
+                filteredPrimaryNavItems.length === 4 && index === 2 ? "ml-16" : "";
 
               // For "more" button, use button element; for others use Link
               if (item.id === "more") {

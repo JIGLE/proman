@@ -26,8 +26,10 @@ import { apiFetch } from "@/lib/utils/api-client";
 import { createEntityActions } from "./create-entity-actions";
 import { isDemoModeClient } from "@/lib/demo/demo-mode";
 import { getDemoData } from "@/lib/demo/demo-data";
+import { usePortalAccess } from "./portal-access-context";
+import { filterStateForRole, PortalAppState } from "@/lib/portal-access";
 
-interface AppState {
+interface AppState extends PortalAppState {
   properties: Property[];
   tenants: Tenant[];
   receipts: Receipt[];
@@ -144,7 +146,9 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const { data: session } = useSession();
   const { error: showError, success: showSuccess } = useToast();
   const { token: csrfToken } = useCsrf();
+  const { role, activeTenantId, canManage } = usePortalAccess();
   const userId = (session?.user as { id?: string } | undefined)?.id;
+  const userEmail = (session?.user as { email?: string | null } | undefined)?.email;
   const isDemo = isDemoModeClient();
 
   // --- data loading ---
@@ -419,43 +423,89 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     [csrfToken, userId, showError, showSuccess, isDemo, state.leases],
   );
 
+  const visibleState = useMemo(
+    () => filterStateForRole(state, role, activeTenantId, userEmail),
+    [activeTenantId, role, state, userEmail],
+  );
+
+  const blockTenantMutation = useCallback(async () => {
+    showError("This action is only available in the owner portal.");
+  }, [showError]);
+
   // --- context value (backward-compatible shape) ---
 
   const contextValue: AppContextValue = useMemo(
     () => ({
-      state,
+      state: visibleState,
       dispatch,
-      addProperty: (d) => propertyActions.add(d) as unknown as Promise<void>,
-      updateProperty: (id, d) => propertyActions.update(id, d) as unknown as Promise<void>,
-      deleteProperty: (id) => propertyActions.remove(id),
-      addTenant: (d) => tenantActions.add(d) as unknown as Promise<void>,
-      updateTenant: (id, d) => tenantActions.update(id, d) as unknown as Promise<void>,
-      deleteTenant: (id) => tenantActions.remove(id),
-      addReceipt: (d) => receiptActions.add(d) as unknown as Promise<void>,
-      updateReceipt: (id, d) => receiptActions.update(id, d) as unknown as Promise<void>,
-      deleteReceipt: (id) => receiptActions.remove(id),
-      addTemplate: (d) => templateActions.add(d) as unknown as Promise<void>,
-      updateTemplate: (id, d) => templateActions.update(id, d) as unknown as Promise<void>,
-      deleteTemplate: (id) => templateActions.remove(id),
-      addCorrespondence: (d) => correspondenceActions.add(d) as unknown as Promise<void>,
-      updateCorrespondence: (id, d) =>
-        correspondenceActions.update(id, d) as unknown as Promise<void>,
-      deleteCorrespondence: (id) => correspondenceActions.remove(id),
-      addOwner: (d) => ownerActions.add(d) as unknown as Promise<void>,
-      updateOwner: (id, d) => ownerActions.update(id, d) as unknown as Promise<void>,
-      deleteOwner: (id) => ownerActions.remove(id),
-      addExpense: (d) => expenseActions.add(d) as unknown as Promise<void>,
-      deleteExpense: (id) => expenseActions.remove(id),
-      addMaintenance: (d) => maintenanceActions.add(d) as unknown as Promise<void>,
-      updateMaintenance: (id, d) => maintenanceActions.update(id, d) as unknown as Promise<void>,
-      deleteMaintenance: (id) => maintenanceActions.remove(id),
-      addLease: (d) => leaseActions.add(d) as unknown as Promise<void>,
-      updateLease: (id, d) => leaseActions.update(id, d) as unknown as Promise<void>,
-      deleteLease: (id) => leaseActions.remove(id),
+      addProperty: canManage
+        ? (d) => propertyActions.add(d) as unknown as Promise<void>
+        : blockTenantMutation,
+      updateProperty: canManage
+        ? (id, d) => propertyActions.update(id, d) as unknown as Promise<void>
+        : async () => blockTenantMutation(),
+      deleteProperty: canManage ? (id) => propertyActions.remove(id) : blockTenantMutation,
+      addTenant: canManage
+        ? (d) => tenantActions.add(d) as unknown as Promise<void>
+        : blockTenantMutation,
+      updateTenant: canManage
+        ? (id, d) => tenantActions.update(id, d) as unknown as Promise<void>
+        : async () => blockTenantMutation(),
+      deleteTenant: canManage ? (id) => tenantActions.remove(id) : blockTenantMutation,
+      addReceipt: canManage
+        ? (d) => receiptActions.add(d) as unknown as Promise<void>
+        : blockTenantMutation,
+      updateReceipt: canManage
+        ? (id, d) => receiptActions.update(id, d) as unknown as Promise<void>
+        : async () => blockTenantMutation(),
+      deleteReceipt: canManage ? (id) => receiptActions.remove(id) : blockTenantMutation,
+      addTemplate: canManage
+        ? (d) => templateActions.add(d) as unknown as Promise<void>
+        : blockTenantMutation,
+      updateTemplate: canManage
+        ? (id, d) => templateActions.update(id, d) as unknown as Promise<void>
+        : async () => blockTenantMutation(),
+      deleteTemplate: canManage ? (id) => templateActions.remove(id) : blockTenantMutation,
+      addCorrespondence: canManage
+        ? (d) => correspondenceActions.add(d) as unknown as Promise<void>
+        : blockTenantMutation,
+      updateCorrespondence: canManage
+        ? (id, d) => correspondenceActions.update(id, d) as unknown as Promise<void>
+        : async () => blockTenantMutation(),
+      deleteCorrespondence: canManage
+        ? (id) => correspondenceActions.remove(id)
+        : blockTenantMutation,
+      addOwner: canManage
+        ? (d) => ownerActions.add(d) as unknown as Promise<void>
+        : blockTenantMutation,
+      updateOwner: canManage
+        ? (id, d) => ownerActions.update(id, d) as unknown as Promise<void>
+        : async () => blockTenantMutation(),
+      deleteOwner: canManage ? (id) => ownerActions.remove(id) : blockTenantMutation,
+      addExpense: canManage
+        ? (d) => expenseActions.add(d) as unknown as Promise<void>
+        : blockTenantMutation,
+      deleteExpense: canManage ? (id) => expenseActions.remove(id) : blockTenantMutation,
+      addMaintenance: canManage
+        ? (d) => maintenanceActions.add(d) as unknown as Promise<void>
+        : blockTenantMutation,
+      updateMaintenance: canManage
+        ? (id, d) => maintenanceActions.update(id, d) as unknown as Promise<void>
+        : async () => blockTenantMutation(),
+      deleteMaintenance: canManage ? (id) => maintenanceActions.remove(id) : blockTenantMutation,
+      addLease: canManage
+        ? (d) => leaseActions.add(d) as unknown as Promise<void>
+        : blockTenantMutation,
+      updateLease: canManage
+        ? (id, d) => leaseActions.update(id, d) as unknown as Promise<void>
+        : async () => blockTenantMutation(),
+      deleteLease: canManage ? (id) => leaseActions.remove(id) : blockTenantMutation,
       refreshData,
     }),
     [
-      state,
+      blockTenantMutation,
+      canManage,
+      visibleState,
       dispatch,
       refreshData,
       propertyActions,

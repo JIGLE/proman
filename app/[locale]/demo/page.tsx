@@ -1,15 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Building2, Loader2 } from "lucide-react";
-import { setDemoCookieClient } from "@/lib/demo/demo-mode";
+import {
+  setDemoCookieClient,
+  setDemoRoleClient,
+  setDemoTenantIdClient,
+} from "@/lib/demo/demo-mode";
+import { DEFAULT_DEMO_ROLE, DEFAULT_DEMO_TENANT_ID } from "@/lib/portal-access";
 
 export default function DemoPage() {
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<"initializing" | "redirecting" | "error">("initializing");
-  const router = useRouter();
   const pathname = usePathname();
   const t = useTranslations();
 
@@ -23,6 +27,14 @@ export default function DemoPage() {
       try {
         // Step 1: Set demo cookie client-side (no server dependency)
         setDemoCookieClient();
+        const role =
+          new URLSearchParams(window.location.search).get("role") === "tenant"
+            ? "tenant"
+            : DEFAULT_DEMO_ROLE;
+        setDemoRoleClient(role);
+        if (role === "tenant") {
+          setDemoTenantIdClient(DEFAULT_DEMO_TENANT_ID);
+        }
         sessionStorage.setItem("proman_demo", "1");
 
         // Step 2: Fire-and-forget server-side cookie as backup
@@ -34,7 +46,7 @@ export default function DemoPage() {
 
         // Step 3: Redirect to overview — no NextAuth sign-in needed
         setStatus("redirecting");
-        router.replace(`/${locale}/overview`);
+        window.location.replace(`/${locale}/overview`);
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : "An error occurred");
@@ -46,7 +58,7 @@ export default function DemoPage() {
     return () => {
       cancelled = true;
     };
-  }, [router, locale]);
+  }, [locale]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">

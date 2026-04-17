@@ -4,7 +4,16 @@ import { OverviewView } from "./overview-view";
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
+  useLocale: () => "en",
   NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => children,
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    refresh: vi.fn(),
+  }),
 }));
 
 // Mock next-auth
@@ -71,6 +80,18 @@ vi.mock("@/lib/contexts/app-context", () => ({
 // Mock keyboard shortcuts hook
 vi.mock("@/lib/hooks/use-keyboard-shortcuts", () => ({
   useKeyboardShortcuts: vi.fn(),
+}));
+
+vi.mock("@/lib/contexts/portal-access-context", () => ({
+  usePortalAccess: () => ({
+    role: "owner",
+    isOwner: true,
+    isTenant: false,
+    activeTenantId: null,
+    canManage: true,
+    canAccess: () => true,
+    switchDemoRole: vi.fn(),
+  }),
 }));
 
 describe("OverviewView", () => {

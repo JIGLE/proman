@@ -17,6 +17,7 @@ import type {
   Expense,
   MaintenanceTicket,
 } from "@/lib/types";
+import type { Document as DemoDocument } from "@/lib/services/document-service";
 
 const DEMO_USER_ID = "demo-user";
 
@@ -682,6 +683,59 @@ export const DEMO_EXPENSES: Expense[] = [
   },
 ];
 
+// ── Documents ──────────────────────────────────────────
+export const DEMO_DOCUMENTS: DemoDocument[] = [
+  {
+    id: "demo-doc-1",
+    userId: DEMO_USER_ID,
+    name: "Lease Agreement - Sunset Apartments",
+    description: "Signed residential lease for Maria Silva.",
+    type: "contract",
+    mimeType: "application/pdf",
+    storagePath: "demo/leases/sunset-apartments.pdf",
+    fileSize: 842000,
+    propertyId: "demo-prop-1",
+    propertyName: "Sunset Apartments",
+    tenantId: "demo-tenant-1",
+    tenantName: "Maria Silva",
+    uploadedAt: "2026-01-05T09:30:00Z",
+    createdAt: "2026-01-05T09:30:00Z",
+    updatedAt: "2026-01-05T09:30:00Z",
+  },
+  {
+    id: "demo-doc-2",
+    userId: DEMO_USER_ID,
+    name: "April 2026 Rent Receipt",
+    description: "Receipt for April rent payment.",
+    type: "receipt",
+    mimeType: "application/pdf",
+    storagePath: "demo/receipts/april-2026-receipt.pdf",
+    fileSize: 192000,
+    propertyId: "demo-prop-1",
+    propertyName: "Sunset Apartments",
+    tenantId: "demo-tenant-1",
+    tenantName: "Maria Silva",
+    uploadedAt: "2026-04-01T10:05:00Z",
+    createdAt: "2026-04-01T10:05:00Z",
+    updatedAt: "2026-04-01T10:05:00Z",
+  },
+  {
+    id: "demo-doc-3",
+    userId: DEMO_USER_ID,
+    name: "Property Insurance Certificate",
+    description: "Insurance certificate for owner review.",
+    type: "certificate",
+    mimeType: "application/pdf",
+    storagePath: "demo/certificates/property-insurance.pdf",
+    fileSize: 268000,
+    propertyId: "demo-prop-2",
+    propertyName: "Downtown Office Suite",
+    uploadedAt: "2026-02-14T08:10:00Z",
+    createdAt: "2026-02-14T08:10:00Z",
+    updatedAt: "2026-02-14T08:10:00Z",
+  },
+];
+
 // ── Maintenance Tickets ────────────────────────────────
 export const DEMO_MAINTENANCE: MaintenanceTicket[] = [
   {
@@ -818,6 +872,7 @@ export type DemoEntityType =
   | "expenses"
   | "maintenance"
   | "leases"
+  | "documents"
   | "contacts";
 
 const DEMO_DATA_MAP: Record<DemoEntityType, unknown[]> = {
@@ -830,6 +885,7 @@ const DEMO_DATA_MAP: Record<DemoEntityType, unknown[]> = {
   expenses: DEMO_EXPENSES,
   maintenance: DEMO_MAINTENANCE,
   leases: DEMO_LEASES,
+  documents: DEMO_DOCUMENTS,
   contacts: [], // Maintenance contacts — use from existing mock if needed
 };
 

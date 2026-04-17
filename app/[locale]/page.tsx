@@ -1,6 +1,6 @@
 ﻿import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Building2, Users, Wallet, ArrowRight, Play } from "lucide-react";
+import { Building2, Users, Wallet, ArrowRight, Play, KeyRound, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { getTranslations } from "next-intl/server";
@@ -84,28 +84,57 @@ export default async function LandingPage({ params }: Props) {
             {t("subtitle")}
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/auth/signin">
-              <Button
-                size="lg"
-                className="bg-blue-600 hover:bg-blue-700 text-white gap-2 px-8 h-12 text-base"
-              >
-                {t("cta")}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
             {isDemoEnabled && (
-              <Link href={`/${locale}/demo`}>
+              <Link href={`/${locale}/demo?role=owner`}>
                 <Button
                   size="lg"
-                  variant="outline"
-                  className="border-zinc-700 text-zinc-300 hover:text-zinc-50 hover:border-zinc-500 gap-2 px-8 h-12 text-base"
+                  className="bg-blue-600 hover:bg-blue-700 text-white gap-2 px-8 h-12 text-base"
                 >
                   <Play className="h-4 w-4" />
                   {t("demoCta")}
                 </Button>
               </Link>
             )}
+            <Link href="/auth/signin">
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-zinc-700 text-zinc-300 hover:text-zinc-50 hover:border-zinc-500 gap-2 px-8 h-12 text-base"
+              >
+                {t("cta")}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </Link>
           </div>
+
+          {isDemoEnabled && (
+            <div className="mt-10 grid gap-4 md:grid-cols-2 text-left">
+              <Link href={`/${locale}/demo?role=owner`} className="block">
+                <div className="h-full rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 transition-colors hover:border-zinc-600">
+                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-blue-600/10">
+                    <KeyRound className="h-5 w-5 text-blue-400" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-zinc-100">Explore as Owner</h2>
+                  <p className="mt-2 text-sm text-zinc-400">
+                    Review the full portfolio, tenants, payments, documents, and tax-ready financial
+                    data.
+                  </p>
+                </div>
+              </Link>
+              <Link href={`/${locale}/demo?role=tenant`} className="block">
+                <div className="h-full rounded-2xl border border-zinc-800 bg-zinc-900/60 p-6 transition-colors hover:border-zinc-600">
+                  <div className="mb-4 inline-flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-600/10">
+                    <Home className="h-5 w-5 text-emerald-400" />
+                  </div>
+                  <h2 className="text-lg font-semibold text-zinc-100">Explore as Tenant</h2>
+                  <p className="mt-2 text-sm text-zinc-400">
+                    View one lease, payments, receipts, documents, and your property details in the
+                    same app.
+                  </p>
+                </div>
+              </Link>
+            </div>
+          )}
         </div>
       </section>
 

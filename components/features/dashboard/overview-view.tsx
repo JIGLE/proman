@@ -38,11 +38,13 @@ import {
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { DashboardSkeleton } from "@/components/ui/page-skeletons";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { useSession } from "next-auth/react";
 import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { cn } from "@/lib/utils/utils";
 import { tokens } from "@/lib/design-tokens";
+import { usePortalAccess } from "@/lib/contexts/portal-access-context";
+import { useRouter } from "next/navigation";
 
 const MONTH_KEYS = [
   "jan",
@@ -305,6 +307,9 @@ export function OverviewView({
   const { formatCurrency } = useCurrency();
   const t = useTranslations();
   const { data: session } = useSession();
+  const { isTenant } = usePortalAccess();
+  const router = useRouter();
+  const locale = useLocale();
   const greetingInfo = useMemo(() => getGreetingKey(), []);
   const GreetingIcon = greetingInfo.icon;
   const greetingText = t(`greeting.${greetingInfo.key}`);
@@ -703,50 +708,76 @@ export function OverviewView({
           </h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <QuickActionHero
-            label={t("quickActions.addProperty")}
-            description={t("quickActions.addPropertyDesc")}
-            icon={Building2}
-            onClick={onAddProperty}
-            primary
-            shortcut="⌘P"
-            testId="add-property-btn"
-            dataTour="add-property"
-          />
-          <QuickActionHero
-            label={t("quickActions.addTenant")}
-            description={t("quickActions.addTenantDesc")}
-            icon={Users}
-            onClick={onAddTenant}
-            shortcut="⌘T"
-          />
-          <QuickActionHero
-            label={t("quickActions.recordPayment")}
-            description={t("quickActions.recordPaymentDesc")}
-            icon={DollarSign}
-            onClick={onRecordPayment}
-            shortcut="⌘R"
-            testId="record-payment-btn"
-          />
-          <QuickActionHero
-            label={t("quickActions.createLease")}
-            description={t("quickActions.createLeaseDesc")}
-            icon={FileText}
-            onClick={onAddLease}
-            testId="add-lease-btn"
-          />
-          <QuickActionHero
-            label={t("quickActions.maintenanceTicket")}
-            description={t("quickActions.maintenanceTicketDesc")}
-            icon={Wrench}
-            onClick={onCreateTicket}
-          />
-          <QuickActionHero
-            label={t("quickActions.sendCorrespondence")}
-            description={t("quickActions.sendCorrespondenceDesc")}
-            icon={Mail}
-            onClick={onSendCorrespondence}
-          />
+          {isTenant ? (
+            <>
+              <QuickActionHero
+                label="View Property"
+                description="Open the property details linked to your lease"
+                icon={Building2}
+                onClick={() => router.push(`/${locale}/properties`)}
+                primary
+              />
+              <QuickActionHero
+                label="View Payments"
+                description="Check payment history and available receipts"
+                icon={DollarSign}
+                onClick={() => router.push(`/${locale}/financials`)}
+              />
+              <QuickActionHero
+                label="View Documents"
+                description="Access shared lease and receipt documents"
+                icon={FileText}
+                onClick={() => router.push(`/${locale}/documents`)}
+              />
+            </>
+          ) : (
+            <>
+              <QuickActionHero
+                label={t("quickActions.addProperty")}
+                description={t("quickActions.addPropertyDesc")}
+                icon={Building2}
+                onClick={onAddProperty}
+                primary
+                shortcut="⌘P"
+                testId="add-property-btn"
+                dataTour="add-property"
+              />
+              <QuickActionHero
+                label={t("quickActions.addTenant")}
+                description={t("quickActions.addTenantDesc")}
+                icon={Users}
+                onClick={onAddTenant}
+                shortcut="⌘T"
+              />
+              <QuickActionHero
+                label={t("quickActions.recordPayment")}
+                description={t("quickActions.recordPaymentDesc")}
+                icon={DollarSign}
+                onClick={onRecordPayment}
+                shortcut="⌘R"
+                testId="record-payment-btn"
+              />
+              <QuickActionHero
+                label={t("quickActions.createLease")}
+                description={t("quickActions.createLeaseDesc")}
+                icon={FileText}
+                onClick={onAddLease}
+                testId="add-lease-btn"
+              />
+              <QuickActionHero
+                label={t("quickActions.maintenanceTicket")}
+                description={t("quickActions.maintenanceTicketDesc")}
+                icon={Wrench}
+                onClick={onCreateTicket}
+              />
+              <QuickActionHero
+                label={t("quickActions.sendCorrespondence")}
+                description={t("quickActions.sendCorrespondenceDesc")}
+                icon={Mail}
+                onClick={onSendCorrespondence}
+              />
+            </>
+          )}
         </div>
       </section>
 

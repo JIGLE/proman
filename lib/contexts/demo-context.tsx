@@ -3,7 +3,13 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { isDemoModeClient, clearDemoCookieClient, DEMO_USER } from "@/lib/demo/demo-mode";
+import {
+  isDemoModeClient,
+  clearDemoCookieClient,
+  DEMO_USER,
+  clearDemoRoleClient,
+  clearDemoTenantIdClient,
+} from "@/lib/demo/demo-mode";
 import { clearDemoStore } from "@/lib/demo/demo-local-state";
 
 interface DemoContextValue {
@@ -29,6 +35,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
 
   const exitDemo = useCallback(async () => {
     clearDemoCookieClient();
+    clearDemoRoleClient();
+    clearDemoTenantIdClient();
     clearDemoStore();
     sessionStorage.removeItem("proman_demo");
     sessionStorage.removeItem("proman_demo_start");

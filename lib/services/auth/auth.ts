@@ -212,6 +212,7 @@ function createBaseAuthOptions(): NextAuthOptions {
           if (session?.user) {
             const sessionUser = session.user as {
               id?: string;
+              role?: string;
               email?: string | null;
               name?: string | null;
               image?: string | null;
@@ -222,9 +223,11 @@ function createBaseAuthOptions(): NextAuthOptions {
               email?: string;
               name?: string;
               picture?: string;
+              role?: string;
               isDevAuth?: boolean;
             };
             sessionUser.id = t.sub || t.id;
+            sessionUser.role = t.role || sessionUser.role || "ADMIN";
             if (t.email) sessionUser.email = t.email;
             if (t.name) sessionUser.name = t.name;
             if (t.picture) sessionUser.image = t.picture;

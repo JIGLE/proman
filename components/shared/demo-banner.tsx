@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useDemoMode } from "@/lib/contexts/demo-context";
+import { usePortalAccess } from "@/lib/contexts/portal-access-context";
 import {
   AlertTriangle,
   LogOut,
@@ -37,6 +38,7 @@ function formatTime(ms: number): string {
 
 export function DemoBanner() {
   const { isDemoMode, exitDemo } = useDemoMode();
+  const { role, switchDemoRole } = usePortalAccess();
   const t = useTranslations();
   const [remaining, setRemaining] = useState(() => getTimeRemaining());
   const [collapsed, setCollapsed] = useState(false);
@@ -108,6 +110,22 @@ export function DemoBanner() {
               <Timer className="h-3 w-3" />
               {formatTime(remaining)}
             </span>
+
+            <div className="inline-flex items-center rounded-md border border-amber-900/20 bg-amber-900/10 p-0.5">
+              {(["owner", "tenant"] as const).map((viewRole) => (
+                <button
+                  key={viewRole}
+                  onClick={() => switchDemoRole(viewRole)}
+                  className={`rounded px-2 py-0.5 text-[10px] font-semibold transition-colors ${
+                    role === viewRole
+                      ? "bg-amber-950/20 text-amber-950 dark:bg-white/15 dark:text-white"
+                      : "text-amber-950/70 dark:text-amber-100/80"
+                  }`}
+                >
+                  {viewRole === "owner" ? "Owner" : "Tenant"}
+                </button>
+              ))}
+            </div>
 
             {/* Restart Tour */}
             <button

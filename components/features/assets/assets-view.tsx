@@ -8,6 +8,7 @@ import { PropertiesView, PropertiesViewRef } from "@/components/features/propert
 import { ExportButton, ExportColumn } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 import { Button } from "@/components/ui/button";
+import { usePortalAccess } from "@/lib/contexts/portal-access-context";
 
 /**
  * Assets View - Unified view for managing physical properties
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button";
 export function AssetsView(): React.ReactElement {
   const [activeTab, setActiveTab] = useTabPersistence("assets", "properties");
   const { state } = useApp();
+  const { canManage, isTenant } = usePortalAccess();
   const { properties } = state;
   const propertiesViewRef = useRef<PropertiesViewRef>(null);
 
@@ -60,6 +62,11 @@ export function AssetsView(): React.ReactElement {
             <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
               Manage and visualize your property portfolio
             </p>
+            {isTenant && (
+              <p className="text-xs text-[var(--color-muted-foreground)] mt-2">
+                Tenant view: only your linked property is shown.
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <ExportButton
@@ -121,13 +128,15 @@ export function AssetsView(): React.ReactElement {
               <span className="hidden sm:inline">Map</span>
             </TabsTrigger>
           </TabsList>
-          <Button
-            onClick={() => propertiesViewRef.current?.openDialog()}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add Property</span>
-          </Button>
+          {canManage && (
+            <Button
+              onClick={() => propertiesViewRef.current?.openDialog()}
+              className="flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Add Property</span>
+            </Button>
+          )}
         </div>
 
         <TabsContent value="map" className="mt-0">

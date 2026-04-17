@@ -40,9 +40,11 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { PageHeader } from "@/components/shared/page-header";
+import { usePortalAccess } from "@/lib/contexts/portal-access-context";
 
 export function FinancialsView(): React.ReactElement {
   const { state, addExpense } = useApp();
+  const { canManage, isTenant } = usePortalAccess();
   const { properties, receipts, expenses, loading } = state;
   const { formatCurrency } = useCurrency();
 
@@ -241,127 +243,135 @@ export function FinancialsView(): React.ReactElement {
               </SelectContent>
             </Select>
 
-            <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
-              <DialogTrigger asChild>
-                <Button onClick={dialog.openDialog} className="flex items-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  Add Expense
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="bg-zinc-900 border-zinc-800 sm:max-w-[500px]">
-                <DialogHeader>
-                  <DialogTitle>Record Expense</DialogTitle>
-                  <DialogDescription>
-                    Add a new property expense to track your spending
-                  </DialogDescription>
-                </DialogHeader>
-                <form onSubmit={dialog.handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="property">Property</Label>
-                      <Select
-                        value={dialog.formData.propertyId}
-                        onValueChange={(val) => dialog.updateFormData({ propertyId: val })}
-                      >
-                        <SelectTrigger
-                          id="property"
-                          className={dialog.formErrors.propertyId ? "border-red-500" : ""}
+            {isTenant && (
+              <div className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-xs text-[var(--color-muted-foreground)]">
+                Tenant view: payments and receipts are filtered to your lease.
+              </div>
+            )}
+
+            {canManage && (
+              <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
+                <DialogTrigger asChild>
+                  <Button onClick={dialog.openDialog} className="flex items-center gap-2">
+                    <Plus className="w-4 h-4" />
+                    Add Expense
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-zinc-900 border-zinc-800 sm:max-w-[500px]">
+                  <DialogHeader>
+                    <DialogTitle>Record Expense</DialogTitle>
+                    <DialogDescription>
+                      Add a new property expense to track your spending
+                    </DialogDescription>
+                  </DialogHeader>
+                  <form onSubmit={dialog.handleSubmit} className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="property">Property</Label>
+                        <Select
+                          value={dialog.formData.propertyId}
+                          onValueChange={(val) => dialog.updateFormData({ propertyId: val })}
                         >
-                          <SelectValue placeholder="Select property" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {properties.map((p) => (
-                            <SelectItem key={p.id} value={p.id}>
-                              {p.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {dialog.formErrors.propertyId && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.propertyId}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="category">Category</Label>
-                      <Select
-                        value={dialog.formData.category}
-                        onValueChange={(val) => dialog.updateFormData({ category: val })}
-                      >
-                        <SelectTrigger
-                          id="category"
-                          className={dialog.formErrors.category ? "border-red-500" : ""}
+                          <SelectTrigger
+                            id="property"
+                            className={dialog.formErrors.propertyId ? "border-red-500" : ""}
+                          >
+                            <SelectValue placeholder="Select property" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {properties.map((p) => (
+                              <SelectItem key={p.id} value={p.id}>
+                                {p.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {dialog.formErrors.propertyId && (
+                          <p className="text-sm text-destructive">{dialog.formErrors.propertyId}</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="category">Category</Label>
+                        <Select
+                          value={dialog.formData.category}
+                          onValueChange={(val) => dialog.updateFormData({ category: val })}
                         >
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((c) => (
-                            <SelectItem key={c} value={c}>
-                              {c}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {dialog.formErrors.category && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.category}</p>
-                      )}
+                          <SelectTrigger
+                            id="category"
+                            className={dialog.formErrors.category ? "border-red-500" : ""}
+                          >
+                            <SelectValue placeholder="Select category" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((c) => (
+                              <SelectItem key={c} value={c}>
+                                {c}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {dialog.formErrors.category && (
+                          <p className="text-sm text-destructive">{dialog.formErrors.category}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="amount">Amount ($)</Label>
+                        <Input
+                          id="amount"
+                          type="number"
+                          step="0.01"
+                          value={dialog.formData.amount || ""}
+                          onChange={(e) =>
+                            dialog.updateFormData({
+                              amount: parseFloat(e.target.value),
+                            })
+                          }
+                          className={dialog.formErrors.amount ? "border-red-500" : ""}
+                        />
+                        {dialog.formErrors.amount && (
+                          <p className="text-sm text-destructive">{dialog.formErrors.amount}</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="date">Date</Label>
+                        <Input
+                          id="date"
+                          type="date"
+                          value={dialog.formData.date}
+                          onChange={(e) => dialog.updateFormData({ date: e.target.value })}
+                          className={dialog.formErrors.date ? "border-red-500" : ""}
+                        />
+                        {dialog.formErrors.date && (
+                          <p className="text-sm text-destructive">{dialog.formErrors.date}</p>
+                        )}
+                      </div>
+                    </div>
+
                     <div className="space-y-2">
-                      <Label htmlFor="amount">Amount ($)</Label>
-                      <Input
-                        id="amount"
-                        type="number"
-                        step="0.01"
-                        value={dialog.formData.amount || ""}
-                        onChange={(e) =>
-                          dialog.updateFormData({
-                            amount: parseFloat(e.target.value),
-                          })
-                        }
-                        className={dialog.formErrors.amount ? "border-red-500" : ""}
+                      <Label htmlFor="description">Description</Label>
+                      <Textarea
+                        id="description"
+                        value={dialog.formData.description || ""}
+                        onChange={(e) => dialog.updateFormData({ description: e.target.value })}
+                        placeholder="Details about the expense..."
                       />
-                      {dialog.formErrors.amount && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.amount}</p>
-                      )}
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="date">Date</Label>
-                      <Input
-                        id="date"
-                        type="date"
-                        value={dialog.formData.date}
-                        onChange={(e) => dialog.updateFormData({ date: e.target.value })}
-                        className={dialog.formErrors.date ? "border-red-500" : ""}
-                      />
-                      {dialog.formErrors.date && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.date}</p>
-                      )}
+
+                    <div className="flex justify-end gap-2 pt-4">
+                      <Button type="button" variant="outline" onClick={dialog.closeDialog}>
+                        Cancel
+                      </Button>
+                      <Button type="submit" loading={dialog.isSubmitting}>
+                        Create Expense
+                      </Button>
                     </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
-                    <Textarea
-                      id="description"
-                      value={dialog.formData.description || ""}
-                      onChange={(e) => dialog.updateFormData({ description: e.target.value })}
-                      placeholder="Details about the expense..."
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-4">
-                    <Button type="button" variant="outline" onClick={dialog.closeDialog}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" loading={dialog.isSubmitting}>
-                      Create Expense
-                    </Button>
-                  </div>
-                </form>
-              </DialogContent>
-            </Dialog>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            )}
           </PageHeader>
 
           {/* Summary Cards */}

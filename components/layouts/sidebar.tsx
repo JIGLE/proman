@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -31,6 +31,8 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { NotificationCenter, useNotifications } from "@/components/ui/notification-center";
 import { useDemoMode } from "@/lib/contexts/demo-context";
+import { usePortalAccess } from "@/lib/contexts/portal-access-context";
+import { getAllowedNavKeys } from "@/lib/portal-access";
 
 // ── Nav Item Type ──────────────────────────────────────
 export interface SidebarNavItem {
@@ -245,6 +247,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   const { data: session } = useSession();
   const pathname = usePathname();
   const { isDemoMode } = useDemoMode();
+  const { role } = usePortalAccess();
 
   useEffect(() => {
     try {
@@ -258,7 +261,15 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   }, []);
 
   // Build menu from config
-  const menuItems = NAV_CONFIG;
+  const allowedNavKeys = useMemo(() => new Set(getAllowedNavKeys(role)), [role]);
+  const menuItems = useMemo(
+    () =>
+      NAV_CONFIG.map((group) => ({
+        ...group,
+        items: group.items.filter((item) => allowedNavKeys.has(item.key)),
+      })).filter((group) => group.items.length > 0),
+    [allowedNavKeys],
+  );
 
   const { notifications, markAsRead, markAllAsRead, deleteNotification, clearAll } =
     useNotifications();
