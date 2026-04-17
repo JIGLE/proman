@@ -1,5 +1,9 @@
 import { NextRequest } from "next/server";
-import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  getAccessContext,
+  handleOptions,
+  requireOwnerAccess,
+} from "@/lib/services/auth/auth-middleware";
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -12,6 +16,7 @@ import {
 } from "@/lib/services/document-service";
 import { sanitizeForDatabase } from "@/lib/utils/sanitize";
 import { z } from "zod";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 
 // Validation schemas
 const documentTypeSchema = z.enum([
@@ -38,10 +43,18 @@ const createDocumentSchema = z.object({
 
 // GET /api/documents - Get all documents with optional filters
 async function handleGet(request: NextRequest): Promise<Response> {
-  const authResult = await requireAuth(request);
+  const demo = handleDemoGet(request, "documents");
+  if (demo.response) return demo.response;
+
+  const authResult = await getAccessContext(request);
   if (authResult instanceof Response) return authResult;
 
-  const { userId } = authResult;
+  const {
+    scopeUserId,
+    portalRole,
+    tenantId: accessTenantId,
+    propertyId: accessPropertyId,
+  } = authResult;
   const { searchParams } = new URL(request.url);
 
   try {
@@ -67,8 +80,16 @@ async function handleGet(request: NextRequest): Promise<Response> {
     const search = searchParams.get("search");
     if (search) filters.search = sanitizeForDatabase(search);
 
-    const documents = await documentService.getAll(userId, filters);
-    return createSuccessResponse(documents);
+    const documents = await documentService.getAll(scopeUserId, filters);
+    const scopedDocuments =
+      portalRole === "tenant" && accessTenantId
+        ? documents.filter(
+            (document) =>
+              document.tenantId === accessTenantId ||
+              (accessPropertyId ? document.propertyId === accessPropertyId : false),
+          )
+        : documents;
+    return createSuccessResponse(scopedDocuments);
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);
   }
@@ -76,10 +97,13 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
 // POST /api/documents - Upload a new document
 async function handlePost(request: NextRequest): Promise<Response> {
-  const authResult = await requireAuth(request);
+  const demo = await handleDemoMutation(request, "documents");
+  if (demo.response) return demo.response;
+
+  const authResult = await requireOwnerAccess(request);
   if (authResult instanceof Response) return authResult;
 
-  const { userId } = authResult;
+  const { scopeUserId } = authResult;
 
   try {
     const body = await request.json();
@@ -98,7 +122,7 @@ async function handlePost(request: NextRequest): Promise<Response> {
     // Validate input
     const validatedData = createDocumentSchema.parse(sanitizedBody);
 
-    const document = await documentService.create(userId, validatedData);
+    const document = await documentService.create(scopeUserId, validatedData);
     return createSuccessResponse(document, 201);
   } catch (error) {
     if (error instanceof z.ZodError) {

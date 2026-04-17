@@ -3,13 +3,13 @@ import { test, expect } from "@playwright/test";
 test.use({ storageState: "playwright/.auth/user.json" });
 
 test("Critical Path: Create new property", async ({ page }) => {
-  // 1. Navigate to properties page (list view, not map)
+  // 1. Navigate to portfolio page (list view, not map)
   // We use /en to ensure consistent locale, and ?view=properties to land on
   // the List tab where the "Add Property" button is visible (map tab hides it).
-  await page.goto("/en/properties?view=properties");
+  await page.goto("/en/portfolio?view=properties");
 
-  // Verify we are on the properties page
-  await expect(page).toHaveURL(/.*\/properties/);
+  // Verify we are on the portfolio page
+  await expect(page).toHaveURL(/.*\/portfolio/);
 
   // 2. Open Add Property Dialog
   // The button has "Add Property" text and a Plus icon

@@ -20,8 +20,8 @@
   "navigation": {
     "dashboard": "Panel",
     "home": "Inicio",
-    "properties": "Inmuebles",
-    "tenants": "Inquilinos",
+    "properties": "Cartera",
+    "tenants": "Personas",
     "leases": "Contratos",
     "payments": "Pagos",
     "maintenance": "Mantenimiento",
@@ -169,23 +169,55 @@
     "viewAll": "Ver Todo"
   },
   "landing": {
-    "hero": "Gestión Inmobiliaria Simplificada",
-    "subtitle": "Gestiona inmuebles, inquilinos, contratos y finanzas en un solo lugar.",
-    "cta": "Empezar",
+    "eyebrow": "Operaciones de alquiler para Portugal y España",
+    "hero": "Cobra alquileres, emite recibos y controla impuestos para Portugal y España.",
+    "subtitle": "ProMan da a propietarios y gestores un flujo claro para inmuebles, inquilinos, contratos, pagos, recibos y registros listos para fiscalidad.",
+    "cta": "Entrar",
     "demoCta": "Probar Demo",
-    "features": {
-      "properties": {
-        "title": "Gestión de Inmuebles",
-        "description": "Organiza y sigue todos tus inmuebles, unidades y documentos."
+    "trustLine": "Pensado para cobro diario de alquileres, emisión de recibos y claridad financiera sin complejidad contable.",
+    "bullets": {
+      "track": "Sigue cada alquiler por inmueble, inquilino y contrato.",
+      "receipts": "Genera recibos y documentos de pago dentro del mismo flujo.",
+      "tax": "Mantén el contexto fiscal PT/ES visible en pagos y recibos."
+    },
+    "preview": {
+      "label": "Vista previa del producto",
+      "title": "Una cola operativa para cobrar alquileres",
+      "badge": "Flujo del propietario",
+      "kpis": {
+        "overdue": "Alquiler vencido",
+        "overdueHint": "Inquilinos que requieren seguimiento hoy",
+        "collected": "Cobrado este mes",
+        "collectedHint": "Alquileres pagados ya registrados",
+        "occupancy": "Ocupación",
+        "occupancyHint": "Unidades con contratos activos"
       },
-      "tenants": {
-        "title": "Gestión de Inquilinos",
-        "description": "Gestiona inquilinos, contratos e historial de pagos."
+      "queue": {
+        "title": "Cola de acción",
+        "subtitle": "Revisa en segundos las siguientes tareas de cobro.",
+        "badge": "Actuar ahora",
+        "ownerAction": "Recordatorio de impago listo para enviar",
+        "status": "3 días de retraso",
+        "taxHint": "Contrato, recibo y perfil fiscal permanecen conectados"
       },
-      "finance": {
-        "title": "Informes Financieros",
-        "description": "Sigue ingresos, gastos y genera informes fiscales."
+      "receipt": {
+        "title": "Visibilidad de recibo e impuestos",
+        "subtitle": "Revisa el resultado financiero antes de exportar el PDF.",
+        "country": "Perfil del país",
+        "gross": "Alquiler bruto",
+        "tax": "Retención / impuesto",
+        "net": "Importe neto recibido"
       }
+    },
+    "demo": {
+      "label": "Modo demo",
+      "title": "Explora un único portal desde ambos lados",
+      "subtitle": "Empieza en modo propietario para control total de la cartera o cambia a modo inquilino para una vista autoservicio de un contrato.",
+      "cardCta": "Abrir vista demo",
+      "ownerTitle": "Explorar como Propietario",
+      "ownerDescription": "Ve la cartera completa, inquilinos, pagos, documentos y flujos fiscales.",
+      "tenantTitle": "Explorar como Inquilino",
+      "tenantDescription": "Ve una vivienda, un contrato, pagos, recibos y documentos compartidos."
     }
   },
   "errors": {

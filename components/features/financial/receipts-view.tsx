@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, forwardRef, useImperativeHandle } from "react";
+import { useState, useEffect, useMemo, forwardRef, useImperativeHandle } from "react";
 import {
   FileText,
   Download,
@@ -46,12 +46,16 @@ import { Receipt } from "@/lib/types";
 import { receiptSchema, ReceiptFormData } from "@/lib/utils/validation";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
+import { usePortalAccess } from "@/lib/contexts/portal-context";
 import jsPDF from "jspdf";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { PageHeader } from "@/components/shared/page-header";
 
-export type ReceiptsViewProps = Record<string, never>;
+export interface ReceiptsViewProps {
+  tenantId?: string;
+  propertyId?: string;
+}
 
 export interface ReceiptsViewRef {
   openDialog: () => void;
@@ -60,6 +64,7 @@ export interface ReceiptsViewRef {
 export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
   function ReceiptsView(props, ref) {
     const { state, addReceipt, updateReceipt, deleteReceipt } = useApp();
+    const { isOwnerPortal } = usePortalAccess();
     const { receipts, tenants, properties, loading } = state;
     const { success, error } = useToast();
     const { formatCurrency } = useCurrency();
@@ -93,10 +98,51 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
       },
       validation: { validateOnChange: true, debounceValidation: 300 },
     });
+    const { editingItem, isOpen, openDialog, updateFormData } = dialog;
 
     useImperativeHandle(ref, () => ({
-      openDialog: dialog.openDialog,
+      openDialog,
     }));
+
+    useEffect(() => {
+      if (!isOpen || editingItem) {
+        return;
+      }
+
+      const updates: Partial<ReceiptFormData> = {};
+      if (props.tenantId) {
+        updates.tenantId = props.tenantId;
+      }
+      if (props.propertyId) {
+        updates.propertyId = props.propertyId;
+      }
+
+      if (Object.keys(updates).length > 0) {
+        updateFormData(updates);
+      }
+    }, [editingItem, isOpen, props.propertyId, props.tenantId, updateFormData]);
+
+    const filteredReceipts = useMemo(
+      () =>
+        receipts.filter((receipt) => {
+          if (props.tenantId && receipt.tenantId !== props.tenantId) {
+            return false;
+          }
+          if (props.propertyId && receipt.propertyId !== props.propertyId) {
+            return false;
+          }
+          return true;
+        }),
+      [props.propertyId, props.tenantId, receipts],
+    );
+
+    const description = props.tenantId
+      ? "Record payments and receipts for the selected tenant."
+      : props.propertyId
+        ? "Record payments and receipts for the selected property."
+        : isOwnerPortal
+          ? "Record payments, issue receipts, and export PDF confirmations."
+          : "Review your payment history and download receipts linked to your lease.";
 
     const handleEdit = (receipt: Receipt) => {
       dialog.openEditDialog(receipt, (r) => ({
@@ -192,166 +238,177 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
           <LoadingState variant="cards" count={6} />
         ) : (
           <div className="space-y-6">
-            <PageHeader title="Receipts" description="Manage payment receipts and generate PDFs">
-              <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
-                <DialogTrigger asChild>
-                  <Button onClick={dialog.openDialog} className="flex items-center gap-2">
-                    <Plus className="w-4 h-4" />
-                    Add Receipt
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
-                  <DialogHeader>
-                    <DialogTitle className="text-[var(--color-foreground)]">
-                      {dialog.editingItem ? "Edit Receipt" : "Add New Receipt"}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {dialog.editingItem
-                        ? "Update receipt information"
-                        : "Create a new payment receipt"}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <form onSubmit={dialog.handleSubmit} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="tenant">Tenant</Label>
-                        <Select
-                          value={dialog.formData.tenantId}
-                          onValueChange={(value) => dialog.updateFormData({ tenantId: value })}
-                        >
-                          <SelectTrigger
-                            className={dialog.formErrors.tenantId ? "border-red-500" : ""}
+            <PageHeader title="Receipts" description={description}>
+              {isOwnerPortal && (
+                <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
+                  <DialogTrigger asChild>
+                    <Button onClick={dialog.openDialog} className="flex items-center gap-2">
+                      <Plus className="w-4 h-4" />
+                      Add Receipt
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle className="text-[var(--color-foreground)]">
+                        {dialog.editingItem ? "Edit Receipt" : "Add New Receipt"}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {dialog.editingItem
+                          ? "Update receipt information"
+                          : "Create a new payment receipt"}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <form onSubmit={dialog.handleSubmit} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="tenant">Tenant</Label>
+                          <Select
+                            value={dialog.formData.tenantId}
+                            onValueChange={(value) => dialog.updateFormData({ tenantId: value })}
                           >
-                            <SelectValue placeholder="Select tenant" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {tenants.map((tenant) => (
-                              <SelectItem key={tenant.id} value={tenant.id}>
-                                {tenant.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {dialog.formErrors.tenantId && (
-                          <p className="text-sm text-destructive">{dialog.formErrors.tenantId}</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="property">Property</Label>
-                        <Select
-                          value={dialog.formData.propertyId}
-                          onValueChange={(value) => dialog.updateFormData({ propertyId: value })}
-                        >
-                          <SelectTrigger
-                            className={dialog.formErrors.propertyId ? "border-red-500" : ""}
+                            <SelectTrigger
+                              className={dialog.formErrors.tenantId ? "border-red-500" : ""}
+                            >
+                              <SelectValue placeholder="Select tenant" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {tenants.map((tenant) => (
+                                <SelectItem key={tenant.id} value={tenant.id}>
+                                  {tenant.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {dialog.formErrors.tenantId && (
+                            <p className="text-sm text-destructive">{dialog.formErrors.tenantId}</p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="property">Property</Label>
+                          <Select
+                            value={dialog.formData.propertyId}
+                            onValueChange={(value) => dialog.updateFormData({ propertyId: value })}
                           >
-                            <SelectValue placeholder="Select property" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {properties.map((property) => (
-                              <SelectItem key={property.id} value={property.id}>
-                                {property.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        {dialog.formErrors.propertyId && (
-                          <p className="text-sm text-destructive">{dialog.formErrors.propertyId}</p>
-                        )}
+                            <SelectTrigger
+                              className={dialog.formErrors.propertyId ? "border-red-500" : ""}
+                            >
+                              <SelectValue placeholder="Select property" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {properties.map((property) => (
+                                <SelectItem key={property.id} value={property.id}>
+                                  {property.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          {dialog.formErrors.propertyId && (
+                            <p className="text-sm text-destructive">
+                              {dialog.formErrors.propertyId}
+                            </p>
+                          )}
+                        </div>
                       </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="amount">Amount ($)</Label>
+                          <Input
+                            id="amount"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={dialog.formData.amount}
+                            onChange={(e) =>
+                              dialog.updateFormData({
+                                amount: parseFloat(e.target.value) || 0,
+                              })
+                            }
+                            className={dialog.formErrors.amount ? "border-red-500" : ""}
+                            required
+                          />
+                          {dialog.formErrors.amount && (
+                            <p className="text-sm text-destructive">{dialog.formErrors.amount}</p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="date">Payment Date</Label>
+                          <Input
+                            id="date"
+                            type="date"
+                            value={dialog.formData.date}
+                            onChange={(e) => dialog.updateFormData({ date: e.target.value })}
+                            className={dialog.formErrors.date ? "border-red-500" : ""}
+                            required
+                          />
+                          {dialog.formErrors.date && (
+                            <p className="text-sm text-destructive">{dialog.formErrors.date}</p>
+                          )}
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="type">Payment Type</Label>
+                          <Select
+                            value={dialog.formData.type}
+                            onValueChange={(value: Receipt["type"]) =>
+                              dialog.updateFormData({ type: value })
+                            }
+                          >
+                            <SelectTrigger
+                              className={dialog.formErrors.type ? "border-red-500" : ""}
+                            >
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="rent">Rent</SelectItem>
+                              <SelectItem value="deposit">Deposit</SelectItem>
+                              <SelectItem value="maintenance">Maintenance</SelectItem>
+                              <SelectItem value="other">Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          {dialog.formErrors.type && (
+                            <p className="text-sm text-destructive">{dialog.formErrors.type}</p>
+                          )}
+                        </div>
+                      </div>
+
                       <div className="space-y-2">
-                        <Label htmlFor="amount">Amount ($)</Label>
-                        <Input
-                          id="amount"
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={dialog.formData.amount}
-                          onChange={(e) =>
-                            dialog.updateFormData({
-                              amount: parseFloat(e.target.value) || 0,
-                            })
-                          }
-                          className={dialog.formErrors.amount ? "border-red-500" : ""}
-                          required
+                        <Label htmlFor="description">Description (Optional)</Label>
+                        <Textarea
+                          id="description"
+                          value={dialog.formData.description}
+                          onChange={(e) => dialog.updateFormData({ description: e.target.value })}
+                          className={dialog.formErrors.description ? "border-red-500" : ""}
+                          rows={3}
                         />
-                        {dialog.formErrors.amount && (
-                          <p className="text-sm text-destructive">{dialog.formErrors.amount}</p>
+                        {dialog.formErrors.description && (
+                          <p className="text-sm text-destructive">
+                            {dialog.formErrors.description}
+                          </p>
                         )}
                       </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="date">Payment Date</Label>
-                        <Input
-                          id="date"
-                          type="date"
-                          value={dialog.formData.date}
-                          onChange={(e) => dialog.updateFormData({ date: e.target.value })}
-                          className={dialog.formErrors.date ? "border-red-500" : ""}
-                          required
-                        />
-                        {dialog.formErrors.date && (
-                          <p className="text-sm text-destructive">{dialog.formErrors.date}</p>
-                        )}
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="type">Payment Type</Label>
-                        <Select
-                          value={dialog.formData.type}
-                          onValueChange={(value: Receipt["type"]) =>
-                            dialog.updateFormData({ type: value })
-                          }
-                        >
-                          <SelectTrigger className={dialog.formErrors.type ? "border-red-500" : ""}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="rent">Rent</SelectItem>
-                            <SelectItem value="deposit">Deposit</SelectItem>
-                            <SelectItem value="maintenance">Maintenance</SelectItem>
-                            <SelectItem value="other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        {dialog.formErrors.type && (
-                          <p className="text-sm text-destructive">{dialog.formErrors.type}</p>
-                        )}
-                      </div>
-                    </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="description">Description (Optional)</Label>
-                      <Textarea
-                        id="description"
-                        value={dialog.formData.description}
-                        onChange={(e) => dialog.updateFormData({ description: e.target.value })}
-                        className={dialog.formErrors.description ? "border-red-500" : ""}
-                        rows={3}
-                      />
-                      {dialog.formErrors.description && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.description}</p>
-                      )}
-                    </div>
-
-                    <div className="flex justify-end gap-2">
-                      <Button type="button" variant="outline" onClick={dialog.closeDialog}>
-                        Cancel
-                      </Button>
-                      <Button type="submit" loading={dialog.isSubmitting}>
-                        {dialog.editingItem ? "Update Receipt" : "Create Receipt"}
-                      </Button>
-                    </div>
-                  </form>
-                </DialogContent>
-              </Dialog>
+                      <div className="flex justify-end gap-2">
+                        <Button type="button" variant="outline" onClick={dialog.closeDialog}>
+                          Cancel
+                        </Button>
+                        <Button type="submit" loading={dialog.isSubmitting}>
+                          {dialog.editingItem ? "Update Receipt" : "Create Receipt"}
+                        </Button>
+                      </div>
+                    </form>
+                  </DialogContent>
+                </Dialog>
+              )}
             </PageHeader>
 
             <div className="grid gap-4">
-              {receipts.length === 0 ? (
-                <EmptyStateIllustration type="receipts" onAction={dialog.openDialog} />
+              {filteredReceipts.length === 0 ? (
+                <EmptyStateIllustration
+                  type="receipts"
+                  onAction={isOwnerPortal ? dialog.openDialog : undefined}
+                />
               ) : (
-                receipts.map((receipt) => (
+                filteredReceipts.map((receipt) => (
                   <Card key={receipt.id} className="bg-zinc-900 border-zinc-800">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
@@ -396,17 +453,21 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                                 <Download className="h-4 w-4 mr-2" />
                                 {generatingPdf === receipt.id ? "Generating..." : "Download PDF"}
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleEdit(receipt)}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit Receipt
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={() => handleDelete(receipt.id)}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete Receipt
-                              </DropdownMenuItem>
+                              {isOwnerPortal && (
+                                <>
+                                  <DropdownMenuItem onClick={() => handleEdit(receipt)}>
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit Receipt
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-destructive"
+                                    onClick={() => handleDelete(receipt.id)}
+                                  >
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete Receipt
+                                  </DropdownMenuItem>
+                                </>
+                              )}
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>

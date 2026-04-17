@@ -124,8 +124,8 @@ export function useCrossDomainNav(): CrossDomainNavResult {
  */
 export const SECTION_ROUTES = {
   home: "/overview",
-  assets: "/properties",
-  people: "/tenants",
+  assets: "/portfolio",
+  people: "/people",
   maintenance: "/maintenance",
   correspondence: "/correspondence",
   finance: "/financials",

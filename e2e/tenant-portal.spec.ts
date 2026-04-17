@@ -31,7 +31,7 @@ test.describe("Tenant Self-Service Portal", () => {
 // E2E test for SearchFilter dropdown behavior in tenants page
 test.describe("Tenants SearchFilter", () => {
   test("status filter should open and select Active", async ({ page }) => {
-    await page.goto("/en/tenants");
+    await page.goto("/en/people");
     await page.waitForLoadState("networkidle");
 
     const statusTrigger = page.locator('[data-testid="select-trigger-status"]');

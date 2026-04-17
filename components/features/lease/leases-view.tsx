@@ -501,9 +501,9 @@ export function LeasesView(): React.ReactElement {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => router.push(`/${locale}/properties`)}
+                            onClick={() => router.push(`/${locale}/portfolio`)}
                           >
-                            <Plus className="w-4 h-4 mr-2" /> Go to Properties
+                            <Plus className="w-4 h-4 mr-2" /> Go to Portfolio
                           </Button>
                         </div>
                       )}
@@ -553,9 +553,9 @@ export function LeasesView(): React.ReactElement {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => router.push(`/${locale}/tenants`)}
+                            onClick={() => router.push(`/${locale}/people`)}
                           >
-                            <Plus className="w-4 h-4 mr-2" /> Go to Tenants
+                            <Plus className="w-4 h-4 mr-2" /> Go to People
                           </Button>
                         </div>
                       )}
@@ -803,18 +803,18 @@ export function LeasesView(): React.ReactElement {
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => router.push(`/${locale}/properties`)}
+                      onClick={() => router.push(`/${locale}/portfolio`)}
                     >
-                      <Plus className="w-4 h-4 mr-2" /> Create Property
+                      <Plus className="w-4 h-4 mr-2" /> Create Portfolio Property
                     </Button>
                   )}
                   {tenants.length === 0 && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => router.push(`/${locale}/tenants`)}
+                      onClick={() => router.push(`/${locale}/people`)}
                     >
-                      <Plus className="w-4 h-4 mr-2" /> Create Tenant
+                      <Plus className="w-4 h-4 mr-2" /> Create Person
                     </Button>
                   )}
                 </div>
@@ -961,18 +961,18 @@ export function LeasesView(): React.ReactElement {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => router.push(`/${locale}/properties`)}
+                            onClick={() => router.push(`/${locale}/portfolio`)}
                           >
-                            <Plus className="w-4 h-4 mr-2" /> Create Property
+                            <Plus className="w-4 h-4 mr-2" /> Create Portfolio Property
                           </Button>
                         )}
                         {tenants.length === 0 && (
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => router.push(`/${locale}/tenants`)}
+                            onClick={() => router.push(`/${locale}/people`)}
                           >
-                            <Plus className="w-4 h-4 mr-2" /> Create Tenant
+                            <Plus className="w-4 h-4 mr-2" /> Create Person
                           </Button>
                         )}
                       </div>

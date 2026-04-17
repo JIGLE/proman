@@ -1,19 +1,10 @@
-import { Suspense } from "react";
-import { TenantDetailView } from "@/components/features/tenant/tenant-detail-view";
-import { GenericPageSkeleton } from "@/components/ui/page-skeletons";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default async function TenantDetailPage({
+export default async function TenantDetailRedirectPage({
   params,
 }: {
   params: Promise<{ locale: string; id: string }>;
 }) {
-  const { id } = await params;
-
-  return (
-    <Suspense fallback={<GenericPageSkeleton />}>
-      <TenantDetailView tenantId={id} />
-    </Suspense>
-  );
+  const { locale, id } = await params;
+  redirect(`/${locale}/people/${id}`);
 }

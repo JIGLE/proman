@@ -189,7 +189,7 @@ export function InsightsView(): React.ReactElement {
         label: `${metrics.vacantCount} vacant propert${metrics.vacantCount > 1 ? "ies" : "y"}`,
         detail: `${metrics.occupancyRate.toFixed(0)}% occupied`,
         severity: metrics.vacantCount > 2 ? "warning" : "info",
-        href: `/${locale}/properties`,
+        href: `/${locale}/portfolio`,
       });
     }
 

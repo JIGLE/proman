@@ -16,36 +16,36 @@ test.describe("Dashboard", () => {
     expect(pageUrl).toContain("localhost");
   });
 
-  test("should navigate to Properties section", async ({ page }) => {
+  test("should navigate to Portfolio section", async ({ page }) => {
     await page.goto("/en");
 
-    // Click on Properties in sidebar
+    // Click on Portfolio in sidebar
     const propertiesLink = page
-      .getByRole("link", { name: /properties/i })
-      .or(page.getByText(/properties/i).first());
+      .getByRole("link", { name: /portfolio/i })
+      .or(page.getByText(/portfolio/i).first());
 
     if (await propertiesLink.isVisible()) {
       await propertiesLink.click();
       await page.waitForLoadState("networkidle");
 
-      // Verify we're in the properties section
-      await expect(page.getByText(/properties/i).first()).toBeVisible();
+      // Verify we're in the portfolio section
+      await expect(page.getByText(/portfolio/i).first()).toBeVisible();
     }
   });
 
-  test("should navigate to Tenants section", async ({ page }) => {
+  test("should navigate to People section", async ({ page }) => {
     await page.goto("/en");
 
-    // Click on Tenants in sidebar
+    // Click on People in sidebar
     const tenantsLink = page
-      .getByRole("link", { name: /tenants/i })
-      .or(page.getByText(/tenants/i).first());
+      .getByRole("link", { name: /people/i })
+      .or(page.getByText(/people/i).first());
 
     if (await tenantsLink.isVisible()) {
       await tenantsLink.click();
       await page.waitForLoadState("networkidle");
 
-      await expect(page.getByText(/tenants/i).first()).toBeVisible();
+      await expect(page.getByText(/people/i).first()).toBeVisible();
     }
   });
 

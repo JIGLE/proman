@@ -11,6 +11,7 @@ import {
   DEMO_PROPERTIES,
   DEMO_TENANTS,
   DEMO_RECEIPTS,
+  DEMO_DOCUMENTS,
   DEMO_TEMPLATES,
   DEMO_CORRESPONDENCE,
   DEMO_OWNERS,
@@ -25,6 +26,7 @@ interface DemoStore {
   properties: unknown[];
   tenants: unknown[];
   receipts: unknown[];
+  documents: unknown[];
   templates: unknown[];
   correspondence: unknown[];
   owners: unknown[];
@@ -39,6 +41,7 @@ function getDefaultStore(): DemoStore {
     properties: JSON.parse(JSON.stringify(DEMO_PROPERTIES)),
     tenants: JSON.parse(JSON.stringify(DEMO_TENANTS)),
     receipts: JSON.parse(JSON.stringify(DEMO_RECEIPTS)),
+    documents: JSON.parse(JSON.stringify(DEMO_DOCUMENTS)),
     templates: JSON.parse(JSON.stringify(DEMO_TEMPLATES)),
     correspondence: JSON.parse(JSON.stringify(DEMO_CORRESPONDENCE)),
     owners: JSON.parse(JSON.stringify(DEMO_OWNERS)),

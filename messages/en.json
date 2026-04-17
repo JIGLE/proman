@@ -20,8 +20,8 @@
   "navigation": {
     "dashboard": "Dashboard",
     "home": "Home",
-    "properties": "Properties",
-    "tenants": "Tenants",
+    "properties": "Portfolio",
+    "tenants": "People",
     "leases": "Leases",
     "payments": "Payments",
     "maintenance": "Maintenance",
@@ -169,23 +169,55 @@
     "viewAll": "View All"
   },
   "landing": {
-    "hero": "Property Management Simplified",
-    "subtitle": "Manage properties, tenants, contracts, and finances in one place.",
-    "cta": "Get Started",
+    "eyebrow": "Portugal & Spain rental operations",
+    "hero": "Collect rent, issue receipts, and track taxes for Portugal and Spain.",
+    "subtitle": "ProMan gives landlords and property managers one clear workflow for properties, tenants, leases, payments, receipts, and tax-ready records.",
+    "cta": "Sign in",
     "demoCta": "Try Demo",
-    "features": {
-      "properties": {
-        "title": "Property Management",
-        "description": "Organize and track all your properties, units, and documents."
+    "trustLine": "Built for daily rent collection, receipt issuing, and financial clarity without accounting bloat.",
+    "bullets": {
+      "track": "Track every rent payment by property, tenant, and lease.",
+      "receipts": "Generate receipts and payment documents from the same workflow.",
+      "tax": "Keep PT/ES tax context visible on payments and receipts."
+    },
+    "preview": {
+      "label": "Live product preview",
+      "title": "One operational queue for rent collection",
+      "badge": "Owner workflow",
+      "kpis": {
+        "overdue": "Overdue rent",
+        "overdueHint": "Tenants needing follow-up today",
+        "collected": "Collected this month",
+        "collectedHint": "Paid rent already posted",
+        "occupancy": "Occupancy",
+        "occupancyHint": "Units with active leases"
       },
-      "tenants": {
-        "title": "Tenant Management",
-        "description": "Manage tenants, leases, and payment history."
+      "queue": {
+        "title": "Action queue",
+        "subtitle": "Review the next rent tasks in seconds.",
+        "badge": "Follow up now",
+        "ownerAction": "Late payment reminder ready to send",
+        "status": "3 days overdue",
+        "taxHint": "Lease, receipt, and tax profile stay linked"
       },
-      "finance": {
-        "title": "Financial Reports",
-        "description": "Track revenue, expenses, and generate tax reports."
+      "receipt": {
+        "title": "Receipt and tax visibility",
+        "subtitle": "Preview the financial result before exporting the PDF.",
+        "country": "Country profile",
+        "gross": "Gross rent",
+        "tax": "Withholding / tax",
+        "net": "Net received"
       }
+    },
+    "demo": {
+      "label": "Demo mode",
+      "title": "Explore one portal from both sides",
+      "subtitle": "Start in owner mode for full portfolio control or switch to tenant mode for a self-service view of one lease.",
+      "cardCta": "Open demo view",
+      "ownerTitle": "Explore as Owner",
+      "ownerDescription": "See the full portfolio, tenants, payments, documents, and tax workflows.",
+      "tenantTitle": "Explore as Tenant",
+      "tenantDescription": "See one property, one lease, payments, receipts, and shared documents."
     }
   },
   "errors": {

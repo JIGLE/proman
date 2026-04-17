@@ -44,7 +44,7 @@ test.describe("No Native confirm() Calls", () => {
     await page.goto("/en");
     await page.waitForLoadState("networkidle");
 
-    const navLink = page.getByRole("link", { name: /properties/i }).first();
+    const navLink = page.getByRole("link", { name: /portfolio/i }).first();
     if (await navLink.isVisible().catch(() => false)) {
       await navLink.click();
       await page.waitForLoadState("networkidle");
@@ -65,7 +65,7 @@ test.describe("No Native confirm() Calls", () => {
     expect(nativeDialogAppeared).toBe(false);
   });
 
-  test("no native confirm() dialogs appear in tenants view", async ({ page }) => {
+  test("no native confirm() dialogs appear in people view", async ({ page }) => {
     let nativeDialogAppeared = false;
     page.on("dialog", (dialog) => {
       nativeDialogAppeared = true;
@@ -75,7 +75,7 @@ test.describe("No Native confirm() Calls", () => {
     await page.goto("/en");
     await page.waitForLoadState("networkidle");
 
-    const navLink = page.getByRole("link", { name: /tenants/i }).first();
+    const navLink = page.getByRole("link", { name: /people/i }).first();
     if (await navLink.isVisible().catch(() => false)) {
       await navLink.click();
       await page.waitForLoadState("networkidle");
@@ -113,14 +113,14 @@ test.describe("Page Skeletons", () => {
     expect(errors).toHaveLength(0);
   });
 
-  test("properties page loads without rendering errors", async ({ page }) => {
+  test("portfolio page loads without rendering errors", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
     await page.goto("/en");
     await page.waitForLoadState("networkidle");
 
-    const navLink = page.getByRole("link", { name: /properties/i }).first();
+    const navLink = page.getByRole("link", { name: /portfolio/i }).first();
     if (await navLink.isVisible().catch(() => false)) {
       await navLink.click();
       await page.waitForLoadState("networkidle");
@@ -129,14 +129,14 @@ test.describe("Page Skeletons", () => {
     expect(errors).toHaveLength(0);
   });
 
-  test("tenants page loads without rendering errors", async ({ page }) => {
+  test("people page loads without rendering errors", async ({ page }) => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
     await page.goto("/en");
     await page.waitForLoadState("networkidle");
 
-    const navLink = page.getByRole("link", { name: /tenants/i }).first();
+    const navLink = page.getByRole("link", { name: /people/i }).first();
     if (await navLink.isVisible().catch(() => false)) {
       await navLink.click();
       await page.waitForLoadState("networkidle");

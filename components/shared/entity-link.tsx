@@ -12,8 +12,8 @@ const ENTITY_CONFIG: Record<
   EntityType,
   { icon: React.ComponentType<{ className?: string }>; basePath: string; color: string }
 > = {
-  property: { icon: Building2, basePath: "/properties", color: "text-blue-500" },
-  tenant: { icon: Users, basePath: "/tenants", color: "text-emerald-500" },
+  property: { icon: Building2, basePath: "/portfolio", color: "text-blue-500" },
+  tenant: { icon: Users, basePath: "/people", color: "text-emerald-500" },
   lease: { icon: FileText, basePath: "/leases", color: "text-violet-500" },
   maintenance: { icon: Wrench, basePath: "/maintenance", color: "text-amber-500" },
   receipt: { icon: Receipt, basePath: "/financials", color: "text-green-500" },

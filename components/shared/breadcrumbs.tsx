@@ -8,8 +8,10 @@ import { cn } from "@/lib/utils/utils";
 /** Human-readable labels for known route segments */
 const SEGMENT_LABELS: Record<string, string> = {
   overview: "Dashboard",
-  properties: "Properties",
-  tenants: "Tenants",
+  tenants: "People",
+  people: "People",
+  properties: "Portfolio",
+  portfolio: "Portfolio",
   leases: "Leases",
   financials: "Finance",
   maintenance: "Maintenance",

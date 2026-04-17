@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
-import { MapPin } from "lucide-react";
+import { Building2, MapPin } from "lucide-react";
 import "leaflet/dist/leaflet.css";
+import { useApp } from "@/lib/contexts/app-context";
 
-// Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(() => import("react-leaflet").then((mod) => mod.MapContainer), {
   ssr: false,
 });
@@ -25,88 +24,102 @@ interface PropertyMarker {
   latitude: number;
   longitude: number;
   status: "occupied" | "vacant" | "maintenance";
-  type: "apartment" | "house" | "commercial";
-  tenants?: number;
   rent?: number;
-  units?: number;
-}
-
-interface _MapViewState {
-  showVacant: boolean;
-  showOccupied: boolean;
-  showMaintenance: boolean;
-  clusterView: boolean;
 }
 
 export default function PropertyMap() {
-  const { data: session } = useSession();
-  const [properties, setProperties] = useState<PropertyMarker[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [mapCenter, setMapCenter] = useState<[number, number]>([38.7223, -9.1393]); // Lisbon default
+  const { state } = useApp();
+  const [mapCenter, setMapCenter] = useState<[number, number]>([38.7223, -9.1393]);
+  const [leafletReady, setLeafletReady] = useState(false);
+
+  const properties = useMemo<PropertyMarker[]>(
+    () =>
+      state.properties
+        .filter(
+          (property) =>
+            typeof property.latitude === "number" && typeof property.longitude === "number",
+        )
+        .map((property) => ({
+          id: property.id,
+          name: property.name,
+          address: property.address,
+          latitude: property.latitude as number,
+          longitude: property.longitude as number,
+          status: property.status,
+          rent: property.rent,
+        })),
+    [state.properties],
+  );
 
   useEffect(() => {
-    // Only fetch properties if authenticated
-    if (session?.user) {
-      fetchProperties();
-    } else {
-      setLoading(false);
+    if (properties.length > 0) {
+      setMapCenter([properties[0].latitude, properties[0].longitude]);
     }
-  }, [session?.user]);
+  }, [properties]);
 
-  const fetchProperties = async () => {
-    try {
-      const res = await fetch("/api/properties");
-      if (res.ok) {
-        const response = await res.json();
-        // Handle both direct array and wrapped response
-        const data = Array.isArray(response) ? response : response.data || [];
-        const withCoords = data
-          .filter((p: PropertyMarker) => p.latitude && p.longitude)
-          .map((p: PropertyMarker) => ({
-            id: p.id,
-            name: p.name,
-            address: p.address,
-            latitude: p.latitude,
-            longitude: p.longitude,
-            status: p.status,
-          }));
+  useEffect(() => {
+    let active = true;
 
-        setProperties(withCoords);
+    import("leaflet")
+      .then((L) => {
+        if (!active) return;
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+          iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+        });
+        setLeafletReady(true);
+      })
+      .catch(() => setLeafletReady(true));
 
-        // Center on first property if available
-        if (withCoords.length > 0) {
-          setMapCenter([withCoords[0].latitude, withCoords[0].longitude]);
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching properties:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  if (loading) {
+  const missingCoordinates = state.properties.length - properties.length;
+
+  if (state.loading || !leafletReady) {
     return (
-      <div className="flex items-center justify-center h-[600px] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      <div className="flex h-[600px] items-center justify-center rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
+        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-blue-600" />
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
+      <div className="grid gap-4 md:grid-cols-3">
+        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+          <div className="text-sm text-gray-500 dark:text-gray-400">Mapped properties</div>
+          <div className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
+            {properties.length}
+          </div>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+          <div className="text-sm text-gray-500 dark:text-gray-400">Missing coordinates</div>
+          <div className="mt-1 text-2xl font-bold text-amber-500">{missingCoordinates}</div>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+          <div className="text-sm text-gray-500 dark:text-gray-400">Map source</div>
+          <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
+            OpenStreetMap
+          </div>
+        </div>
+      </div>
+
       {properties.length === 0 ? (
-        <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <MapPin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+        <div className="rounded-lg border border-gray-200 bg-white py-12 text-center dark:border-gray-700 dark:bg-gray-800">
+          <MapPin className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+          <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
             No properties with coordinates
           </h3>
           <p className="text-gray-600 dark:text-gray-400">
-            Add latitude and longitude to your properties to see them on the map
+            Verify the property address or save latitude and longitude to place it on the map.
           </p>
         </div>
       ) : (
-        <div className="h-[600px] rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+        <div className="h-[600px] overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
           <MapContainer
             center={mapCenter}
             zoom={13}
@@ -120,10 +133,16 @@ export default function PropertyMap() {
             {properties.map((property) => (
               <Marker key={property.id} position={[property.latitude, property.longitude]}>
                 <Popup>
-                  <div className="p-2">
-                    <h3 className="font-semibold text-gray-900">{property.name}</h3>
+                  <div className="space-y-2 p-2">
+                    <div className="flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-blue-500" />
+                      <h3 className="font-semibold text-gray-900">{property.name}</h3>
+                    </div>
                     <p className="text-sm text-gray-600">{property.address}</p>
-                    <p className="text-xs text-gray-500 mt-1">Status: {property.status}</p>
+                    <p className="text-xs text-gray-500">Status: {property.status}</p>
+                    {typeof property.rent === "number" && (
+                      <p className="text-xs text-gray-500">Rent: {property.rent}</p>
+                    )}
                   </div>
                 </Popup>
               </Marker>

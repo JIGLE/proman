@@ -3,29 +3,69 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
-import { isDemoModeClient, clearDemoCookieClient, DEMO_USER } from "@/lib/demo/demo-mode";
+import {
+  isDemoModeClient,
+  clearDemoCookieClient,
+  DEMO_USER,
+  getDemoPerspectiveClient,
+  getDemoTenantIdClient,
+  setDemoPerspectiveClient,
+  setDemoTenantClient,
+  DEFAULT_DEMO_TENANT_ID,
+} from "@/lib/demo/demo-mode";
 import { clearDemoStore } from "@/lib/demo/demo-local-state";
+import type { PortalRole } from "@/lib/portal/access";
 
 interface DemoContextValue {
   isDemoMode: boolean;
   demoUser: typeof DEMO_USER | null;
+  demoPerspective: PortalRole;
+  selectedTenantId: string | null;
+  switchDemoPerspective: (role: PortalRole, tenantId?: string) => void;
   exitDemo: () => Promise<void>;
 }
 
 const DemoContext = createContext<DemoContextValue>({
   isDemoMode: false,
   demoUser: null,
+  demoPerspective: "owner",
+  selectedTenantId: null,
+  switchDemoPerspective: () => {},
   exitDemo: async () => {},
 });
 
 export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [isDemoMode, setIsDemoMode] = useState(() => isDemoModeClient());
+  const [demoPerspective, setDemoPerspective] = useState<PortalRole>(() =>
+    getDemoPerspectiveClient(),
+  );
+  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(() =>
+    isDemoModeClient() ? getDemoTenantIdClient() : null,
+  );
   const router = useRouter();
 
   useEffect(() => {
     // Re-check on mount (SSR → client hydration)
     setIsDemoMode(isDemoModeClient());
+    setDemoPerspective(getDemoPerspectiveClient());
+    setSelectedTenantId(isDemoModeClient() ? getDemoTenantIdClient() : null);
   }, []);
+
+  const switchDemoPerspective = useCallback(
+    (role: PortalRole, tenantId?: string) => {
+      setDemoPerspective(role);
+      setDemoPerspectiveClient(role);
+      if (role === "tenant") {
+        const nextTenantId = tenantId || selectedTenantId || DEFAULT_DEMO_TENANT_ID;
+        setSelectedTenantId(nextTenantId);
+        setDemoTenantClient(nextTenantId);
+      } else {
+        setSelectedTenantId(null);
+      }
+      router.refresh();
+    },
+    [router, selectedTenantId],
+  );
 
   const exitDemo = useCallback(async () => {
     clearDemoCookieClient();
@@ -33,6 +73,8 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     sessionStorage.removeItem("proman_demo");
     sessionStorage.removeItem("proman_demo_start");
     setIsDemoMode(false);
+    setDemoPerspective("owner");
+    setSelectedTenantId(null);
     try {
       await signOut({ redirect: false });
     } catch {
@@ -46,6 +88,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       value={{
         isDemoMode,
         demoUser: isDemoMode ? DEMO_USER : null,
+        demoPerspective,
+        selectedTenantId,
+        switchDemoPerspective,
         exitDemo,
       }}
     >

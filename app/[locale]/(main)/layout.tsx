@@ -7,6 +7,7 @@ import { CommandPalette } from "@/components/shared/command-palette";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { AppTour } from "@/components/shared/app-tour";
 import { ScenarioRunner } from "@/components/shared/scenario-runner";
+import { PortalAccessGuard } from "@/components/shared/portal-access-guard";
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -28,7 +29,9 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
         <main id="main-content" className="flex-1 overflow-y-auto pb-16 md:pb-0" tabIndex={-1}>
           <div className="min-h-full p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
             <Breadcrumbs className="mb-4" />
-            <ErrorBoundary component="MainContent">{children}</ErrorBoundary>
+            <ErrorBoundary component="MainContent">
+              <PortalAccessGuard>{children}</PortalAccessGuard>
+            </ErrorBoundary>
           </div>
         </main>
       </div>

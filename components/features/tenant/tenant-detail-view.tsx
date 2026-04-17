@@ -72,7 +72,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <p className="text-[var(--color-muted-foreground)]">Tenant not found</p>
-        <Button variant="outline" onClick={() => router.push(`/${locale}/tenants`)}>
+        <Button variant="outline" onClick={() => router.push(`/${locale}/people`)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Tenants
         </Button>
@@ -120,6 +120,22 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push(`/${locale}/financials?tab=receipts&tenantId=${tenant.id}`)}
+          >
+            <DollarSign className="h-4 w-4 mr-1" /> Review Payments
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              router.push(`/${locale}/documents?search=${encodeURIComponent(tenant.name)}`)
+            }
+          >
+            <FileText className="h-4 w-4 mr-1" /> Documents
+          </Button>
           <Button variant="outline" size="sm">
             <Mail className="h-4 w-4 mr-1" /> Contact
           </Button>

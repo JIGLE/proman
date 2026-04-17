@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { Users, Briefcase, Plus, Wrench } from "lucide-react";
-import { useRef } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
@@ -24,10 +25,18 @@ import { useApp } from "@/lib/contexts/app-context";
  */
 export function PeopleView(): React.ReactElement {
   const [activeTab, setActiveTab] = useTabPersistence("people", "tenants");
+  const searchParams = useSearchParams();
   const { state } = useApp();
   const { tenants, owners } = state;
   const tenantsViewRef = useRef<TenantsViewRef>(null);
   const ownersViewRef = useRef<OwnersViewRef>(null);
+
+  useEffect(() => {
+    const view = searchParams.get("view");
+    if (view === "owners" || view === "contacts" || view === "tenants") {
+      setActiveTab(view);
+    }
+  }, [searchParams, setActiveTab]);
 
   // Export columns for tenants
   const tenantColumns = [
@@ -61,10 +70,10 @@ export function PeopleView(): React.ReactElement {
           <div>
             <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-2">
               <Users className="h-8 w-8" />
-              People Directory
+              People
             </h1>
             <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-              Manage tenants and property owners
+              Manage tenants, co-owners, and maintenance contacts from one workspace
             </p>
           </div>
           <div className="flex items-center gap-2">

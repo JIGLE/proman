@@ -18,6 +18,24 @@ import type {
   MaintenanceTicket,
 } from "@/lib/types";
 
+interface DemoDocument {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  type: "contract" | "invoice" | "receipt" | "photo" | "floor_plan" | "certificate" | "other";
+  mimeType: string;
+  storagePath: string;
+  fileSize: number;
+  propertyId?: string;
+  propertyName?: string;
+  tenantId?: string;
+  tenantName?: string;
+  uploadedAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 const DEMO_USER_ID = "demo-user";
 
 // ── Properties ─────────────────────────────────────────
@@ -806,12 +824,65 @@ export const DEMO_CORRESPONDENCE: Correspondence[] = [
   },
 ];
 
+export const DEMO_DOCUMENTS: DemoDocument[] = [
+  {
+    id: "demo-document-1",
+    userId: DEMO_USER_ID,
+    name: "Lease Agreement - Maria Silva.pdf",
+    description: "Signed residential lease for Sunset Apartments.",
+    type: "contract",
+    mimeType: "application/pdf",
+    storagePath: "/demo/documents/lease-maria-silva.pdf",
+    fileSize: 248000,
+    propertyId: "demo-prop-1",
+    propertyName: "Sunset Apartments",
+    tenantId: "demo-tenant-1",
+    tenantName: "Maria Silva",
+    uploadedAt: "2026-01-01T09:00:00Z",
+    createdAt: "2026-01-01T09:00:00Z",
+    updatedAt: "2026-01-01T09:00:00Z",
+  },
+  {
+    id: "demo-document-2",
+    userId: DEMO_USER_ID,
+    name: "April Rent Receipt - Maria Silva.pdf",
+    description: "Rent receipt for April 2026.",
+    type: "receipt",
+    mimeType: "application/pdf",
+    storagePath: "/demo/documents/april-rent-receipt.pdf",
+    fileSize: 132000,
+    propertyId: "demo-prop-1",
+    propertyName: "Sunset Apartments",
+    tenantId: "demo-tenant-1",
+    tenantName: "Maria Silva",
+    uploadedAt: "2026-04-01T10:15:00Z",
+    createdAt: "2026-04-01T10:15:00Z",
+    updatedAt: "2026-04-01T10:15:00Z",
+  },
+  {
+    id: "demo-document-3",
+    userId: DEMO_USER_ID,
+    name: "Building Insurance Certificate.pdf",
+    description: "Insurance certificate shared with current tenants.",
+    type: "certificate",
+    mimeType: "application/pdf",
+    storagePath: "/demo/documents/building-insurance-certificate.pdf",
+    fileSize: 198000,
+    propertyId: "demo-prop-1",
+    propertyName: "Sunset Apartments",
+    uploadedAt: "2026-03-12T15:00:00Z",
+    createdAt: "2026-03-12T15:00:00Z",
+    updatedAt: "2026-03-12T15:00:00Z",
+  },
+];
+
 // ── Aggregated Demo Data ───────────────────────────────
 
 export type DemoEntityType =
   | "properties"
   | "tenants"
   | "receipts"
+  | "documents"
   | "templates"
   | "correspondence"
   | "owners"
@@ -824,6 +895,7 @@ const DEMO_DATA_MAP: Record<DemoEntityType, unknown[]> = {
   properties: DEMO_PROPERTIES,
   tenants: DEMO_TENANTS,
   receipts: DEMO_RECEIPTS,
+  documents: DEMO_DOCUMENTS,
   templates: DEMO_TEMPLATES,
   correspondence: DEMO_CORRESPONDENCE,
   owners: DEMO_OWNERS,

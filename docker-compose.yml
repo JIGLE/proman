@@ -20,7 +20,7 @@ services:
       start_interval: 5s
     labels:
       com.truenas.app.name: "ProMan"
-      com.truenas.app.version: "1.5.4"
+      com.truenas.app.version: "1.8.1"
       com.truenas.app.icon: "https://raw.githubusercontent.com/JIGLE/proman/main/public/proman-icon.svg"
       org.opencontainers.image.title: "ProMan"
       org.opencontainers.image.description: "Property Management System"

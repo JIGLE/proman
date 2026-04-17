@@ -145,8 +145,8 @@ export function proxy(request: NextRequest) {
     // Map old tab names to new routes
     const tabRouteMap: Record<string, string> = {
       overview: "/dashboard",
-      properties: "/properties",
-      tenants: "/tenants",
+      properties: "/portfolio",
+      tenants: "/people",
       leases: "/leases",
       financials: "/financials",
       receipts: "/financials/receipts",

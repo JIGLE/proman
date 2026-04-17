@@ -1,9 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { apiFetch } from "@/lib/utils/api-client";
 import { useCsrf } from "@/lib/contexts/csrf-context";
+import { useDemoMode } from "@/lib/contexts/demo-context";
+import { usePortalAccess } from "@/lib/contexts/portal-context";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -161,8 +164,11 @@ function formatDate(dateString: string): string {
 }
 
 export function DocumentsView() {
+  const searchParams = useSearchParams();
   const { data: session } = useSession();
   const { token: csrfToken } = useCsrf();
+  const { isDemoMode } = useDemoMode();
+  const { isOwnerPortal } = usePortalAccess();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [stats, setStats] = useState<DocumentStats | null>(null);
   const [properties, setProperties] = useState<Property[]>([]);
@@ -175,6 +181,18 @@ export function DocumentsView() {
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<DocumentType | "all">("all");
   const [propertyFilter, setPropertyFilter] = useState<string>("all");
+
+  useEffect(() => {
+    const propertyId = searchParams.get("propertyId");
+    const search = searchParams.get("search");
+
+    if (propertyId) {
+      setPropertyFilter(propertyId);
+    }
+    if (search) {
+      setSearchTerm(search);
+    }
+  }, [searchParams]);
 
   // Upload dialog state
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
@@ -214,6 +232,9 @@ export function DocumentsView() {
 
   // Fetch stats
   const fetchStats = useCallback(async () => {
+    if (isDemoMode) {
+      return;
+    }
     try {
       const data = await apiFetch<{ data: DocumentStats } | DocumentStats>(
         "/api/documents/stats",
@@ -223,7 +244,7 @@ export function DocumentsView() {
     } catch (err) {
       console.error("Failed to fetch stats:", err);
     }
-  }, [csrfToken]);
+  }, [csrfToken, isDemoMode]);
 
   // Fetch reference data
   const fetchReferenceData = useCallback(async () => {
@@ -231,7 +252,9 @@ export function DocumentsView() {
       const [propsData, tenantsData, ownersData] = await Promise.all([
         apiFetch<{ data: Property[] } | Property[]>("/api/properties", csrfToken),
         apiFetch<{ data: Tenant[] } | Tenant[]>("/api/tenants", csrfToken),
-        apiFetch<{ data: Owner[] } | Owner[]>("/api/owners", csrfToken),
+        isOwnerPortal
+          ? apiFetch<{ data: Owner[] } | Owner[]>("/api/owners", csrfToken)
+          : Promise.resolve([] as Owner[]),
       ]);
 
       setProperties(Array.isArray(propsData) ? propsData : propsData.data || []);
@@ -240,16 +263,57 @@ export function DocumentsView() {
     } catch (err) {
       console.error("Failed to fetch reference data:", err);
     }
-  }, [csrfToken]);
+  }, [csrfToken, isOwnerPortal]);
 
   // Initial load
   useEffect(() => {
-    if (session) {
+    if (session || isDemoMode) {
       Promise.all([fetchDocuments(), fetchStats(), fetchReferenceData()]).finally(() =>
         setLoading(false),
       );
     }
-  }, [session, fetchDocuments, fetchStats, fetchReferenceData]);
+  }, [fetchDocuments, fetchReferenceData, fetchStats, isDemoMode, session]);
+
+  useEffect(() => {
+    if (!isDemoMode) {
+      return;
+    }
+    const byType = documents.reduce<Record<string, number>>((acc, document) => {
+      acc[document.type] = (acc[document.type] || 0) + 1;
+      return acc;
+    }, {});
+    const totalSize = documents.reduce((sum, document) => sum + document.fileSize, 0);
+    setStats({
+      totalDocuments: documents.length,
+      totalSize,
+      byType,
+    });
+  }, [documents, isDemoMode]);
+
+  const activeFilters = useMemo(() => {
+    const filters: string[] = [];
+    if (searchTerm) filters.push(`Search: ${searchTerm}`);
+    if (typeFilter !== "all") filters.push(`Type: ${documentTypeConfig[typeFilter].label}`);
+    if (propertyFilter !== "all") {
+      const propertyName =
+        properties.find((property) => property.id === propertyFilter)?.name ?? "Property";
+      filters.push(`Property: ${propertyName}`);
+    }
+    return filters;
+  }, [properties, propertyFilter, searchTerm, typeFilter]);
+
+  const groupedDocuments = useMemo(() => {
+    return documents.reduce<Record<string, Document[]>>((acc, document) => {
+      const key = isOwnerPortal
+        ? document.propertyName || document.tenantName || "Unassigned"
+        : "Shared with you";
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(document);
+      return acc;
+    }, {});
+  }, [documents, isOwnerPortal]);
 
   // Handle file selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -438,7 +502,7 @@ export function DocumentsView() {
     }
   };
 
-  if (!session) {
+  if (!session && !isDemoMode) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">Please sign in to view documents</p>
@@ -459,205 +523,214 @@ export function DocumentsView() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Documents</h2>
+          <h2 className="text-2xl font-bold tracking-tight">
+            {isOwnerPortal ? "Documents" : "My documents"}
+          </h2>
           <p className="text-muted-foreground">
-            Manage your property documents, contracts, and files
+            {isOwnerPortal
+              ? "Manage contracts, receipts, and property files by entity instead of one flat list."
+              : "Review the documents shared with your tenancy and download what you need quickly."}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <FilePlus className="mr-2 h-4 w-4" />
-                Generate
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Generate Document</DialogTitle>
-                <DialogDescription>Create a document from a template</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label>Template Type</Label>
-                  <Select
-                    value={selectedTemplate}
-                    onValueChange={(v) => setSelectedTemplate(v as typeof selectedTemplate)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="lease">Lease Agreement</SelectItem>
-                      <SelectItem value="receipt">Rent Receipt</SelectItem>
-                      <SelectItem value="notice">Notice Letter</SelectItem>
-                    </SelectContent>
-                  </Select>
+        {isOwnerPortal && (
+          <div className="flex gap-2">
+            <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">
+                  <FilePlus className="mr-2 h-4 w-4" />
+                  Generate
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Generate Document</DialogTitle>
+                  <DialogDescription>Create a document from a template</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label>Template Type</Label>
+                    <Select
+                      value={selectedTemplate}
+                      onValueChange={(v) => setSelectedTemplate(v as typeof selectedTemplate)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="lease">Lease Agreement</SelectItem>
+                        <SelectItem value="receipt">Rent Receipt</SelectItem>
+                        <SelectItem value="notice">Notice Letter</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    This will generate a sample document. For production use, connect this to your
+                    actual property and tenant data.
+                  </p>
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  This will generate a sample document. For production use, connect this to your
-                  actual property and tenant data.
-                </p>
-              </div>
-              <DialogFooter className="gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => handleGenerateTemplate("html")}
-                  disabled={generatingTemplate}
-                >
-                  <Eye className="mr-2 h-4 w-4" />
-                  Preview HTML
-                </Button>
-                <Button onClick={() => handleGenerateTemplate("pdf")} disabled={generatingTemplate}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Download PDF
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                <DialogFooter className="gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => handleGenerateTemplate("html")}
+                    disabled={generatingTemplate}
+                  >
+                    <Eye className="mr-2 h-4 w-4" />
+                    Preview HTML
+                  </Button>
+                  <Button
+                    onClick={() => handleGenerateTemplate("pdf")}
+                    disabled={generatingTemplate}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Download PDF
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
 
-          <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Upload className="mr-2 h-4 w-4" />
-                Upload
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Upload Document</DialogTitle>
-                <DialogDescription>Upload a new document to your library</DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="file">File</Label>
-                  <Input
-                    id="file"
-                    type="file"
-                    onChange={handleFileSelect}
-                    accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input
-                    id="name"
-                    value={uploadForm.name}
-                    onChange={(e) =>
-                      setUploadForm((prev) => ({
-                        ...prev,
-                        name: e.target.value,
-                      }))
-                    }
-                    placeholder="Document name"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="type">Type</Label>
-                  <Select
-                    value={uploadForm.type}
-                    onValueChange={(v) =>
-                      setUploadForm((prev) => ({
-                        ...prev,
-                        type: v as DocumentType,
-                      }))
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Object.entries(documentTypeConfig).map(([key, config]) => (
-                        <SelectItem key={key} value={key}>
-                          {config.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Description (optional)</Label>
-                  <Textarea
-                    id="description"
-                    value={uploadForm.description}
-                    onChange={(e) =>
-                      setUploadForm((prev) => ({
-                        ...prev,
-                        description: e.target.value,
-                      }))
-                    }
-                    placeholder="Brief description"
-                    rows={2}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Link to (optional)</Label>
-                  <div className="grid grid-cols-3 gap-2">
+            <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Upload className="mr-2 h-4 w-4" />
+                  Upload
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Upload Document</DialogTitle>
+                  <DialogDescription>Upload a new document to your library</DialogDescription>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="file">File</Label>
+                    <Input
+                      id="file"
+                      type="file"
+                      onChange={handleFileSelect}
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.gif,.txt"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      value={uploadForm.name}
+                      onChange={(e) =>
+                        setUploadForm((prev) => ({
+                          ...prev,
+                          name: e.target.value,
+                        }))
+                      }
+                      placeholder="Document name"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="type">Type</Label>
                     <Select
-                      value={uploadForm.propertyId}
-                      onValueChange={(v) => setUploadForm((prev) => ({ ...prev, propertyId: v }))}
+                      value={uploadForm.type}
+                      onValueChange={(v) =>
+                        setUploadForm((prev) => ({
+                          ...prev,
+                          type: v as DocumentType,
+                        }))
+                      }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Property" />
+                        <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">None</SelectItem>
-                        {properties.map((p) => (
-                          <SelectItem key={p.id} value={p.id}>
-                            {p.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select
-                      value={uploadForm.tenantId}
-                      onValueChange={(v) => setUploadForm((prev) => ({ ...prev, tenantId: v }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Tenant" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">None</SelectItem>
-                        {tenants.map((t) => (
-                          <SelectItem key={t.id} value={t.id}>
-                            {t.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select
-                      value={uploadForm.ownerId}
-                      onValueChange={(v) => setUploadForm((prev) => ({ ...prev, ownerId: v }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Owner" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="">None</SelectItem>
-                        {owners.map((o) => (
-                          <SelectItem key={o.id} value={o.id}>
-                            {o.name}
+                        {Object.entries(documentTypeConfig).map(([key, config]) => (
+                          <SelectItem key={key} value={key}>
+                            {config.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="description">Description (optional)</Label>
+                    <Textarea
+                      id="description"
+                      value={uploadForm.description}
+                      onChange={(e) =>
+                        setUploadForm((prev) => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
+                      placeholder="Brief description"
+                      rows={2}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label>Link to (optional)</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      <Select
+                        value={uploadForm.propertyId}
+                        onValueChange={(v) => setUploadForm((prev) => ({ ...prev, propertyId: v }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Property" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {properties.map((p) => (
+                            <SelectItem key={p.id} value={p.id}>
+                              {p.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={uploadForm.tenantId}
+                        onValueChange={(v) => setUploadForm((prev) => ({ ...prev, tenantId: v }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Tenant" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {tenants.map((t) => (
+                            <SelectItem key={t.id} value={t.id}>
+                              {t.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select
+                        value={uploadForm.ownerId}
+                        onValueChange={(v) => setUploadForm((prev) => ({ ...prev, ownerId: v }))}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Owner" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="">None</SelectItem>
+                          {owners.map((o) => (
+                            <SelectItem key={o.id} value={o.id}>
+                              {o.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleUpload}
-                  disabled={uploading || !uploadForm.file || !uploadForm.name}
-                >
-                  {uploading ? "Uploading..." : "Upload"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleUpload}
+                    disabled={uploading || !uploadForm.file || !uploadForm.name}
+                  >
+                    {uploading ? "Uploading..." : "Upload"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        )}
       </div>
 
       {/* Error display */}
@@ -700,6 +773,30 @@ export function DocumentsView() {
         </div>
       )}
 
+      <Card>
+        <CardContent className="flex flex-col gap-3 p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              {isOwnerPortal ? "Document workspace" : "Shared document workspace"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {isOwnerPortal
+                ? "Group by property context, keep contracts and receipts close to the related entity, and export on demand."
+                : "Everything here belongs to your lease, property, or payment history."}
+            </p>
+          </div>
+          {activeFilters.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {activeFilters.map((filter) => (
+                <Badge key={filter} variant="outline">
+                  {filter}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Filters */}
       <Card>
         <CardContent className="pt-6">
@@ -732,19 +829,21 @@ export function DocumentsView() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={propertyFilter} onValueChange={setPropertyFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by property" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Properties</SelectItem>
-                {properties.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isOwnerPortal && (
+              <Select value={propertyFilter} onValueChange={setPropertyFilter}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Filter by property" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Properties</SelectItem>
+                  {properties.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -752,7 +851,7 @@ export function DocumentsView() {
       {/* Documents List */}
       <Card>
         <CardHeader>
-          <CardTitle>All Documents</CardTitle>
+          <CardTitle>{isOwnerPortal ? "Documents by entity" : "Shared with you"}</CardTitle>
           <CardDescription>
             {documents.length} document{documents.length !== 1 ? "s" : ""} found
           </CardDescription>
@@ -762,82 +861,106 @@ export function DocumentsView() {
             <EmptyStateIllustration
               type="documents"
               title="No documents"
-              description="Upload your first document to get started"
+              description={
+                isOwnerPortal
+                  ? "Upload your first document to get started"
+                  : "No documents have been shared with this tenant yet"
+              }
             />
           ) : (
-            <div className="space-y-4">
-              {documents.map((doc) => {
-                const config = documentTypeConfig[doc.type];
-                const Icon = config.icon;
-
-                return (
-                  <div
-                    key={doc.id}
-                    className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="p-2 bg-muted rounded-lg">
-                        <Icon className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-medium">{doc.name}</h4>
-                          <Badge variant="secondary" className={config.color}>
-                            {config.label}
-                          </Badge>
-                        </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>{formatFileSize(doc.fileSize)}</span>
-                          <span>•</span>
-                          <span>{formatDate(doc.uploadedAt)}</span>
-                          {doc.propertyName && (
-                            <>
-                              <span>•</span>
-                              <span>{doc.propertyName}</span>
-                            </>
-                          )}
-                          {doc.tenantName && (
-                            <>
-                              <span>•</span>
-                              <span>{doc.tenantName}</span>
-                            </>
-                          )}
-                        </div>
-                        {doc.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{doc.description}</p>
-                        )}
-                      </div>
+            <div className="space-y-6">
+              {Object.entries(groupedDocuments).map(([groupName, groupDocs]) => (
+                <div key={groupName} className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-medium text-foreground">{groupName}</h3>
+                      <p className="text-sm text-muted-foreground">
+                        {groupDocs.length} document{groupDocs.length !== 1 ? "s" : ""}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)}>
-                        <Download className="h-4 w-4" />
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <Trash2 className="h-4 w-4 text-destructive" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Document</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete &quot;{doc.name}
-                              &quot;? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => handleDelete(doc.id)}>
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
+                    <Badge variant="outline">{groupDocs.length}</Badge>
                   </div>
-                );
-              })}
+
+                  <div className="space-y-4">
+                    {groupDocs.map((doc) => {
+                      const config = documentTypeConfig[doc.type];
+                      const Icon = config.icon;
+
+                      return (
+                        <div
+                          key={doc.id}
+                          className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="rounded-lg bg-muted p-2">
+                              <Icon className="h-6 w-6" />
+                            </div>
+                            <div>
+                              <div className="flex flex-wrap items-center gap-2">
+                                <h4 className="font-medium">{doc.name}</h4>
+                                <Badge variant="secondary" className={config.color}>
+                                  {config.label}
+                                </Badge>
+                              </div>
+                              <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                                <span>{formatFileSize(doc.fileSize)}</span>
+                                <span>•</span>
+                                <span>{formatDate(doc.uploadedAt)}</span>
+                                {doc.propertyName && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{doc.propertyName}</span>
+                                  </>
+                                )}
+                                {doc.tenantName && (
+                                  <>
+                                    <span>•</span>
+                                    <span>{doc.tenantName}</span>
+                                  </>
+                                )}
+                              </div>
+                              {doc.description && (
+                                <p className="mt-1 text-sm text-muted-foreground">
+                                  {doc.description}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)}>
+                              <Download className="h-4 w-4" />
+                            </Button>
+                            {isOwnerPortal && (
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>Delete Document</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Are you sure you want to delete &quot;{doc.name}
+                                      &quot;? This action cannot be undone.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => handleDelete(doc.id)}>
+                                      Delete
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
           )}
         </CardContent>

@@ -1,30 +1,53 @@
 "use client";
 
-import { Building2, MapPin, Plus } from "lucide-react";
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import {
+  ArrowRight,
+  Building2,
+  CreditCard,
+  FileText,
+  MapPin,
+  Plus,
+  Receipt,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { PropertiesView, PropertiesViewRef } from "@/components/features/property/property-list";
 import { ExportButton, ExportColumn } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { usePortalAccess } from "@/lib/contexts/portal-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
+import { getActiveLease } from "@/lib/utils/lease-helpers";
 
-/**
- * Assets View - Unified view for managing physical properties
- *
- * Information Architecture:
- * - Purpose: Manage physical properties (buildings)
- * - Belongs here: Properties list/details, Map view
- * - Forbidden: Tenant data (except occupancy status), financial transactions, maintenance tickets
- * - Links to: People (view tenants/owners), Maintenance (create ticket for property)
- */
+function StatCard({ label, value, detail }: { label: string; value: string; detail: string }) {
+  return (
+    <Card className="border-white/10 bg-zinc-950/70">
+      <CardContent className="p-4">
+        <div className="text-sm text-muted-foreground">{label}</div>
+        <div className="mt-1 text-2xl font-semibold text-[var(--color-foreground)]">{value}</div>
+        <div className="mt-1 text-xs text-muted-foreground">{detail}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function AssetsView(): React.ReactElement {
   const [activeTab, setActiveTab] = useTabPersistence("assets", "properties");
   const { state } = useApp();
-  const { properties } = state;
+  const { isOwnerPortal } = usePortalAccess();
+  const { formatCurrency } = useCurrency();
+  const router = useRouter();
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "pt";
+  const { properties, leases, receipts, tenants } = state;
   const propertiesViewRef = useRef<PropertiesViewRef>(null);
 
-  // Export columns for properties
   const propertyColumns = [
     { key: "name", label: "Name" },
     { key: "address", label: "Address" },
@@ -35,85 +58,241 @@ export function AssetsView(): React.ReactElement {
     { key: "rent", label: "Rent" },
   ];
 
-  // Get export data based on active tab
-  const getExportData = (): { data: unknown[]; columns: ExportColumn[] } => {
-    switch (activeTab) {
-      case "properties":
-        return { data: properties, columns: propertyColumns };
-      default:
-        return { data: [], columns: [] };
-    }
-  };
+  const exportConfig =
+    activeTab === "properties"
+      ? ({ data: properties, columns: propertyColumns } satisfies {
+          data: unknown[];
+          columns: ExportColumn[];
+        })
+      : ({ data: [], columns: [] } satisfies { data: unknown[]; columns: ExportColumn[] });
 
-  const exportConfig = getExportData();
+  const occupiedCount = properties.filter((property) => property.status === "occupied").length;
+  const occupancyRate = properties.length
+    ? Math.round((occupiedCount / properties.length) * 100)
+    : 0;
+  const monthlyRunRate = properties.reduce((sum, property) => sum + (property.rent || 0), 0);
+  const mappedCount = properties.filter(
+    (property) => typeof property.latitude === "number" && typeof property.longitude === "number",
+  ).length;
+
+  const tenantHome = useMemo(() => {
+    const tenant = tenants[0];
+    const activeLease = tenant ? getActiveLease(tenant.id, leases) : null;
+    const property = properties.find(
+      (item) => item.id === (activeLease?.propertyId ?? tenant?.propertyId),
+    );
+    const paidReceipts = receipts.filter((receipt) => receipt.status === "paid");
+
+    return { tenant, activeLease, property, paidReceipts };
+  }, [leases, properties, receipts, tenants]);
 
   return (
     <div className="space-y-6">
-      {/* Enhanced Page Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-2">
-              <Building2 className="h-8 w-8" />
-              Asset Portfolio
-            </h1>
-            <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-              Manage and visualize your property portfolio
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <ExportButton
-              data={exportConfig.data}
-              filename={`${activeTab}-export`}
-              columns={exportConfig.columns}
-            />
-          </div>
-        </div>
+      {isOwnerPortal ? (
+        <>
+          <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.2),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
+            <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+              <div className="space-y-4">
+                <Badge
+                  variant="outline"
+                  className="w-fit border-blue-500/20 bg-blue-500/10 text-blue-200"
+                >
+                  Portfolio workspace
+                </Badge>
+                <div className="space-y-2">
+                  <h1 className="flex items-center gap-2 text-3xl font-semibold tracking-tight text-zinc-50">
+                    <Building2 className="h-8 w-8" />
+                    Portfolio
+                  </h1>
+                  <p className="max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">
+                    Manage portfolio health, occupancy, and rent potential without burying the main
+                    list under too many competing cards.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={() => propertiesViewRef.current?.openDialog()} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Property
+                  </Button>
+                  <Button variant="outline" onClick={() => setActiveTab("map")} className="gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Open map
+                  </Button>
+                </div>
+              </div>
 
-        {/* Portfolio Statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">Total Properties</div>
-            <div className="text-2xl font-bold text-[var(--color-foreground)]">
-              {properties.length}
+              <div className="grid gap-3 md:grid-cols-3 xl:w-[520px]">
+                <StatCard
+                  label="Tracked units"
+                  value={`${properties.length}`}
+                  detail={`${occupiedCount} occupied`}
+                />
+                <StatCard
+                  label="Occupancy"
+                  value={`${occupancyRate}%`}
+                  detail={`${Math.max(properties.length - occupiedCount, 0)} vacancy slots`}
+                />
+                <StatCard
+                  label="Run rate"
+                  value={formatCurrency(monthlyRunRate)}
+                  detail={`${mappedCount}/${properties.length || 0} on map`}
+                />
+              </div>
             </div>
-          </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">Occupied</div>
-            <div className="text-2xl font-bold text-green-500">
-              {properties.filter((p) => p.status === "occupied").length}
-            </div>
-          </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">Vacant</div>
-            <div className="text-2xl font-bold text-amber-500">
-              {properties.filter((p) => p.status === "vacant").length}
-            </div>
-          </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">Occupancy Rate</div>
-            <div className="text-2xl font-bold text-blue-500">
-              {properties.length > 0
-                ? Math.round(
-                    (properties.filter((p) => p.status === "occupied").length / properties.length) *
-                      100,
-                  )
-                : 0}
-              %
-            </div>
-          </div>
-        </div>
-      </div>
+          </section>
 
-      {/* Tab Navigation and Content */}
+          <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+            <Card className="border-white/10 bg-zinc-950/70">
+              <CardHeader>
+                <CardTitle>Portfolio focus</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-3 sm:grid-cols-3">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-sm text-zinc-400">Primary view</p>
+                  <p className="mt-2 text-lg font-semibold text-zinc-50">
+                    {activeTab === "map" ? "Map" : "Portfolio list"}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-sm text-zinc-400">Collection context</p>
+                  <p className="mt-2 text-lg font-semibold text-zinc-50">
+                    {formatCurrency(monthlyRunRate)}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-sm text-zinc-400">Map coverage</p>
+                  <p className="mt-2 text-lg font-semibold text-zinc-50">{mappedCount} mapped</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="border-white/10 bg-zinc-950/70">
+              <CardHeader>
+                <CardTitle>Quick paths</CardTitle>
+              </CardHeader>
+              <CardContent className="grid gap-2">
+                <Button
+                  variant="outline"
+                  className="justify-between"
+                  onClick={() => router.push(`/${locale}/financials`)}
+                >
+                  Review payments
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-between"
+                  onClick={() => router.push(`/${locale}/documents`)}
+                >
+                  Open documents
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  className="justify-between"
+                  onClick={() => router.push(`/${locale}/people`)}
+                >
+                  Open people
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <ExportButton
+                  data={exportConfig.data}
+                  filename={`${activeTab}-export`}
+                  columns={exportConfig.columns}
+                />
+              </CardContent>
+            </Card>
+          </section>
+        </>
+      ) : (
+        <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
+          <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+            <div className="space-y-4">
+              <Badge
+                variant="outline"
+                className="w-fit border-blue-500/20 bg-blue-500/10 text-blue-200"
+              >
+                Portfolio
+              </Badge>
+              <div className="space-y-2">
+                <h1 className="flex items-center gap-2 text-3xl font-semibold tracking-tight text-zinc-50">
+                  <Building2 className="h-8 w-8" />
+                  {tenantHome.property?.name ?? "My home"}
+                </h1>
+                <p className="text-sm leading-6 text-zinc-300 sm:text-base">
+                  Keep the essentials for your home in one place: lease, payments, receipts, and
+                  shared documents.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => router.push(`/${locale}/financials`)}>
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  Payments
+                </Button>
+                <Button variant="outline" onClick={() => router.push(`/${locale}/leases`)}>
+                  <Receipt className="mr-2 h-4 w-4" />
+                  My lease
+                </Button>
+                <Button variant="outline" onClick={() => router.push(`/${locale}/documents`)}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  My documents
+                </Button>
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <StatCard
+                label="Monthly rent"
+                value={formatCurrency(
+                  tenantHome.activeLease?.monthlyRent ?? tenantHome.property?.rent ?? 0,
+                )}
+                detail={
+                  tenantHome.activeLease
+                    ? `Lease ends ${tenantHome.activeLease.endDate}`
+                    : "No lease loaded"
+                }
+              />
+              <StatCard
+                label="Receipts"
+                value={`${tenantHome.paidReceipts.length}`}
+                detail="Paid records available"
+              />
+              <Card className="border-white/10 bg-zinc-950/70 md:col-span-2">
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5 text-blue-300" />
+                        <p className="font-medium text-zinc-50">Home summary</p>
+                      </div>
+                      <p className="mt-2 text-sm text-zinc-400">
+                        {tenantHome.property?.address ?? "Property address not available"}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="capitalize">
+                      {tenantHome.property?.status ?? "active"}
+                    </Badge>
+                  </div>
+                  <div className="mt-4 flex items-center gap-2 text-sm text-zinc-400">
+                    <Sparkles className="h-4 w-4 text-blue-300" />
+                    {tenantHome.property?.latitude && tenantHome.property?.longitude
+                      ? "Map view is available for your home."
+                      : "Map view will appear once coordinates are available."}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
+      )}
+
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center gap-2">
           <TabsList className="grid w-full max-w-md grid-cols-2">
             <TabsTrigger value="properties" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
-              <span className="hidden sm:inline">List</span>
-              <span className="ml-1 rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs">
-                {properties.length}
+              <span className="hidden sm:inline">
+                {isOwnerPortal ? "Portfolio list" : "Home details"}
               </span>
             </TabsTrigger>
             <TabsTrigger value="map" className="flex items-center gap-2">
@@ -121,21 +300,24 @@ export function AssetsView(): React.ReactElement {
               <span className="hidden sm:inline">Map</span>
             </TabsTrigger>
           </TabsList>
-          <Button
-            onClick={() => propertiesViewRef.current?.openDialog()}
-            className="flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="hidden sm:inline">Add Property</span>
-          </Button>
         </div>
 
         <TabsContent value="map" className="mt-0">
-          <PropertiesView ref={propertiesViewRef} viewMode="map" density="compact" />
+          <PropertiesView
+            ref={propertiesViewRef}
+            viewMode="map"
+            density="compact"
+            showPageHeader={false}
+          />
         </TabsContent>
 
         <TabsContent value="properties" className="mt-0">
-          <PropertiesView ref={propertiesViewRef} viewMode="list" density="compact" />
+          <PropertiesView
+            ref={propertiesViewRef}
+            viewMode="list"
+            density="compact"
+            showPageHeader={false}
+          />
         </TabsContent>
       </Tabs>
     </div>

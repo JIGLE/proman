@@ -102,7 +102,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
         <p className="text-[var(--color-muted-foreground)]">Property not found</p>
-        <Button variant="outline" onClick={() => router.push(`/${locale}/properties`)}>
+        <Button variant="outline" onClick={() => router.push(`/${locale}/portfolio`)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Properties
         </Button>
@@ -140,6 +140,22 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() =>
+                router.push(`/${locale}/financials?tab=receipts&propertyId=${property.id}`)
+              }
+            >
+              <DollarSign className="h-4 w-4 mr-1" /> Review Payments
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push(`/${locale}/documents?propertyId=${property.id}`)}
+            >
+              <FileText className="h-4 w-4 mr-1" /> Documents
+            </Button>
             <Button variant="outline" size="sm">
               <Edit className="h-4 w-4 mr-1" /> Edit
             </Button>
@@ -206,7 +222,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
           </TabsTrigger>
           <TabsTrigger value="finance" className="flex items-center gap-1.5">
             <DollarSign className="h-3.5 w-3.5" />
-            Finance
+            Payments
           </TabsTrigger>
         </TabsList>
 

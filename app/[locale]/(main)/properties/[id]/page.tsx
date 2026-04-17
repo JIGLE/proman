@@ -1,19 +1,10 @@
-import { Suspense } from "react";
-import { PropertyDetailView } from "@/components/features/property/property-detail-view";
-import { GenericPageSkeleton } from "@/components/ui/page-skeletons";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default async function PropertyDetailPage({
+export default async function PropertyDetailRedirectPage({
   params,
 }: {
   params: Promise<{ locale: string; id: string }>;
 }) {
-  const { id } = await params;
-
-  return (
-    <Suspense fallback={<GenericPageSkeleton />}>
-      <PropertyDetailView propertyId={id} />
-    </Suspense>
-  );
+  const { locale, id } = await params;
+  redirect(`/${locale}/portfolio/${id}`);
 }

@@ -1,5 +1,17 @@
 # Releases
 
+- Date: 2026-04-17
+  - Version: v1.8.1
+  - Image: `ghcr.io/jigle/proman:1.8.1`
+  - Notes: Role-based portal UX and IA release — canonical People/Portfolio navigation, richer owner and tenant experiences, and improved demo mode
+    - **IA Refresh**: Replaced top-level Tenants/Properties naming with canonical **People** and **Portfolio** routes while preserving compatibility via redirects
+    - **Portfolio UX**: Simplified the shared portfolio workspace, reduced clutter, and made owner versus tenant presentation more relevant without splitting the app
+    - **Dashboard & Landing**: Improved landing-page demo presentation and made the dashboard feel more engaging for both owner and tenant perspectives
+    - **Property Experience**: Expanded the property detail modal with a fuller overview and faster contextual actions
+    - **Mapping & Demo Data**: Kept the map on a free OpenStreetMap/Leaflet stack and ensured mock property data renders correctly in demo flows
+    - **Payments & Documents**: Continued the simplified role-aware redesign across finance and document surfaces
+    - **Verification**: `tsc --noEmit` clean, `eslint --max-warnings=0` clean, `vitest run` clean
+
 - Date: 2026-04-14
   - Version: v1.7.1
   - Image: `ghcr.io/jigle/proman:1.7.1`

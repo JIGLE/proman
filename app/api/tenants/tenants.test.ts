@@ -6,7 +6,23 @@ import { GET as getTenants, POST as postTenants } from "./route";
 vi.mock("@/lib/services/auth/auth-middleware", () => ({
   requireAuth: vi.fn(async (req) => {
     if (req.headers.get("Authorization") === "Bearer valid-token") {
-      return { userId: "user-123", email: "user@example.com" };
+      return { userId: "user-123", scopeUserId: "user-123", portalRole: "owner" };
+    }
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+    });
+  }),
+  getAccessContext: vi.fn(async (req) => {
+    if (req.headers.get("Authorization") === "Bearer valid-token") {
+      return { userId: "user-123", scopeUserId: "user-123", portalRole: "owner" };
+    }
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+    });
+  }),
+  requireOwnerAccess: vi.fn(async (req) => {
+    if (req.headers.get("Authorization") === "Bearer valid-token") {
+      return { userId: "user-123", scopeUserId: "user-123", portalRole: "owner" };
     }
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,

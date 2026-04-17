@@ -1,16 +1,10 @@
-import { Suspense } from "react";
-import { AssetsView } from "@/components/features/assets/assets-view";
-import { PropertiesListSkeleton } from "@/components/ui/page-skeletons";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-
-export default function AssetsPage() {
-  return (
-    <Suspense fallback={<PropertiesListSkeleton />}>
-      <div className="h-full">
-        <AssetsView />
-      </div>
-    </Suspense>
-  );
+export default async function PropertiesRedirectPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect(`/${locale}/portfolio`);
 }

@@ -26,6 +26,7 @@ import { apiFetch } from "@/lib/utils/api-client";
 import { createEntityActions } from "./create-entity-actions";
 import { isDemoModeClient } from "@/lib/demo/demo-mode";
 import { getDemoData } from "@/lib/demo/demo-data";
+import { usePortalAccess } from "@/lib/contexts/portal-context";
 
 interface AppState {
   properties: Property[];
@@ -142,6 +143,7 @@ const AppContext = createContext<AppContextValue | null>(null);
 export function AppProvider({ children }: { children: ReactNode }): React.ReactElement {
   const [state, dispatch] = React.useReducer(appReducer, initialState);
   const { data: session } = useSession();
+  const { portalRole, tenantEmail, tenantId: selectedTenantId } = usePortalAccess();
   const { error: showError, success: showSuccess } = useToast();
   const { token: csrfToken } = useCsrf();
   const userId = (session?.user as { id?: string } | undefined)?.id;
@@ -419,11 +421,66 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     [csrfToken, userId, showError, showSuccess, isDemo, state.leases],
   );
 
+  const scopedState = useMemo(() => {
+    if (portalRole !== "tenant") {
+      return state;
+    }
+
+    const activeTenant =
+      (selectedTenantId
+        ? state.tenants.find((tenant) => tenant.id === selectedTenantId)
+        : undefined) ??
+      (tenantEmail ? state.tenants.find((tenant) => tenant.email === tenantEmail) : undefined);
+
+    if (!activeTenant) {
+      return {
+        ...state,
+        properties: [],
+        tenants: [],
+        receipts: [],
+        templates: [],
+        correspondence: [],
+        owners: [],
+        expenses: [],
+        maintenance: [],
+        leases: [],
+      };
+    }
+
+    const tenantPropertyIds = new Set(
+      [
+        activeTenant.propertyId,
+        ...state.leases
+          .filter((lease) => lease.tenantId === activeTenant.id)
+          .map((lease) => lease.propertyId),
+      ].filter(Boolean) as string[],
+    );
+
+    return {
+      ...state,
+      properties: state.properties.filter((property) => tenantPropertyIds.has(property.id)),
+      tenants: [activeTenant],
+      receipts: state.receipts.filter((receipt) => receipt.tenantId === activeTenant.id),
+      templates: [],
+      correspondence: state.correspondence.filter(
+        (correspondence) => correspondence.tenantId === activeTenant.id,
+      ),
+      owners: [],
+      expenses: [],
+      maintenance: state.maintenance.filter(
+        (ticket) =>
+          ticket.tenantId === activeTenant.id ||
+          (ticket.propertyId ? tenantPropertyIds.has(ticket.propertyId) : false),
+      ),
+      leases: state.leases.filter((lease) => lease.tenantId === activeTenant.id),
+    };
+  }, [portalRole, selectedTenantId, state, tenantEmail]);
+
   // --- context value (backward-compatible shape) ---
 
   const contextValue: AppContextValue = useMemo(
     () => ({
-      state,
+      state: scopedState,
       dispatch,
       addProperty: (d) => propertyActions.add(d) as unknown as Promise<void>,
       updateProperty: (id, d) => propertyActions.update(id, d) as unknown as Promise<void>,
@@ -455,7 +512,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
       refreshData,
     }),
     [
-      state,
+      scopedState,
       dispatch,
       refreshData,
       propertyActions,

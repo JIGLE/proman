@@ -36,7 +36,7 @@ function formatTime(ms: number): string {
 }
 
 export function DemoBanner() {
-  const { isDemoMode, exitDemo } = useDemoMode();
+  const { isDemoMode, exitDemo, demoPerspective, switchDemoPerspective } = useDemoMode();
   const t = useTranslations();
   const [remaining, setRemaining] = useState(() => getTimeRemaining());
   const [collapsed, setCollapsed] = useState(false);
@@ -96,6 +96,25 @@ export function DemoBanner() {
       <div className="flex items-center gap-1.5 shrink-0">
         {!collapsed && (
           <>
+            <div className="hidden md:inline-flex items-center gap-1 rounded bg-amber-900/15 p-0.5">
+              <button
+                onClick={() => switchDemoPerspective("owner")}
+                className={`rounded px-2 py-0.5 text-[10px] font-semibold transition-colors ${
+                  demoPerspective === "owner" ? "bg-amber-950/20" : ""
+                }`}
+              >
+                Owner
+              </button>
+              <button
+                onClick={() => switchDemoPerspective("tenant")}
+                className={`rounded px-2 py-0.5 text-[10px] font-semibold transition-colors ${
+                  demoPerspective === "tenant" ? "bg-amber-950/20" : ""
+                }`}
+              >
+                Tenant
+              </button>
+            </div>
+
             {/* Session timer */}
             <span
               className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-mono tabular-nums ${

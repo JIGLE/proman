@@ -6,9 +6,9 @@ test.use({ storageState: "playwright/.auth/user.json" });
 test.skip("Critical Path: Create new tenant", async ({ page }) => {
   const timestamp = Date.now();
 
-  // 1. Navigate to tenants page directly
-  await page.goto("/en/tenants");
-  await expect(page).toHaveURL(/.*\/tenants/);
+  // 1. Navigate to people page directly
+  await page.goto("/en/people");
+  await expect(page).toHaveURL(/.*\/people/);
 
   // 2. Open Add Tenant Dialog
   await page.getByRole("button", { name: "Add Tenant" }).first().click();

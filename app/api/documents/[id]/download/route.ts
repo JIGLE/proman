@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import { getAccessContext, handleOptions } from "@/lib/services/auth/auth-middleware";
 import { createErrorResponse, withErrorHandler } from "@/lib/utils/error-handling";
 import { documentService } from "@/lib/services/document-service";
 
@@ -8,10 +8,10 @@ async function handleGet(
   request: NextRequest,
   context?: { params?: Record<string, string> | Promise<Record<string, string>> },
 ): Promise<Response> {
-  const authResult = await requireAuth(request);
+  const authResult = await getAccessContext(request);
   if (authResult instanceof Response) return authResult;
 
-  const { userId } = authResult;
+  const { scopeUserId, portalRole, tenantId, propertyId } = authResult;
 
   // Handle both sync and async params
   const params = context?.params
@@ -26,7 +26,16 @@ async function handleGet(
   }
 
   try {
-    const file = await documentService.getFileContent(userId, id);
+    const document = await documentService.getById(scopeUserId, id);
+    if (
+      portalRole === "tenant" &&
+      (!document ||
+        (document.tenantId !== tenantId && (!propertyId || document.propertyId !== propertyId)))
+    ) {
+      return createErrorResponse(new Error("Document not found or file unavailable"), 404, request);
+    }
+
+    const file = await documentService.getFileContent(scopeUserId, id);
 
     if (!file) {
       return createErrorResponse(new Error("Document not found or file unavailable"), 404, request);

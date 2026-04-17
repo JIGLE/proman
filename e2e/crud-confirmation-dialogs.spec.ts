@@ -60,8 +60,8 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
     await page.goto("/en");
     await page.waitForLoadState("networkidle");
 
-    // Navigate to properties
-    const navLink = page.getByRole("link", { name: /properties/i }).first();
+    // Navigate to portfolio
+    const navLink = page.getByRole("link", { name: /portfolio/i }).first();
     if (!(await navLink.isVisible().catch(() => false))) {
       test.skip(true, "Properties nav not visible – may require auth");
       return;
@@ -98,7 +98,7 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
     await page.goto("/en");
     await page.waitForLoadState("networkidle");
 
-    const navLink = page.getByRole("link", { name: /tenants/i }).first();
+    const navLink = page.getByRole("link", { name: /people/i }).first();
     if (!(await navLink.isVisible().catch(() => false))) {
       test.skip(true, "Tenants nav not visible – may require auth");
       return;
@@ -177,9 +177,9 @@ test.describe("Form Validation – Authenticated", () => {
     await page.goto("/en");
     await page.waitForLoadState("networkidle");
 
-    const navLink = page.getByRole("link", { name: /properties/i }).first();
+    const navLink = page.getByRole("link", { name: /portfolio/i }).first();
     if (!(await navLink.isVisible().catch(() => false))) {
-      test.skip(true, "Properties nav not visible");
+      test.skip(true, "Portfolio nav not visible");
       return;
     }
     await navLink.click();

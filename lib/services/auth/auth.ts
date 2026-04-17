@@ -87,6 +87,7 @@ function createBaseAuthOptions(): NextAuthOptions {
                 email: credentials.email,
                 name: "Demo User",
                 image: null,
+                role: "ADMIN",
               };
             }
 
@@ -114,6 +115,7 @@ function createBaseAuthOptions(): NextAuthOptions {
                 email: user.email,
                 name: user.name,
                 image: user.image,
+                role: user.role,
               };
             } catch (error) {
               logger.error(
@@ -126,6 +128,7 @@ function createBaseAuthOptions(): NextAuthOptions {
                 email: credentials.email,
                 name: "Demo User",
                 image: null,
+                role: "ADMIN",
               };
             }
           }
@@ -197,6 +200,7 @@ function createBaseAuthOptions(): NextAuthOptions {
           t.email = user.email ?? undefined;
           t.name = user.name ?? undefined;
           t.picture = user.image ?? undefined;
+          t.role = (user as NextAuthUser & { role?: string }).role ?? t.role ?? "ADMIN";
         }
         return token;
       },
@@ -222,12 +226,14 @@ function createBaseAuthOptions(): NextAuthOptions {
               email?: string;
               name?: string;
               picture?: string;
+              role?: string;
               isDevAuth?: boolean;
             };
             sessionUser.id = t.sub || t.id;
             if (t.email) sessionUser.email = t.email;
             if (t.name) sessionUser.name = t.name;
             if (t.picture) sessionUser.image = t.picture;
+            session.user.role = t.role || session.user.role || "ADMIN";
 
             // If dev auth, update session expiry to 24 hours from now
             if (t.isDevAuth) {

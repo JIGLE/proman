@@ -1,19 +1,11 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import {
-  Search,
-  Building2,
-  Users,
-  FileText,
-  Wrench,
-  DollarSign,
-  Plus,
-  ArrowRight,
-} from "lucide-react";
+import { Search, Building2, Users, DollarSign, Plus, ArrowRight, FileText } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/utils";
 import { useApp } from "@/lib/contexts/app-context";
+import { usePortalAccess } from "@/lib/contexts/portal-context";
 
 interface CommandItem {
   id: string;
@@ -34,6 +26,7 @@ export function CommandPalette() {
   const { state } = useApp();
   const pathname = usePathname();
   const router = useRouter();
+  const { portalRole, navigation } = usePortalAccess();
   const locale = pathname.split("/")[1] || "pt";
 
   // Keyboard shortcut to open
@@ -62,93 +55,53 @@ export function CommandPalette() {
 
   // Build items
   const items = useMemo<CommandItem[]>(() => {
-    const actions: CommandItem[] = [
-      {
-        id: "add-property",
-        label: "Add Property",
-        description: "Create a new property listing",
-        icon: Plus,
-        category: "action",
-        href: `/${locale}/properties`,
-      },
-      {
-        id: "add-tenant",
-        label: "Add Tenant",
-        description: "Register a new tenant",
-        icon: Plus,
-        category: "action",
-        href: `/${locale}/tenants`,
-      },
-      {
-        id: "add-lease",
-        label: "Create Lease",
-        description: "Draft a new lease agreement",
-        icon: Plus,
-        category: "action",
-        href: `/${locale}/leases`,
-      },
-      {
-        id: "record-payment",
-        label: "Record Payment",
-        description: "Log a rent payment",
-        icon: DollarSign,
-        category: "action",
-        href: `/${locale}/financials`,
-      },
-      {
-        id: "log-maintenance",
-        label: "Log Maintenance",
-        description: "Create a maintenance ticket",
-        icon: Wrench,
-        category: "action",
-        href: `/${locale}/maintenance`,
-      },
-    ];
+    const actions: CommandItem[] =
+      portalRole === "owner"
+        ? [
+            {
+              id: "add-property",
+              label: "Add Property",
+              description: "Create a new property listing",
+              icon: Plus,
+              category: "action",
+              href: `/${locale}/portfolio`,
+            },
+            {
+              id: "add-tenant",
+              label: "Add Person",
+              description: "Open people to add a tenant, owner, or contact",
+              icon: Plus,
+              category: "action",
+              href: `/${locale}/people`,
+            },
+            {
+              id: "record-payment",
+              label: "Record Payment",
+              description: "Open the payment queue and receipt flow",
+              icon: DollarSign,
+              category: "action",
+              href: `/${locale}/financials?tab=receipts`,
+            },
+            {
+              id: "review-documents",
+              label: "Review Documents",
+              description: "Open contracts, receipts, and notices",
+              icon: FileText,
+              category: "action",
+              href: `/${locale}/documents`,
+            },
+          ]
+        : [];
 
-    const navigation: CommandItem[] = [
-      {
-        id: "nav-dashboard",
-        label: "Dashboard",
-        icon: Building2,
-        category: "navigation",
-        href: `/${locale}/overview`,
-      },
-      {
-        id: "nav-properties",
-        label: "Properties",
-        icon: Building2,
-        category: "navigation",
-        href: `/${locale}/properties`,
-      },
-      {
-        id: "nav-tenants",
-        label: "Tenants",
-        icon: Users,
-        category: "navigation",
-        href: `/${locale}/tenants`,
-      },
-      {
-        id: "nav-leases",
-        label: "Leases",
-        icon: FileText,
-        category: "navigation",
-        href: `/${locale}/leases`,
-      },
-      {
-        id: "nav-finance",
-        label: "Finance",
-        icon: DollarSign,
-        category: "navigation",
-        href: `/${locale}/financials`,
-      },
-      {
-        id: "nav-maintenance",
-        label: "Maintenance",
-        icon: Wrench,
-        category: "navigation",
-        href: `/${locale}/maintenance`,
-      },
-    ];
+    const navigationItems: CommandItem[] = navigation.flatMap((group) =>
+      group.items.map((item) => ({
+        id: `nav-${item.key}`,
+        label: item.label,
+        icon: item.icon,
+        category: "navigation" as const,
+        href: `/${locale}${item.href}`,
+      })),
+    );
 
     const propertyItems: CommandItem[] = state.properties.map((p) => ({
       id: `property-${p.id}`,
@@ -156,7 +109,7 @@ export function CommandPalette() {
       description: p.address,
       icon: Building2,
       category: "property" as const,
-      href: `/${locale}/properties/${p.id}`,
+      href: `/${locale}/portfolio/${p.id}`,
     }));
 
     const tenantItems: CommandItem[] = state.tenants.map((t) => ({
@@ -165,11 +118,11 @@ export function CommandPalette() {
       description: t.email,
       icon: Users,
       category: "tenant" as const,
-      href: `/${locale}/tenants/${t.id}`,
+      href: `/${locale}/people/${t.id}`,
     }));
 
-    return [...actions, ...navigation, ...propertyItems, ...tenantItems];
-  }, [state.properties, state.tenants, locale]);
+    return [...actions, ...navigationItems, ...propertyItems, ...tenantItems];
+  }, [navigation, portalRole, state.properties, state.tenants, locale]);
 
   // Filter
   const filtered = useMemo(() => {
@@ -222,8 +175,8 @@ export function CommandPalette() {
   const categoryLabels: Record<string, string> = {
     action: "Quick Actions",
     navigation: "Navigation",
-    property: "Properties",
-    tenant: "Tenants",
+    property: "Portfolio",
+    tenant: "People",
     lease: "Leases",
   };
 

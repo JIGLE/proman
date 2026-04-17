@@ -1,5 +1,9 @@
 import { NextRequest } from "next/server";
-import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  getAccessContext,
+  handleOptions,
+  requireOwnerAccess,
+} from "@/lib/services/auth/auth-middleware";
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -19,10 +23,10 @@ async function handleGet(request: NextRequest): Promise<Response> {
   const demo = handleDemoGet(request, "properties");
   if (demo.response) return demo.response;
 
-  const authResult = await requireAuth(request);
+  const authResult = await getAccessContext(request);
   if (authResult instanceof Response) return authResult;
 
-  const { userId } = authResult;
+  const { scopeUserId, portalRole, propertyId } = authResult;
 
   try {
     // Check if pagination is requested
@@ -36,19 +40,31 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
       const [properties, total] = await Promise.all([
         prisma.property.findMany({
-          where: { userId },
+          where:
+            portalRole === "tenant" && propertyId
+              ? { userId: scopeUserId, id: propertyId }
+              : { userId: scopeUserId },
           skip: pagination.skip,
           take: pagination.limit,
           orderBy: { createdAt: "desc" },
         }),
-        prisma.property.count({ where: { userId } }),
+        prisma.property.count({
+          where:
+            portalRole === "tenant" && propertyId
+              ? { userId: scopeUserId, id: propertyId }
+              : { userId: scopeUserId },
+        }),
       ]);
 
       return createSuccessResponse(createPaginatedResponse(properties, total, pagination));
     } else {
       // Legacy: Return all properties (backward compatible)
-      const properties = await propertyService.getAll(userId);
-      return createSuccessResponse(properties);
+      const properties = await propertyService.getAll(scopeUserId);
+      return createSuccessResponse(
+        portalRole === "tenant" && propertyId
+          ? properties.filter((property) => property.id === propertyId)
+          : properties,
+      );
     }
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);
@@ -60,10 +76,10 @@ async function handlePost(request: NextRequest): Promise<Response> {
   const demo = await handleDemoMutation(request, "properties");
   if (demo.response) return demo.response;
 
-  const authResult = await requireAuth(request);
+  const authResult = await requireOwnerAccess(request);
   if (authResult instanceof Response) return authResult;
 
-  const { userId } = authResult;
+  const { scopeUserId } = authResult;
 
   try {
     const body = await request.json();
@@ -88,7 +104,7 @@ async function handlePost(request: NextRequest): Promise<Response> {
       rent: sanitizeNumber(validatedData.rent, 0, 0),
     };
 
-    const property = await propertyService.create(userId, sanitizedData);
+    const property = await propertyService.create(scopeUserId, sanitizedData);
     return createSuccessResponse(property, 201);
   } catch (error) {
     if (error instanceof ZodError) {

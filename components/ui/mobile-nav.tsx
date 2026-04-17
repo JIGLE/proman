@@ -2,58 +2,20 @@
 
 import * as React from "react";
 import { useState } from "react";
-import {
-  Building2,
-  Users,
-  Home,
-  Menu,
-  X,
-  Hammer,
-  Settings,
-  LogOut,
-  Search,
-  Wallet,
-  FileText,
-  FileBox,
-  Contact,
-  UserCog,
-  BarChart3,
-  ClipboardList,
-} from "lucide-react";
+import { Menu, X, LogOut, Search, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { usePortalAccess } from "@/lib/contexts/portal-context";
 
 interface MobileNavProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
   onSearchClick?: () => void;
 }
-
-// Primary navigation items for bottom bar (4 items for optimal thumb reach)
-// Aligned with new IA: Dashboard, Properties, Tenants, More
-const primaryNavItems = [
-  { id: "home", label: "Dashboard", icon: Home, href: "/overview" },
-  { id: "assets", label: "Properties", icon: Building2, href: "/properties" },
-  { id: "people", label: "Tenants", icon: Users, href: "/tenants" },
-  { id: "more", label: "More", icon: Menu, href: null },
-];
-
-// Secondary items in the "More" menu - aligned with new IA
-const secondaryNavItems = [
-  { id: "leases", label: "Leases", icon: FileText, href: "/leases" },
-  { id: "finance", label: "Finance", icon: Wallet, href: "/financials" },
-  { id: "maintenance", label: "Maintenance", icon: Hammer, href: "/maintenance" },
-  { id: "documents", label: "Documents", icon: FileBox, href: "/documents" },
-  { id: "contacts", label: "Contacts", icon: Contact, href: "/contacts" },
-  { id: "owners", label: "Owners", icon: UserCog, href: "/owners" },
-  { id: "analytics", label: "Analytics", icon: BarChart3, href: "/analytics" },
-  { id: "reports", label: "Reports", icon: ClipboardList, href: "/reports" },
-  { id: "settings", label: "Settings", icon: Settings, href: "/settings" },
-];
 
 export function MobileBottomNav({
   activeTab: _activeTab,
@@ -63,6 +25,7 @@ export function MobileBottomNav({
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const { data: session } = useSession();
   const pathname = usePathname();
+  const { mobilePrimaryNavigation, mobileSecondaryNavigation } = usePortalAccess();
   const user = session?.user;
   const initials =
     user?.name
@@ -73,6 +36,21 @@ export function MobileBottomNav({
 
   // Extract locale from pathname
   const currentLocale = pathname.split("/")[1] || "en";
+  const primaryNavItems = [
+    ...mobilePrimaryNavigation.map((item) => ({
+      id: item.key,
+      label: item.label,
+      icon: item.icon,
+      href: item.href,
+    })),
+    { id: "more", label: "More", icon: Menu, href: null },
+  ];
+  const secondaryNavItems = mobileSecondaryNavigation.map((item) => ({
+    id: item.key,
+    label: item.label,
+    icon: item.icon,
+    href: item.href,
+  }));
 
   const handleNavClick = (id: string, _href: string | null) => {
     if (id === "more") {

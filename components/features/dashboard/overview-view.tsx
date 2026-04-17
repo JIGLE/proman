@@ -1,294 +1,124 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { type ElementType, type ReactElement, useMemo } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
+  AlertTriangle,
+  ArrowRight,
+  BadgeEuro,
   Building2,
-  Users,
-  DollarSign,
-  TrendingUp,
-  Trophy,
-  Sun,
-  Sunset,
-  Moon,
-  Keyboard,
-  X,
-  RefreshCw,
+  CalendarClock,
+  CreditCard,
   FileText,
-  ArrowUpRight,
-  ArrowDownRight,
-  Minus,
-  ChevronRight,
-  Zap,
-  Wrench,
-  Mail,
+  Home,
+  Plus,
+  Receipt,
+  ShieldCheck,
+  Sparkles,
+  UserRound,
 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { LineChart, DonutChart } from "@/components/ui/charts";
-import { DashboardGrid, ChartWidget, ListWidget } from "@/components/ui/dashboard-widgets";
-import { AttentionNeeded } from "@/components/ui/quick-actions";
-import { useCurrency } from "@/lib/contexts/currency-context";
-import { useApp } from "@/lib/contexts/app-context";
-import { AchievementGrid } from "@/components/ui/achievements";
-import {
-  OnboardingChecklist,
-  getDefaultOnboardingSteps,
-} from "@/components/ui/onboarding-checklist";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
-import { DashboardSkeleton } from "@/components/ui/page-skeletons";
-import { motion, AnimatePresence } from "framer-motion";
-import { useTranslations } from "next-intl";
-import { useSession } from "next-auth/react";
-import { useKeyboardShortcuts } from "@/lib/hooks/use-keyboard-shortcuts";
 import { cn } from "@/lib/utils/utils";
-import { tokens } from "@/lib/design-tokens";
+import { useApp } from "@/lib/contexts/app-context";
+import { useCurrency } from "@/lib/contexts/currency-context";
+import { usePortalAccess } from "@/lib/contexts/portal-context";
+import { getActiveLease } from "@/lib/utils/lease-helpers";
 
-const MONTH_KEYS = [
-  "jan",
-  "feb",
-  "mar",
-  "apr",
-  "may",
-  "jun",
-  "jul",
-  "aug",
-  "sep",
-  "oct",
-  "nov",
-  "dec",
-] as const;
-
-function getGreetingKey(): {
-  key: "morning" | "afternoon" | "evening" | "night";
-  icon: typeof Sun;
-} {
-  const hour = new Date().getHours();
-  if (hour >= 5 && hour < 12) return { key: "morning", icon: Sun };
-  if (hour >= 12 && hour < 17) return { key: "afternoon", icon: Sun };
-  if (hour >= 17 && hour < 21) return { key: "evening", icon: Sunset };
-  return { key: "night", icon: Moon };
-}
-
-/* ─── Stat Card ─────────────────────────────────────── */
-interface StatCardProps {
-  title: string;
-  value: string | number;
-  change?: number;
-  changeLabel?: string;
-  icon: React.ElementType;
-  accent?: string;
-  /** Make this card visually larger / more prominent */
-  hero?: boolean;
-}
-
-function StatCard({
-  title,
-  value,
-  change,
-  icon: Icon,
-  accent = "text-[var(--color-primary)]",
-  hero = false,
-}: StatCardProps) {
-  return (
-    <div className={cn("card-elevated rounded-xl group", hero ? "p-6" : "p-5")}>
-      <div className="flex items-start justify-between mb-3">
-        <div
-          className={cn(
-            "flex items-center justify-center rounded-lg bg-[var(--color-secondary)]",
-            hero ? "w-12 h-12" : "w-10 h-10",
-          )}
-        >
-          <Icon className={cn(hero ? "h-6 w-6" : "h-5 w-5", accent)} />
-        </div>
-        {change !== undefined && (
-          <div
-            className={cn(
-              "flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full",
-              change > 0
-                ? "text-[var(--color-success)] bg-[var(--color-success-muted)]"
-                : change < 0
-                  ? "text-[var(--color-destructive)] bg-[var(--color-error-muted)]"
-                  : "text-[var(--color-muted-foreground)] bg-[var(--color-muted)]",
-            )}
-          >
-            {change > 0 ? (
-              <ArrowUpRight className="h-3 w-3" />
-            ) : change < 0 ? (
-              <ArrowDownRight className="h-3 w-3" />
-            ) : (
-              <Minus className="h-3 w-3" />
-            )}
-            {Math.abs(change).toFixed(1)}%
-          </div>
-        )}
-      </div>
-      <p
-        className={cn(
-          "font-bold tracking-tight text-[var(--color-foreground)]",
-          hero ? "text-3xl" : "text-2xl",
-        )}
-      >
-        {value}
-      </p>
-      <p
-        className={cn(
-          "text-[var(--color-muted-foreground)] mt-1",
-          hero ? "text-sm font-medium" : "text-sm",
-        )}
-      >
-        {title}
-      </p>
-    </div>
-  );
-}
-
-/* ─── Quick Action Hero Button ──────────────────────── */
-interface QuickActionHeroProps {
-  label: string;
-  description: string;
-  icon: React.ElementType;
-  onClick?: () => void;
-  primary?: boolean;
-  shortcut?: string;
-  testId?: string;
-  dataTour?: string;
-}
-
-function QuickActionHero({
-  label,
-  description,
-  icon: Icon,
-  onClick,
-  primary,
-  shortcut,
-  testId,
-  dataTour,
-}: QuickActionHeroProps) {
-  return (
-    <motion.button
-      whileHover={{ scale: 1.01, y: -2 }}
-      whileTap={{ scale: 0.98 }}
-      onClick={onClick}
-      data-testid={testId}
-      data-tour={dataTour}
-      className={cn(
-        "relative flex items-start gap-4 p-5 rounded-xl text-left w-full transition-all duration-200",
-        "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]",
-        primary
-          ? `bg-gradient-to-br from-[var(--color-primary)] to-[${tokens.accentSecondary}] text-white border-transparent shadow-lg animate-glow-pulse`
-          : "card-elevated hover:border-[var(--color-inner-border-active)]",
-      )}
-    >
-      <div
-        className={cn(
-          "flex items-center justify-center w-11 h-11 rounded-lg shrink-0",
-          primary ? "bg-white/20" : "bg-[var(--color-secondary)]",
-        )}
-      >
-        <Icon className={cn("h-5 w-5", primary ? "text-white" : "text-[var(--color-primary)]")} />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              "font-semibold text-sm",
-              primary ? "text-white" : "text-[var(--color-foreground)]",
-            )}
-          >
-            {label}
-          </span>
-          {shortcut && (
-            <kbd
-              className={cn(
-                "hidden sm:inline-flex items-center px-1.5 py-0.5 text-[10px] font-mono rounded",
-                primary
-                  ? "bg-white/20 text-white/80"
-                  : "bg-[var(--color-muted)] text-[var(--color-muted-foreground)]",
-              )}
-            >
-              {shortcut}
-            </kbd>
-          )}
-        </div>
-        <p
-          className={cn(
-            "text-xs mt-0.5",
-            primary ? "text-white/70" : "text-[var(--color-muted-foreground)]",
-          )}
-        >
-          {description}
-        </p>
-      </div>
-      <ChevronRight
-        className={cn(
-          "h-4 w-4 shrink-0 mt-1 opacity-40 transition-opacity",
-          primary ? "text-white" : "text-[var(--color-muted-foreground)]",
-        )}
-      />
-    </motion.button>
-  );
-}
-
-/* ─── Property Row ──────────────────────────────────── */
-function PropertyRow({
-  property,
-  formatCurrency,
-}: {
-  property: {
-    id: string;
-    name: string;
-    status: string;
-    bedrooms: number;
-    bathrooms: number;
-    rent: number;
-  };
-  formatCurrency: (n: number) => string;
-}) {
-  const statusColors: Record<string, string> = {
-    occupied:
-      "bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]/20",
-    vacant:
-      "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20",
-    maintenance:
-      "bg-[var(--color-error-muted)] text-[var(--color-destructive)] border-[var(--color-destructive)]/20",
-  };
-
-  return (
-    <div className="flex items-center justify-between py-3 px-4 rounded-lg hover:bg-[var(--color-hover)] transition-colors">
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-[var(--color-secondary)] shrink-0">
-          <Building2 className="h-4 w-4 text-[var(--color-primary)]" />
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
-            {property.name}
-          </p>
-          <p className="text-xs text-[var(--color-muted-foreground)]">
-            {property.bedrooms} bed · {property.bathrooms} bath · {formatCurrency(property.rent)}/mo
-          </p>
-        </div>
-      </div>
-      <Badge
-        className={cn(
-          "text-xs border shrink-0",
-          statusColors[property.status] || statusColors.vacant,
-        )}
-      >
-        {property.status}
-      </Badge>
-    </div>
-  );
-}
-
-/* ─── Main Component ────────────────────────────────── */
 export interface OverviewViewProps {
   onAddProperty?: () => void;
   onAddTenant?: () => void;
   onAddLease?: () => void;
   onRecordPayment?: () => void;
-  onCreateTicket?: () => void;
-  onSendCorrespondence?: () => void;
+}
+
+function startOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), 1);
+}
+
+function endOfMonth(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59, 999);
+}
+
+function formatDate(date?: string) {
+  if (!date) return "—";
+  return new Date(date).toLocaleDateString(undefined, {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function addMonths(date: Date, months: number) {
+  return new Date(date.getFullYear(), date.getMonth() + months, 5);
+}
+
+function MetricCard({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  tone = "default",
+}: {
+  title: string;
+  value: string;
+  subtitle: string;
+  icon: ElementType;
+  tone?: "default" | "danger" | "success" | "info";
+}) {
+  const toneClasses = {
+    default: "border-white/10 bg-white/[0.03] text-zinc-100",
+    danger: "border-red-500/20 bg-red-500/10 text-red-50",
+    success: "border-emerald-500/20 bg-emerald-500/10 text-emerald-50",
+    info: "border-blue-500/20 bg-blue-500/10 text-blue-50",
+  };
+
+  return (
+    <Card className={cn("overflow-hidden border shadow-sm", toneClasses[tone])}>
+      <CardContent className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm text-zinc-400">{title}</p>
+            <p className="mt-2 text-3xl font-semibold tracking-tight text-zinc-50">{value}</p>
+          </div>
+          <div className="rounded-2xl bg-black/20 p-3">
+            <Icon className="h-5 w-5 text-zinc-100" />
+          </div>
+        </div>
+        <p className="mt-3 text-xs text-zinc-400">{subtitle}</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function ActionTile({
+  title,
+  subtitle,
+  icon: Icon,
+  onClick,
+}: {
+  title: string;
+  subtitle: string;
+  icon: ElementType;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="flex w-full items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left transition hover:border-white/20 hover:bg-white/[0.07]"
+    >
+      <div className="rounded-xl bg-white/10 p-2">
+        <Icon className="h-4 w-4 text-zinc-100" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="font-medium text-zinc-50">{title}</p>
+        <p className="mt-1 text-sm text-zinc-400">{subtitle}</p>
+      </div>
+    </button>
+  );
 }
 
 export function OverviewView({
@@ -296,699 +126,608 @@ export function OverviewView({
   onAddTenant,
   onAddLease,
   onRecordPayment,
-  onCreateTicket,
-  onSendCorrespondence,
-}: OverviewViewProps = {}): React.ReactElement {
-  const { state, refreshData } = useApp();
-  const { properties, tenants, receipts, maintenance } = state;
-  const isLoading = state.loading;
+}: OverviewViewProps = {}): ReactElement {
+  const { state } = useApp();
   const { formatCurrency } = useCurrency();
-  const t = useTranslations();
+  const { isOwnerPortal } = usePortalAccess();
   const { data: session } = useSession();
-  const greetingInfo = useMemo(() => getGreetingKey(), []);
-  const GreetingIcon = greetingInfo.icon;
-  const greetingText = t(`greeting.${greetingInfo.key}`);
-  const userName = session?.user?.name?.split(" ")[0] || "there";
-  const [showShortcuts, setShowShortcuts] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const router = useRouter();
+  const pathname = usePathname();
+  const locale = pathname.split("/")[1] || "pt";
 
-  // Refresh handler
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await refreshData();
-      setLastUpdated(new Date());
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [refreshData]);
+  const { properties = [], tenants = [], leases = [], receipts = [], loading } = state;
 
-  // Keyboard shortcuts
-  const shortcuts = useMemo(
-    () => [
-      {
-        key: "p",
-        ctrl: true,
-        action: () => onAddProperty?.(),
-        description: t("quickActions.addProperty"),
-      },
-      {
-        key: "t",
-        ctrl: true,
-        action: () => onAddTenant?.(),
-        description: t("quickActions.addTenant"),
-      },
-      {
-        key: "l",
-        ctrl: true,
-        action: () => onAddLease?.(),
-        description: t("quickActions.createLease"),
-      },
-      {
-        key: "r",
-        ctrl: true,
-        action: () => onRecordPayment?.(),
-        description: t("quickActions.recordPayment"),
-      },
-      {
-        key: "m",
-        ctrl: true,
-        action: () => onCreateTicket?.(),
-        description: t("quickActions.maintenanceTicket"),
-      },
-      {
-        key: "/",
-        action: () => setShowShortcuts((prev) => !prev),
-        description: "Toggle shortcuts",
-      },
-      {
-        key: "r",
-        shift: true,
-        action: handleRefresh,
-        description: "Refresh data",
-      },
-    ],
-    [onAddProperty, onAddTenant, onAddLease, onRecordPayment, onCreateTicket, handleRefresh, t],
-  );
+  const navigate = (href: string) => router.push(`/${locale}${href}`);
+  const handleAddProperty = () => onAddProperty?.() ?? navigate("/portfolio");
+  const handleAddTenant = () => onAddTenant?.() ?? navigate("/people");
+  const handleAddLease = () => onAddLease?.() ?? navigate("/leases");
+  const handleRecordPayment = () => onRecordPayment?.() ?? navigate("/financials?tab=receipts");
 
-  useKeyboardShortcuts({ shortcuts });
+  const dashboardData = useMemo(() => {
+    const currentMonth = new Date();
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
 
-  // ─── Computed stats ──────────────────────────────────
-  const totalProperties = properties.length;
-  const occupiedProperties = properties.filter((p) => p.status === "occupied").length;
-  const vacantProperties = properties.filter((p) => p.status === "vacant").length;
-  const activeTenants = tenants.length;
-  const overduePayments = tenants.filter((t) => t.paymentStatus === "overdue").length;
-  const openTickets = maintenance.filter(
-    (m) => m.status === "open" || m.status === "in_progress",
-  ).length;
+    const occupiedProperties = properties.filter(
+      (property) => property.status === "occupied",
+    ).length;
+    const occupancyRate =
+      properties.length > 0 ? (occupiedProperties / properties.length) * 100 : 0;
 
-  const monthlyRevenue = receipts
-    .filter((r) => r.status === "paid" && r.type === "rent")
-    .reduce((sum, r) => sum + r.amount, 0);
-
-  const occupancyRate = totalProperties > 0 ? (occupiedProperties / totalProperties) * 100 : 0;
-
-  // Monthly revenue trend (last 6 months)
-  const monthlyTrend = useMemo(() => {
-    const now = new Date();
-    const trend = [];
-    for (let i = 5; i >= 0; i--) {
-      const targetDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthReceipts = receipts.filter((r) => {
-        const d = new Date(r.date);
+    const monthlyIncome = receipts
+      .filter((receipt) => {
+        const receiptDate = new Date(receipt.date);
         return (
-          d.getMonth() === targetDate.getMonth() &&
-          d.getFullYear() === targetDate.getFullYear() &&
-          r.status === "paid" &&
-          r.type === "rent"
+          receipt.status === "paid" &&
+          receipt.type === "rent" &&
+          receiptDate >= monthStart &&
+          receiptDate <= monthEnd
         );
-      });
-      trend.push({
-        label: t(`calendar.months.${MONTH_KEYS[targetDate.getMonth()]}`),
-        value: monthReceipts.reduce((sum, r) => sum + r.amount, 0),
-      });
-    }
-    return trend;
-  }, [receipts, t]);
+      })
+      .reduce((sum, receipt) => sum + receipt.amount, 0);
 
-  // Property type distribution
-  const propertyTypeData = useMemo(() => {
-    const types = properties.reduce<Record<string, number>>((acc, p) => {
-      const type = p.type || "other";
-      acc[type] = (acc[type] || 0) + 1;
-      return acc;
-    }, {});
-    const colors: Record<string, string> = {
-      apartment: tokens.chartPropertyType.apartment,
-      house: tokens.chartPropertyType.house,
-      commercial: tokens.chartPropertyType.commercial,
-      other: tokens.chartPropertyType.other,
+    const overdueTenants = tenants.filter((tenant) => tenant.paymentStatus === "overdue");
+    const overdueRent = overdueTenants.reduce((sum, tenant) => {
+      const activeLease = getActiveLease(tenant.id, leases);
+      return sum + (activeLease?.monthlyRent ?? tenant.rent ?? 0);
+    }, 0);
+
+    const pendingReceipts = receipts.filter((receipt) => receipt.status === "pending").length;
+
+    const recentPayments = [...receipts]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 4);
+
+    const overdueQueue = overdueTenants
+      .map((tenant) => {
+        const activeLease = getActiveLease(tenant.id, leases);
+        const relatedPropertyId = activeLease?.propertyId ?? tenant.propertyId;
+
+        return {
+          id: tenant.id,
+          tenantName: tenant.name,
+          propertyName:
+            properties.find((property) => property.id === relatedPropertyId)?.name ??
+            tenant.propertyName ??
+            "Unassigned property",
+          amountDue: activeLease?.monthlyRent ?? tenant.rent ?? 0,
+          dueDate: tenant.lastPayment || activeLease?.startDate,
+        };
+      })
+      .slice(0, 4);
+
+    const expiringLeases = [...leases]
+      .filter((lease) => lease.status === "active")
+      .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime())
+      .slice(0, 4)
+      .map((lease) => ({
+        id: lease.id,
+        propertyName:
+          properties.find((property) => property.id === lease.propertyId)?.name ??
+          lease.property?.name ??
+          "Property",
+        tenantName:
+          tenants.find((tenant) => tenant.id === lease.tenantId)?.name ??
+          lease.tenant?.name ??
+          "Tenant",
+        endDate: lease.endDate,
+      }));
+
+    const tenant = tenants[0] ?? null;
+    const activeLease = tenant ? getActiveLease(tenant.id, leases) : null;
+    const home = properties.find(
+      (property) => property.id === (activeLease?.propertyId ?? tenant?.propertyId),
+    );
+    const paidReceipts = receipts.filter((receipt) => receipt.status === "paid");
+    const nextPaymentDate = addMonths(new Date(), 1);
+
+    return {
+      occupancyRate,
+      monthlyIncome,
+      overdueRent,
+      pendingReceipts,
+      recentPayments,
+      overdueQueue,
+      expiringLeases,
+      tenant,
+      activeLease,
+      home,
+      paidReceipts,
+      nextPaymentDate,
     };
-    return Object.entries(types).map(([type, count]) => ({
-      label: type.charAt(0).toUpperCase() + type.slice(1),
-      value: count as number,
-      color: colors[type] || colors.other,
-    }));
-  }, [properties]);
+  }, [leases, properties, receipts, tenants]);
 
-  // Recent payments
-  const recentPayments = useMemo(
-    () =>
-      receipts
-        .filter((r) => r.status === "paid")
-        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-        .slice(0, 3),
-    [receipts],
-  );
+  const firstName = session?.user?.name?.split(" ")[0] || "there";
 
-  // Recent activities
-  const recentActivities = useMemo(
-    () =>
-      recentPayments
-        .map((payment) => ({
-          id: payment.id,
-          type: "payment" as const,
-          message: `Payment received from ${payment.propertyName}`,
-          amount: payment.amount,
-          timestamp: payment.date,
-          icon: "💰",
-        }))
-        .slice(0, 5),
-    [recentPayments],
-  );
-
-  // Recent properties
-  const recentProperties = useMemo(
-    () =>
-      [...properties]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 5),
-    [properties],
-  );
-
-  // Attention items
-  const attentionItems = useMemo(
-    () => [
-      ...(overduePayments > 0
-        ? [
-            {
-              id: "overdue-payments",
-              type: "overdue" as const,
-              title: "Overdue Payments",
-              description: `${overduePayments} tenant${overduePayments > 1 ? "s have" : " has"} overdue payments`,
-              count: overduePayments,
-              urgency: (overduePayments > 3 ? "high" : "medium") as "high" | "medium" | "low",
-              actionLabel: "View",
-            },
-          ]
-        : []),
-      ...(vacantProperties > 0
-        ? [
-            {
-              id: "vacant-properties",
-              type: "vacancy" as const,
-              title: "Vacant Properties",
-              description: `${vacantProperties} propert${vacantProperties > 1 ? "ies are" : "y is"} currently vacant`,
-              count: vacantProperties,
-              urgency: (vacantProperties > 2 ? "medium" : "low") as "high" | "medium" | "low",
-              actionLabel: "View",
-            },
-          ]
-        : []),
-      ...(openTickets > 0
-        ? [
-            {
-              id: "open-tickets",
-              type: "maintenance" as const,
-              title: "Open Tickets",
-              description: `${openTickets} maintenance ticket${openTickets > 1 ? "s" : ""} pending`,
-              count: openTickets,
-              urgency: (openTickets > 3 ? "high" : "low") as "high" | "medium" | "low",
-              actionLabel: "View",
-            },
-          ]
-        : []),
-    ],
-    [overduePayments, vacantProperties, openTickets],
-  );
-
-  // Onboarding
-  const hasProperties = totalProperties > 0;
-  const hasPayments = receipts.length > 0;
-  const hasTenants = activeTenants > 0;
-  const hasActivities = recentActivities.length > 0;
-
-  const onboardingSteps = useMemo(
-    () => [
-      {
-        id: "property",
-        label: "Add your first property",
-        completed: hasProperties,
-      },
-      { id: "tenant", label: "Add a tenant", completed: hasTenants },
-      { id: "payment", label: "Record a payment", completed: hasPayments },
-    ],
-    [hasProperties, hasTenants, hasPayments],
-  );
-
-  const completedSteps = onboardingSteps.filter((s) => s.completed).length;
-  const isOnboardingComplete = completedSteps === onboardingSteps.length;
-
-  // Property status summary
-  const propertyStatus = properties.slice(0, 3);
-
-  // Loading skeleton
-  if (isLoading) {
-    return <DashboardSkeleton />;
+  if (loading) {
+    return <div className="h-40 animate-pulse rounded-2xl bg-[var(--color-muted)]/30" />;
   }
 
-  return (
-    <div className="space-y-8 animate-fade-in">
-      {/* ─── Keyboard Shortcuts Panel ─── */}
-      <AnimatePresence>
-        {showShortcuts && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="fixed top-4 right-4 z-popover"
-          >
-            <Card className="w-72 glass-modal">
-              <CardHeader className="pb-2">
+  if (properties.length === 0 && isOwnerPortal) {
+    return (
+      <EmptyStateIllustration
+        type="properties"
+        title="Start managing your portfolio"
+        description="Add your first property, then connect the tenant, lease, and first payment."
+        onAction={handleAddProperty}
+        actionLabel="Add your first property"
+      />
+    );
+  }
+
+  if (isOwnerPortal) {
+    return (
+      <div className="space-y-6">
+        <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.25),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.18),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
+          <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
+            <div className="space-y-5">
+              <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-sm text-blue-200">
+                <Sparkles className="h-4 w-4" />
+                Daily operations for {firstName}
+              </div>
+              <div className="space-y-3">
+                <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-zinc-50 sm:text-4xl">
+                  Stay ahead of overdue rent, expiring leases, and receipt follow-up.
+                </h1>
+                <p className="max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">
+                  Your owner workspace highlights what needs attention first, keeps cash flow
+                  visible, and gives you direct paths into payments, tenants, and portfolio
+                  activity.
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-3">
+                <ActionTile
+                  title="Add property"
+                  subtitle="Expand the portfolio with a new unit."
+                  icon={Plus}
+                  onClick={handleAddProperty}
+                />
+                <ActionTile
+                  title="Add tenant"
+                  subtitle="Assign a resident and start the lease flow."
+                  icon={UserRound}
+                  onClick={handleAddTenant}
+                />
+                <ActionTile
+                  title="Record payment"
+                  subtitle="Issue the payment record and prepare the receipt."
+                  icon={Receipt}
+                  onClick={handleRecordPayment}
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <MetricCard
+                title="Overdue rent"
+                value={formatCurrency(dashboardData.overdueRent)}
+                subtitle={`${dashboardData.overdueQueue.length} tenant${dashboardData.overdueQueue.length === 1 ? "" : "s"} need follow-up`}
+                icon={AlertTriangle}
+                tone="danger"
+              />
+              <MetricCard
+                title="Collected this month"
+                value={formatCurrency(dashboardData.monthlyIncome)}
+                subtitle="Paid rent already posted this month"
+                icon={BadgeEuro}
+                tone="success"
+              />
+              <MetricCard
+                title="Occupancy"
+                value={`${dashboardData.occupancyRate.toFixed(0)}%`}
+                subtitle={`${properties.length} properties currently tracked`}
+                icon={Building2}
+                tone="info"
+              />
+              <MetricCard
+                title="Receipts pending"
+                value={`${dashboardData.pendingReceipts}`}
+                subtitle="Records still waiting for review or output"
+                icon={FileText}
+              />
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+          <Card className="border-white/10 bg-zinc-950/70">
+            <CardHeader className="flex flex-row items-center justify-between gap-4">
+              <div>
+                <CardTitle>Action queue</CardTitle>
+                <p className="mt-1 text-sm text-zinc-400">
+                  Prioritize collection and contract tasks before they become problems.
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleRecordPayment}>
+                Open payments
+              </Button>
+            </CardHeader>
+            <CardContent className="grid gap-6 lg:grid-cols-2">
+              <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm flex items-center gap-2">
-                    <Keyboard className="h-4 w-4" />
-                    Keyboard Shortcuts
-                  </CardTitle>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-6 w-6 p-0"
-                    onClick={() => setShowShortcuts(false)}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
+                  <h3 className="text-sm font-semibold text-zinc-100">Overdue rent</h3>
+                  <Badge variant="destructive">{dashboardData.overdueQueue.length}</Badge>
                 </div>
-              </CardHeader>
-              <CardContent className="pb-4">
-                <div className="space-y-2 text-sm">
-                  {shortcuts
-                    .filter((s) => s.description !== "Toggle shortcuts")
-                    .map((shortcut) => (
-                      <div
-                        key={
-                          shortcut.key + (shortcut.ctrl ? "c" : "") + (shortcut.shift ? "s" : "")
-                        }
-                        className="flex items-center justify-between"
-                      >
-                        <span className="text-[var(--color-muted-foreground)]">
-                          {shortcut.description}
-                        </span>
-                        <kbd className="px-2 py-1 bg-[var(--color-muted)] rounded text-xs font-mono">
-                          {shortcut.ctrl ? "⌘" : ""}
-                          {shortcut.shift ? "⇧" : ""}
-                          {shortcut.key.toUpperCase()}
-                        </kbd>
-                      </div>
-                    ))}
-                  <div className="flex items-center justify-between pt-2 border-t border-[var(--color-border)]">
-                    <span className="text-[var(--color-muted-foreground)]">Toggle this panel</span>
-                    <kbd className="px-2 py-1 bg-[var(--color-muted)] rounded text-xs font-mono">
-                      /
-                    </kbd>
+                {dashboardData.overdueQueue.length === 0 ? (
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">
+                    No overdue payments today.
                   </div>
+                ) : (
+                  dashboardData.overdueQueue.map((item) => (
+                    <div
+                      key={item.id}
+                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-zinc-50">{item.tenantName}</p>
+                          <p className="text-sm text-zinc-400">{item.propertyName}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-zinc-50">
+                            {formatCurrency(item.amountDue)}
+                          </p>
+                          <p className="text-xs text-red-300">Due {formatDate(item.dueDate)}</p>
+                        </div>
+                      </div>
+                      <div className="mt-4 flex gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => navigate(`/financials?tab=receipts&tenantId=${item.id}`)}
+                        >
+                          Review payment
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={handleAddLease}>
+                          Review lease
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold text-zinc-100">Lease follow-up</h3>
+                  <Badge variant="secondary">{dashboardData.expiringLeases.length}</Badge>
+                </div>
+                {dashboardData.expiringLeases.length === 0 ? (
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">
+                    No active leases need review right now.
+                  </div>
+                ) : (
+                  dashboardData.expiringLeases.map((lease) => (
+                    <div
+                      key={lease.id}
+                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="font-medium text-zinc-50">{lease.propertyName}</p>
+                          <p className="text-sm text-zinc-400">{lease.tenantName}</p>
+                        </div>
+                        <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">
+                          <CalendarClock className="h-3.5 w-3.5" />
+                          Ends {formatDate(lease.endDate)}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="space-y-4">
+            <Card className="border-white/10 bg-zinc-950/70">
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
+                <div>
+                  <CardTitle>Recent payments</CardTitle>
+                  <p className="mt-1 text-sm text-zinc-400">
+                    Latest payment activity across the portfolio.
+                  </p>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate("/financials?tab=receipts")}
+                >
+                  See all
+                  <ArrowRight className="ml-1 h-4 w-4" />
+                </Button>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {dashboardData.recentPayments.length === 0 ? (
+                  <p className="text-sm text-zinc-400">No payments recorded yet.</p>
+                ) : (
+                  dashboardData.recentPayments.map((receipt) => (
+                    <div
+                      key={receipt.id}
+                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                    >
+                      <div>
+                        <p className="font-medium text-zinc-50">{receipt.tenantName}</p>
+                        <p className="text-sm text-zinc-400">{receipt.propertyName}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-semibold text-zinc-50">
+                          {formatCurrency(receipt.amount)}
+                        </p>
+                        <p className="text-xs text-zinc-400">{formatDate(receipt.date)}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </CardContent>
+            </Card>
+
+            <Card className="border-white/10 bg-zinc-950/70">
+              <CardHeader>
+                <CardTitle>Owner highlights</CardTitle>
+                <p className="mt-1 text-sm text-zinc-400">
+                  Keep rent, leases, and receipt output moving without leaving the dashboard.
+                </p>
+              </CardHeader>
+              <CardContent className="grid gap-3">
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-sm text-zinc-400">Tracked tenants</p>
+                  <p className="mt-1 text-xl font-semibold text-zinc-50">{tenants.length}</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+                  <p className="text-sm text-zinc-400">Active leases</p>
+                  <p className="mt-1 text-xl font-semibold text-zinc-50">
+                    {leases.filter((lease) => lease.status === "active").length}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" onClick={() => navigate("/portfolio")}>
+                    Open portfolio
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate("/documents")}>
+                    Open documents
+                  </Button>
                 </div>
               </CardContent>
             </Card>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* ─── Header ─── */}
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)] mb-1">
-            <GreetingIcon className="h-4 w-4 text-amber-500" />
-            <span>
-              {greetingText}, {userName}
-            </span>
-            <span className="text-[var(--color-border)]">·</span>
-            <span className="text-xs">
-              Updated{" "}
-              {lastUpdated.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-          </div>
-          <h2 className="text-display-small font-bold tracking-tight text-[var(--color-foreground)]">
-            {t("navigation.home") || "Home"}
-          </h2>
-          <p className="text-body-medium text-[var(--color-muted-foreground)] mt-1">
-            {t("dashboard.welcome")}
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            className="h-9 w-9 p-0"
-            variant="ghost"
-            onClick={() => setShowShortcuts((prev) => !prev)}
-            title="Keyboard shortcuts (/)"
-          >
-            <Keyboard className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-9 w-9 p-0"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            title="Refresh data (Shift+R)"
-          >
-            <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-          </Button>
-        </div>
-      </div>
-
-      {/* ─── Stats Grid (HERO — first thing users see) ─── */}
-      {hasProperties ? (
-        <section data-tour="dashboard-stats">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-5">
-            <StatCard
-              title={t("dashboard.monthlyRevenue")}
-              value={formatCurrency(monthlyRevenue)}
-              icon={DollarSign}
-              accent="text-emerald-400"
-              hero
-            />
-            <StatCard
-              title={t("dashboard.occupancyRate")}
-              value={`${occupancyRate.toFixed(1)}%`}
-              icon={TrendingUp}
-              accent="text-amber-400"
-              hero
-            />
-            <StatCard
-              title={t("dashboard.totalProperties")}
-              value={totalProperties}
-              icon={Building2}
-            />
-            <StatCard
-              title={t("dashboard.activeTenants")}
-              value={activeTenants}
-              icon={Users}
-              accent="text-purple-400"
-            />
           </div>
         </section>
-      ) : (
-        <EmptyStateIllustration
-          type="properties"
-          title={t("dashboard.startManagingPortfolio")}
-          description={t("dashboard.startManagingPortfolioDesc")}
-          onAction={onAddProperty}
-          actionLabel={t("dashboard.addYourFirstProperty")}
-        />
-      )}
+      </div>
+    );
+  }
 
-      {/* ─── Quick Actions (promoted — immediate next steps) ─── */}
-      <section data-tour="quick-actions">
-        <div className="flex items-center gap-2 mb-4">
-          <Zap className="h-4 w-4 text-[var(--color-primary)]" />
-          <h2 className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wider">
-            {t("quickActions.title")}
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <QuickActionHero
-            label={t("quickActions.addProperty")}
-            description={t("quickActions.addPropertyDesc")}
-            icon={Building2}
-            onClick={onAddProperty}
-            primary
-            shortcut="⌘P"
-            testId="add-property-btn"
-            dataTour="add-property"
-          />
-          <QuickActionHero
-            label={t("quickActions.addTenant")}
-            description={t("quickActions.addTenantDesc")}
-            icon={Users}
-            onClick={onAddTenant}
-            shortcut="⌘T"
-          />
-          <QuickActionHero
-            label={t("quickActions.recordPayment")}
-            description={t("quickActions.recordPaymentDesc")}
-            icon={DollarSign}
-            onClick={onRecordPayment}
-            shortcut="⌘R"
-            testId="record-payment-btn"
-          />
-          <QuickActionHero
-            label={t("quickActions.createLease")}
-            description={t("quickActions.createLeaseDesc")}
-            icon={FileText}
-            onClick={onAddLease}
-            testId="add-lease-btn"
-          />
-          <QuickActionHero
-            label={t("quickActions.maintenanceTicket")}
-            description={t("quickActions.maintenanceTicketDesc")}
-            icon={Wrench}
-            onClick={onCreateTicket}
-          />
-          <QuickActionHero
-            label={t("quickActions.sendCorrespondence")}
-            description={t("quickActions.sendCorrespondenceDesc")}
-            icon={Mail}
-            onClick={onSendCorrespondence}
-          />
+  const tenant = dashboardData.tenant;
+  const activeLease = dashboardData.activeLease;
+  const home = dashboardData.home;
+  const paidReceipts = dashboardData.paidReceipts;
+  const nextRent = activeLease?.monthlyRent ?? tenant?.rent ?? 0;
+  const paymentStatus = tenant?.paymentStatus ?? "pending";
+  const statusTone =
+    paymentStatus === "paid"
+      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-100"
+      : paymentStatus === "overdue"
+        ? "border-red-500/20 bg-red-500/10 text-red-100"
+        : "border-amber-500/20 bg-amber-500/10 text-amber-100";
+
+  return (
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.25),_transparent_40%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.18),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
+        <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+          <div className="space-y-5">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm text-zinc-200">
+              <ShieldCheck className="h-4 w-4" />
+              Tenant workspace
+            </div>
+            <div className="space-y-3">
+              <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-zinc-50 sm:text-4xl">
+                Keep your lease, payments, and shared documents in one calm place.
+              </h1>
+              <p className="max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">
+                Review the next rent amount, confirm your lease details, and open the latest
+                receipts without digging through owner-focused tools.
+              </p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              <ActionTile
+                title="Review payments"
+                subtitle="Open your payment history and receipts."
+                icon={CreditCard}
+                onClick={() => navigate("/financials")}
+              />
+              <ActionTile
+                title="Open documents"
+                subtitle="Download your latest lease and receipts."
+                icon={FileText}
+                onClick={() => navigate("/documents")}
+              />
+              <ActionTile
+                title="View lease"
+                subtitle="Check term, rent, and renewal details."
+                icon={Receipt}
+                onClick={() => navigate("/leases")}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <MetricCard
+              title="Next rent"
+              value={formatCurrency(nextRent)}
+              subtitle={`Upcoming payment target for ${formatDate(dashboardData.nextPaymentDate.toISOString())}`}
+              icon={BadgeEuro}
+              tone="info"
+            />
+            <MetricCard
+              title="Receipts available"
+              value={`${paidReceipts.length}`}
+              subtitle="Paid records you can review or download"
+              icon={FileText}
+              tone="success"
+            />
+            <Card className={cn("border shadow-sm", statusTone)}>
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm text-zinc-300">Payment status</p>
+                    <p className="mt-2 text-3xl font-semibold capitalize tracking-tight text-zinc-50">
+                      {paymentStatus}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-black/20 p-3">
+                    <AlertTriangle className="h-5 w-5 text-zinc-100" />
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-zinc-300">
+                  {paymentStatus === "paid"
+                    ? "Your latest rent record is marked as received."
+                    : paymentStatus === "overdue"
+                      ? "A payment needs attention. Review your receipts or contact the owner."
+                      : "Your next payment is pending. Review your recent payment history."}
+                </p>
+              </CardContent>
+            </Card>
+            <MetricCard
+              title="Lease ends"
+              value={activeLease ? formatDate(activeLease.endDate) : "—"}
+              subtitle="Current contract end date"
+              icon={CalendarClock}
+            />
+          </div>
         </div>
       </section>
 
-      {/* ─── Onboarding ─── */}
-      {!isOnboardingComplete && (
-        <OnboardingChecklist
-          steps={getDefaultOnboardingSteps({
-            hasProperties,
-            hasTenants,
-            hasPayments,
-            onAddProperty,
-            onAddTenant,
-            onRecordPayment,
-          })}
-        />
-      )}
-
-      {/* ─── Attention Needed + Charts ─── */}
-      {hasProperties && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Charts - takes 2 columns */}
-          <div className="lg:col-span-2 space-y-6">
-            <DashboardGrid columns={2} gap={6}>
-              {hasPayments && (
-                <ChartWidget
-                  title={t("charts.revenueTrend")}
-                  subtitle={t("charts.revenueTrend")}
-                  chart={<LineChart data={monthlyTrend} height={200} showValues={false} />}
-                />
-              )}
-
-              <ChartWidget
-                title={t("charts.propertyDistribution")}
-                subtitle={t("dashboard.portfolioBreakdown")}
-                chart={
-                  propertyTypeData.length > 0 ? (
-                    <DonutChart data={propertyTypeData} height={200} />
-                  ) : (
-                    <div className="flex items-center justify-center h-[200px] text-[var(--color-muted-foreground)]">
-                      <p className="text-sm">{t("dashboard.noPropertyData")}</p>
-                    </div>
-                  )
-                }
-              />
-            </DashboardGrid>
-          </div>
-
-          {/* Attention + Activity - sidebar column */}
-          <div className="space-y-6">
-            {attentionItems.length > 0 && <AttentionNeeded items={attentionItems} />}
-
-            {/* Recent Activities (compact) */}
-            <ListWidget
-              title={t("dashboard.recentActivities")}
-              subtitle={
-                hasActivities
-                  ? t("dashboard.latestPortfolioUpdates")
-                  : t("dashboard.activityFeedPlaceholder")
-              }
-              items={recentActivities}
-              renderItem={(activity) => (
-                <div className="flex items-center justify-between py-2">
-                  <div className="flex items-center gap-3">
-                    <span className="text-lg">{activity.icon}</span>
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium text-[var(--color-foreground)]">
-                        {activity.message}
-                      </p>
-                      <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
-                        <span>{activity.type}</span>
-                        {activity.amount && <span>· {formatCurrency(activity.amount)}</span>}
-                      </div>
-                    </div>
-                  </div>
+      <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <Card className="border-white/10 bg-zinc-950/70">
+          <CardHeader>
+            <CardTitle>My lease</CardTitle>
+            <p className="mt-1 text-sm text-zinc-400">
+              Everything you need about your current home and agreement.
+            </p>
+          </CardHeader>
+          <CardContent className="grid gap-4 lg:grid-cols-2">
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl bg-white/10 p-3">
+                  <Home className="h-5 w-5 text-zinc-100" />
                 </div>
-              )}
-              emptyState={
-                <div className="flex flex-col items-center py-6 text-center">
-                  <div className="rounded-full bg-[var(--color-secondary)] p-3 mb-3">
-                    <TrendingUp className="h-5 w-5 text-[var(--color-primary)]" />
-                  </div>
-                  <p className="text-sm text-[var(--color-muted-foreground)]">
-                    {hasProperties
-                      ? t("dashboard.addTenantsToSeeActivity")
-                      : t("dashboard.addPropertiesToStart")}
+                <div>
+                  <p className="font-medium text-zinc-50">{home?.name ?? "Your property"}</p>
+                  <p className="text-sm text-zinc-400">
+                    {home?.address ?? "Address not available"}
                   </p>
                 </div>
-              }
-            />
-          </div>
-        </div>
-      )}
-
-      {/* ─── Recent Properties ─── */}
-      {hasProperties && (
-        <section data-tour="properties">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-sm font-semibold text-[var(--color-foreground)] uppercase tracking-wider">
-              {t("dashboard.recentProperties")}
-            </h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-xs text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
-            >
-              {t("dashboard.viewAll")}
-              <ChevronRight className="h-3 w-3 ml-1" />
-            </Button>
-          </div>
-          <Card className="card-elevated rounded-xl overflow-hidden">
-            <CardContent className="p-2">
-              {recentProperties.length > 0 ? (
-                <div className="divide-y divide-[var(--color-border)]">
-                  {recentProperties.map((property) => (
-                    <PropertyRow
-                      key={property.id}
-                      property={property}
-                      formatCurrency={formatCurrency}
-                    />
-                  ))}
+              </div>
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-zinc-500">Monthly rent</p>
+                  <p className="mt-1 text-lg font-semibold text-zinc-50">
+                    {formatCurrency(nextRent)}
+                  </p>
                 </div>
-              ) : (
-                <EmptyStateIllustration
-                  type="properties"
-                  compact
-                  onAction={onAddProperty}
-                  actionLabel={t("quickActions.addProperty")}
-                />
-              )}
-            </CardContent>
-          </Card>
-        </section>
-      )}
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-zinc-500">Lease status</p>
+                  <p className="mt-1 text-lg font-semibold capitalize text-zinc-50">
+                    {activeLease?.status ?? "Active"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-zinc-500">Start date</p>
+                  <p className="mt-1 text-sm font-medium text-zinc-200">
+                    {formatDate(activeLease?.startDate)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-zinc-500">End date</p>
+                  <p className="mt-1 text-sm font-medium text-zinc-200">
+                    {formatDate(activeLease?.endDate)}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-      {/* ─── Achievements ─── */}
-      {isOnboardingComplete && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.4 }}
-        >
-          <Card className="card-elevated">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Trophy className="h-5 w-5 text-yellow-500" />
-                {t("dashboard.achievements")}
-              </CardTitle>
-              <CardDescription>{t("dashboard.achievementsDescription")}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <AchievementGrid
-                occupancyRate={occupancyRate}
-                totalPayments={receipts.length}
-                totalProperties={totalProperties}
-                overduePayments={overduePayments}
-              />
-            </CardContent>
-          </Card>
-        </motion.div>
-      )}
+            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-zinc-50">What you can do now</p>
+                  <p className="text-sm text-zinc-400">
+                    Open the main tenant tasks directly from here.
+                  </p>
+                </div>
+                <Sparkles className="h-5 w-5 text-blue-300" />
+              </div>
+              <div className="mt-4 grid gap-3">
+                <Button onClick={() => navigate("/financials")} className="justify-between">
+                  Payment history
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/documents")}
+                  className="justify-between"
+                >
+                  Shared documents
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => navigate("/portfolio")}
+                  className="justify-between"
+                >
+                  Property overview
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
-      {/* ─── Recent Payments + Property Status ─── */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card className="card-elevated">
-          <CardHeader>
-            <CardTitle>{t("dashboard.recentPayments")}</CardTitle>
-            <CardDescription>{t("dashboard.latestTenantPayments")}</CardDescription>
+        <Card className="border-white/10 bg-zinc-950/70">
+          <CardHeader className="flex flex-row items-center justify-between gap-4">
+            <div>
+              <CardTitle>Recent receipts</CardTitle>
+              <p className="mt-1 text-sm text-zinc-400">
+                Latest payment confirmations linked to your lease.
+              </p>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => navigate("/financials")}>
+              Open all
+              <ArrowRight className="ml-1 h-4 w-4" />
+            </Button>
           </CardHeader>
-          <CardContent className="space-y-4">
-            {recentPayments.length > 0 ? (
-              recentPayments.map((payment) => (
-                <div key={payment.id} className="flex items-center justify-between">
+          <CardContent className="space-y-3">
+            {paidReceipts.length === 0 ? (
+              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">
+                No receipts are available yet.
+              </div>
+            ) : (
+              paidReceipts.slice(0, 4).map((receipt) => (
+                <div
+                  key={receipt.id}
+                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                >
                   <div>
-                    <p className="text-sm font-medium text-[var(--color-foreground)]">
-                      {payment.tenantName}
-                    </p>
-                    <p className="text-xs text-[var(--color-muted-foreground)]">
-                      {payment.propertyName}
-                    </p>
+                    <p className="font-medium text-zinc-50">{receipt.propertyName}</p>
+                    <p className="text-sm text-zinc-400">{formatDate(receipt.date)}</p>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-semibold text-[var(--color-foreground)]">
-                      {formatCurrency(payment.amount)}
-                    </p>
-                    <Badge variant="success" className="text-xs">
-                      {t("dashboard.paid")}
-                    </Badge>
+                    <p className="font-semibold text-zinc-50">{formatCurrency(receipt.amount)}</p>
+                    <p className="text-xs capitalize text-zinc-400">{receipt.type}</p>
                   </div>
                 </div>
               ))
-            ) : (
-              <EmptyStateIllustration
-                type="payments"
-                compact
-                onAction={onRecordPayment}
-                actionLabel={t("quickActions.recordPayment")}
-              />
             )}
-          </CardContent>
-        </Card>
 
-        <Card className="card-elevated">
-          <CardHeader>
-            <CardTitle>{t("dashboard.propertyStatus")}</CardTitle>
-            <CardDescription>{t("dashboard.currentPropertyConditions")}</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {propertyStatus.length > 0 ? (
-              propertyStatus.map((property) => (
-                <div key={property.id} className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-[var(--color-foreground)]">
-                      {property.name}
-                    </p>
-                    <p className="text-xs text-[var(--color-muted-foreground)]">
-                      {property.bedrooms} bed, {property.bathrooms} bath
-                    </p>
-                  </div>
-                  <Badge
-                    variant={
-                      property.status === "occupied"
-                        ? "success"
-                        : property.status === "vacant"
-                          ? "secondary"
-                          : "destructive"
-                    }
-                  >
-                    {property.status}
-                  </Badge>
-                </div>
-              ))
-            ) : (
-              <EmptyStateIllustration
-                type="properties"
-                compact
-                onAction={onAddProperty}
-                actionLabel={t("quickActions.addProperty")}
-              />
-            )}
+            <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4">
+              <p className="text-sm font-medium text-blue-100">Need help?</p>
+              <p className="mt-1 text-sm text-blue-200/80">
+                Use your lease and receipt history as the source of truth before contacting the
+                owner.
+              </p>
+            </div>
           </CardContent>
         </Card>
-      </div>
+      </section>
     </div>
   );
 }

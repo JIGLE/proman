@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => ({
     get: vi.fn(),
   }),
-  usePathname: () => "/properties",
+  usePathname: () => "/portfolio",
 }));
 
 // Mock the currency hook

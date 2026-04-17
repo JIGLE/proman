@@ -1,5 +1,9 @@
 import { NextRequest } from "next/server";
-import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  getAccessContext,
+  handleOptions,
+  requireOwnerAccess,
+} from "@/lib/services/auth/auth-middleware";
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -25,14 +29,17 @@ async function handleGet(request: NextRequest): Promise<Response> {
     return createSuccessResponse([]);
   }
 
-  const authResult = await requireAuth(request);
+  const authResult = await getAccessContext(request);
   if (authResult instanceof Response) return authResult;
 
-  const { userId } = authResult;
+  const { scopeUserId, portalRole, tenantId } = authResult;
   const prisma = getPrismaClient();
 
   const leases = await prisma.lease.findMany({
-    where: { userId },
+    where:
+      portalRole === "tenant" && tenantId
+        ? { userId: scopeUserId, tenantId }
+        : { userId: scopeUserId },
     orderBy: { createdAt: "desc" },
     include: leaseInclude,
   });
@@ -44,10 +51,10 @@ async function handlePost(request: NextRequest): Promise<Response> {
   const demo = await handleDemoMutation(request, "leases");
   if (demo.response) return demo.response;
 
-  const authResult = await requireAuth(request);
+  const authResult = await requireOwnerAccess(request);
   if (authResult instanceof Response) return authResult;
 
-  const { userId } = authResult;
+  const { scopeUserId } = authResult;
   const prisma = getPrismaClient();
 
   try {
@@ -67,7 +74,7 @@ async function handlePost(request: NextRequest): Promise<Response> {
     const lease = await prisma.lease.create({
       data: {
         ...body,
-        userId,
+        userId: scopeUserId,
         startDate: new Date(body.startDate),
         endDate: new Date(body.endDate),
         contractFile: contractFile ? Buffer.from(contractFile) : undefined,

@@ -12,6 +12,9 @@
 
 /** Cookie name used to flag a demo session */
 export const DEMO_COOKIE_NAME = "proman_demo";
+export const DEMO_PERSPECTIVE_COOKIE_NAME = "proman_demo_role";
+export const DEMO_TENANT_COOKIE_NAME = "proman_demo_tenant";
+export const DEFAULT_DEMO_TENANT_ID = "demo-tenant-1";
 
 /** Max age for the demo cookie (1 hour) */
 export const DEMO_COOKIE_MAX_AGE = 60 * 60;
@@ -94,6 +97,29 @@ export function demoCookieClearHeader(): string {
   return `${DEMO_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
 }
 
+export function demoPerspectiveCookieSetHeader(perspective: "owner" | "tenant"): string {
+  return `${DEMO_PERSPECTIVE_COOKIE_NAME}=${perspective}; Path=/; Max-Age=${DEMO_COOKIE_MAX_AGE}; SameSite=Lax`;
+}
+
+export function demoTenantCookieSetHeader(tenantId: string): string {
+  return `${DEMO_TENANT_COOKIE_NAME}=${tenantId}; Path=/; Max-Age=${DEMO_COOKIE_MAX_AGE}; SameSite=Lax`;
+}
+
+export function demoTenantCookieClearHeader(): string {
+  return `${DEMO_TENANT_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
+}
+
+export function getDemoPerspectiveFromRequest(request: Request): "owner" | "tenant" {
+  const cookieHeader = request.headers?.get("cookie") || "";
+  return cookieHeader.includes(`${DEMO_PERSPECTIVE_COOKIE_NAME}=tenant`) ? "tenant" : "owner";
+}
+
+export function getDemoTenantIdFromRequest(request: Request): string {
+  const cookieHeader = request.headers?.get("cookie") || "";
+  const match = cookieHeader.match(new RegExp(`${DEMO_TENANT_COOKIE_NAME}=([^;]+)`));
+  return match?.[1] || DEFAULT_DEMO_TENANT_ID;
+}
+
 // ---------------------------------------------------------------------------
 // Client-side helpers (for use in "use client" components — no server imports)
 // ---------------------------------------------------------------------------
@@ -107,6 +133,24 @@ export function isDemoModeClient(): boolean {
   return document.cookie.split(";").some((c) => c.trim() === `${DEMO_COOKIE_NAME}=1`);
 }
 
+export function getDemoPerspectiveClient(): "owner" | "tenant" {
+  if (typeof document === "undefined") return "owner";
+  return document.cookie
+    .split(";")
+    .some((c) => c.trim() === `${DEMO_PERSPECTIVE_COOKIE_NAME}=tenant`)
+    ? "tenant"
+    : "owner";
+}
+
+export function getDemoTenantIdClient(): string {
+  if (typeof document === "undefined") return DEFAULT_DEMO_TENANT_ID;
+  const cookie = document.cookie
+    .split(";")
+    .map((value) => value.trim())
+    .find((value) => value.startsWith(`${DEMO_TENANT_COOKIE_NAME}=`));
+  return cookie?.split("=")[1] || DEFAULT_DEMO_TENANT_ID;
+}
+
 /**
  * Set the demo cookie from client-side JS.
  */
@@ -115,10 +159,22 @@ export function setDemoCookieClient(): void {
   document.cookie = `${DEMO_COOKIE_NAME}=1; Path=/; Max-Age=${DEMO_COOKIE_MAX_AGE}; SameSite=Lax`;
 }
 
+export function setDemoPerspectiveClient(perspective: "owner" | "tenant"): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${DEMO_PERSPECTIVE_COOKIE_NAME}=${perspective}; Path=/; Max-Age=${DEMO_COOKIE_MAX_AGE}; SameSite=Lax`;
+}
+
+export function setDemoTenantClient(tenantId: string): void {
+  if (typeof document === "undefined") return;
+  document.cookie = `${DEMO_TENANT_COOKIE_NAME}=${tenantId}; Path=/; Max-Age=${DEMO_COOKIE_MAX_AGE}; SameSite=Lax`;
+}
+
 /**
  * Clear the demo cookie from client-side JS.
  */
 export function clearDemoCookieClient(): void {
   if (typeof document === "undefined") return;
   document.cookie = `${DEMO_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
+  document.cookie = `${DEMO_PERSPECTIVE_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
+  document.cookie = `${DEMO_TENANT_COOKIE_NAME}=; Path=/; Max-Age=0; SameSite=Lax`;
 }

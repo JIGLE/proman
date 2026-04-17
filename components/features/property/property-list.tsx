@@ -59,6 +59,7 @@ export type PropertiesViewProps = {
   viewMode?: "list" | "map";
   onPropertySelect?: (propertyId: string) => void;
   density?: "comfortable" | "compact";
+  showPageHeader?: boolean;
 };
 
 export type PropertiesViewRef = {
@@ -67,7 +68,7 @@ export type PropertiesViewRef = {
 
 export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>(
   function PropertiesView(
-    { viewMode = "list", onPropertySelect }: PropertiesViewProps,
+    { viewMode = "list", onPropertySelect, showPageHeader = true }: PropertiesViewProps,
     ref,
   ): React.ReactElement {
     const { state, addProperty, updateProperty, deleteProperty } = useApp();
@@ -363,7 +364,12 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
           <LoadingState variant="cards" count={6} />
         ) : (
           <div className="space-y-6">
-            <PageHeader title="Properties" description="Manage your property portfolio" />
+            {showPageHeader && (
+              <PageHeader
+                title="Portfolio"
+                description="Manage your properties, occupancy, and rent coverage."
+              />
+            )}
             {/* Property Form Dialog */}
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">

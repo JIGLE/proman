@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/lib/contexts/theme-context";
 import { CsrfProvider } from "@/lib/contexts/csrf-context";
 import { DevAuthProvider } from "@/components/shared/dev-auth";
 import { DemoProvider } from "@/lib/contexts/demo-context";
+import { PortalProvider } from "@/lib/contexts/portal-context";
 
 interface ClientProvidersProps {
   children: React.ReactNode;
@@ -20,7 +21,9 @@ export function ClientProviders({ children, nonce }: ClientProvidersProps): Reac
         <CsrfProvider>
           <ToastProvider>
             <DemoProvider>
-              <AppProvider>{children}</AppProvider>
+              <PortalProvider>
+                <AppProvider>{children}</AppProvider>
+              </PortalProvider>
             </DemoProvider>
           </ToastProvider>
         </CsrfProvider>

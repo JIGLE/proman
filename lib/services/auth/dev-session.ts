@@ -11,7 +11,7 @@ export function createDevSession(): Session {
   return {
     user: {
       id: "dev-user",
-      role: "developer",
+      role: "ADMIN",
       email: "dev@example.local",
       name: "Dev User",
       image: null,

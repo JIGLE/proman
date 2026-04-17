@@ -1,5 +1,9 @@
 import { NextRequest } from "next/server";
-import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  getAccessContext,
+  handleOptions,
+  requireOwnerAccess,
+} from "@/lib/services/auth/auth-middleware";
 import {
   createErrorResponse,
   createSuccessResponse,
@@ -33,10 +37,10 @@ async function handleGet(request: NextRequest): Promise<Response> {
   const demo = handleDemoGet(request, "tenants");
   if (demo.response) return demo.response;
 
-  const authResult = await requireAuth(request);
+  const authResult = await getAccessContext(request);
   if (authResult instanceof Response) return authResult;
 
-  const { userId } = authResult;
+  const { scopeUserId, portalRole, tenantId } = authResult;
 
   try {
     // Check if pagination is requested
@@ -50,19 +54,31 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
       const [tenants, total] = await Promise.all([
         prisma.tenant.findMany({
-          where: { userId },
+          where:
+            portalRole === "tenant" && tenantId
+              ? { userId: scopeUserId, id: tenantId }
+              : { userId: scopeUserId },
           skip: pagination.skip,
           take: pagination.limit,
           orderBy: { createdAt: "desc" },
         }),
-        prisma.tenant.count({ where: { userId } }),
+        prisma.tenant.count({
+          where:
+            portalRole === "tenant" && tenantId
+              ? { userId: scopeUserId, id: tenantId }
+              : { userId: scopeUserId },
+        }),
       ]);
 
       return createSuccessResponse(createPaginatedResponse(tenants, total, pagination));
     } else {
       // Legacy: Return all tenants (backward compatible)
-      const tenants = await tenantService.getAll(userId);
-      return createSuccessResponse(tenants);
+      const tenants = await tenantService.getAll(scopeUserId);
+      return createSuccessResponse(
+        portalRole === "tenant" && tenantId
+          ? tenants.filter((tenant) => tenant.id === tenantId)
+          : tenants,
+      );
     }
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);
@@ -74,10 +90,10 @@ async function handlePost(request: NextRequest): Promise<Response> {
   const demo = await handleDemoMutation(request, "tenants");
   if (demo.response) return demo.response;
 
-  const authResult = await requireAuth(request);
+  const authResult = await requireOwnerAccess(request);
   if (authResult instanceof Response) return authResult;
 
-  const { userId } = authResult;
+  const { scopeUserId } = authResult;
 
   try {
     const body = await request.json();
@@ -96,7 +112,7 @@ async function handlePost(request: NextRequest): Promise<Response> {
     // Validate input
     const validatedData = createTenantSchema.parse(sanitizedBody);
 
-    const tenant = await tenantService.create(userId, validatedData);
+    const tenant = await tenantService.create(scopeUserId, validatedData);
     return createSuccessResponse(tenant, 201);
   } catch (error) {
     if (error instanceof z.ZodError) {

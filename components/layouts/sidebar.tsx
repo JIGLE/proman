@@ -5,24 +5,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import {
-  Building2,
-  Users,
-  ChevronLeft,
-  ChevronRight,
-  Home,
-  Settings,
-  LogOut,
-  Hammer,
-  Wallet,
-  FileText,
-  FileBox,
-  Contact,
-  UserCog,
-  BarChart3,
-  ClipboardList,
-  Search,
-} from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, Settings, LogOut, Search } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -31,122 +14,9 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { NotificationCenter, useNotifications } from "@/components/ui/notification-center";
 import { useDemoMode } from "@/lib/contexts/demo-context";
+import { usePortalAccess } from "@/lib/contexts/portal-context";
 
 // ── Nav Item Type ──────────────────────────────────────
-export interface SidebarNavItem {
-  key: string;
-  icon: React.ComponentType<{ className?: string }>;
-  labelKey: string; // i18n key under "navigation.*"
-  label: string; // fallback display label
-  href: string;
-}
-
-export interface SidebarNavGroup {
-  group: string;
-  items: SidebarNavItem[];
-}
-
-// ── Default navigation config ──────────────────────────
-const NAV_CONFIG: SidebarNavGroup[] = [
-  {
-    group: "Portfolio",
-    items: [
-      {
-        key: "home",
-        icon: Home,
-        labelKey: "navigation.dashboard",
-        label: "Dashboard",
-        href: "/overview",
-      },
-      {
-        key: "assets",
-        icon: Building2,
-        labelKey: "navigation.properties",
-        label: "Properties",
-        href: "/properties",
-      },
-      {
-        key: "people",
-        icon: Users,
-        labelKey: "navigation.tenants",
-        label: "Tenants",
-        href: "/tenants",
-      },
-      {
-        key: "leases",
-        icon: FileText,
-        labelKey: "navigation.leases",
-        label: "Leases",
-        href: "/leases",
-      },
-    ],
-  },
-  {
-    group: "Operations",
-    items: [
-      {
-        key: "finance",
-        icon: Wallet,
-        labelKey: "navigation.finance",
-        label: "Finance",
-        href: "/financials",
-      },
-      {
-        key: "maintenance",
-        icon: Hammer,
-        labelKey: "navigation.maintenance",
-        label: "Maintenance",
-        href: "/maintenance",
-      },
-    ],
-  },
-  {
-    group: "Management",
-    items: [
-      {
-        key: "documents",
-        icon: FileBox,
-        labelKey: "navigation.documents",
-        label: "Documents",
-        href: "/documents",
-      },
-      {
-        key: "contacts",
-        icon: Contact,
-        labelKey: "navigation.contacts",
-        label: "Contacts",
-        href: "/contacts",
-      },
-      {
-        key: "owners",
-        icon: UserCog,
-        labelKey: "navigation.owners",
-        label: "Owners",
-        href: "/owners",
-      },
-    ],
-  },
-  {
-    group: "Reports",
-    items: [
-      {
-        key: "analytics",
-        icon: BarChart3,
-        labelKey: "navigation.analytics",
-        label: "Analytics",
-        href: "/analytics",
-      },
-      {
-        key: "reports",
-        icon: ClipboardList,
-        labelKey: "navigation.reports",
-        label: "Reports",
-        href: "/reports",
-      },
-    ],
-  },
-];
-
 interface SidebarProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
@@ -161,6 +31,8 @@ interface SidebarFooterProps {
   locale: string;
   user?: { name?: string | null; email?: string | null; image?: string | null };
   isDemo?: boolean;
+  subtitle?: string | null;
+  allowSettings?: boolean;
 }
 
 function SidebarFooter({
@@ -169,6 +41,8 @@ function SidebarFooter({
   locale,
   user,
   isDemo,
+  subtitle,
+  allowSettings = true,
 }: SidebarFooterProps): React.ReactElement {
   const initials =
     user?.name
@@ -189,15 +63,17 @@ function SidebarFooter({
           </Avatar>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
-              {user?.name}
+              {user?.name || "Portal User"}
             </p>
-            <p className="text-xs text-[var(--color-muted-foreground)] truncate">{user?.email}</p>
+            <p className="text-xs text-[var(--color-muted-foreground)] truncate">
+              {subtitle || user?.email}
+            </p>
           </div>
         </div>
         <div className="flex items-center justify-between gap-1 px-1">
           <LanguageSelector compact />
           <ThemeToggle variant="button" size="sm" className="h-8 w-8" />
-          {!isDemo && (
+          {!isDemo && allowSettings && (
             <Link href={`/${locale}/settings`} title="Settings">
               <div className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
                 <Settings className="h-4 w-4" />
@@ -244,7 +120,8 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   const [collapsed, setCollapsed] = useState(false);
   const { data: session } = useSession();
   const pathname = usePathname();
-  const { isDemoMode } = useDemoMode();
+  const { isDemoMode, demoPerspective } = useDemoMode();
+  const { navigation, isOwnerPortal } = usePortalAccess();
 
   useEffect(() => {
     try {
@@ -258,7 +135,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   }, []);
 
   // Build menu from config
-  const menuItems = NAV_CONFIG;
+  const menuItems = navigation;
 
   const { notifications, markAsRead, markAllAsRead, deleteNotification, clearAll } =
     useNotifications();
@@ -414,6 +291,8 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
             locale={currentLocale}
             user={user}
             isDemo={isDemoMode}
+            subtitle={isDemoMode ? `Demo ${demoPerspective}` : user?.email}
+            allowSettings={isOwnerPortal}
           />
         </div>
       )}

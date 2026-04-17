@@ -1,16 +1,10 @@
-import { Suspense } from "react";
-import { PeopleView } from "@/components/features/people/people-view";
-import { PeopleListSkeleton } from "@/components/ui/page-skeletons";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-
-export default function PeoplePage() {
-  return (
-    <Suspense fallback={<PeopleListSkeleton />}>
-      <div className="h-full">
-        <PeopleView />
-      </div>
-    </Suspense>
-  );
+export default async function TenantsRedirectPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect(`/${locale}/people`);
 }
