@@ -3,6 +3,13 @@ import { getAccessContext, handleOptions } from "@/lib/services/auth/auth-middle
 import { createErrorResponse, withErrorHandler } from "@/lib/utils/error-handling";
 import { documentService } from "@/lib/services/document-service";
 
+function sanitizeDownloadFilename(fileName: string): string {
+  const withoutControlChars = fileName.replace(/[\r\n\t]/g, "");
+  const withoutQuotes = withoutControlChars.replace(/["\\]/g, "");
+  const normalized = withoutQuotes.replace(/[^a-zA-Z0-9._()\- ]/g, "_").trim();
+  return normalized.length > 0 ? normalized.slice(0, 180) : "download.bin";
+}
+
 // GET /api/documents/[id]/download - Download document file
 async function handleGet(
   request: NextRequest,
@@ -43,13 +50,15 @@ async function handleGet(
 
     // Convert Buffer to Uint8Array for Response compatibility
     const uint8Array = new Uint8Array(file.content);
+    const safeFileName = sanitizeDownloadFilename(file.fileName);
+    const encodedFileName = encodeURIComponent(safeFileName);
 
     // Return file as download
     return new Response(uint8Array, {
       status: 200,
       headers: {
         "Content-Type": file.mimeType,
-        "Content-Disposition": `attachment; filename="${encodeURIComponent(file.fileName)}"`,
+        "Content-Disposition": `attachment; filename="${safeFileName}"; filename*=UTF-8''${encodedFileName}`,
         "Content-Length": file.content.length.toString(),
         "Cache-Control": "private, max-age=3600",
       },

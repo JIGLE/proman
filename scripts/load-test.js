@@ -7,7 +7,7 @@
  * Validates performance under various load conditions
  */
 
-const { execSync } = require("child_process");
+const { execSync, execFileSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -32,6 +32,21 @@ function printSection(title) {
   console.log("=".repeat(70) + "\n");
 }
 
+function validateTargetUrl(rawUrl) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error(`Invalid TARGET_URL: ${rawUrl}`);
+  }
+
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    throw new Error(`Unsupported TARGET_URL protocol: ${parsed.protocol}`);
+  }
+
+  return parsed.toString();
+}
+
 /**
  * Check if Artillery is installed
  */
@@ -51,7 +66,7 @@ function checkAppRunning(targetUrl) {
   printSection("APPLICATION CHECK");
 
   try {
-    const response = execSync(`curl -s -o /dev/null -w "%{http_code}" ${targetUrl}`, {
+    const response = execFileSync("curl", ["-s", "-o", "/dev/null", "-w", "%{http_code}", targetUrl], {
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "ignore"],
     });
@@ -78,7 +93,7 @@ function runSmokeTest(targetUrl) {
   print("Running quick smoke test (10 seconds, 5 users)...", "blue");
 
   try {
-    execSync(`npx artillery quick --count 5 --num 10 ${targetUrl}`, {
+    execFileSync("npx", ["artillery", "quick", "--count", "5", "--num", "10", targetUrl], {
       stdio: "inherit",
     });
 
@@ -225,7 +240,7 @@ function analyzeResults(reportPath) {
 function main() {
   const args = process.argv.slice(2);
   const testType = args[0] || "full";
-  const targetUrl = process.env.TARGET_URL || "http://localhost:3000";
+  const targetUrl = validateTargetUrl(process.env.TARGET_URL || "http://localhost:3000");
 
   print("\n🚀 ProMan Load Testing Suite", "cyan");
   print(`Target: ${targetUrl}`, "blue");

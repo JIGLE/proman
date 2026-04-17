@@ -245,7 +245,7 @@ export function AnalyticsDashboard(): React.ReactElement {
       // Each property counts as 1 unit
       const totalUnitsCount = 1;
       const occupiedUnitsCount = property.status === "occupied" ? 1 : 0;
-      const occupancyRate = totalUnitsCount > 0 ? (occupiedUnitsCount / totalUnitsCount) * 100 : 0;
+      const occupancyRate = occupiedUnitsCount * 100;
 
       const propertyReceipts = receipts.filter(
         (r) => r.propertyId === property.id && r.status === "paid",

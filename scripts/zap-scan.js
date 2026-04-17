@@ -11,7 +11,7 @@
  * - Application running on specified port
  */
 
-const { execSync } = require("child_process");
+const { execFileSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -44,6 +44,21 @@ function printSection(title) {
   console.log("=".repeat(70) + "\n");
 }
 
+function validateTargetUrl(rawUrl) {
+  let parsed;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    throw new Error(`Invalid TARGET_URL: ${rawUrl}`);
+  }
+
+  if (!["http:", "https:"].includes(parsed.protocol)) {
+    throw new Error(`Unsupported TARGET_URL protocol: ${parsed.protocol}`);
+  }
+
+  return parsed.toString();
+}
+
 /**
  * Check if ZAP is available
  */
@@ -51,7 +66,7 @@ function checkZapAvailability() {
   printSection("ZAP AVAILABILITY CHECK");
 
   try {
-    const response = execSync(`curl -s ${config.zapUrl}`, {
+    const response = execFileSync("curl", ["-s", config.zapUrl], {
       encoding: "utf-8",
       stdio: ["pipe", "pipe", "ignore"],
     });
@@ -79,10 +94,14 @@ function checkTargetAvailability() {
   printSection("TARGET APPLICATION CHECK");
 
   try {
-    const response = execSync(`curl -s -o /dev/null -w "%{http_code}" ${config.targetUrl}`, {
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "ignore"],
-    });
+    const response = execFileSync(
+      "curl",
+      ["-s", "-o", "/dev/null", "-w", "%{http_code}", config.targetUrl],
+      {
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "ignore"],
+      },
+    );
 
     if (response && response.trim() !== "000") {
       print(`✓ Target application is running at ${config.targetUrl}`, "green");
@@ -305,6 +324,9 @@ function generateHtmlReport(report, summary) {
  * Main execution
  */
 function main() {
+  config.zapUrl = validateTargetUrl(config.zapUrl);
+  config.targetUrl = validateTargetUrl(config.targetUrl);
+
   print("\n🔒 OWASP ZAP Security Scanner for ProMan", "cyan");
   print("Automated vulnerability testing\n", "blue");
 

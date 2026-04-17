@@ -36,6 +36,11 @@ type SendGridEvent = {
   [key: string]: unknown;
 };
 
+function sanitizeForLog(value: unknown, maxLen = 256): string {
+  const raw = typeof value === "string" ? value : String(value ?? "");
+  return raw.replace(/[\r\n\t]/g, " ").slice(0, maxLen);
+}
+
 /**
  * Verify SendGrid webhook signature
  * Reference: https://docs.sendgrid.com/for-developers/tracking-events/getting-started-event-webhook-security
@@ -84,7 +89,10 @@ async function processEvent(event: SendGridEvent): Promise<void> {
     const sgMessageId = String(event["sg_message_id"] || event["message-id"] || "").trim();
 
     if (!sgMessageId) {
-      console.debug("[SendGrid webhook] Event missing message ID, skipping update:", event.event);
+      console.debug(
+        "[SendGrid webhook] Event missing message ID, skipping update:",
+        sanitizeForLog(event.event),
+      );
       return;
     }
 
@@ -112,15 +120,15 @@ async function processEvent(event: SendGridEvent): Promise<void> {
     });
 
     console.debug("[SendGrid webhook] Processed event", {
-      eventType: event.event,
-      email: safeEmail,
-      messageId: sgMessageId,
+      eventType: sanitizeForLog(event.event),
+      email: sanitizeForLog(safeEmail),
+      messageId: sanitizeForLog(sgMessageId),
       logId: emailLog.id,
     });
   } catch (error) {
     console.error("[SendGrid webhook] Failed to process event", {
-      eventType: event.event,
-      message: error instanceof Error ? error.message : String(error),
+      eventType: sanitizeForLog(event.event),
+      message: sanitizeForLog(error instanceof Error ? error.message : String(error), 500),
     });
   }
 }
@@ -149,7 +157,7 @@ export async function POST(request: Request): Promise<NextResponse> {
       if (!isValid) {
         console.warn(
           "[SendGrid webhook] Invalid signature from IP:",
-          request.headers.get("x-forwarded-for"),
+          sanitizeForLog(request.headers.get("x-forwarded-for") || "unknown"),
         );
         return NextResponse.json({ error: "invalid signature" }, { status: 403 });
       }
