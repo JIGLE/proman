@@ -19,7 +19,7 @@ export function PortalRouteGuard() {
   }, [allowed, isTenant, locale, router]);
 
   if (isTenant && !allowed) {
-    return null;
+    return <p className="sr-only">Redirecting to an allowed tenant page.</p>;
   }
 
   return null;

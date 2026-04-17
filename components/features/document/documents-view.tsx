@@ -200,6 +200,7 @@ export function DocumentsView() {
   const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<"lease" | "receipt" | "notice">("lease");
   const [generatingTemplate, setGeneratingTemplate] = useState(false);
+  const canViewDocuments = !!session || isDemoMode;
 
   const activePropertyIds = useMemo(
     () =>
@@ -314,12 +315,12 @@ export function DocumentsView() {
 
   // Initial load
   useEffect(() => {
-    if (session || isDemoMode) {
+    if (canViewDocuments) {
       Promise.all([fetchDocuments(), fetchStats(), fetchReferenceData()]).finally(() =>
         setLoading(false),
       );
     }
-  }, [fetchDocuments, fetchReferenceData, fetchStats, isDemoMode, session]);
+  }, [canViewDocuments, fetchDocuments, fetchReferenceData, fetchStats]);
 
   // Handle file selection
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -524,7 +525,7 @@ export function DocumentsView() {
     }
   };
 
-  if (!session && !isDemoMode) {
+  if (!canViewDocuments) {
     return (
       <div className="flex items-center justify-center h-64">
         <p className="text-muted-foreground">Please sign in to view documents</p>
