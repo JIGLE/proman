@@ -3,20 +3,30 @@
  */
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { type Currency, formatCurrency, FormatCurrencyOptions } from "@/lib/utils/currency";
 
 export function useUserCurrency() {
+  const { status } = useSession();
   const [currency, setCurrency] = useState<Currency>("EUR");
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    if (status === "loading") return;
+
+    if (status !== "authenticated") {
+      setIsLoading(false);
+      return;
+    }
+
     // Fetch user settings to get default currency
     const fetchCurrency = async () => {
       try {
         const response = await fetch("/api/settings");
         if (response.ok) {
           const data = await response.json();
-          setCurrency(data.defaultCurrency || "EUR");
+          const defaultCurrency = data?.data?.defaultCurrency ?? data?.defaultCurrency;
+          setCurrency(defaultCurrency || "EUR");
         }
       } catch (error) {
         console.error("Failed to fetch user currency:", error);
@@ -28,7 +38,7 @@ export function useUserCurrency() {
     };
 
     fetchCurrency();
-  }, []);
+  }, [status]);
 
   /**
    * Format amount with user's preferred currency

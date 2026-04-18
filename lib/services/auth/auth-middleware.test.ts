@@ -16,6 +16,13 @@ vi.mock("next-auth", () => ({
   getServerSession: vi.fn(),
 }));
 
+const { mockGetPrismaClient } = vi.hoisted(() => ({
+  mockGetPrismaClient: vi.fn(),
+}));
+vi.mock("@/lib/services/database/database", () => ({
+  getPrismaClient: mockGetPrismaClient,
+}));
+
 import { mockGetServerSession, resetGetServerSession } from "@/tests/helpers/next-auth";
 
 describe("auth-middleware", () => {
@@ -35,6 +42,15 @@ describe("auth-middleware", () => {
 
     const res = await requireAuth({} as NextRequest);
     expect((res as { userId?: string }).userId).toBe("user-1");
+  });
+
+  it("uses session user id without db lookup when both id and email exist", async () => {
+    await mockGetServerSession({ user: { id: "user-1", email: "u@example.com" } } as Session);
+
+    const res = await requireAuth({} as NextRequest);
+
+    expect((res as { userId?: string }).userId).toBe("user-1");
+    expect(mockGetPrismaClient).not.toHaveBeenCalled();
   });
 
   it("requireOwnership denies access when userId mismatch", async () => {

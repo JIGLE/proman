@@ -35,13 +35,10 @@ const DemoContext = createContext<DemoContextValue>({
 });
 
 export function DemoProvider({ children }: { children: React.ReactNode }) {
-  const [isDemoMode, setIsDemoMode] = useState(() => isDemoModeClient());
-  const [demoPerspective, setDemoPerspective] = useState<PortalRole>(() =>
-    getDemoPerspectiveClient(),
-  );
-  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(() =>
-    isDemoModeClient() ? getDemoTenantIdClient() : null,
-  );
+  // Keep initial render deterministic to avoid SSR/client hydration mismatches.
+  const [isDemoMode, setIsDemoMode] = useState(false);
+  const [demoPerspective, setDemoPerspective] = useState<PortalRole>("owner");
+  const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {

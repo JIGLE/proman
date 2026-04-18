@@ -7,6 +7,8 @@ declare module "@testing-library/react" {
   export const screen: any;
   export const fireEvent: any;
   export function render(element: any, options?: any): any;
+  export function waitFor(callback: () => void | Promise<void>, options?: any): Promise<void>;
+  export function renderHook(callback: () => any, options?: any): any;
 }
 
 declare module "@testing-library/jest-dom" {

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import {
   type Currency,
   formatCurrency as formatCurrencyUtil,
@@ -37,6 +38,7 @@ export function CurrencyProvider({
   initialCurrency = "EUR",
   initialLocale = "en",
 }: CurrencyProviderProps) {
+  const { status } = useSession();
   const [currency, setCurrencyState] = useState<Currency>(initialCurrency);
   const [isLoading, setIsLoading] = useState(true);
   // Locale now comes from URL via initialLocale prop (from useParams in layout)
@@ -44,13 +46,21 @@ export function CurrencyProvider({
 
   // Load currency from UserSettings API on mount
   useEffect(() => {
+    if (status === "loading") return;
+
+    if (status !== "authenticated") {
+      setIsLoading(false);
+      return;
+    }
+
     const fetchCurrency = async () => {
       try {
         const response = await fetch("/api/settings");
         if (response.ok) {
           const data = await response.json();
-          if (data.defaultCurrency) {
-            setCurrencyState(data.defaultCurrency as Currency);
+          const defaultCurrency = data?.data?.defaultCurrency ?? data?.defaultCurrency;
+          if (defaultCurrency) {
+            setCurrencyState(defaultCurrency as Currency);
           }
         }
       } catch (error) {
@@ -62,10 +72,14 @@ export function CurrencyProvider({
     };
 
     fetchCurrency();
-  }, []);
+  }, [status]);
 
   const setCurrency = async (newCurrency: Currency) => {
     setCurrencyState(newCurrency);
+
+    if (status !== "authenticated") {
+      return;
+    }
 
     // Save to UserSettings via API
     try {

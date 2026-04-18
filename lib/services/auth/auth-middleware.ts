@@ -58,8 +58,12 @@ export async function requireAuth(_request: NextRequest): Promise<
       return { session, userId };
     }
 
-    // Support multiple session shapes in tests: prefer email-based lookup when
-    // available (real auth), but accept a session.user.id fallback used by tests/mocks.
+    // Prefer session user id when present to avoid unnecessary DB lookups on every request.
+    if (session.user?.id) {
+      return { session, userId: session.user.id };
+    }
+
+    // Fallback for session shapes that only contain email.
     if (session.user?.email) {
       // Find user in database — separate DB errors from "not found"
       let user;
@@ -107,11 +111,6 @@ export async function requireAuth(_request: NextRequest): Promise<
       }
 
       return { session, userId: user.id };
-    }
-
-    if (session.user?.id) {
-      // Tests may provide a user id directly; use it as the authenticated user id
-      return { session, userId: session.user.id };
     }
 
     return new NextResponse(JSON.stringify({ error: "Authentication required" }), {
