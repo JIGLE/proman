@@ -19,7 +19,7 @@ export default async function NotFound() {
         </CardHeader>
         <CardContent>
           <Button asChild className="w-full">
-            <Link href="/en/overview">
+            <Link href="/en/dashboard">
               <Home className="mr-2 h-4 w-4" />
               {t("returnHome")}
             </Link>

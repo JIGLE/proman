@@ -123,7 +123,7 @@ export function useCrossDomainNav(): CrossDomainNavResult {
  * Defines canonical routes for each top-level section
  */
 export const SECTION_ROUTES = {
-  home: "/overview",
+  home: "/dashboard",
   assets: "/portfolio",
   people: "/people",
   maintenance: "/maintenance",

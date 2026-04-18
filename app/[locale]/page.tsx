@@ -33,7 +33,7 @@ export default async function LandingPage({ params }: Props) {
     const { getAuthOptions } = await import("@/lib/services/auth/auth");
     const session = await getServerSession(getAuthOptions());
     if (session?.user) {
-      redirect(`/${locale}/overview`);
+      redirect(`/${locale}/dashboard`);
     }
   } catch {
     // If session check fails, show landing page normally

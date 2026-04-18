@@ -45,9 +45,11 @@ export default function DemoPage() {
 
         if (cancelled) return;
 
-        // Step 3: Redirect to overview — no NextAuth sign-in needed
+        window.dispatchEvent(new Event("proman:demo-mode-changed"));
+
+        // Step 3: Redirect to dashboard — no NextAuth sign-in needed
         setStatus("redirecting");
-        router.replace(`/${locale}/overview`);
+        router.replace(`/${locale}/dashboard`);
       } catch (err) {
         if (cancelled) return;
         setError(err instanceof Error ? err.message : "An error occurred");

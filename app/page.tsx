@@ -7,7 +7,7 @@ export default async function Home() {
     const { getAuthOptions } = await import("@/lib/services/auth/auth");
     const session = await getServerSession(getAuthOptions());
     if (session?.user) {
-      redirect("/pt/overview");
+      redirect("/pt/dashboard");
     }
   } catch (e) {
     // redirect() throws a special error — re-throw it

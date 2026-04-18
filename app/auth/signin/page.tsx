@@ -22,7 +22,7 @@ function SignInContent() {
       const browserLang =
         typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "pt";
       const locale = ["pt", "en", "es"].includes(browserLang) ? browserLang : "pt";
-      router.push(`/${locale}/overview`);
+      router.push(`/${locale}/dashboard`);
     }
   }, [status, router]);
 
@@ -78,7 +78,7 @@ function SignInContent() {
                     signIn("credentials", {
                       email: formData.get("email"),
                       password: formData.get("password"),
-                      callbackUrl: `/${locale}/overview`,
+                      callbackUrl: `/${locale}/dashboard`,
                     });
                   }}
                   className="space-y-3"
@@ -133,7 +133,7 @@ function SignInContent() {
                 const browserLang =
                   typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "pt";
                 const locale = ["pt", "en", "es"].includes(browserLang) ? browserLang : "pt";
-                signIn("google", { callbackUrl: `/${locale}/overview` });
+                signIn("google", { callbackUrl: `/${locale}/dashboard` });
               }}
               variant="outline"
               className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700 font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-3"

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils/utils";
 
 /** Human-readable labels for known route segments */
 const SEGMENT_LABELS: Record<string, string> = {
+  dashboard: "Dashboard",
   overview: "Dashboard",
   tenants: "People",
   people: "People",
@@ -50,7 +51,7 @@ export function Breadcrumbs({ overrides, className }: BreadcrumbsProps) {
   const routeSegments = segments.slice(1);
 
   if (routeSegments.length <= 1) {
-    // On top-level pages (e.g. /pt/overview), no breadcrumb needed
+    // On top-level pages (e.g. /pt/dashboard), no breadcrumb needed
     return null;
   }
 
@@ -69,7 +70,7 @@ export function Breadcrumbs({ overrides, className }: BreadcrumbsProps) {
     <nav aria-label="Breadcrumb" className={cn("flex items-center gap-1.5 text-sm", className)}>
       {/* Home icon linking to dashboard */}
       <Link
-        href={`/${locale}/overview`}
+        href={`/${locale}/dashboard`}
         className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors"
         aria-label="Dashboard"
       >

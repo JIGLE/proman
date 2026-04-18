@@ -1,13 +1,8 @@
-import { Suspense } from "react";
-import { OverviewView } from "@/components/features/dashboard/overview-view";
-import { DashboardSkeleton } from "@/components/ui/page-skeletons";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default function OverviewPage() {
-  return (
-    <Suspense fallback={<DashboardSkeleton />}>
-      <OverviewView />
-    </Suspense>
-  );
+export default async function OverviewPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  redirect(`/${locale}/dashboard`);
 }

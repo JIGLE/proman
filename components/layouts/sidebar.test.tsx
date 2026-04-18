@@ -4,7 +4,7 @@ import { act } from "react";
 import { Sidebar } from "./sidebar";
 
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/en/overview",
+  usePathname: () => "/en/dashboard",
   useRouter: () => ({
     push: vi.fn(),
     refresh: vi.fn(),
@@ -40,7 +40,7 @@ describe("Sidebar", () => {
     const onTabChange = vi.fn();
     let container: HTMLElement;
     await act(async () => {
-      ({ container } = render(<Sidebar activeTab="overview" onTabChange={onTabChange} />));
+      ({ container } = render(<Sidebar activeTab="dashboard" onTabChange={onTabChange} />));
     });
 
     // Just verify the component renders
@@ -51,7 +51,7 @@ describe("Sidebar", () => {
     const onTabChange = vi.fn();
     let getByText: (text: string) => HTMLElement;
     await act(async () => {
-      ({ getByText } = render(<Sidebar activeTab="overview" onTabChange={onTabChange} />));
+      ({ getByText } = render(<Sidebar activeTab="dashboard" onTabChange={onTabChange} />));
     });
 
     // Username should be visible in expanded mode
@@ -66,7 +66,7 @@ describe("Sidebar", () => {
     let getByLabelText: (text: string) => HTMLElement;
     await act(async () => {
       ({ queryByText, queryByLabelText, getByLabelText } = render(
-        <Sidebar activeTab="overview" />,
+        <Sidebar activeTab="dashboard" />,
       ));
     });
 
@@ -88,7 +88,7 @@ describe("Sidebar", () => {
     let getByText: (text: string) => HTMLElement;
     let getByLabelText: (text: RegExp | string) => HTMLElement;
     await act(async () => {
-      ({ getByText, getByLabelText } = render(<Sidebar activeTab="overview" />));
+      ({ getByText, getByLabelText } = render(<Sidebar activeTab="dashboard" />));
     });
     expect(getByText!("Alice")).toBeDefined();
 

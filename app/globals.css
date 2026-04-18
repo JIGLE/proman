@@ -99,11 +99,11 @@
 
   /* Z-Index layers */
   --z-base: 0;
-  --z-dropdown: 50;
+  --z-dropdown: 220;
   --z-sticky: 100;
-  --z-modal: 150;
-  --z-popover: 200;
-  --z-toast: 250;
+  --z-modal: 180;
+  --z-popover: 230;
+  --z-toast: 260;
 
   /* Shadows — subtle glow for depth */
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
@@ -334,11 +334,14 @@ body {
 }
 
 .glass-modal {
-  background: var(--color-surface-raised);
-  backdrop-filter: blur(24px) saturate(2);
-  -webkit-backdrop-filter: blur(24px) saturate(2);
-  border: 1px solid var(--color-inner-border);
-  box-shadow: var(--shadow-modal);
+  background: color-mix(in srgb, var(--color-surface-raised) 82%, transparent);
+  backdrop-filter: blur(30px) saturate(1.8);
+  -webkit-backdrop-filter: blur(30px) saturate(1.8);
+  border: 1px solid color-mix(in srgb, var(--color-inner-border-hover) 80%, transparent);
+  box-shadow:
+    var(--shadow-modal),
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 24px 80px rgba(0, 0, 0, 0.35);
 }
 
 /* Inner border card style */

@@ -246,7 +246,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                 const Icon = item.icon;
                 const isActive =
                   pathname === `/${currentLocale}${item.href}` ||
-                  (item.href !== "/overview" &&
+                  (item.href !== "/dashboard" &&
                     pathname.startsWith(`/${currentLocale}${item.href}/`));
 
                 return (

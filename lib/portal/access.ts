@@ -24,8 +24,8 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
     group: "Workspace",
     items: [
       {
-        key: "overview",
-        href: "/overview",
+        key: "dashboard",
+        href: "/dashboard",
         label: "Dashboard",
         labelKey: "navigation.dashboard",
         icon: Home,
@@ -122,9 +122,10 @@ export function getSecondaryMobileNavigation(role: PortalRole): PortalNavItem[] 
 export function normalizePortalPath(pathname: string): string {
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length <= 1) {
-    return "/overview";
+    return "/dashboard";
   }
   const normalized = `/${segments[1]}`;
+  if (normalized === "/overview") return "/dashboard";
   if (normalized === "/properties") return "/portfolio";
   if (normalized === "/tenants") return "/people";
   return normalized;

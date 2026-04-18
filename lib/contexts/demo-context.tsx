@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useCallback, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import {
   isDemoModeClient,
@@ -40,13 +40,29 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
   const [demoPerspective, setDemoPerspective] = useState<PortalRole>("owner");
   const [selectedTenantId, setSelectedTenantId] = useState<string | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
+
+  const syncDemoState = useCallback(() => {
+    const nextIsDemoMode = isDemoModeClient();
+    setIsDemoMode(nextIsDemoMode);
+    setDemoPerspective(nextIsDemoMode ? getDemoPerspectiveClient() : "owner");
+    setSelectedTenantId(nextIsDemoMode ? getDemoTenantIdClient() : null);
+  }, []);
 
   useEffect(() => {
-    // Re-check on mount (SSR → client hydration)
-    setIsDemoMode(isDemoModeClient());
-    setDemoPerspective(getDemoPerspectiveClient());
-    setSelectedTenantId(isDemoModeClient() ? getDemoTenantIdClient() : null);
-  }, []);
+    syncDemoState();
+  }, [syncDemoState, pathname]);
+
+  useEffect(() => {
+    const handleDemoModeChanged = () => {
+      syncDemoState();
+    };
+
+    window.addEventListener("proman:demo-mode-changed", handleDemoModeChanged);
+    return () => {
+      window.removeEventListener("proman:demo-mode-changed", handleDemoModeChanged);
+    };
+  }, [syncDemoState]);
 
   const switchDemoPerspective = useCallback(
     (role: PortalRole, tenantId?: string) => {
@@ -69,6 +85,7 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     clearDemoStore();
     sessionStorage.removeItem("proman_demo");
     sessionStorage.removeItem("proman_demo_start");
+    window.dispatchEvent(new Event("proman:demo-mode-changed"));
     setIsDemoMode(false);
     setDemoPerspective("owner");
     setSelectedTenantId(null);

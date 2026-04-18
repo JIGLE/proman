@@ -125,10 +125,10 @@ export function proxy(request: NextRequest) {
         applySecurityHeaders(response, nonce);
         return response;
       }
-      // For page routes, redirect to overview
+      // For page routes, redirect to dashboard
       const url = request.nextUrl.clone();
       const locale = pathname.split("/")[1] || defaultLocale;
-      url.pathname = `/${locale}/overview`;
+      url.pathname = `/${locale}/dashboard`;
       const response = NextResponse.redirect(url);
       applySecurityHeaders(response, nonce);
       return response;
