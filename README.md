@@ -7,7 +7,7 @@
 
 A modern, self-hosted property management platform built for landlords and property managers in **Portugal and Spain**. Track properties, tenants, leases, receipts, expenses, maintenance, and correspondence with Iberian-focused tax and legal compliance tooling.
 
-> **v1.7.1** — Production-ready baseline for the 2026 Portuguese and Spanish rental market. See [RELEASES.md](RELEASES.md) for the full changelog.
+> **v1.11.0** — Production-ready baseline for the 2026 Portuguese and Spanish rental market. See [RELEASES.md](RELEASES.md) for the full changelog.
 
 ## Features
 

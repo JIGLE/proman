@@ -229,16 +229,24 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     // Group properties by building
     const groupedProperties = sortedProperties.reduce(
       (acc, property) => {
-        const buildingId = property.buildingId || property.id; // Fallback to property ID for ungrouped
-        if (!acc[buildingId]) {
-          acc[buildingId] = {
-            buildingId,
+        const normalizedAddressKey = [
+          property.streetAddress || property.address,
+          property.city,
+          property.zipCode,
+        ]
+          .filter(Boolean)
+          .join("|")
+          .toLowerCase();
+        const groupingKey = property.buildingId || normalizedAddressKey || property.id;
+        if (!acc[groupingKey]) {
+          acc[groupingKey] = {
+            buildingId: groupingKey,
             buildingName: property.buildingName || property.address.split(",")[0],
             buildingAddress: property.address,
             properties: [],
           };
         }
-        acc[buildingId].properties.push(property);
+        acc[groupingKey].properties.push(property);
         return acc;
       },
       {} as Record<
@@ -284,11 +292,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
 
     const handleAddressSelect = (suggestion: AddressSuggestion) => {
       const verifiedAddress = AddressVerificationService.parseAddressSuggestion(suggestion);
-      const buildingId = AddressVerificationService.generateBuildingId(
-        verifiedAddress.streetAddress,
-        verifiedAddress.city,
-        verifiedAddress.zipCode,
-      );
 
       dialog.updateFormData({
         address: suggestion.display_name,
@@ -299,7 +302,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
         latitude: verifiedAddress.latitude,
         longitude: verifiedAddress.longitude,
         addressVerified: verifiedAddress.verified,
-        buildingId,
+        buildingId: undefined,
+        buildingName: verifiedAddress.streetAddress,
       });
 
       setAddressSuggestions([]);

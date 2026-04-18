@@ -71,7 +71,12 @@ const DEFAULT_CSP_DIRECTIVES: ContentSecurityPolicyDirectives = {
   ],
   imgSrc: ["'self'", "data:", "blob:", "https:"],
   fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"],
-  connectSrc: ["'self'", "https://accounts.google.com", "https://api.stripe.com"],
+  connectSrc: [
+    "'self'",
+    "https://accounts.google.com",
+    "https://api.stripe.com",
+    "https://nominatim.openstreetmap.org",
+  ],
   frameSrc: ["'self'", "https://accounts.google.com", "https://js.stripe.com"],
   objectSrc: ["'none'"],
   mediaSrc: ["'self'"],

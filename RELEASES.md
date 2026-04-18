@@ -1,5 +1,14 @@
 # Releases
 
+- Date: 2026-04-18
+  - Version: v1.11.0
+  - Image: `ghcr.io/jigle/proman:1.11.0`
+  - Notes: Property creation and address-autocomplete reliability release
+    - **CSP Fix**: Added `https://nominatim.openstreetmap.org` to `connect-src` so address autocomplete requests are allowed in production
+    - **Property Creation Fix**: Prevented synthetic `buildingId` values from being sent during address selection, avoiding foreign-key failures on `POST /api/properties`
+    - **Grouping Behavior**: Preserved property grouping in the UI by deriving a stable address-based fallback key when no real building relation exists
+    - **Version Metadata**: Synchronized app and chart metadata to `1.11.0` across package, Helm, and TrueNAS catalog files
+
 - Date: 2026-04-17
   - Version: v1.8.1
   - Image: `ghcr.io/jigle/proman:1.8.1`
