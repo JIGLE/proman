@@ -2,11 +2,13 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import {
   type Currency,
   formatCurrency as formatCurrencyUtil,
   CURRENCY_SYMBOLS,
 } from "@/lib/utils/currency";
+import { isPublicPagePath } from "@/lib/utils/public-route";
 
 interface CurrencyContextType {
   currency: Currency;
@@ -39,6 +41,7 @@ export function CurrencyProvider({
   initialLocale = "en",
 }: CurrencyProviderProps) {
   const { status } = useSession();
+  const pathname = usePathname();
   const [currency, setCurrencyState] = useState<Currency>(initialCurrency);
   const [isLoading, setIsLoading] = useState(true);
   // Locale now comes from URL via initialLocale prop (from useParams in layout)
@@ -47,6 +50,11 @@ export function CurrencyProvider({
   // Load currency from UserSettings API on mount
   useEffect(() => {
     if (status === "loading") return;
+
+    if (isPublicPagePath(pathname)) {
+      setIsLoading(false);
+      return;
+    }
 
     if (status !== "authenticated") {
       setIsLoading(false);
@@ -72,7 +80,7 @@ export function CurrencyProvider({
     };
 
     fetchCurrency();
-  }, [status]);
+  }, [status, pathname]);
 
   const setCurrency = async (newCurrency: Currency) => {
     setCurrencyState(newCurrency);

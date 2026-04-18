@@ -9,6 +9,7 @@ import React, {
   useMemo,
 } from "react";
 import { useSession } from "next-auth/react";
+import { usePathname } from "next/navigation";
 import {
   Property,
   Tenant,
@@ -27,6 +28,7 @@ import { createEntityActions } from "./create-entity-actions";
 import { isDemoModeClient } from "@/lib/demo/demo-mode";
 import { getDemoData } from "@/lib/demo/demo-data";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
+import { isPublicPagePath } from "@/lib/utils/public-route";
 
 interface AppState {
   properties: Property[];
@@ -143,15 +145,23 @@ const AppContext = createContext<AppContextValue | null>(null);
 export function AppProvider({ children }: { children: ReactNode }): React.ReactElement {
   const [state, dispatch] = React.useReducer(appReducer, initialState);
   const { data: session } = useSession();
+  const pathname = usePathname();
   const { portalRole, tenantEmail, tenantId: selectedTenantId } = usePortalAccess();
   const { error: showError, success: showSuccess } = useToast();
   const { token: csrfToken } = useCsrf();
   const userId = (session?.user as { id?: string } | undefined)?.id;
   const isDemo = isDemoModeClient();
+  const isPublicPage = isPublicPagePath(pathname);
 
   // --- data loading ---
 
   const loadData = useCallback(async () => {
+    // Do not preload protected dashboard data on public routes (landing/auth/demo).
+    if (isPublicPage) {
+      dispatch({ type: "SET_LOADING", payload: false });
+      return;
+    }
+
     // Demo mode: load bundled demo data — no API calls, no auth needed
     if (isDemoModeClient()) {
       dispatch({ type: "SET_LOADING", payload: true });
@@ -263,7 +273,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     } finally {
       dispatch({ type: "SET_LOADING", payload: false });
     }
-  }, [userId, csrfToken, showError]);
+  }, [userId, csrfToken, showError, isPublicPage]);
 
   useEffect(() => {
     loadData();
