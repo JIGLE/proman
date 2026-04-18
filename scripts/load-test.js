@@ -66,10 +66,14 @@ function checkAppRunning(targetUrl) {
   printSection("APPLICATION CHECK");
 
   try {
-    const response = execFileSync("curl", ["-s", "-o", "/dev/null", "-w", "%{http_code}", targetUrl], {
-      encoding: "utf-8",
-      stdio: ["pipe", "pipe", "ignore"],
-    });
+    const response = execFileSync(
+      "curl",
+      ["-s", "-o", "/dev/null", "-w", "%{http_code}", targetUrl],
+      {
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "ignore"],
+      },
+    );
 
     if (response && response.trim() !== "000") {
       print(`✓ Application is running at ${targetUrl}`, "green");
