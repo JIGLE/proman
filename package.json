@@ -90,7 +90,7 @@
     "redis": "^5.11.0"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.1",
+    "@axe-core/playwright": "^4.11.2",
     "@next/bundle-analyzer": "^16.2.4",
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
