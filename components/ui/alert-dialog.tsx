@@ -26,7 +26,7 @@ const AlertDialogTrigger = React.forwardRef<
     );
   const { asChild: _asChild, ...forwardProps } = triggerProps;
   return (
-    <AlertDialogPrimitive.Trigger ref={ref} {...forwardProps}>
+    <AlertDialogPrimitive.Trigger ref={ref} asChild={asChild} {...forwardProps}>
       {asChild ? safeChild : children}
     </AlertDialogPrimitive.Trigger>
   );

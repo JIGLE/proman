@@ -45,20 +45,31 @@ export function FinancialsContainer() {
       tabParam === "rent-roll" ||
       tabParam === "tax"
     ) {
-      setActiveTab(tabParam);
+      if (tabParam !== activeTab) {
+        setActiveTab(tabParam);
+      }
       return;
     }
 
-    if (tabParam === "overview") {
+    if (tabParam === "overview" && activeTab !== "tax") {
       setActiveTab("tax");
     }
-  }, [setActiveTab, tabParam]);
+  }, [activeTab, setActiveTab, tabParam]);
 
   useEffect(() => {
     if (!isOwnerPortal && activeTab !== "receipts") {
       setActiveTab("receipts");
     }
   }, [activeTab, isOwnerPortal, setActiveTab]);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "record-payment" && isOwnerPortal) {
+      if (activeTab !== "receipts") {
+        setActiveTab("receipts");
+      }
+      receiptsViewRef.current?.openDialog();
+    }
+  }, [activeTab, isOwnerPortal, searchParams, setActiveTab]);
 
   const metrics = useMemo(() => {
     const now = new Date();
@@ -150,73 +161,89 @@ export function FinancialsContainer() {
 
       {isOwnerPortal ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card className="border-red-500/20 bg-red-500/5">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-red-300">
-                <AlertTriangle className="h-4 w-4" />
-                Overdue rent
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-[var(--color-foreground)]">
-                {formatCurrency(metrics.overdueAmount)}
-              </div>
-              <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                Total expected rent currently marked overdue
-              </p>
-            </CardContent>
-          </Card>
+          <button type="button" onClick={() => setActiveTab("queue")} className="text-left w-full">
+            <Card className="border-red-500/20 bg-red-500/5 cursor-pointer hover:ring-1 hover:ring-red-500/30 transition-all">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-red-300">
+                  <AlertTriangle className="h-4 w-4" />
+                  Overdue rent
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-[var(--color-foreground)]">
+                  {formatCurrency(metrics.overdueAmount)}
+                </div>
+                <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
+                  Total expected rent currently marked overdue
+                </p>
+              </CardContent>
+            </Card>
+          </button>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
-                <BadgeEuro className="h-4 w-4 text-emerald-400" />
-                Collected this month
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-[var(--color-foreground)]">
-                {formatCurrency(metrics.monthlyCollected)}
-              </div>
-              <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                Paid rent already received this month
-              </p>
-            </CardContent>
-          </Card>
+          <button
+            type="button"
+            onClick={() => setActiveTab("receipts")}
+            className="text-left w-full"
+          >
+            <Card className="cursor-pointer hover:ring-1 hover:ring-white/10 transition-all">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
+                  <BadgeEuro className="h-4 w-4 text-emerald-400" />
+                  Collected this month
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-[var(--color-foreground)]">
+                  {formatCurrency(metrics.monthlyCollected)}
+                </div>
+                <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
+                  Paid rent already received this month
+                </p>
+              </CardContent>
+            </Card>
+          </button>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
-                <Receipt className="h-4 w-4 text-blue-400" />
-                Pending receipts
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-[var(--color-foreground)]">
-                {metrics.pendingReceipts}
-              </div>
-              <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                Records that still need payment or receipt follow-up
-              </p>
-            </CardContent>
-          </Card>
+          <button
+            type="button"
+            onClick={() => setActiveTab("receipts")}
+            className="text-left w-full"
+          >
+            <Card className="cursor-pointer hover:ring-1 hover:ring-white/10 transition-all">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
+                  <Receipt className="h-4 w-4 text-blue-400" />
+                  Pending receipts
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-[var(--color-foreground)]">
+                  {metrics.pendingReceipts}
+                </div>
+                <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
+                  Records that still need payment or receipt follow-up
+                </p>
+              </CardContent>
+            </Card>
+          </button>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
-                <FileText className="h-4 w-4 text-amber-400" />
-                Tax-linked leases
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-[var(--color-foreground)]">
-                {metrics.taxTrackedLeases}
-              </div>
-              <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                Lease records carrying PT/ES tax configuration
-              </p>
-            </CardContent>
-          </Card>
+          <button type="button" onClick={() => setActiveTab("tax")} className="text-left w-full">
+            <Card className="cursor-pointer hover:ring-1 hover:ring-white/10 transition-all">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
+                  <FileText className="h-4 w-4 text-amber-400" />
+                  Tax-linked leases
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-[var(--color-foreground)]">
+                  {metrics.taxTrackedLeases}
+                </div>
+                <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
+                  Lease records carrying PT/ES tax configuration
+                </p>
+              </CardContent>
+            </Card>
+          </button>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

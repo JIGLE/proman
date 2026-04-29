@@ -6,8 +6,6 @@ import {
   MapPin,
   Bed,
   Bath,
-  Edit,
-  Trash2,
   ArrowLeft,
   Users,
   FileText,
@@ -25,6 +23,7 @@ import { useApp } from "@/lib/contexts/app-context";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { EntityLink } from "@/components/shared/entity-link";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
+import { buildLocalizedFinancialReviewPath } from "@/lib/utils/financial-navigation";
 
 interface PropertyDetailViewProps {
   propertyId: string;
@@ -144,7 +143,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               variant="outline"
               size="sm"
               onClick={() =>
-                router.push(`/${locale}/financials?tab=receipts&propertyId=${property.id}`)
+                router.push(buildLocalizedFinancialReviewPath(locale, { propertyId: property.id }))
               }
             >
               <DollarSign className="h-4 w-4 mr-1" /> Review Payments
@@ -155,12 +154,6 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               onClick={() => router.push(`/${locale}/documents?propertyId=${property.id}`)}
             >
               <FileText className="h-4 w-4 mr-1" /> Documents
-            </Button>
-            <Button variant="outline" size="sm">
-              <Edit className="h-4 w-4 mr-1" /> Edit
-            </Button>
-            <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600">
-              <Trash2 className="h-4 w-4 mr-1" /> Delete
             </Button>
           </div>
         </div>

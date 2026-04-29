@@ -66,6 +66,7 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         labelKey: "navigation.documents",
         icon: FileBox,
         roles: ["owner", "tenant"],
+        mobilePrimary: true,
       },
     ],
   },
@@ -88,7 +89,7 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         labelKey: "navigation.settings",
         icon: Settings,
         roles: ["owner"],
-        hidden: true,
+        mobilePrimary: true,
       },
     ],
   },
@@ -109,7 +110,7 @@ export function getPrimaryMobileNavigation(role: PortalRole): PortalNavItem[] {
   return getPortalNavigation(role)
     .flatMap((group) => group.items)
     .filter((item) => item.mobilePrimary)
-    .slice(0, 4);
+    .slice(0, 5);
 }
 
 export function getSecondaryMobileNavigation(role: PortalRole): PortalNavItem[] {

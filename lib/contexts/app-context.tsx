@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useCallback,
   useMemo,
+  useRef,
 } from "react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
@@ -152,134 +153,164 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const userId = (session?.user as { id?: string } | undefined)?.id;
   const isDemo = isDemoModeClient();
   const isPublicPage = isPublicPagePath(pathname);
+  const loadControlRef = useRef<{ inFlight: boolean; lastKey: string | null }>({
+    inFlight: false,
+    lastKey: null,
+  });
 
   // --- data loading ---
 
-  const loadData = useCallback(async () => {
-    // Do not preload protected dashboard data on public routes (landing/auth/demo).
-    if (isPublicPage) {
-      dispatch({ type: "SET_LOADING", payload: false });
-      return;
-    }
+  const loadData = useCallback(
+    async (force = false) => {
+      const loadKey = `${isPublicPage ? "public" : "private"}|${userId ?? "anon"}|${csrfToken ?? "nocsrf"}|${isDemo ? "demo" : "live"}`;
 
-    // Demo mode: load bundled demo data — no API calls, no auth needed
-    if (isDemoModeClient()) {
-      dispatch({ type: "SET_LOADING", payload: true });
-      dispatch({ type: "SET_ERROR", payload: null });
-      dispatch({ type: "SET_PROPERTIES", payload: getDemoData<Property>("properties") });
-      dispatch({ type: "SET_TENANTS", payload: getDemoData<Tenant>("tenants") });
-      dispatch({ type: "SET_RECEIPTS", payload: getDemoData<Receipt>("receipts") });
-      dispatch({
-        type: "SET_TEMPLATES",
-        payload: getDemoData<CorrespondenceTemplate>("templates"),
-      });
-      dispatch({
-        type: "SET_CORRESPONDENCE",
-        payload: getDemoData<Correspondence>("correspondence"),
-      });
-      dispatch({ type: "SET_OWNERS", payload: getDemoData<Owner>("owners") });
-      dispatch({ type: "SET_EXPENSES", payload: getDemoData<Expense>("expenses") });
-      dispatch({ type: "SET_MAINTENANCE", payload: getDemoData<MaintenanceTicket>("maintenance") });
-      dispatch({ type: "SET_LEASES", payload: getDemoData<Lease>("leases") });
-      dispatch({ type: "SET_LOADING", payload: false });
-      return;
-    }
+      // Prevent request storms from effect/dependency churn.
+      if (!force) {
+        if (loadControlRef.current.inFlight) {
+          return;
+        }
+        if (loadControlRef.current.lastKey === loadKey) {
+          return;
+        }
+      }
 
-    // Prevent API calls if not authenticated
-    if (!userId) {
-      dispatch({ type: "SET_LOADING", payload: false });
-      return;
-    }
-    try {
-      dispatch({ type: "SET_LOADING", payload: true });
-      dispatch({ type: "SET_ERROR", payload: null });
+      loadControlRef.current.inFlight = true;
+      loadControlRef.current.lastKey = loadKey;
 
-      const [
-        propertiesRes,
-        tenantsRes,
-        receiptsRes,
-        templatesRes,
-        correspondenceRes,
-        ownersRes,
-        expensesRes,
-        maintenanceRes,
-        leasesRes,
-      ] = await Promise.all([
-        apiFetch<{ data: Property[] }>("/api/properties", csrfToken),
-        apiFetch<{ data: Tenant[] }>("/api/tenants", csrfToken),
-        apiFetch<{ data: Receipt[] }>("/api/receipts", csrfToken),
-        apiFetch<{ data: CorrespondenceTemplate[] }>("/api/correspondence/templates", csrfToken),
-        apiFetch<{ data: Correspondence[] }>("/api/correspondence", csrfToken),
-        apiFetch<{ data: Owner[] }>("/api/owners", csrfToken),
-        apiFetch<{ data: Expense[] }>("/api/expenses", csrfToken),
-        apiFetch<{ data: MaintenanceTicket[] }>("/api/maintenance", csrfToken),
-        apiFetch<{ data: Lease[] }>("/api/leases", csrfToken),
-      ]);
+      // Do not preload protected dashboard data on public routes (landing/auth/demo).
+      if (isPublicPage) {
+        dispatch({ type: "SET_LOADING", payload: false });
+        loadControlRef.current.inFlight = false;
+        return;
+      }
 
-      dispatch({
-        type: "SET_PROPERTIES",
-        payload: (propertiesRes.data ?? propertiesRes) as Property[],
-      });
-      dispatch({
-        type: "SET_TENANTS",
-        payload: (tenantsRes.data ?? tenantsRes) as Tenant[],
-      });
-      dispatch({
-        type: "SET_RECEIPTS",
-        payload: (receiptsRes.data ?? receiptsRes) as Receipt[],
-      });
-      dispatch({
-        type: "SET_TEMPLATES",
-        payload: (templatesRes.data ?? templatesRes) as CorrespondenceTemplate[],
-      });
-      dispatch({
-        type: "SET_CORRESPONDENCE",
-        payload: (correspondenceRes.data ?? correspondenceRes) as Correspondence[],
-      });
-      dispatch({
-        type: "SET_OWNERS",
-        payload: (ownersRes.data ?? ownersRes) as Owner[],
-      });
-      dispatch({
-        type: "SET_EXPENSES",
-        payload: (expensesRes.data ?? expensesRes) as Expense[],
-      });
-      dispatch({
-        type: "SET_MAINTENANCE",
-        payload: (maintenanceRes.data ?? maintenanceRes) as MaintenanceTicket[],
-      });
-      dispatch({
-        type: "SET_LEASES",
-        payload: (leasesRes.data ?? leasesRes) as Lease[],
-      });
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to load data";
+      // Demo mode: load bundled demo data — no API calls, no auth needed
+      if (isDemoModeClient()) {
+        dispatch({ type: "SET_LOADING", payload: true });
+        dispatch({ type: "SET_ERROR", payload: null });
+        dispatch({ type: "SET_PROPERTIES", payload: getDemoData<Property>("properties") });
+        dispatch({ type: "SET_TENANTS", payload: getDemoData<Tenant>("tenants") });
+        dispatch({ type: "SET_RECEIPTS", payload: getDemoData<Receipt>("receipts") });
+        dispatch({
+          type: "SET_TEMPLATES",
+          payload: getDemoData<CorrespondenceTemplate>("templates"),
+        });
+        dispatch({
+          type: "SET_CORRESPONDENCE",
+          payload: getDemoData<Correspondence>("correspondence"),
+        });
+        dispatch({ type: "SET_OWNERS", payload: getDemoData<Owner>("owners") });
+        dispatch({ type: "SET_EXPENSES", payload: getDemoData<Expense>("expenses") });
+        dispatch({
+          type: "SET_MAINTENANCE",
+          payload: getDemoData<MaintenanceTicket>("maintenance"),
+        });
+        dispatch({ type: "SET_LEASES", payload: getDemoData<Lease>("leases") });
+        dispatch({ type: "SET_LOADING", payload: false });
+        loadControlRef.current.inFlight = false;
+        return;
+      }
 
-      // Check if this is a CSRF error
-      const isCsrfError =
-        (err instanceof Error && (err.message.includes("CSRF") || err.message.includes("csrf"))) ||
-        (typeof err === "object" &&
-          err !== null &&
-          "status" in err &&
-          (err as { status?: number }).status === 403);
+      // Prevent API calls if not authenticated
+      if (!userId) {
+        dispatch({ type: "SET_LOADING", payload: false });
+        loadControlRef.current.inFlight = false;
+        return;
+      }
+      try {
+        dispatch({ type: "SET_LOADING", payload: true });
+        dispatch({ type: "SET_ERROR", payload: null });
 
-      // For CSRF errors, suggest refresh
-      const displayMessage = isCsrfError
-        ? "Security token expired. Please refresh the page."
-        : errorMessage;
+        const [
+          propertiesRes,
+          tenantsRes,
+          receiptsRes,
+          templatesRes,
+          correspondenceRes,
+          ownersRes,
+          expensesRes,
+          maintenanceRes,
+          leasesRes,
+        ] = await Promise.all([
+          apiFetch<{ data: Property[] }>("/api/properties", csrfToken),
+          apiFetch<{ data: Tenant[] }>("/api/tenants", csrfToken),
+          apiFetch<{ data: Receipt[] }>("/api/receipts", csrfToken),
+          apiFetch<{ data: CorrespondenceTemplate[] }>("/api/correspondence/templates", csrfToken),
+          apiFetch<{ data: Correspondence[] }>("/api/correspondence", csrfToken),
+          apiFetch<{ data: Owner[] }>("/api/owners", csrfToken),
+          apiFetch<{ data: Expense[] }>("/api/expenses", csrfToken),
+          apiFetch<{ data: MaintenanceTicket[] }>("/api/maintenance", csrfToken),
+          apiFetch<{ data: Lease[] }>("/api/leases", csrfToken),
+        ]);
 
-      dispatch({ type: "SET_ERROR", payload: displayMessage });
-      showError(displayMessage);
-    } finally {
-      dispatch({ type: "SET_LOADING", payload: false });
-    }
-  }, [userId, csrfToken, showError, isPublicPage]);
+        dispatch({
+          type: "SET_PROPERTIES",
+          payload: (propertiesRes.data ?? propertiesRes) as Property[],
+        });
+        dispatch({
+          type: "SET_TENANTS",
+          payload: (tenantsRes.data ?? tenantsRes) as Tenant[],
+        });
+        dispatch({
+          type: "SET_RECEIPTS",
+          payload: (receiptsRes.data ?? receiptsRes) as Receipt[],
+        });
+        dispatch({
+          type: "SET_TEMPLATES",
+          payload: (templatesRes.data ?? templatesRes) as CorrespondenceTemplate[],
+        });
+        dispatch({
+          type: "SET_CORRESPONDENCE",
+          payload: (correspondenceRes.data ?? correspondenceRes) as Correspondence[],
+        });
+        dispatch({
+          type: "SET_OWNERS",
+          payload: (ownersRes.data ?? ownersRes) as Owner[],
+        });
+        dispatch({
+          type: "SET_EXPENSES",
+          payload: (expensesRes.data ?? expensesRes) as Expense[],
+        });
+        dispatch({
+          type: "SET_MAINTENANCE",
+          payload: (maintenanceRes.data ?? maintenanceRes) as MaintenanceTicket[],
+        });
+        dispatch({
+          type: "SET_LEASES",
+          payload: (leasesRes.data ?? leasesRes) as Lease[],
+        });
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : "Failed to load data";
+
+        // Check if this is a CSRF error
+        const isCsrfError =
+          (err instanceof Error &&
+            (err.message.includes("CSRF") || err.message.includes("csrf"))) ||
+          (typeof err === "object" &&
+            err !== null &&
+            "status" in err &&
+            (err as { status?: number }).status === 403);
+
+        // For CSRF errors, suggest refresh
+        const displayMessage = isCsrfError
+          ? "Security token expired. Please refresh the page."
+          : errorMessage;
+
+        dispatch({ type: "SET_ERROR", payload: displayMessage });
+        showError(displayMessage);
+      } finally {
+        dispatch({ type: "SET_LOADING", payload: false });
+        loadControlRef.current.inFlight = false;
+      }
+    },
+    [userId, csrfToken, showError, isPublicPage, isDemo],
+  );
 
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  const refreshData = useCallback(() => loadData(), [loadData]);
+  const refreshData = useCallback(() => loadData(true), [loadData]);
 
   // --- CRUD actions via factory (replaces ~500 LOC of boilerplate) ---
 

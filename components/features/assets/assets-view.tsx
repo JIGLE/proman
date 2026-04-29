@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useRef } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
-  ArrowRight,
+  AlertTriangle,
   Building2,
+  Clock3,
   CreditCard,
   FileText,
   MapPin,
@@ -12,6 +13,7 @@ import {
   Receipt,
   ShieldCheck,
   Sparkles,
+  Wrench,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
@@ -19,7 +21,7 @@ import { PropertiesView, PropertiesViewRef } from "@/components/features/propert
 import { ExportButton, ExportColumn } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
@@ -39,14 +41,27 @@ function StatCard({ label, value, detail }: { label: string; value: string; deta
 
 export function AssetsView(): React.ReactElement {
   const [activeTab, setActiveTab] = useTabPersistence("assets", "properties");
+  const [highlightedPropertyId, setHighlightedPropertyId] = useState<string | null>(null);
   const { state } = useApp();
   const { isOwnerPortal } = usePortalAccess();
   const { formatCurrency } = useCurrency();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "pt";
-  const { properties, leases, receipts, tenants } = state;
+  const { properties, leases, maintenance, receipts, tenants } = state;
   const propertiesViewRef = useRef<PropertiesViewRef>(null);
+
+  const handleLocateOnMap = (propertyId: string) => {
+    setHighlightedPropertyId(propertyId);
+    setActiveTab("map");
+  };
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create-property") {
+      propertiesViewRef.current?.openDialog();
+    }
+  }, [searchParams]);
 
   const propertyColumns = [
     { key: "name", label: "Name" },
@@ -74,6 +89,24 @@ export function AssetsView(): React.ReactElement {
   const mappedCount = properties.filter(
     (property) => typeof property.latitude === "number" && typeof property.longitude === "number",
   ).length;
+  const expiringLeasesCount = useMemo(() => {
+    const now = new Date();
+    const inThirtyDays = new Date();
+    inThirtyDays.setDate(inThirtyDays.getDate() + 30);
+
+    return leases.filter((lease) => {
+      if (lease.status !== "active") return false;
+      const endDate = new Date(lease.endDate);
+      return endDate >= now && endDate <= inThirtyDays;
+    }).length;
+  }, [leases]);
+  const openMaintenanceCount = useMemo(
+    () =>
+      maintenance.filter((ticket) => ticket.status === "open" || ticket.status === "in_progress")
+        .length,
+    [maintenance],
+  );
+  const missingCoordinatesCount = Math.max(properties.length - mappedCount, 0);
 
   const tenantHome = useMemo(() => {
     const tenant = tenants[0];
@@ -141,68 +174,46 @@ export function AssetsView(): React.ReactElement {
             </div>
           </section>
 
-          <section className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-            <Card className="border-white/10 bg-zinc-950/70">
-              <CardHeader>
-                <CardTitle>Portfolio focus</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-sm text-zinc-400">Primary view</p>
-                  <p className="mt-2 text-lg font-semibold text-zinc-50">
-                    {activeTab === "map" ? "Map" : "Portfolio list"}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-sm text-zinc-400">Collection context</p>
-                  <p className="mt-2 text-lg font-semibold text-zinc-50">
-                    {formatCurrency(monthlyRunRate)}
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-sm text-zinc-400">Map coverage</p>
-                  <p className="mt-2 text-lg font-semibold text-zinc-50">{mappedCount} mapped</p>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-white/10 bg-zinc-950/70">
-              <CardHeader>
-                <CardTitle>Quick paths</CardTitle>
-              </CardHeader>
-              <CardContent className="grid gap-2">
-                <Button
-                  variant="outline"
-                  className="justify-between"
-                  onClick={() => router.push(`/${locale}/financials`)}
-                >
-                  Review payments
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="justify-between"
-                  onClick={() => router.push(`/${locale}/documents`)}
-                >
-                  Open documents
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="justify-between"
-                  onClick={() => router.push(`/${locale}/people`)}
-                >
-                  Open people
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-                <ExportButton
-                  data={exportConfig.data}
-                  filename={`${activeTab}-export`}
-                  columns={exportConfig.columns}
-                />
-              </CardContent>
-            </Card>
-          </section>
+          {/* Slim attention strip */}
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-zinc-950/70 px-4 py-3">
+            <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+              Attention
+            </span>
+            <button
+              type="button"
+              onClick={() => setActiveTab("properties")}
+              className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200 transition-colors hover:border-amber-400/60"
+            >
+              <Clock3 className="h-3.5 w-3.5" />
+              <span className="font-semibold text-zinc-50">{expiringLeasesCount}</span>
+              leases ending 30d
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push(`/${locale}/maintenance`)}
+              className="flex items-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-xs text-orange-200 transition-colors hover:border-orange-400/60"
+            >
+              <Wrench className="h-3.5 w-3.5" />
+              <span className="font-semibold text-zinc-50">{openMaintenanceCount}</span>
+              open tickets
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("map")}
+              className="flex items-center gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs text-blue-200 transition-colors hover:border-blue-400/60"
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              <span className="font-semibold text-zinc-50">{missingCoordinatesCount}</span>
+              missing coords
+            </button>
+            <div className="ml-auto">
+              <ExportButton
+                data={exportConfig.data}
+                filename={`${activeTab}-export`}
+                columns={exportConfig.columns}
+              />
+            </div>
+          </div>
         </>
       ) : (
         <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
@@ -308,6 +319,7 @@ export function AssetsView(): React.ReactElement {
             viewMode="map"
             density="compact"
             showPageHeader={false}
+            highlightedPropertyId={highlightedPropertyId ?? undefined}
           />
         </TabsContent>
 
@@ -317,6 +329,7 @@ export function AssetsView(): React.ReactElement {
             viewMode="list"
             density="compact"
             showPageHeader={false}
+            onLocateOnMap={handleLocateOnMap}
           />
         </TabsContent>
       </Tabs>

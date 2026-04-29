@@ -170,43 +170,44 @@
   },
   "landing": {
     "eyebrow": "Operações de arrendamento para Portugal e Espanha",
-    "hero": "Cobrar rendas, emitir recibos e acompanhar impostos para Portugal e Espanha.",
-    "subtitle": "O ProMan dá a senhorios e gestores um fluxo claro para imóveis, inquilinos, contratos, pagamentos, recibos e registos prontos para fiscalidade.",
+    "hero": "Receba rendas mais rápido. Recibos e impostos tratados.",
+    "subtitle": "O ProMan dá a senhorios e gestores um fluxo único do seguimento de pagamento ao recibo com contexto fiscal PT/ES.",
     "cta": "Entrar",
-    "demoCta": "Experimentar Demo",
-    "trustLine": "Feito para cobrança diária de rendas, emissão de recibos e clareza financeira sem complexidade contabilística.",
-    "bullets": {
-      "track": "Acompanhe cada renda por imóvel, inquilino e contrato.",
-      "receipts": "Gere recibos e documentos de pagamento no mesmo fluxo.",
-      "tax": "Mantenha o contexto fiscal PT/ES visível nos pagamentos e recibos."
+    "demoCta": "Ver demo",
+    "secondaryCta": "Ver como funciona",
+    "microcopy": "Sem cartão. Sem configuração. Demonstração guiada em menos de 2 minutos.",
+    "chips": {
+      "simple": "Um fluxo da renda ao recibo",
+      "compliance": "Conformidade PT/ES no mesmo contexto",
+      "workflow": "Contratos, inquilinos e pagamentos ligados"
     },
     "preview": {
       "label": "Pré-visualização do produto",
-      "title": "Uma fila operacional para cobrar rendas",
+      "title": "Da renda em atraso ao registo fiscal pronto",
+      "subtitle": "Um fluxo único, sem dashboard fragmentado.",
       "badge": "Fluxo do proprietário",
-      "kpis": {
-        "overdue": "Renda em atraso",
-        "overdueHint": "Inquilinos que exigem seguimento hoje",
-        "collected": "Cobrado este mês",
-        "collectedHint": "Rendas pagas já registadas",
-        "occupancy": "Ocupação",
-        "occupancyHint": "Unidades com contratos ativos"
+      "steps": {
+        "detect": {
+          "title": "Renda em atraso identificada",
+          "description": "Veja a próxima ação do dia numa única fila."
+        },
+        "receipt": {
+          "title": "Pagamento registado e recibo emitido",
+          "description": "Gere o documento sem sair do fluxo."
+        },
+        "compliance": {
+          "title": "Contexto fiscal PT/ES aplicado",
+          "description": "O perfil do país mantém-se ligado ao mesmo pagamento."
+        }
       },
-      "queue": {
-        "title": "Fila de ação",
-        "subtitle": "Reveja em segundos as próximas tarefas de cobrança.",
-        "badge": "Atuar agora",
-        "ownerAction": "Lembrete de atraso pronto a enviar",
-        "status": "3 dias de atraso",
-        "taxHint": "Contrato, recibo e perfil fiscal mantêm-se ligados"
-      },
-      "receipt": {
-        "title": "Visibilidade de recibo e imposto",
-        "subtitle": "Veja o resultado financeiro antes de exportar o PDF.",
-        "country": "Perfil do país",
-        "gross": "Renda bruta",
-        "tax": "Retenção / imposto",
-        "net": "Valor líquido recebido"
+      "result": {
+        "title": "Resultado",
+        "netLabel": "Valor líquido recebido hoje",
+        "receipt": "Estado do recibo",
+        "compliance": "Perfil fiscal",
+        "export": "Exportação",
+        "done": "Emitido",
+        "ready": "Pronta"
       }
     },
     "demo": {

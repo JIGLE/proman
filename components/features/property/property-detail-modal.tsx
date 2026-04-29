@@ -46,6 +46,7 @@ import UnitsView from "./units-view";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { useCurrency } from "@/lib/contexts/currency-context";
+import { buildFinancialReviewPath } from "@/lib/utils/financial-navigation";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
 
 interface PropertyDetailModalProps {
@@ -498,7 +499,9 @@ export function PropertyDetailModal({
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => navigateTo(`/financials?tab=receipts&propertyId=${property.id}`)}
+                    onClick={() =>
+                      navigateTo(buildFinancialReviewPath({ propertyId: property.id }))
+                    }
                   >
                     <CreditCard className="mr-2 h-4 w-4" />
                     Review payments

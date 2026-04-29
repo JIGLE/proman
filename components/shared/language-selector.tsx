@@ -59,10 +59,7 @@ export function LanguageSelector({ compact = false, className }: LanguageSelecto
           {compact ? (
             <Globe className="h-4 w-4" />
           ) : (
-            <>
-              <span className="text-base leading-none">{localeFlags[currentLocale]}</span>
-              <span className="text-xs font-medium">{currentLocale.toUpperCase()}</span>
-            </>
+            <span className="text-base leading-none">{localeFlags[currentLocale]}</span>
           )}
         </Button>
       </DropdownMenuTrigger>

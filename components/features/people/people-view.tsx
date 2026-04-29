@@ -33,10 +33,18 @@ export function PeopleView(): React.ReactElement {
 
   useEffect(() => {
     const view = searchParams.get("view");
-    if (view === "owners" || view === "contacts" || view === "tenants") {
+    if ((view === "owners" || view === "contacts" || view === "tenants") && view !== activeTab) {
       setActiveTab(view);
     }
-  }, [searchParams, setActiveTab]);
+  }, [activeTab, searchParams, setActiveTab]);
+
+  useEffect(() => {
+    if (searchParams.get("action") !== "create-tenant") return;
+    if (activeTab !== "tenants") {
+      setActiveTab("tenants");
+    }
+    tenantsViewRef.current?.openDialog();
+  }, [activeTab, searchParams, setActiveTab]);
 
   // Export columns for tenants
   const tenantColumns = [
@@ -103,9 +111,11 @@ export function PeopleView(): React.ReactElement {
             <div className="text-sm text-muted-foreground mb-1">Total Owners</div>
             <div className="text-2xl font-bold text-[var(--color-foreground)]">{owners.length}</div>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">Active Owners</div>
-            <div className="text-2xl font-bold text-blue-500">{owners.length}</div>
+          <div className="bg-zinc-900 border border-red-500/20 rounded-lg p-4 bg-red-500/5">
+            <div className="text-sm text-muted-foreground mb-1">Overdue Payments</div>
+            <div className="text-2xl font-bold text-red-400">
+              {tenants.filter((t) => t.paymentStatus === "overdue").length}
+            </div>
           </div>
         </div>
       </div>

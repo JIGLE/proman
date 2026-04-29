@@ -138,10 +138,13 @@ export function OverviewView({
   const { properties = [], tenants = [], leases = [], receipts = [], loading } = state;
 
   const navigate = (href: string) => router.push(`/${locale}${href}`);
-  const handleAddProperty = () => onAddProperty?.() ?? navigate("/portfolio");
-  const handleAddTenant = () => onAddTenant?.() ?? navigate("/people");
+  const handleAddProperty = () =>
+    onAddProperty?.() ?? navigate("/portfolio?action=create-property");
+  const handleAddTenant = () =>
+    onAddTenant?.() ?? navigate("/people?view=tenants&action=create-tenant");
   const handleAddLease = () => onAddLease?.() ?? navigate("/leases");
-  const handleRecordPayment = () => onRecordPayment?.() ?? navigate("/financials?tab=receipts");
+  const handleRecordPayment = () =>
+    onRecordPayment?.() ?? navigate("/financials?tab=receipts&action=record-payment");
 
   const dashboardData = useMemo(() => {
     const currentMonth = new Date();

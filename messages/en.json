@@ -170,43 +170,44 @@
   },
   "landing": {
     "eyebrow": "Portugal & Spain rental operations",
-    "hero": "Collect rent, issue receipts, and track taxes for Portugal and Spain.",
-    "subtitle": "ProMan gives landlords and property managers one clear workflow for properties, tenants, leases, payments, receipts, and tax-ready records.",
+    "hero": "Get rent paid faster. Receipts and taxes handled.",
+    "subtitle": "ProMan gives landlords and managers one clear flow from payment follow-up to receipt and PT/ES tax context.",
     "cta": "Sign in",
-    "demoCta": "Try Demo",
-    "trustLine": "Built for daily rent collection, receipt issuing, and financial clarity without accounting bloat.",
-    "bullets": {
-      "track": "Track every rent payment by property, tenant, and lease.",
-      "receipts": "Generate receipts and payment documents from the same workflow.",
-      "tax": "Keep PT/ES tax context visible on payments and receipts."
+    "demoCta": "View demo",
+    "secondaryCta": "See how it works",
+    "microcopy": "No card. No setup. Guided walkthrough in under 2 minutes.",
+    "chips": {
+      "simple": "One flow from rent to receipt",
+      "compliance": "PT/ES compliance in context",
+      "workflow": "Contracts, tenants, and payments connected"
     },
     "preview": {
       "label": "Live product preview",
-      "title": "One operational queue for rent collection",
+      "title": "From overdue rent to tax-ready records",
+      "subtitle": "A single workflow, not a fragmented dashboard.",
       "badge": "Owner workflow",
-      "kpis": {
-        "overdue": "Overdue rent",
-        "overdueHint": "Tenants needing follow-up today",
-        "collected": "Collected this month",
-        "collectedHint": "Paid rent already posted",
-        "occupancy": "Occupancy",
-        "occupancyHint": "Units with active leases"
+      "steps": {
+        "detect": {
+          "title": "Overdue rent detected",
+          "description": "See the next action for today in one queue."
+        },
+        "receipt": {
+          "title": "Payment logged and receipt issued",
+          "description": "Generate the document without leaving the flow."
+        },
+        "compliance": {
+          "title": "PT/ES tax context applied",
+          "description": "Country profile stays linked to the same payment record."
+        }
       },
-      "queue": {
-        "title": "Action queue",
-        "subtitle": "Review the next rent tasks in seconds.",
-        "badge": "Follow up now",
-        "ownerAction": "Late payment reminder ready to send",
-        "status": "3 days overdue",
-        "taxHint": "Lease, receipt, and tax profile stay linked"
-      },
-      "receipt": {
-        "title": "Receipt and tax visibility",
-        "subtitle": "Preview the financial result before exporting the PDF.",
-        "country": "Country profile",
-        "gross": "Gross rent",
-        "tax": "Withholding / tax",
-        "net": "Net received"
+      "result": {
+        "title": "Outcome",
+        "netLabel": "Net rent received today",
+        "receipt": "Receipt status",
+        "compliance": "Tax profile",
+        "export": "Export",
+        "done": "Issued",
+        "ready": "Ready"
       }
     },
     "demo": {

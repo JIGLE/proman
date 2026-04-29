@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
-import { Menu, X, LogOut, Search, Building2 } from "lucide-react";
+import { LogOut, Building2 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
@@ -14,18 +13,15 @@ import { usePortalAccess } from "@/lib/contexts/portal-context";
 interface MobileNavProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
-  onSearchClick?: () => void;
 }
 
 export function MobileBottomNav({
   activeTab: _activeTab,
   onTabChange,
-  onSearchClick,
 }: MobileNavProps): React.ReactElement {
-  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const { data: session } = useSession();
   const pathname = usePathname();
-  const { mobilePrimaryNavigation, mobileSecondaryNavigation } = usePortalAccess();
+  const { mobilePrimaryNavigation } = usePortalAccess();
   const user = session?.user;
   const initials =
     user?.name
@@ -36,123 +32,21 @@ export function MobileBottomNav({
 
   // Extract locale from pathname
   const currentLocale = pathname.split("/")[1] || "en";
-  const primaryNavItems = [
-    ...mobilePrimaryNavigation.map((item) => ({
-      id: item.key,
-      label: item.label,
-      icon: item.icon,
-      href: item.href,
-    })),
-    { id: "more", label: "More", icon: Menu, href: null },
-  ];
-  const secondaryNavItems = mobileSecondaryNavigation.map((item) => ({
+  const primaryNavItems = mobilePrimaryNavigation.map((item) => ({
     id: item.key,
     label: item.label,
     icon: item.icon,
     href: item.href,
   }));
 
-  const handleNavClick = (id: string, _href: string | null) => {
-    if (id === "more") {
-      setShowMoreMenu(!showMoreMenu);
-    } else {
-      onTabChange?.(id);
-      setShowMoreMenu(false);
-    }
-  };
-
   // Check if current path matches an item
-  const isItemActive = (href: string | null) => {
+  const isItemActive = (href: string) => {
     if (!href) return false;
     return pathname.includes(href);
   };
 
-  const isActiveInSecondary = secondaryNavItems.some((item) => isItemActive(item.href));
-
   return (
     <>
-      {/* More Menu Overlay */}
-      {showMoreMenu && (
-        <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm md:hidden"
-          onClick={() => setShowMoreMenu(false)}
-        />
-      )}
-
-      {/* More Menu Slide-up Panel */}
-      <div
-        className={cn(
-          "fixed bottom-16 left-0 right-0 z-50 bg-[var(--color-card)] border-t border-[var(--color-border)] rounded-t-2xl transition-transform duration-300 ease-out md:hidden",
-          "max-h-[70vh] overflow-y-auto",
-          showMoreMenu ? "translate-y-0" : "translate-y-full pointer-events-none",
-        )}
-      >
-        {/* Handle bar */}
-        <div className="flex justify-center py-2">
-          <div className="w-10 h-1 bg-[var(--color-border)] rounded-full" />
-        </div>
-
-        {/* User profile in more menu */}
-        {session && (
-          <div className="px-4 py-3 border-b border-[var(--color-border)]">
-            <div className="flex items-center gap-3">
-              <Avatar className="w-10 h-10 ring-2 ring-[var(--color-border)]">
-                <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
-                <AvatarFallback className="bg-accent-primary text-white text-sm font-semibold">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-[var(--color-foreground)] truncate">
-                  {user?.name}
-                </p>
-                <p className="text-xs text-[var(--color-muted-foreground)] truncate">
-                  {user?.email}
-                </p>
-              </div>
-              <LanguageSelector compact />
-            </div>
-          </div>
-        )}
-
-        {/* Secondary nav items */}
-        <div className="p-2 grid grid-cols-3 gap-1">
-          {secondaryNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = isItemActive(item.href);
-
-            return (
-              <Link
-                key={item.id}
-                href={`/${currentLocale}${item.href}`}
-                onClick={() => setShowMoreMenu(false)}
-                className={cn(
-                  "flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl transition-all duration-200",
-                  "active:scale-95 touch-manipulation",
-                  isActive
-                    ? "bg-accent-primary/20 text-accent-primary"
-                    : "text-[var(--color-muted-foreground)] hover:bg-[var(--color-hover)] hover:text-[var(--color-foreground)]",
-                )}
-              >
-                <Icon className="h-5 w-5" />
-                <span className="text-xs font-medium">{item.label}</span>
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Sign out button */}
-        <div className="p-2 border-t border-[var(--color-border)]">
-          <button
-            onClick={() => signOut({ callbackUrl: `/${currentLocale}` })}
-            className="flex w-full items-center justify-center gap-2 p-3 rounded-xl text-[var(--color-error)] hover:bg-[var(--color-error)]/10 transition-colors active:scale-95 touch-manipulation"
-          >
-            <LogOut className="h-5 w-5" />
-            <span className="text-sm font-medium">Sign Out</span>
-          </button>
-        </div>
-      </div>
-
       {/* Bottom Navigation Bar */}
       <nav
         className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
@@ -161,68 +55,22 @@ export function MobileBottomNav({
       >
         {/* Safe area spacer for notched devices */}
         <div className="bg-[var(--color-background)]/95 backdrop-blur-sm border-t border-[var(--color-border)]">
-          <div className="relative flex items-center justify-around h-16 px-2">
-            {primaryNavItems.map((item, index) => {
+          <div className="grid h-16 grid-cols-5 items-center px-2">
+            {primaryNavItems.map((item) => {
               const Icon = item.icon;
-              const isActive =
-                item.id === "more" ? showMoreMenu || isActiveInSecondary : isItemActive(item.href);
-
-              // Create gap for FAB button after second item (between Assets and People)
-              const marginClass = index === 2 ? "ml-16" : "";
-
-              // For "more" button, use button element; for others use Link
-              if (item.id === "more") {
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => handleNavClick(item.id, null)}
-                    className={cn(
-                      "flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-full px-2 py-1 rounded-lg transition-all duration-200",
-                      "active:scale-95 touch-manipulation",
-                      "focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-1",
-                      marginClass,
-                      isActive
-                        ? "text-accent-primary"
-                        : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
-                    )}
-                    aria-label={item.label}
-                  >
-                    <div
-                      className={cn(
-                        "p-1.5 rounded-lg transition-colors",
-                        isActive && "bg-accent-primary/20",
-                      )}
-                    >
-                      {showMoreMenu ? (
-                        <X className="h-5 w-5" aria-hidden="true" />
-                      ) : (
-                        <Icon className="h-5 w-5" aria-hidden="true" />
-                      )}
-                    </div>
-                    <span
-                      className={cn(
-                        "text-[10px] font-medium transition-colors",
-                        isActive ? "text-accent-primary" : "text-[var(--color-muted-foreground)]",
-                      )}
-                    >
-                      {item.label}
-                    </span>
-                  </button>
-                );
-              }
+              const isActive = isItemActive(item.href);
 
               return (
                 <Link
                   key={item.id}
                   href={`/${currentLocale}${item.href}`}
-                  onClick={() => setShowMoreMenu(false)}
+                  onClick={() => onTabChange?.(item.id)}
                   className={cn(
-                    "flex flex-col items-center justify-center gap-0.5 min-w-[64px] h-full px-2 py-1 rounded-lg transition-all duration-200",
+                    "flex flex-col items-center justify-center gap-0.5 h-full px-1 py-1 rounded-lg transition-all duration-200",
                     "active:scale-95 touch-manipulation",
                     "focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-1",
-                    marginClass,
                     isActive
-                      ? "text-accent-primary"
+                      ? "bg-accent-primary/15 text-accent-primary"
                       : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
                   )}
                   aria-label={item.label}
@@ -247,29 +95,32 @@ export function MobileBottomNav({
                 </Link>
               );
             })}
-
-            {/* Floating Action Button (FAB) for Search - centered between Properties and People */}
-            {onSearchClick && (
-              <button
-                onClick={onSearchClick}
-                className={cn(
-                  "absolute left-1/2 -translate-x-1/2 -top-6",
-                  "w-14 h-14 rounded-full",
-                  "bg-gradient-to-br from-accent-primary to-accent-primary/80",
-                  "text-white shadow-lg shadow-accent-primary/50",
-                  "flex items-center justify-center",
-                  "transition-all duration-200 active:scale-90",
-                  "ring-4 ring-[var(--color-background)]",
-                  "focus-visible:ring-4 focus-visible:ring-accent-primary/50 focus-visible:outline-none",
-                  "hover:shadow-xl hover:shadow-accent-primary/60",
-                )}
-                aria-label="Open search"
-                title="Search (⌘K)"
-              >
-                <Search className="h-6 w-6" aria-hidden="true" />
-              </button>
-            )}
           </div>
+          {session && (
+            <div className="border-t border-[var(--color-border)] px-3 py-2 flex items-center justify-between">
+              <div className="flex items-center gap-2 min-w-0">
+                <Avatar className="w-7 h-7 ring-1 ring-[var(--color-border)]">
+                  <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+                  <AvatarFallback className="bg-accent-primary text-white text-[10px] font-semibold">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate text-xs text-[var(--color-muted-foreground)]">
+                  {user?.name}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <LanguageSelector compact />
+                <button
+                  onClick={() => signOut({ callbackUrl: `/${currentLocale}` })}
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-md text-[var(--color-error)] hover:bg-[var(--color-error)]/10"
+                  aria-label="Sign Out"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
           {/* iOS safe area padding */}
           <div
             className="bg-[var(--color-background)]"

@@ -114,35 +114,35 @@ const documentTypeConfig: Record<
 > = {
   contract: {
     label: "Contract",
-    color: "bg-blue-100 text-blue-800",
+    color: "bg-blue-500/20 text-blue-300",
     icon: FileText,
   },
   invoice: {
     label: "Invoice",
-    color: "bg-green-100 text-green-800",
+    color: "bg-green-500/20 text-green-300",
     icon: File,
   },
   receipt: {
     label: "Receipt",
-    color: "bg-emerald-100 text-emerald-800",
+    color: "bg-emerald-500/20 text-emerald-300",
     icon: File,
   },
   photo: {
     label: "Photo",
-    color: "bg-purple-100 text-purple-800",
+    color: "bg-purple-500/20 text-purple-300",
     icon: Image,
   },
   floor_plan: {
     label: "Floor Plan",
-    color: "bg-orange-100 text-orange-800",
+    color: "bg-orange-500/20 text-orange-300",
     icon: FileImage,
   },
   certificate: {
     label: "Certificate",
-    color: "bg-yellow-100 text-yellow-800",
+    color: "bg-yellow-500/20 text-yellow-300",
     icon: FileText,
   },
-  other: { label: "Other", color: "bg-gray-100 text-gray-800", icon: File },
+  other: { label: "Other", color: "bg-zinc-500/20 text-zinc-300", icon: File },
 };
 
 // Format file size
@@ -156,7 +156,7 @@ function formatFileSize(bytes: number): string {
 
 // Format date
 function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString("en-US", {
+  return new Date(dateString).toLocaleDateString("pt-PT", {
     year: "numeric",
     month: "short",
     day: "numeric",
@@ -889,7 +889,7 @@ export function DocumentsView() {
                       return (
                         <div
                           key={doc.id}
-                          className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-muted/50"
+                          className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:bg-zinc-800/60"
                         >
                           <div className="flex items-center gap-4">
                             <div className="rounded-lg bg-muted p-2">

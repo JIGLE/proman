@@ -9,6 +9,27 @@ import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
+const SUPPORTED_LOCALES = ["pt", "en", "es"] as const;
+
+function detectLocale(): string {
+  // 1. Check the referring page's path for a locale segment (/pt/, /en/, /es/)
+  if (typeof document !== "undefined" && document.referrer) {
+    try {
+      const segment = new URL(document.referrer).pathname.split("/")[1];
+      if (SUPPORTED_LOCALES.includes(segment as (typeof SUPPORTED_LOCALES)[number])) {
+        return segment;
+      }
+    } catch {
+      // ignore malformed referrer
+    }
+  }
+  // 2. Fallback to browser language
+  const browserLang = typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "pt";
+  return SUPPORTED_LOCALES.includes(browserLang as (typeof SUPPORTED_LOCALES)[number])
+    ? browserLang
+    : "pt";
+}
+
 const isDemoEnabled =
   process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true" || process.env.NODE_ENV !== "production";
 
@@ -18,11 +39,7 @@ function SignInContent() {
 
   useEffect(() => {
     if (status === "authenticated") {
-      // Detect locale from browser or default to 'pt'
-      const browserLang =
-        typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "pt";
-      const locale = ["pt", "en", "es"].includes(browserLang) ? browserLang : "pt";
-      router.push(`/${locale}/dashboard`);
+      router.push(`/${detectLocale()}/dashboard`);
     }
   }, [status, router]);
 
@@ -72,13 +89,10 @@ function SignInContent() {
                   onSubmit={(e) => {
                     e.preventDefault();
                     const formData = new FormData(e.currentTarget);
-                    const browserLang =
-                      typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "pt";
-                    const locale = ["pt", "en", "es"].includes(browserLang) ? browserLang : "pt";
                     signIn("credentials", {
                       email: formData.get("email"),
                       password: formData.get("password"),
-                      callbackUrl: `/${locale}/dashboard`,
+                      callbackUrl: `/${detectLocale()}/dashboard`,
                     });
                   }}
                   className="space-y-3"
@@ -108,10 +122,7 @@ function SignInContent() {
                   type="button"
                   className="w-full h-10 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white"
                   onClick={() => {
-                    const browserLang =
-                      typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "pt";
-                    const locale = ["pt", "en", "es"].includes(browserLang) ? browserLang : "pt";
-                    router.push(`/${locale}/demo`);
+                    router.push(`/${detectLocale()}/demo`);
                   }}
                 >
                   Try Demo Mode

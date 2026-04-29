@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import { useMap } from "react-leaflet";
 import { Building2, MapPin } from "lucide-react";
 import "leaflet/dist/leaflet.css";
 import { useApp } from "@/lib/contexts/app-context";
@@ -27,7 +28,31 @@ interface PropertyMarker {
   rent?: number;
 }
 
-export default function PropertyMap() {
+function MapFlyToController({
+  propertyId,
+  markers,
+}: {
+  propertyId: string | undefined;
+  markers: PropertyMarker[];
+}) {
+  const map = useMap();
+  useEffect(() => {
+    if (!propertyId) return;
+    const target = markers.find((m) => m.id === propertyId);
+    if (target) {
+      map.flyTo([target.latitude, target.longitude], 16, { duration: 1.2 });
+    }
+  }, [propertyId, markers, map]);
+  return null;
+}
+
+export default function PropertyMap({
+  highlightedPropertyId,
+  onSelectProperty,
+}: {
+  highlightedPropertyId?: string;
+  onSelectProperty?: (propertyId: string) => void;
+}) {
   const { state } = useApp();
   const [mapCenter, setMapCenter] = useState<[number, number]>([38.7223, -9.1393]);
   const [leafletReady, setLeafletReady] = useState(false);
@@ -130,8 +155,15 @@ export default function PropertyMap() {
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
+            <MapFlyToController propertyId={highlightedPropertyId} markers={properties} />
             {properties.map((property) => (
-              <Marker key={property.id} position={[property.latitude, property.longitude]}>
+              <Marker
+                key={property.id}
+                position={[property.latitude, property.longitude]}
+                eventHandlers={{
+                  click: () => onSelectProperty?.(property.id),
+                }}
+              >
                 <Popup>
                   <div className="space-y-2 p-2">
                     <div className="flex items-center gap-2">
@@ -143,6 +175,13 @@ export default function PropertyMap() {
                     {typeof property.rent === "number" && (
                       <p className="text-xs text-gray-500">Rent: {property.rent}</p>
                     )}
+                    <button
+                      type="button"
+                      onClick={() => onSelectProperty?.(property.id)}
+                      className="mt-1 rounded-md bg-blue-600 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-500"
+                    >
+                      Open details
+                    </button>
                   </div>
                 </Popup>
               </Marker>

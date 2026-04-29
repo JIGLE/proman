@@ -81,13 +81,8 @@ export function OnboardingChecklist({
     if (allComplete && !celebrateComplete) {
       setCelebrateComplete(true);
       onAllComplete?.();
-      // Auto-dismiss after 5 seconds
-      const timer = setTimeout(() => {
-        handleDismiss();
-      }, 8000);
-      return () => clearTimeout(timer);
     }
-  }, [allComplete, celebrateComplete, onAllComplete, handleDismiss]);
+  }, [allComplete, celebrateComplete, onAllComplete]);
 
   const handleToggleCollapse = useCallback(() => {
     setCollapsed((prev) => {

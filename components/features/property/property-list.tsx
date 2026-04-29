@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
-import { Building2, MapPin, Bed, Bath, CheckCircle, Wrench } from "lucide-react";
+import { Building2, MapPin, CheckCircle, Wrench, ChevronDown } from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { getCountryName, resolveCountryCode } from "@/lib/utils/country";
 import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/table";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { motion } from "framer-motion";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -58,6 +57,8 @@ import { PageHeader } from "@/components/shared/page-header";
 export type PropertiesViewProps = {
   viewMode?: "list" | "map";
   onPropertySelect?: (propertyId: string) => void;
+  onLocateOnMap?: (propertyId: string) => void;
+  highlightedPropertyId?: string;
   density?: "comfortable" | "compact";
   showPageHeader?: boolean;
 };
@@ -68,7 +69,13 @@ export type PropertiesViewRef = {
 
 export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>(
   function PropertiesView(
-    { viewMode = "list", onPropertySelect, showPageHeader = true }: PropertiesViewProps,
+    {
+      viewMode = "list",
+      onPropertySelect,
+      onLocateOnMap,
+      highlightedPropertyId,
+      showPageHeader = true,
+    }: PropertiesViewProps,
     ref,
   ): React.ReactElement {
     const { state, addProperty, updateProperty, deleteProperty } = useApp();
@@ -76,7 +83,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const { success } = useToast();
     const { formatCurrency } = useCurrency();
     const confirmDialog = useConfirmDialog();
-    const compact = true; // Always compact for denser lists
 
     // Property detail modal state
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -101,6 +107,78 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const [searchQuery, setSearchQuery] = useState("");
     const [typeFilter, setTypeFilter] = useState<string>("all");
     const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [operationalFilter, setOperationalFilter] = useState<string>("all");
+
+    // Collapsible building sections
+    const [collapsedBuildings, setCollapsedBuildings] = useState<Set<string>>(new Set());
+    const toggleBuilding = useCallback((buildingId: string) => {
+      setCollapsedBuildings((prev) => {
+        const next = new Set(prev);
+        if (next.has(buildingId)) next.delete(buildingId);
+        else next.add(buildingId);
+        return next;
+      });
+    }, []);
+
+    const activeLeasePropertyIds = useMemo(() => {
+      return new Set(
+        leases.filter((lease) => lease.status === "active").map((lease) => lease.propertyId),
+      );
+    }, [leases]);
+
+    const expiringLeasePropertyIds = useMemo(() => {
+      const now = new Date();
+      const inThirtyDays = new Date();
+      inThirtyDays.setDate(inThirtyDays.getDate() + 30);
+
+      return new Set(
+        leases
+          .filter((lease) => {
+            if (lease.status !== "active") return false;
+            const endDate = new Date(lease.endDate);
+            return endDate >= now && endDate <= inThirtyDays;
+          })
+          .map((lease) => lease.propertyId),
+      );
+    }, [leases]);
+
+    const openMaintenancePropertyIds = useMemo(() => {
+      return new Set(
+        maintenance
+          .filter((ticket) => ticket.status === "open" || ticket.status === "in_progress")
+          .map((ticket) => ticket.propertyId),
+      );
+    }, [maintenance]);
+
+    const missingMapPropertyIds = useMemo(() => {
+      return new Set(
+        properties
+          .filter(
+            (property) =>
+              typeof property.latitude !== "number" || typeof property.longitude !== "number",
+          )
+          .map((property) => property.id),
+      );
+    }, [properties]);
+
+    const occupiedWithoutActiveLeaseIds = useMemo(() => {
+      return new Set(
+        properties
+          .filter(
+            (property) =>
+              property.status === "occupied" && !activeLeasePropertyIds.has(property.id),
+          )
+          .map((property) => property.id),
+      );
+    }, [activeLeasePropertyIds, properties]);
+
+    const needsAttentionPropertyIds = useMemo(() => {
+      return new Set([
+        ...expiringLeasePropertyIds,
+        ...openMaintenancePropertyIds,
+        ...occupiedWithoutActiveLeaseIds,
+      ]);
+    }, [expiringLeasePropertyIds, openMaintenancePropertyIds, occupiedWithoutActiveLeaseIds]);
 
     // Form dialog hook
     const initialFormData: PropertyFormData = {
@@ -160,9 +238,29 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
         // Status filter
         const matchesStatus = statusFilter === "all" || property.status === statusFilter;
 
-        return matchesSearch && matchesType && matchesStatus;
+        // Operational filter
+        const matchesOperational =
+          operationalFilter === "all" ||
+          (operationalFilter === "needs-attention" && needsAttentionPropertyIds.has(property.id)) ||
+          (operationalFilter === "lease-renewal" && expiringLeasePropertyIds.has(property.id)) ||
+          (operationalFilter === "open-maintenance" &&
+            openMaintenancePropertyIds.has(property.id)) ||
+          (operationalFilter === "missing-map" && missingMapPropertyIds.has(property.id)) ||
+          (operationalFilter === "vacancy" && property.status === "vacant");
+
+        return matchesSearch && matchesType && matchesStatus && matchesOperational;
       });
-    }, [properties, searchQuery, typeFilter, statusFilter]);
+    }, [
+      properties,
+      searchQuery,
+      typeFilter,
+      statusFilter,
+      operationalFilter,
+      needsAttentionPropertyIds,
+      expiringLeasePropertyIds,
+      openMaintenancePropertyIds,
+      missingMapPropertyIds,
+    ]);
 
     // Sorting
     const {
@@ -361,6 +459,17 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const _handleSubmit = async (e: React.FormEvent) => {
       await dialog.handleSubmit(e);
     };
+
+    const handleMapPropertySelect = useCallback(
+      (propertyId: string) => {
+        const selected = properties.find((property) => property.id === propertyId);
+        if (!selected) return;
+        setSelectedProperty(selected);
+        setIsDetailModalOpen(true);
+        onPropertySelect?.(selected.id);
+      },
+      [onPropertySelect, properties],
+    );
 
     return (
       <>
@@ -677,10 +786,78 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
             {/* Conditional rendering based on viewMode prop */}
             {viewMode === "map" ? (
               <div className="space-y-6">
-                <PropertyMap />
+                <PropertyMap
+                  highlightedPropertyId={highlightedPropertyId}
+                  onSelectProperty={handleMapPropertySelect}
+                />
               </div>
             ) : (
-              <div className="space-y-6">
+              <div className="space-y-4">
+                {/* Slim operational filter strip */}
+                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-2.5">
+                  <span className="mr-1 text-xs font-medium uppercase tracking-wider text-zinc-500">
+                    Filter
+                  </span>
+                  {[
+                    { key: "all", label: "All", count: properties.length, color: "" },
+                    {
+                      key: "needs-attention",
+                      label: "Needs attention",
+                      count: needsAttentionPropertyIds.size,
+                      color: "text-red-300",
+                    },
+                    {
+                      key: "lease-renewal",
+                      label: "Lease renewal",
+                      count: expiringLeasePropertyIds.size,
+                      color: "text-amber-300",
+                    },
+                    {
+                      key: "open-maintenance",
+                      label: "Maintenance",
+                      count: openMaintenancePropertyIds.size,
+                      color: "text-orange-300",
+                    },
+                    {
+                      key: "missing-map",
+                      label: "Missing map",
+                      count: missingMapPropertyIds.size,
+                      color: "text-blue-300",
+                    },
+                    {
+                      key: "vacancy",
+                      label: "Vacant",
+                      count: properties.filter((p) => p.status === "vacant").length,
+                      color: "text-zinc-300",
+                    },
+                  ].map((opt) => {
+                    const isActive = operationalFilter === opt.key;
+                    return (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => setOperationalFilter(opt.key)}
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                          isActive
+                            ? "bg-accent-primary text-white"
+                            : "border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200",
+                        )}
+                      >
+                        {opt.label}
+                        <span
+                          className={cn(
+                            "font-semibold",
+                            isActive ? "text-white" : opt.color || "text-zinc-300",
+                          )}
+                        >
+                          {opt.count}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
                 {/* Search and Filter */}
                 <SearchFilter
                   searchPlaceholder="Search properties by name or address..."
@@ -808,315 +985,230 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                   )
                 ) : (
                   <>
-                    {/* Sortable Column Headers */}
-                    {filteredProperties.length > 0 && (
-                      <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
-                        <div className="flex-1">
-                          <SortableHeader
-                            sortKey="name"
-                            label="Property"
-                            currentSort={getSortDirection("name")}
-                            onSort={(key) => requestSort(key as keyof Property)}
-                          />
-                        </div>
-                        <div className="w-32">
-                          <SortableHeader
-                            sortKey="type"
-                            label="Type"
-                            currentSort={getSortDirection("type")}
-                            onSort={(key) => requestSort(key as keyof Property)}
-                          />
-                        </div>
-                        <div className="w-32">
-                          <SortableHeader
-                            sortKey="status"
-                            label="Status"
-                            currentSort={getSortDirection("status")}
-                            onSort={(key) => requestSort(key as keyof Property)}
-                          />
-                        </div>
-                        <div className="w-32">
-                          <SortableHeader
-                            sortKey="rent"
-                            label="Rent"
-                            currentSort={getSortDirection("rent")}
-                            onSort={(key) => requestSort(key as keyof Property)}
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    <div
-                      className={cn(
-                        "grid",
-                        compact
-                          ? "gap-1 md:grid-cols-4 lg:grid-cols-6"
-                          : "gap-6 md:grid-cols-2 lg:grid-cols-3",
-                      )}
-                    >
-                      {filteredProperties.length === 0 ? (
-                        <div className="col-span-full">
-                          <EmptyStateIllustration
-                            type={properties.length === 0 ? "properties" : "generic"}
-                            title={properties.length === 0 ? undefined : "No properties found"}
-                            description={
-                              properties.length === 0
-                                ? undefined
-                                : "Try adjusting your search or filters"
-                            }
-                            onAction={properties.length === 0 ? dialog.openDialog : undefined}
-                          />
-                        </div>
-                      ) : (
-                        buildingGroups.map((building) => (
-                          <div key={building.buildingId} className="space-y-4 col-span-full">
-                            {/* Building Header */}
-                            <motion.div
-                              initial={{ opacity: 0, y: -20 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.4 }}
-                            >
-                              <Card className="bg-zinc-800 border-zinc-700 hover:border-accent-primary/30 transition-colors duration-300">
-                                <CardHeader>
-                                  <div className="flex items-center justify-between">
-                                    <div>
-                                      <motion.div
-                                        className="text-[var(--color-foreground)] flex items-center gap-2"
-                                        initial={{ x: -20, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.1 }}
-                                      >
-                                        <Building2 className="h-5 w-5" />
-                                        <CardTitle className="text-lg">
-                                          {building.buildingName}
-                                        </CardTitle>
-                                      </motion.div>
-                                      <motion.div
-                                        className="flex items-start gap-1 mt-1"
-                                        initial={{ x: -20, opacity: 0 }}
-                                        animate={{ x: 0, opacity: 1 }}
-                                        transition={{ delay: 0.2 }}
-                                      >
-                                        <MapPin className="h-4 w-4 shrink-0 mt-0.5 text-zinc-500" />
-                                        <CardDescription className="text-sm">
-                                          {building.buildingAddress}
-                                        </CardDescription>
-                                      </motion.div>
-                                    </div>
-                                    <motion.div
-                                      className="text-sm text-zinc-400 bg-zinc-700 px-3 py-1 rounded-full"
-                                      initial={{ scale: 0 }}
-                                      animate={{ scale: 1 }}
-                                      transition={{ delay: 0.3, type: "spring" }}
-                                    >
-                                      {building.properties.length} unit
-                                      {building.properties.length !== 1 ? "s" : ""}
-                                    </motion.div>
-                                  </div>
-                                </CardHeader>
-                              </Card>
-                            </motion.div>
-
-                            {/* Properties in this building */}
+                    {/* List View — full-width property rows grouped by building */}
+                    {filteredProperties.length === 0 ? (
+                      <EmptyStateIllustration
+                        type={properties.length === 0 ? "properties" : "generic"}
+                        title={properties.length === 0 ? undefined : "No properties found"}
+                        description={
+                          properties.length === 0
+                            ? undefined
+                            : "Try adjusting your search or filters"
+                        }
+                        onAction={properties.length === 0 ? dialog.openDialog : undefined}
+                      />
+                    ) : (
+                      <div className="space-y-3">
+                        {buildingGroups.map((building) => {
+                          const isCollapsed = collapsedBuildings.has(building.buildingId);
+                          return (
                             <div
-                              className={cn(
-                                "grid grid-cols-1",
-                                compact
-                                  ? "md:grid-cols-4 lg:grid-cols-6 gap-1"
-                                  : "md:grid-cols-2 lg:grid-cols-3 gap-4",
-                              )}
+                              key={building.buildingId}
+                              className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/60"
                             >
-                              {building.properties.map((property, index) => {
-                                const isSelected = bulkSelection.isSelected(property.id);
-                                return (
-                                  <motion.div
-                                    key={property.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: index * 0.1, duration: 0.3 }}
-                                    whileHover={{ y: -4 }}
+                              {/* Building section header — collapsible */}
+                              <button
+                                type="button"
+                                onClick={() => toggleBuilding(building.buildingId)}
+                                className="flex w-full items-center justify-between px-4 py-3 hover:bg-zinc-800/50 transition-colors"
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <Building2 className="h-4 w-4 shrink-0 text-zinc-500" />
+                                  <div className="min-w-0 text-left">
+                                    <p className="text-sm font-semibold text-zinc-100 truncate">
+                                      {building.buildingName}
+                                    </p>
+                                    <p className="flex items-center gap-1 text-xs text-zinc-500 truncate">
+                                      <MapPin className="h-3 w-3 shrink-0" />
+                                      {building.buildingAddress}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex shrink-0 items-center gap-3 ml-4">
+                                  <span className="text-xs text-zinc-500">
+                                    {building.properties.length} unit
+                                    {building.properties.length !== 1 ? "s" : ""}
+                                  </span>
+                                  <ChevronDown
                                     className={cn(
-                                      "group cursor-pointer",
-                                      isSelected &&
-                                        "ring-2 ring-accent-primary border-accent-primary/50",
+                                      "h-4 w-4 text-zinc-500 transition-transform duration-200",
+                                      isCollapsed && "-rotate-90",
                                     )}
-                                    onClick={() => {
-                                      setSelectedProperty(property);
-                                      setIsDetailModalOpen(true);
-                                      onPropertySelect?.(property.id);
-                                    }}
-                                  >
-                                    <Card className="overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-accent-primary/10 border-border/50 group-hover:border-accent-primary/30">
+                                  />
+                                </div>
+                              </button>
+
+                              {/* Property rows */}
+                              {!isCollapsed && (
+                                <div className="divide-y divide-zinc-800 border-t border-zinc-800">
+                                  {building.properties.map((property) => {
+                                    const activeLease = leases.find(
+                                      (l) => l.propertyId === property.id && l.status === "active",
+                                    );
+                                    const propTenants = tenants.filter(
+                                      (t) => t.propertyId === property.id,
+                                    );
+                                    const openTickets = maintenance.filter(
+                                      (m) =>
+                                        m.propertyId === property.id && m.status !== "resolved",
+                                    );
+                                    const isSelected = bulkSelection.isSelected(property.id);
+                                    const hasAttention = needsAttentionPropertyIds.has(property.id);
+                                    const isExpiring = expiringLeasePropertyIds.has(property.id);
+                                    const isMissingMap = missingMapPropertyIds.has(property.id);
+
+                                    return (
                                       <div
+                                        key={property.id}
                                         className={cn(
-                                          compact ? "h-16" : "aspect-video",
-                                          "w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative overflow-hidden",
+                                          "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40",
+                                          hasAttention && "border-l-2 border-l-amber-500/60",
+                                          isSelected && "bg-zinc-800/60",
                                         )}
                                       >
-                                        <motion.div
-                                          className="absolute inset-0 flex items-center justify-center"
-                                          whileHover={{ scale: 1.1 }}
-                                          transition={{
-                                            type: "spring",
-                                            stiffness: 300,
+                                        {/* Checkbox */}
+                                        <Checkbox
+                                          checked={isSelected}
+                                          onCheckedChange={() =>
+                                            bulkSelection.toggleSelection(property.id)
+                                          }
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="shrink-0"
+                                        />
+
+                                        {/* Name + street address */}
+                                        <div
+                                          className="flex min-w-0 flex-1 cursor-pointer flex-col"
+                                          onClick={() => {
+                                            setSelectedProperty(property);
+                                            setIsDetailModalOpen(true);
+                                            onPropertySelect?.(property.id);
                                           }}
                                         >
-                                          <Building2 className="h-12 w-12 text-zinc-700 group-hover:text-zinc-600 transition-colors duration-300" />
-                                        </motion.div>
-                                        <div className="absolute top-3 right-3">
-                                          {getStatusBadge(property.status)}
+                                          <span className="truncate text-sm font-medium text-zinc-100">
+                                            {property.name}
+                                          </span>
+                                          <span className="truncate text-xs text-zinc-500">
+                                            {property.streetAddress || property.address}
+                                          </span>
                                         </div>
-                                        {property.addressVerified && (
-                                          <motion.div
-                                            initial={{ scale: 0 }}
-                                            animate={{ scale: 1 }}
-                                            className="absolute bottom-3 right-3 bg-success/20 rounded-full p-1"
-                                          >
-                                            <CheckCircle className="h-4 w-4 text-success" />
-                                          </motion.div>
-                                        )}
-                                      </div>
-                                      <CardHeader>
-                                        <div className="flex items-start justify-between w-full">
-                                          <div className="flex items-start gap-3">
-                                            <Checkbox
-                                              checked={isSelected}
-                                              onCheckedChange={() =>
-                                                bulkSelection.toggleSelection(property.id)
+
+                                        {/* Type · bed · bath */}
+                                        <div className="hidden shrink-0 flex-col items-end gap-0.5 text-xs text-zinc-500 sm:flex">
+                                          <span className="capitalize">{property.type}</span>
+                                          <span>
+                                            {property.bedrooms}bd · {property.bathrooms}ba
+                                          </span>
+                                        </div>
+
+                                        {/* Relationship badges */}
+                                        <div className="hidden shrink-0 items-center gap-1 md:flex">
+                                          {propTenants.length > 0 && (
+                                            <RelationshipBadge
+                                              variant="tenant"
+                                              label={
+                                                propTenants.length === 1 ? "tenant" : "tenants"
                                               }
-                                              className="mt-2"
+                                              count={propTenants.length}
                                             />
-                                            <div>
-                                              <div
+                                          )}
+                                          {activeLease && (
+                                            <RelationshipBadge
+                                              variant="lease"
+                                              label="lease"
+                                              count={1}
+                                            />
+                                          )}
+                                          {openTickets.length > 0 && (
+                                            <RelationshipBadge
+                                              variant="maintenance"
+                                              label={
+                                                openTickets.length === 1 ? "ticket" : "tickets"
+                                              }
+                                              count={openTickets.length}
+                                            />
+                                          )}
+                                        </div>
+
+                                        {/* Lease end date */}
+                                        <div className="hidden w-[88px] shrink-0 flex-col items-end text-xs lg:flex">
+                                          {activeLease ? (
+                                            <>
+                                              <span className="text-zinc-500">Lease ends</span>
+                                              <span
                                                 className={cn(
-                                                  "text-[var(--color-foreground)]",
-                                                  compact
-                                                    ? "text-xs font-medium"
-                                                    : "text-base font-semibold",
+                                                  "font-medium",
+                                                  isExpiring ? "text-amber-300" : "text-zinc-300",
                                                 )}
                                               >
-                                                {property.name}
-                                              </div>
-                                              <CardDescription className="flex items-start gap-1">
-                                                <MapPin className="h-3 w-3 shrink-0 mt-0.5" />
-                                                <span className="text-xs">
-                                                  {property.streetAddress || "Unit address"}
-                                                </span>
-                                              </CardDescription>
-                                            </div>
-                                          </div>
-                                        </div>
-                                      </CardHeader>
-                                      {/* Relationship badges */}
-                                      <div className="flex flex-wrap gap-1 px-2 pb-1">
-                                        {(() => {
-                                          const propTenants = tenants.filter(
-                                            (t) => t.propertyId === property.id,
-                                          );
-                                          const propLeases = leases.filter(
-                                            (l) =>
-                                              l.propertyId === property.id && l.status === "active",
-                                          );
-                                          const openTickets = maintenance.filter(
-                                            (m) =>
-                                              m.propertyId === property.id &&
-                                              m.status !== "resolved",
-                                          );
-                                          return (
-                                            <>
-                                              {propTenants.length > 0 && (
-                                                <RelationshipBadge
-                                                  variant="tenant"
-                                                  label={
-                                                    propTenants.length === 1 ? "tenant" : "tenants"
-                                                  }
-                                                  count={propTenants.length}
-                                                />
-                                              )}
-                                              {propLeases.length > 0 && (
-                                                <RelationshipBadge
-                                                  variant="lease"
-                                                  label={
-                                                    propLeases.length === 1 ? "lease" : "leases"
-                                                  }
-                                                  count={propLeases.length}
-                                                />
-                                              )}
-                                              {openTickets.length > 0 && (
-                                                <RelationshipBadge
-                                                  variant="maintenance"
-                                                  label={
-                                                    openTickets.length === 1 ? "ticket" : "tickets"
-                                                  }
-                                                  count={openTickets.length}
-                                                />
-                                              )}
+                                                {new Date(activeLease.endDate).toLocaleDateString(
+                                                  "pt-PT",
+                                                  {
+                                                    day: "numeric",
+                                                    month: "short",
+                                                    year: "numeric",
+                                                  },
+                                                )}
+                                              </span>
                                             </>
-                                          );
-                                        })()}
-                                      </div>
-                                      <CardContent
-                                        className={compact ? "space-y-1 p-2" : "space-y-3"}
-                                      >
-                                        <div className="flex items-center justify-between text-sm">
-                                          <span className="text-[var(--color-muted-foreground)]">
-                                            {property.type}
-                                          </span>
-                                          <motion.span
-                                            className="font-semibold text-[var(--color-foreground)]"
-                                            initial={{ scale: 0.9 }}
-                                            animate={{ scale: 1 }}
-                                            transition={{ delay: 0.2 }}
-                                          >
-                                            <span className="text-sm font-semibold">
-                                              {formatCurrency(Number(property.rent))}
-                                            </span>
-                                          </motion.span>
+                                          ) : null}
                                         </div>
-                                        <div className="flex items-center gap-4 text-sm text-[var(--color-muted-foreground)]">
-                                          <motion.div
-                                            className="flex items-center gap-1"
-                                            initial={{ x: -10, opacity: 0 }}
-                                            animate={{ x: 0, opacity: 1 }}
-                                            transition={{ delay: 0.3 }}
-                                          >
-                                            <Bed className="h-4 w-4" />
-                                            <span>{property.bedrooms} bed</span>
-                                          </motion.div>
-                                          <motion.div
-                                            className="flex items-center gap-1"
-                                            initial={{ x: -10, opacity: 0 }}
-                                            animate={{ x: 0, opacity: 1 }}
-                                            transition={{ delay: 0.4 }}
-                                          >
-                                            <Bath className="h-4 w-4" />
-                                            <span>{property.bathrooms} bath</span>
-                                          </motion.div>
-                                        </div>
-                                        {/* Card actions removed: editing and deleting moved to detail modal */}
-                                      </CardContent>
-                                    </Card>
-                                  </motion.div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ))
-                      )}
 
-                      {/* Bulk Action Bar */}
-                      <BulkActionBar
-                        selectedCount={bulkSelection.selectedCount}
-                        totalCount={sortedProperties.length}
-                        itemLabel="properties"
-                        actions={bulkActions}
-                        onSelectAll={() => bulkSelection.selectAll(sortedProperties)}
-                        onClearSelection={bulkSelection.clearSelection}
-                        isAllSelected={bulkSelection.isAllSelected(sortedProperties)}
-                        isPartiallySelected={bulkSelection.isPartiallySelected(sortedProperties)}
-                        selectedIds={Array.from(bulkSelection.selectedIds)}
-                      />
-                    </div>
+                                        {/* Rent */}
+                                        <div className="hidden w-[80px] shrink-0 text-right text-sm font-semibold text-zinc-100 sm:block">
+                                          {formatCurrency(Number(property.rent))}
+                                        </div>
+
+                                        {/* Status badge */}
+                                        <div className="shrink-0">
+                                          {getStatusBadge(property.status)}
+                                        </div>
+
+                                        {/* Locate on map button */}
+                                        <button
+                                          type="button"
+                                          title={
+                                            isMissingMap
+                                              ? "No coordinates — verify address first"
+                                              : "Locate on map"
+                                          }
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!isMissingMap) onLocateOnMap?.(property.id);
+                                          }}
+                                          className={cn(
+                                            "shrink-0 rounded-md p-1.5 transition-colors",
+                                            isMissingMap
+                                              ? "cursor-not-allowed text-zinc-700"
+                                              : "text-zinc-500 hover:bg-zinc-700 hover:text-blue-300",
+                                          )}
+                                          disabled={isMissingMap}
+                                        >
+                                          <MapPin className="h-4 w-4" />
+                                        </button>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {/* Bulk Action Bar */}
+                        <BulkActionBar
+                          selectedCount={bulkSelection.selectedCount}
+                          totalCount={sortedProperties.length}
+                          itemLabel="properties"
+                          actions={bulkActions}
+                          onSelectAll={() => bulkSelection.selectAll(sortedProperties)}
+                          onClearSelection={bulkSelection.clearSelection}
+                          isAllSelected={bulkSelection.isAllSelected(sortedProperties)}
+                          isPartiallySelected={bulkSelection.isPartiallySelected(sortedProperties)}
+                          selectedIds={Array.from(bulkSelection.selectedIds)}
+                        />
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -1133,7 +1225,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
             setSelectedProperty(null);
           }}
           onEdit={(updatedProperty) => {
-            // Property is already updated via useApp updateProperty
             setSelectedProperty(updatedProperty);
           }}
           onDelete={() => {

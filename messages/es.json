@@ -170,43 +170,44 @@
   },
   "landing": {
     "eyebrow": "Operaciones de alquiler para Portugal y España",
-    "hero": "Cobra alquileres, emite recibos y controla impuestos para Portugal y España.",
-    "subtitle": "ProMan da a propietarios y gestores un flujo claro para inmuebles, inquilinos, contratos, pagos, recibos y registros listos para fiscalidad.",
+    "hero": "Cobra alquileres más rápido. Recibos e impuestos resueltos.",
+    "subtitle": "ProMan da a propietarios y gestores un flujo único desde el seguimiento del pago hasta el recibo con contexto fiscal PT/ES.",
     "cta": "Entrar",
-    "demoCta": "Probar Demo",
-    "trustLine": "Pensado para cobro diario de alquileres, emisión de recibos y claridad financiera sin complejidad contable.",
-    "bullets": {
-      "track": "Sigue cada alquiler por inmueble, inquilino y contrato.",
-      "receipts": "Genera recibos y documentos de pago dentro del mismo flujo.",
-      "tax": "Mantén el contexto fiscal PT/ES visible en pagos y recibos."
+    "demoCta": "Probar demo",
+    "secondaryCta": "Ver cómo funciona",
+    "microcopy": "Sin tarjeta. Sin configuración. Demostración guiada en menos de 2 minutos.",
+    "chips": {
+      "simple": "Un flujo del cobro al recibo",
+      "compliance": "Cumplimiento PT/ES en contexto",
+      "workflow": "Contratos, inquilinos y pagos conectados"
     },
     "preview": {
       "label": "Vista previa del producto",
-      "title": "Una cola operativa para cobrar alquileres",
+      "title": "Del alquiler vencido al registro fiscal listo",
+      "subtitle": "Un único flujo, no un panel fragmentado.",
       "badge": "Flujo del propietario",
-      "kpis": {
-        "overdue": "Alquiler vencido",
-        "overdueHint": "Inquilinos que requieren seguimiento hoy",
-        "collected": "Cobrado este mes",
-        "collectedHint": "Alquileres pagados ya registrados",
-        "occupancy": "Ocupación",
-        "occupancyHint": "Unidades con contratos activos"
+      "steps": {
+        "detect": {
+          "title": "Alquiler vencido detectado",
+          "description": "Ve la siguiente acción del día en una sola cola."
+        },
+        "receipt": {
+          "title": "Pago registrado y recibo emitido",
+          "description": "Genera el documento sin salir del flujo."
+        },
+        "compliance": {
+          "title": "Contexto fiscal PT/ES aplicado",
+          "description": "El perfil del país sigue vinculado al mismo pago."
+        }
       },
-      "queue": {
-        "title": "Cola de acción",
-        "subtitle": "Revisa en segundos las siguientes tareas de cobro.",
-        "badge": "Actuar ahora",
-        "ownerAction": "Recordatorio de impago listo para enviar",
-        "status": "3 días de retraso",
-        "taxHint": "Contrato, recibo y perfil fiscal permanecen conectados"
-      },
-      "receipt": {
-        "title": "Visibilidad de recibo e impuestos",
-        "subtitle": "Revisa el resultado financiero antes de exportar el PDF.",
-        "country": "Perfil del país",
-        "gross": "Alquiler bruto",
-        "tax": "Retención / impuesto",
-        "net": "Importe neto recibido"
+      "result": {
+        "title": "Resultado",
+        "netLabel": "Importe neto recibido hoy",
+        "receipt": "Estado del recibo",
+        "compliance": "Perfil fiscal",
+        "export": "Exportación",
+        "done": "Emitido",
+        "ready": "Lista"
       }
     },
     "demo": {

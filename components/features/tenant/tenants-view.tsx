@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
-import { Mail, Phone, Calendar, Plus, MoreHorizontal, Trash2, Edit } from "lucide-react";
+import { Mail, Plus, MoreHorizontal, Trash2, Edit } from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
 import {
@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/table";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { cn } from "@/lib/utils/utils";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,10 +45,10 @@ import {
 import { SearchFilter } from "@/components/ui/search-filter";
 import { BulkActionBar, getDefaultBulkActions } from "@/components/ui/bulk-action-bar";
 import { TenantDetailModal } from "./tenant-detail-modal";
-import { EditableCell } from "@/components/ui/editable-cell";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import { useApp } from "@/lib/contexts/app-context";
-import { RelationshipBadge } from "@/components/shared/relationship-badge";
+
 import { Tenant } from "@/lib/types";
 import { getActiveLease } from "@/lib/utils/lease-helpers";
 import { tenantSchema, TenantFormData } from "@/lib/utils/validation";
@@ -72,7 +71,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
     const { state, addTenant, updateTenant, deleteTenant } = useApp();
     const { tenants, properties, loading } = state;
     const { leases } = state;
-    const { success, error: showError } = useToast();
+    const { success } = useToast();
     const { formatCurrency } = useCurrency();
     const confirmDialog = useConfirmDialog();
     const compact = true; // Always compact
@@ -185,23 +184,6 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
         );
       },
       [deleteTenant, success, confirmDialog],
-    );
-
-    // Inline edit handler
-    const handleInlineEdit = useCallback(
-      async (tenantId: string, field: keyof Tenant, value: string | number) => {
-        try {
-          const tenant = tenants.find((t) => t.id === tenantId);
-          if (!tenant) return;
-
-          await updateTenant(tenantId, { [field]: value });
-          success(`${field.charAt(0).toUpperCase() + field.slice(1)} updated`);
-        } catch (err) {
-          showError("Failed to update");
-          console.error(err);
-        }
-      },
-      [tenants, updateTenant, success, showError],
     );
 
     // Export selected tenants
@@ -636,43 +618,6 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
               )
             ) : (
               <>
-                {filteredTenants.length > 0 && (
-                  <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
-                    <div className="flex-1">
-                      <SortableHeader
-                        sortKey="name"
-                        label="Tenant"
-                        currentSort={getSortDirection("name")}
-                        onSort={(key) => requestSort(key as keyof Tenant)}
-                      />
-                    </div>
-                    <div className="w-36 text-right">
-                      <SortableHeader
-                        sortKey="rent"
-                        label="Rent"
-                        currentSort={getSortDirection("rent")}
-                        onSort={(key) => requestSort(key as keyof Tenant)}
-                      />
-                    </div>
-                    <div className="w-36 text-right">
-                      <SortableHeader
-                        sortKey="paymentStatus"
-                        label="Status"
-                        currentSort={getSortDirection("paymentStatus")}
-                        onSort={(key) => requestSort(key as keyof Tenant)}
-                      />
-                    </div>
-                    <div className="w-36 text-right">
-                      <SortableHeader
-                        sortKey="leaseEnd"
-                        label="Lease End"
-                        currentSort={getSortDirection("leaseEnd")}
-                        onSort={(key) => requestSort(key as keyof Tenant)}
-                      />
-                    </div>
-                  </div>
-                )}
-
                 {filteredTenants.length === 0 ? (
                   <EmptyStateIllustration
                     type="tenants"
@@ -680,230 +625,149 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                     compact={compact}
                   />
                 ) : (
-                  <div
-                    className={cn(
-                      "grid",
-                      compact
-                        ? "gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
-                        : "gap-4 md:grid-cols-2 xl:grid-cols-3",
-                    )}
-                  >
+                  <div className="space-y-1 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/60">
                     {sortedTenants.map((tenant) => {
                       const isSelected = bulkSelection.isSelected(tenant.id);
+                      const activeLease = getActiveLease(tenant.id, leases);
+                      const isExpiring = activeLease
+                        ? (() => {
+                            const end = new Date(activeLease.endDate);
+                            const inThirty = new Date();
+                            inThirty.setDate(inThirty.getDate() + 30);
+                            return end >= new Date() && end <= inThirty;
+                          })()
+                        : false;
+                      const isOverdue = tenant.paymentStatus === "overdue";
                       return (
-                        <Card
+                        <div
                           key={tenant.id}
                           className={cn(
-                            "relative bg-[var(--color-surface)] border border-[var(--color-border)] transition-all duration-200 cursor-pointer",
-                            "hover:border-[var(--color-accent-primary)]/40 hover:shadow-lg",
-                            isSelected && "border-[var(--color-accent-primary)] shadow-lg",
+                            "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40 border-b border-zinc-800 last:border-b-0 cursor-pointer",
+                            isOverdue && "border-l-2 border-l-red-500/60",
+                            isSelected && "bg-zinc-800/60",
                           )}
                           onClick={() => {
                             setSelectedTenant(tenant);
                             setIsDetailModalOpen(true);
                           }}
                         >
-                          <CardHeader className="space-y-4">
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="flex items-start gap-3">
-                                <Checkbox
-                                  checked={isSelected}
-                                  onCheckedChange={() => bulkSelection.toggleSelection(tenant.id)}
-                                  className="mt-1"
-                                />
-                                <div className="flex items-center gap-3">
-                                  <div
-                                    className={cn(
-                                      compact
-                                        ? "flex h-8 w-8 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30 text-xs"
-                                        : "flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30",
-                                    )}
-                                  >
-                                    <span className="text-sm font-semibold text-accent-primary">
-                                      {tenant.name
-                                        .split(" ")
-                                        .map((n: string) => n[0])
-                                        .join("")
-                                        .toUpperCase()}
-                                    </span>
-                                  </div>
-                                  <div>
-                                    <CardTitle
-                                      className={cn(
-                                        compact ? "text-xs font-semibold" : "text-xl font-semibold",
-                                        "text-[var(--color-foreground)]",
-                                      )}
-                                    >
-                                      {tenant.name}
-                                    </CardTitle>
-                                    <CardDescription className="flex flex-col text-xs text-[var(--color-muted-foreground)]">
-                                      <span className="flex items-center gap-1">
-                                        <Mail className="h-3 w-3" />
-                                        {tenant.email}
-                                      </span>
-                                      <span className="flex items-center gap-1">
-                                        <Phone className="h-3 w-3" />
-                                        {tenant.phone}
-                                      </span>
-                                    </CardDescription>
-                                    {/* Relationship badges */}
-                                    <div className="flex flex-wrap gap-1 mt-1">
-                                      {(() => {
-                                        const prop = properties.find(
-                                          (p) => p.id === tenant.propertyId,
-                                        );
-                                        return prop ? (
-                                          <RelationshipBadge variant="property" label={prop.name} />
-                                        ) : null;
-                                      })()}
-                                      {tenant.paymentStatus === "overdue" && (
-                                        <RelationshipBadge variant="overdue" label="Overdue" />
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8 shrink-0"
-                                    onClick={(e) => e.stopPropagation()}
-                                  >
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      dialog.openEditDialog(tenant, (t) => ({
-                                        name: t.name,
-                                        email: t.email,
-                                        phone: t.phone || "",
-                                        propertyId: t.propertyId || "",
-                                        rent: Number(t.rent),
-                                        leaseStart: t.leaseStart || "",
-                                        leaseEnd: t.leaseEnd || "",
-                                        paymentStatus: t.paymentStatus,
-                                        notes: t.notes || "",
-                                      }));
-                                    }}
-                                  >
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      window.location.href = `mailto:${tenant.email}`;
-                                    }}
-                                  >
-                                    <Mail className="h-4 w-4 mr-2" />
-                                    Send Email
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-destructive"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleDelete(tenant);
-                                    }}
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
+                          <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={() => bulkSelection.toggleSelection(tenant.id)}
+                            onClick={(e) => e.stopPropagation()}
+                            className="shrink-0"
+                          />
 
-                            <div
-                              className={cn(
-                                "space-y-2 rounded-lg bg-[var(--color-surface-muted)]",
-                                compact ? "p-2" : "p-4",
-                              )}
-                            >
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-[var(--color-muted-foreground)]">
-                                  Monthly Rent
-                                </span>
-                                {/* Derived from active lease's monthlyRent */}
-                                <span className="text-sm font-semibold text-[var(--color-foreground)]">
-                                  {formatCurrency(
-                                    Number(
-                                      getActiveLease(tenant.id, leases)?.monthlyRent ?? tenant.rent,
-                                    ),
+                          {/* Avatar + name + email */}
+                          <div className="flex min-w-0 flex-1 items-center gap-3">
+                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30 text-xs font-semibold text-accent-primary">
+                              {tenant.name
+                                .split(" ")
+                                .map((n: string) => n[0])
+                                .join("")
+                                .slice(0, 2)
+                                .toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-medium text-zinc-100">
+                                {tenant.name}
+                              </p>
+                              <p className="truncate text-xs text-zinc-500">{tenant.email}</p>
+                            </div>
+                          </div>
+
+                          {/* Property */}
+                          <div className="hidden w-36 shrink-0 truncate text-xs text-zinc-400 md:block">
+                            {properties.find((p) => p.id === tenant.propertyId)?.name ||
+                              tenant.propertyName ||
+                              "Unassigned"}
+                          </div>
+
+                          {/* Lease end */}
+                          <div className="hidden w-[88px] shrink-0 flex-col items-end text-xs lg:flex">
+                            {activeLease ? (
+                              <>
+                                <span className="text-zinc-500">Ends</span>
+                                <span
+                                  className={cn(
+                                    "font-medium",
+                                    isExpiring ? "text-amber-300" : "text-zinc-300",
                                   )}
+                                >
+                                  {new Date(activeLease.endDate).toLocaleDateString("pt-PT", {
+                                    day: "numeric",
+                                    month: "short",
+                                    year: "numeric",
+                                  })}
                                 </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-[var(--color-muted-foreground)]">
-                                  Property
-                                </span>
-                                <span className="text-sm font-medium text-[var(--color-foreground)]">
-                                  {properties.find((p) => p.id === tenant.propertyId)?.name ||
-                                    tenant.propertyName ||
-                                    "Unassigned"}
-                                </span>
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <span className="text-sm text-[var(--color-muted-foreground)]">
-                                  Lease Period
-                                </span>
-                                {/* Derived from active lease's startDate/endDate */}
-                                <span className="text-xs text-[var(--color-foreground)]">
-                                  {(() => {
-                                    const al = getActiveLease(tenant.id, leases);
-                                    const start = al?.startDate ?? tenant.leaseStart;
-                                    const end = al?.endDate ?? tenant.leaseEnd;
-                                    return (
-                                      <>
-                                        {start ? new Date(start).toLocaleDateString() : "\u2014"} —{" "}
-                                        {end ? new Date(end).toLocaleDateString() : "\u2014"}
-                                      </>
-                                    );
-                                  })()}
-                                </span>
-                              </div>
-                            </div>
+                              </>
+                            ) : null}
+                          </div>
 
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <Calendar className="h-4 w-4 text-zinc-500" />
-                                <span className="text-sm text-[var(--color-muted-foreground)]">
-                                  Next payment due
-                                </span>
-                              </div>
-                              {getPaymentStatusBadge(tenant.paymentStatus)}
-                            </div>
-                          </CardHeader>
+                          {/* Rent */}
+                          <div className="hidden w-20 shrink-0 text-right text-sm font-semibold text-zinc-100 sm:block">
+                            {formatCurrency(Number(activeLease?.monthlyRent ?? tenant.rent))}
+                          </div>
 
-                          <CardContent className={compact ? "space-y-1 p-2" : "space-y-4"}>
-                            <div className="space-y-2">
-                              <h4 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wide">
-                                Notes
-                              </h4>
-                              <EditableCell
-                                value={tenant.notes || ""}
-                                type="text"
-                                onSave={(value) => handleInlineEdit(tenant.id, "notes", value)}
-                                placeholder="Add important notes"
-                                className="text-sm text-[var(--color-foreground)]"
-                              />
-                            </div>
+                          {/* Status badge */}
+                          <div className="shrink-0">
+                            {getPaymentStatusBadge(tenant.paymentStatus)}
+                          </div>
 
-                            <div className="flex items-center justify-between text-xs text-[var(--color-muted-foreground)]">
-                              <span>
-                                {tenant.createdAt
-                                  ? new Date(tenant.createdAt).toLocaleDateString()
-                                  : ""}
-                              </span>
-                              <span className="text-xs text-[var(--color-muted-foreground)]">
-                                {tenant.paymentStatus ? tenant.paymentStatus.toUpperCase() : ""}
-                              </span>
-                            </div>
-                          </CardContent>
-                        </Card>
+                          {/* Actions menu */}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 shrink-0"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  dialog.openEditDialog(tenant, (t) => ({
+                                    name: t.name,
+                                    email: t.email,
+                                    phone: t.phone || "",
+                                    propertyId: t.propertyId || "",
+                                    rent: Number(t.rent),
+                                    leaseStart: t.leaseStart || "",
+                                    leaseEnd: t.leaseEnd || "",
+                                    paymentStatus: t.paymentStatus,
+                                    notes: t.notes || "",
+                                  }));
+                                }}
+                              >
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  window.location.href = `mailto:${tenant.email}`;
+                                }}
+                              >
+                                <Mail className="h-4 w-4 mr-2" />
+                                Send Email
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDelete(tenant);
+                                }}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
                       );
                     })}
                   </div>

@@ -24,6 +24,7 @@ import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { EntityLink } from "@/components/shared/entity-link";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { getActiveLease as findActiveLease } from "@/lib/utils/lease-helpers";
+import { buildLocalizedFinancialReviewPath } from "@/lib/utils/financial-navigation";
 
 interface TenantDetailViewProps {
   tenantId: string;
@@ -123,7 +124,9 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push(`/${locale}/financials?tab=receipts&tenantId=${tenant.id}`)}
+            onClick={() =>
+              router.push(buildLocalizedFinancialReviewPath(locale, { tenantId: tenant.id }))
+            }
           >
             <DollarSign className="h-4 w-4 mr-1" /> Review Payments
           </Button>

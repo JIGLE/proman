@@ -104,6 +104,22 @@ export function proxy(request: NextRequest) {
     return response;
   }
 
+  // ── Legacy property payment path redirects ────────────────────────
+  // Redirect old nested payment-review URLs to the canonical financials URL.
+  const legacyPropertyPaymentMatch = pathname.match(
+    /^\/(en|pt|es)\/(?:portfolio|properties)\/([^/]+)\/(?:payments?|payment-review|review-payments)(?:\/review)?\/?$/,
+  );
+  if (legacyPropertyPaymentMatch) {
+    const [, locale, propertyId] = legacyPropertyPaymentMatch;
+    const url = request.nextUrl.clone();
+    url.pathname = `/${locale}/financials`;
+    url.searchParams.set("tab", "receipts");
+    url.searchParams.set("propertyId", propertyId);
+    const response = NextResponse.redirect(url, 301);
+    applySecurityHeaders(response, nonce);
+    return response;
+  }
+
   // ── Demo mode route blocking ────────────────────────
   const cookieHeader = request.headers.get("cookie") || "";
   const isDemo = cookieHeader.includes(`${DEMO_COOKIE_NAME}=1`);
@@ -135,24 +151,34 @@ export function proxy(request: NextRequest) {
     }
   }
 
+  const localeMatch = pathname.match(/^\/(en|pt|es)/);
+  const locale = localeMatch ? localeMatch[1] : defaultLocale;
+
+  // Preserve canonical financial tab routes used by the current UI.
+  const isFinancialsPath = pathname === `/${locale}/financials` || pathname === "/financials";
+  const canonicalFinancialTabs = new Set(["queue", "receipts", "rent-roll", "tax"]);
+
   // Handle old tab-based URL redirects (backward compatibility)
   const tab = searchParams.get("tab");
   if (tab) {
-    // Extract locale from pathname (e.g., /en, /pt, or root)
-    const localeMatch = pathname.match(/^\/(en|pt|es)/);
-    const locale = localeMatch ? localeMatch[1] : defaultLocale;
+    // Keep canonical financial URLs untouched (e.g. /pt/financials?tab=receipts&propertyId=...)
+    if (isFinancialsPath && canonicalFinancialTabs.has(tab)) {
+      const response = NextResponse.next();
+      applySecurityHeaders(response, nonce);
+      return response;
+    }
 
     // Map old tab names to new routes
-    const tabRouteMap: Record<string, string> = {
+    const tabRouteMap: Record<string, string | { path: string; financialTab?: string }> = {
       overview: "/dashboard",
       properties: "/portfolio",
       tenants: "/people",
       leases: "/leases",
       financials: "/financials",
-      receipts: "/financials/receipts",
-      expenses: "/financials/expenses",
-      invoices: "/financials/invoices",
-      "payment-matrix": "/financials/payment-matrix",
+      receipts: { path: "/financials", financialTab: "receipts" },
+      expenses: { path: "/financials", financialTab: "queue" },
+      invoices: { path: "/financials", financialTab: "receipts" },
+      "payment-matrix": { path: "/financials", financialTab: "receipts" },
       maintenance: "/maintenance",
       owners: "/owners",
       correspondence: "/correspondence",
@@ -164,15 +190,19 @@ export function proxy(request: NextRequest) {
       admin: "/settings/admin",
     };
 
-    const newPath = tabRouteMap[tab];
-    if (newPath) {
+    const mapping = tabRouteMap[tab as keyof typeof tabRouteMap];
+    if (mapping) {
       // Build new URL with locale prefix
       const url = request.nextUrl.clone();
-      url.pathname = `/${locale}${newPath}`;
+      const path = typeof mapping === "string" ? mapping : mapping.path;
+      url.pathname = `/${locale}${path}`;
 
       // Preserve other query params (like search, status, etc.)
       url.searchParams.delete("tab");
       url.searchParams.delete("subtab"); // Remove old subtab param too
+      if (typeof mapping !== "string" && mapping.financialTab) {
+        url.searchParams.set("tab", mapping.financialTab);
+      }
 
       const response = NextResponse.redirect(url, 301); // Permanent redirect
       applySecurityHeaders(response, nonce);
@@ -183,21 +213,19 @@ export function proxy(request: NextRequest) {
   // Handle old subtab-based URLs for financials
   const subtab = searchParams.get("subtab");
   if (subtab && pathname.includes("financials")) {
-    const localeMatch = pathname.match(/^\/(en|pt|es)/);
-    const locale = localeMatch ? localeMatch[1] : defaultLocale;
-
     const subtabRouteMap: Record<string, string> = {
-      receipts: "/financials/receipts",
-      expenses: "/financials/expenses",
-      invoices: "/financials/invoices",
-      "payment-matrix": "/financials/payment-matrix",
+      receipts: "receipts",
+      expenses: "queue",
+      invoices: "receipts",
+      "payment-matrix": "receipts",
     };
 
-    const newPath = subtabRouteMap[subtab];
-    if (newPath) {
+    const financialTab = subtabRouteMap[subtab];
+    if (financialTab) {
       const url = request.nextUrl.clone();
-      url.pathname = `/${locale}${newPath}`;
+      url.pathname = `/${locale}/financials`;
       url.searchParams.delete("subtab");
+      url.searchParams.set("tab", financialTab);
       const response = NextResponse.redirect(url, 301);
       applySecurityHeaders(response, nonce);
       return response;

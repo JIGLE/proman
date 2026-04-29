@@ -5,14 +5,13 @@ import { useState, useCallback, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Building2, ChevronLeft, ChevronRight, Settings, LogOut, Search } from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, Settings, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSelector } from "@/components/shared/language-selector";
-import { NotificationCenter, useNotifications } from "@/components/ui/notification-center";
 import { useDemoMode } from "@/lib/contexts/demo-context";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
 
@@ -137,9 +136,6 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   // Build menu from config
   const menuItems = navigation;
 
-  const { notifications, markAsRead, markAllAsRead, deleteNotification, clearAll } =
-    useNotifications();
-
   const handleToggleCollapsed = useCallback(() => {
     setCollapsed((prev) => {
       const next = !prev;
@@ -184,33 +180,6 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                 Proman
               </span>
             </div>
-            {/* Notifications (only shown when expanded) */}
-            <div className="mr-1">
-              <NotificationCenter
-                notifications={notifications}
-                onMarkAsRead={markAsRead}
-                onMarkAllAsRead={markAllAsRead}
-                onDelete={deleteNotification}
-                onClearAll={clearAll}
-                onNotificationClick={() => {}}
-              />
-            </div>
-            {/* Search / Command Palette trigger */}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                // Trigger Cmd+K command palette
-                window.dispatchEvent(
-                  new KeyboardEvent("keydown", { key: "k", metaKey: true, bubbles: true }),
-                );
-              }}
-              className="h-8 w-8 p-0 mr-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
-              title="Search (⌘K)"
-              aria-label="Open search"
-            >
-              <Search className="h-4 w-4" />
-            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -263,11 +232,16 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                         "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
                         collapsed && "justify-center px-2",
                         isActive
-                          ? "bg-[var(--color-sidebar-active)] text-[var(--color-primary)]"
+                          ? "bg-[var(--color-sidebar-active)] text-[var(--color-primary)] ring-1 ring-[var(--color-primary)]/40"
                           : "text-[var(--color-sidebar-text)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)]",
                       )}
                     >
-                      <Icon className="h-[18px] w-[18px] shrink-0" />
+                      <Icon
+                        className={cn(
+                          "h-[18px] w-[18px] shrink-0",
+                          isActive && "text-[var(--color-primary)]",
+                        )}
+                      />
                       {!collapsed && <span className="truncate">{item.label}</span>}
                     </div>
                   </Link>

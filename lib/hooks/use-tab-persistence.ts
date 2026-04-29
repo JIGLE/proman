@@ -32,6 +32,10 @@ export function useTabPersistence(
   // Update both URL and localStorage when tab changes
   const setActiveTab = useCallback(
     (tab: string) => {
+      if (tab === activeTab) {
+        return;
+      }
+
       setActiveTabState(tab);
 
       // Update localStorage (client only)
@@ -45,10 +49,13 @@ export function useTabPersistence(
 
       // Update URL without page reload
       const params = new URLSearchParams(searchParams.toString());
-      params.set("view", tab);
-      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      const currentView = params.get("view");
+      if (currentView !== tab) {
+        params.set("view", tab);
+        router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+      }
     },
-    [moduleId, searchParams, router, pathname],
+    [activeTab, moduleId, searchParams, router, pathname],
   );
 
   // On mount (client only) hydrate from localStorage if present (preference) or from URL
