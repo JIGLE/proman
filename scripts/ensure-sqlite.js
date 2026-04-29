@@ -94,6 +94,12 @@ try {
 // Operators can disable this by setting AUTO_DB_INIT=false.
 const autoDbInit = process.env.AUTO_DB_INIT !== "false" && process.env.AUTO_DB_INIT !== "0";
 
+// AUTO_DB_SCHEMA_SYNC (default: "true") will run `prisma db push` (without --accept-data-loss)
+// on every startup to add any missing columns. Safe for existing databases — only additive.
+// Operators can disable this by setting AUTO_DB_SCHEMA_SYNC=false.
+const autoSchemaSync =
+  process.env.AUTO_DB_SCHEMA_SYNC !== "false" && process.env.AUTO_DB_SCHEMA_SYNC !== "0";
+
 // After applying schema, verify tables exist in sqlite
 let expectedTables = [];
 
@@ -239,7 +245,48 @@ try {
   const allTables = allRows.map((r) => String(r.name)).join(", ");
   log("All sqlite tables present:", allTables);
   log("Table count:", allRows.length);
-  db.close();
+
+  // Schema column sync: check for missing columns on the properties table and run
+  // `prisma db push` (additive-only, no --accept-data-loss) if any are absent.
+  // This handles the common case where new columns were added to schema.prisma after
+  // the DB was first initialised — without this, Prisma throws 500 on INSERT.
+  if (autoSchemaSync) {
+    try {
+      const requiredPropertyColumns = [
+        "buildingId",
+        "buildingName",
+        "currency",
+        "incomeSplitMode",
+        "distributionFrequency",
+        "createdByOwnerId",
+        "isZonaTensionada",
+        "cadasterReference",
+      ];
+      const colRows = db.prepare("PRAGMA table_info(properties)").all();
+      db.close();
+      const presentCols = new Set(colRows.map((r) => String(r.name)));
+      const missingCols = requiredPropertyColumns.filter((c) => !presentCols.has(c));
+
+      if (missingCols.length > 0) {
+        log(
+          "Missing columns in properties table:",
+          missingCols.join(", "),
+          "— running schema sync (prisma db push).",
+        );
+        execSync("npx prisma db push --schema=prisma/schema.prisma", {
+          stdio: "inherit",
+          env: { ...process.env, DATABASE_URL: dbUrl },
+          timeout: 60000,
+        });
+        log("Schema sync completed successfully.");
+      } else {
+        log("All expected properties columns present; no schema sync needed.");
+      }
+    } catch (syncErr) {
+      log("Schema sync check failed (non-fatal):", syncErr && syncErr.message);
+    }
+  }
+
   process.exit(0);
 } catch (err) {
   error("Error while validating sqlite tables:", err && err.message);
