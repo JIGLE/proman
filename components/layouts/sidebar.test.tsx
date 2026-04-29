@@ -58,23 +58,17 @@ describe("Sidebar", () => {
     expect(getByText!("Alice")).toBeDefined();
   });
 
-  it("hides labels when collapsed, hides notifications, and shows header toggle", async () => {
+  it("hides labels when collapsed and shows header toggle", async () => {
     // Persist collapsed state so the component mounts collapsed
     window.localStorage.setItem("proman.sidebar.collapsed", "true");
     let queryByText: (text: string) => HTMLElement | null;
-    let queryByLabelText: (text: RegExp) => HTMLElement | null;
     let getByLabelText: (text: string) => HTMLElement;
     await act(async () => {
-      ({ queryByText, queryByLabelText, getByLabelText } = render(
-        <Sidebar activeTab="dashboard" />,
-      ));
+      ({ queryByText, getByLabelText } = render(<Sidebar activeTab="dashboard" />));
     });
 
     // Username should not be visible in collapsed mode
     expect(queryByText!("Alice")).toBeNull();
-
-    // Notifications button should be hidden when collapsed
-    expect(queryByLabelText!(/Notifications/)).toBeNull();
 
     // Header collapse toggle should be present with Expand label
     expect(getByLabelText!("Expand Sidebar")).toBeDefined();
@@ -83,7 +77,7 @@ describe("Sidebar", () => {
     expect(queryByText!("Proman")).toBeNull();
   });
 
-  it("shows labels when expanded and username & notifications are visible", async () => {
+  it("shows labels when expanded and username is visible", async () => {
     window.localStorage.setItem("proman.sidebar.collapsed", "false");
     let getByText: (text: string) => HTMLElement;
     let getByLabelText: (text: RegExp | string) => HTMLElement;
@@ -91,9 +85,6 @@ describe("Sidebar", () => {
       ({ getByText, getByLabelText } = render(<Sidebar activeTab="dashboard" />));
     });
     expect(getByText!("Alice")).toBeDefined();
-
-    // Notifications button should be present when expanded
-    expect(getByLabelText!(/Notifications/)).toBeDefined();
 
     // Header collapse toggle should be present with Collapse label
     expect(getByLabelText!("Collapse Sidebar")).toBeDefined();

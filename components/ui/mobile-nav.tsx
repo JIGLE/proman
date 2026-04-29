@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { LogOut, Building2 } from "lucide-react";
+import { LogOut, Building2, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
