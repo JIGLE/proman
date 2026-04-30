@@ -43,7 +43,7 @@ vi.mock("@/lib/services/auth/auth-middleware", () => ({
 }));
 
 // Mock database service
-vi.mock("@/lib/services/database", () => ({
+vi.mock("@/lib/services/database/property", () => ({
   propertyService: {
     getAll: vi.fn(),
     create: vi.fn(),

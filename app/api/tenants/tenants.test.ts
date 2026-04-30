@@ -32,7 +32,7 @@ vi.mock("@/lib/services/auth/auth-middleware", () => ({
 }));
 
 // Mock database service
-vi.mock("@/lib/services/database", () => ({
+vi.mock("@/lib/services/database/tenant", () => ({
   tenantService: {
     getAll: vi.fn(async () => []),
     create: vi.fn(async (_userId, data) => ({ id: "tenant-1", ...data })),

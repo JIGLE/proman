@@ -52,10 +52,13 @@ if (parsed.success) {
     } as z.infer<typeof envSchema>;
   }
 
-  // Enforce DATABASE_URL in non-development environments
+  // Enforce DATABASE_URL in non-development environments (skip at build time / CI)
+  const _isCI = !!process.env.CI || !!process.env.GITHUB_ACTIONS;
+  const _isBuildTime = _isCI || process.env.NEXT_BUILD === "true";
   if (
     process.env.NODE_ENV !== "development" &&
     process.env.NODE_ENV !== "test" &&
+    !_isBuildTime &&
     !env.DATABASE_URL
   ) {
     console.error("❌ DATABASE_URL is required in production environments");

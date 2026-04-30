@@ -38,14 +38,6 @@ export function PeopleView(): React.ReactElement {
     }
   }, [activeTab, searchParams, setActiveTab]);
 
-  useEffect(() => {
-    if (searchParams.get("action") !== "create-tenant") return;
-    if (activeTab !== "tenants") {
-      setActiveTab("tenants");
-    }
-    tenantsViewRef.current?.openDialog();
-  }, [activeTab, searchParams, setActiveTab]);
-
   // Export columns for tenants
   const tenantColumns = [
     { key: "name", label: "Name" },

@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   AlertTriangle,
   Building2,
@@ -46,7 +46,6 @@ export function AssetsView(): React.ReactElement {
   const { isOwnerPortal } = usePortalAccess();
   const { formatCurrency } = useCurrency();
   const router = useRouter();
-  const searchParams = useSearchParams();
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "pt";
   const { properties, leases, maintenance, receipts, tenants } = state;
@@ -56,12 +55,6 @@ export function AssetsView(): React.ReactElement {
     setHighlightedPropertyId(propertyId);
     setActiveTab("map");
   };
-
-  useEffect(() => {
-    if (searchParams.get("action") === "create-property") {
-      propertiesViewRef.current?.openDialog();
-    }
-  }, [searchParams]);
 
   const propertyColumns = [
     { key: "name", label: "Name" },

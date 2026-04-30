@@ -5,7 +5,7 @@ import {
   createSuccessResponse,
   withErrorHandler,
 } from "@/lib/utils/error-handling";
-import { receiptService } from "@/lib/services/database";
+import { receiptService } from "@/lib/services/database/receipt";
 import { sanitizeForDatabase, sanitizeNumber } from "@/lib/utils/sanitize";
 import { z } from "zod";
 

@@ -36,7 +36,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
         },
         documents: {
           orderBy: {
-            uploadedAt: "desc",
+            createdAt: "desc",
           },
         },
       },

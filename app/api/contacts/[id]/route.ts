@@ -13,12 +13,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     const prisma = getPrismaClient();
     const contact = await prisma.maintenanceContact.findUnique({
       where: { id },
-      include: {
-        tickets: {
-          take: 10,
-          orderBy: { createdAt: "desc" },
-        },
-      },
     });
 
     if (!contact) {

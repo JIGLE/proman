@@ -173,8 +173,8 @@
     "hero": "Get rent paid faster. Receipts and taxes handled.",
     "subtitle": "ProMan gives landlords and managers one clear flow from payment follow-up to receipt and PT/ES tax context.",
     "cta": "Sign in",
-    "demoCta": "View demo",
-    "secondaryCta": "See how it works",
+    "demoCta": "Try Free Demo",
+    "secondaryCta": "See the workflow",
     "microcopy": "No card. No setup. Guided walkthrough in under 2 minutes.",
     "chips": {
       "simple": "One flow from rent to receipt",
@@ -208,6 +208,23 @@
         "export": "Export",
         "done": "Issued",
         "ready": "Ready"
+      }
+    },
+    "howItWorks": {
+      "eyebrow": "How it works",
+      "title": "Three steps to close the collection loop",
+      "subtitle": "See what happens between overdue rent, receipt issuance, and tax-ready output in one workflow.",
+      "collect": {
+        "title": "Prioritize today's collection work",
+        "description": "The queue shows who needs immediate follow-up by contract and property."
+      },
+      "issue": {
+        "title": "Log payment and issue instantly",
+        "description": "As soon as payment is recorded, the receipt is generated in the same flow."
+      },
+      "report": {
+        "title": "Export with PT/ES context",
+        "description": "Payment data and tax profile stay linked for reporting and audit trails."
       }
     },
     "demo": {

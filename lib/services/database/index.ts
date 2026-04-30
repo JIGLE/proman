@@ -6,14 +6,21 @@
  */
 
 import { isMockMode } from "@/lib/config/data-mode";
+import { propertyService as realPropertyService } from "./property";
+import { tenantService as realTenantService } from "./tenant";
+import { receiptService as realReceiptService } from "./receipt";
+import {
+  correspondenceService as realCorrespondenceService,
+  templateService as realTemplateService,
+} from "./correspondence";
+import * as mockDb from "./database.mock";
 
 export { getPrismaClient } from "./database";
 
-// Export services based on data mode - use dynamic imports to avoid top-level await
-const services = isMockMode ? import("./database.mock") : import("./database");
-
-export const propertyService = (await services).propertyService;
-export const tenantService = (await services).tenantService;
-export const receiptService = (await services).receiptService;
-export const templateService = (await services).templateService;
-export const correspondenceService = (await services).correspondenceService;
+export const propertyService = isMockMode ? mockDb.propertyService : realPropertyService;
+export const tenantService = isMockMode ? mockDb.tenantService : realTenantService;
+export const receiptService = isMockMode ? mockDb.receiptService : realReceiptService;
+export const templateService = isMockMode ? mockDb.templateService : realTemplateService;
+export const correspondenceService = isMockMode
+  ? mockDb.correspondenceService
+  : realCorrespondenceService;

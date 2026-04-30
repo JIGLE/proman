@@ -164,6 +164,11 @@ Most routes require authentication via NextAuth.js. Protected routes will return
 - `POST /api/tax/saft-pt` - Generate SAF-T PT (Portuguese tax format)
 - `GET /api/tax/saft-pt/download` - Download SAF-T PT file
 
+### Ownership Verification
+
+- `GET /api/ownership-verifications` - List user-scoped ownership verification requests
+- `POST /api/ownership-verifications` - Create a provider-agnostic ownership verification request scaffold
+
 ## Integrations
 
 ### Webhooks

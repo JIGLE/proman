@@ -5,7 +5,7 @@ import {
   createSuccessResponse,
   withErrorHandler,
 } from "@/lib/utils/error-handling";
-import { propertyService } from "@/lib/services/database";
+import { propertyService } from "@/lib/services/database/property";
 import { sanitizeForDatabase, sanitizeNumber } from "@/lib/utils/sanitize";
 import { z } from "zod";
 

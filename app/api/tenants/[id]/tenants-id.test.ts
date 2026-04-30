@@ -16,7 +16,7 @@ vi.mock("@/lib/services/auth/auth-middleware", () => ({
 }));
 
 // Mock database service
-vi.mock("@/lib/services/database", () => ({
+vi.mock("@/lib/services/database/tenant", () => ({
   tenantService: {
     getById: vi.fn(async (userId, id) => {
       if (userId === "user-123" && id === "tenant-123") {

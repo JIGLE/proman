@@ -1,0 +1,1 @@
+export { propertyService } from "./service";

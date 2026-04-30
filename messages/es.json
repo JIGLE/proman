@@ -173,8 +173,8 @@
     "hero": "Cobra alquileres más rápido. Recibos e impuestos resueltos.",
     "subtitle": "ProMan da a propietarios y gestores un flujo único desde el seguimiento del pago hasta el recibo con contexto fiscal PT/ES.",
     "cta": "Entrar",
-    "demoCta": "Probar demo",
-    "secondaryCta": "Ver cómo funciona",
+    "demoCta": "Probar Demo Gratuita",
+    "secondaryCta": "Ver el flujo",
     "microcopy": "Sin tarjeta. Sin configuración. Demostración guiada en menos de 2 minutos.",
     "chips": {
       "simple": "Un flujo del cobro al recibo",
@@ -208,6 +208,23 @@
         "export": "Exportación",
         "done": "Emitido",
         "ready": "Lista"
+      }
+    },
+    "howItWorks": {
+      "eyebrow": "Cómo funciona",
+      "title": "Tres pasos para cerrar el ciclo de cobro",
+      "subtitle": "Mira qué ocurre entre el alquiler vencido, la emisión del recibo y la salida fiscal lista en un solo flujo.",
+      "collect": {
+        "title": "Prioriza el cobro del día",
+        "description": "La cola muestra quién necesita seguimiento inmediato por contrato y vivienda."
+      },
+      "issue": {
+        "title": "Registra el pago y emite al momento",
+        "description": "Al registrar el pago, el recibo se genera en el mismo flujo."
+      },
+      "report": {
+        "title": "Exporta con contexto PT/ES",
+        "description": "Los datos de pago y el perfil fiscal permanecen vinculados para informes y auditoría."
       }
     },
     "demo": {

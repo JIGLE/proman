@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import { createRentReceipt, listRentReceipts } from "@/lib/compliance/rent-receipts-pt";
+import { logAudit } from "@/lib/services/audit-log";
 import type { RentReceiptInput } from "@/lib/compliance/rent-receipts-pt";
 
 export async function GET(request: NextRequest) {
@@ -31,6 +32,13 @@ export async function GET(request: NextRequest) {
     year,
     page,
     limit,
+  });
+
+  await logAudit({
+    userId,
+    action: "VIEW_RENT_RECEIPTS",
+    resourceType: "RentReceipt",
+    details: { tenantId, propertyId, status, year, page, limit, resultCount: result.total },
   });
 
   return NextResponse.json(result);
@@ -61,6 +69,20 @@ export async function POST(request: NextRequest) {
   };
 
   const result = await createRentReceipt(input);
+
+  await logAudit({
+    userId,
+    action: "CREATE_RENT_RECEIPT",
+    resourceType: "RentReceipt",
+    resourceId: result.receiptId,
+    details: {
+      success: result.success,
+      tenantId: body.tenantId,
+      propertyId: body.propertyId,
+      receiptNumber: result.receiptNumber,
+      errors: result.errors,
+    },
+  });
 
   if (!result.success) {
     return NextResponse.json(

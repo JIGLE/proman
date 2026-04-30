@@ -62,15 +62,6 @@ export function FinancialsContainer() {
     }
   }, [activeTab, isOwnerPortal, setActiveTab]);
 
-  useEffect(() => {
-    if (searchParams.get("action") === "record-payment" && isOwnerPortal) {
-      if (activeTab !== "receipts") {
-        setActiveTab("receipts");
-      }
-      receiptsViewRef.current?.openDialog();
-    }
-  }, [activeTab, isOwnerPortal, searchParams, setActiveTab]);
-
   const metrics = useMemo(() => {
     const now = new Date();
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);

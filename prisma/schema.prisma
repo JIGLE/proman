@@ -41,6 +41,8 @@ model User {
   invoices       Invoice[]
   maintenanceContacts MaintenanceContact[]
   rentReceipts   RentReceipt[]
+  settings       UserSettings?
+  governmentVerifications GovernmentVerification[]
 }
 
 model EmailLog {
@@ -109,6 +111,56 @@ model PropertyOwner {
 
   @@unique([propertyId, ownerId])
   @@map("property_owners")
+}
+
+model GovernmentVerification {
+  id               String                       @id @default(cuid())
+  userId           String
+  provider         GovernmentVerificationProvider
+  scope            GovernmentVerificationScope
+  status           GovernmentVerificationStatus @default(pending)
+  externalReference String?
+  verifiedFullName String?
+  verifiedTaxId    String?
+  requestedAt      DateTime                     @default(now())
+  authorizedAt     DateTime?
+  completedAt      DateTime?
+  expiresAt        DateTime?
+  errorCode        String?
+  errorMessage     String?
+  metadata         String?
+  createdAt        DateTime                     @default(now())
+  updatedAt        DateTime                     @updatedAt
+
+  user           User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  propertyClaims PropertyVerificationClaim[]
+
+  @@index([userId, status])
+  @@index([provider, status])
+  @@map("government_verifications")
+}
+
+model PropertyVerificationClaim {
+  id                String                        @id @default(cuid())
+  verificationId    String
+  propertyId        String
+  claimType         PropertyVerificationClaimType @default(ownership)
+  status            PropertyVerificationClaimStatus @default(pending)
+  ownershipPercentage Float?
+  sourceReference   String?
+  matchedAddress    String?
+  registryData      String?
+  verifiedAt        DateTime?
+  createdAt         DateTime                      @default(now())
+  updatedAt         DateTime                      @updatedAt
+
+  verification GovernmentVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
+  property     Property               @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, status])
+  @@index([verificationId])
+  @@unique([verificationId, propertyId])
+  @@map("property_verification_claims")
 }
 
 model Account {
@@ -227,6 +279,7 @@ model Property {
   incomeDistributions IncomeDistribution[]
   rentReceipts        RentReceipt[]
   nruaRegistrations   NRUARegistration[]
+  verificationClaims  PropertyVerificationClaim[]
 
   // Performance indexes
   @@index([userId])
@@ -336,8 +389,7 @@ model MaintenanceTicket {
   priority          MaintenancePriority @default(medium)
   images            String   // JSON string of image URLs
   cost              Float?
-  assignedTo        String?  // Legacy field for text assignment
-  assignedContactId String?  // FK to MaintenanceContact
+  assignedTo        String?  // Free-text assignment (contactPerson name)
   resolvedAt        DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -346,7 +398,6 @@ model MaintenanceTicket {
   user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
   property        Property           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   tenant          Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  assignedContact MaintenanceContact? @relation(fields: [assignedContactId], references: [id], onDelete: SetNull)
 
   // Performance indexes
   @@index([userId])
@@ -472,7 +523,6 @@ model Document {
   ownerId     String?
   tenantId    String?
   
-  uploadedAt  DateTime @default(now())
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -542,20 +592,6 @@ model Notification {
   @@index([userId, read])
   @@index([createdAt])
   @@map("notifications")
-}
-
-model MapPoint {
-  id          String   @id @default(cuid())
-  name        String
-  latitude    Float
-  longitude   Float
-  zoom        Int?     @default(15)
-  description String?
-  metadata    String?  // JSON for additional data
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@map("map_points")
 }
 
 // Payment System Models for Portugal/Spain
@@ -717,6 +753,41 @@ enum UserRole {
   MANAGER
 }
 
+enum GovernmentVerificationProvider {
+  financas
+  cadastro
+  land_registry
+  manual_review
+}
+
+enum GovernmentVerificationScope {
+  identity
+  property_ownership
+  property_details
+}
+
+enum GovernmentVerificationStatus {
+  pending
+  authorized
+  verified
+  rejected
+  expired
+  failed
+}
+
+enum PropertyVerificationClaimType {
+  ownership
+  management
+  details_access
+}
+
+enum PropertyVerificationClaimStatus {
+  pending
+  matched
+  verified
+  rejected
+}
+
 enum EmailStatus {
   sent
   delivered
@@ -830,7 +901,6 @@ model MaintenanceContact {
   updatedAt     DateTime @updatedAt
 
   // Relations
-  tickets MaintenanceTicket[]
   user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("maintenance_contacts")
@@ -885,17 +955,19 @@ model IncomeDistributionShare {
 
 // User Settings (preferences)
 model UserSettings {
-  id                      String   @id @default(cuid())
-  userId                  String   @unique
-  theme                   String   @default("system")  // light, dark, system
-  language                String   @default("en")
-  defaultCurrency         Currency @default(EUR)
-  defaultTaxCountry       String?  // PT, ES, DK
-  emailNotifications      Boolean  @default(true)
-  taxReminderNotifications Boolean @default(true)
+  id                       String   @id @default(cuid())
+  userId                   String   @unique
+  theme                    String   @default("system")  // light, dark, system
+  language                 String   @default("en")
+  defaultCurrency          Currency @default(EUR)
+  defaultTaxCountry        String?  // PT, ES, DK
+  emailNotifications       Boolean  @default(true)
+  taxReminderNotifications Boolean  @default(true)
   distributionNotifications Boolean @default(true)
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_settings")
 }

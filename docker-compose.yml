@@ -45,8 +45,8 @@ services:
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-in-production}
 
       # Google OAuth (configure in Google Cloud Console)
-      GOOGLE_ID: ${GOOGLE_ID:-}
-      GOOGLE_SECRET: ${GOOGLE_SECRET:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
 
       # Email Configuration (SendGrid)
       SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}

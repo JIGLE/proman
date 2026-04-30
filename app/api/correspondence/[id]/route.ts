@@ -5,7 +5,7 @@ import {
   createSuccessResponse,
   withErrorHandler,
 } from "@/lib/utils/error-handling";
-import { correspondenceService } from "@/lib/services/database";
+import { correspondenceService } from "@/lib/services/database/correspondence";
 
 // GET /api/correspondence/[id] - Get a specific correspondence
 async function handleGet(

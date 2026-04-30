@@ -1,8 +1,21 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowRight, BadgeEuro, Building2, KeyRound, Play, ShieldCheck } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  AlarmClock,
+  ArrowRight,
+  BadgeEuro,
+  Building2,
+  Globe2,
+  KeyRound,
+  Play,
+  ReceiptText,
+  ShieldCheck,
+} from "lucide-react";
+import {
+  LandingAnalyticsObserver,
+  TrackedLandingLink,
+} from "@/components/shared/landing-analytics";
 import { LanguageSelector } from "@/components/shared/language-selector";
+import { Button } from "@/components/ui/button";
 import { getTranslations } from "next-intl/server";
 
 import pkg from "@/package.json";
@@ -34,6 +47,27 @@ export default async function LandingPage({ params }: Props) {
 
   const trustChips = [t("chips.simple"), t("chips.compliance"), t("chips.workflow")];
 
+  const howItWorksSteps = [
+    {
+      key: "collect",
+      icon: AlarmClock,
+      title: t("howItWorks.collect.title"),
+      description: t("howItWorks.collect.description"),
+    },
+    {
+      key: "issue",
+      icon: ReceiptText,
+      title: t("howItWorks.issue.title"),
+      description: t("howItWorks.issue.description"),
+    },
+    {
+      key: "report",
+      icon: Globe2,
+      title: t("howItWorks.report.title"),
+      description: t("howItWorks.report.description"),
+    },
+  ];
+
   const demoOptions = [
     {
       key: "owner",
@@ -53,29 +87,35 @@ export default async function LandingPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-zinc-900 text-zinc-50">
-      <header className="fixed top-0 left-0 right-0 z-50 bg-zinc-950/80 backdrop-blur-md border-b border-zinc-800">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-2">
             <Building2 className="h-7 w-7 text-blue-500" />
             <span className="text-xl font-bold">Proman</span>
           </div>
           <div className="flex items-center gap-3">
             <LanguageSelector />
-            <Link href="/auth/signin">
+            <TrackedLandingLink
+              href="/auth/signin"
+              eventName="landing.signin_click"
+              eventData={{ location: "header" }}
+            >
               <Button
                 variant="outline"
                 size="sm"
-                className="border-zinc-700 text-zinc-300 hover:text-zinc-50 hover:border-zinc-600"
+                className="border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:text-zinc-50"
               >
                 {t("cta")}
               </Button>
-            </Link>
+            </TrackedLandingLink>
           </div>
         </div>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-4 pt-28 pb-16 space-y-12">
-        <section className="grid gap-14 lg:grid-cols-[0.98fr_1.02fr] lg:items-center">
+      <main className="px-4 pb-16 pt-28">
+        <LandingAnalyticsObserver locale={locale} demoEnabled={isDemoEnabled} />
+
+        <section className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[0.98fr_1.02fr] lg:items-center">
           <div className="space-y-7">
             <div className="inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-sm text-blue-200">
               {t("eyebrow")}
@@ -89,7 +129,11 @@ export default async function LandingPage({ params }: Props) {
 
             <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
               {isDemoEnabled && (
-                <Link href={`/${locale}/demo?perspective=owner`}>
+                <TrackedLandingLink
+                  href={`/${locale}/demo?perspective=owner`}
+                  eventName="landing.demo_start"
+                  eventData={{ location: "hero_primary", perspective: "owner" }}
+                >
                   <Button
                     size="xl"
                     className="h-12 gap-2 bg-blue-600 px-8 text-base text-white hover:bg-blue-700"
@@ -97,9 +141,13 @@ export default async function LandingPage({ params }: Props) {
                     <Play className="h-4 w-4" />
                     {t("demoCta")}
                   </Button>
-                </Link>
+                </TrackedLandingLink>
               )}
-              <Link href="#product-flow">
+              <TrackedLandingLink
+                href="#product-flow"
+                eventName="landing.workflow_cta_click"
+                eventData={{ location: "hero_secondary" }}
+              >
                 <Button
                   size="xl"
                   variant="outline"
@@ -108,7 +156,7 @@ export default async function LandingPage({ params }: Props) {
                   {t("secondaryCta")}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
-              </Link>
+              </TrackedLandingLink>
             </div>
 
             <p className="text-sm text-zinc-300">{t("microcopy")}</p>
@@ -238,12 +286,41 @@ export default async function LandingPage({ params }: Props) {
           </div>
         </section>
 
+        <section className="mx-auto mt-14 max-w-6xl rounded-[28px] border border-zinc-800 bg-zinc-900/55 p-6 sm:p-8">
+          <div className="max-w-2xl">
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+              {t("howItWorks.eyebrow")}
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold text-zinc-50 sm:text-3xl">
+              {t("howItWorks.title")}
+            </h2>
+            <p className="mt-3 text-sm text-zinc-300 sm:text-base">{t("howItWorks.subtitle")}</p>
+          </div>
+
+          <div className="mt-8 grid gap-3 md:grid-cols-3">
+            {howItWorksSteps.map((step, index) => (
+              <div key={step.key} className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5">
+                <div className="flex items-center justify-between">
+                  <div className="rounded-lg bg-blue-500/10 p-2">
+                    <step.icon className="h-5 w-5 text-blue-300" />
+                  </div>
+                  <span className="text-xs font-semibold text-zinc-500">0{index + 1}</span>
+                </div>
+                <p className="mt-4 text-base font-semibold text-zinc-100">{step.title}</p>
+                <p className="mt-2 text-sm text-zinc-400">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {isDemoEnabled && (
-          <section className="grid gap-3 border-t border-zinc-800/70 pt-6 md:grid-cols-2">
+          <section className="mx-auto mt-6 grid max-w-6xl gap-3 md:grid-cols-2">
             {demoOptions.map((option) => (
-              <Link
+              <TrackedLandingLink
                 key={option.key}
                 href={option.href}
+                eventName="landing.demo_start"
+                eventData={{ location: "demo_card", perspective: option.key }}
                 className="rounded-[24px] border border-zinc-800 bg-zinc-900/65 p-5 transition-colors hover:border-zinc-700"
               >
                 <div className="flex items-start gap-4">
@@ -262,14 +339,14 @@ export default async function LandingPage({ params }: Props) {
                     </div>
                   </div>
                 </div>
-              </Link>
+              </TrackedLandingLink>
             ))}
           </section>
         )}
       </main>
 
-      <footer className="py-8 px-4 border-t border-zinc-800 mt-auto">
-        <div className="max-w-7xl mx-auto text-center text-sm text-zinc-500">
+      <footer className="mt-auto border-t border-zinc-800 px-4 py-8">
+        <div className="mx-auto max-w-6xl text-center text-sm text-zinc-500">
           <p>{tFooter("copyright", { year: new Date().getFullYear().toString() })}</p>
           <p className="mt-1 text-zinc-600">v{pkg.version}</p>
         </div>

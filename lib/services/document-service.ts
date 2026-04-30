@@ -39,7 +39,7 @@ export interface Document {
   ownerName?: string;
   tenantId?: string;
   tenantName?: string;
-  uploadedAt: string;
+  uploadedAt: string; // alias for createdAt — kept for API backwards compatibility
   createdAt: string;
   updatedAt: string;
 }
@@ -272,7 +272,7 @@ export const documentService = {
         owner: { select: { name: true } },
         tenant: { select: { name: true } },
       },
-      orderBy: { uploadedAt: "desc" },
+      orderBy: { createdAt: "desc" },
     });
 
     return documents.map((doc) => ({
@@ -292,7 +292,7 @@ export const documentService = {
       ownerName: doc.owner?.name,
       tenantId: doc.tenantId || undefined,
       tenantName: doc.tenant?.name,
-      uploadedAt: doc.uploadedAt.toISOString(),
+      uploadedAt: doc.createdAt.toISOString(),
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
     }));
@@ -333,7 +333,7 @@ export const documentService = {
       ownerName: doc.owner?.name,
       tenantId: doc.tenantId || undefined,
       tenantName: doc.tenant?.name,
-      uploadedAt: doc.uploadedAt.toISOString(),
+      uploadedAt: doc.createdAt.toISOString(),
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
     };
@@ -404,7 +404,7 @@ export const documentService = {
       ownerName: doc.owner?.name,
       tenantId: doc.tenantId || undefined,
       tenantName: doc.tenant?.name,
-      uploadedAt: doc.uploadedAt.toISOString(),
+      uploadedAt: doc.createdAt.toISOString(),
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
     };
@@ -459,7 +459,7 @@ export const documentService = {
       ownerName: doc.owner?.name,
       tenantId: doc.tenantId || undefined,
       tenantName: doc.tenant?.name,
-      uploadedAt: doc.uploadedAt.toISOString(),
+      uploadedAt: doc.createdAt.toISOString(),
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
     };
@@ -1263,7 +1263,7 @@ export const versionService = {
         ownerName: doc.owner?.name,
         tenantId: doc.tenantId || undefined,
         tenantName: doc.tenant?.name,
-        uploadedAt: doc.uploadedAt.toISOString(),
+        uploadedAt: doc.createdAt.toISOString(),
         createdAt: doc.createdAt.toISOString(),
         updatedAt: doc.updatedAt.toISOString(),
       };

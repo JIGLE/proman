@@ -42,8 +42,8 @@ NEXTAUTH_URL=https://your-domain.com
 NEXTAUTH_SECRET=your-random-secret-here
 
 # Google OAuth
-GOOGLE_ID=your-google-id
-GOOGLE_SECRET=your-google-secret
+GOOGLE_CLIENT_ID=your-google-client-id
+GOOGLE_CLIENT_SECRET=your-google-client-secret
 
 # SendGrid Email
 SENDGRID_API_KEY=your-sendgrid-api-key
@@ -130,8 +130,8 @@ env:
 # Secrets (configure separately or use sealed-secrets)
 secrets:
   NEXTAUTH_SECRET: your-secret-here
-  GOOGLE_ID: your-google-id
-  GOOGLE_SECRET: your-google-secret
+  GOOGLE_CLIENT_ID: your-google-client-id
+  GOOGLE_CLIENT_SECRET: your-google-client-secret
   SENDGRID_API_KEY: your-sendgrid-key
   SENDGRID_WEBHOOK_PUBLIC_KEY: your-webhook-key
   DATABASE_URL: file:./data/dev.db
@@ -149,8 +149,8 @@ kubectl label namespace proman name=proman
 ```bash
 kubectl create secret generic proman-secrets \
   --from-literal=NEXTAUTH_SECRET='your-secret' \
-  --from-literal=GOOGLE_ID='your-id' \
-  --from-literal=GOOGLE_SECRET='your-secret' \
+  --from-literal=GOOGLE_CLIENT_ID='your-google-client-id' \
+  --from-literal=GOOGLE_CLIENT_SECRET='your-google-client-secret' \
   --from-literal=SENDGRID_API_KEY='your-key' \
   --from-literal=SENDGRID_WEBHOOK_PUBLIC_KEY='your-key' \
   --from-literal=DATABASE_URL='file:./data/dev.db' \

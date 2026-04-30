@@ -33,6 +33,14 @@ export interface NRUAExportData {
   propertySurfaceM2?: number;
 }
 
+export interface NRUAExportResult {
+  success: boolean;
+  registrationId?: string;
+  xml?: string;
+  errors?: string[];
+  status?: number;
+}
+
 /**
  * Validate a Spanish NIF/NIE
  * Re-exported from shared validation module for backward compatibility.
@@ -95,17 +103,17 @@ export function generateNRUAXml(data: NRUAExportData): string {
 
 /**
  * Export and persist NRUA registration for a lease
+ * @param leaseId — Lease ID to export
+ * @param landlordNif — Landlord NIF/NIE
+ * @param landlordName — Landlord name
+ * @param userId — Authenticated user ID for ownership validation
  */
 export async function exportLeaseToNRUA(
   leaseId: string,
   landlordNif: string,
   landlordName: string,
-): Promise<{
-  success: boolean;
-  registrationId?: string;
-  xml?: string;
-  errors?: string[];
-}> {
+  userId: string,
+): Promise<NRUAExportResult> {
   const prisma = getPrismaClient();
   const errors: string[] = [];
 
@@ -114,9 +122,19 @@ export async function exportLeaseToNRUA(
     include: { tenant: true, property: true },
   });
 
-  if (!lease) return { success: false, errors: ["Lease not found"] };
-  if (!lease.tenant) return { success: false, errors: ["Tenant not found on lease"] };
-  if (!lease.property) return { success: false, errors: ["Property not found on lease"] };
+  if (!lease) return { success: false, errors: ["Lease not found"], status: 404 };
+  if (!lease.tenant) return { success: false, errors: ["Tenant not found on lease"], status: 400 };
+  if (!lease.property)
+    return { success: false, errors: ["Property not found on lease"], status: 400 };
+
+  // Ownership validation: user must own the lease or the property
+  if (lease.userId !== userId && lease.property.userId !== userId) {
+    return {
+      success: false,
+      errors: ["Forbidden: You do not own this lease or property"],
+      status: 403,
+    };
+  }
 
   if (!validateNifNie(landlordNif)) errors.push("Invalid landlord NIF/NIE");
   // Tenant NIF is optional — foreign tenants may not have one

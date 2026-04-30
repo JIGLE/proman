@@ -5,7 +5,7 @@ import {
   createSuccessResponse,
   withErrorHandler,
 } from "@/lib/utils/error-handling";
-import { correspondenceService } from "@/lib/services/database";
+import { correspondenceService } from "@/lib/services/database/correspondence";
 import { z } from "zod";
 import { handleDemoGet } from "@/lib/demo/demo-api-handler";
 

@@ -10,7 +10,7 @@ import {
   withErrorHandler,
 } from "@/lib/utils/error-handling";
 import { withRateLimit } from "@/lib/utils/rate-limit";
-import { receiptService } from "@/lib/services/database";
+import { receiptService } from "@/lib/services/database/receipt";
 import { sanitizeForDatabase, sanitizeNumber } from "@/lib/utils/sanitize";
 import { getPaginationFromRequest, createPaginatedResponse } from "@/lib/utils/pagination";
 import { getPrismaClient } from "@/lib/services/database/database";
