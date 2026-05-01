@@ -7,6 +7,7 @@ import {
 import {
   createErrorResponse,
   createSuccessResponse,
+  parseBody,
   withErrorHandler,
 } from "@/lib/utils/error-handling";
 import { tenantService } from "@/lib/services/database/tenant";
@@ -95,35 +96,20 @@ async function handlePost(request: NextRequest): Promise<Response> {
 
   const { scopeUserId } = authResult;
 
-  try {
-    const body = await request.json();
+  const raw = await request.json();
+  const sanitizedBody = {
+    ...raw,
+    name: sanitizeForDatabase(raw.name),
+    email: sanitizeEmail(raw.email),
+    phone: sanitizeForDatabase(raw.phone),
+    propertyId: raw.propertyId ? sanitizeForDatabase(raw.propertyId) : undefined,
+    rent: sanitizeNumber(raw.rent, 0, 0),
+    notes: raw.notes ? sanitizeForDatabase(raw.notes) : undefined,
+  };
 
-    // Sanitize input
-    const sanitizedBody = {
-      ...body,
-      name: sanitizeForDatabase(body.name),
-      email: sanitizeEmail(body.email),
-      phone: sanitizeForDatabase(body.phone),
-      propertyId: body.propertyId ? sanitizeForDatabase(body.propertyId) : undefined,
-      rent: sanitizeNumber(body.rent, 0, 0),
-      notes: body.notes ? sanitizeForDatabase(body.notes) : undefined,
-    };
-
-    // Validate input
-    const validatedData = createTenantSchema.parse(sanitizedBody);
-
-    const tenant = await tenantService.create(scopeUserId, validatedData);
-    return createSuccessResponse(tenant, 201);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
-        400,
-        request,
-      );
-    }
-    return createErrorResponse(error as Error, 500, request);
-  }
+  const validatedData = parseBody(sanitizedBody, createTenantSchema);
+  const tenant = await tenantService.create(scopeUserId, validatedData);
+  return createSuccessResponse(tenant, 201);
 }
 
 // Main handler

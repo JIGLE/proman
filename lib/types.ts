@@ -1,5 +1,8 @@
 "use client";
 
+/** Currency codes supported by the application (mirrors the Prisma Currency enum). */
+export type Currency = "EUR" | "DKK" | "USD" | "GBP";
+
 export interface Building {
   id: string;
   userId: string;

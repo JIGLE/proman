@@ -32,9 +32,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useApp } from "@/lib/contexts/app-context";
-import { expenseSchema, ExpenseFormData } from "@/lib/utils/validation";
+import { expenseSchema, type ExpenseFormData } from "@/lib/schemas/expense.schema";
 import { cn } from "@/lib/utils/utils";
-import { TaxCalculator, TaxCalculationResult } from "@/lib/services/tax-calculator";
+import { TaxCalculator, TaxCalculationResult } from "@/lib/utils/tax-calculator";
 import { getExpenseCategoryColor } from "@/lib/design-tokens";
 import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";

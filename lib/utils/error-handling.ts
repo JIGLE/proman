@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ZodError, ZodSchema } from "zod";
 
 // Custom error types
 export class ValidationError extends Error {
@@ -160,4 +161,44 @@ export function withErrorHandler<C = unknown>(
       return createErrorResponse(err, 500, request);
     }
   };
+}
+
+/**
+ * Validate an already-parsed body object against a Zod schema.
+ *
+ * Throws `ValidationError` (→ 400) on failure, so callers wrapped in
+ * `withErrorHandler` need no additional try/catch for ZodError.
+ *
+ * Use this when you need to sanitize the raw body before validation.
+ *
+ * @example
+ * const raw = await request.json();
+ * const data = parseBody({ ...raw, name: sanitizeForDatabase(raw.name) }, schema);
+ */
+export function parseBody<T>(body: unknown, schema: ZodSchema<T>): T {
+  try {
+    return schema.parse(body);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      throw new ValidationError(
+        `Validation error: ${error.issues.map((e) => e.message).join(", ")}`,
+      );
+    }
+    throw error;
+  }
+}
+
+/**
+ * Parse and validate a JSON request body against a Zod schema.
+ *
+ * Throws `ValidationError` (→ 400) when validation fails, so callers wrapped in
+ * `withErrorHandler` need no additional try/catch for ZodError.
+ *
+ * Use this for routes that do not need sanitization before validation.
+ *
+ * @example
+ * const data = await parseJsonBody(request, createTenantSchema);
+ */
+export async function parseJsonBody<T>(request: NextRequest, schema: ZodSchema<T>): Promise<T> {
+  return parseBody(await request.json(), schema);
 }

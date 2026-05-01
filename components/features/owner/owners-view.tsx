@@ -22,7 +22,7 @@ import { EmptyStateIllustration } from "@/components/ui/empty-state-illustration
 import { SearchFilter } from "@/components/ui/search-filter";
 import { useApp } from "@/lib/contexts/app-context";
 import { Owner } from "@/lib/types";
-import { ownerSchema, OwnerFormData } from "@/lib/utils/validation";
+import { ownerSchema, type OwnerFormData } from "@/lib/schemas/owner.schema";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import jsPDF from "jspdf";

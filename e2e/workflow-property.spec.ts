@@ -2,115 +2,82 @@ import { test, expect } from "@playwright/test";
 
 test.use({ storageState: "playwright/.auth/user.json" });
 
-test("Critical Path: Create new property", async ({ page }) => {
-  // 1. Navigate to portfolio page (list view, not map)
-  // We use /en to ensure consistent locale, and ?view=properties to land on
-  // the List tab where the "Add Property" button is visible (map tab hides it).
-  await page.goto("/en/portfolio?view=properties");
+test.describe("Critical Path: Property management", () => {
+  test("should create a new property and show it in the list", async ({ page }) => {
+    const timestamp = Date.now();
+    const propertyName = `Test Property ${timestamp}`;
 
-  // Verify we are on the portfolio page
-  await expect(page).toHaveURL(/.*\/portfolio/);
+    // Attach listeners before any navigation
+    page.on("console", (msg) => {
+      if (msg.type() === "error") console.error("Browser error:", msg.text());
+    });
 
-  // 2. Open Add Property Dialog
-  // The button has "Add Property" text and a Plus icon
-  await page.getByRole("button", { name: "Add Property" }).click();
+    await page.goto("/en/portfolio?view=properties");
+    await expect(page).toHaveURL(/\/portfolio/);
 
-  // Verify dialog is open
-  await expect(page.getByRole("dialog")).toBeVisible();
+    // Open dialog
+    await page.getByRole("button", { name: "Add Property" }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
 
-  // 3. Fill Form
-  const timestamp = Date.now();
-  const propertyName = `Test Property ${timestamp}`;
+    // Fill form
+    await page.getByLabel("Property Name").fill(propertyName);
 
-  // Fill text inputs
-  await page.getByLabel("Property Name").fill(propertyName);
+    await page
+      .locator("div.space-y-2")
+      .filter({ hasText: "Property Type" })
+      .getByRole("combobox")
+      .click();
+    await page.getByRole("option", { name: "Apartment" }).click();
 
-  // Property Type (Select)
-  // Radix UI Select often separates Label and Trigger, so we use a text filter
-  await page
-    .locator("div.space-y-2")
-    .filter({ hasText: "Property Type" })
-    .getByRole("combobox")
-    .click();
-  await page.getByRole("option", { name: "Apartment" }).click();
+    await page.getByLabel("Full Address Search").fill("123 Test St");
+    await page.getByLabel("City").fill("Lisbon");
+    await page.getByLabel("Postal Code").fill("1000-001");
+    await page.getByLabel("Monthly Rent").fill("1500");
+    await page.getByLabel("Bedrooms").fill("2");
+    await page.getByLabel("Bathrooms").fill("1");
 
-  // Address Section
-  await page.getByLabel("Full Address Search").fill("123 Test St");
-  await page.getByLabel("City").fill("Lisbon");
+    // Submit and wait for the API call to complete
+    const responsePromise = page.waitForResponse(
+      (res) => res.url().includes("/api/properties") && res.request().method() === "POST",
+    );
+    await dialog.getByRole("button", { name: "Add Property" }).click();
 
-  // Postal Code (id="zipCode")
-  await page.getByLabel("Postal Code").fill("1000-001");
+    const response = await responsePromise;
+    expect(response.status()).toBe(201);
 
-  // Country defaults to Portugal
-
-  // Rent
-  await page.getByLabel("Monthly Rent").fill("1500");
-
-  // Bedrooms/Bathrooms have defaults, but let's set them
-  await page.getByLabel("Bedrooms").fill("2");
-  await page.getByLabel("Bathrooms").fill("1");
-
-  // 4. Submit
-  // The submit button is inside the dialog
-  const dialog = page.getByRole("dialog");
-
-  // Listen for console messages to capture any errors
-  page.on("console", (msg) => {
-    if (msg.type() === "error") {
-      console.log("Browser console error:", msg.text());
-    }
+    // Dialog closes on success; new property name appears in the list
+    await expect(dialog).toBeHidden({ timeout: 5000 });
+    await expect(page.getByText(propertyName, { exact: false })).toBeVisible();
   });
 
-  // Listen for API responses
-  page.on("response", (response) => {
-    if (response.url().includes("/api/properties")) {
-      console.log("API Response:", response.status(), response.statusText());
-    }
+  test("should show validation errors when required fields are missing", async ({ page }) => {
+    await page.goto("/en/portfolio?view=properties");
+    await page.getByRole("button", { name: "Add Property" }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+
+    // Submit without filling anything
+    await dialog.getByRole("button", { name: "Add Property" }).click();
+
+    // Form should stay open with validation feedback
+    await expect(dialog).toBeVisible();
+    // At least one validation message should be present
+    const errors = dialog.locator("[role='alert'], .text-destructive, .text-red-400");
+    await expect(errors.first()).toBeVisible({ timeout: 3000 });
   });
 
-  await dialog.getByRole("button", { name: "Add Property" }).click();
+  test("should cancel the dialog without creating a property", async ({ page }) => {
+    await page.goto("/en/portfolio?view=properties");
+    await page.getByRole("button", { name: "Add Property" }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
 
-  // 5. Verify creation
-  // Wait for the submission to complete (check for network idle or specific state)
-  await page.waitForTimeout(2000); // Give time for async operations
+    await page.getByLabel("Property Name").fill("Should not be created");
 
-  // Check for validation errors first
-  const errorElements = page.locator(".text-red-400");
-  const errorCount = await errorElements.count();
-  if (errorCount > 0) {
-    const errors = await errorElements.allTextContents();
-    console.log("Validation errors found:", errors);
+    const cancelButton = dialog.getByRole("button", { name: /cancel/i });
+    await cancelButton.click();
 
-    // Take a screenshot for debugging
-    await page.screenshot({ path: "test-results/validation-error.png" });
-    throw new Error(`Validation failed: ${errors.join(", ")}`);
-  }
-
-  // Check for server errors via toast or console
-  const errorToast = page.locator("text=/error|failed/i").first();
-  if (await errorToast.isVisible()) {
-    const errorText = await errorToast.textContent();
-    console.log("Toast error:", errorText);
-    throw new Error(`Server error: ${errorText}`);
-  }
-
-  // Dialog should close if successful
-  const isDialogHidden = await dialog.isHidden().catch(() => false);
-  if (!isDialogHidden) {
-    // Take screenshot of still-open dialog
-    await page.screenshot({ path: "test-results/dialog-still-open.png" });
-
-    // Check what's in the dialog
-    const dialogContent = await dialog.textContent();
-    console.log("Dialog still open with content:", dialogContent);
-  }
-
-  await expect(dialog).toBeHidden({ timeout: 5000 });
-
-  // Toast should appear (optional check)
-  // await expect(page.getByText('Property added successfully')).toBeVisible()
-
-  // New property should appear in the list
-  // Using a less strict locator in case of layout changes, checking for text presence
-  await expect(page.getByText(propertyName, { exact: false })).toBeVisible();
+    await expect(dialog).toBeHidden({ timeout: 3000 });
+  });
 });

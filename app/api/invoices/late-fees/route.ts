@@ -7,15 +7,7 @@ import {
 } from "@/lib/utils/error-handling";
 import { invoiceService, type LateFeeConfig } from "@/lib/services/invoice-service";
 import { z } from "zod";
-
-// Validation schema for late fee configuration
-const lateFeeConfigSchema = z.object({
-  enabled: z.boolean().default(true),
-  gracePeriodDays: z.number().min(0).max(30).default(5),
-  percentageRate: z.number().min(0).max(50).default(5),
-  flatFee: z.number().min(0).optional(),
-  maxPercentage: z.number().min(0).max(100).optional(),
-});
+import { lateFeeConfigSchema } from "@/lib/schemas/late-fee-config.schema";
 
 // POST /api/invoices/late-fees - Apply late fees to overdue invoices
 async function handlePost(request: NextRequest): Promise<Response> {

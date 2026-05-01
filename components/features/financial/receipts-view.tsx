@@ -43,7 +43,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { useApp } from "@/lib/contexts/app-context";
 import { Receipt } from "@/lib/types";
-import { receiptSchema, ReceiptFormData } from "@/lib/utils/validation";
+import { receiptSchema, type ReceiptFormData } from "@/lib/schemas/receipt.schema";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { usePortalAccess } from "@/lib/contexts/portal-context";

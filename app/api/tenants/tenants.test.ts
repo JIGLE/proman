@@ -62,7 +62,15 @@ vi.mock("@/lib/utils/error-handling", () => ({
     new Response(JSON.stringify({ error: error.message }), { status }),
   createSuccessResponse: (data: any, status: any = 200) =>
     new Response(JSON.stringify(data), { status }),
-  withErrorHandler: (fn: any) => fn,
+  withErrorHandler: (fn: any) => async (req: any, ctx?: any) => {
+    try {
+      return await fn(req, ctx);
+    } catch (err: any) {
+      const status = err?.name === "ZodError" || err?.name === "ValidationError" ? 400 : 500;
+      return new Response(JSON.stringify({ error: err?.message ?? "Unknown error" }), { status });
+    }
+  },
+  parseBody: (body: any, schema: any) => schema.parse(body),
 }));
 
 // Mock pagination

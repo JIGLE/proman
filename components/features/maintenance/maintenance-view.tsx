@@ -52,7 +52,7 @@ import { EmptyStateIllustration } from "@/components/ui/empty-state-illustration
 import { SearchFilter } from "@/components/ui/search-filter";
 import { ExportButton } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
-import { maintenanceSchema, MaintenanceFormData } from "@/lib/utils/validation";
+import { maintenanceSchema, type MaintenanceFormData } from "@/lib/schemas/maintenance.schema";
 import { MaintenanceTicket } from "@/lib/types";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";

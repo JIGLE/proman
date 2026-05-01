@@ -6,7 +6,7 @@ import {
   withErrorHandler,
 } from "@/lib/utils/error-handling";
 import { getPrismaClient } from "@/lib/services/database/database";
-import { maintenanceSchema } from "@/lib/utils/validation";
+import { maintenanceSchema } from "@/lib/schemas/maintenance.schema";
 
 const ticketInclude = {
   property: { select: { name: true } },

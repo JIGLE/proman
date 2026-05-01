@@ -29,7 +29,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { useApp } from "@/lib/contexts/app-context";
 import { CorrespondenceTemplate, Tenant } from "@/lib/types";
-import { templateSchema, TemplateFormData } from "@/lib/utils/validation";
+import { templateSchema, type TemplateFormData } from "@/lib/schemas/template.schema";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import jsPDF from "jspdf";

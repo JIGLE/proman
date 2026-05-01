@@ -210,6 +210,23 @@
         "ready": "Pronta"
       }
     },
+    "howItWorks": {
+      "eyebrow": "Como funciona",
+      "title": "Três passos para fechar o ciclo de cobrança",
+      "subtitle": "Veja o que acontece entre a renda em atraso, a emissão do recibo e o output fiscal num único fluxo.",
+      "collect": {
+        "title": "Priorize o trabalho de cobrança do dia",
+        "description": "A fila mostra quem precisa de seguimento imediato por contrato e propriedade."
+      },
+      "issue": {
+        "title": "Registe o pagamento e emita de imediato",
+        "description": "Assim que o pagamento é registado, o recibo é gerado no mesmo fluxo."
+      },
+      "report": {
+        "title": "Exporte com contexto PT/ES",
+        "description": "Os dados de pagamento e o perfil fiscal mantêm-se ligados para relatórios e registos de auditoria."
+      }
+    },
     "demo": {
       "label": "Modo demo",
       "title": "Explore um único portal a partir de duas perspetivas",

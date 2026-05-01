@@ -40,5 +40,6 @@ export const createInvoiceSchema = invoiceSchema.omit({ status: true });
 export const updateInvoiceSchema = invoiceSchema.partial();
 
 export type Invoice = z.infer<typeof invoiceSchema>;
+export type InvoiceFormData = z.infer<typeof invoiceSchema>;
 export type CreateInvoice = z.infer<typeof createInvoiceSchema>;
 export type UpdateInvoice = z.infer<typeof updateInvoiceSchema>;

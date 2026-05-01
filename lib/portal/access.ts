@@ -89,7 +89,6 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         labelKey: "navigation.settings",
         icon: Settings,
         roles: ["owner"],
-        mobilePrimary: true,
       },
     ],
   },

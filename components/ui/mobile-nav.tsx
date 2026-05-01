@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { LogOut, Building2, Menu, X } from "lucide-react";
+import { LogOut, Building2, Menu, X, Settings } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
@@ -9,6 +9,7 @@ import { LanguageSelector } from "@/components/shared/language-selector";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
+import { useDemoMode } from "@/lib/contexts/demo-context";
 
 interface MobileNavProps {
   activeTab?: string;
@@ -21,7 +22,8 @@ export function MobileBottomNav({
 }: MobileNavProps): React.ReactElement {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const { mobilePrimaryNavigation } = usePortalAccess();
+  const { mobilePrimaryNavigation, isOwnerPortal } = usePortalAccess();
+  const { isDemoMode } = useDemoMode();
   const user = session?.user;
   const initials =
     user?.name
@@ -31,7 +33,7 @@ export function MobileBottomNav({
       .toUpperCase() || "U";
 
   // Extract locale from pathname
-  const currentLocale = pathname.split("/")[1] || "en";
+  const currentLocale = pathname.split("/")[1] || "pt";
   const primaryNavItems = mobilePrimaryNavigation.map((item) => ({
     id: item.key,
     label: item.label,
@@ -39,10 +41,10 @@ export function MobileBottomNav({
     href: item.href,
   }));
 
-  // Check if current path matches an item
   const isItemActive = (href: string) => {
     if (!href) return false;
-    return pathname.includes(href);
+    const fullPath = `/${currentLocale}${href}`;
+    return pathname === fullPath || pathname.startsWith(`${fullPath}/`);
   };
 
   return (
@@ -55,7 +57,7 @@ export function MobileBottomNav({
       >
         {/* Safe area spacer for notched devices */}
         <div className="bg-[var(--color-background)]/95 backdrop-blur-sm border-t border-[var(--color-border)]">
-          <div className="grid h-16 grid-cols-5 items-center px-2">
+          <div className={cn("grid h-16 items-center px-2", `grid-cols-${primaryNavItems.length}`)}>
             {primaryNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = isItemActive(item.href);
@@ -111,6 +113,15 @@ export function MobileBottomNav({
               </div>
               <div className="flex items-center gap-1">
                 <LanguageSelector compact />
+                {isOwnerPortal && !isDemoMode && (
+                  <Link
+                    href={`/${currentLocale}/settings`}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-md text-[var(--color-muted-foreground)] hover:bg-[var(--color-hover)] hover:text-[var(--color-foreground)]"
+                    aria-label="Settings"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Link>
+                )}
                 <button
                   onClick={() => signOut({ callbackUrl: `/${currentLocale}` })}
                   className="inline-flex items-center justify-center h-8 w-8 rounded-md text-[var(--color-error)] hover:bg-[var(--color-error)]/10"
