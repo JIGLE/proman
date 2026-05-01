@@ -24,6 +24,13 @@
 - [ ] All new UI strings added to all three locale files (`messages/en.json`, `messages/pt.json`, `messages/es.json`)
 - [ ] No secrets committed
 
+## Licensing and Intellectual Property
+
+- This repository is proprietary and all rights are reserved by JIGLE.
+- By submitting a contribution, you confirm you have the legal right to submit the change.
+- By submitting a contribution, you grant JIGLE the perpetual, worldwide, irrevocable right to use, modify, distribute, relicense, and commercialize the contribution as part of this project.
+- Do not submit code, assets, or text you are not authorized to license for proprietary commercial use.
+
 ## CI Pipeline
 
 Five GitHub Actions workflows protect the repository:

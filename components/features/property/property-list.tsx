@@ -79,7 +79,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     ref,
   ): React.ReactElement {
     const { state, addProperty, updateProperty, deleteProperty } = useApp();
-    const { properties, tenants, leases, maintenance, loading } = state;
+    const { properties = [], tenants = [], leases = [], maintenance = [], loading } = state;
     const { success } = useToast();
     const { formatCurrency } = useCurrency();
     const confirmDialog = useConfirmDialog();

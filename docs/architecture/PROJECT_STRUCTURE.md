@@ -408,7 +408,7 @@ See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
 
 ## License
 
-MIT - See [LICENSE](../LICENSE)
+Proprietary - All Rights Reserved. See [LICENSE](../LICENSE)
 
 ---
 
