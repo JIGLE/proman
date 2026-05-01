@@ -455,8 +455,15 @@ export function PropertyDetailModal({
             </div>
           ) : (
             <div className="space-y-6">
-              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <Card className="border-zinc-700 bg-zinc-800">
+              <div className="grid grid-cols-2 gap-4 xl:grid-cols-4">
+                <Card
+                  className="cursor-pointer border-zinc-700 bg-zinc-800 transition-colors hover:border-zinc-600"
+                  onClick={() =>
+                    activeTenant
+                      ? navigateTo(`/people/${activeTenant.id}`)
+                      : navigateTo(`/tenants?propertyId=${property.id}`)
+                  }
+                >
                   <CardContent className="p-4">
                     <div className="text-sm text-zinc-400">Active tenant</div>
                     <div className="mt-1 text-xl font-semibold text-[var(--color-foreground)]">
@@ -464,7 +471,10 @@ export function PropertyDetailModal({
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="border-zinc-700 bg-zinc-800">
+                <Card
+                  className="cursor-pointer border-zinc-700 bg-zinc-800 transition-colors hover:border-zinc-600"
+                  onClick={() => navigateTo(`/leases?propertyId=${property.id}`)}
+                >
                   <CardContent className="p-4">
                     <div className="text-sm text-zinc-400">Lease status</div>
                     <div className="mt-1 text-xl font-semibold capitalize text-[var(--color-foreground)]">
@@ -472,7 +482,10 @@ export function PropertyDetailModal({
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="border-zinc-700 bg-zinc-800">
+                <Card
+                  className="cursor-pointer border-zinc-700 bg-zinc-800 transition-colors hover:border-zinc-600"
+                  onClick={() => navigateTo(buildFinancialReviewPath({ propertyId: property.id }))}
+                >
                   <CardContent className="p-4">
                     <div className="text-sm text-zinc-400">Paid receipts</div>
                     <div className="mt-1 text-xl font-semibold text-[var(--color-foreground)]">
@@ -480,7 +493,10 @@ export function PropertyDetailModal({
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="border-zinc-700 bg-zinc-800">
+                <Card
+                  className="cursor-pointer border-zinc-700 bg-zinc-800 transition-colors hover:border-zinc-600"
+                  onClick={() => navigateTo(`/maintenance?propertyId=${property.id}`)}
+                >
                   <CardContent className="p-4">
                     <div className="text-sm text-zinc-400">Open tickets</div>
                     <div className="mt-1 text-xl font-semibold text-amber-400">{openTickets}</div>
@@ -543,14 +559,16 @@ export function PropertyDetailModal({
                         </p>
                         <p className="text-zinc-400">{property.country || "Country not set"}</p>
                         {typeof property.latitude === "number" &&
-                        typeof property.longitude === "number" ? (
-                          <p className="mt-2 text-xs text-emerald-300">
-                            Map coordinates ready: {property.latitude.toFixed(4)},{" "}
-                            {property.longitude.toFixed(4)}
-                          </p>
-                        ) : (
+                        typeof property.longitude === "number" ? null : (
                           <p className="mt-2 text-xs text-amber-300">
-                            Coordinates missing for map placement
+                            Coordinates missing —{" "}
+                            <button
+                              type="button"
+                              onClick={() => setIsEditing(true)}
+                              className="underline transition-colors hover:text-amber-100"
+                            >
+                              fix address
+                            </button>
                           </p>
                         )}
                       </div>
@@ -596,41 +614,47 @@ export function PropertyDetailModal({
               </div>
 
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <Card className="border-zinc-700 bg-zinc-800">
-                  <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Tenancy snapshot</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-zinc-400">Current tenant</span>
-                      <span className="text-[var(--color-foreground)]">
-                        {activeTenant?.name ?? "Vacant"}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-zinc-400">Current lease</span>
-                      <span className="capitalize text-[var(--color-foreground)]">
-                        {activeLease?.status ?? "Not linked"}
-                      </span>
-                    </div>
-                    {activeLease && (
-                      <>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-zinc-400">Lease term</span>
+                {activeLease && (
+                  <Card className="border-zinc-700 bg-zinc-800">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-sm text-zinc-400">Lease details</CardTitle>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setIsEditing(true)}
+                          className="h-6 px-2 text-xs text-zinc-500 hover:text-zinc-200"
+                        >
+                          Edit
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-zinc-400">Lease term</span>
+                        <span className="text-[var(--color-foreground)]">
+                          {activeLease.startDate} - {activeLease.endDate}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-zinc-400">Tax regime</span>
+                        {activeLease.taxRegime ? (
                           <span className="text-[var(--color-foreground)]">
-                            {activeLease.startDate} - {activeLease.endDate}
+                            {activeLease.taxRegime}
                           </span>
-                        </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-zinc-400">Tax regime</span>
-                          <span className="text-[var(--color-foreground)]">
-                            {activeLease.taxRegime ?? "Not set"}
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </CardContent>
-                </Card>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => navigateTo(`/leases`)}
+                            className="text-sm text-amber-400 underline transition-colors hover:text-amber-200"
+                          >
+                            Not set — set regime
+                          </button>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
 
                 <Card className="border-zinc-700 bg-zinc-800">
                   <CardHeader>
@@ -664,12 +688,14 @@ export function PropertyDetailModal({
                         </div>
                       ))
                     )}
-                    <div className="rounded-2xl border border-zinc-700 bg-zinc-900/80 p-3 text-sm text-zinc-300">
-                      <div className="flex items-center gap-2">
-                        <Wrench className="h-4 w-4 text-amber-400" />
-                        <span>{openTickets} maintenance item(s) still need review</span>
+                    {openTickets > 0 && (
+                      <div className="rounded-2xl border border-zinc-700 bg-zinc-900/80 p-3 text-sm text-zinc-300">
+                        <div className="flex items-center gap-2">
+                          <Wrench className="h-4 w-4 text-amber-400" />
+                          <span>{openTickets} maintenance item(s) still need review</span>
+                        </div>
                       </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -710,7 +736,7 @@ export function PropertyDetailModal({
               )}
 
               {isOwnerPortal && (
-                <div className="flex justify-between gap-2 border-t border-zinc-800 pt-4">
+                <div className="sticky bottom-0 flex justify-between gap-2 border-t border-zinc-800 bg-zinc-900 pb-1 pt-4">
                   <Button
                     variant="destructive"
                     onClick={handleDelete}

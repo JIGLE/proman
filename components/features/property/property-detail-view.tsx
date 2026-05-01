@@ -138,7 +138,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -160,25 +160,37 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card>
+          <Card
+            className="cursor-pointer transition-colors hover:border-zinc-600"
+            onClick={() => setActiveTab("tenants")}
+          >
             <CardContent className="p-4">
               <div className="text-sm text-[var(--color-muted-foreground)]">Tenants</div>
               <div className="text-2xl font-bold mt-1">{relatedTenants.length}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card
+            className="cursor-pointer transition-colors hover:border-zinc-600"
+            onClick={() => setActiveTab("leases")}
+          >
             <CardContent className="p-4">
               <div className="text-sm text-[var(--color-muted-foreground)]">Active Leases</div>
               <div className="text-2xl font-bold text-green-500 mt-1">{activeLeases}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card
+            className="cursor-pointer transition-colors hover:border-zinc-600"
+            onClick={() => setActiveTab("finance")}
+          >
             <CardContent className="p-4">
               <div className="text-sm text-[var(--color-muted-foreground)]">Revenue</div>
               <div className="text-2xl font-bold mt-1">{formatCurrency(totalRevenue)}</div>
             </CardContent>
           </Card>
-          <Card>
+          <Card
+            className="cursor-pointer transition-colors hover:border-zinc-600"
+            onClick={() => setActiveTab("maintenance")}
+          >
             <CardContent className="p-4">
               <div className="text-sm text-[var(--color-muted-foreground)]">Open Tickets</div>
               <div className="text-2xl font-bold text-amber-500 mt-1">{openTickets}</div>
@@ -189,7 +201,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList>
+        <TabsList className="overflow-x-auto">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="tenants" className="flex items-center gap-1.5">
             <Users className="h-3.5 w-3.5" />
@@ -292,9 +304,21 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                 ))}
               {relatedTenants.length === 0 &&
                 relatedLeases.filter((l) => l.status === "active").length === 0 && (
-                  <p className="text-sm text-[var(--color-muted-foreground)]">
-                    No related entities
-                  </p>
+                  <div className="rounded-lg border border-dashed border-[var(--color-border)] p-4 text-center space-y-2">
+                    <p className="text-sm text-[var(--color-muted-foreground)]">
+                      {property.status === "vacant" ? "Property is vacant" : "No related entities"}
+                    </p>
+                    {property.status === "vacant" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => router.push(`/${locale}/leases`)}
+                      >
+                        <FileText className="h-3.5 w-3.5 mr-1.5" />
+                        Create lease
+                      </Button>
+                    )}
+                  </div>
                 )}
             </div>
           </div>
@@ -334,24 +358,47 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <EmptyStateIllustration entityType="leases" />
           ) : (
             <div className="grid gap-3">
-              {relatedLeases.map((lease) => (
-                <EntityLink
-                  key={lease.id}
-                  type="lease"
-                  id={lease.id}
-                  title={`Lease ${lease.id.slice(0, 8)}`}
-                  subtitle={`${formatCurrency(lease.monthlyRent)}/mo · ${lease.startDate} — ${lease.endDate}`}
-                  status={lease.status}
-                  statusVariant={
-                    lease.status === "active"
-                      ? "success"
-                      : lease.status === "expired"
-                        ? "destructive"
-                        : "warning"
-                  }
-                  variant="full"
-                />
-              ))}
+              {relatedLeases.map((lease) => {
+                const daysUntilExpiry = Math.ceil(
+                  (new Date(lease.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+                );
+                const isExpiring =
+                  lease.status === "active" && daysUntilExpiry >= 0 && daysUntilExpiry <= 30;
+                return (
+                  <div key={lease.id} className="space-y-1">
+                    <EntityLink
+                      type="lease"
+                      id={lease.id}
+                      title={`Lease ${lease.id.slice(0, 8)}`}
+                      subtitle={`${formatCurrency(lease.monthlyRent)}/mo · ${lease.startDate} — ${lease.endDate}`}
+                      status={lease.status}
+                      statusVariant={
+                        lease.status === "active"
+                          ? "success"
+                          : lease.status === "expired"
+                            ? "destructive"
+                            : "warning"
+                      }
+                      variant="full"
+                    />
+                    {isExpiring && (
+                      <div className="flex items-center justify-between rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-1.5">
+                        <span className="text-xs text-amber-400">
+                          Expires in {daysUntilExpiry} day{daysUntilExpiry !== 1 ? "s" : ""}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-5 px-2 text-xs text-amber-400 hover:bg-amber-500/20 hover:text-amber-200"
+                          onClick={() => router.push(`/${locale}/leases`)}
+                        >
+                          Renew →
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </TabsContent>
@@ -362,6 +409,21 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <EmptyStateIllustration entityType="maintenance" />
           ) : (
             <div className="space-y-3">
+              {openTickets > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-amber-400">
+                    {openTickets} open ticket{openTickets !== 1 ? "s" : ""}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => router.push(`/${locale}/maintenance?propertyId=${propertyId}`)}
+                  >
+                    <Wrench className="h-3.5 w-3.5 mr-1.5" />
+                    View in Maintenance
+                  </Button>
+                </div>
+              )}
               {relatedMaintenance.map((ticket) => (
                 <Card key={ticket.id}>
                   <CardContent className="p-4">

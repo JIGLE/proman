@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
-import { Building2, MapPin, CheckCircle, Wrench, ChevronDown, Plus } from "lucide-react";
+import {
+  Building2,
+  MapPin,
+  CheckCircle,
+  Wrench,
+  ChevronDown,
+  Plus,
+  ExternalLink,
+} from "lucide-react";
+import { useRouter, usePathname } from "next/navigation";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { getCountryName, resolveCountryCode } from "@/lib/utils/country";
 import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
@@ -82,6 +91,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const { properties = [], tenants = [], leases = [], maintenance = [], loading } = state;
     const { success } = useToast();
     const { formatCurrency, currencySymbol } = useCurrency();
+    const router = useRouter();
+    const pathname = usePathname();
+    const locale = pathname.split("/")[1] || "pt";
     const confirmDialog = useConfirmDialog();
     // Property detail modal state
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -263,8 +275,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
           (operationalFilter === "lease-renewal" && expiringLeasePropertyIds.has(property.id)) ||
           (operationalFilter === "open-maintenance" &&
             openMaintenancePropertyIds.has(property.id)) ||
-          (operationalFilter === "missing-map" && missingMapPropertyIds.has(property.id)) ||
-          (operationalFilter === "vacancy" && property.status === "vacant");
+          (operationalFilter === "missing-map" && missingMapPropertyIds.has(property.id));
 
         return matchesSearch && matchesType && matchesStatus && matchesOperational;
       });
@@ -885,8 +896,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
             ) : (
               <div className="space-y-4">
                 {/* Slim operational filter strip */}
-                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-2.5">
-                  <span className="mr-1 text-xs font-medium uppercase tracking-wider text-zinc-500">
+                <div className="hidden sm:flex items-center gap-2 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-2.5 scrollbar-none">
+                  <span className="mr-1 shrink-0 text-xs font-medium uppercase tracking-wider text-zinc-500">
                     Filter
                   </span>
                   {[
@@ -915,12 +926,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                       count: missingMapPropertyIds.size,
                       color: "text-blue-300",
                     },
-                    {
-                      key: "vacancy",
-                      label: "Vacant",
-                      count: properties.filter((p) => p.status === "vacant").length,
-                      color: "text-zinc-300",
-                    },
                   ].map((opt) => {
                     const isActive = operationalFilter === opt.key;
                     return (
@@ -929,7 +934,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                         type="button"
                         onClick={() => setOperationalFilter(opt.key)}
                         className={cn(
-                          "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                          "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
                           isActive
                             ? "bg-accent-primary text-white"
                             : "border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200",
@@ -949,44 +954,47 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                   })}
                 </div>
 
-                {/* Search and Filter */}
-                <SearchFilter
-                  searchPlaceholder="Search properties by name or address..."
-                  onSearchChange={setSearchQuery}
-                  onFilterChange={(key, value) => {
-                    if (key === "type") setTypeFilter(value);
-                    if (key === "status") setStatusFilter(value);
-                  }}
-                  filters={[
-                    {
-                      key: "type",
-                      label: "Type",
-                      options: [
-                        { label: "All Types", value: "all" },
-                        { label: "Apartment", value: "apartment" },
-                        { label: "House", value: "house" },
-                        { label: "Commercial", value: "commercial" },
-                        { label: "Land", value: "land" },
-                        { label: "Other", value: "other" },
-                      ],
-                      defaultValue: "all",
-                    },
-                    {
-                      key: "status",
-                      label: "Status",
-                      options: [
-                        { label: "All Statuses", value: "all" },
-                        { label: "Occupied", value: "occupied" },
-                        { label: "Vacant", value: "vacant" },
-                        { label: "Maintenance", value: "maintenance" },
-                      ],
-                      defaultValue: "all",
-                    },
-                  ]}
-                />
-
-                <div className="flex items-center justify-end">
-                  <DataViewToggle mode={dataViewMode} onChange={handleViewModeChange} />
+                {/* Search, Filter, and View Toggle */}
+                <div className="flex items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <SearchFilter
+                      searchPlaceholder="Search properties by name or address..."
+                      onSearchChange={setSearchQuery}
+                      onFilterChange={(key, value) => {
+                        if (key === "type") setTypeFilter(value);
+                        if (key === "status") setStatusFilter(value);
+                      }}
+                      filters={[
+                        {
+                          key: "type",
+                          label: "Type",
+                          options: [
+                            { label: "All Types", value: "all" },
+                            { label: "Apartment", value: "apartment" },
+                            { label: "House", value: "house" },
+                            { label: "Commercial", value: "commercial" },
+                            { label: "Land", value: "land" },
+                            { label: "Other", value: "other" },
+                          ],
+                          defaultValue: "all",
+                        },
+                        {
+                          key: "status",
+                          label: "Status",
+                          options: [
+                            { label: "All Statuses", value: "all" },
+                            { label: "Occupied", value: "occupied" },
+                            { label: "Vacant", value: "vacant" },
+                            { label: "Maintenance", value: "maintenance" },
+                          ],
+                          defaultValue: "all",
+                        },
+                      ]}
+                    />
+                  </div>
+                  <div className="shrink-0 pt-0.5">
+                    <DataViewToggle mode={dataViewMode} onChange={handleViewModeChange} />
+                  </div>
                 </div>
 
                 {dataViewMode === "table" ? (
@@ -1175,19 +1183,38 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         key={property.id}
                                         className={cn(
                                           "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40",
-                                          hasAttention && "border-l-2 border-l-amber-500/60",
+                                          hasAttention && "border-l-2",
+                                          hasAttention &&
+                                            isExpiring &&
+                                            openTickets.length > 0 &&
+                                            "border-l-amber-500/60",
+                                          hasAttention &&
+                                            isExpiring &&
+                                            openTickets.length === 0 &&
+                                            "border-l-amber-400/70",
+                                          hasAttention &&
+                                            !isExpiring &&
+                                            openTickets.length > 0 &&
+                                            "border-l-orange-500/60",
+                                          hasAttention &&
+                                            !isExpiring &&
+                                            openTickets.length === 0 &&
+                                            "border-l-red-400/60",
                                           isSelected && "bg-zinc-800/60",
                                         )}
                                       >
-                                        {/* Checkbox */}
-                                        <Checkbox
-                                          checked={isSelected}
-                                          onCheckedChange={() =>
-                                            bulkSelection.toggleSelection(property.id)
-                                          }
+                                        {/* Checkbox — 32px tap target for mobile */}
+                                        <div
+                                          className="flex shrink-0 items-center justify-center min-w-[32px] min-h-[32px]"
                                           onClick={(e) => e.stopPropagation()}
-                                          className="shrink-0"
-                                        />
+                                        >
+                                          <Checkbox
+                                            checked={isSelected}
+                                            onCheckedChange={() =>
+                                              bulkSelection.toggleSelection(property.id)
+                                            }
+                                          />
+                                        </div>
 
                                         {/* Name + street address */}
                                         <div
@@ -1207,39 +1234,71 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         </div>
 
                                         {/* Type · bed · bath */}
-                                        <div className="hidden shrink-0 flex-col items-end gap-0.5 text-xs text-zinc-500 sm:flex">
+                                        <div className="hidden shrink-0 flex-col items-end gap-0.5 text-xs text-zinc-500 xl:flex">
                                           <span className="capitalize">{property.type}</span>
                                           <span>
                                             {property.bedrooms}bd · {property.bathrooms}ba
                                           </span>
                                         </div>
 
-                                        {/* Relationship badges */}
                                         <div className="hidden shrink-0 items-center gap-1 md:flex">
                                           {propTenants.length > 0 && (
-                                            <RelationshipBadge
-                                              variant="tenant"
-                                              label={
-                                                propTenants.length === 1 ? "tenant" : "tenants"
-                                              }
-                                              count={propTenants.length}
-                                            />
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                router.push(
+                                                  `/${locale}/tenants?propertyId=${property.id}`,
+                                                );
+                                              }}
+                                              className="rounded transition-opacity hover:opacity-70"
+                                            >
+                                              <RelationshipBadge
+                                                variant="tenant"
+                                                label={
+                                                  propTenants.length === 1 ? "tenant" : "tenants"
+                                                }
+                                                count={propTenants.length}
+                                              />
+                                            </button>
                                           )}
                                           {activeLease && (
-                                            <RelationshipBadge
-                                              variant="lease"
-                                              label="lease"
-                                              count={1}
-                                            />
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                router.push(
+                                                  `/${locale}/leases?propertyId=${property.id}`,
+                                                );
+                                              }}
+                                              className="rounded transition-opacity hover:opacity-70"
+                                            >
+                                              <RelationshipBadge
+                                                variant="lease"
+                                                label="lease"
+                                                count={1}
+                                              />
+                                            </button>
                                           )}
                                           {openTickets.length > 0 && (
-                                            <RelationshipBadge
-                                              variant="maintenance"
-                                              label={
-                                                openTickets.length === 1 ? "ticket" : "tickets"
-                                              }
-                                              count={openTickets.length}
-                                            />
+                                            <button
+                                              type="button"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                router.push(
+                                                  `/${locale}/maintenance?propertyId=${property.id}`,
+                                                );
+                                              }}
+                                              className="rounded transition-opacity hover:opacity-70"
+                                            >
+                                              <RelationshipBadge
+                                                variant="maintenance"
+                                                label={
+                                                  openTickets.length === 1 ? "ticket" : "tickets"
+                                                }
+                                                count={openTickets.length}
+                                              />
+                                            </button>
                                           )}
                                         </div>
 
@@ -1268,7 +1327,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         </div>
 
                                         {/* Rent */}
-                                        <div className="hidden w-[80px] shrink-0 text-right text-sm font-semibold text-zinc-100 sm:block">
+                                        <div className="w-[80px] shrink-0 text-right text-sm font-semibold text-zinc-100">
                                           {formatCurrency(Number(property.rent))}
                                         </div>
 
@@ -1277,25 +1336,43 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           {getStatusBadge(property.status)}
                                         </div>
 
+                                        {/* Needs-attention shortcut — navigate to detail page */}
+                                        {hasAttention && (
+                                          <button
+                                            type="button"
+                                            title="View details"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              router.push(`/${locale}/portfolio/${property.id}`);
+                                            }}
+                                            className="shrink-0 rounded-md p-1.5 text-amber-500 transition-colors hover:bg-zinc-700 hover:text-amber-300"
+                                          >
+                                            <ExternalLink className="h-3.5 w-3.5" />
+                                          </button>
+                                        )}
+
                                         {/* Locate on map button */}
                                         <button
                                           type="button"
                                           title={
                                             isMissingMap
-                                              ? "No coordinates — verify address first"
+                                              ? "No coordinates — click to fix address"
                                               : "Locate on map"
                                           }
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            if (!isMissingMap) onLocateOnMap?.(property.id);
+                                            if (isMissingMap) {
+                                              dialog.openEditDialog(property);
+                                            } else {
+                                              onLocateOnMap?.(property.id);
+                                            }
                                           }}
                                           className={cn(
                                             "shrink-0 rounded-md p-1.5 transition-colors",
                                             isMissingMap
-                                              ? "cursor-not-allowed text-zinc-700"
+                                              ? "text-amber-600 hover:bg-zinc-700 hover:text-amber-400"
                                               : "text-zinc-500 hover:bg-zinc-700 hover:text-blue-300",
                                           )}
-                                          disabled={isMissingMap}
                                         >
                                           <MapPin className="h-4 w-4" />
                                         </button>
