@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/table";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { motion } from "framer-motion";
-import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -84,14 +83,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const { success } = useToast();
     const { formatCurrency, currencySymbol } = useCurrency();
     const confirmDialog = useConfirmDialog();
-    const router = useRouter();
-    const pathname = usePathname();
-    const currentLocale = pathname.split("/")[1] || "pt";
-    const navigateTo = useCallback(
-      (href: string) => router.push(`/${currentLocale}${href}`),
-      [router, currentLocale],
-    );
-
     // Property detail modal state
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
