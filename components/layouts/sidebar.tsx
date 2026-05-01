@@ -5,7 +5,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { Building2, ChevronLeft, ChevronRight, Settings, LogOut } from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -29,9 +29,7 @@ interface SidebarFooterProps {
   onToggleCollapsed: () => void;
   locale: string;
   user?: { name?: string | null; email?: string | null; image?: string | null };
-  isDemo?: boolean;
   subtitle?: string | null;
-  allowSettings?: boolean;
 }
 
 function SidebarFooter({
@@ -39,9 +37,7 @@ function SidebarFooter({
   onToggleCollapsed,
   locale,
   user,
-  isDemo,
   subtitle,
-  allowSettings = true,
 }: SidebarFooterProps): React.ReactElement {
   const initials =
     user?.name
@@ -72,13 +68,6 @@ function SidebarFooter({
         <div className="flex items-center justify-between gap-1 px-1">
           <LanguageSelector compact />
           <ThemeToggle variant="button" size="sm" className="h-8 w-8" />
-          {!isDemo && allowSettings && (
-            <Link href={`/${locale}/settings`} title="Settings">
-              <div className="inline-flex items-center justify-center h-8 w-8 rounded-md hover:bg-accent hover:text-accent-foreground transition-colors">
-                <Settings className="h-4 w-4" />
-              </div>
-            </Link>
-          )}
           <Button
             variant="ghost"
             size="sm"
@@ -120,7 +109,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   const { data: session } = useSession();
   const pathname = usePathname();
   const { isDemoMode, demoPerspective } = useDemoMode();
-  const { navigation, isOwnerPortal } = usePortalAccess();
+  const { navigation } = usePortalAccess();
 
   useEffect(() => {
     try {
@@ -264,9 +253,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
             onToggleCollapsed={handleToggleCollapsed}
             locale={currentLocale}
             user={user}
-            isDemo={isDemoMode}
             subtitle={isDemoMode ? `Demo ${demoPerspective}` : user?.email}
-            allowSettings={isOwnerPortal}
           />
         </div>
       )}

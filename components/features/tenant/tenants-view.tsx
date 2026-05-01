@@ -51,7 +51,7 @@ import { useApp } from "@/lib/contexts/app-context";
 
 import { Tenant } from "@/lib/types";
 import { getActiveLease } from "@/lib/utils/lease-helpers";
-import { tenantSchema, TenantFormData } from "@/lib/utils/validation";
+import { tenantSchema, type TenantFormData } from "@/lib/schemas/tenant.schema";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { useSortableData } from "@/lib/hooks/use-sortable-data";

@@ -19,7 +19,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency as formatCurrencyUtil } from "@/lib/utils/currency";
-import { Currency } from "@prisma/client";
+import type { Currency } from "@/lib/types";
 import { ContractDetailDialog } from "./contract-detail-dialog";
 
 interface Lease {

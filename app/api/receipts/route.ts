@@ -7,6 +7,7 @@ import {
 import {
   createErrorResponse,
   createSuccessResponse,
+  parseBody,
   withErrorHandler,
 } from "@/lib/utils/error-handling";
 import { withRateLimit } from "@/lib/utils/rate-limit";
@@ -93,33 +94,18 @@ async function handlePost(request: NextRequest): Promise<Response> {
 
   const { scopeUserId } = authResult;
 
-  try {
-    const body = await request.json();
+  const raw = await request.json();
+  const sanitizedBody = {
+    ...raw,
+    tenantId: sanitizeForDatabase(raw.tenantId),
+    propertyId: sanitizeForDatabase(raw.propertyId),
+    amount: sanitizeNumber(raw.amount, 0.01, 0.01),
+    description: raw.description ? sanitizeForDatabase(raw.description) : undefined,
+  };
 
-    // Sanitize input
-    const sanitizedBody = {
-      ...body,
-      tenantId: sanitizeForDatabase(body.tenantId),
-      propertyId: sanitizeForDatabase(body.propertyId),
-      amount: sanitizeNumber(body.amount, 0.01, 0.01),
-      description: body.description ? sanitizeForDatabase(body.description) : undefined,
-    };
-
-    // Validate input
-    const validatedData = createReceiptSchema.parse(sanitizedBody);
-
-    const receipt = await receiptService.create(scopeUserId, validatedData);
-    return createSuccessResponse(receipt, 201);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
-        400,
-        request,
-      );
-    }
-    return createErrorResponse(error as Error, 500, request);
-  }
+  const validatedData = parseBody(sanitizedBody, createReceiptSchema);
+  const receipt = await receiptService.create(scopeUserId, validatedData);
+  return createSuccessResponse(receipt, 201);
 }
 
 // Main handler

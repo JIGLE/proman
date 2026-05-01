@@ -1,7 +1,7 @@
 import { NextRequest } from "next/server";
 import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
-import { ownerSchema } from "@/lib/utils/validation";
+import { ownerSchema } from "@/lib/schemas/owner.schema";
 import { isMockMode } from "@/lib/config/data-mode";
 import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 import { createSuccessResponse, withErrorHandler } from "@/lib/utils/error-handling";

@@ -61,7 +61,7 @@ import { ExportButton } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 import { RelationshipBadge, daysUntil } from "@/components/shared/relationship-badge";
 import { Lease } from "@/lib/types";
-import { leaseSchema, LeaseFormData } from "@/lib/utils/validation";
+import { leaseSchema, type LeaseFormData } from "@/lib/schemas/lease.schema";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { useMultiStepForm, StepConfig } from "@/lib/hooks/use-multi-step-form";
@@ -118,6 +118,7 @@ export function LeasesView(): React.ReactElement {
     taxRegime: undefined,
     autoRenew: false,
     renewalNoticeDays: 60,
+    status: "draft" as const,
     notes: "",
   };
 

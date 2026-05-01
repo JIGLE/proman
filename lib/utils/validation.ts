@@ -1,201 +1,43 @@
-import { z } from "zod";
+/**
+ * @deprecated Import directly from `@/lib/schemas` or `@/lib/schemas/<entity>.schema`.
+ * This file is kept as a compatibility shim only and will be removed in a future release.
+ */
 
-// Property validation schema - Re-exported from shared schemas
+// Re-export property schema (already canonical)
 export { propertySchema, type PropertyFormData } from "@/lib/schemas/property.schema";
 
-// Tenant validation schema
-export const tenantSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name too long"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().min(10, "Phone number too short").max(20, "Phone number too long"),
-  propertyId: z.string().optional(),
-  rent: z.number().min(0, "Rent must be positive"),
-  leaseStart: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date"),
-  leaseEnd: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date"),
-  paymentStatus: z.enum(["paid", "overdue", "pending"]),
-  notes: z.string().max(500, "Notes too long").optional(),
-});
+// Re-export schemas that were previously defined here — now canonical in lib/schemas/
+export { tenantSchema, type TenantFormData } from "@/lib/schemas/tenant.schema";
 
-// Receipt validation schema
-export const receiptSchema = z.object({
-  tenantId: z.string().min(1, "Tenant is required"),
-  propertyId: z.string().min(1, "Property is required"),
-  amount: z.number().min(0.01, "Amount must be greater than 0"),
-  date: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date"),
-  type: z.enum(["rent", "deposit", "maintenance", "other"]),
-  status: z.enum(["paid", "pending"]),
-  description: z.string().max(200, "Description too long").optional(),
-});
+export { receiptSchema, type ReceiptFormData } from "@/lib/schemas/receipt.schema";
 
-// Correspondence template validation schema
-export const templateSchema = z.object({
-  name: z.string().min(1, "Template name is required").max(100, "Name too long"),
-  type: z.enum([
-    "welcome",
-    "rent_reminder",
-    "eviction_notice",
-    "maintenance_request",
-    "lease_renewal",
-    "custom",
-  ]),
-  subject: z.string().min(1, "Subject is required").max(200, "Subject too long"),
-  content: z.string().min(1, "Content is required").max(5000, "Content too long"),
-});
+export { templateSchema, type TemplateFormData } from "@/lib/schemas/template.schema";
 
-// User settings validation schema
-export const settingsSchema = z.object({
-  emailNotifications: z.boolean(),
-  pushNotifications: z.boolean(),
-  maintenanceReminders: z.boolean(),
-  paymentReminders: z.boolean(),
-  theme: z.enum(["dark", "light"]),
-  language: z.enum(["en", "es", "fr"]),
-  profileVisibility: z.enum(["public", "private"]),
-  dataSharing: z.boolean(),
-  timezone: z.string(),
-  currency: z.enum(["USD", "EUR", "GBP", "CAD"]),
-});
+export { settingsSchema, type SettingsFormData } from "@/lib/schemas/settings.schema";
 
-// Type exports for form data
-export type TenantFormData = z.infer<typeof tenantSchema>;
-export type ReceiptFormData = z.infer<typeof receiptSchema>;
-export type TemplateFormData = z.infer<typeof templateSchema>;
-export type SettingsFormData = z.infer<typeof settingsSchema>;
+export { ownerSchema, type OwnerFormData } from "@/lib/schemas/owner.schema";
 
-// Owner validation schema
-export const ownerSchema = z.object({
-  name: z.string().min(1, "Name is required").max(100, "Name too long"),
-  email: z.string().email("Invalid email address"),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  notes: z.string().max(500, "Notes too long").optional(),
-});
+export { expenseSchema, type ExpenseFormData } from "@/lib/schemas/expense.schema";
 
-// Expense validation schema
-export const expenseSchema = z.object({
-  propertyId: z.string().min(1, "Property is required"),
-  amount: z.number().min(0.01, "Amount must be greater than 0"),
-  date: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date"),
-  category: z.string().min(1, "Category is required"),
-  description: z.string().max(200, "Description too long").optional(),
-});
+export { maintenanceSchema, type MaintenanceFormData } from "@/lib/schemas/maintenance.schema";
 
-// Maintenance validation schema
-export const maintenanceSchema = z.object({
-  propertyId: z.string().min(1, "Property is required"),
-  tenantId: z.string().optional(),
-  title: z.string().min(1, "Title is required").max(100, "Title too long"),
-  description: z.string().min(1, "Description is required").max(1000, "Description too long"),
-  status: z.enum(["open", "in_progress", "resolved", "closed"]),
-  priority: z.enum(["low", "medium", "high", "urgent"]),
-  cost: z.number().min(0).optional(),
-  assignedTo: z.string().optional(),
-});
+export { leaseSchema, type LeaseFormData } from "@/lib/schemas/lease.schema";
 
-// Lease validation schema
-export const leaseSchema = z.object({
-  propertyId: z.string().min(1, "Property is required"),
-  tenantId: z.string().min(1, "Tenant is required"),
-  startDate: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid start date"),
-  endDate: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid end date"),
-  monthlyRent: z.number().min(0, "Monthly rent must be positive"),
-  deposit: z.number().min(0, "Deposit cannot be negative").default(0),
-  taxRegime: z.enum(["portugal_rendimentos", "spain_inmuebles"]).optional(),
-  autoRenew: z.boolean().default(false),
-  renewalNoticeDays: z.number().min(0).max(365).default(60),
-  notes: z.string().max(1000, "Notes too long").optional(),
-});
+export { invoiceSchema, type InvoiceFormData } from "@/lib/schemas/invoice.schema";
 
-// Invoice validation schema
-export const invoiceSchema = z.object({
-  tenantId: z.string().optional(),
-  propertyId: z.string().optional(),
-  ownerId: z.string().optional(),
-  amount: z.number().min(0.01, "Amount must be greater than 0"),
-  dueDate: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid due date"),
-  description: z.string().max(500, "Description too long").optional(),
-  lineItems: z
-    .array(
-      z.object({
-        description: z.string().min(1, "Line item description required"),
-        quantity: z.number().min(1, "Quantity must be at least 1"),
-        unitPrice: z.number().min(0, "Unit price cannot be negative"),
-        total: z.number().min(0, "Total cannot be negative"),
-      }),
-    )
-    .optional(),
-  notes: z.string().max(1000, "Notes too long").optional(),
-});
+export {
+  lateFeeConfigSchema,
+  type LateFeeConfigFormData,
+} from "@/lib/schemas/late-fee-config.schema";
 
-// Late fee configuration schema
-export const lateFeeConfigSchema = z.object({
-  enabled: z.boolean().default(true),
-  gracePeriodDays: z.number().min(0).max(30).default(5),
-  percentageRate: z.number().min(0).max(50).default(5),
-  flatFee: z.number().min(0).optional(),
-  maxPercentage: z.number().min(0).max(100).optional(),
-});
+export {
+  documentSchema,
+  documentUpdateSchema,
+  type DocumentFormData,
+  type DocumentUpdateFormData,
+} from "@/lib/schemas/document.schema";
 
-// Document validation schema
-export const documentSchema = z.object({
-  name: z.string().min(1, "Document name is required").max(255, "Name too long"),
-  description: z.string().max(1000, "Description too long").optional(),
-  type: z.enum(["contract", "invoice", "receipt", "photo", "floor_plan", "certificate", "other"]),
-  mimeType: z.string().min(1, "MIME type is required"),
-  fileContent: z.string().min(1, "File content is required"), // Base64 encoded
-  propertyId: z.string().optional(),
-  unitId: z.string().optional(),
-  ownerId: z.string().optional(),
-  tenantId: z.string().optional(),
-});
-
-// Document update schema
-export const documentUpdateSchema = z.object({
-  name: z.string().min(1).max(255).optional(),
-  description: z.string().max(1000).optional().nullable(),
-  type: z
-    .enum(["contract", "invoice", "receipt", "photo", "floor_plan", "certificate", "other"])
-    .optional(),
-  propertyId: z.string().optional().nullable(),
-  unitId: z.string().optional().nullable(),
-  ownerId: z.string().optional().nullable(),
-  tenantId: z.string().optional().nullable(),
-});
-
-// Lease template data schema
-export const leaseTemplateDataSchema = z.object({
-  propertyName: z.string().min(1, "Property name is required"),
-  propertyAddress: z.string().min(1, "Property address is required"),
-  unitNumber: z.string().optional(),
-  tenantName: z.string().min(1, "Tenant name is required"),
-  tenantEmail: z.string().email("Invalid tenant email"),
-  tenantPhone: z.string().optional(),
-  tenantAddress: z.string().optional(),
-  ownerName: z.string().min(1, "Owner name is required"),
-  ownerEmail: z.string().email().optional(),
-  ownerPhone: z.string().optional(),
-  ownerAddress: z.string().optional(),
-  startDate: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid start date"),
-  endDate: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid end date"),
-  monthlyRent: z.number().min(0, "Monthly rent must be positive"),
-  securityDeposit: z.number().min(0, "Security deposit cannot be negative"),
-  currency: z.string().default("USD"),
-  paymentDueDay: z.number().min(1).max(31).optional(),
-  lateFeePercentage: z.number().min(0).max(100).optional(),
-  lateFeeGracePeriod: z.number().min(0).max(30).optional(),
-  petPolicy: z.string().optional(),
-  utilities: z.array(z.string()).optional(),
-  parkingSpaces: z.number().min(0).optional(),
-  specialTerms: z.array(z.string()).optional(),
-  signatureDate: z.string().optional(),
-});
-
-export type OwnerFormData = z.infer<typeof ownerSchema>;
-export type ExpenseFormData = z.infer<typeof expenseSchema>;
-export type MaintenanceFormData = z.infer<typeof maintenanceSchema>;
-export type LeaseFormData = z.infer<typeof leaseSchema>;
-export type InvoiceFormData = z.infer<typeof invoiceSchema>;
-export type LateFeeConfigFormData = z.infer<typeof lateFeeConfigSchema>;
-export type DocumentFormData = z.infer<typeof documentSchema>;
-export type DocumentUpdateFormData = z.infer<typeof documentUpdateSchema>;
-export type LeaseTemplateDataFormData = z.infer<typeof leaseTemplateDataSchema>;
+export {
+  leaseTemplateDataSchema,
+  type LeaseTemplateDataFormData,
+} from "@/lib/schemas/lease-template-data.schema";

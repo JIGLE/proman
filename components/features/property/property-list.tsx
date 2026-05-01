@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
-import { Building2, MapPin, CheckCircle, Wrench, ChevronDown } from "lucide-react";
+import { Building2, MapPin, CheckCircle, Wrench, ChevronDown, Plus } from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { getCountryName, resolveCountryCode } from "@/lib/utils/country";
 import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/table";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { motion } from "framer-motion";
+import { useRouter, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -43,13 +44,13 @@ import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 import { useApp } from "@/lib/contexts/app-context";
 import { RelationshipBadge } from "@/components/shared/relationship-badge";
 import { Property } from "@/lib/types";
-import { propertySchema, PropertyFormData } from "@/lib/utils/validation";
+import { propertySchema, type PropertyFormData } from "@/lib/schemas/property.schema";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { useSortableData } from "@/lib/hooks/use-sortable-data";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
-import { AddressVerificationService, AddressSuggestion } from "@/lib/services/address-verification";
+import { AddressVerificationService, AddressSuggestion } from "@/lib/utils/address-verification";
 import PropertyMap from "./property-map";
 import { PropertyDetailModal } from "./property-detail-modal";
 import { PageHeader } from "@/components/shared/page-header";
@@ -81,12 +82,23 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const { state, addProperty, updateProperty, deleteProperty } = useApp();
     const { properties = [], tenants = [], leases = [], maintenance = [], loading } = state;
     const { success } = useToast();
-    const { formatCurrency } = useCurrency();
+    const { formatCurrency, currencySymbol } = useCurrency();
     const confirmDialog = useConfirmDialog();
+    const router = useRouter();
+    const pathname = usePathname();
+    const currentLocale = pathname.split("/")[1] || "pt";
+    const navigateTo = useCallback(
+      (href: string) => router.push(`/${currentLocale}${href}`),
+      [router, currentLocale],
+    );
 
     // Property detail modal state
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+
+    // Form UI state — collapsible sections
+    const [showManualFields, setShowManualFields] = useState(false);
+    const [showDetails, setShowDetails] = useState(false);
 
     // Address verification state
     const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
@@ -222,6 +234,21 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     useImperativeHandle(ref, () => ({
       openDialog: dialog.openDialog,
     }));
+
+    // Reset collapsible sections when dialog closes
+    useEffect(() => {
+      if (!dialog.isOpen) {
+        setShowManualFields(false);
+        setShowDetails(false);
+      }
+      // On edit, auto-expand details if the property already has them filled
+      if (dialog.isOpen && dialog.editingItem) {
+        const item = dialog.editingItem;
+        if (item.bedrooms > 1 || item.bathrooms > 1 || item.description) {
+          setShowDetails(true);
+        }
+      }
+    }, [dialog.isOpen, dialog.editingItem]);
 
     // Filter and search properties
     const filteredProperties = useMemo(() => {
@@ -404,6 +431,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
         buildingName: verifiedAddress.streetAddress,
       });
 
+      setShowManualFields(false);
       setAddressSuggestions([]);
       setShowSuggestions(false);
     };
@@ -485,8 +513,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
             )}
             {/* Property Form Dialog */}
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
-              <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
-                <DialogHeader>
+              <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+                <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                   <DialogTitle className="text-[var(--color-foreground)]">
                     {dialog.editingItem ? "Edit Property" : "Add New Property"}
                   </DialogTitle>
@@ -494,288 +522,360 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     {dialog.editingItem ? "Update property details" : "Enter property information"}
                   </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={dialog.handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Property Name</Label>
-                      <Input
-                        id="name"
-                        value={dialog.formData.name}
-                        onChange={(e) => dialog.updateFormData({ name: e.target.value })}
-                        className={dialog.formErrors.name ? "border-red-500" : ""}
-                      />
-                      {dialog.formErrors.name && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.name}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="type">Property Type</Label>
-                      <Select
-                        value={dialog.formData.type}
-                        onValueChange={(value: PropertyFormData["type"]) =>
-                          dialog.updateFormData({ type: value })
-                        }
-                      >
-                        <SelectTrigger className={dialog.formErrors.type ? "border-red-500" : ""}>
-                          <SelectValue placeholder="Select type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="apartment">Apartment</SelectItem>
-                          <SelectItem value="house">House</SelectItem>
-                          <SelectItem value="condo">Condo</SelectItem>
-                          <SelectItem value="townhouse">Townhouse</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {dialog.formErrors.type && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.type}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Enhanced Address Section */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <Label>Address Information</Label>
-                      {dialog.formData.addressVerified && (
-                        <span className="text-sm text-green-500 flex items-center gap-1">
-                          ✓ Verified
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Full Address Search</Label>
-                      <div className="relative">
+                <form onSubmit={dialog.handleSubmit} className="flex flex-col flex-1 min-h-0">
+                  <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name">Property Name</Label>
                         <Input
-                          id="address"
-                          placeholder="Start typing to search addresses..."
-                          value={dialog.formData.address}
-                          onChange={(e) => {
-                            dialog.updateFormData({ address: e.target.value });
-                            handleAddressSearch(e.target.value);
-                          }}
-                          className={dialog.formErrors.address ? "border-red-500" : ""}
+                          id="name"
+                          placeholder="e.g. Apt 4B, Garden Flat, Unit 12"
+                          value={dialog.formData.name}
+                          onChange={(e) => dialog.updateFormData({ name: e.target.value })}
+                          className={dialog.formErrors.name ? "border-red-500" : ""}
                         />
-                        {showSuggestions && addressSuggestions.length > 0 && (
-                          <div className="absolute z-10 w-full bg-zinc-800 border border-zinc-600 rounded-md mt-1 max-h-60 overflow-y-auto">
-                            {addressSuggestions.map((suggestion, _index) => (
-                              <button
-                                key={suggestion.place_id}
-                                type="button"
-                                className="w-full text-left px-3 py-2 hover:bg-zinc-700 first:rounded-t-md last:rounded-b-md"
-                                onClick={() => handleAddressSelect(suggestion)}
-                              >
-                                <div className="text-sm text-zinc-200">
-                                  {suggestion.display_name}
-                                </div>
-                                <div className="text-xs text-zinc-400">
-                                  {suggestion.address.postcode &&
-                                    `${suggestion.address.postcode}, `}
-                                  {suggestion.address.city || suggestion.address.municipality}
-                                </div>
-                              </button>
-                            ))}
-                          </div>
+                        {dialog.formErrors.name && (
+                          <p className="text-sm text-destructive">{dialog.formErrors.name}</p>
                         )}
                       </div>
-                      {dialog.formErrors.address && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.address}</p>
+                      <div className="space-y-2">
+                        <Label htmlFor="type">Property Type</Label>
+                        <Select
+                          value={dialog.formData.type}
+                          onValueChange={(value: PropertyFormData["type"]) =>
+                            dialog.updateFormData({ type: value })
+                          }
+                        >
+                          <SelectTrigger className={dialog.formErrors.type ? "border-red-500" : ""}>
+                            <SelectValue placeholder="Select type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="apartment">Apartment</SelectItem>
+                            <SelectItem value="house">House</SelectItem>
+                            <SelectItem value="condo">Condo</SelectItem>
+                            <SelectItem value="townhouse">Townhouse</SelectItem>
+                            <SelectItem value="commercial">Commercial</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        {dialog.formErrors.type && (
+                          <p className="text-sm text-destructive">{dialog.formErrors.type}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Address Section */}
+                    <div className="space-y-3">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Label htmlFor="address">Address *</Label>
+                          {dialog.formData.addressVerified && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-green-500 flex items-center gap-1">
+                                ✓ Verified
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setShowManualFields((v) => !v)}
+                                className="text-xs text-zinc-400 hover:text-zinc-200 underline underline-offset-2 min-h-[32px] px-1"
+                              >
+                                {showManualFields ? "Hide fields" : "Edit manually"}
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                        <div className="relative">
+                          <Input
+                            id="address"
+                            placeholder="Start typing to search addresses..."
+                            value={dialog.formData.address}
+                            onFocus={(e) =>
+                              e.target.scrollIntoView({ behavior: "smooth", block: "center" })
+                            }
+                            onChange={(e) => {
+                              dialog.updateFormData({ address: e.target.value });
+                              handleAddressSearch(e.target.value);
+                            }}
+                            className={dialog.formErrors.address ? "border-red-500" : ""}
+                          />
+                          {showSuggestions && addressSuggestions.length > 0 && (
+                            <div className="absolute z-10 w-full bg-zinc-800 border border-zinc-600 rounded-md mt-1 max-h-60 overflow-y-auto">
+                              {addressSuggestions.map((suggestion, _index) => (
+                                <button
+                                  key={suggestion.place_id}
+                                  type="button"
+                                  className="w-full text-left px-3 py-2 hover:bg-zinc-700 first:rounded-t-md last:rounded-b-md"
+                                  onClick={() => handleAddressSelect(suggestion)}
+                                >
+                                  <div className="text-sm text-zinc-200">
+                                    {suggestion.display_name}
+                                  </div>
+                                  <div className="text-xs text-zinc-400">
+                                    {suggestion.address.postcode &&
+                                      `${suggestion.address.postcode}, `}
+                                    {suggestion.address.city || suggestion.address.municipality}
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        {dialog.formErrors.address && (
+                          <p className="text-sm text-destructive">{dialog.formErrors.address}</p>
+                        )}
+                      </div>
+
+                      {/* Sub-fields: shown when not verified (user typed manually) or toggled open */}
+                      {(showManualFields ||
+                        (!dialog.formData.addressVerified &&
+                          dialog.formData.address.length > 0)) && (
+                        <div className="space-y-3 rounded-md border border-zinc-800 bg-zinc-950/50 p-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                              <Label htmlFor="country">Country</Label>
+                              <Select
+                                value={dialog.formData.country}
+                                onValueChange={(value) =>
+                                  dialog.updateFormData({
+                                    country: value as "PT" | "ES",
+                                  })
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="PT">Portugal</SelectItem>
+                                  <SelectItem value="ES">Spain</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="zipCode">Postal Code</Label>
+                              <Input
+                                id="zipCode"
+                                placeholder={
+                                  dialog.formData.country === "PT" ? "1234-567" : "12345"
+                                }
+                                value={dialog.formData.zipCode || ""}
+                                onChange={(e) => dialog.updateFormData({ zipCode: e.target.value })}
+                                className={dialog.formErrors.zipCode ? "border-red-500" : ""}
+                              />
+                              {dialog.formErrors.zipCode && (
+                                <p className="text-sm text-destructive">
+                                  {dialog.formErrors.zipCode}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                              <Label htmlFor="city">City</Label>
+                              <Input
+                                id="city"
+                                value={dialog.formData.city || ""}
+                                onChange={(e) => dialog.updateFormData({ city: e.target.value })}
+                                className={dialog.formErrors.city ? "border-red-500" : ""}
+                              />
+                              {dialog.formErrors.city && (
+                                <p className="text-sm text-destructive">{dialog.formErrors.city}</p>
+                              )}
+                            </div>
+
+                            <div className="space-y-2">
+                              <Label htmlFor="streetAddress">Street Address</Label>
+                              <Input
+                                id="streetAddress"
+                                value={dialog.formData.streetAddress || ""}
+                                onChange={(e) =>
+                                  dialog.updateFormData({
+                                    streetAddress: e.target.value,
+                                  })
+                                }
+                                className={dialog.formErrors.streetAddress ? "border-red-500" : ""}
+                              />
+                              {dialog.formErrors.streetAddress && (
+                                <p className="text-sm text-destructive">
+                                  {dialog.formErrors.streetAddress}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {dialog.formData.buildingId && (
+                        <div className="space-y-2">
+                          <Label htmlFor="buildingName">Building Name (Optional)</Label>
+                          <Input
+                            id="buildingName"
+                            placeholder="e.g., Downtown Apartments"
+                            value={dialog.formData.buildingName || ""}
+                            onChange={(e) =>
+                              dialog.updateFormData({
+                                buildingName: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
                       )}
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="country">Country</Label>
-                        <Select
-                          value={dialog.formData.country}
-                          onValueChange={(value) =>
+                        <Label htmlFor="rent">Monthly Rent ({currencySymbol})</Label>
+                        <Input
+                          id="rent"
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={dialog.formData.rent || ""}
+                          onChange={(e) =>
                             dialog.updateFormData({
-                              country: value as "PT" | "ES",
+                              rent: parseFloat(e.target.value) || 0,
                             })
                           }
+                          className={dialog.formErrors.rent ? "border-red-500" : ""}
+                        />
+                        {dialog.formErrors.rent && (
+                          <p className="text-sm text-destructive">{dialog.formErrors.rent}</p>
+                        )}
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="status">Status</Label>
+                        <Select
+                          value={dialog.formData.status}
+                          onValueChange={(value: PropertyFormData["status"]) =>
+                            dialog.updateFormData({ status: value })
+                          }
                         >
-                          <SelectTrigger>
+                          <SelectTrigger
+                            className={dialog.formErrors.status ? "border-red-500" : ""}
+                          >
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="PT">Portugal</SelectItem>
-                            <SelectItem value="ES">Spain</SelectItem>
+                            <SelectItem value="vacant">Vacant</SelectItem>
+                            <SelectItem value="occupied">
+                              {dialog.editingItem
+                                ? "Occupied"
+                                : "Occupied — I'll add the tenant next"}
+                            </SelectItem>
+                            {dialog.editingItem && (
+                              <SelectItem value="maintenance">Maintenance</SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="zipCode">Postal Code</Label>
-                        <Input
-                          id="zipCode"
-                          placeholder={dialog.formData.country === "PT" ? "1234-567" : "12345"}
-                          value={dialog.formData.zipCode || ""}
-                          onChange={(e) => dialog.updateFormData({ zipCode: e.target.value })}
-                          className={dialog.formErrors.zipCode ? "border-red-500" : ""}
-                        />
-                        {dialog.formErrors.zipCode && (
-                          <p className="text-sm text-destructive">{dialog.formErrors.zipCode}</p>
+                        {dialog.formErrors.status && (
+                          <p className="text-sm text-destructive">{dialog.formErrors.status}</p>
                         )}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="city">City</Label>
-                        <Input
-                          id="city"
-                          value={dialog.formData.city || ""}
-                          onChange={(e) => dialog.updateFormData({ city: e.target.value })}
-                          className={dialog.formErrors.city ? "border-red-500" : ""}
-                        />
-                        {dialog.formErrors.city && (
-                          <p className="text-sm text-destructive">{dialog.formErrors.city}</p>
-                        )}
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="streetAddress">Street Address</Label>
-                        <Input
-                          id="streetAddress"
-                          value={dialog.formData.streetAddress || ""}
-                          onChange={(e) =>
-                            dialog.updateFormData({
-                              streetAddress: e.target.value,
-                            })
-                          }
-                          className={dialog.formErrors.streetAddress ? "border-red-500" : ""}
-                        />
-                        {dialog.formErrors.streetAddress && (
-                          <p className="text-sm text-destructive">
-                            {dialog.formErrors.streetAddress}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {dialog.formData.buildingId && (
-                      <div className="space-y-2">
-                        <Label htmlFor="buildingName">Building Name (Optional)</Label>
-                        <Input
-                          id="buildingName"
-                          placeholder="e.g., Downtown Apartments"
-                          value={dialog.formData.buildingName || ""}
-                          onChange={(e) =>
-                            dialog.updateFormData({
-                              buildingName: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="bedrooms">Bedrooms</Label>
-                      <Input
-                        id="bedrooms"
-                        type="number"
-                        min="0"
-                        max="20"
-                        value={dialog.formData.bedrooms}
-                        onChange={(e) =>
-                          dialog.updateFormData({
-                            bedrooms: parseInt(e.target.value) || 0,
-                          })
-                        }
-                        className={dialog.formErrors.bedrooms ? "border-red-500" : ""}
-                      />
-                      {dialog.formErrors.bedrooms && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.bedrooms}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="bathrooms">Bathrooms</Label>
-                      <Input
-                        id="bathrooms"
-                        type="number"
-                        min="0"
-                        max="20"
-                        step="0.5"
-                        value={dialog.formData.bathrooms}
-                        onChange={(e) =>
-                          dialog.updateFormData({
-                            bathrooms: parseFloat(e.target.value) || 0,
-                          })
-                        }
-                        className={dialog.formErrors.bathrooms ? "border-red-500" : ""}
-                      />
-                      {dialog.formErrors.bathrooms && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.bathrooms}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="rent">Monthly Rent ($)</Label>
-                      <Input
-                        id="rent"
-                        type="number"
-                        min="0"
-                        value={dialog.formData.rent}
-                        onChange={(e) =>
-                          dialog.updateFormData({
-                            rent: parseInt(e.target.value) || 0,
-                          })
-                        }
-                        className={dialog.formErrors.rent ? "border-red-500" : ""}
-                      />
-                      {dialog.formErrors.rent && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.rent}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="status">Status</Label>
-                      <Select
-                        value={dialog.formData.status}
-                        onValueChange={(value: PropertyFormData["status"]) =>
-                          dialog.updateFormData({ status: value })
-                        }
+                    {/* Optional details toggle */}
+                    <div>
+                      <button
+                        type="button"
+                        onClick={() => setShowDetails((v) => !v)}
+                        className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors min-h-[36px]"
                       >
-                        <SelectTrigger className={dialog.formErrors.status ? "border-red-500" : ""}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="vacant">Vacant</SelectItem>
-                          <SelectItem value="occupied">Occupied</SelectItem>
-                          <SelectItem value="maintenance">Maintenance</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {dialog.formErrors.status && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.status}</p>
+                        <ChevronDown
+                          className={cn(
+                            "h-4 w-4 transition-transform duration-150",
+                            showDetails && "rotate-180",
+                          )}
+                        />
+                        {showDetails
+                          ? "Hide details"
+                          : "Add details (bedrooms, bathrooms, description)"}
+                      </button>
+
+                      {showDetails && (
+                        <div className="mt-3 space-y-3 rounded-md border border-zinc-800 bg-zinc-950/50 p-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div className="space-y-2">
+                              <Label htmlFor="bedrooms">Bedrooms</Label>
+                              <Input
+                                id="bedrooms"
+                                type="number"
+                                min="0"
+                                max="20"
+                                value={dialog.formData.bedrooms}
+                                onChange={(e) =>
+                                  dialog.updateFormData({
+                                    bedrooms: parseInt(e.target.value) || 0,
+                                  })
+                                }
+                                className={dialog.formErrors.bedrooms ? "border-red-500" : ""}
+                              />
+                              {dialog.formErrors.bedrooms && (
+                                <p className="text-sm text-destructive">
+                                  {dialog.formErrors.bedrooms}
+                                </p>
+                              )}
+                            </div>
+                            <div className="space-y-2">
+                              <Label htmlFor="bathrooms">Bathrooms</Label>
+                              <Input
+                                id="bathrooms"
+                                type="number"
+                                min="0"
+                                max="20"
+                                step="0.5"
+                                value={dialog.formData.bathrooms}
+                                onChange={(e) =>
+                                  dialog.updateFormData({
+                                    bathrooms: parseFloat(e.target.value) || 0,
+                                  })
+                                }
+                                className={dialog.formErrors.bathrooms ? "border-red-500" : ""}
+                              />
+                              {dialog.formErrors.bathrooms && (
+                                <p className="text-sm text-destructive">
+                                  {dialog.formErrors.bathrooms}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea
+                              id="description"
+                              value={dialog.formData.description}
+                              onChange={(e) =>
+                                dialog.updateFormData({ description: e.target.value })
+                              }
+                              rows={3}
+                              className={dialog.formErrors.description ? "border-red-500" : ""}
+                            />
+                            {dialog.formErrors.description && (
+                              <p className="text-sm text-destructive">
+                                {dialog.formErrors.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       )}
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description (Optional)</Label>
-                    <Textarea
-                      id="description"
-                      value={dialog.formData.description}
-                      onChange={(e) => dialog.updateFormData({ description: e.target.value })}
-                      rows={3}
-                      className={dialog.formErrors.description ? "border-red-500" : ""}
-                    />
-                    {dialog.formErrors.description && (
-                      <p className="text-sm text-destructive">{dialog.formErrors.description}</p>
-                    )}
-                  </div>
-
-                  <div className="flex justify-end gap-2">
+                  {/* end scrollable fields */}
+                  <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 border-t border-zinc-800 px-6 py-4 shrink-0">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={dialog.closeDialog}
                       disabled={dialog.isSubmitting}
+                      className="w-full sm:w-auto"
                     >
                       Cancel
                     </Button>
-                    <Button type="submit" loading={dialog.isSubmitting}>
+                    <Button
+                      type="submit"
+                      loading={dialog.isSubmitting}
+                      className="w-full sm:w-auto"
+                    >
                       {dialog.editingItem ? "Update Property" : "Create Property"}
                     </Button>
                   </div>
@@ -1007,12 +1107,12 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/60"
                             >
                               {/* Building section header — collapsible */}
-                              <button
-                                type="button"
-                                onClick={() => toggleBuilding(building.buildingId)}
-                                className="flex w-full items-center justify-between px-4 py-3 hover:bg-zinc-800/50 transition-colors"
-                              >
-                                <div className="flex items-center gap-3 min-w-0">
+                              <div className="flex w-full items-center justify-between hover:bg-zinc-800/50 transition-colors">
+                                <button
+                                  type="button"
+                                  onClick={() => toggleBuilding(building.buildingId)}
+                                  className="flex flex-1 items-center gap-3 min-w-0 px-4 py-3 text-left"
+                                >
                                   <Building2 className="h-4 w-4 shrink-0 text-zinc-500" />
                                   <div className="min-w-0 text-left">
                                     <p className="text-sm font-semibold text-zinc-100 truncate">
@@ -1023,20 +1123,42 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                       {building.buildingAddress}
                                     </p>
                                   </div>
-                                </div>
-                                <div className="flex shrink-0 items-center gap-3 ml-4">
-                                  <span className="text-xs text-zinc-500">
+                                </button>
+                                <div className="flex shrink-0 items-center gap-1 px-3">
+                                  <span className="text-xs text-zinc-500 mr-1">
                                     {building.properties.length} unit
                                     {building.properties.length !== 1 ? "s" : ""}
                                   </span>
-                                  <ChevronDown
-                                    className={cn(
-                                      "h-4 w-4 text-zinc-500 transition-transform duration-200",
-                                      isCollapsed && "-rotate-90",
-                                    )}
-                                  />
+                                  <button
+                                    type="button"
+                                    title="Add unit to this building"
+                                    onClick={() => {
+                                      dialog.openDialog();
+                                      dialog.updateFormData({
+                                        buildingId: building.buildingId,
+                                        buildingName: building.buildingName,
+                                        address: building.buildingAddress,
+                                        streetAddress: building.buildingAddress.split(",")[0],
+                                      });
+                                    }}
+                                    className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
+                                  >
+                                    <Plus className="h-3.5 w-3.5" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => toggleBuilding(building.buildingId)}
+                                    className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
+                                  >
+                                    <ChevronDown
+                                      className={cn(
+                                        "h-4 w-4 transition-transform duration-200",
+                                        isCollapsed && "-rotate-90",
+                                      )}
+                                    />
+                                  </button>
                                 </div>
-                              </button>
+                              </div>
 
                               {/* Property rows */}
                               {!isCollapsed && (

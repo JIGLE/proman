@@ -26,7 +26,7 @@ import {
 import { Tenant } from "@/lib/types";
 import { useApp } from "@/lib/contexts/app-context";
 import { useToast } from "@/lib/contexts/toast-context";
-import { tenantSchema, TenantFormData } from "@/lib/utils/validation";
+import { tenantSchema, type TenantFormData } from "@/lib/schemas/tenant.schema";
 import { getActiveLease } from "@/lib/utils/lease-helpers";
 
 interface TenantDetailModalProps {

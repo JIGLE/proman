@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Owner } from "@/lib/types";
 import { useApp } from "@/lib/contexts/app-context";
 import { useToast } from "@/lib/contexts/toast-context";
-import { ownerSchema, OwnerFormData } from "@/lib/utils/validation";
+import { ownerSchema, type OwnerFormData } from "@/lib/schemas/owner.schema";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 

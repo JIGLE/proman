@@ -7,7 +7,7 @@ import {
 } from "@/lib/utils/error-handling";
 import { withRateLimit } from "@/lib/utils/rate-limit";
 import { getPrismaClient } from "@/lib/services/database/database";
-import { maintenanceSchema } from "@/lib/utils/validation";
+import { maintenanceSchema } from "@/lib/schemas/maintenance.schema";
 import { isMockMode } from "@/lib/config/data-mode";
 import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 import { ZodError } from "zod";

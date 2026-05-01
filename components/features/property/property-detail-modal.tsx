@@ -41,7 +41,7 @@ import {
 import { Property } from "@/lib/types";
 import { useApp } from "@/lib/contexts/app-context";
 import { useToast } from "@/lib/contexts/toast-context";
-import { propertySchema, PropertyFormData } from "@/lib/utils/validation";
+import { propertySchema, type PropertyFormData } from "@/lib/schemas/property.schema";
 import UnitsView from "./units-view";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";

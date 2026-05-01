@@ -2,128 +2,144 @@ import { test, expect } from "@playwright/test";
 
 test.use({ storageState: "playwright/.auth/user.json" });
 
-test("Critical Path: Create new lease", async ({ page }) => {
-  // 1. Navigate to leases page (with ?view=leases to land on the Leases tab;
-  // default tab is "tenants" from TenantsLeasesContainer)
-  await page.goto("/en/leases?view=leases");
+test.describe("Critical Path: Lease management", () => {
+  let propertyId: string;
+  let tenantId: string;
 
-  // Verify we are on the leases page
-  await expect(page).toHaveURL(/.*\/leases/);
+  // Seed both a property and a tenant via API so the lease form has real options to select
+  test.beforeAll(async ({ request }) => {
+    const today = new Date();
+    const nextYear = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
 
-  // 2. Open Create Lease Dialog
-  await page
-    .getByRole("button", { name: /create lease|add lease/i })
-    .first()
-    .click();
+    const propRes = await request.post("/api/properties", {
+      data: {
+        name: `Lease Seed Property ${Date.now()}`,
+        address: "42 Lease Ave, Lisbon",
+        type: "apartment",
+        bedrooms: 2,
+        bathrooms: 1,
+        rent: 1200,
+      },
+    });
+    if (propRes.ok()) {
+      const body = await propRes.json();
+      propertyId = body.id ?? body.data?.id;
+    }
 
-  // Verify dialog is open
-  await expect(page.getByRole("dialog")).toBeVisible();
+    const tenantRes = await request.post("/api/tenants", {
+      data: {
+        name: `Lease Seed Tenant ${Date.now()}`,
+        email: `lease_seed_${Date.now()}@test.local`,
+        phone: "+351 900 000 001",
+        rent: 1200,
+        leaseStart: today.toISOString(),
+        leaseEnd: nextYear.toISOString(),
+      },
+    });
+    if (tenantRes.ok()) {
+      const body = await tenantRes.json();
+      tenantId = body.id ?? body.data?.id;
+    }
+  });
 
-  // 3. Fill Form
-  // Note: This requires existing property and tenant
-  // In a real scenario, we might seed data or create them first
-  // For now, we'll try to select the first available options
+  test("should create a new lease and show it in the list", async ({ page }) => {
+    page.on("console", (msg) => {
+      if (msg.type() === "error") console.error("Browser error:", msg.text());
+    });
 
-  const dialog = page.getByRole("dialog");
+    await page.goto("/en/leases?view=leases");
+    await expect(page).toHaveURL(/\/leases/);
 
-  // Select Property (dropdown/combobox)
-  const propertySelect = dialog
-    .locator("div.space-y-2")
-    .filter({ hasText: "Property" })
-    .getByRole("combobox");
-  if (await propertySelect.isVisible().catch(() => false)) {
+    // Open create dialog
+    await page
+      .getByRole("button", { name: /create lease|add lease/i })
+      .first()
+      .click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+
+    // Select the seeded property — must succeed for a valid lease
+    const propertySelect = dialog
+      .locator("div.space-y-2")
+      .filter({ hasText: /property/i })
+      .getByRole("combobox");
+    await expect(propertySelect).toBeVisible({ timeout: 5000 });
     await propertySelect.click();
-    // Select first available property
     const firstProperty = page.getByRole("option").first();
-    if (await firstProperty.isVisible().catch(() => false)) {
-      await firstProperty.click();
-    }
-  }
+    await expect(firstProperty).toBeVisible({ timeout: 3000 });
+    await firstProperty.click();
 
-  // Select Tenant (dropdown/combobox)
-  const tenantSelect = dialog
-    .locator("div.space-y-2")
-    .filter({ hasText: "Tenant" })
-    .getByRole("combobox");
-  if (await tenantSelect.isVisible().catch(() => false)) {
+    // Select the seeded tenant — must succeed too
+    const tenantSelect = dialog
+      .locator("div.space-y-2")
+      .filter({ hasText: /tenant/i })
+      .getByRole("combobox");
+    await expect(tenantSelect).toBeVisible({ timeout: 5000 });
     await tenantSelect.click();
-    // Select first available tenant
     const firstTenant = page.getByRole("option").first();
-    if (await firstTenant.isVisible().catch(() => false)) {
-      await firstTenant.click();
+    await expect(firstTenant).toBeVisible({ timeout: 3000 });
+    await firstTenant.click();
+
+    // Fill dates
+    const today = new Date();
+    const startDate = today.toISOString().split("T")[0];
+    const endDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())
+      .toISOString()
+      .split("T")[0];
+    await dialog.getByLabel("Start Date").fill(startDate);
+    await dialog.getByLabel("End Date").fill(endDate);
+
+    await dialog.getByLabel(/monthly rent|rent amount/i).fill("1200");
+
+    const depositField = dialog.getByLabel(/security deposit|deposit/i);
+    if (await depositField.isVisible()) {
+      await depositField.fill("2400");
     }
-  }
 
-  // Set lease dates
-  const today = new Date();
-  const startDate = today.toISOString().split("T")[0];
-  const endDate = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())
-    .toISOString()
-    .split("T")[0];
+    // Submit and wait for the API call
+    const responsePromise = page.waitForResponse(
+      (res) => res.url().includes("/api/leases") && res.request().method() === "POST",
+    );
+    await dialog.getByRole("button", { name: /create lease|add lease|save/i }).click();
+    const response = await responsePromise;
 
-  await dialog.getByLabel("Start Date").fill(startDate);
-  await dialog.getByLabel("End Date").fill(endDate);
+    expect([200, 201]).toContain(response.status());
+    await expect(dialog).toBeHidden({ timeout: 5000 });
 
-  // Set monthly rent
-  await dialog.getByLabel(/monthly rent|rent amount/i).fill("1200");
-
-  // Security deposit (if field exists)
-  const depositField = dialog.getByLabel(/security deposit|deposit/i);
-  if (await depositField.isVisible().catch(() => false)) {
-    await depositField.fill("2400");
-  }
-
-  // 4. Submit
-  // Listen for console errors
-  page.on("console", (msg) => {
-    if (msg.type() === "error") {
-      console.log("Browser console error:", msg.text());
-    }
+    // A lease entry (any status badge) should be visible
+    await expect(page.locator("text=/active|pending|draft/i").first()).toBeVisible({
+      timeout: 5000,
+    });
   });
 
-  // Listen for API responses
-  page.on("response", (response) => {
-    if (response.url().includes("/api/leases")) {
-      console.log("API Response:", response.status(), response.statusText());
-    }
+  test("should show validation errors when required fields are missing", async ({ page }) => {
+    await page.goto("/en/leases?view=leases");
+    await page
+      .getByRole("button", { name: /create lease|add lease/i })
+      .first()
+      .click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+
+    // Submit without filling anything
+    await dialog.getByRole("button", { name: /create lease|add lease|save/i }).click();
+
+    // Dialog should remain open with error feedback
+    await expect(dialog).toBeVisible();
+    const errors = dialog.locator("[role='alert'], .text-destructive, .text-red-400");
+    await expect(errors.first()).toBeVisible({ timeout: 3000 });
   });
 
-  await dialog.getByRole("button", { name: /create lease|add lease/i }).click();
+  test("should cancel without creating a lease", async ({ page }) => {
+    await page.goto("/en/leases?view=leases");
+    await page
+      .getByRole("button", { name: /create lease|add lease/i })
+      .first()
+      .click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
 
-  // 5. Verify creation
-  await page.waitForTimeout(2000);
-
-  // Check for validation errors
-  const errorElements = page.locator(".text-red-400");
-  const errorCount = await errorElements.count();
-  if (errorCount > 0) {
-    const errors = await errorElements.allTextContents();
-    console.log("Validation errors found:", errors);
-    await page.screenshot({ path: "test-results/lease-validation-error.png" });
-    throw new Error(`Validation failed: ${errors.join(", ")}`);
-  }
-
-  // Check for error toast
-  const errorToast = page.locator("text=/error|failed/i").first();
-  if (await errorToast.isVisible()) {
-    const errorText = await errorToast.textContent();
-    console.log("Toast error:", errorText);
-    throw new Error(`Server error: ${errorText}`);
-  }
-
-  // Dialog should close if successful
-  const isDialogHidden = await dialog.isHidden().catch(() => false);
-  if (!isDialogHidden) {
-    await page.screenshot({ path: "test-results/lease-dialog-still-open.png" });
-    const dialogContent = await dialog.textContent();
-    console.log("Dialog still open with content:", dialogContent);
-    throw new Error("Dialog did not close - lease creation may have failed");
-  }
-
-  // Verify lease appears in list
-  await expect(page.locator("text=/active|pending/i").first()).toBeVisible({
-    timeout: 5000,
+    await dialog.getByRole("button", { name: /cancel/i }).click();
+    await expect(dialog).toBeHidden({ timeout: 3000 });
   });
-
-  console.log("✓ Lease created successfully");
 });
