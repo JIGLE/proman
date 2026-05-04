@@ -331,6 +331,7 @@ model Receipt {
   userId      String
   tenantId    String
   propertyId  String
+  leaseId     String?
   amount      Float
   date        DateTime
   type        ReceiptType
@@ -383,6 +384,7 @@ model MaintenanceTicket {
   userId            String
   propertyId        String
   tenantId          String?
+  unitId            String?
   title             String
   description       String
   status            MaintenanceStatus @default(open)

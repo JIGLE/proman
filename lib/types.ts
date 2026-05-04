@@ -70,6 +70,7 @@ export interface Receipt {
   tenantName: string;
   propertyId: string;
   propertyName: string;
+  leaseId?: string;
   amount: number;
   date: string;
   type: "rent" | "deposit" | "maintenance" | "other";
@@ -137,24 +138,29 @@ export interface Lease {
   id: string;
   userId: string;
   propertyId: string;
+  propertyName?: string;
   property?: {
     name: string;
     address: string;
   };
   tenantId: string;
+  tenantName?: string;
   tenant?: {
     name: string;
     email: string;
   };
+  unitId?: string;
+  unitName?: string;
   startDate: string;
   endDate: string;
   monthlyRent: number;
   deposit: number;
+  currency?: string;
   contractFile?: Buffer;
   contractFileName?: string;
   contractFileSize?: number;
   taxRegime?: string;
-  status: "active" | "expired" | "terminated" | "pending" | "draft";
+  status: "active" | "expiring" | "expired" | "terminated" | "pending" | "draft";
   autoRenew: boolean;
   renewalNoticeDays: number;
   notes?: string;
@@ -186,12 +192,13 @@ export interface MaintenanceTicket {
   propertyName?: string;
   tenantId?: string;
   tenantName?: string;
+  unitId?: string;
   title: string;
   description: string;
   status: MaintenanceStatus;
   priority: MaintenancePriority;
   category?: string;
-  images: string; // JSON string
+  images?: string[];
   cost?: number; // @deprecated — use estimatedCost
   estimatedCost?: number;
   scheduledDate?: string;

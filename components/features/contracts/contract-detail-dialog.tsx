@@ -7,18 +7,7 @@ import { Calendar, Building2, User, DollarSign, Edit, Trash2 } from "lucide-reac
 import { formatCurrency as formatCurrencyUtil, type Currency } from "@/lib/utils/currency";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
-
-interface Lease {
-  id: string;
-  propertyName: string;
-  unitName: string | null;
-  tenantName: string;
-  startDate: string;
-  endDate: string | null;
-  monthlyRent: number;
-  currency: string;
-  status: "active" | "expiring" | "expired" | "terminated";
-}
+import type { Lease } from "@/lib/types";
 
 interface ContractDetailDialogProps {
   lease: Lease | null;

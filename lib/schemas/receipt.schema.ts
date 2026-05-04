@@ -3,6 +3,7 @@ import { z } from "zod";
 export const receiptSchema = z.object({
   tenantId: z.string().min(1, "Tenant is required"),
   propertyId: z.string().min(1, "Property is required"),
+  leaseId: z.string().optional(),
   amount: z.number().min(0.01, "Amount must be greater than 0"),
   date: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date"),
   type: z.enum(["rent", "deposit", "maintenance", "other"]),

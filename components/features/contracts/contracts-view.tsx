@@ -19,20 +19,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { formatCurrency as formatCurrencyUtil } from "@/lib/utils/currency";
-import type { Currency } from "@/lib/types";
+import type { Lease, Currency } from "@/lib/types";
 import { ContractDetailDialog } from "./contract-detail-dialog";
-
-interface Lease {
-  id: string;
-  propertyName: string;
-  unitName: string | null;
-  tenantName: string;
-  startDate: string;
-  endDate: string | null;
-  monthlyRent: number;
-  currency: string;
-  status: "active" | "expiring" | "expired" | "terminated";
-}
 
 const statusColors: Record<string, string> = {
   active:
@@ -71,8 +59,8 @@ export function ContractsView(): React.ReactElement {
 
   const filteredLeases = leases.filter((lease) => {
     const matchesSearch =
-      lease.propertyName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      lease.tenantName.toLowerCase().includes(searchQuery.toLowerCase());
+      (lease.propertyName ?? "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (lease.tenantName ?? "").toLowerCase().includes(searchQuery.toLowerCase());
 
     if (activeTab === "all") return matchesSearch;
     return matchesSearch && lease.status === activeTab;

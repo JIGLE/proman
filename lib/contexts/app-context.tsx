@@ -127,6 +127,7 @@ interface AppContextValue {
   updateOwner: (id: string, data: Partial<Owner>) => Promise<void>;
   deleteOwner: (id: string) => Promise<void>;
   addExpense: (data: Partial<Expense>) => Promise<void>;
+  updateExpense: (id: string, data: Partial<Expense>) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   addMaintenance: (data: Partial<MaintenanceTicket>) => Promise<void>;
   updateMaintenance: (id: string, data: Partial<MaintenanceTicket>) => Promise<void>;
@@ -543,6 +544,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
       updateOwner: (id, d) => ownerActions.update(id, d) as unknown as Promise<void>,
       deleteOwner: (id) => ownerActions.remove(id),
       addExpense: (d) => expenseActions.add(d) as unknown as Promise<void>,
+      updateExpense: (id, d) => expenseActions.update(id, d) as unknown as Promise<void>,
       deleteExpense: (id) => expenseActions.remove(id),
       addMaintenance: (d) => maintenanceActions.add(d) as unknown as Promise<void>,
       updateMaintenance: (id, d) => maintenanceActions.update(id, d) as unknown as Promise<void>,

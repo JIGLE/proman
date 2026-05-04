@@ -478,7 +478,7 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 5 points
-- Status: Done
+- Status: Not started
 - Tasks:
   1. Change `MaintenanceTicket.images` from `string` (JSON) to `string[]` in `lib/types.ts`.
   2. Update all serialization/deserialization paths.
@@ -488,7 +488,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 3 points
-- Status: Done
+- Status: Not started
 - Tasks:
   1. Add optional `leaseId` to `Receipt` type and schema.
   2. Update `LeaseDetailView` to filter receipts by `leaseId` instead of `propertyId + tenantId`.
@@ -498,13 +498,13 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 3 points
-- Status: Done
+- Status: Not started
 
 ### Ticket 4.4 — Add updateExpense to AppContext
 
 - Priority: P2
 - Effort: 2 points
-- Status: Done
+- Status: Not started
 - Tasks:
   1. Add `updateExpense` to the context API alongside existing `addExpense`/`deleteExpense`.
 
@@ -512,7 +512,7 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 2 points
-- Status: Done
+- Status: Not started
 - Tasks:
   1. Add `currency?: string` and `unitName?: string` to global `Lease` type.
   2. Remove local interface from `contract-detail-dialog.tsx`.
@@ -539,19 +539,19 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 3 points
-- Status: Done
+- Status: Not started
 
 ### Ticket 4.5 — Estimated vs actual cost split + Expense auto-create
 
 - Priority: P2
 - Effort: 5 points
-- Status: Done
+- Status: Not started
 
 ### Ticket 5.2 — Standardize Expense.category enum
 
 - Priority: P2
 - Effort: 2 points
-- Status: Done
+- Status: Not started
 
 ### Ticket 5.3 — Annual fiscal summary per property
 
@@ -563,7 +563,7 @@ Owner: Product + Engineering
 
 - Priority: P3
 - Effort: 8 points
-- Status: Done
+- Status: Not started
 
 ---
 
