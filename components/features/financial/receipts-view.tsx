@@ -77,7 +77,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
       amount: 0,
       date: new Date().toISOString().split("T")[0],
       type: "rent",
-      status: "paid",
+      status: "pending",
       description: "",
     };
 

@@ -1,10 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { isMockMode } from "@/lib/config/data-mode";
+import { requireAuth } from "@/lib/services/auth/auth-middleware";
+import { getPortalRoleFromSessionRole } from "@/lib/portal/access";
 
 export const runtime = "nodejs";
 
-export async function GET(): Promise<NextResponse> {
+export async function GET(request: NextRequest): Promise<NextResponse> {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) return authResult;
+
+  const { session } = authResult;
+  if (getPortalRoleFromSessionRole(session.user.role) !== "owner") {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
   const startTime = Date.now();
 
   try {

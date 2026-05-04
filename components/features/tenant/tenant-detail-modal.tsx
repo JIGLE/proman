@@ -1,7 +1,19 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Mail, Phone, MapPin, Calendar, DollarSign, Edit, Trash2 } from "lucide-react";
+import {
+  AlertTriangle,
+  Calendar,
+  CheckCircle,
+  DollarSign,
+  Edit,
+  Mail,
+  MapPin,
+  Phone,
+  Trash2,
+  Wrench,
+} from "lucide-react";
+import { usePathname, useRouter } from "next/navigation";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import {
   Dialog,
@@ -10,9 +22,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +38,8 @@ import {
 import { Tenant } from "@/lib/types";
 import { useApp } from "@/lib/contexts/app-context";
 import { useToast } from "@/lib/contexts/toast-context";
+import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { tenantSchema, type TenantFormData } from "@/lib/schemas/tenant.schema";
 import { getActiveLease } from "@/lib/utils/lease-helpers";
 
@@ -37,6 +51,18 @@ interface TenantDetailModalProps {
   onDelete?: (tenantId: string) => void;
 }
 
+const PAYMENT_STATUS_STYLES: Record<string, string> = {
+  paid: "bg-green-500/10 text-green-400 border-green-500/30",
+  pending: "bg-amber-500/10 text-amber-400 border-amber-500/30",
+  overdue: "bg-red-500/10 text-red-400 border-red-500/30",
+};
+
+function formatDate(dateStr?: string): string {
+  if (!dateStr) return "—";
+  const d = new Date(dateStr);
+  return isNaN(d.getTime()) ? "—" : d.toLocaleDateString();
+}
+
 export function TenantDetailModal({
   tenant,
   isOpen,
@@ -46,9 +72,14 @@ export function TenantDetailModal({
 }: TenantDetailModalProps) {
   const { formatCurrency } = useCurrency();
   const { updateTenant, deleteTenant, state } = useApp();
-  const { properties, leases } = state;
+  const { properties, leases, receipts } = state;
   const { success, error } = useToast();
+  const confirmDialog = useConfirmDialog();
+  const pathname = usePathname();
+  const router = useRouter();
+  const locale = pathname.split("/")[1] || "pt";
   const [isEditing, setIsEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState("overview");
   const [formData, setFormData] = useState<TenantFormData>({
     name: "",
     email: "",
@@ -61,7 +92,6 @@ export function TenantDetailModal({
     notes: "",
   });
 
-  // Initialize form data when tenant changes
   useEffect(() => {
     if (tenant) {
       setFormData({
@@ -75,59 +105,105 @@ export function TenantDetailModal({
         paymentStatus: tenant.paymentStatus || "pending",
         notes: tenant.notes || "",
       });
-    } else {
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        propertyId: "",
-        rent: 0,
-        leaseStart: "",
-        leaseEnd: "",
-        paymentStatus: "pending",
-        notes: "",
-      });
     }
   }, [tenant]);
 
   if (!tenant) return null;
 
-  // Derive lease values from the active lease when available
   const activeLease = getActiveLease(tenant.id, leases);
   const derivedRent = activeLease?.monthlyRent ?? tenant.rent;
   const derivedLeaseStart = activeLease?.startDate ?? tenant.leaseStart;
   const derivedLeaseEnd = activeLease?.endDate ?? tenant.leaseEnd;
 
-  function getPaymentStatusBadge(paymentStatus: string): import("react").ReactNode {
-    if (paymentStatus === "paid") {
-      return <Badge>Paid</Badge>;
+  // Derived metrics
+  const today = new Date();
+  const leaseExpiryDays = derivedLeaseEnd
+    ? Math.ceil((new Date(derivedLeaseEnd).getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    : null;
+  const isLeaseExpiringSoon =
+    leaseExpiryDays !== null && leaseExpiryDays > 0 && leaseExpiryDays <= 60;
+  const isOverdue = tenant.paymentStatus === "overdue";
+
+  // Zone 2: Primary action
+  const primaryAction = (() => {
+    if (isOverdue) {
+      return {
+        label: "Record payment",
+        onClick: () => {
+          onClose();
+          router.push(`/${locale}/financials?tenantId=${tenant.id}`);
+        },
+        icon: DollarSign,
+        variant: "destructive" as const,
+      };
     }
-    if (paymentStatus === "pending") {
-      return <Badge>Pending</Badge>;
+    if (isLeaseExpiringSoon && activeLease) {
+      return {
+        label: "Renew lease",
+        onClick: () => {
+          onClose();
+          router.push(`/${locale}/leases?action=renew&id=${activeLease.id}`);
+        },
+        icon: Calendar,
+        variant: "default" as const,
+      };
     }
-    if (paymentStatus === "overdue") {
-      return <Badge>Overdue</Badge>;
+    if (!activeLease) {
+      return {
+        label: "Add lease",
+        onClick: () => {
+          onClose();
+          router.push(`/${locale}/leases?action=create&tenantId=${tenant.id}`);
+        },
+        icon: Wrench,
+        variant: "default" as const,
+      };
     }
-    return <Badge>Unknown</Badge>;
+    return null;
+  })();
+
+  // Zone 3: Issues
+  const issues = [];
+  if (!activeLease) {
+    issues.push({
+      id: "no-lease",
+      icon: AlertTriangle,
+      color: "text-amber-400",
+      label: "No active lease",
+    });
+  }
+  if (!tenant.email) {
+    issues.push({ id: "no-email", icon: Mail, color: "text-amber-400", label: "No email address" });
+  }
+  if (isOverdue) {
+    issues.push({
+      id: "overdue",
+      icon: AlertTriangle,
+      color: "text-red-400",
+      label: "Payment overdue",
+    });
   }
 
-  const resetForm = () => {
-    if (!tenant) return;
-    setFormData({
-      name: tenant.name || "",
-      email: tenant.email || "",
-      phone: tenant.phone || "",
-      propertyId: tenant.propertyId || "",
-      rent: tenant.rent ?? 0,
-      leaseStart: tenant.leaseStart || "",
-      leaseEnd: tenant.leaseEnd || "",
-      paymentStatus: tenant.paymentStatus || "pending",
-      notes: tenant.notes || "",
-    });
-  };
+  // Payments tab: last 3 receipts for this tenant
+  const tenantReceipts = [...(receipts ?? [])]
+    .filter((r) => r.tenantId === tenant.id)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 3);
 
   function handleCancel() {
-    resetForm();
+    if (tenant) {
+      setFormData({
+        name: tenant.name || "",
+        email: tenant.email || "",
+        phone: tenant.phone || "",
+        propertyId: tenant.propertyId || "",
+        rent: tenant.rent ?? 0,
+        leaseStart: tenant.leaseStart || "",
+        leaseEnd: tenant.leaseEnd || "",
+        paymentStatus: tenant.paymentStatus || "pending",
+        notes: tenant.notes || "",
+      });
+    }
     setIsEditing(false);
   }
 
@@ -146,30 +222,40 @@ export function TenantDetailModal({
     }
   }
 
-  async function handleDelete() {
-    if (!tenant) return;
-    if (onDelete) {
-      onDelete(tenant.id);
-      onClose();
-    } else if (deleteTenant) {
-      try {
-        await deleteTenant(tenant.id);
-        success?.("Tenant deleted");
-        onClose();
-      } catch {
-        error?.("Failed to delete tenant");
-      }
-    }
+  function handleDelete() {
+    confirmDialog.confirm(
+      {
+        title: "Delete Tenant",
+        description: `"${tenant!.name}" will be permanently removed. This action cannot be undone.`,
+        confirmLabel: "Delete",
+        variant: "destructive",
+      },
+      async () => {
+        try {
+          if (onDelete) {
+            onDelete(tenant!.id);
+            onClose();
+          } else if (deleteTenant) {
+            await deleteTenant(tenant!.id);
+            success?.("Tenant deleted");
+            onClose();
+          }
+        } catch {
+          error?.("Failed to delete tenant");
+        }
+      },
+    );
   }
 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          {/* ── Zone 1: Header + Status ─────────────────────────────────── */}
           <DialogHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex-1 flex items-start gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30">
+            <div className="flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30">
                   <span className="text-sm font-semibold text-accent-primary">
                     {tenant.name
                       .split(" ")
@@ -178,32 +264,37 @@ export function TenantDetailModal({
                       .toUpperCase()}
                   </span>
                 </div>
-                <div>
-                  <DialogTitle className="text-2xl text-[var(--color-foreground)]">
+                <div className="min-w-0">
+                  <DialogTitle className="text-lg font-semibold truncate">
                     {isEditing ? "Edit Tenant" : tenant.name}
                   </DialogTitle>
-                  <DialogDescription className="flex flex-col gap-1">
-                    <span className="flex items-center gap-1">
+                  <DialogDescription className="flex items-center gap-2 mt-0.5">
+                    <span className="flex items-center gap-1 text-xs">
                       <Mail className="h-3 w-3" />
-                      {tenant.email}
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <Phone className="h-3 w-3" />
-                      {tenant.phone}
+                      {tenant.email || "No email"}
                     </span>
                   </DialogDescription>
                 </div>
               </div>
               {!isEditing && (
-                <div className="flex items-center gap-2">
-                  {getPaymentStatusBadge(tenant.paymentStatus)}
+                <div className="flex items-center gap-2 shrink-0">
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold capitalize ${PAYMENT_STATUS_STYLES[tenant.paymentStatus] ?? ""}`}
+                  >
+                    {tenant.paymentStatus}
+                  </span>
+                  {isLeaseExpiringSoon && leaseExpiryDays !== null && (
+                    <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-400">
+                      {leaseExpiryDays}d left
+                    </span>
+                  )}
                 </div>
               )}
             </div>
           </DialogHeader>
 
           {isEditing ? (
-            // Edit Mode
+            /* ── Edit Mode ──────────────────────────────────────────────── */
             <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
@@ -293,112 +384,223 @@ export function TenantDetailModal({
               </div>
             </div>
           ) : (
-            // View Mode
-            <div className="space-y-6">
-              {/* Tenant Details Grid */}
-              <div className="grid grid-cols-2 gap-6">
-                <Card className="bg-zinc-800 border-zinc-700">
-                  <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Contact Information</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Mail className="h-4 w-4 text-zinc-500" />
-                      <span className="text-[var(--color-foreground)]">{tenant.email}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Phone className="h-4 w-4 text-zinc-500" />
-                      <span className="text-[var(--color-foreground)]">{tenant.phone}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-zinc-800 border-zinc-700">
-                  <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Property</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-start gap-2">
-                      <MapPin className="h-4 w-4 text-zinc-500 mt-1" />
-                      <div className="text-sm">
-                        <p className="text-[var(--color-foreground)] font-medium">
-                          {tenant.propertyName || "Unassigned"}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Financial Details */}
-              <Card className="bg-zinc-800 border-zinc-700">
-                <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">Financial Details</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-zinc-400 flex items-center gap-1">
-                      <DollarSign className="h-4 w-4" /> Monthly Rent
-                    </span>
-                    <span className="text-lg font-semibold text-[var(--color-foreground)]">
-                      {/* Derived from active lease's monthlyRent */}
-                      {formatCurrency(derivedRent)}
-                    </span>
+            /* ── View Mode ──────────────────────────────────────────────── */
+            <div className="space-y-4">
+              {/* ── Zone 2: Primary Action ─────────────────────────────── */}
+              {primaryAction && (
+                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="text-sm text-[var(--color-muted-foreground)]">
+                      {isOverdue && "This tenant has an overdue payment. Record it now."}
+                      {isLeaseExpiringSoon &&
+                        !isOverdue &&
+                        `Lease expires in ${leaseExpiryDays} days. Renew before it lapses.`}
+                      {!activeLease &&
+                        !isOverdue &&
+                        "No active lease found. Create one to track rent."}
+                    </p>
+                    <Button
+                      size="sm"
+                      variant={primaryAction.variant}
+                      onClick={primaryAction.onClick}
+                      className="shrink-0"
+                    >
+                      <primaryAction.icon className="h-3.5 w-3.5 mr-1.5" />
+                      {primaryAction.label}
+                    </Button>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Lease Information */}
-              <Card className="bg-zinc-800 border-zinc-700">
-                <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">Lease Period</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-400 flex items-center gap-1">
-                      <Calendar className="h-4 w-4" /> Start Date
-                    </span>
-                    {/* Derived from active lease's startDate */}
-                    <span className="text-[var(--color-foreground)]">
-                      {derivedLeaseStart ? new Date(derivedLeaseStart).toLocaleDateString() : "—"}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-zinc-400 flex items-center gap-1">
-                      <Calendar className="h-4 w-4" /> End Date
-                    </span>
-                    {/* Derived from active lease's endDate */}
-                    <span className="text-[var(--color-foreground)]">
-                      {derivedLeaseEnd ? new Date(derivedLeaseEnd).toLocaleDateString() : "—"}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Notes */}
-              {tenant.notes && (
-                <Card className="bg-zinc-800 border-zinc-700">
-                  <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Notes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-[var(--color-foreground)]">{tenant.notes}</p>
-                  </CardContent>
-                </Card>
+                </div>
               )}
 
+              {/* ── Zone 3: Issues ─────────────────────────────────────── */}
+              {issues.length > 0 && (
+                <div className="space-y-2">
+                  {issues.map((issue) => (
+                    <div
+                      key={issue.id}
+                      className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2 text-sm"
+                    >
+                      <issue.icon className={`h-3.5 w-3.5 shrink-0 ${issue.color}`} />
+                      <span className="text-[var(--color-foreground)]">{issue.label}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* ── Zone 4: Tabbed Info ─────────────────────────────────── */}
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsList className="w-full justify-start">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="lease">Lease</TabsTrigger>
+                  <TabsTrigger value="payments">Payments</TabsTrigger>
+                </TabsList>
+
+                {/* Overview tab */}
+                <TabsContent value="overview" className="space-y-3 mt-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
+                      <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
+                        Contact
+                      </p>
+                      <div className="space-y-1.5">
+                        <div className="flex items-center gap-2 text-sm">
+                          <Mail className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" />
+                          <span className="truncate">{tenant.email || "—"}</span>
+                        </div>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Phone className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" />
+                          <span>{tenant.phone || "—"}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
+                      <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
+                        Property
+                      </p>
+                      <div className="flex items-start gap-2 text-sm">
+                        <MapPin className="h-3.5 w-3.5 text-[var(--color-muted-foreground)] mt-0.5" />
+                        <span className="font-medium">{tenant.propertyName || "Unassigned"}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {tenant.notes && (
+                    <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
+                      <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-1">
+                        Notes
+                      </p>
+                      <p className="text-sm text-[var(--color-foreground)]">{tenant.notes}</p>
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Lease tab */}
+                <TabsContent value="lease" className="mt-4">
+                  {activeLease ? (
+                    <div className="space-y-3">
+                      <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <p className="text-sm font-medium text-[var(--color-foreground)]">
+                            Active Lease
+                          </p>
+                          {leaseExpiryDays !== null && (
+                            <Badge
+                              variant="outline"
+                              className={
+                                leaseExpiryDays <= 30
+                                  ? "border-red-500/30 bg-red-500/10 text-red-400"
+                                  : leaseExpiryDays <= 60
+                                    ? "border-amber-500/30 bg-amber-500/10 text-amber-400"
+                                    : "border-green-500/30 bg-green-500/10 text-green-400"
+                              }
+                            >
+                              {leaseExpiryDays > 0 ? `${leaseExpiryDays} days left` : "Expired"}
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-2 gap-3 text-sm">
+                          <div>
+                            <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                              Monthly Rent
+                            </p>
+                            <p className="mt-0.5 font-semibold text-[var(--color-foreground)]">
+                              {formatCurrency(derivedRent)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                              Status
+                            </p>
+                            <p className="mt-0.5 capitalize font-medium text-[var(--color-foreground)]">
+                              {activeLease.status}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                              Start Date
+                            </p>
+                            <p className="mt-0.5 text-[var(--color-foreground)]">
+                              {formatDate(derivedLeaseStart)}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                              End Date
+                            </p>
+                            <p className="mt-0.5 text-[var(--color-foreground)]">
+                              {formatDate(derivedLeaseEnd)}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rounded-md border border-dashed border-[var(--color-border)] p-6 text-center">
+                      <Calendar className="mx-auto h-8 w-8 text-[var(--color-muted-foreground)] mb-2 opacity-50" />
+                      <p className="text-sm text-[var(--color-muted-foreground)]">
+                        No active lease
+                      </p>
+                    </div>
+                  )}
+                </TabsContent>
+
+                {/* Payments tab */}
+                <TabsContent value="payments" className="mt-4">
+                  {tenantReceipts.length === 0 ? (
+                    <div className="rounded-md border border-dashed border-[var(--color-border)] p-6 text-center">
+                      <DollarSign className="mx-auto h-8 w-8 text-[var(--color-muted-foreground)] mb-2 opacity-50" />
+                      <p className="text-sm text-[var(--color-muted-foreground)]">
+                        No payment records
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {tenantReceipts.map((r) => (
+                        <div
+                          key={r.id}
+                          className="flex items-center justify-between rounded-md border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2.5"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-[var(--color-foreground)]">
+                              {r.description || r.type}
+                            </p>
+                            <p className="text-xs text-[var(--color-muted-foreground)]">
+                              {formatDate(r.date)}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {r.status === "paid" ? (
+                              <CheckCircle className="h-3.5 w-3.5 text-green-400" />
+                            ) : (
+                              <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
+                            )}
+                            <span className="text-sm font-semibold text-[var(--color-foreground)]">
+                              {formatCurrency(r.amount)}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+
               {/* Action Buttons */}
-              <div className="flex justify-between gap-2 pt-4 border-t border-zinc-800">
+              <div className="flex justify-between gap-2 pt-2 border-t border-[var(--color-border)]">
                 <Button
-                  variant="destructive"
+                  variant="ghost"
+                  size="sm"
                   onClick={handleDelete}
-                  className="flex items-center gap-1"
+                  className="gap-1.5 text-[var(--color-muted-foreground)] hover:text-red-400"
                 >
-                  <Trash2 className="w-4 h-4" />
-                  Delete Tenant
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete
                 </Button>
-                <Button onClick={() => setIsEditing(true)} className="flex items-center gap-1">
-                  <Edit className="w-4 h-4" />
+                <Button
+                  size="sm"
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-1.5"
+                >
+                  <Edit className="w-3.5 h-3.5" />
                   Edit Tenant
                 </Button>
               </div>
@@ -406,6 +608,7 @@ export function TenantDetailModal({
           )}
         </DialogContent>
       </Dialog>
+      <ConfirmationDialog dialog={confirmDialog} />
     </>
   );
 }

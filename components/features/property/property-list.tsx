@@ -943,8 +943,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
             ) : (
               <div className="space-y-4">
                 {/* Slim operational filter strip */}
-                <div className="hidden sm:flex items-center gap-2 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-2.5 scrollbar-none">
-                  <span className="mr-1 shrink-0 text-xs font-medium uppercase tracking-wider text-zinc-500">
+                <div className="flex items-center gap-2 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-2.5 scrollbar-none">
+                  <span className="mr-1 hidden shrink-0 text-xs font-medium uppercase tracking-wider text-zinc-500 sm:inline">
                     Filter
                   </span>
                   {[
@@ -987,7 +987,15 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                             : "border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200",
                         )}
                       >
-                        {opt.label}
+                        <span className="hidden sm:inline">{opt.label}</span>
+                        <span className="inline sm:hidden">
+                          {opt.key === "all"
+                            ? "All"
+                            : opt.key
+                                .split("-")
+                                .map((w) => w[0].toUpperCase())
+                                .join("")}
+                        </span>
                         <span
                           className={cn(
                             "font-semibold",

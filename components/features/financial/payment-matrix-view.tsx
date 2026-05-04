@@ -381,7 +381,7 @@ export function PaymentMatrixView(): React.ReactElement {
                   >
                     <th
                       scope="col"
-                      className="text-left py-3 px-4 font-medium text-[var(--color-muted-foreground)]"
+                      className="sticky left-0 z-10 bg-[var(--color-card)] text-left py-3 px-4 font-medium text-[var(--color-muted-foreground)]"
                     >
                       Tenant
                     </th>
@@ -419,7 +419,7 @@ export function PaymentMatrixView(): React.ReactElement {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.6 + tenantIndex * 0.1 }}
                       >
-                        <td className="py-3 px-4">
+                        <td className="sticky left-0 z-10 bg-[var(--color-card)] py-3 px-4">
                           <motion.div
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}

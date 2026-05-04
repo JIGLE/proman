@@ -52,8 +52,18 @@ function formatDate(date?: string) {
   });
 }
 
-function addMonths(date: Date, months: number) {
-  return new Date(date.getFullYear(), date.getMonth() + months, 5);
+function getNextPaymentDate(leaseStartDate?: string): Date | null {
+  if (!leaseStartDate) return null;
+  const start = new Date(leaseStartDate);
+  if (isNaN(start.getTime())) return null;
+  const payDay = start.getDate();
+  const today = new Date();
+  // Try current month first, then advance if past
+  let candidate = new Date(today.getFullYear(), today.getMonth(), payDay);
+  if (candidate <= today) {
+    candidate = new Date(today.getFullYear(), today.getMonth() + 1, payDay);
+  }
+  return candidate;
 }
 
 function MetricCard({
@@ -227,7 +237,7 @@ export function OverviewView({
       (property) => property.id === (activeLease?.propertyId ?? tenant?.propertyId),
     );
     const paidReceipts = receipts.filter((receipt) => receipt.status === "paid");
-    const nextPaymentDate = addMonths(new Date(), 1);
+    const nextPaymentDate = getNextPaymentDate(activeLease?.startDate);
 
     return {
       occupancyRate,
@@ -562,7 +572,11 @@ export function OverviewView({
             <MetricCard
               title="Next rent"
               value={formatCurrency(nextRent)}
-              subtitle={`Upcoming payment target for ${formatDate(dashboardData.nextPaymentDate.toISOString())}`}
+              subtitle={
+                dashboardData.nextPaymentDate
+                  ? `Upcoming payment target for ${formatDate(dashboardData.nextPaymentDate.toISOString())}`
+                  : "No active lease"
+              }
               icon={BadgeEuro}
               tone="info"
             />

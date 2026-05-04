@@ -41,7 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Property, Lease, Tenant, Receipt } from "@/lib/types";
+import type { Property, Lease, Tenant, Receipt, MaintenanceTicket } from "@/lib/types";
 import { useApp } from "@/lib/contexts/app-context";
 import { useToast } from "@/lib/contexts/toast-context";
 import { propertySchema, type PropertyFormData } from "@/lib/schemas/property.schema";
@@ -207,6 +207,11 @@ export function PropertyDetailModal({
 
   const recentPayments = [...relatedReceipts]
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 3);
+
+  const recentOpenTickets = [...relatedMaintenance]
+    .filter((t) => t.status === "open" || t.status === "in_progress")
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 3);
 
   const leaseExpiryDays = useMemo(() => {
@@ -415,6 +420,7 @@ export function PropertyDetailModal({
               openTickets={openTickets}
               paidTotal={paidTotal}
               recentPayments={recentPayments}
+              recentOpenTickets={recentOpenTickets}
               issues={issues}
               primaryAction={primaryAction}
               healthLabel={healthLabel}
@@ -448,6 +454,7 @@ function ViewContent({
   openTickets,
   paidTotal,
   recentPayments,
+  recentOpenTickets,
   issues,
   primaryAction,
   healthLabel,
@@ -468,6 +475,7 @@ function ViewContent({
   openTickets: number;
   paidTotal: number;
   recentPayments: Receipt[];
+  recentOpenTickets: MaintenanceTicket[];
   issues: Issue[];
   primaryAction: {
     label: string;
@@ -601,10 +609,11 @@ function ViewContent({
 
         {/* ── Zone 4: Supporting Information (Tabs) ────────────────────────── */}
         <Tabs value={detailsTab} onValueChange={setDetailsTab} className="px-5 pt-3 pb-4">
-          <TabsList className="mb-3 grid w-full grid-cols-3">
+          <TabsList className="mb-3 grid w-full grid-cols-4">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="financials">Financials</TabsTrigger>
             <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="maintenance">Maintenance</TabsTrigger>
           </TabsList>
 
           {/* OVERVIEW TAB */}
@@ -878,6 +887,45 @@ function ViewContent({
                 )}
               </div>
             )}
+          </TabsContent>
+
+          {/* MAINTENANCE TAB */}
+          <TabsContent value="maintenance" className="mt-0 space-y-3">
+            {recentOpenTickets.length === 0 ? (
+              <div className="rounded-lg border border-zinc-800 px-3 py-6 text-center">
+                <Wrench className="mx-auto h-6 w-6 text-zinc-600 mb-2" />
+                <p className="text-sm text-zinc-500">No open maintenance tickets.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {recentOpenTickets.map((ticket) => (
+                  <div
+                    key={ticket.id}
+                    className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-800/60 px-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-zinc-200">{ticket.title}</p>
+                      <p className="text-xs text-zinc-500 capitalize">
+                        {ticket.status.replace("_", " ")}
+                        {ticket.vendorName ? ` · ${ticket.vendorName}` : ""}
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="ml-2 shrink-0 text-[10px] capitalize">
+                      {ticket.priority}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full gap-1 text-zinc-400 hover:text-zinc-200"
+              onClick={() => navigateTo(`/maintenance?property=${property.id}`)}
+            >
+              View all tickets
+              <ChevronRight className="h-3.5 w-3.5" />
+            </Button>
           </TabsContent>
         </Tabs>
       </div>

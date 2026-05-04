@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, AlertCircle, Clock, CheckCircle, XCircle, MoreVertical } from "lucide-react";
+import { Plus, AlertCircle, Clock, CheckCircle, XCircle, MoreVertical, User } from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
 import {
@@ -79,6 +79,7 @@ export function MaintenanceView(): React.ReactElement {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
 
   // Detail modal state
   const [selectedTicket, setSelectedTicket] = useState<MaintenanceTicket | null>(null);
@@ -150,9 +151,12 @@ export function MaintenanceView(): React.ReactElement {
       // Priority filter
       const matchesPriority = priorityFilter === "all" || ticket.priority === priorityFilter;
 
-      return matchesSearch && matchesStatus && matchesPriority;
+      // Category filter
+      const matchesCategory = categoryFilter === "all" || ticket.category === categoryFilter;
+
+      return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
     });
-  }, [maintenance, searchQuery, statusFilter, priorityFilter]);
+  }, [maintenance, searchQuery, statusFilter, priorityFilter, categoryFilter]);
 
   // Sorting
   const {
@@ -160,6 +164,14 @@ export function MaintenanceView(): React.ReactElement {
     requestSort,
     getSortDirection,
   } = useSortableData(filteredTickets);
+
+  // Cost summary for open/in-progress filtered tickets
+  const costSummary = useMemo(() => {
+    const open = filteredTickets.filter((t) => t.status === "open" || t.status === "in_progress");
+    const total = open.reduce((sum, t) => sum + (t.estimatedCost ?? t.cost ?? 0), 0);
+    const withCost = open.filter((t) => (t.estimatedCost ?? t.cost) != null).length;
+    return { total, count: open.length, withCost };
+  }, [filteredTickets]);
 
   const handleEdit = (ticket: MaintenanceTicket) => {
     dialog.openEditDialog(ticket, (t) => ({
@@ -507,6 +519,50 @@ export function MaintenanceView(): React.ReactElement {
             ]}
           />
 
+          {/* Category filter chip strip */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {["all", ...MAINTENANCE_CATEGORIES].map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setCategoryFilter(cat)}
+                className={cn(
+                  "rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors",
+                  categoryFilter === cat
+                    ? "border-accent-primary bg-accent-primary/10 text-accent-primary"
+                    : "border-zinc-700 bg-transparent text-zinc-400 hover:border-zinc-500",
+                )}
+              >
+                {cat === "all" ? "All categories" : cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Cost summary bar */}
+          {costSummary.count > 0 && (
+            <div className="flex items-center gap-6 rounded-lg border border-zinc-800 bg-zinc-900/50 px-4 py-2.5 text-sm">
+              <span className="text-zinc-400">
+                <span className="font-medium text-zinc-200">{costSummary.count}</span> open ticket
+                {costSummary.count !== 1 ? "s" : ""}
+              </span>
+              {costSummary.withCost > 0 && (
+                <>
+                  <span className="text-zinc-700">|</span>
+                  <span className="text-zinc-400">
+                    Est. cost:{" "}
+                    <span className="font-medium text-zinc-200">
+                      {formatCurrency(costSummary.total)}
+                    </span>
+                  </span>
+                  {costSummary.withCost < costSummary.count && (
+                    <span className="text-zinc-500 text-xs">
+                      ({costSummary.count - costSummary.withCost} without estimate)
+                    </span>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center justify-end">
             <DataViewToggle mode={dataViewMode} onChange={handleViewModeChange} />
           </div>
@@ -553,6 +609,8 @@ export function MaintenanceView(): React.ReactElement {
                         />
                       </TableHead>
                       <TableHead className="text-zinc-400">Created</TableHead>
+                      <TableHead className="text-zinc-400">Vendor</TableHead>
+                      <TableHead className="text-zinc-400">Scheduled</TableHead>
                       <TableHead className="text-zinc-400 w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
@@ -587,7 +645,20 @@ export function MaintenanceView(): React.ReactElement {
                           </div>
                         </TableCell>
                         <TableCell className="text-sm text-zinc-400">
-                          {new Date(ticket.createdAt).toLocaleDateString()}
+                          <div className="flex items-center gap-1">
+                            {ticket.isTenantReport && (
+                              <User className="h-3.5 w-3.5 text-blue-400" />
+                            )}
+                            {new Date(ticket.createdAt).toLocaleDateString()}
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-zinc-400">
+                          {ticket.vendorName || ticket.assignedTo || "—"}
+                        </TableCell>
+                        <TableCell className="text-sm text-zinc-400">
+                          {ticket.scheduledDate
+                            ? new Date(ticket.scheduledDate).toLocaleDateString()
+                            : "—"}
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
@@ -714,6 +785,15 @@ export function MaintenanceView(): React.ReactElement {
                           >
                             {ticket.priority} Priority
                           </Badge>
+                          {ticket.isTenantReport && (
+                            <Badge
+                              variant="outline"
+                              className="mb-2 ml-1 bg-blue-500/10 text-blue-400 border-blue-500/30"
+                            >
+                              <User className="h-3 w-3 mr-1" />
+                              Tenant
+                            </Badge>
+                          )}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                               <Button variant="ghost" size="icon" className="h-8 w-8">

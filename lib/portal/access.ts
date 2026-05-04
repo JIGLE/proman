@@ -1,5 +1,17 @@
 import type { ComponentType } from "react";
-import { Building2, FileBox, FileText, Home, Settings, Users, Wallet, Wrench } from "lucide-react";
+import {
+  BarChart2,
+  Building2,
+  FileBarChart,
+  FileBox,
+  FileText,
+  Home,
+  Mail,
+  Settings,
+  Users,
+  Wallet,
+  Wrench,
+} from "lucide-react";
 
 export type PortalRole = "owner" | "tenant";
 
@@ -95,6 +107,35 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         label: "Settings",
         labelKey: "navigation.settings",
         icon: Settings,
+        roles: ["owner"],
+      },
+    ],
+  },
+  {
+    group: "Insights",
+    items: [
+      {
+        key: "analytics",
+        href: "/analytics",
+        label: "Analytics",
+        labelKey: "navigation.analytics",
+        icon: BarChart2,
+        roles: ["owner"],
+      },
+      {
+        key: "reports",
+        href: "/reports",
+        label: "Reports",
+        labelKey: "navigation.reports",
+        icon: FileBarChart,
+        roles: ["owner"],
+      },
+      {
+        key: "correspondence",
+        href: "/correspondence",
+        label: "Correspondence",
+        labelKey: "navigation.correspondence",
+        icon: Mail,
         roles: ["owner"],
       },
     ],
