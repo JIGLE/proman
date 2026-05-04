@@ -57,7 +57,10 @@ export function MobileBottomNav({
       >
         {/* Safe area spacer for notched devices */}
         <div className="bg-[var(--color-background)]/95 backdrop-blur-sm border-t border-[var(--color-border)]">
-          <div className={cn("grid h-16 items-center px-2", `grid-cols-${primaryNavItems.length}`)}>
+          <div
+            className="grid h-16 items-center px-2"
+            style={{ gridTemplateColumns: `repeat(${primaryNavItems.length}, minmax(0, 1fr))` }}
+          >
             {primaryNavItems.map((item) => {
               const Icon = item.icon;
               const isActive = isItemActive(item.href);

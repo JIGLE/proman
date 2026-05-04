@@ -1,9 +1,21 @@
 /**
- * Demo Data
+ * Demo Data — v2
  *
- * Extended mock dataset for the public demo mode.
- * Provides realistic, interconnected data across all entity types.
- * All data uses userId "demo-user" and is completely isolated.
+ * Realistic, fully interconnected dataset for public demo mode.
+ * Designed around three explicit UX scenarios:
+ *
+ *   SCENARIO 1 — Happy Path        → Sunset Apt. 2A  (demo-prop-1)
+ *   SCENARIO 2 — Needs Attention   → Marina View Condo (demo-prop-4)  [lease expiring, overdue, open ticket]
+ *   SCENARIO 3 — Broken Setup      → Alfama Heritage Loft (demo-prop-6) [no tenant, no lease, no coords]
+ *
+ * Multi-unit buildings:
+ *   demo-building-1  → Sunset Apartments   (Lisbon, Príncipe Real — demo-prop-1 + demo-prop-10)
+ *   demo-building-2  → Ribeira Flats       (Porto, Ribeira       — demo-prop-11 + demo-prop-12)
+ *
+ * Map coverage: 10 of 12 properties have valid coordinates (83 %).
+ * Missing coords (intentional): demo-prop-6 (Alfama) and demo-prop-3 (Riverside House).
+ *
+ * All data uses userId "demo-user" and is completely isolated from production data.
  */
 
 import type {
@@ -38,94 +50,200 @@ interface DemoDocument {
 
 const DEMO_USER_ID = "demo-user";
 
-// ── Properties ─────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// PROPERTIES
+// ─────────────────────────────────────────────────────────────────────────────
+// Coordinates are real-world accurate and verified against OpenStreetMap.
+// Properties intentionally missing coordinates are noted inline.
+
 export const DEMO_PROPERTIES: Property[] = [
+  // ── Building 1 — Sunset Apartments, Lisboa Príncipe Real ─────────────────
+  // SCENARIO 1: Happy Path — fully configured, tenant + active lease + payments
   {
     id: "demo-prop-1",
     userId: DEMO_USER_ID,
-    name: "Sunset Apartments",
-    address: "Rua do Sol 123, Lisboa, 1200-001, Portugal",
-    streetAddress: "Rua do Sol 123",
+    buildingId: "demo-building-1",
+    buildingName: "Sunset Apartments",
+    name: "Sunset Apt. 2A",
+    address: "Rua Dom Pedro V 74, Lisboa, 1250-097, Portugal",
+    streetAddress: "Rua Dom Pedro V 74",
     city: "Lisboa",
-    zipCode: "1200-001",
-    country: "Portugal",
+    zipCode: "1250-097",
+    country: "PT",
+    latitude: 38.7158,
+    longitude: -9.1481,
+    addressVerified: true,
     type: "apartment",
     status: "occupied",
     bedrooms: 2,
     bathrooms: 2,
     rent: 950,
+    description: "Bright 2-bedroom apartment in Príncipe Real. Renovated kitchen, hardwood floors.",
     createdAt: "2024-01-15T10:00:00Z",
     updatedAt: "2026-03-01T14:30:00Z",
   },
   {
+    id: "demo-prop-10",
+    userId: DEMO_USER_ID,
+    buildingId: "demo-building-1",
+    buildingName: "Sunset Apartments",
+    name: "Sunset Apt. 1B",
+    address: "Rua Dom Pedro V 74, Lisboa, 1250-097, Portugal",
+    streetAddress: "Rua Dom Pedro V 74",
+    city: "Lisboa",
+    zipCode: "1250-097",
+    country: "PT",
+    latitude: 38.7158,
+    longitude: -9.1481,
+    addressVerified: true,
+    type: "apartment",
+    status: "occupied",
+    bedrooms: 1,
+    bathrooms: 1,
+    rent: 780,
+    description: "Cosy 1-bedroom on the ground floor. Recently repainted. South-facing patio.",
+    createdAt: "2024-02-01T09:00:00Z",
+    updatedAt: "2026-03-15T10:00:00Z",
+  },
+
+  // ── Building 2 — Ribeira Flats, Porto ────────────────────────────────────
+  {
+    id: "demo-prop-11",
+    userId: DEMO_USER_ID,
+    buildingId: "demo-building-2",
+    buildingName: "Ribeira Flats",
+    name: "Ribeira Flat No. 3",
+    address: "Rua da Reboleira 22, Porto, 4050-479, Portugal",
+    streetAddress: "Rua da Reboleira 22",
+    city: "Porto",
+    zipCode: "4050-479",
+    country: "PT",
+    latitude: 41.1407,
+    longitude: -8.6145,
+    addressVerified: true,
+    type: "apartment",
+    status: "occupied",
+    bedrooms: 2,
+    bathrooms: 1,
+    rent: 1050,
+    description: "River-view apartment in historic Ribeira. Stone walls, wooden ceiling.",
+    createdAt: "2024-09-01T10:00:00Z",
+    updatedAt: "2026-02-20T12:00:00Z",
+  },
+  {
+    id: "demo-prop-12",
+    userId: DEMO_USER_ID,
+    buildingId: "demo-building-2",
+    buildingName: "Ribeira Flats",
+    name: "Ribeira Flat No. 4",
+    address: "Rua da Reboleira 22, Porto, 4050-479, Portugal",
+    streetAddress: "Rua da Reboleira 22",
+    city: "Porto",
+    zipCode: "4050-479",
+    country: "PT",
+    latitude: 41.1407,
+    longitude: -8.6145,
+    addressVerified: true,
+    type: "apartment",
+    status: "vacant",
+    bedrooms: 1,
+    bathrooms: 1,
+    rent: 820,
+    description: "Studio-style flat on the top floor. Excellent natural light. Available now.",
+    createdAt: "2024-09-01T10:00:00Z",
+    updatedAt: "2026-04-28T09:00:00Z",
+  },
+
+  // ── Standalone Properties ─────────────────────────────────────────────────
+  {
     id: "demo-prop-2",
     userId: DEMO_USER_ID,
     name: "Downtown Office Suite",
-    address: "Av. da Liberdade 456, Lisboa, 1250-096, Portugal",
-    streetAddress: "Av. da Liberdade 456",
+    address: "Av. da Liberdade 180, Lisboa, 1250-146, Portugal",
+    streetAddress: "Av. da Liberdade 180",
     city: "Lisboa",
-    zipCode: "1250-096",
-    country: "Portugal",
+    zipCode: "1250-146",
+    country: "PT",
+    latitude: 38.7188,
+    longitude: -9.1441,
+    addressVerified: true,
     type: "commercial",
     status: "occupied",
     bedrooms: 0,
-    bathrooms: 1,
+    bathrooms: 2,
     rent: 2800,
+    description: "Class-A office suite, 120 m². Central HVAC, fibre internet, reception lobby.",
     createdAt: "2024-03-20T09:00:00Z",
     updatedAt: "2026-02-15T16:45:00Z",
   },
   {
+    // Intentionally missing coordinates — edge case for map view
     id: "demo-prop-3",
     userId: DEMO_USER_ID,
     name: "Riverside House",
-    address: "Rua do Rio 789, Porto, 4000-321, Portugal",
-    streetAddress: "Rua do Rio 789",
+    address: "Rua do Ouro 12, Porto, 4150-458, Portugal",
+    streetAddress: "Rua do Ouro 12",
     city: "Porto",
-    zipCode: "4000-321",
-    country: "Portugal",
+    zipCode: "4150-458",
+    country: "PT",
+    // latitude / longitude intentionally omitted → triggers "Fix address" CTA
+    addressVerified: false,
     type: "house",
     status: "vacant",
     bedrooms: 3,
     bathrooms: 2,
     rent: 1200,
+    description:
+      "Detached 3-bedroom house with garden and garage. Address not yet verified on map.",
     createdAt: "2024-06-10T11:30:00Z",
     updatedAt: "2026-01-20T08:15:00Z",
   },
   {
+    // SCENARIO 2: Needs Attention — lease expiring in <30 days, overdue rent, open ticket
     id: "demo-prop-4",
     userId: DEMO_USER_ID,
     name: "Marina View Condo",
-    address: "Rua da Marina 321, Faro, 8000-123, Portugal",
-    streetAddress: "Rua da Marina 321",
+    address: "Rua Comandante Francisco Manuel 8, Faro, 8000-302, Portugal",
+    streetAddress: "Rua Comandante Francisco Manuel 8",
     city: "Faro",
-    zipCode: "8000-123",
-    country: "Portugal",
+    zipCode: "8000-302",
+    country: "PT",
+    latitude: 37.0162,
+    longitude: -7.9323,
+    addressVerified: true,
     type: "apartment",
     status: "occupied",
     bedrooms: 2,
     bathrooms: 2,
     rent: 1100,
+    description:
+      "Marina-facing condo, 2-bedroom. Tenant lease expires end of May — renewal pending.",
     createdAt: "2024-08-05T13:20:00Z",
-    updatedAt: "2026-03-28T10:00:00Z",
+    updatedAt: "2026-04-28T10:00:00Z",
   },
   {
     id: "demo-prop-5",
     userId: DEMO_USER_ID,
     name: "Coimbra Student Flat",
-    address: "Rua da Universidade 55, Coimbra, 3000-200, Portugal",
-    streetAddress: "Rua da Universidade 55",
+    address: "Rua de São João 18, Coimbra, 3000-381, Portugal",
+    streetAddress: "Rua de São João 18",
     city: "Coimbra",
-    zipCode: "3000-200",
-    country: "Portugal",
+    zipCode: "3000-381",
+    country: "PT",
+    latitude: 40.2094,
+    longitude: -8.4226,
+    addressVerified: true,
     type: "apartment",
     status: "occupied",
     bedrooms: 1,
     bathrooms: 1,
     rent: 550,
+    description: "Student flat, 2 min walk from University. Furnished. Academic-year lease.",
     createdAt: "2025-01-10T09:00:00Z",
     updatedAt: "2026-03-05T11:00:00Z",
   },
   {
+    // SCENARIO 3: Broken Setup — maintenance status, no tenant, no lease, NO coordinates
     id: "demo-prop-6",
     userId: DEMO_USER_ID,
     name: "Alfama Heritage Loft",
@@ -133,16 +251,21 @@ export const DEMO_PROPERTIES: Property[] = [
     streetAddress: "Travessa do Almargem 12",
     city: "Lisboa",
     zipCode: "1100-030",
-    country: "Portugal",
+    country: "PT",
+    // No latitude / longitude — triggers map alert + "Fix address" CTA in modal
+    addressVerified: false,
     type: "apartment",
     status: "maintenance",
     bedrooms: 1,
     bathrooms: 1,
     rent: 800,
+    description:
+      "Heritage loft under full renovation. No tenant — lease never configured. Address unverified.",
     createdAt: "2025-06-01T08:00:00Z",
     updatedAt: "2026-04-10T15:30:00Z",
   },
-  // ── Spanish Properties ──
+
+  // ── Spanish Properties ────────────────────────────────────────────────────
   {
     id: "demo-prop-7",
     userId: DEMO_USER_ID,
@@ -151,12 +274,16 @@ export const DEMO_PROPERTIES: Property[] = [
     streetAddress: "Carrer de Mallorca 234",
     city: "Barcelona",
     zipCode: "08008",
-    country: "Spain",
+    country: "ES",
+    latitude: 41.3944,
+    longitude: 2.1618,
+    addressVerified: true,
     type: "apartment",
     status: "occupied",
     bedrooms: 3,
     bathrooms: 2,
     rent: 1350,
+    description: "Modernista building, 3-bed. Zona tensionada — rent cap applies.",
     createdAt: "2025-04-01T10:00:00Z",
     updatedAt: "2026-04-01T12:00:00Z",
   },
@@ -168,12 +295,16 @@ export const DEMO_PROPERTIES: Property[] = [
     streetAddress: "Calle de Fuencarral 89",
     city: "Madrid",
     zipCode: "28004",
-    country: "Spain",
+    country: "ES",
+    latitude: 40.4309,
+    longitude: -3.6982,
+    addressVerified: true,
     type: "apartment",
     status: "occupied",
     bedrooms: 1,
     bathrooms: 1,
     rent: 900,
+    description: "Top-floor studio in Chamberí. Recently refurbished. Roof terrace access.",
     createdAt: "2025-07-15T09:00:00Z",
     updatedAt: "2026-04-01T11:00:00Z",
   },
@@ -185,60 +316,99 @@ export const DEMO_PROPERTIES: Property[] = [
     streetAddress: "Avinguda del Port 45",
     city: "Valencia",
     zipCode: "46024",
-    country: "Spain",
+    country: "ES",
+    latitude: 39.4617,
+    longitude: -0.3347,
+    addressVerified: true,
     type: "commercial",
     status: "occupied",
     bedrooms: 0,
     bathrooms: 1,
     rent: 1800,
+    description: "Ground-floor commercial unit near the Port. Retail or office use.",
     createdAt: "2024-11-01T08:00:00Z",
     updatedAt: "2026-04-01T10:00:00Z",
   },
 ];
 
-// ── Tenants ────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// TENANTS
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const DEMO_TENANTS: Tenant[] = [
+  // Building 1
   {
     id: "demo-tenant-1",
     userId: DEMO_USER_ID,
     propertyId: "demo-prop-1",
     name: "Maria Silva",
     email: "maria.silva@email.com",
-    phone: "+351-912-345-678",
+    phone: "+351 912 345 678",
     leaseStart: "2025-01-01",
     leaseEnd: "2026-12-31",
     rent: 950,
     paymentStatus: "paid",
     createdAt: "2024-12-15T09:00:00Z",
-    updatedAt: "2026-03-05T14:30:00Z",
+    updatedAt: "2026-04-01T14:30:00Z",
   },
+  {
+    id: "demo-tenant-9",
+    userId: DEMO_USER_ID,
+    propertyId: "demo-prop-10",
+    name: "Sofia Costa",
+    email: "sofia.costa@email.com",
+    phone: "+351 913 987 654",
+    leaseStart: "2025-11-01",
+    leaseEnd: "2026-10-31",
+    rent: 780,
+    paymentStatus: "paid",
+    createdAt: "2025-10-15T09:00:00Z",
+    updatedAt: "2026-04-01T10:00:00Z",
+  },
+  // Building 2
+  {
+    id: "demo-tenant-10",
+    userId: DEMO_USER_ID,
+    propertyId: "demo-prop-11",
+    name: "RC Consultores Lda.",
+    email: "geral@rc-consultores.pt",
+    phone: "+351 222 111 333",
+    leaseStart: "2025-02-01",
+    leaseEnd: "2027-01-31",
+    rent: 1050,
+    paymentStatus: "paid",
+    createdAt: "2025-01-20T10:00:00Z",
+    updatedAt: "2026-04-01T09:00:00Z",
+  },
+  // Standalone PT
   {
     id: "demo-tenant-2",
     userId: DEMO_USER_ID,
     propertyId: "demo-prop-2",
     name: "TechStart Lda.",
     email: "admin@techstart.pt",
-    phone: "+351-213-456-789",
+    phone: "+351 213 456 789",
     leaseStart: "2024-06-01",
     leaseEnd: "2027-05-31",
     rent: 2800,
     paymentStatus: "paid",
     createdAt: "2024-05-20T10:30:00Z",
-    updatedAt: "2026-03-02T11:15:00Z",
+    updatedAt: "2026-04-02T11:15:00Z",
   },
+  // SCENARIO 2 — overdue rent, lease expiring soon
   {
     id: "demo-tenant-3",
     userId: DEMO_USER_ID,
     propertyId: "demo-prop-4",
     name: "João Mendes",
     email: "joao.mendes@email.com",
-    phone: "+351-916-789-012",
-    leaseStart: "2025-03-01",
-    leaseEnd: "2026-02-28",
+    phone: "+351 916 789 012",
+    leaseStart: "2025-06-01",
+    leaseEnd: "2026-05-28",
     rent: 1100,
     paymentStatus: "overdue",
-    createdAt: "2025-02-10T12:00:00Z",
-    updatedAt: "2026-04-01T09:20:00Z",
+    createdAt: "2025-05-10T12:00:00Z",
+    updatedAt: "2026-04-30T09:20:00Z",
   },
   {
     id: "demo-tenant-4",
@@ -246,36 +416,23 @@ export const DEMO_TENANTS: Tenant[] = [
     propertyId: "demo-prop-5",
     name: "Ana Ferreira",
     email: "ana.ferreira@email.com",
-    phone: "+351-918-567-234",
+    phone: "+351 918 567 234",
     leaseStart: "2025-09-01",
     leaseEnd: "2026-08-31",
     rent: 550,
     paymentStatus: "paid",
     createdAt: "2025-08-15T10:00:00Z",
-    updatedAt: "2026-03-01T09:00:00Z",
+    updatedAt: "2026-04-01T09:00:00Z",
   },
-  {
-    id: "demo-tenant-5",
-    userId: DEMO_USER_ID,
-    propertyId: "demo-prop-3",
-    name: "Pedro Almeida",
-    email: "pedro.almeida@email.com",
-    phone: "+351-914-222-333",
-    leaseStart: "2026-05-01",
-    leaseEnd: "2027-04-30",
-    rent: 1200,
-    paymentStatus: "pending",
-    createdAt: "2026-04-01T10:00:00Z",
-    updatedAt: "2026-04-15T09:00:00Z",
-  },
-  // ── Spanish Tenants ──
+  // SCENARIO 3: demo-prop-6 intentionally has NO tenant
+  // Spanish
   {
     id: "demo-tenant-6",
     userId: DEMO_USER_ID,
     propertyId: "demo-prop-7",
     name: "Lucía García",
     email: "lucia.garcia@email.com",
-    phone: "+34-612-345-678",
+    phone: "+34 612 345 678",
     leaseStart: "2025-06-01",
     leaseEnd: "2026-05-31",
     rent: 1350,
@@ -289,7 +446,7 @@ export const DEMO_TENANTS: Tenant[] = [
     propertyId: "demo-prop-8",
     name: "Miguel Rodríguez",
     email: "miguel.rodriguez@email.com",
-    phone: "+34-623-456-789",
+    phone: "+34 623 456 789",
     leaseStart: "2025-09-01",
     leaseEnd: "2026-08-31",
     rent: 900,
@@ -303,7 +460,7 @@ export const DEMO_TENANTS: Tenant[] = [
     propertyId: "demo-prop-9",
     name: "Innovación Digital SL",
     email: "admin@innovacion-digital.es",
-    phone: "+34-634-567-890",
+    phone: "+34 634 567 890",
     leaseStart: "2025-01-01",
     leaseEnd: "2027-12-31",
     rent: 1800,
@@ -313,14 +470,17 @@ export const DEMO_TENANTS: Tenant[] = [
   },
 ];
 
-// ── Owners ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// OWNERS
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const DEMO_OWNERS: Owner[] = [
   {
     id: "demo-owner-1",
     userId: DEMO_USER_ID,
     name: "Carlos Santos",
     email: "carlos.santos@email.com",
-    phone: "+351-919-111-222",
+    phone: "+351 919 111 222",
     address: "Rua dos Proprietários 100, Lisboa, 1100-001, Portugal",
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2026-02-15T10:00:00Z",
@@ -330,15 +490,21 @@ export const DEMO_OWNERS: Owner[] = [
     userId: DEMO_USER_ID,
     name: "Investimentos Ibéricos Lda.",
     email: "geral@inv-ibericos.pt",
-    phone: "+351-214-333-444",
+    phone: "+351 214 333 444",
     address: "Av. da República 200, Lisboa, 1050-191, Portugal",
     createdAt: "2024-02-15T00:00:00Z",
     updatedAt: "2026-01-20T14:30:00Z",
   },
 ];
 
-// ── Leases ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// LEASES
+// ─────────────────────────────────────────────────────────────────────────────
+// taxRegime is set on all leases (Portugal = portugal_rendamentos, Spain = spain_inmuebles).
+// SCENARIO 3 lease intentionally omits taxRegime to surface the "Set tax regime" action.
+
 export const DEMO_LEASES: Lease[] = [
+  // Building 1
   {
     id: "demo-lease-1",
     userId: DEMO_USER_ID,
@@ -348,13 +514,52 @@ export const DEMO_LEASES: Lease[] = [
     endDate: "2026-12-31",
     monthlyRent: 950,
     deposit: 1900,
+    taxRegime: "portugal_rendamentos",
     status: "active",
     autoRenew: true,
     renewalNoticeDays: 60,
-    notes: "Contrato habitacional padrão. Inquilino responsável por utilidades.",
+    notes:
+      "Contrato habitacional padrão. Arrendatária responsbile pelas utilidades. Auto-renovação activa.",
     createdAt: "2024-12-15T09:00:00Z",
     updatedAt: "2025-01-01T10:00:00Z",
   },
+  {
+    id: "demo-lease-9",
+    userId: DEMO_USER_ID,
+    propertyId: "demo-prop-10",
+    tenantId: "demo-tenant-9",
+    startDate: "2025-11-01",
+    endDate: "2026-10-31",
+    monthlyRent: 780,
+    deposit: 780,
+    taxRegime: "portugal_rendamentos",
+    status: "active",
+    autoRenew: false,
+    renewalNoticeDays: 60,
+    notes: "Contrato habitacional de 12 meses. Primeiro arrendamento no imóvel.",
+    createdAt: "2025-10-15T09:00:00Z",
+    updatedAt: "2025-11-01T08:00:00Z",
+  },
+  // Building 2
+  {
+    id: "demo-lease-10",
+    userId: DEMO_USER_ID,
+    propertyId: "demo-prop-11",
+    tenantId: "demo-tenant-10",
+    startDate: "2025-02-01",
+    endDate: "2027-01-31",
+    monthlyRent: 1050,
+    deposit: 2100,
+    taxRegime: "portugal_rendamentos",
+    status: "active",
+    autoRenew: true,
+    renewalNoticeDays: 90,
+    notes: "Contrato de arrendamento não habitacional (escritório). Empresa como arrendatário.",
+    createdAt: "2025-01-20T10:00:00Z",
+    updatedAt: "2025-02-01T08:00:00Z",
+  },
+  // demo-prop-12 (Ribeira Flat No. 4) is vacant — no lease
+  // Standalone PT
   {
     id: "demo-lease-2",
     userId: DEMO_USER_ID,
@@ -364,28 +569,32 @@ export const DEMO_LEASES: Lease[] = [
     endDate: "2027-05-31",
     monthlyRent: 2800,
     deposit: 5600,
+    taxRegime: "portugal_rendamentos",
     status: "active",
     autoRenew: false,
     renewalNoticeDays: 90,
-    notes: "Contrato comercial. Inquilino responsável por impostos, seguro e manutenção.",
+    notes: "Contrato comercial (escritório). Prazo de 3 anos. Inquilino suporta IMI e seguros.",
     createdAt: "2024-05-20T10:30:00Z",
     updatedAt: "2024-06-01T09:00:00Z",
   },
   {
+    // SCENARIO 2 — expiring in <30 days from demo date (2026-05-04 reference)
     id: "demo-lease-3",
     userId: DEMO_USER_ID,
     propertyId: "demo-prop-4",
     tenantId: "demo-tenant-3",
-    startDate: "2025-03-01",
-    endDate: "2026-02-28",
+    startDate: "2025-06-01",
+    endDate: "2026-05-28",
     monthlyRent: 1100,
     deposit: 1100,
+    taxRegime: "portugal_rendamentos",
     status: "active",
-    autoRenew: true,
+    autoRenew: false,
     renewalNoticeDays: 60,
-    notes: "Contrato habitacional. Prazo de 1 ano com opção de renovação.",
-    createdAt: "2025-02-10T12:00:00Z",
-    updatedAt: "2025-03-01T08:00:00Z",
+    notes:
+      "Arrendamento expira em 28 Mai 2026. Inquilino notificado mas resposta pendente. Pagamento Abril em falta.",
+    createdAt: "2025-05-10T12:00:00Z",
+    updatedAt: "2026-04-30T09:00:00Z",
   },
   {
     id: "demo-lease-4",
@@ -396,30 +605,35 @@ export const DEMO_LEASES: Lease[] = [
     endDate: "2026-08-31",
     monthlyRent: 550,
     deposit: 550,
+    taxRegime: "portugal_rendamentos",
     status: "active",
     autoRenew: false,
     renewalNoticeDays: 60,
-    notes: "Contrato habitacional para estudantes. 12 meses.",
+    notes: "Arrendamento para fins habitacionais — estudante universitária. Duração: 12 meses.",
     createdAt: "2025-08-15T10:00:00Z",
     updatedAt: "2025-09-01T08:00:00Z",
   },
   {
-    id: "demo-lease-5",
+    // SCENARIO 3 — Alfama Heritage Loft: expired lease, no taxRegime, no active tenant
+    id: "demo-lease-6-expired",
     userId: DEMO_USER_ID,
-    propertyId: "demo-prop-3",
-    tenantId: "demo-tenant-5",
-    startDate: "2026-05-01",
-    endDate: "2027-04-30",
-    monthlyRent: 1200,
-    deposit: 2400,
-    status: "pending",
+    propertyId: "demo-prop-6",
+    tenantId: "demo-tenant-1", // Last tenant (departed)
+    startDate: "2024-03-01",
+    endDate: "2025-02-28",
+    monthlyRent: 800,
+    deposit: 800,
+    // taxRegime intentionally omitted — surfaces "Set tax regime" action in UI
+    status: "expired",
     autoRenew: false,
     renewalNoticeDays: 60,
-    notes: "Contrato habitacional. Início previsto: 1 Maio 2026.",
-    createdAt: "2026-04-01T10:00:00Z",
-    updatedAt: "2026-04-01T10:00:00Z",
+    notes:
+      "Arrendamento expirado. Novo arrendamento não criado. Imóvel em renovação desde Março 2025.",
+    createdAt: "2024-02-20T10:00:00Z",
+    updatedAt: "2025-03-01T09:00:00Z",
   },
-  // ── Spanish Leases ──
+  // demo-prop-3 (Riverside House) — vacant, no lease, no tenant
+  // Spanish
   {
     id: "demo-lease-6",
     userId: DEMO_USER_ID,
@@ -429,10 +643,12 @@ export const DEMO_LEASES: Lease[] = [
     endDate: "2026-05-31",
     monthlyRent: 1350,
     deposit: 2700,
+    taxRegime: "spain_inmuebles",
     status: "active",
     autoRenew: true,
     renewalNoticeDays: 30,
-    notes: "Contrato de vivienda estándar. Inquilina responsable de suministros.",
+    notes:
+      "Contrato de vivienda estándar. Zona de mercado tensionado — cap de renta aplicado. Auto-renovación activa.",
     createdAt: "2025-05-15T10:00:00Z",
     updatedAt: "2025-06-01T08:00:00Z",
   },
@@ -445,11 +661,11 @@ export const DEMO_LEASES: Lease[] = [
     endDate: "2026-08-31",
     monthlyRent: 900,
     deposit: 900,
+    taxRegime: "spain_inmuebles",
     status: "active",
     autoRenew: true,
     renewalNoticeDays: 30,
-    notes:
-      "Zona tensionada - rent cap applies. Contrato de vivienda en zona de mercado tensionado.",
+    notes: "Zona tensionada. Incremento de renta limitado al IPC. Contrato de 12 meses.",
     createdAt: "2025-08-20T09:00:00Z",
     updatedAt: "2025-09-01T08:00:00Z",
   },
@@ -462,24 +678,30 @@ export const DEMO_LEASES: Lease[] = [
     endDate: "2027-12-31",
     monthlyRent: 1800,
     deposit: 3600,
+    taxRegime: "spain_inmuebles",
     status: "active",
     autoRenew: false,
     renewalNoticeDays: 90,
-    notes: "Contrato comercial. Inquilino responsable de impuestos, seguro y mantenimiento.",
+    notes:
+      "Contrato comercial de 3 años. Inquilino responsable de tributos locales y seguros del local.",
     createdAt: "2024-12-01T08:00:00Z",
     updatedAt: "2025-01-01T09:00:00Z",
   },
 ];
 
-// ── Receipts ───────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// RECEIPTS  (3 months of history for active leases, Apr + Mar + Feb 2026)
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const DEMO_RECEIPTS: Receipt[] = [
+  // ── April 2026 ──
   {
     id: "demo-receipt-1",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-1",
     tenantName: "Maria Silva",
     propertyId: "demo-prop-1",
-    propertyName: "Sunset Apartments",
+    propertyName: "Sunset Apt. 2A",
     type: "rent",
     amount: 950,
     date: "2026-04-01",
@@ -487,6 +709,36 @@ export const DEMO_RECEIPTS: Receipt[] = [
     description: "Renda Abril 2026",
     createdAt: "2026-04-01T10:00:00Z",
     updatedAt: "2026-04-01T10:00:00Z",
+  },
+  {
+    id: "demo-receipt-r9",
+    userId: DEMO_USER_ID,
+    tenantId: "demo-tenant-9",
+    tenantName: "Sofia Costa",
+    propertyId: "demo-prop-10",
+    propertyName: "Sunset Apt. 1B",
+    type: "rent",
+    amount: 780,
+    date: "2026-04-01",
+    status: "paid",
+    description: "Renda Abril 2026",
+    createdAt: "2026-04-01T10:05:00Z",
+    updatedAt: "2026-04-01T10:05:00Z",
+  },
+  {
+    id: "demo-receipt-r10",
+    userId: DEMO_USER_ID,
+    tenantId: "demo-tenant-10",
+    tenantName: "RC Consultores Lda.",
+    propertyId: "demo-prop-11",
+    propertyName: "Ribeira Flat No. 3",
+    type: "rent",
+    amount: 1050,
+    date: "2026-04-01",
+    status: "paid",
+    description: "Renda Abril 2026",
+    createdAt: "2026-04-01T09:30:00Z",
+    updatedAt: "2026-04-01T09:30:00Z",
   },
   {
     id: "demo-receipt-2",
@@ -504,6 +756,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
     updatedAt: "2026-04-01T09:00:00Z",
   },
   {
+    // SCENARIO 2 — overdue / pending for April: João Mendes didn't pay
     id: "demo-receipt-3",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-3",
@@ -514,7 +767,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
     amount: 1100,
     date: "2026-04-01",
     status: "pending",
-    description: "Renda Abril 2026",
+    description: "Renda Abril 2026 — Em falta",
     createdAt: "2026-04-01T00:00:00Z",
     updatedAt: "2026-04-01T00:00:00Z",
   },
@@ -534,12 +787,58 @@ export const DEMO_RECEIPTS: Receipt[] = [
     updatedAt: "2026-04-01T08:00:00Z",
   },
   {
+    id: "demo-receipt-9",
+    userId: DEMO_USER_ID,
+    tenantId: "demo-tenant-6",
+    tenantName: "Lucía García",
+    propertyId: "demo-prop-7",
+    propertyName: "Eixample Apartment",
+    type: "rent",
+    amount: 1350,
+    date: "2026-04-01",
+    status: "paid",
+    description: "Alquiler Abril 2026",
+    createdAt: "2026-04-01T10:30:00Z",
+    updatedAt: "2026-04-01T10:30:00Z",
+  },
+  {
+    id: "demo-receipt-10",
+    userId: DEMO_USER_ID,
+    tenantId: "demo-tenant-7",
+    tenantName: "Miguel Rodríguez",
+    propertyId: "demo-prop-8",
+    propertyName: "Chamberí Studio",
+    type: "rent",
+    amount: 900,
+    date: "2026-04-01",
+    status: "paid",
+    description: "Alquiler Abril 2026",
+    createdAt: "2026-04-01T11:00:00Z",
+    updatedAt: "2026-04-01T11:00:00Z",
+  },
+  {
+    id: "demo-receipt-11",
+    userId: DEMO_USER_ID,
+    tenantId: "demo-tenant-8",
+    tenantName: "Innovación Digital SL",
+    propertyId: "demo-prop-9",
+    propertyName: "Valencia Office",
+    type: "rent",
+    amount: 1800,
+    date: "2026-04-01",
+    status: "paid",
+    description: "Alquiler Abril 2026",
+    createdAt: "2026-04-01T09:30:00Z",
+    updatedAt: "2026-04-01T09:30:00Z",
+  },
+  // ── March 2026 ──
+  {
     id: "demo-receipt-5",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-1",
     tenantName: "Maria Silva",
     propertyId: "demo-prop-1",
-    propertyName: "Sunset Apartments",
+    propertyName: "Sunset Apt. 2A",
     type: "rent",
     amount: 950,
     date: "2026-03-01",
@@ -547,6 +846,21 @@ export const DEMO_RECEIPTS: Receipt[] = [
     description: "Renda Março 2026",
     createdAt: "2026-03-01T10:00:00Z",
     updatedAt: "2026-03-01T10:00:00Z",
+  },
+  {
+    id: "demo-receipt-r11",
+    userId: DEMO_USER_ID,
+    tenantId: "demo-tenant-9",
+    tenantName: "Sofia Costa",
+    propertyId: "demo-prop-10",
+    propertyName: "Sunset Apt. 1B",
+    type: "rent",
+    amount: 780,
+    date: "2026-03-01",
+    status: "paid",
+    description: "Renda Março 2026",
+    createdAt: "2026-03-01T10:05:00Z",
+    updatedAt: "2026-03-01T10:05:00Z",
   },
   {
     id: "demo-receipt-6",
@@ -593,55 +907,43 @@ export const DEMO_RECEIPTS: Receipt[] = [
     createdAt: "2026-03-01T07:00:00Z",
     updatedAt: "2026-03-01T07:00:00Z",
   },
-  // ── Spanish Receipts ──
+  // ── February 2026 (partial — selected properties) ──
   {
-    id: "demo-receipt-9",
+    id: "demo-receipt-f1",
     userId: DEMO_USER_ID,
-    tenantId: "demo-tenant-6",
-    tenantName: "Lucía García",
-    propertyId: "demo-prop-7",
-    propertyName: "Eixample Apartment",
+    tenantId: "demo-tenant-1",
+    tenantName: "Maria Silva",
+    propertyId: "demo-prop-1",
+    propertyName: "Sunset Apt. 2A",
     type: "rent",
-    amount: 1350,
-    date: "2026-04-01",
+    amount: 950,
+    date: "2026-02-01",
     status: "paid",
-    description: "Alquiler Abril 2026",
-    createdAt: "2026-04-01T10:30:00Z",
-    updatedAt: "2026-04-01T10:30:00Z",
+    description: "Renda Fevereiro 2026",
+    createdAt: "2026-02-01T10:00:00Z",
+    updatedAt: "2026-02-01T10:00:00Z",
   },
   {
-    id: "demo-receipt-10",
+    id: "demo-receipt-f2",
     userId: DEMO_USER_ID,
-    tenantId: "demo-tenant-7",
-    tenantName: "Miguel Rodríguez",
-    propertyId: "demo-prop-8",
-    propertyName: "Chamberí Studio",
+    tenantId: "demo-tenant-2",
+    tenantName: "TechStart Lda.",
+    propertyId: "demo-prop-2",
+    propertyName: "Downtown Office Suite",
     type: "rent",
-    amount: 900,
-    date: "2026-04-01",
+    amount: 2800,
+    date: "2026-02-01",
     status: "paid",
-    description: "Alquiler Abril 2026",
-    createdAt: "2026-04-01T11:00:00Z",
-    updatedAt: "2026-04-01T11:00:00Z",
-  },
-  {
-    id: "demo-receipt-11",
-    userId: DEMO_USER_ID,
-    tenantId: "demo-tenant-8",
-    tenantName: "Innovación Digital SL",
-    propertyId: "demo-prop-9",
-    propertyName: "Valencia Office",
-    type: "rent",
-    amount: 1800,
-    date: "2026-04-01",
-    status: "paid",
-    description: "Alquiler Abril 2026",
-    createdAt: "2026-04-01T09:30:00Z",
-    updatedAt: "2026-04-01T09:30:00Z",
+    description: "Renda Fevereiro 2026",
+    createdAt: "2026-02-01T09:00:00Z",
+    updatedAt: "2026-02-01T09:00:00Z",
   },
 ];
 
-// ── Expenses ───────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// EXPENSES
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const DEMO_EXPENSES: Expense[] = [
   {
     id: "demo-expense-1",
@@ -690,42 +992,66 @@ export const DEMO_EXPENSES: Expense[] = [
   {
     id: "demo-expense-5",
     userId: DEMO_USER_ID,
-    propertyId: "demo-prop-3",
+    propertyId: "demo-prop-6",
     category: "maintenance",
-    amount: 320,
-    date: "2026-04-01",
-    description: "Jardinagem e manutenção exterior",
-    createdAt: "2026-04-01T11:00:00Z",
-    updatedAt: "2026-04-01T11:00:00Z",
+    amount: 4200,
+    date: "2026-03-01",
+    description: "Obra de renovação — cozinha e casa de banho (fase 1)",
+    createdAt: "2026-03-01T11:00:00Z",
+    updatedAt: "2026-03-01T11:00:00Z",
+  },
+  {
+    id: "demo-expense-6",
+    userId: DEMO_USER_ID,
+    propertyId: "demo-prop-11",
+    category: "repairs",
+    amount: 310,
+    date: "2026-04-05",
+    description: "Substituição de torneiras — casa de banho",
+    createdAt: "2026-04-05T10:00:00Z",
+    updatedAt: "2026-04-05T10:00:00Z",
   },
 ];
 
-// ── Maintenance Tickets ────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// MAINTENANCE TICKETS
+// ─────────────────────────────────────────────────────────────────────────────
+// Spread across scenarios:
+//   open/in_progress × 4  → drives the open-ticket alert count to 4
+//   resolved × 2          → shows history
+//   SCENARIO 2 property (demo-prop-4) has 1 open ticket
+//   SCENARIO 3 property (demo-prop-6) has 1 in_progress (the renovation)
+
 export const DEMO_MAINTENANCE: MaintenanceTicket[] = [
   {
+    // SCENARIO 1 — resolved, shows history
     id: "demo-maint-1",
     userId: DEMO_USER_ID,
     propertyId: "demo-prop-1",
-    propertyName: "Sunset Apartments",
+    propertyName: "Sunset Apt. 2A",
     tenantId: "demo-tenant-1",
     tenantName: "Maria Silva",
-    title: "Torneira a pingar na casa de banho",
-    description: "A torneira da casa de banho tem estado a pingar constantemente na última semana.",
-    status: "in_progress",
+    title: "Leaking tap in bathroom",
+    description:
+      "The bathroom tap has been dripping continuously for the past week. Plumber scheduled.",
+    status: "resolved",
     priority: "medium",
     images: "[]",
+    resolvedAt: "2026-04-05T11:00:00Z",
     createdAt: "2026-04-01T10:00:00Z",
-    updatedAt: "2026-04-02T14:00:00Z",
+    updatedAt: "2026-04-05T11:00:00Z",
   },
   {
+    // Open — commercial property
     id: "demo-maint-2",
     userId: DEMO_USER_ID,
     propertyId: "demo-prop-2",
     propertyName: "Downtown Office Suite",
     tenantId: "demo-tenant-2",
     tenantName: "TechStart Lda.",
-    title: "Sistema AVAC não arrefece",
-    description: "A unidade de ar condicionado não produz ar frio no escritório.",
+    title: "HVAC not cooling",
+    description:
+      "The central air conditioning unit is not producing cold air. Temperatures in the office are uncomfortable.",
     status: "open",
     priority: "high",
     images: "[]",
@@ -733,54 +1059,77 @@ export const DEMO_MAINTENANCE: MaintenanceTicket[] = [
     updatedAt: "2026-04-03T09:00:00Z",
   },
   {
+    // SCENARIO 2 — open ticket on the expiring-lease property
     id: "demo-maint-3",
     userId: DEMO_USER_ID,
     propertyId: "demo-prop-4",
     propertyName: "Marina View Condo",
     tenantId: "demo-tenant-3",
     tenantName: "João Mendes",
-    title: "Vidro partido na sala de estar",
-    description: "Vidro da janela rachado, necessita substituição.",
-    status: "resolved",
+    title: "Front door lock stiff and unreliable",
+    description:
+      "The front door lock is increasingly difficult to operate. Tenant concerned about security.",
+    status: "open",
     priority: "high",
     images: "[]",
-    resolvedAt: "2026-02-25T11:00:00Z",
-    createdAt: "2026-02-20T16:00:00Z",
-    updatedAt: "2026-02-25T11:00:00Z",
+    createdAt: "2026-04-28T10:00:00Z",
+    updatedAt: "2026-04-28T10:00:00Z",
   },
   {
+    // SCENARIO 3 — in_progress renovation on the broken-setup property
     id: "demo-maint-4",
     userId: DEMO_USER_ID,
     propertyId: "demo-prop-6",
     propertyName: "Alfama Heritage Loft",
     title: "Full renovation — kitchen and bathroom remodel",
     description:
-      "Heritage loft under renovation. Kitchen cabinets and bathroom tiling being replaced.",
+      "Heritage loft under full renovation. Kitchen cabinets and bathroom tiling being replaced. No tenant during works.",
     status: "in_progress",
     priority: "low",
     images: "[]",
     createdAt: "2026-03-15T10:00:00Z",
     updatedAt: "2026-04-10T15:30:00Z",
   },
-  // ── Spanish Maintenance ──
   {
+    // Spanish portfolio — open, high priority
     id: "demo-maint-5",
     userId: DEMO_USER_ID,
     propertyId: "demo-prop-7",
     propertyName: "Eixample Apartment",
     tenantId: "demo-tenant-6",
     tenantName: "Lucía García",
-    title: "Caldera no enciende",
-    description: "La caldera de gas no arranca. No hay agua caliente ni calefacción desde ayer.",
+    title: "Boiler not igniting — no hot water or heating",
+    description:
+      "The gas boiler has not been starting since yesterday. No hot water or heating in the property.",
     status: "open",
     priority: "high",
     images: "[]",
     createdAt: "2026-04-14T08:30:00Z",
     updatedAt: "2026-04-14T08:30:00Z",
   },
+  {
+    // Ribeira Flats — recent resolved
+    id: "demo-maint-6",
+    userId: DEMO_USER_ID,
+    propertyId: "demo-prop-11",
+    propertyName: "Ribeira Flat No. 3",
+    tenantId: "demo-tenant-10",
+    tenantName: "RC Consultores Lda.",
+    title: "Bathroom taps replaced",
+    description: "Old taps showing wear. Replaced all three taps in the main bathroom.",
+    status: "resolved",
+    priority: "low",
+    images: "[]",
+    resolvedAt: "2026-04-06T14:00:00Z",
+    createdAt: "2026-04-01T09:00:00Z",
+    updatedAt: "2026-04-06T14:00:00Z",
+  },
 ];
 
-// ── Templates ──────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// TEMPLATES & CORRESPONDENCE
+// ─────────────────────────────────────────────────────────────────────────────
+
 export const DEMO_TEMPLATES: CorrespondenceTemplate[] = [
   {
     id: "demo-template-1",
@@ -806,7 +1155,6 @@ export const DEMO_TEMPLATES: CorrespondenceTemplate[] = [
   },
 ];
 
-// ── Correspondence ─────────────────────────────────────
 export const DEMO_CORRESPONDENCE: Correspondence[] = [
   {
     id: "demo-corr-1",
@@ -816,43 +1164,61 @@ export const DEMO_CORRESPONDENCE: Correspondence[] = [
     tenantName: "Maria Silva",
     subject: "Bem-vinda ao Sunset Apartments",
     content:
-      "Cara Maria,\n\nBem-vinda ao Sunset Apartments! Estamos muito satisfeitos por tê-la como inquilina.\n\nCumprimentos,\nGestão do Imóvel",
+      "Cara Maria,\n\nBem-vinda ao Sunset Apt. 2A! Estamos muito satisfeitos por tê-la como inquilina.\n\nCumprimentos,\nGestão do Imóvel",
     status: "sent",
     sentAt: "2025-01-01T12:00:00Z",
     createdAt: "2025-01-01T11:50:00Z",
     updatedAt: "2025-01-01T12:00:00Z",
   },
+  {
+    id: "demo-corr-2",
+    userId: DEMO_USER_ID,
+    templateId: "demo-template-1",
+    tenantId: "demo-tenant-3",
+    tenantName: "João Mendes",
+    subject: "Renda em Atraso — Abril 2026",
+    content:
+      "Caro João,\n\nVerificámos que o pagamento da renda referente a Abril 2026 (€1.100) ainda não foi efectuado.\n\nPor favor proceda ao pagamento até 15 de Abril.\n\nCumprimentos,\nGestão do Imóvel",
+    status: "sent",
+    sentAt: "2026-04-10T09:00:00Z",
+    createdAt: "2026-04-10T08:50:00Z",
+    updatedAt: "2026-04-10T09:00:00Z",
+  },
 ];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DOCUMENTS
+// ─────────────────────────────────────────────────────────────────────────────
 
 export const DEMO_DOCUMENTS: DemoDocument[] = [
   {
     id: "demo-document-1",
     userId: DEMO_USER_ID,
-    name: "Lease Agreement - Maria Silva.pdf",
-    description: "Signed residential lease for Sunset Apartments.",
+    name: "Lease Agreement — Maria Silva.pdf",
+    description: "Signed residential lease for Sunset Apt. 2A.",
     type: "contract",
     mimeType: "application/pdf",
     storagePath: "/demo/documents/lease-maria-silva.pdf",
     fileSize: 248000,
     propertyId: "demo-prop-1",
-    propertyName: "Sunset Apartments",
+    propertyName: "Sunset Apt. 2A",
     tenantId: "demo-tenant-1",
     tenantName: "Maria Silva",
-    uploadedAt: "2026-01-01T09:00:00Z",
-    createdAt: "2026-01-01T09:00:00Z",
-    updatedAt: "2026-01-01T09:00:00Z",
+    uploadedAt: "2025-01-01T09:00:00Z",
+    createdAt: "2025-01-01T09:00:00Z",
+    updatedAt: "2025-01-01T09:00:00Z",
   },
   {
     id: "demo-document-2",
     userId: DEMO_USER_ID,
-    name: "April Rent Receipt - Maria Silva.pdf",
+    name: "April Rent Receipt — Maria Silva.pdf",
     description: "Rent receipt for April 2026.",
     type: "receipt",
     mimeType: "application/pdf",
     storagePath: "/demo/documents/april-rent-receipt.pdf",
     fileSize: 132000,
     propertyId: "demo-prop-1",
-    propertyName: "Sunset Apartments",
+    propertyName: "Sunset Apt. 2A",
     tenantId: "demo-tenant-1",
     tenantName: "Maria Silva",
     uploadedAt: "2026-04-01T10:15:00Z",
@@ -863,20 +1229,54 @@ export const DEMO_DOCUMENTS: DemoDocument[] = [
     id: "demo-document-3",
     userId: DEMO_USER_ID,
     name: "Building Insurance Certificate.pdf",
-    description: "Insurance certificate shared with current tenants.",
+    description: "Annual insurance certificate for Sunset Apartments building.",
     type: "certificate",
     mimeType: "application/pdf",
     storagePath: "/demo/documents/building-insurance-certificate.pdf",
     fileSize: 198000,
     propertyId: "demo-prop-1",
-    propertyName: "Sunset Apartments",
-    uploadedAt: "2026-03-12T15:00:00Z",
-    createdAt: "2026-03-12T15:00:00Z",
-    updatedAt: "2026-03-12T15:00:00Z",
+    propertyName: "Sunset Apt. 2A",
+    uploadedAt: "2026-01-01T15:00:00Z",
+    createdAt: "2026-01-01T15:00:00Z",
+    updatedAt: "2026-01-01T15:00:00Z",
+  },
+  {
+    id: "demo-document-4",
+    userId: DEMO_USER_ID,
+    name: "Commercial Lease — TechStart Lda..pdf",
+    description: "3-year commercial lease agreement for Downtown Office Suite.",
+    type: "contract",
+    mimeType: "application/pdf",
+    storagePath: "/demo/documents/lease-techstart.pdf",
+    fileSize: 312000,
+    propertyId: "demo-prop-2",
+    propertyName: "Downtown Office Suite",
+    tenantId: "demo-tenant-2",
+    tenantName: "TechStart Lda.",
+    uploadedAt: "2024-06-01T10:00:00Z",
+    createdAt: "2024-06-01T10:00:00Z",
+    updatedAt: "2024-06-01T10:00:00Z",
+  },
+  {
+    id: "demo-document-5",
+    userId: DEMO_USER_ID,
+    name: "Renovation Scope — Alfama Heritage Loft.pdf",
+    description: "Contractor scope of works for full kitchen and bathroom renovation.",
+    type: "other",
+    mimeType: "application/pdf",
+    storagePath: "/demo/documents/renovation-scope-alfama.pdf",
+    fileSize: 175000,
+    propertyId: "demo-prop-6",
+    propertyName: "Alfama Heritage Loft",
+    uploadedAt: "2026-03-01T11:30:00Z",
+    createdAt: "2026-03-01T11:30:00Z",
+    updatedAt: "2026-03-01T11:30:00Z",
   },
 ];
 
-// ── Aggregated Demo Data ───────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// AGGREGATION  (unchanged API surface)
+// ─────────────────────────────────────────────────────────────────────────────
 
 export type DemoEntityType =
   | "properties"
@@ -902,21 +1302,17 @@ const DEMO_DATA_MAP: Record<DemoEntityType, unknown[]> = {
   expenses: DEMO_EXPENSES,
   maintenance: DEMO_MAINTENANCE,
   leases: DEMO_LEASES,
-  contacts: [], // Maintenance contacts — use from existing mock if needed
+  contacts: [],
 };
 
-/**
- * Get demo data for a given entity type. Returns a deep copy.
- */
+/** Get demo data for a given entity type. Returns a deep copy. */
 export function getDemoData<T = unknown>(entityType: DemoEntityType): T[] {
   const data = DEMO_DATA_MAP[entityType];
   if (!data) return [];
   return JSON.parse(JSON.stringify(data)) as T[];
 }
 
-/**
- * Get a single demo entity by ID. Returns a deep copy or null.
- */
+/** Get a single demo entity by ID. Returns a deep copy or null. */
 export function getDemoDataById<T extends { id: string }>(
   entityType: DemoEntityType,
   id: string,

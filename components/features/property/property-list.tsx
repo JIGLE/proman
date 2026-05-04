@@ -63,6 +63,53 @@ import PropertyMap from "./property-map";
 import { PropertyDetailModal } from "./property-detail-modal";
 import { PageHeader } from "@/components/shared/page-header";
 
+// ─── Next Action derivation ────────────────────────────────────────────────────
+type NextAction = {
+  label: string;
+  urgency: "urgent" | "warning" | "info" | "ok";
+};
+
+function getNextAction(
+  property: Property,
+  {
+    hasActiveLease,
+    isExpiring,
+    hasOpenTickets,
+    isMissingMap,
+    hasTenant,
+  }: {
+    hasActiveLease: boolean;
+    isExpiring: boolean;
+    hasOpenTickets: boolean;
+    isMissingMap: boolean;
+    hasTenant: boolean;
+  },
+): NextAction {
+  if (property.status === "occupied" && !hasActiveLease) {
+    return { label: "Add lease", urgency: "urgent" };
+  }
+  if (isExpiring) {
+    return { label: "Renew lease", urgency: "warning" };
+  }
+  if (hasOpenTickets) {
+    return { label: "Review tickets", urgency: "warning" };
+  }
+  if (property.status === "vacant" && !hasTenant) {
+    return { label: "Find tenant", urgency: "info" };
+  }
+  if (isMissingMap) {
+    return { label: "Verify address", urgency: "info" };
+  }
+  return { label: "All good", urgency: "ok" };
+}
+
+const nextActionStyles: Record<NextAction["urgency"], string> = {
+  urgent: "text-red-400 bg-red-500/10 border-red-500/30",
+  warning: "text-amber-300 bg-amber-500/10 border-amber-500/30",
+  info: "text-blue-300 bg-blue-500/10 border-blue-500/30",
+  ok: "text-zinc-500 bg-transparent border-transparent",
+};
+
 export type PropertiesViewProps = {
   viewMode?: "list" | "map";
   onPropertySelect?: (propertyId: string) => void;
@@ -1047,6 +1094,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                 onSort={(key) => requestSort(key as keyof Property)}
                               />
                             </TableHead>
+                            <TableHead className="text-zinc-400">Next Action</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1076,6 +1124,34 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                 {formatCurrency(Number(property.rent))}
                               </TableCell>
                               <TableCell>{getStatusBadge(property.status)}</TableCell>
+                              <TableCell>
+                                {(() => {
+                                  const propTenants = tenants.filter(
+                                    (t) => t.propertyId === property.id,
+                                  );
+                                  const hasActiveLease = activeLeasePropertyIds.has(property.id);
+                                  const isExpiring = expiringLeasePropertyIds.has(property.id);
+                                  const hasOpenTickets = openMaintenancePropertyIds.has(
+                                    property.id,
+                                  );
+                                  const isMissingMap = missingMapPropertyIds.has(property.id);
+                                  const action = getNextAction(property, {
+                                    hasActiveLease,
+                                    isExpiring,
+                                    hasOpenTickets,
+                                    isMissingMap,
+                                    hasTenant: propTenants.length > 0,
+                                  });
+                                  if (action.urgency === "ok") return null;
+                                  return (
+                                    <span
+                                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${nextActionStyles[action.urgency]}`}
+                                    >
+                                      {action.label}
+                                    </span>
+                                  );
+                                })()}
+                              </TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -1187,19 +1263,19 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           hasAttention &&
                                             isExpiring &&
                                             openTickets.length > 0 &&
-                                            "border-l-amber-500/60",
+                                            "border-l-amber-500/60 bg-amber-500/[0.04]",
                                           hasAttention &&
                                             isExpiring &&
                                             openTickets.length === 0 &&
-                                            "border-l-amber-400/70",
+                                            "border-l-amber-400/70 bg-amber-500/[0.04]",
                                           hasAttention &&
                                             !isExpiring &&
                                             openTickets.length > 0 &&
-                                            "border-l-orange-500/60",
+                                            "border-l-orange-500/60 bg-orange-500/[0.04]",
                                           hasAttention &&
                                             !isExpiring &&
                                             openTickets.length === 0 &&
-                                            "border-l-red-400/60",
+                                            "border-l-red-400/60 bg-red-500/[0.04]",
                                           isSelected && "bg-zinc-800/60",
                                         )}
                                       >
@@ -1216,7 +1292,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           />
                                         </div>
 
-                                        {/* Name + street address */}
+                                        {/* Name + street address + next action */}
                                         <div
                                           className="flex min-w-0 flex-1 cursor-pointer flex-col"
                                           onClick={() => {
@@ -1231,6 +1307,25 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           <span className="truncate text-xs text-zinc-500">
                                             {property.streetAddress || property.address}
                                           </span>
+                                          {(() => {
+                                            const action = getNextAction(property, {
+                                              hasActiveLease: activeLeasePropertyIds.has(
+                                                property.id,
+                                              ),
+                                              isExpiring,
+                                              hasOpenTickets: openTickets.length > 0,
+                                              isMissingMap,
+                                              hasTenant: propTenants.length > 0,
+                                            });
+                                            if (action.urgency === "ok") return null;
+                                            return (
+                                              <span
+                                                className={`mt-0.5 w-fit rounded-full border px-1.5 py-0.5 text-[10px] font-medium leading-none ${nextActionStyles[action.urgency]}`}
+                                              >
+                                                {action.label}
+                                              </span>
+                                            );
+                                          })()}
                                         </div>
 
                                         {/* Type · bed · bath */}

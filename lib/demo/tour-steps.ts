@@ -2,42 +2,46 @@ import type { TourStep } from "@/components/shared/guided-tour";
 
 /**
  * Tour shown to demo users on first entry.
- * Targets CSS selectors that exist in the main app shell.
+ *
+ * Aligned with the three demo scenarios pre-loaded in demo-data.ts:
+ *   S1 — Happy Path      → Sunset Apt. 2A  (fully configured)
+ *   S2 — Needs Attention → Marina View Condo (lease exp. May 28, overdue rent, open ticket)
+ *   S3 — Broken Setup    → Alfama Heritage Loft (no tenant, no lease, no map coords)
  */
 export const DEMO_TOUR_STEPS: TourStep[] = [
   {
     target: '[data-tour="sidebar"]',
-    title: "Navigation",
+    title: "Your portfolio, pre-loaded",
     description:
-      "Use the sidebar to switch between Properties, Tenants, Finances, Leases, and Maintenance. Each section is pre-loaded with realistic sample data.",
+      "12 demo properties across Portugal and Spain are ready to explore — apartments, offices, and multi-unit buildings. Navigate to any section from here.",
     placement: "right",
   },
   {
     target: '[data-tour="properties"]',
-    title: "Property Portfolio",
+    title: "Three scenarios to explore",
     description:
-      "View and manage your properties. Try adding a new property or editing an existing one — all changes persist within your demo session.",
+      "Look for the coloured left borders: Sunset Apt. 2A is your happy path, Marina View Condo needs urgent attention (lease expires May 28), and Alfama Heritage Loft shows a broken setup with no tenant or lease.",
     placement: "bottom",
   },
   {
     target: '[data-tour="dashboard-stats"]',
-    title: "Dashboard Overview",
+    title: "Alerts are real, not placeholders",
     description:
-      "Key metrics at a glance: occupancy rates, revenue, pending maintenance, and upcoming lease renewals.",
+      "The 'Needs attention' zone shows 4 open tickets and 2 leases expiring within 30 days. Click any alert to jump directly to the affected properties.",
     placement: "bottom",
   },
   {
     target: '[data-tour="quick-actions"]',
-    title: "Quick Actions",
+    title: "Map view has live pins",
     description:
-      "Record payments, add tenants, or create maintenance tickets right from the dashboard without navigating away.",
+      "10 of 12 properties have verified coordinates and appear on the map. Two properties show the 'Fix address' call-to-action — click the amber pin to see it in action.",
     placement: "left",
   },
   {
     target: '[data-tour="demo-banner"]',
-    title: "Demo Controls",
+    title: "Demo controls",
     description:
-      "Use the toolbar above to reset demo data, restart this tour, or exit the demo. A session timer shows remaining time.",
+      "Reset the data back to its original state at any time, restart this tour, or switch to the tenant perspective to see the renter's view. A session timer shows remaining time.",
     placement: "bottom",
   },
 ];
