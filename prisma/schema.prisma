@@ -280,6 +280,7 @@ model Property {
   rentReceipts        RentReceipt[]
   nruaRegistrations   NRUARegistration[]
   verificationClaims  PropertyVerificationClaim[]
+  correspondences     Correspondence[]
 
   // Performance indexes
   @@index([userId])
@@ -393,6 +394,7 @@ model MaintenanceTicket {
   images            String   // JSON string of image URLs
   cost              Float?   // @deprecated — kept for backward compat; use estimatedCost
   estimatedCost     Float?
+  actualCost        Float?
   scheduledDate     DateTime?
   dueDate           DateTime?
   assignedTo        String?  // @deprecated — kept for backward compat; use vendorName
@@ -439,6 +441,7 @@ model Correspondence {
   userId     String
   templateId String
   tenantId   String
+  propertyId String?
   subject    String
   content    String
   status     CorrespondenceStatus @default(draft)
@@ -450,6 +453,7 @@ model Correspondence {
   user     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
   template CorrespondenceTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
   tenant   Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  property Property?              @relation(fields: [propertyId], references: [id], onDelete: SetNull)
 
   @@map("correspondence")
 }

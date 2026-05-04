@@ -32,7 +32,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useApp } from "@/lib/contexts/app-context";
-import { expenseSchema, type ExpenseFormData } from "@/lib/schemas/expense.schema";
+import {
+  expenseSchema,
+  EXPENSE_CATEGORIES,
+  type ExpenseFormData,
+} from "@/lib/schemas/expense.schema";
 import { cn } from "@/lib/utils/utils";
 import { TaxCalculator, TaxCalculationResult } from "@/lib/utils/tax-calculator";
 import { getExpenseCategoryColor } from "@/lib/design-tokens";
@@ -202,16 +206,7 @@ export function FinancialsView(): React.ReactElement {
     }
   }, [metrics, selectedCountry, timeRange]);
 
-  const categories = [
-    "Maintenance",
-    "Repairs",
-    "Utilities",
-    "Insurance",
-    "Taxes",
-    "Mortgage",
-    "Management Fees",
-    "Other",
-  ];
+  const categories = EXPENSE_CATEGORIES;
 
   return (
     <>

@@ -7,33 +7,13 @@ import {
 } from "@/lib/utils/error-handling";
 import { withRateLimit } from "@/lib/utils/rate-limit";
 import { getPrismaClient } from "@/lib/services/database/database";
-import { maintenanceSchema } from "@/lib/schemas/maintenance.schema";
+import { buildingSchema } from "@/lib/schemas/building.schema";
 import { isMockMode } from "@/lib/config/data-mode";
 import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 import { ZodError } from "zod";
 
-const ticketInclude = {
-  property: { select: { name: true } },
-  tenant: { select: { name: true } },
-};
-
-function flattenTicket(
-  ticket: Record<string, unknown> & {
-    property: { name: string };
-    tenant?: { name: string } | null;
-  },
-) {
-  const images = ticket.images;
-  return {
-    ...ticket,
-    propertyName: ticket.property.name,
-    tenantName: ticket.tenant?.name,
-    images: typeof images === "string" ? (JSON.parse(images) as string[]) : (images ?? []),
-  };
-}
-
 async function handleGet(request: NextRequest): Promise<Response> {
-  const demo = handleDemoGet(request, "maintenance");
+  const demo = handleDemoGet(request, "buildings");
   if (demo.response) return demo.response;
 
   if (isMockMode) {
@@ -46,17 +26,21 @@ async function handleGet(request: NextRequest): Promise<Response> {
   const { userId } = authResult;
   const prisma = getPrismaClient();
 
-  const tickets = await prisma.maintenanceTicket.findMany({
+  const buildings = await prisma.building.findMany({
     where: { userId },
-    orderBy: { createdAt: "desc" },
-    include: ticketInclude,
+    orderBy: { name: "asc" },
+    include: {
+      _count: { select: { properties: true } },
+    },
   });
 
-  return createSuccessResponse(tickets.map(flattenTicket));
+  return createSuccessResponse(
+    buildings.map((b) => ({ ...b, propertyCount: b._count.properties })),
+  );
 }
 
 async function handlePost(request: NextRequest): Promise<Response> {
-  const demo = await handleDemoMutation(request, "maintenance");
+  const demo = await handleDemoMutation(request, "buildings");
   if (demo.response) return demo.response;
 
   if (isMockMode) {
@@ -75,18 +59,14 @@ async function handlePost(request: NextRequest): Promise<Response> {
 
   try {
     const json = await request.json();
-    const body = maintenanceSchema.parse(json);
+    const body = buildingSchema.parse(json);
 
-    const ticket = await prisma.maintenanceTicket.create({
-      data: {
-        ...body,
-        userId,
-        images: "[]",
-      },
-      include: ticketInclude,
+    const building = await prisma.building.create({
+      data: { ...body, userId },
+      include: { _count: { select: { properties: true } } },
     });
 
-    return createSuccessResponse(flattenTicket(ticket), 201);
+    return createSuccessResponse({ ...building, propertyCount: building._count.properties }, 201);
   } catch (error) {
     if (error instanceof ZodError) {
       return createErrorResponse(

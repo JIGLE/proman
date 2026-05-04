@@ -54,6 +54,14 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         mobilePrimary: true,
       },
       {
+        key: "buildings",
+        href: "/buildings",
+        label: "Buildings",
+        labelKey: "navigation.buildings",
+        icon: Building2,
+        roles: ["owner"],
+      },
+      {
         key: "tenants",
         href: "/people",
         label: "People",

@@ -21,6 +21,7 @@ import {
   Expense,
   MaintenanceTicket,
   Lease,
+  Building,
 } from "@/lib/types";
 import { useToast } from "./toast-context";
 import { useCsrf } from "./csrf-context";
@@ -41,6 +42,7 @@ interface AppState {
   expenses: Expense[];
   maintenance: MaintenanceTicket[];
   leases: Lease[];
+  buildings: Building[];
   loading: boolean;
   error: string | null;
 }
@@ -56,7 +58,8 @@ type AppAction =
   | { type: "SET_OWNERS"; payload: Owner[] }
   | { type: "SET_EXPENSES"; payload: Expense[] }
   | { type: "SET_MAINTENANCE"; payload: MaintenanceTicket[] }
-  | { type: "SET_LEASES"; payload: Lease[] };
+  | { type: "SET_LEASES"; payload: Lease[] }
+  | { type: "SET_BUILDINGS"; payload: Building[] };
 
 const initialState: AppState = {
   properties: [],
@@ -68,6 +71,7 @@ const initialState: AppState = {
   expenses: [],
   maintenance: [],
   leases: [],
+  buildings: [],
   loading: false,
   error: null,
 };
@@ -96,6 +100,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, maintenance: action.payload };
     case "SET_LEASES":
       return { ...state, leases: action.payload };
+    case "SET_BUILDINGS":
+      return { ...state, buildings: action.payload };
     default:
       return state;
   }
@@ -135,6 +141,9 @@ interface AppContextValue {
   addLease: (data: Partial<Lease>) => Promise<void>;
   updateLease: (id: string, data: Partial<Lease>) => Promise<void>;
   deleteLease: (id: string) => Promise<void>;
+  addBuilding: (data: Partial<Building>) => Promise<void>;
+  updateBuilding: (id: string, data: Partial<Building>) => Promise<void>;
+  deleteBuilding: (id: string) => Promise<void>;
   refreshData: () => Promise<void>;
 }
 
@@ -207,6 +216,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
           payload: getDemoData<MaintenanceTicket>("maintenance"),
         });
         dispatch({ type: "SET_LEASES", payload: getDemoData<Lease>("leases") });
+        dispatch({ type: "SET_BUILDINGS", payload: getDemoData<Building>("buildings") });
         dispatch({ type: "SET_LOADING", payload: false });
         loadControlRef.current.inFlight = false;
         return;
@@ -232,6 +242,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
           expensesRes,
           maintenanceRes,
           leasesRes,
+          buildingsRes,
         ] = await Promise.all([
           apiFetch<{ data: Property[] }>("/api/properties", csrfToken),
           apiFetch<{ data: Tenant[] }>("/api/tenants", csrfToken),
@@ -242,6 +253,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
           apiFetch<{ data: Expense[] }>("/api/expenses", csrfToken),
           apiFetch<{ data: MaintenanceTicket[] }>("/api/maintenance", csrfToken),
           apiFetch<{ data: Lease[] }>("/api/leases", csrfToken),
+          apiFetch<{ data: Building[] }>("/api/buildings", csrfToken),
         ]);
 
         dispatch({
@@ -279,6 +291,10 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         dispatch({
           type: "SET_LEASES",
           payload: (leasesRes.data ?? leasesRes) as Lease[],
+        });
+        dispatch({
+          type: "SET_BUILDINGS",
+          payload: (buildingsRes.data ?? buildingsRes) as Building[],
         });
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Failed to load data";
@@ -463,6 +479,22 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     [csrfToken, userId, showError, showSuccess, isDemo, state.leases],
   );
 
+  const buildingActions = useMemo(
+    () =>
+      createEntityActions<Building>({
+        endpoint: "/api/buildings",
+        getItems: () => state.buildings,
+        setItems: (items) => dispatch({ type: "SET_BUILDINGS", payload: items }),
+        showError,
+        showSuccess,
+        csrfToken,
+        userId,
+        entityName: "building",
+        isDemo,
+      }),
+    [csrfToken, userId, showError, showSuccess, isDemo, state.buildings],
+  );
+
   const scopedState = useMemo(() => {
     if (portalRole !== "tenant") {
       return state;
@@ -486,6 +518,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         expenses: [],
         maintenance: [],
         leases: [],
+        buildings: [],
       };
     }
 
@@ -552,6 +585,9 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
       addLease: (d) => leaseActions.add(d) as unknown as Promise<void>,
       updateLease: (id, d) => leaseActions.update(id, d) as unknown as Promise<void>,
       deleteLease: (id) => leaseActions.remove(id),
+      addBuilding: (d) => buildingActions.add(d) as unknown as Promise<void>,
+      updateBuilding: (id, d) => buildingActions.update(id, d) as unknown as Promise<void>,
+      deleteBuilding: (id) => buildingActions.remove(id),
       refreshData,
     }),
     [
@@ -567,6 +603,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
       expenseActions,
       maintenanceActions,
       leaseActions,
+      buildingActions,
     ],
   );
 

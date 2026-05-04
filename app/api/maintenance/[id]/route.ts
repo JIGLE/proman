@@ -19,10 +19,12 @@ function flattenTicket(
     tenant?: { name: string } | null;
   },
 ) {
+  const images = ticket.images;
   return {
     ...ticket,
     propertyName: ticket.property.name,
     tenantName: ticket.tenant?.name,
+    images: typeof images === "string" ? (JSON.parse(images) as string[]) : (images ?? []),
   };
 }
 

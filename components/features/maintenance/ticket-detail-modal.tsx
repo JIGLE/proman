@@ -66,7 +66,7 @@ export function TicketDetailModal({
   onEdit,
   onDelete,
 }: TicketDetailModalProps) {
-  const { updateMaintenance, deleteMaintenance } = useApp();
+  const { updateMaintenance, deleteMaintenance, addExpense } = useApp();
   const { success, error } = useToast();
   const { formatCurrency } = useCurrency();
   const confirmDialog = useConfirmDialog();
@@ -81,7 +81,7 @@ export function TicketDetailModal({
     ticket.status !== "resolved" &&
     ticket.status !== "closed";
   const hasVendor = !!(ticket.vendorName || ticket.assignedTo);
-  const hasCost = !!(ticket.estimatedCost ?? ticket.cost);
+  const hasCost = !!(ticket.estimatedCost ?? ticket.cost ?? ticket.actualCost);
 
   // ── Zone 2: Primary Action ───────────────────────────────────────────────────
   const primaryAction = (() => {
@@ -108,6 +108,17 @@ export function TicketDetailModal({
               status: "resolved",
               resolvedAt: new Date().toISOString(),
             });
+            // Auto-create expense if a cost is recorded
+            const resolvedCost = ticket.actualCost ?? ticket.estimatedCost ?? ticket.cost;
+            if (resolvedCost && resolvedCost > 0) {
+              await addExpense({
+                propertyId: ticket.propertyId,
+                amount: resolvedCost,
+                date: new Date().toISOString(),
+                category: "Maintenance",
+                description: ticket.title,
+              });
+            }
             success("Ticket resolved");
             onClose();
           } catch {
@@ -188,7 +199,8 @@ export function TicketDetailModal({
   };
 
   const vendorDisplay = ticket.vendorName || ticket.assignedTo;
-  const costDisplay = ticket.estimatedCost ?? ticket.cost;
+  const estimatedCostDisplay = ticket.estimatedCost ?? ticket.cost;
+  const actualCostDisplay = ticket.actualCost;
 
   return (
     <>
@@ -383,25 +395,44 @@ export function TicketDetailModal({
             <TabsContent value="costs" className="mt-4">
               <div className="space-y-3">
                 {hasCost ? (
-                  <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Receipt className="h-4 w-4 text-accent-primary" />
-                        <span className="text-sm text-[var(--color-muted-foreground)]">
-                          Estimated Cost
-                        </span>
+                  <>
+                    {estimatedCostDisplay != null && (
+                      <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <Receipt className="h-4 w-4 text-accent-primary" />
+                            <span className="text-sm text-[var(--color-muted-foreground)]">
+                              Estimated Cost
+                            </span>
+                          </div>
+                          <span className="text-lg font-semibold text-[var(--color-foreground)]">
+                            {formatCurrency(estimatedCostDisplay)}
+                          </span>
+                        </div>
                       </div>
-                      <span className="text-lg font-semibold text-[var(--color-foreground)]">
-                        {formatCurrency(costDisplay!)}
-                      </span>
-                    </div>
+                    )}
+                    {actualCostDisplay != null && (
+                      <div className="rounded-md border border-green-500/20 bg-green-500/5 p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <span className="text-sm text-[var(--color-muted-foreground)]">
+                              Actual Cost
+                            </span>
+                          </div>
+                          <span className="text-lg font-semibold text-green-400">
+                            {formatCurrency(actualCostDisplay)}
+                          </span>
+                        </div>
+                      </div>
+                    )}
                     {ticket.invoiceRef && (
-                      <div className="mt-2 flex items-center justify-between text-sm">
+                      <div className="flex items-center justify-between p-3 text-sm">
                         <span className="text-[var(--color-muted-foreground)]">Invoice Ref</span>
                         <span className="font-medium">{ticket.invoiceRef}</span>
                       </div>
                     )}
-                  </div>
+                  </>
                 ) : (
                   <div className="rounded-md border border-dashed border-[var(--color-border)] bg-transparent p-6 text-center">
                     <Receipt className="mx-auto h-8 w-8 text-[var(--color-muted-foreground)] mb-2 opacity-50" />

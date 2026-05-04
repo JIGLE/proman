@@ -1322,7 +1322,8 @@ export type DemoEntityType =
   | "expenses"
   | "maintenance"
   | "leases"
-  | "contacts";
+  | "contacts"
+  | "buildings";
 
 const DEMO_DATA_MAP: Record<DemoEntityType, unknown[]> = {
   properties: DEMO_PROPERTIES,
@@ -1336,6 +1337,7 @@ const DEMO_DATA_MAP: Record<DemoEntityType, unknown[]> = {
   maintenance: DEMO_MAINTENANCE,
   leases: DEMO_LEASES,
   contacts: [],
+  buildings: [],
 };
 
 /** Get demo data for a given entity type. Returns a deep copy. */

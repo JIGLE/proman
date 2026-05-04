@@ -103,6 +103,7 @@ export interface Correspondence {
   templateId: string;
   tenantId: string;
   tenantName: string;
+  propertyId?: string;
   subject: string;
   content: string;
   status: "draft" | "sent" | "delivered";
@@ -201,6 +202,7 @@ export interface MaintenanceTicket {
   images?: string[];
   cost?: number; // @deprecated — use estimatedCost
   estimatedCost?: number;
+  actualCost?: number;
   scheduledDate?: string;
   dueDate?: string;
   assignedTo?: string; // @deprecated — use vendorName

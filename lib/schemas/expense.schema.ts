@@ -1,5 +1,20 @@
 import { z } from "zod";
 
+export const EXPENSE_CATEGORIES = [
+  "Maintenance",
+  "Repairs",
+  "Utilities",
+  "Insurance",
+  "Taxes",
+  "Mortgage",
+  "Management Fees",
+  "Cleaning",
+  "Legal",
+  "Other",
+] as const;
+
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+
 export const expenseSchema = z.object({
   propertyId: z.string().min(1, "Property is required"),
   amount: z.number().min(0.01, "Amount must be greater than 0"),

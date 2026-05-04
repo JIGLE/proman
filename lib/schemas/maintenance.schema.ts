@@ -19,6 +19,7 @@ export const maintenanceSchema = z.object({
   priority: z.enum(["low", "medium", "high", "urgent"]),
   category: z.enum(MAINTENANCE_CATEGORIES).optional(),
   estimatedCost: z.number().min(0).optional(),
+  actualCost: z.number().min(0).optional(),
   scheduledDate: z.string().optional(),
   dueDate: z.string().optional(),
   vendorName: z.string().max(100).optional(),
