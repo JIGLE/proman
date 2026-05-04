@@ -478,10 +478,10 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 5 points
-- Status: In progress (types updated; API serialization paths + upload UI pending)
+- Status: Done (types + API serialization; photo upload UI deferred)
 - Tasks:
   1. Change `MaintenanceTicket.images` from `string` (JSON) to `string[]` in `lib/types.ts`. ✓
-  2. Update all serialization/deserialization paths.
+  2. Update all serialization/deserialization paths. ✓
   3. Add photo upload UI to ticket form and image gallery to ticket detail modal.
 
 ### Ticket 4.1 — Add leaseId to Receipt
@@ -539,19 +539,19 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 3 points
-- Status: Not started
+- Status: Done
 
 ### Ticket 4.5 — Estimated vs actual cost split + Expense auto-create
 
 - Priority: P2
 - Effort: 5 points
-- Status: Not started
+- Status: Done
 
 ### Ticket 5.2 — Standardize Expense.category enum
 
 - Priority: P2
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 
 ### Ticket 5.3 — Annual fiscal summary per property
 
@@ -563,7 +563,7 @@ Owner: Product + Engineering
 
 - Priority: P3
 - Effort: 8 points
-- Status: Not started
+- Status: Done
 
 ---
 
