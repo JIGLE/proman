@@ -16,7 +16,7 @@ import {
   FileText,
   MapPin,
   Plus,
-  Receipt,
+  Receipt as ReceiptIcon,
   Trash2,
   Users,
   Wrench,
@@ -182,9 +182,13 @@ export function PropertyDetailModal({
   }, [property?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived data (guarded; property may be null until early return below) ──
-  const relatedLeases = state.leases.filter((l) => l.propertyId === (property?.id ?? ""));
-  const relatedReceipts = state.receipts.filter((r) => r.propertyId === (property?.id ?? ""));
-  const relatedMaintenance = state.maintenance.filter((t) => t.propertyId === (property?.id ?? ""));
+  const relatedLeases = (state.leases ?? []).filter((l) => l.propertyId === (property?.id ?? ""));
+  const relatedReceipts = (state.receipts ?? []).filter(
+    (r) => r.propertyId === (property?.id ?? ""),
+  );
+  const relatedMaintenance = (state.maintenance ?? []).filter(
+    (t) => t.propertyId === (property?.id ?? ""),
+  );
 
   const activeLease =
     relatedLeases.find((l) => l.status === "active") ??
@@ -192,8 +196,8 @@ export function PropertyDetailModal({
     null;
 
   const activeTenant = activeLease
-    ? (state.tenants.find((t) => t.id === activeLease.tenantId) ?? null)
-    : (state.tenants.find((t) => t.propertyId === (property?.id ?? "")) ?? null);
+    ? ((state.tenants ?? []).find((t) => t.id === activeLease.tenantId) ?? null)
+    : ((state.tenants ?? []).find((t) => t.propertyId === (property?.id ?? "")) ?? null);
 
   const openTickets = relatedMaintenance.filter(
     (t) => t.status === "open" || t.status === "in_progress",
@@ -306,7 +310,7 @@ export function PropertyDetailModal({
     if (isLeaseExpiringSoon) {
       return {
         label: "Renew Lease",
-        icon: Receipt,
+        icon: ReceiptIcon,
         onClick: () => navigateTo(`/leases?propertyId=${property.id}`),
         urgency: "urgent",
       };
