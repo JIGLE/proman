@@ -1,6 +1,6 @@
 "use client";
 
-import { type ElementType, type ReactElement, useMemo } from "react";
+import { type ElementType, type ReactElement, useMemo, useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -12,6 +12,8 @@ import {
   CreditCard,
   FileText,
   Home,
+  Mail,
+  Phone,
   Plus,
   Receipt,
   ShieldCheck,
@@ -155,6 +157,22 @@ export function OverviewView({
   const handleAddLease = () => onAddLease?.() ?? navigate("/leases");
   const handleRecordPayment = () =>
     onRecordPayment?.() ?? navigate("/financials?tab=receipts&action=record-payment");
+
+  const [ownerContact, setOwnerContact] = useState<{
+    name: string;
+    email: string;
+    phone?: string;
+  } | null>(null);
+
+  useEffect(() => {
+    if (isOwnerPortal) return;
+    fetch("/api/portal/owner-contact")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (json?.data) setOwnerContact(json.data);
+      })
+      .catch(() => {});
+  }, [isOwnerPortal]);
 
   const dashboardData = useMemo(() => {
     const currentMonth = new Date();
@@ -742,10 +760,33 @@ export function OverviewView({
 
             <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4">
               <p className="text-sm font-medium text-blue-100">Need help?</p>
-              <p className="mt-1 text-sm text-blue-200/80">
-                Use your lease and receipt history as the source of truth before contacting the
-                owner.
-              </p>
+              {ownerContact ? (
+                <div className="mt-2 space-y-2">
+                  <p className="text-sm text-blue-200/80">Contact your property owner:</p>
+                  <p className="text-sm font-medium text-blue-100">{ownerContact.name}</p>
+                  <a
+                    href={`mailto:${ownerContact.email}`}
+                    className="flex items-center gap-2 text-sm text-blue-300 hover:text-blue-100 transition-colors"
+                  >
+                    <Mail className="h-3.5 w-3.5 shrink-0" />
+                    {ownerContact.email}
+                  </a>
+                  {ownerContact.phone && (
+                    <a
+                      href={`tel:${ownerContact.phone}`}
+                      className="flex items-center gap-2 text-sm text-blue-300 hover:text-blue-100 transition-colors"
+                    >
+                      <Phone className="h-3.5 w-3.5 shrink-0" />
+                      {ownerContact.phone}
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <p className="mt-1 text-sm text-blue-200/80">
+                  Use your lease and receipt history as the source of truth before contacting the
+                  owner.
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

@@ -51,7 +51,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 import { useApp } from "@/lib/contexts/app-context";
 import { RelationshipBadge } from "@/components/shared/relationship-badge";
-import { Property } from "@/lib/types";
+import { Property, Building } from "@/lib/types";
 import { propertySchema, type PropertyFormData } from "@/lib/schemas/property.schema";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
@@ -135,7 +135,14 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     ref,
   ): React.ReactElement {
     const { state, addProperty, updateProperty, deleteProperty } = useApp();
-    const { properties = [], tenants = [], leases = [], maintenance = [], loading } = state;
+    const {
+      properties = [],
+      tenants = [],
+      leases = [],
+      maintenance = [],
+      buildings = [],
+      loading,
+    } = state;
     const { success } = useToast();
     const { formatCurrency, currencySymbol } = useCurrency();
     const router = useRouter();
@@ -400,6 +407,12 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
       [handleBulkDelete, handleExportSelected],
     );
 
+    // Map Building entity records by id for fast lookup
+    const buildingsById = useMemo(
+      () => Object.fromEntries(buildings.map((b) => [b.id, b])) as Record<string, Building>,
+      [buildings],
+    );
+
     // Group properties by building
     const groupedProperties = sortedProperties.reduce(
       (acc, property) => {
@@ -413,10 +426,19 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
           .toLowerCase();
         const groupingKey = property.buildingId || normalizedAddressKey || property.id;
         if (!acc[groupingKey]) {
+          const entityBuilding = property.buildingId
+            ? buildingsById[property.buildingId]
+            : undefined;
           acc[groupingKey] = {
             buildingId: groupingKey,
-            buildingName: property.buildingName || property.address.split(",")[0],
-            buildingAddress: property.address,
+            buildingName:
+              entityBuilding?.name ?? property.buildingName ?? property.address.split(",")[0],
+            buildingAddress: entityBuilding
+              ? [entityBuilding.address, entityBuilding.city, entityBuilding.country]
+                  .filter(Boolean)
+                  .join(", ")
+              : property.address,
+            building: entityBuilding,
             properties: [],
           };
         }
@@ -429,6 +451,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
           buildingId: string;
           buildingName: string;
           buildingAddress: string;
+          building?: Building;
           properties: Property[];
         }
       >,
@@ -438,6 +461,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
       buildingId: string;
       buildingName: string;
       buildingAddress: string;
+      building?: Building;
       properties: Property[];
     };
     const buildingGroups: BuildingGroup[] = Object.values(groupedProperties);
@@ -1106,62 +1130,84 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {sortedProperties.map((property) => (
-                            <TableRow
-                              key={property.id}
-                              className="border-zinc-800 cursor-pointer hover:bg-zinc-800/50"
-                              onClick={() => {
-                                setSelectedProperty(property);
-                                setIsDetailModalOpen(true);
-                                onPropertySelect?.(property.id);
-                              }}
-                            >
-                              <TableCell className="text-sm font-medium text-zinc-100">
-                                {property.name}
-                              </TableCell>
-                              <TableCell className="text-sm text-zinc-400">
-                                {property.address}
-                              </TableCell>
-                              <TableCell className="text-sm text-zinc-400 capitalize">
-                                {property.type}
-                              </TableCell>
-                              <TableCell className="text-sm text-zinc-400">
-                                {property.bedrooms}
-                              </TableCell>
-                              <TableCell className="text-sm font-medium text-zinc-100">
-                                {formatCurrency(Number(property.rent))}
-                              </TableCell>
-                              <TableCell>{getStatusBadge(property.status)}</TableCell>
-                              <TableCell>
-                                {(() => {
-                                  const propTenants = tenants.filter(
-                                    (t) => t.propertyId === property.id,
-                                  );
-                                  const hasActiveLease = activeLeasePropertyIds.has(property.id);
-                                  const isExpiring = expiringLeasePropertyIds.has(property.id);
-                                  const hasOpenTickets = openMaintenancePropertyIds.has(
-                                    property.id,
-                                  );
-                                  const isMissingMap = missingMapPropertyIds.has(property.id);
-                                  const action = getNextAction(property, {
-                                    hasActiveLease,
-                                    isExpiring,
-                                    hasOpenTickets,
-                                    isMissingMap,
-                                    hasTenant: propTenants.length > 0,
-                                  });
-                                  if (action.urgency === "ok") return null;
-                                  return (
-                                    <span
-                                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${nextActionStyles[action.urgency]}`}
-                                    >
-                                      {action.label}
+                          {buildingGroups.flatMap((group) => {
+                            const showHeader =
+                              group.properties.length > 1 || group.building !== undefined;
+                            const headerRow = showHeader ? (
+                              <TableRow
+                                key={`header-${group.buildingId}`}
+                                className="border-zinc-800 hover:bg-transparent"
+                              >
+                                <TableCell colSpan={7} className="bg-zinc-800/40 py-2 px-4">
+                                  <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                                    {group.buildingName}
+                                  </span>
+                                  {group.buildingAddress && (
+                                    <span className="ml-2 text-xs text-zinc-500">
+                                      {group.buildingAddress}
                                     </span>
-                                  );
-                                })()}
-                              </TableCell>
-                            </TableRow>
-                          ))}
+                                  )}
+                                </TableCell>
+                              </TableRow>
+                            ) : null;
+                            const propertyRows = group.properties.map((property) => (
+                              <TableRow
+                                key={property.id}
+                                className="border-zinc-800 cursor-pointer hover:bg-zinc-800/50"
+                                onClick={() => {
+                                  setSelectedProperty(property);
+                                  setIsDetailModalOpen(true);
+                                  onPropertySelect?.(property.id);
+                                }}
+                              >
+                                <TableCell className="text-sm font-medium text-zinc-100">
+                                  {property.name}
+                                </TableCell>
+                                <TableCell className="text-sm text-zinc-400">
+                                  {property.address}
+                                </TableCell>
+                                <TableCell className="text-sm text-zinc-400 capitalize">
+                                  {property.type}
+                                </TableCell>
+                                <TableCell className="text-sm text-zinc-400">
+                                  {property.bedrooms}
+                                </TableCell>
+                                <TableCell className="text-sm font-medium text-zinc-100">
+                                  {formatCurrency(Number(property.rent))}
+                                </TableCell>
+                                <TableCell>{getStatusBadge(property.status)}</TableCell>
+                                <TableCell>
+                                  {(() => {
+                                    const propTenants = tenants.filter(
+                                      (t) => t.propertyId === property.id,
+                                    );
+                                    const hasActiveLease = activeLeasePropertyIds.has(property.id);
+                                    const isExpiring = expiringLeasePropertyIds.has(property.id);
+                                    const hasOpenTickets = openMaintenancePropertyIds.has(
+                                      property.id,
+                                    );
+                                    const isMissingMap = missingMapPropertyIds.has(property.id);
+                                    const action = getNextAction(property, {
+                                      hasActiveLease,
+                                      isExpiring,
+                                      hasOpenTickets,
+                                      isMissingMap,
+                                      hasTenant: propTenants.length > 0,
+                                    });
+                                    if (action.urgency === "ok") return null;
+                                    return (
+                                      <span
+                                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${nextActionStyles[action.urgency]}`}
+                                      >
+                                        {action.label}
+                                      </span>
+                                    );
+                                  })()}
+                                </TableCell>
+                              </TableRow>
+                            ));
+                            return headerRow ? [headerRow, ...propertyRows] : propertyRows;
+                          })}
                         </TableBody>
                       </Table>
                     </div>
