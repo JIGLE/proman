@@ -15,12 +15,10 @@ import {
   ExternalLink,
   FileText,
   MapPin,
-  Plus,
   Receipt as ReceiptIcon,
   Trash2,
   Users,
   Wrench,
-  X,
 } from "lucide-react";
 import {
   Dialog,
