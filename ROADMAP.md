@@ -1,12 +1,12 @@
 # ProMan Roadmap
 
 > Living document. Single source of truth for planned work.
-> Last updated: 2026-05-05. UX-audited (end-user simulation): 2026-05-04.
+> Last updated: 2026-05-04. UX-audited (end-user simulation): 2026-05-04.
 
 ## Current State
 
 **Version**: 1.16.0
-**Stage**: Production-ready. All 4 Q3 sprints complete. Decision-driven UI, multi-scenario demo, map view, fiscal compliance (PT/ES), and building management in place.
+**Stage**: Production-ready. All Q3 sprints (1–5) complete. Decision-driven UI, multi-scenario demo, map view, fiscal compliance (PT/ES), building management, tenant owner-contact callout, and portfolio building grouping in place.
 
 ### Completed Features
 
@@ -19,6 +19,8 @@
 - **Financials**: 4-tab container (Action Queue / Receipts / Occupancy & Rent / Tax Summary) — all 4 fully wired; standardized expense categories
 - **Maintenance**: Full work-order lifecycle (category/vendor/cost/scheduleDate/isTenantReport); 4-zone TicketDetailModal; auto-creates Expense on resolve
 - **Buildings**: Building entity in AppState+context; CRUD API; BuildingsView at `/buildings`; nav entry
+- **Tenant Owner Contact**: `/api/portal/owner-contact` endpoint; tenant "Need help?" callout shows managing owner name, email, and phone (demo + real mode)
+- **Portfolio Building Grouping**: Property list uses canonical Building entity for group headers (grid + table); table view inserts section header rows for multi-unit groups
 - **Email Integration**: SendGrid with templates, bulk sending, delivery tracking, exponential-backoff retry
 - **Insights Nav**: Analytics, Reports, Correspondence — accessible from sidebar (owner-only)
 - **Monitoring**: Health endpoints (owner-gated), Prometheus-compatible `/api/metrics`
@@ -107,21 +109,21 @@
 
 **Goal**: Fix high-friction interactions found during end-user simulation that are not data-model issues.
 
-| #    | Task                                                                                                                                    | Status   | Sprint |
-| ---- | --------------------------------------------------------------------------------------------------------------------------------------- | -------- | ------ |
-| 5.1  | Dashboard: filter "Lease follow-up" queue to leases ending within 60 days (currently shows all active leases)                           | Done     | Q3-S1  |
-| 5.2  | Property list: expose key filters (Needs attention, Lease renewal, Maintenance) on mobile — currently `hidden sm:flex`                  | Done     | Q3-S2  |
-| 5.3  | Payment matrix: wrap table in horizontal-scroll container for mobile; add sticky tenant-name column                                     | Done     | Q3-S2  |
-| 5.4  | Tenant dashboard: derive "Next rent" from active lease payment schedule instead of `addMonths(new Date(), 1)`                           | Done     | Q3-S2  |
-| 5.5  | Tenant Detail Modal: add Quick Links section (Payments, Lease, Property) matching property modal pattern                                | Done     | Q3-S2  |
-| 5.6  | Tenant dashboard: add real owner contact mechanism to the "Need help?" callout (email link or in-app message)                           | Deferred | —      |
-| 5.7  | Maintenance form: replace hardcoded `$` label with currency context symbol                                                              | Done     | Q3-S1  |
-| 5.8  | Receipt create: default status to `"pending"` instead of `"paid"`; rename CTA to "Record expected payment" vs "Record payment received" | Done     | Q3-S2  |
-| 5.9  | Demo banner: add a 5-minute countdown warning before auto-expiry; show a "Extend 15 min" option                                         | Done     | Q3-S2  |
-| 5.10 | Demo banner: make Owner/Tenant perspective switcher visible on mobile (currently `hidden md:flex`)                                      | Done     | Q3-S1  |
-| 5.11 | Settings: gate `/api/health` endpoint behind admin/owner role check — currently exposed to browser on every settings load               | Done     | Q3-S2  |
-| 5.12 | Property detail modal: guard the 4-column KPI grid for narrow viewports (collapses to 2-col below `sm`)                                 | Done     | Q3-S2  |
-| 5.13 | Tenant delete: add `await` to `deleteTenant()` call and keep modal open until operation confirms                                        | Done     | Q3-S1  |
+| #    | Task                                                                                                                                    | Status | Sprint |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------- | ------ | ------ |
+| 5.1  | Dashboard: filter "Lease follow-up" queue to leases ending within 60 days (currently shows all active leases)                           | Done   | Q3-S1  |
+| 5.2  | Property list: expose key filters (Needs attention, Lease renewal, Maintenance) on mobile — currently `hidden sm:flex`                  | Done   | Q3-S2  |
+| 5.3  | Payment matrix: wrap table in horizontal-scroll container for mobile; add sticky tenant-name column                                     | Done   | Q3-S2  |
+| 5.4  | Tenant dashboard: derive "Next rent" from active lease payment schedule instead of `addMonths(new Date(), 1)`                           | Done   | Q3-S2  |
+| 5.5  | Tenant Detail Modal: add Quick Links section (Payments, Lease, Property) matching property modal pattern                                | Done   | Q3-S2  |
+| 5.6  | Tenant dashboard: add real owner contact mechanism to the "Need help?" callout (email link or in-app message)                           | Done   | Q3-S5  |
+| 5.7  | Maintenance form: replace hardcoded `$` label with currency context symbol                                                              | Done   | Q3-S1  |
+| 5.8  | Receipt create: default status to `"pending"` instead of `"paid"`; rename CTA to "Record expected payment" vs "Record payment received" | Done   | Q3-S2  |
+| 5.9  | Demo banner: add a 5-minute countdown warning before auto-expiry; show a "Extend 15 min" option                                         | Done   | Q3-S2  |
+| 5.10 | Demo banner: make Owner/Tenant perspective switcher visible on mobile (currently `hidden md:flex`)                                      | Done   | Q3-S1  |
+| 5.11 | Settings: gate `/api/health` endpoint behind admin/owner role check — currently exposed to browser on every settings load               | Done   | Q3-S2  |
+| 5.12 | Property detail modal: guard the 4-column KPI grid for narrow viewports (collapses to 2-col below `sm`)                                 | Done   | Q3-S2  |
+| 5.13 | Tenant delete: add `await` to `deleteTenant()` call and keep modal open until operation confirms                                        | Done   | Q3-S1  |
 
 ---
 
@@ -141,11 +143,11 @@
 
 **Goal**: Give multi-unit buildings a proper first-class entity.
 
-| #   | Task                                                                                                       | Status   | Sprint |
-| --- | ---------------------------------------------------------------------------------------------------------- | -------- | ------ |
-| 7.1 | Load `Building[]` into `AppState`; add CRUD actions to `app-context.tsx`                                   | Done     | Q3-S4  |
-| 7.2 | Building management page or modal: name, address, list of units (properties) with tenant/lease status      | Done     | Q3-S4  |
-| 7.3 | Portfolio view: group properties by building with building-level summary (total units, occupancy, revenue) | Deferred | —      |
+| #   | Task                                                                                                       | Status | Sprint |
+| --- | ---------------------------------------------------------------------------------------------------------- | ------ | ------ |
+| 7.1 | Load `Building[]` into `AppState`; add CRUD actions to `app-context.tsx`                                   | Done   | Q3-S4  |
+| 7.2 | Building management page or modal: name, address, list of units (properties) with tenant/lease status      | Done   | Q3-S4  |
+| 7.3 | Portfolio view: group properties by building with building-level summary (total units, occupancy, revenue) | Done   | Q3-S5  |
 
 ---
 
@@ -283,7 +285,7 @@
 | 5.3  | Payment matrix: wrap table in horizontal-scroll container for mobile; add sticky tenant-name column                                     | Not started | Q3-S2  |
 | 5.4  | Tenant dashboard: derive "Next rent" from active lease payment schedule instead of `addMonths(new Date(), 1)`                           | Not started | Q3-S2  |
 | 5.5  | Tenant Detail Modal: add Quick Links section (Payments, Lease, Property) matching property modal pattern                                | Not started | Q3-S2  |
-| 5.6  | Tenant dashboard: add real owner contact mechanism to the "Need help?" callout (email link or in-app message)                           | Not started | Q3-S3  |
+| 5.6  | Tenant dashboard: add real owner contact mechanism to the "Need help?" callout (email link or in-app message)                           | Done        | Q3-S5  |
 | 5.7  | Maintenance form: replace hardcoded `$` label with currency context symbol                                                              | Not started | Q3-S1  |
 | 5.8  | Receipt create: default status to `"pending"` instead of `"paid"`; rename CTA to "Record expected payment" vs "Record payment received" | Not started | Q3-S2  |
 | 5.9  | Demo banner: add a 5-minute countdown warning before auto-expiry; show a "Extend 15 min" option                                         | Not started | Q3-S2  |
@@ -318,7 +320,7 @@
 | --- | ---------------------------------------------------------------------------------------------------------- | ----------- | ------ |
 | 7.1 | Load `Building[]` into `AppState`; add CRUD actions to `app-context.tsx`                                   | Not started | Q4     |
 | 7.2 | Building management page or modal: name, address, list of units (properties) with tenant/lease status      | Not started | Q4     |
-| 7.3 | Portfolio view: group properties by building with building-level summary (total units, occupancy, revenue) | Not started | Q4     |
+| 7.3 | Portfolio view: group properties by building with building-level summary (total units, occupancy, revenue) | Done        | Q3-S5  |
 
 ---
 
