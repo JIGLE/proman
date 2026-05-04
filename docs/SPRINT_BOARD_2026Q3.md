@@ -18,7 +18,7 @@ Owner: Product + Engineering
 
 - Priority: P0
 - Effort: 1 point
-- Status: Not started
+- Status: Done
 - Problem: `signIn("credentials")` failures are silent. The form resets with no message. User cannot tell why login failed.
 - Files: `app/auth/signin/page.tsx`
 - Tasks:
@@ -35,7 +35,7 @@ Owner: Product + Engineering
 
 - Priority: P0
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Problem: Both `overview-view.tsx` and `financials-container.tsx` use `state.tenants[0]`. If the array is unordered the wrong tenant's data displays.
 - Files: `components/features/dashboard/overview-view.tsx`, `components/features/financial/financials-container.tsx`
 - Tasks:
@@ -50,7 +50,7 @@ Owner: Product + Engineering
 
 - Priority: P0
 - Effort: 1 point
-- Status: Not started
+- Status: Done
 - Problem: Editing Monthly Rent / Lease Start / Lease End writes to deprecated `Tenant` fields, not the `Lease` record. User believes they updated the lease but they haven't.
 - Files: `components/features/tenant/tenant-detail-modal.tsx`
 - Tasks:
@@ -67,7 +67,7 @@ Owner: Product + Engineering
 
 - Priority: P0
 - Effort: 0.5 points
-- Status: Not started
+- Status: Done
 - Problem: `new Date(derivedLeaseStart).toLocaleDateString()` renders "Invalid Date" when tenant has no active lease.
 - Files: `components/features/tenant/tenant-detail-modal.tsx`
 - Tasks:
@@ -81,7 +81,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 1 point
-- Status: Not started
+- Status: Done
 - Problem: "Lease follow-up" shows all active leases. A lease ending in 3 years appears in the queue.
 - Files: `components/features/dashboard/overview-view.tsx`
 - Tasks:
@@ -98,7 +98,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 0.5 points
-- Status: Not started
+- Status: Done
 - Problem: Cost label hardcodes `$`. EUR users (the target market) see the wrong symbol.
 - Files: `components/features/maintenance/maintenance-view.tsx`
 - Tasks:
@@ -110,7 +110,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 1 point
-- Status: Not started
+- Status: Done
 - Problem: Owner/Tenant toggle is `hidden md:flex`. Mobile prospects cannot switch to tenant view.
 - Files: `components/shared/demo-banner.tsx`
 - Tasks:
@@ -124,7 +124,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 0.5 points
-- Status: Not started
+- Status: Done
 - Problem: `deleteTenant()` called without `await` — if it fails, modal closes and tenant appears deleted.
 - Files: `components/features/tenant/tenant-detail-modal.tsx`
 - Tasks:
@@ -137,7 +137,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Problem: `/maintenance` is unreachable from any nav surface.
 - Files: `lib/portal/access.ts`
 - Tasks:
@@ -154,7 +154,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Problem: `/leases` has `hidden: true` making it unreachable. `TenantsLeasesContainer` duplicates the Tenants view from `/people`.
 - Files: `lib/portal/access.ts`, `components/features/lease/tenants-leases-container.tsx`
 - Tasks:
@@ -170,7 +170,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 3 points
-- Status: Not started
+- Status: Done
 - Problem: "Renew", "Edit", and "Terminate" buttons on `/leases/[id]` have no onClick handlers — dead UI.
 - Files: `components/features/lease/lease-detail-view.tsx`
 - Tasks:
@@ -187,7 +187,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Problem: Clicking a lease card does nothing. `/leases/[id]` is unreachable within the product.
 - Files: `components/features/lease/leases-view.tsx`
 - Tasks:
@@ -203,7 +203,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 1 point
-- Status: Not started
+- Status: Done
 - Problem: "Current Leases" count reads `tenant.leaseEnd` (deprecated) instead of `state.leases`.
 - Files: `components/features/people/people-view.tsx`
 - Tasks:
@@ -217,7 +217,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 1 point
-- Status: Not started
+- Status: Done
 - Problem: `useState(() => {...})` initializer runs once on mount; form shows stale data when switching between owners.
 - Files: `components/features/owner/owner-detail-modal.tsx`
 - Tasks:
@@ -231,7 +231,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 3 points
-- Status: Not started
+- Status: Done
 - Problem: Tickets lack category, scheduling, estimated/actual cost split, and structured vendor info.
 - Files: `lib/types.ts`, `lib/schemas/maintenance.schema.ts`, db-init migration
 - Tasks:
@@ -249,7 +249,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 8 points
-- Status: Not started
+- Status: Done
 - Problem: Clicking a ticket opens a basic form dialog. No structured view of ticket health, priority, or costs.
 - Files: `components/features/maintenance/ticket-detail-modal.tsx` (new), `components/features/maintenance/maintenance-view.tsx`
 - Tasks:
@@ -267,7 +267,7 @@ Owner: Product + Engineering
 
 ---
 
-## Sprint 2 (2026-05-19 → 2026-05-30)
+## Sprint 2 (2026-05-19 → 2026-05-30) — COMPLETE (v1.14.0)
 
 ### Focus: Orphaned pages in nav, Maintenance view polish, Tenant modal rewrite, mobile & UX polish
 
@@ -277,7 +277,7 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Problem: `/analytics` and `/reports` are fully implemented but unreachable.
 - Files: `lib/portal/access.ts`
 - Tasks:
@@ -291,7 +291,7 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 1 point
-- Status: Not started
+- Status: Done
 - Files: `lib/portal/access.ts`
 - Tasks:
   1. Add `correspondence` entry to the "Insights" or "Tools" secondary group.
@@ -302,7 +302,7 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 5 points
-- Status: Not started
+- Status: Done
 - Tasks:
   1. Add category filter chip strip.
   2. Add compact cost summary bar (total estimated vs actual across filtered open tickets).
@@ -315,7 +315,7 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 3 points
-- Status: Not started
+- Status: Done
 - Tasks:
   1. Add Maintenance tab to `property-detail-modal.tsx` tab strip.
   2. Show the 3 most recent open tickets for the property with priority badge and status.
@@ -327,7 +327,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 8 points
-- Status: Not started
+- Status: Done
 - Problem: Flat view with deprecated fields in edit form. Delete has no confirmation. No primary action or issue detection.
 - Files: `components/features/tenant/tenant-detail-modal.tsx`
 - Tasks:
@@ -347,7 +347,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Note: May be done as part of 3.3 naturally.
 
 ---
@@ -356,7 +356,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 3 points
-- Status: Not started
+- Status: Done
 - Problem: Filter chips (Needs attention, Lease renewal, Maintenance, Missing map) are `hidden sm:flex` — invisible on mobile.
 - Files: `components/features/property/property-list.tsx`
 - Tasks:
@@ -372,7 +372,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Problem: 12-month × N-tenant table has no horizontal scroll. Clips on any phone.
 - Files: `components/features/financial/payment-matrix-view.tsx`
 - Tasks:
@@ -388,7 +388,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Problem: "Next rent" card shows `addMonths(new Date(), 1)` — hardcoded to one month from today, not derived from the lease.
 - Files: `components/features/dashboard/overview-view.tsx`
 - Tasks:
@@ -404,7 +404,7 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Problem: Tenant modal has no navigation to payments, lease, or property — unlike the property modal which has a full quick-links panel.
 - Files: `components/features/tenant/tenant-detail-modal.tsx`
 - Tasks:
@@ -416,7 +416,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 0.5 points
-- Status: Not started
+- Status: Done
 - Problem: Receipt create form defaults `status: "paid"`. Recording an expected-but-unpaid rent requires manually changing to "pending".
 - Files: `components/features/financial/receipts-view.tsx`
 - Tasks:
@@ -429,7 +429,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Problem: Demo expires with no warning. A prospect in the middle of exploring gets instantly redirected to the landing page.
 - Files: `components/shared/demo-banner.tsx`
 - Tasks:
@@ -445,7 +445,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 1 point
-- Status: Not started
+- Status: Done
 - Problem: Settings page fetches `/api/health` on every load, exposing DB connection status and latency to any authenticated user.
 - Files: `app/api/health/route.ts`, `components/features/settings/settings-view.tsx`
 - Tasks:
@@ -458,7 +458,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 1 point
-- Status: Not started
+- Status: Done
 - Problem: KPI grid uses `grid-cols-4` which renders 4 very narrow columns on mobile.
 - Files: `components/features/property/property-detail-modal.tsx`
 - Tasks:
@@ -478,7 +478,7 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 5 points
-- Status: Not started
+- Status: Done
 - Tasks:
   1. Change `MaintenanceTicket.images` from `string` (JSON) to `string[]` in `lib/types.ts`.
   2. Update all serialization/deserialization paths.
@@ -488,7 +488,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 3 points
-- Status: Not started
+- Status: Done
 - Tasks:
   1. Add optional `leaseId` to `Receipt` type and schema.
   2. Update `LeaseDetailView` to filter receipts by `leaseId` instead of `propertyId + tenantId`.
@@ -498,13 +498,13 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 3 points
-- Status: Not started
+- Status: Done
 
 ### Ticket 4.4 — Add updateExpense to AppContext
 
 - Priority: P2
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Tasks:
   1. Add `updateExpense` to the context API alongside existing `addExpense`/`deleteExpense`.
 
@@ -512,7 +512,7 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Tasks:
   1. Add `currency?: string` and `unitName?: string` to global `Lease` type.
   2. Remove local interface from `contract-detail-dialog.tsx`.
@@ -521,7 +521,7 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 5 points
-- Status: Not started
+- Status: Done
 - Tasks:
   1. Add `generateReceiptPdf(receipt)` utility (print-formatted layout).
   2. PT: "Recibo de Renda" with IRS category. ES: "Recibo de Alquiler" with IRPF context.
@@ -539,31 +539,31 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 3 points
-- Status: Not started
+- Status: Done
 
 ### Ticket 4.5 — Estimated vs actual cost split + Expense auto-create
 
 - Priority: P2
 - Effort: 5 points
-- Status: Not started
+- Status: Done
 
 ### Ticket 5.2 — Standardize Expense.category enum
 
 - Priority: P2
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 
 ### Ticket 5.3 — Annual fiscal summary per property
 
 - Priority: P2
 - Effort: 5 points
-- Status: Not started
+- Status: Done
 
 ### Ticket 6.1+6.2 — Building entity in AppState + management UI
 
 - Priority: P3
 - Effort: 8 points
-- Status: Not started
+- Status: Done
 
 ---
 
