@@ -52,7 +52,11 @@ import { EmptyStateIllustration } from "@/components/ui/empty-state-illustration
 import { SearchFilter } from "@/components/ui/search-filter";
 import { ExportButton } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
-import { maintenanceSchema, type MaintenanceFormData } from "@/lib/schemas/maintenance.schema";
+import {
+  maintenanceSchema,
+  type MaintenanceFormData,
+  MAINTENANCE_CATEGORIES,
+} from "@/lib/schemas/maintenance.schema";
 import { MaintenanceTicket } from "@/lib/types";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
@@ -62,18 +66,23 @@ import { MaintenanceStatus, MaintenancePriority } from "@/lib/types";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { PageHeader } from "@/components/shared/page-header";
+import { TicketDetailModal } from "./ticket-detail-modal";
 
 export function MaintenanceView(): React.ReactElement {
   const { state, addMaintenance, updateMaintenance, deleteMaintenance } = useApp();
   const { properties, maintenance, loading } = state;
   const { success, error } = useToast();
-  const { formatCurrency } = useCurrency();
+  const { formatCurrency, currencySymbol } = useCurrency();
   const confirmDialog = useConfirmDialog();
 
   // Search and filter state
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [priorityFilter, setPriorityFilter] = useState<string>("all");
+
+  // Detail modal state
+  const [selectedTicket, setSelectedTicket] = useState<MaintenanceTicket | null>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   // Data view mode state with localStorage persistence
   const [dataViewMode, setDataViewMode] = useState<DataViewMode>("grid");
@@ -93,6 +102,14 @@ export function MaintenanceView(): React.ReactElement {
     description: "",
     status: "open",
     priority: "medium",
+    category: undefined,
+    estimatedCost: undefined,
+    scheduledDate: undefined,
+    dueDate: undefined,
+    vendorName: undefined,
+    vendorPhone: undefined,
+    invoiceRef: undefined,
+    isTenantReport: false,
     cost: undefined,
     assignedTo: undefined,
   };
@@ -123,7 +140,9 @@ export function MaintenanceView(): React.ReactElement {
         searchQuery.length === 0 ||
         ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         (ticket.description || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (ticket.assignedTo || "").toLowerCase().includes(searchQuery.toLowerCase());
+        (ticket.vendorName || ticket.assignedTo || "")
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase());
 
       // Status filter
       const matchesStatus = statusFilter === "all" || ticket.status === statusFilter;
@@ -150,6 +169,14 @@ export function MaintenanceView(): React.ReactElement {
       description: t.description || "",
       status: t.status,
       priority: t.priority,
+      category: t.category as MaintenanceFormData["category"],
+      estimatedCost: t.estimatedCost ?? t.cost,
+      scheduledDate: t.scheduledDate,
+      dueDate: t.dueDate,
+      vendorName: t.vendorName ?? t.assignedTo,
+      vendorPhone: t.vendorPhone,
+      invoiceRef: t.invoiceRef,
+      isTenantReport: t.isTenantReport ?? false,
       cost: t.cost,
       assignedTo: t.assignedTo,
     }));
@@ -234,7 +261,7 @@ export function MaintenanceView(): React.ReactElement {
                   label: "Cost",
                   format: (value) => (value ? formatCurrency(value as number) : "Not set"),
                 },
-                { key: "assignedTo", label: "Assigned To" },
+                { key: "vendorName", label: "Vendor", format: (value) => (value as string) || "—" },
               ]}
             />
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
@@ -315,6 +342,29 @@ export function MaintenanceView(): React.ReactElement {
                   </div>
 
                   <div className="space-y-2">
+                    <Label htmlFor="category">Category</Label>
+                    <Select
+                      value={dialog.formData.category ?? ""}
+                      onValueChange={(val) =>
+                        dialog.updateFormData({
+                          category: (val as MaintenanceFormData["category"]) || undefined,
+                        })
+                      }
+                    >
+                      <SelectTrigger id="category">
+                        <SelectValue placeholder="Select category (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MAINTENANCE_CATEGORIES.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
                     <Label htmlFor="description">Description</Label>
                     <Textarea
                       id="description"
@@ -331,30 +381,78 @@ export function MaintenanceView(): React.ReactElement {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="assignedTo">Assigned To (Optional)</Label>
+                      <Label htmlFor="vendorName">Vendor / Contractor</Label>
                       <Input
-                        id="assignedTo"
-                        value={dialog.formData.assignedTo || ""}
+                        id="vendorName"
+                        value={dialog.formData.vendorName || ""}
                         onChange={(e) =>
-                          dialog.updateFormData({
-                            assignedTo: e.target.value,
-                          })
+                          dialog.updateFormData({ vendorName: e.target.value || undefined })
                         }
                         placeholder="Contractor or staff name"
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="cost">Estimated Cost ($)</Label>
+                      <Label htmlFor="vendorPhone">Vendor Phone</Label>
                       <Input
-                        id="cost"
+                        id="vendorPhone"
+                        value={dialog.formData.vendorPhone || ""}
+                        onChange={(e) =>
+                          dialog.updateFormData({ vendorPhone: e.target.value || undefined })
+                        }
+                        placeholder="+351 912 345 678"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="estimatedCost">Estimated Cost ({currencySymbol})</Label>
+                      <Input
+                        id="estimatedCost"
                         type="number"
                         min="0"
                         step="0.01"
-                        value={dialog.formData.cost || ""}
+                        value={dialog.formData.estimatedCost ?? ""}
                         onChange={(e) =>
                           dialog.updateFormData({
-                            cost: e.target.value ? parseFloat(e.target.value) : undefined,
+                            estimatedCost: e.target.value ? parseFloat(e.target.value) : undefined,
                           })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="invoiceRef">Invoice Ref</Label>
+                      <Input
+                        id="invoiceRef"
+                        value={dialog.formData.invoiceRef || ""}
+                        onChange={(e) =>
+                          dialog.updateFormData({ invoiceRef: e.target.value || undefined })
+                        }
+                        placeholder="INV-0001"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="scheduledDate">Scheduled Date</Label>
+                      <Input
+                        id="scheduledDate"
+                        type="date"
+                        value={dialog.formData.scheduledDate || ""}
+                        onChange={(e) =>
+                          dialog.updateFormData({ scheduledDate: e.target.value || undefined })
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="dueDate">Due Date</Label>
+                      <Input
+                        id="dueDate"
+                        type="date"
+                        value={dialog.formData.dueDate || ""}
+                        onChange={(e) =>
+                          dialog.updateFormData({ dueDate: e.target.value || undefined })
                         }
                       />
                     </div>
@@ -460,7 +558,14 @@ export function MaintenanceView(): React.ReactElement {
                   </TableHeader>
                   <TableBody>
                     {sortedTickets.map((ticket) => (
-                      <TableRow key={ticket.id} className="border-zinc-800 hover:bg-zinc-800/50">
+                      <TableRow
+                        key={ticket.id}
+                        className="border-zinc-800 hover:bg-zinc-800/50 cursor-pointer"
+                        onClick={() => {
+                          setSelectedTicket(ticket);
+                          setIsDetailOpen(true);
+                        }}
+                      >
                         <TableCell className="text-sm font-medium text-zinc-100">
                           {ticket.title}
                         </TableCell>
@@ -486,7 +591,7 @@ export function MaintenanceView(): React.ReactElement {
                         </TableCell>
                         <TableCell>
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                               <Button variant="ghost" size="icon" className="h-8 w-8">
                                 <MoreVertical className="w-4 h-4" />
                               </Button>
@@ -593,7 +698,14 @@ export function MaintenanceView(): React.ReactElement {
                   </div>
                 ) : (
                   sortedTickets.map((ticket) => (
-                    <Card key={ticket.id} className="bg-zinc-900 border-zinc-800">
+                    <Card
+                      key={ticket.id}
+                      className="bg-zinc-900 border-zinc-800 cursor-pointer hover:border-zinc-600 transition-colors"
+                      onClick={() => {
+                        setSelectedTicket(ticket);
+                        setIsDetailOpen(true);
+                      }}
+                    >
                       <CardHeader className="pb-3">
                         <div className="flex justify-between items-start">
                           <Badge
@@ -603,7 +715,7 @@ export function MaintenanceView(): React.ReactElement {
                             {ticket.priority} Priority
                           </Badge>
                           <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
                               <Button variant="ghost" size="icon" className="h-8 w-8">
                                 <MoreVertical className="w-4 h-4" />
                               </Button>
@@ -664,16 +776,18 @@ export function MaintenanceView(): React.ReactElement {
                             {getStatusIcon(ticket.status)}
                             <span className="capitalize">{ticket.status.replace("_", " ")}</span>
                           </div>
-                          {ticket.cost && (
+                          {(ticket.estimatedCost ?? ticket.cost) != null && (
                             <span className="font-medium text-zinc-300">
-                              {formatCurrency(ticket.cost || 0)}
+                              {formatCurrency((ticket.estimatedCost ?? ticket.cost)!)}
                             </span>
                           )}
                         </div>
                       </CardContent>
                       <CardFooter className="pt-3 border-t border-zinc-800 text-xs text-zinc-500 flex justify-between">
                         <span>Created {new Date(ticket.createdAt).toLocaleDateString()}</span>
-                        {ticket.assignedTo && <span>Assigned: {ticket.assignedTo}</span>}
+                        {(ticket.vendorName || ticket.assignedTo) && (
+                          <span>Vendor: {ticket.vendorName || ticket.assignedTo}</span>
+                        )}
                       </CardFooter>
                     </Card>
                   ))
@@ -683,6 +797,16 @@ export function MaintenanceView(): React.ReactElement {
           )}
         </div>
       )}
+      <TicketDetailModal
+        ticket={selectedTicket}
+        isOpen={isDetailOpen}
+        onClose={() => setIsDetailOpen(false)}
+        onEdit={(ticket) => {
+          setIsDetailOpen(false);
+          handleEdit(ticket);
+        }}
+        onDelete={() => setIsDetailOpen(false)}
+      />
       <ConfirmationDialog dialog={confirmDialog} />
     </>
   );

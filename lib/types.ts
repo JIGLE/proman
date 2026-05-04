@@ -190,9 +190,17 @@ export interface MaintenanceTicket {
   description: string;
   status: MaintenanceStatus;
   priority: MaintenancePriority;
+  category?: string;
   images: string; // JSON string
-  cost?: number;
-  assignedTo?: string;
+  cost?: number; // @deprecated — use estimatedCost
+  estimatedCost?: number;
+  scheduledDate?: string;
+  dueDate?: string;
+  assignedTo?: string; // @deprecated — use vendorName
+  vendorName?: string;
+  vendorPhone?: string;
+  invoiceRef?: string;
+  isTenantReport?: boolean;
   resolvedAt?: string;
   createdAt: string;
   updatedAt: string;

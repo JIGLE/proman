@@ -146,15 +146,20 @@ export function TenantDetailModal({
     }
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!tenant) return;
     if (onDelete) {
       onDelete(tenant.id);
+      onClose();
     } else if (deleteTenant) {
-      deleteTenant(tenant.id);
+      try {
+        await deleteTenant(tenant.id);
+        success?.("Tenant deleted");
+        onClose();
+      } catch {
+        error?.("Failed to delete tenant");
+      }
     }
-    onClose();
-    success?.("Tenant deleted");
   }
 
   return (
@@ -246,44 +251,6 @@ export function TenantDetailModal({
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="rent">Monthly Rent</Label>
-                <Input
-                  id="rent"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.rent}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      rent: parseFloat(e.target.value) || 0,
-                    })
-                  }
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="leaseStart">Lease Start</Label>
-                  <Input
-                    id="leaseStart"
-                    type="date"
-                    value={formData.leaseStart}
-                    onChange={(e) => setFormData({ ...formData, leaseStart: e.target.value })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="leaseEnd">Lease End</Label>
-                  <Input
-                    id="leaseEnd"
-                    type="date"
-                    value={formData.leaseEnd}
-                    onChange={(e) => setFormData({ ...formData, leaseEnd: e.target.value })}
-                  />
-                </div>
               </div>
 
               <div className="space-y-2">
@@ -393,7 +360,7 @@ export function TenantDetailModal({
                     </span>
                     {/* Derived from active lease's startDate */}
                     <span className="text-[var(--color-foreground)]">
-                      {new Date(derivedLeaseStart).toLocaleDateString()}
+                      {derivedLeaseStart ? new Date(derivedLeaseStart).toLocaleDateString() : "—"}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-sm">
@@ -402,7 +369,7 @@ export function TenantDetailModal({
                     </span>
                     {/* Derived from active lease's endDate */}
                     <span className="text-[var(--color-foreground)]">
-                      {new Date(derivedLeaseEnd).toLocaleDateString()}
+                      {derivedLeaseEnd ? new Date(derivedLeaseEnd).toLocaleDateString() : "—"}
                     </span>
                   </div>
                 </CardContent>

@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useApp } from "@/lib/contexts/app-context";
+import { useToast } from "@/lib/contexts/toast-context";
+import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { EntityLink } from "@/components/shared/entity-link";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 
@@ -24,8 +26,10 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> = 
 };
 
 export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
-  const { state } = useApp();
+  const { state, updateLease } = useApp();
   const { formatCurrency } = useCurrency();
+  const { success, error } = useToast();
+  const confirmDialog = useConfirmDialog();
   const pathname = usePathname();
   const router = useRouter();
   const locale = pathname.split("/")[1] || "pt";
@@ -64,6 +68,34 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
     .filter((r) => r.status === "paid")
     .reduce((sum, r) => sum + r.amount, 0);
 
+  const handleEdit = () => {
+    router.push(`/${locale}/leases?action=edit&id=${lease.id}`);
+  };
+
+  const handleRenew = () => {
+    router.push(`/${locale}/leases?action=renew&id=${lease.id}`);
+  };
+
+  const handleTerminate = () => {
+    confirmDialog.confirm(
+      {
+        title: "Terminate Lease",
+        description: "This lease will be marked as terminated. This action cannot be undone.",
+        confirmLabel: "Terminate",
+        variant: "destructive",
+      },
+      async () => {
+        try {
+          await updateLease(lease.id, { status: "terminated" });
+          success("Lease terminated");
+          router.push(`/${locale}/leases`);
+        } catch {
+          error("Failed to terminate lease");
+        }
+      },
+    );
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -95,13 +127,19 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleRenew}>
             <RotateCcw className="h-4 w-4 mr-1" /> Renew
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleEdit}>
             <Edit className="h-4 w-4 mr-1" /> Edit
           </Button>
-          <Button variant="outline" size="sm" className="text-red-500 hover:text-red-600">
+          <Button
+            variant="outline"
+            size="sm"
+            className="text-red-500 hover:text-red-600"
+            onClick={handleTerminate}
+            disabled={lease.status === "terminated"}
+          >
             <XCircle className="h-4 w-4 mr-1" /> Terminate
           </Button>
         </div>

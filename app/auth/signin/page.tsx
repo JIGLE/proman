@@ -2,7 +2,7 @@
 
 import { Suspense } from "react";
 import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { Button } from "@/components/ui/button";
@@ -33,9 +33,22 @@ function detectLocale(): string {
 const isDemoEnabled =
   process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true" || process.env.NODE_ENV !== "production";
 
+const ERROR_MESSAGES: Record<string, string> = {
+  CredentialsSignin: "Invalid email or password. Please try again.",
+  OAuthAccountNotLinked:
+    "This email is already linked to another sign-in method. Use Google or your original login.",
+  OAuthSignin: "Error signing in with Google. Please try again.",
+  OAuthCallback: "Sign-in was interrupted. Please try again.",
+  SessionRequired: "You must be signed in to access that page.",
+  Default: "Something went wrong. Please try again.",
+};
+
 function SignInContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const errorCode = searchParams.get("error");
+  const errorMessage = errorCode ? (ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.Default) : null;
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -80,6 +93,12 @@ function SignInContent() {
             <p className="text-zinc-400 mb-8">
               Sign in to access your property management dashboard
             </p>
+
+            {errorMessage && (
+              <div className="mb-6 rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
+                {errorMessage}
+              </div>
+            )}
 
             {/* Credentials login — only shown when demo login is enabled */}
             {isDemoEnabled && (

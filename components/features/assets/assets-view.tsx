@@ -2,6 +2,7 @@
 
 import { useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import {
   AlertTriangle,
   Building2,
@@ -103,6 +104,7 @@ export function AssetsView(): React.ReactElement {
   const [highlightedPropertyId, setHighlightedPropertyId] = useState<string | null>(null);
   const { state } = useApp();
   const { isOwnerPortal } = usePortalAccess();
+  const { data: session } = useSession();
   const { formatCurrency } = useCurrency();
   const router = useRouter();
   const pathname = usePathname();
@@ -181,14 +183,14 @@ export function AssetsView(): React.ReactElement {
 
   // ── Tenant portal home ───────────────────────────────────────────────────────
   const tenantHome = useMemo(() => {
-    const tenant = tenants[0];
+    const tenant = tenants.find((t) => t.email === session?.user?.email) ?? tenants[0];
     const activeLease = tenant ? getActiveLease(tenant.id, leases) : null;
     const property = properties.find(
       (p) => p.id === (activeLease?.propertyId ?? tenant?.propertyId),
     );
     const paidReceipts = receipts.filter((r) => r.status === "paid");
     return { tenant, activeLease, property, paidReceipts };
-  }, [leases, properties, receipts, tenants]);
+  }, [leases, properties, receipts, tenants, session]);
 
   if (!isOwnerPortal) {
     // ── Tenant view (unchanged structure, trimmed) ─────────────────────────────

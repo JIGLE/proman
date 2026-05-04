@@ -96,7 +96,7 @@ export function DemoBanner() {
       <div className="flex items-center gap-1.5 shrink-0">
         {!collapsed && (
           <>
-            <div className="hidden md:inline-flex items-center gap-1 rounded bg-amber-900/15 p-0.5">
+            <div className="inline-flex items-center gap-1 rounded bg-amber-900/15 p-0.5">
               <button
                 onClick={() => switchDemoPerspective("owner")}
                 className={`rounded px-2 py-0.5 text-[10px] font-semibold transition-colors ${

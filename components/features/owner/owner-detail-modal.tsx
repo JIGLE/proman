@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Mail, Phone, MapPin, Building2, Edit, Trash2 } from "lucide-react";
 import {
   Dialog,
@@ -49,7 +49,7 @@ export function OwnerDetailModal({
   });
 
   // Initialize form data when owner changes
-  useState(() => {
+  useEffect(() => {
     if (owner) {
       setFormData({
         name: owner.name,
@@ -59,7 +59,7 @@ export function OwnerDetailModal({
         notes: owner.notes || "",
       });
     }
-  });
+  }, [owner]);
 
   if (!owner) return null;
 

@@ -75,7 +75,7 @@ import { useSortableData } from "@/lib/hooks/use-sortable-data";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { PageHeader } from "@/components/shared/page-header";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
 
 export type LeasesViewProps = Record<string, never>;
@@ -87,6 +87,7 @@ export function LeasesView(): React.ReactElement {
   const { formatCurrency, currencySymbol } = useCurrency();
   const confirmDialog = useConfirmDialog();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const locale = useLocale();
   const [contractFile, setContractFile] = useState<File | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -305,6 +306,23 @@ export function LeasesView(): React.ReactElement {
       },
     );
   };
+
+  // Auto-open wizard when navigating from LeaseDetailView with ?action=edit|renew&id=X
+  useEffect(() => {
+    const action = searchParams.get("action");
+    const id = searchParams.get("id");
+    if (!action || !id || loading) return;
+    const target = leases.find((l) => l.id === id);
+    if (!target) return;
+    if (action === "edit") {
+      handleEdit(target);
+    } else if (action === "renew") {
+      handleEdit(target);
+    }
+    // Clear the query params after opening
+    router.replace(`/${locale}/leases`);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams, leases, loading]);
 
   const handleDownloadContract = (lease: Lease) => {
     if (lease.contractFile) {
@@ -994,7 +1012,8 @@ export function LeasesView(): React.ReactElement {
                 sortedLeases.map((lease: Lease) => (
                   <Card
                     key={lease.id}
-                    className="overflow-hidden transition-all hover:shadow-lg hover:shadow-zinc-900/50"
+                    className="overflow-hidden transition-all hover:shadow-lg hover:shadow-zinc-900/50 cursor-pointer"
+                    onClick={() => router.push(`/${locale}/leases/${lease.id}`)}
                   >
                     <div className="aspect-video w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative">
                       <div className="absolute inset-0 flex items-center justify-center">
@@ -1048,7 +1067,10 @@ export function LeasesView(): React.ReactElement {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleDownloadContract(lease)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownloadContract(lease);
+                            }}
                             className="flex items-center gap-1"
                           >
                             <Download className="w-3 h-3" />
@@ -1056,7 +1078,7 @@ export function LeasesView(): React.ReactElement {
                           </Button>
                         </div>
                       )}
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex gap-2 pt-2" onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" className="flex items-center gap-1">

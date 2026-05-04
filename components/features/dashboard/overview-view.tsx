@@ -199,8 +199,13 @@ export function OverviewView({
       })
       .slice(0, 4);
 
+    const sixtyDaysFromNow = Date.now() + 60 * 24 * 60 * 60 * 1000;
     const expiringLeases = [...leases]
-      .filter((lease) => lease.status === "active")
+      .filter((lease) => {
+        if (lease.status !== "active") return false;
+        const end = Date.parse(lease.endDate);
+        return !isNaN(end) && end > Date.now() && end <= sixtyDaysFromNow;
+      })
       .sort((a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime())
       .slice(0, 4)
       .map((lease) => ({
@@ -216,7 +221,7 @@ export function OverviewView({
         endDate: lease.endDate,
       }));
 
-    const tenant = tenants[0] ?? null;
+    const tenant = tenants.find((t) => t.email === session?.user?.email) ?? tenants[0] ?? null;
     const activeLease = tenant ? getActiveLease(tenant.id, leases) : null;
     const home = properties.find(
       (property) => property.id === (activeLease?.propertyId ?? tenant?.propertyId),
@@ -238,7 +243,7 @@ export function OverviewView({
       paidReceipts,
       nextPaymentDate,
     };
-  }, [leases, properties, receipts, tenants]);
+  }, [leases, properties, receipts, tenants, session]);
 
   const firstName = session?.user?.name?.split(" ")[0] || "there";
 

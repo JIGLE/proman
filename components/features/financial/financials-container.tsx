@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export function FinancialsContainer() {
   const { formatCurrency } = useCurrency();
   const { isOwnerPortal } = usePortalAccess();
   const receiptsViewRef = useRef<ReceiptsViewRef>(null);
+  const { data: session } = useSession();
 
   useEffect(() => {
     if (
@@ -103,7 +105,8 @@ export function FinancialsContainer() {
   const selectedProperty = propertyId
     ? state.properties.find((property) => property.id === propertyId)
     : undefined;
-  const tenantSummary = state.tenants[0];
+  const tenantSummary =
+    state.tenants.find((t) => t.email === session?.user?.email) ?? state.tenants[0];
   const tenantLease = tenantSummary ? getActiveLease(tenantSummary.id, state.leases) : null;
   const tenantPaidReceipts = state.receipts.filter((receipt) => receipt.status === "paid");
 

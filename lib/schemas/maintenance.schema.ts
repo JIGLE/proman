@@ -1,5 +1,15 @@
 import { z } from "zod";
 
+export const MAINTENANCE_CATEGORIES = [
+  "plumbing",
+  "electrical",
+  "structural",
+  "appliance",
+  "cleaning",
+  "hvac",
+  "other",
+] as const;
+
 export const maintenanceSchema = z.object({
   propertyId: z.string().min(1, "Property is required"),
   tenantId: z.string().optional(),
@@ -7,6 +17,15 @@ export const maintenanceSchema = z.object({
   description: z.string().min(1, "Description is required").max(1000, "Description too long"),
   status: z.enum(["open", "in_progress", "resolved", "closed"]),
   priority: z.enum(["low", "medium", "high", "urgent"]),
+  category: z.enum(MAINTENANCE_CATEGORIES).optional(),
+  estimatedCost: z.number().min(0).optional(),
+  scheduledDate: z.string().optional(),
+  dueDate: z.string().optional(),
+  vendorName: z.string().max(100).optional(),
+  vendorPhone: z.string().max(20).optional(),
+  invoiceRef: z.string().max(50).optional(),
+  isTenantReport: z.boolean().optional(),
+  // @deprecated — kept for backward compat
   cost: z.number().min(0).optional(),
   assignedTo: z.string().optional(),
 });

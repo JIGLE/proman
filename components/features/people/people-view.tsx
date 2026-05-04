@@ -27,7 +27,7 @@ export function PeopleView(): React.ReactElement {
   const [activeTab, setActiveTab] = useTabPersistence("people", "tenants");
   const searchParams = useSearchParams();
   const { state } = useApp();
-  const { tenants, owners } = state;
+  const { tenants, owners, leases } = state;
   const tenantsViewRef = useRef<TenantsViewRef>(null);
   const ownersViewRef = useRef<OwnersViewRef>(null);
 
@@ -96,7 +96,7 @@ export function PeopleView(): React.ReactElement {
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Current Leases</div>
             <div className="text-2xl font-bold text-green-500">
-              {tenants.filter((t) => new Date(t.leaseEnd) > new Date()).length}
+              {leases.filter((l) => l.status === "active").length}
             </div>
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">

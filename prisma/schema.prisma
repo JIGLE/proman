@@ -387,9 +387,17 @@ model MaintenanceTicket {
   description       String
   status            MaintenanceStatus @default(open)
   priority          MaintenancePriority @default(medium)
+  category          String?  // plumbing, electrical, structural, appliance, cleaning, other
   images            String   // JSON string of image URLs
-  cost              Float?
-  assignedTo        String?  // Free-text assignment (contactPerson name)
+  cost              Float?   // @deprecated — kept for backward compat; use estimatedCost
+  estimatedCost     Float?
+  scheduledDate     DateTime?
+  dueDate           DateTime?
+  assignedTo        String?  // @deprecated — kept for backward compat; use vendorName
+  vendorName        String?
+  vendorPhone       String?
+  invoiceRef        String?
+  isTenantReport    Boolean  @default(false)
   resolvedAt        DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt

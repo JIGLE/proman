@@ -10,7 +10,126 @@ Owner: Product + Engineering
 
 ## Sprint 1 (2026-05-05 → 2026-05-16)
 
-### Focus: Nav fixes, orphaned pages, quick wins, Maintenance model + Lease wiring
+### Focus: CRITICAL bug fixes (Phase 0) + nav fixes + quick UX wins + Maintenance model + Lease wiring
+
+---
+
+### Ticket 0.1 — Sign-in: show error feedback on failed login
+
+- Priority: P0
+- Effort: 1 point
+- Status: Not started
+- Problem: `signIn("credentials")` failures are silent. The form resets with no message. User cannot tell why login failed.
+- Files: `app/auth/signin/page.tsx`
+- Tasks:
+  1. Read `searchParams.get("error")` on page load.
+  2. Map NextAuth error codes to human-readable messages (`CredentialsSignin` → "Incorrect email or password.").
+  3. Display error in a visible alert above the form.
+- Acceptance criteria:
+  1. Wrong credentials shows "Incorrect email or password."
+  2. No silent empty state after a failed login.
+
+---
+
+### Ticket 0.2 — Fix `tenants[0]` hardcode in tenant dashboard and financials
+
+- Priority: P0
+- Effort: 2 points
+- Status: Not started
+- Problem: Both `overview-view.tsx` and `financials-container.tsx` use `state.tenants[0]`. If the array is unordered the wrong tenant's data displays.
+- Files: `components/features/dashboard/overview-view.tsx`, `components/features/financial/financials-container.tsx`
+- Tasks:
+  1. Identify the correct tenant lookup — match against the session user's email from `useSession()` or portal context.
+  2. Replace `tenants[0]` with a deterministic lookup in both files.
+- Acceptance criteria:
+  1. Tenant dashboard always shows data for the authenticated tenant.
+
+---
+
+### Ticket 0.3 — Remove corrupt edit fields from Tenant modal
+
+- Priority: P0
+- Effort: 1 point
+- Status: Not started
+- Problem: Editing Monthly Rent / Lease Start / Lease End writes to deprecated `Tenant` fields, not the `Lease` record. User believes they updated the lease but they haven't.
+- Files: `components/features/tenant/tenant-detail-modal.tsx`
+- Tasks:
+  1. Remove Monthly Rent, Lease Start, Lease End, and Payment Status from the edit form.
+  2. Show a read-only "Active lease" card in view mode with values derived from `state.leases`.
+  3. Full 4-zone rewrite deferred to Ticket 3.3 in Sprint 2.
+- Acceptance criteria:
+  1. Edit form has no deprecated lease fields.
+  2. Lease dates are shown read-only.
+
+---
+
+### Ticket 0.4 — Guard "Invalid Date" in Tenant modal
+
+- Priority: P0
+- Effort: 0.5 points
+- Status: Not started
+- Problem: `new Date(derivedLeaseStart).toLocaleDateString()` renders "Invalid Date" when tenant has no active lease.
+- Files: `components/features/tenant/tenant-detail-modal.tsx`
+- Tasks:
+  1. Guard: `derivedLeaseStart ? formatDate(derivedLeaseStart) : "No active lease"`. Apply to both start and end.
+- Acceptance criteria:
+  1. Tenants without a lease show "No active lease" rather than "Invalid Date".
+
+---
+
+### Ticket 5.1 — Dashboard: filter Lease follow-up to ≤60 days
+
+- Priority: P1
+- Effort: 1 point
+- Status: Not started
+- Problem: "Lease follow-up" shows all active leases. A lease ending in 3 years appears in the queue.
+- Files: `components/features/dashboard/overview-view.tsx`
+- Tasks:
+  1. Filter to leases where `daysUntilEnd <= 60`.
+  2. Rename section "Expiring within 60 days".
+  3. Add empty state: "No leases expiring soon."
+- Acceptance criteria:
+  1. Only leases ending within 60 days appear.
+  2. Friendly empty state when none.
+
+---
+
+### Ticket 5.7 — Maintenance form: currency symbol from context
+
+- Priority: P1
+- Effort: 0.5 points
+- Status: Not started
+- Problem: Cost label hardcodes `$`. EUR users (the target market) see the wrong symbol.
+- Files: `components/features/maintenance/maintenance-view.tsx`
+- Tasks:
+  1. Import currency context hook. Replace `($)` with `({currencySymbol})`.
+
+---
+
+### Ticket 5.10 — Demo banner: perspective switcher on mobile
+
+- Priority: P1
+- Effort: 1 point
+- Status: Not started
+- Problem: Owner/Tenant toggle is `hidden md:flex`. Mobile prospects cannot switch to tenant view.
+- Files: `components/shared/demo-banner.tsx`
+- Tasks:
+  1. Render compact Owner | Tenant toggle below the main banner row on mobile.
+- Acceptance criteria:
+  1. Toggle visible at 375px viewport. Desktop layout unchanged.
+
+---
+
+### Ticket 5.13 — Tenant delete: await + keep modal open on error
+
+- Priority: P1
+- Effort: 0.5 points
+- Status: Not started
+- Problem: `deleteTenant()` called without `await` — if it fails, modal closes and tenant appears deleted.
+- Files: `components/features/tenant/tenant-detail-modal.tsx`
+- Tasks:
+  1. Make `handleDelete` async, add `await`, wrap in try/catch.
+  2. Only call `onClose()` on success; show error toast on failure.
 
 ---
 
@@ -150,7 +269,7 @@ Owner: Product + Engineering
 
 ## Sprint 2 (2026-05-19 → 2026-05-30)
 
-### Focus: Orphaned pages in nav, Maintenance view polish, Tenant modal rewrite
+### Focus: Orphaned pages in nav, Maintenance view polish, Tenant modal rewrite, mobile & UX polish
 
 ---
 
@@ -230,6 +349,122 @@ Owner: Product + Engineering
 - Effort: 2 points
 - Status: Not started
 - Note: May be done as part of 3.3 naturally.
+
+---
+
+### Ticket 5.2 — Property list: mobile filter strip
+
+- Priority: P1
+- Effort: 3 points
+- Status: Not started
+- Problem: Filter chips (Needs attention, Lease renewal, Maintenance, Missing map) are `hidden sm:flex` — invisible on mobile.
+- Files: `components/features/property/property-list.tsx`
+- Tasks:
+  1. Render a scrollable horizontal chip row (no label, icons only) below `sm` breakpoint.
+  2. Active chip highlighted. Tap to toggle.
+- Acceptance criteria:
+  1. All 4 filters accessible on 375px viewport.
+  2. Desktop layout unchanged.
+
+---
+
+### Ticket 5.3 — Payment matrix: mobile scroll + sticky column
+
+- Priority: P1
+- Effort: 2 points
+- Status: Not started
+- Problem: 12-month × N-tenant table has no horizontal scroll. Clips on any phone.
+- Files: `components/features/financial/payment-matrix-view.tsx`
+- Tasks:
+  1. Wrap table in `overflow-x-auto` container.
+  2. Make the tenant name column sticky (`position: sticky; left: 0`).
+- Acceptance criteria:
+  1. Table scrolls horizontally on mobile.
+  2. Tenant names remain visible while scrolling.
+
+---
+
+### Ticket 5.4 — Tenant dashboard: derive "Next rent" from lease schedule
+
+- Priority: P1
+- Effort: 2 points
+- Status: Not started
+- Problem: "Next rent" card shows `addMonths(new Date(), 1)` — hardcoded to one month from today, not derived from the lease.
+- Files: `components/features/dashboard/overview-view.tsx`
+- Tasks:
+  1. Find the active lease's payment schedule (derived from `startDate` + monthly cadence).
+  2. Calculate the next payment date after today.
+  3. Fall back to "—" if no active lease.
+- Acceptance criteria:
+  1. "Next rent" reflects the actual next due date from the lease.
+
+---
+
+### Ticket 5.5 — Tenant Detail Modal: add Quick Links section
+
+- Priority: P2
+- Effort: 2 points
+- Status: Not started
+- Problem: Tenant modal has no navigation to payments, lease, or property — unlike the property modal which has a full quick-links panel.
+- Files: `components/features/tenant/tenant-detail-modal.tsx`
+- Tasks:
+  1. Add Quick Links row: Payment history (→ `/financials?tenantId=`), Active lease (→ `/leases/{leaseId}`), Property (opens property modal).
+
+---
+
+### Ticket 5.8 — Receipts: default status to "pending" for new records
+
+- Priority: P1
+- Effort: 0.5 points
+- Status: Not started
+- Problem: Receipt create form defaults `status: "paid"`. Recording an expected-but-unpaid rent requires manually changing to "pending".
+- Files: `components/features/financial/receipts-view.tsx`
+- Tasks:
+  1. Change default status to `"pending"`.
+  2. Adjust CTA label: "Record payment received" (status = paid) vs "Record expected payment" (status = pending).
+
+---
+
+### Ticket 5.9 — Demo banner: warn before auto-expiry
+
+- Priority: P1
+- Effort: 2 points
+- Status: Not started
+- Problem: Demo expires with no warning. A prospect in the middle of exploring gets instantly redirected to the landing page.
+- Files: `components/shared/demo-banner.tsx`
+- Tasks:
+  1. Show a warning toast/dialog at 5 minutes remaining: "Demo expires in 5 minutes. Extend?"
+  2. Add an "Extend 15 min" button that resets the timer.
+- Acceptance criteria:
+  1. Warning appears at 5 minutes.
+  2. User can extend without being interrupted.
+
+---
+
+### Ticket 5.11 — Gate /api/health behind admin role
+
+- Priority: P1
+- Effort: 1 point
+- Status: Not started
+- Problem: Settings page fetches `/api/health` on every load, exposing DB connection status and latency to any authenticated user.
+- Files: `app/api/health/route.ts`, `components/features/settings/settings-view.tsx`
+- Tasks:
+  1. Add admin/owner role check to `/api/health` endpoint.
+  2. In settings, only call the endpoint if the user has owner role; show "Status unavailable" otherwise.
+
+---
+
+### Ticket 5.12 — Property detail modal: responsive KPI grid
+
+- Priority: P1
+- Effort: 1 point
+- Status: Not started
+- Problem: KPI grid uses `grid-cols-4` which renders 4 very narrow columns on mobile.
+- Files: `components/features/property/property-detail-modal.tsx`
+- Tasks:
+  1. Change to `grid-cols-2 sm:grid-cols-4`.
+- Acceptance criteria:
+  1. KPI cells are 2 columns on mobile, 4 on sm+.
 
 ---
 
