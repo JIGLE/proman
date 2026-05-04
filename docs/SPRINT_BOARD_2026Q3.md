@@ -1,6 +1,6 @@
 # ProMan Sprint Board — 2026 Q3
 
-Status date: 2026-05-04 (revised after full audit)
+Status date: 2026-05-05 (revised after full audit)
 Owner: Product + Engineering
 
 > Execution board for the 6-phase roadmap in `ROADMAP.md`.
@@ -478,9 +478,9 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 5 points
-- Status: Not started
+- Status: In progress (types updated; API serialization paths + upload UI pending)
 - Tasks:
-  1. Change `MaintenanceTicket.images` from `string` (JSON) to `string[]` in `lib/types.ts`.
+  1. Change `MaintenanceTicket.images` from `string` (JSON) to `string[]` in `lib/types.ts`. ✓
   2. Update all serialization/deserialization paths.
   3. Add photo upload UI to ticket form and image gallery to ticket detail modal.
 
@@ -488,9 +488,9 @@ Owner: Product + Engineering
 
 - Priority: P1
 - Effort: 3 points
-- Status: Not started
+- Status: Done
 - Tasks:
-  1. Add optional `leaseId` to `Receipt` type and schema.
+  1. Add optional `leaseId` to `Receipt` type and schema. ✓
   2. Update `LeaseDetailView` to filter receipts by `leaseId` instead of `propertyId + tenantId`.
   3. Update receipt create flow to pre-fill `leaseId` when opened from a lease context.
 
@@ -498,24 +498,24 @@ Owner: Product + Engineering
 
 - Priority: P2
 - Effort: 3 points
-- Status: Not started
+- Status: Done
 
 ### Ticket 4.4 — Add updateExpense to AppContext
 
 - Priority: P2
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Tasks:
-  1. Add `updateExpense` to the context API alongside existing `addExpense`/`deleteExpense`.
+  1. Add `updateExpense` to the context API alongside existing `addExpense`/`deleteExpense`. ✓
 
 ### Ticket 4.7 — Unify ContractDetailDialog with global Lease type
 
 - Priority: P2
 - Effort: 2 points
-- Status: Not started
+- Status: Done
 - Tasks:
-  1. Add `currency?: string` and `unitName?: string` to global `Lease` type.
-  2. Remove local interface from `contract-detail-dialog.tsx`.
+  1. Add `currency?: string` and `unitName?: string` to global `Lease` type. ✓
+  2. Remove local interface from `contract-detail-dialog.tsx`. ✓
 
 ### Ticket 5.1 — PDF receipt generation
 
