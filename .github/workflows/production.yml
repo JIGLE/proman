@@ -109,3 +109,61 @@ jobs:
           echo "Deployed commit $GITHUB_SHA to production environment." >> $GITHUB_STEP_SUMMARY
     environment:
       name: production
+
+  # Enforces that package.json version matches the latest git tag on main.
+  # Catches the case where a manual version edit or failed release left state inconsistent.
+  version-integrity:
+    name: Version Integrity Check
+    runs-on: ubuntu-latest
+    needs: build
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Check package.json version matches latest tag
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          LATEST_TAG=$(git tag --sort=-creatordate | grep '^v' | head -1 | sed 's/^v//')
+          echo "package.json: $PKG_VERSION"
+          echo "Latest tag:   $LATEST_TAG"
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No release tags found — skipping version check"
+            exit 0
+          fi
+          if [ "$PKG_VERSION" != "$LATEST_TAG" ]; then
+            echo "::error::Version mismatch: package.json=$PKG_VERSION, latest tag=v$LATEST_TAG"
+            echo "Run the release workflow or align package.json to the latest tag."
+            exit 1
+          fi
+          echo "Version integrity OK: $PKG_VERSION == v$LATEST_TAG"
+
+  # Non-blocking advisory job that warns when main has accumulated many unreleased commits.
+  release-lag:
+    name: Release Lag Check
+    runs-on: ubuntu-latest
+    needs: build
+    if: always()
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Count unreleased commits
+        run: |
+          LATEST_TAG=$(git tag --sort=-creatordate | grep '^v' | head -1)
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No tags found — skipping release lag check"
+            exit 0
+          fi
+          COMMIT_COUNT=$(git rev-list ${LATEST_TAG}..HEAD --count)
+          echo "Commits since $LATEST_TAG: $COMMIT_COUNT"
+          echo "## Release Lag" >> $GITHUB_STEP_SUMMARY
+          echo "Commits on \`main\` since last release (**$LATEST_TAG**): **$COMMIT_COUNT**" >> $GITHUB_STEP_SUMMARY
+          if [ "$COMMIT_COUNT" -gt 10 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "> **Warning:** $COMMIT_COUNT unreleased commits on main. Consider triggering the Release workflow." >> $GITHUB_STEP_SUMMARY
+            echo "::warning::$COMMIT_COUNT commits on main since $LATEST_TAG — consider cutting a release"
+          fi

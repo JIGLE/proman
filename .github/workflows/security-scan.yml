@@ -55,9 +55,13 @@ jobs:
           echo "Critical: $CRITICAL"
           echo "High: $HIGH"
 
-          # Fail on critical vulnerabilities only
+          # Fail on critical or high vulnerabilities
           if [ "$CRITICAL" -gt 0 ]; then
             echo "::error::Found $CRITICAL critical severity vulnerabilities"
+            exit 1
+          fi
+          if [ "$HIGH" -gt 0 ]; then
+            echo "::error::Found $HIGH high severity vulnerabilities — run 'npm audit' locally to review"
             exit 1
           fi
 
@@ -161,7 +165,6 @@ jobs:
         with:
           fail-on-severity: critical
           deny-licenses: GPL-2.0, GPL-3.0
-        continue-on-error: true
 
   secret-scanning:
     name: Secret Scanning
@@ -180,6 +183,39 @@ jobs:
           base: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
           head: HEAD
           extra_args: --only-verified
+
+  # Advisory scan: catches revoked/non-verifiable secrets that --only-verified misses.
+  # Always passes (exit 0) — findings appear as a Step Summary warning for manual review.
+  secret-scanning-unverified:
+    name: Secret Scanning (Unverified — Advisory)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: TruffleHog Unverified Scan
+        id: trufflehog-unverified
+        uses: trufflesecurity/trufflehog@v3.94.3
+        with:
+          path: ./
+          base: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
+          head: HEAD
+          extra_args: --json --no-verification
+        continue-on-error: true
+
+      - name: Warn on unverified findings
+        if: steps.trufflehog-unverified.outcome == 'failure'
+        run: |
+          echo "## Advisory: Unverified secrets detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "TruffleHog found potential (unverified) secrets. These may be false positives," >> $GITHUB_STEP_SUMMARY
+          echo "revoked credentials, or internal tokens that need manual review." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Run \`trufflehog git file://. --no-verification\` locally to inspect findings." >> $GITHUB_STEP_SUMMARY
+          echo "::warning::Unverified secrets detected — manual review recommended"
 
   security-summary:
     name: Security Summary

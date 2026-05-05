@@ -1,126 +1,79 @@
-# Branch Protection Rules Configuration
+# Branch Protection Rules
 
-# This file documents the recommended branch protection rules for this repository
+## Branching Model
 
-# These rules should be configured in GitHub Settings → Branches → Branch protection rules
+This repository uses **trunk-based development**:
 
-## Main Branch Protection (main)
+- `main` — production-only, fully protected. All changes arrive via PR.
+- `feature/<id>-description` — short-lived feature branches, PR to `main`.
+- `fix/<id>-description` — short-lived bug fix branches, PR to `main`.
+- `release/vX.Y.Z` — created automatically by `release.yml`, PR to `main`, auto-merged by the workflow.
+- `hotfix/<description>` — critical patches branched from `main`, PR back to `main`.
 
-- **Branch name pattern**: `main`
-- **Require a pull request before merging**
-  - Required approvals: 1
-  - Dismiss stale pull request approvals when new commits are pushed: ✅
-  - Require review from Code Owners: ✅
-  - Restrict who can dismiss pull request reviews: ✅ (Repository administrators)
-- **Require status checks to pass before merging**
-  - Require branches to be up to date before merging: ✅
-  - Status checks:
-    - `lint-type` (CI - Lint & Type Check)
-    - `test` (CI - Unit Tests)
-    - `build` (CI - Build validation)
-    - `security-scan` (Security Scan)
-- **Require conversation resolution before merging**: ✅
-- **Include administrators**: ✅
-- **Restrict pushes that create matching branches**: ✅
-- **Allow force pushes**: ❌
-- **Allow deletions**: ❌
-
-## Develop Branch Protection (develop)
-
-- **Branch name pattern**: `develop`
-- **Require a pull request before merging**
-  - Required approvals: 1
-  - Dismiss stale pull request approvals when new commits are pushed: ✅
-- **Require status checks to pass before merging**
-  - Status checks:
-    - `lint-type` (CI - Lint & Type Check)
-    - `test` (CI - Unit Tests)
-- **Include administrators**: ✅
-- **Allow force pushes**: ❌
-- **Allow deletions**: ❌
-
-## Feature Branch Protection (feature/\*\*)
-
-- **Branch name pattern**: `feature/**`
-- **Require a pull request before merging**
-  - Required approvals: 1
-- **Require status checks to pass before merging**
-  - Status checks:
-    - `lint-type` (CI - Lint & Type Check)
-- **Include administrators**: ✅
-- **Allow force pushes**: ❌
-- **Allow deletions**: ❌
-
-## Notes
-
-- Status check names may vary slightly based on workflow job names
-- Code owners are defined in `.github/CODEOWNERS`
-- These rules ensure quality while allowing efficient development workflow
+There is no long-lived `develop` branch. Dependabot branches follow the standard `dependabot/**` pattern.
 
 ---
 
-## Programmatic Setup
+## Branch Naming Convention
 
-Use the GitHub CLI to apply these rules. Replace `OWNER/REPO` with your repository.
+| Prefix                  | Purpose                  | Example                        |
+| ----------------------- | ------------------------ | ------------------------------ |
+| `feat/<id>-description` | New feature              | `feat/7.3-lease-expiry-alerts` |
+| `fix/<id>-description`  | Bug fix                  | `fix/157-unused-nav-helper`    |
+| `chore/<description>`   | Maintenance              | `chore/upgrade-prisma-7`       |
+| `release/vX.Y.Z`        | Automated release        | `release/v1.14.0`              |
+| `hotfix/<description>`  | Critical patch from main | `hotfix/auth-token-leak`       |
 
-### Main branch
+---
 
-```bash
-gh api repos/OWNER/REPO/branches/main/protection \
-  --method PUT \
-  --input - <<'EOF'
-{
-  "required_status_checks": {
-    "strict": true,
-    "contexts": [
-      "Lint & Type Check",
-      "Unit Tests",
-      "Build validation",
-      "Dependency Security Scan",
-      "Custom Security Scan",
-      "CodeQL Security Analysis"
-    ]
-  },
-  "enforce_admins": true,
-  "required_pull_request_reviews": {
-    "dismiss_stale_reviews": true,
-    "require_code_owner_reviews": true,
-    "required_approving_review_count": 1,
-    "dismissal_restrictions": {}
-  },
-  "required_conversation_resolution": true,
-  "restrictions": null,
-  "allow_force_pushes": false,
-  "allow_deletions": false
-}
-EOF
-```
+## Apply Branch Protection (run once after repo setup)
 
-### Develop branch
+The `branch-protection-config.json` file in this directory contains the ready-to-apply configuration.
 
 ```bash
-gh api repos/OWNER/REPO/branches/develop/protection \
+# Requires: gh auth login with admin scope on the repo
+gh api repos/JIGLE/proman/branches/main/protection \
   --method PUT \
-  --input - <<'EOF'
-{
-  "required_status_checks": {
-    "strict": true,
-    "contexts": [
-      "Lint & Type Check",
-      "Unit Tests"
-    ]
-  },
-  "enforce_admins": true,
-  "required_pull_request_reviews": {
-    "dismiss_stale_reviews": true,
-    "require_code_owner_reviews": false,
-    "required_approving_review_count": 1
-  },
-  "restrictions": null,
-  "allow_force_pushes": false,
-  "allow_deletions": false
-}
-EOF
+  --input .github/branch-protection-config.json
 ```
 
-> **Tip:** Run `gh auth status` to verify you have `admin` scope before applying these rules.
+### Required status checks configured
+
+| Check name                 | Workflow            |
+| -------------------------- | ------------------- |
+| `Lint & Type Check`        | `ci.yml`            |
+| `Unit Tests`               | `ci.yml`            |
+| `Build validation`         | `ci.yml`            |
+| `Dependency Security Scan` | `security-scan.yml` |
+| `CodeQL Security Analysis` | `security-scan.yml` |
+
+### Notes on the release workflow
+
+`release.yml` creates a `release/vX.Y.Z` branch and opens a PR to `main`. It then calls
+`gh pr merge --squash` to merge it. Since the workflow token has `contents: write` and
+`pull-requests: write`, this works when `enforce_admins: false` (the current config).
+
+If you later enable `enforce_admins: true`, the release workflow will need either:
+
+- A **fine-grained PAT** (stored as `RELEASE_TOKEN` secret) with bypass rights, or
+- A **GitHub App** with branch protection bypass configured.
+
+To verify current protection status:
+
+```bash
+gh api repos/JIGLE/proman/branches/main/protection | jq '{
+  required_reviews: .required_pull_request_reviews.required_approving_review_count,
+  required_checks: [.required_status_checks.contexts[]],
+  enforce_admins: .enforce_admins.enabled,
+  force_push_allowed: .allow_force_pushes.enabled
+}'
+```
+
+---
+
+## Verify protection is active
+
+```bash
+# Should return 403 when trying to push directly to main
+git push origin main --dry-run
+```

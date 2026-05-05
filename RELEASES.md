@@ -1,5 +1,32 @@
 # Releases
 
+- Date: 2026-05-04
+  - Version: v1.13.0
+  - Image: `ghcr.io/jigle/proman:1.13.0`
+  - Notes: Sprint 4 & 5 completions — data model improvements, UX polish, lease workflow fixes
+    - **Sprint 5**: Tickets 5.6 and 7.3 — additional UX and data model improvements
+    - **Sprint 4**: Tickets 4.3, 4.5, 5.2, 2.5, 6.1, 6.2 — data model hardening and workflow fixes
+    - **Roadmap**: All Q3 sprint items marked Done; ROADMAP.md updated to reflect completion
+    - **Verification**: `tsc --noEmit` clean, `eslint --max-warnings=0` clean, all tests passing
+
+- Date: 2026-04-29
+  - Version: v1.12.1
+  - Image: `ghcr.io/jigle/proman:1.12.1`
+  - Notes: Lint compliance patch — property modal import cleanup
+    - **Fix**: Removed unused `Plus` and `X` lucide-react imports from the property modal to satisfy `eslint --max-warnings=0`
+    - **Fix**: Resolved duplicate `Receipt` identifier; added null-guards for state arrays in tests
+    - **Verification**: `eslint --max-warnings=0` clean, all tests passing
+
+- Date: 2026-04-25
+  - Version: v1.12.0
+  - Image: `ghcr.io/jigle/proman:1.12.0`
+  - Notes: Portfolio refactor, property modal rewrite, map improvements, and demo redesign
+    - **Portfolio**: Refactored portfolio workspace for cleaner owner/tenant separation
+    - **Property Modal**: Full rewrite — richer overview, faster contextual actions, improved state guidance and mobile UX
+    - **Map**: Improved property map rendering and interaction
+    - **Demo**: Redesigned demo mode entry and presentation flows
+    - **Verification**: `tsc --noEmit` clean, `eslint --max-warnings=0` clean, all tests passing
+
 - Date: 2026-04-18
   - Version: v1.11.0
   - Image: `ghcr.io/jigle/proman:1.11.0`
