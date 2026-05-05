@@ -9,6 +9,8 @@ import {
   BadgeEuro,
   Building2,
   CalendarClock,
+  CheckCircle2,
+  Circle,
   CreditCard,
   FileText,
   Home,
@@ -19,10 +21,12 @@ import {
   ShieldCheck,
   Sparkles,
   UserRound,
+  X,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ProgressBar } from "@/components/ui/progress";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { cn } from "@/lib/utils/utils";
 import { useApp } from "@/lib/contexts/app-context";
@@ -133,6 +137,69 @@ function ActionTile({
   );
 }
 
+function OnboardingChecklist({
+  steps,
+  onDismiss,
+}: {
+  steps: { key: string; label: string; done: boolean; action: () => void }[];
+  onDismiss: () => void;
+}) {
+  const completed = steps.filter((s) => s.done).length;
+  const total = steps.length;
+  return (
+    <div
+      data-tour="onboarding"
+      className="rounded-2xl border border-white/10 bg-zinc-950/70 p-5 space-y-4"
+    >
+      <div className="flex items-center gap-4">
+        <div className="flex-1 space-y-1.5">
+          <p className="text-xs text-zinc-400">
+            {completed} of {total} steps complete
+          </p>
+          <ProgressBar progress={(completed / total) * 100} height={4} />
+        </div>
+        <button
+          onClick={onDismiss}
+          className="rounded-lg p-1.5 text-zinc-500 hover:bg-white/10 hover:text-zinc-300 transition-colors"
+          aria-label="Dismiss checklist"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+      <h2 className="text-sm font-semibold text-zinc-50">Get started with Proman</h2>
+      <div className="space-y-2">
+        {steps.map((step) => (
+          <div
+            key={step.key}
+            className="flex items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3"
+          >
+            <div className="flex items-center gap-3">
+              {step.done ? (
+                <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+              ) : (
+                <Circle className="h-4 w-4 shrink-0 text-zinc-500" />
+              )}
+              <span
+                className={cn(
+                  "text-sm",
+                  step.done ? "line-through text-zinc-500" : "text-zinc-200",
+                )}
+              >
+                {step.label}
+              </span>
+            </div>
+            {!step.done && (
+              <Button size="sm" variant="outline" onClick={step.action} className="shrink-0 gap-1">
+                Start <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function OverviewView({
   onAddProperty,
   onAddTenant,
@@ -173,6 +240,15 @@ export function OverviewView({
       })
       .catch(() => {});
   }, [isOwnerPortal]);
+
+  const [checklistDismissed, setChecklistDismissed] = useState(false);
+  useEffect(() => {
+    setChecklistDismissed(localStorage.getItem("proman.onboarding.dismissed") === "1");
+  }, []);
+  const handleDismissChecklist = () => {
+    localStorage.setItem("proman.onboarding.dismissed", "1");
+    setChecklistDismissed(true);
+  };
 
   const dashboardData = useMemo(() => {
     const currentMonth = new Date();
@@ -275,25 +351,54 @@ export function OverviewView({
 
   const firstName = session?.user?.name?.split(" ")[0] || "there";
 
+  const onboardingSteps = [
+    {
+      key: "property",
+      label: "Add your first property",
+      done: properties.length > 0,
+      action: handleAddProperty,
+    },
+    { key: "tenant", label: "Add a tenant", done: tenants.length > 0, action: handleAddTenant },
+    { key: "lease", label: "Create a lease", done: leases.length > 0, action: handleAddLease },
+    {
+      key: "payment",
+      label: "Record your first payment",
+      done: receipts.length > 0,
+      action: handleRecordPayment,
+    },
+  ];
+  const allStepsDone = onboardingSteps.every((s) => s.done);
+  const showChecklist = isOwnerPortal && !checklistDismissed && !allStepsDone;
+
   if (loading) {
     return <div className="h-40 animate-pulse rounded-2xl bg-[var(--color-muted)]/30" />;
   }
 
   if (properties.length === 0 && isOwnerPortal) {
     return (
-      <EmptyStateIllustration
-        type="properties"
-        title="Start managing your portfolio"
-        description="Add your first property, then connect the tenant, lease, and first payment."
-        onAction={handleAddProperty}
-        actionLabel="Add your first property"
-      />
+      <div className="space-y-6">
+        {showChecklist && (
+          <OnboardingChecklist steps={onboardingSteps} onDismiss={handleDismissChecklist} />
+        )}
+        {!showChecklist && (
+          <EmptyStateIllustration
+            type="properties"
+            title="Start managing your portfolio"
+            description="Add your first property, then connect the tenant, lease, and first payment."
+            onAction={handleAddProperty}
+            actionLabel="Add your first property"
+          />
+        )}
+      </div>
     );
   }
 
   if (isOwnerPortal) {
     return (
       <div className="space-y-6">
+        {showChecklist && (
+          <OnboardingChecklist steps={onboardingSteps} onDismiss={handleDismissChecklist} />
+        )}
         <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.25),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.18),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
           <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
             <div className="space-y-5">

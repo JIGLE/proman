@@ -2,7 +2,6 @@
 
 import { useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import {
   AlertTriangle,
   Building2,
@@ -19,6 +18,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { PropertiesView, PropertiesViewRef } from "@/components/features/property/property-list";
+import { BuildingsView } from "@/components/features/property/buildings-view";
 import { ExportButton, ExportColumn } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,6 @@ import { usePortalAccess } from "@/lib/contexts/portal-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { getActiveLease } from "@/lib/utils/lease-helpers";
 
-// ─── Tenant portal stat card (unchanged, still used in tenant view) ──────────
 function StatCard({ label, value, detail }: { label: string; value: string; detail: string }) {
   return (
     <Card className="border-white/10 bg-zinc-950/70">
@@ -41,70 +40,11 @@ function StatCard({ label, value, detail }: { label: string; value: string; deta
   );
 }
 
-// ─── Alert chip used inside the Issues Zone ───────────────────────────────────
-function IssueAlert({
-  icon: Icon,
-  count,
-  label,
-  sublabel,
-  color,
-  onClick,
-}: {
-  icon: React.ElementType;
-  count: number;
-  label: string;
-  sublabel: string;
-  color: "amber" | "orange" | "blue";
-  onClick: () => void;
-}) {
-  const styles = {
-    amber: {
-      border: "border-amber-500/30",
-      bg: "bg-amber-500/10 hover:bg-amber-500/15",
-      icon: "text-amber-400",
-      count: "text-amber-200",
-      text: "text-amber-200/80",
-    },
-    orange: {
-      border: "border-orange-500/30",
-      bg: "bg-orange-500/10 hover:bg-orange-500/15",
-      icon: "text-orange-400",
-      count: "text-orange-200",
-      text: "text-orange-200/80",
-    },
-    blue: {
-      border: "border-blue-500/30",
-      bg: "bg-blue-500/10 hover:bg-blue-500/15",
-      icon: "text-blue-400",
-      count: "text-blue-200",
-      text: "text-blue-200/80",
-    },
-  }[color];
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex w-full items-center gap-3 rounded-xl border ${styles.border} ${styles.bg} px-4 py-3 text-left transition-colors sm:w-auto sm:flex-1`}
-    >
-      <Icon className={`h-4 w-4 shrink-0 ${styles.icon}`} />
-      <div className="min-w-0 flex-1">
-        <p className={`text-sm font-semibold ${styles.count}`}>
-          {count} {label}
-        </p>
-        <p className={`text-xs ${styles.text}`}>{sublabel}</p>
-      </div>
-      <span className={`shrink-0 text-xs font-medium ${styles.count} opacity-70`}>View →</span>
-    </button>
-  );
-}
-
 export function AssetsView(): React.ReactElement {
   const [activeTab, setActiveTab] = useTabPersistence("assets", "properties");
   const [highlightedPropertyId, setHighlightedPropertyId] = useState<string | null>(null);
   const { state } = useApp();
   const { isOwnerPortal } = usePortalAccess();
-  const { data: session } = useSession();
   const { formatCurrency } = useCurrency();
   const router = useRouter();
   const pathname = usePathname();
@@ -117,7 +57,7 @@ export function AssetsView(): React.ReactElement {
     setActiveTab("map");
   };
 
-  const propertyColumns: ExportColumn[] = [
+  const propertyColumns = [
     { key: "name", label: "Name" },
     { key: "address", label: "Address" },
     { key: "type", label: "Type" },
@@ -135,67 +75,141 @@ export function AssetsView(): React.ReactElement {
         })
       : ({ data: [], columns: [] } satisfies { data: unknown[]; columns: ExportColumn[] });
 
-  // ── Portfolio summary metrics ────────────────────────────────────────────────
-  const occupiedCount = properties.filter((p) => p.status === "occupied").length;
+  const occupiedCount = properties.filter((property) => property.status === "occupied").length;
   const occupancyRate = properties.length
     ? Math.round((occupiedCount / properties.length) * 100)
     : 0;
-  const monthlyRunRate = properties.reduce((sum, p) => sum + (p.rent || 0), 0);
+  const monthlyRunRate = properties.reduce((sum, property) => sum + (property.rent || 0), 0);
   const mappedCount = properties.filter(
-    (p) => typeof p.latitude === "number" && typeof p.longitude === "number",
+    (property) => typeof property.latitude === "number" && typeof property.longitude === "number",
   ).length;
-
-  // ── Issue counts ─────────────────────────────────────────────────────────────
   const expiringLeasesCount = useMemo(() => {
     const now = new Date();
-    const in30 = new Date();
-    in30.setDate(in30.getDate() + 30);
-    return leases.filter((l) => {
-      if (l.status !== "active") return false;
-      const end = new Date(l.endDate);
-      return end >= now && end <= in30;
+    const inThirtyDays = new Date();
+    inThirtyDays.setDate(inThirtyDays.getDate() + 30);
+
+    return leases.filter((lease) => {
+      if (lease.status !== "active") return false;
+      const endDate = new Date(lease.endDate);
+      return endDate >= now && endDate <= inThirtyDays;
     }).length;
   }, [leases]);
-
   const openMaintenanceCount = useMemo(
-    () => maintenance.filter((t) => t.status === "open" || t.status === "in_progress").length,
+    () =>
+      maintenance.filter((ticket) => ticket.status === "open" || ticket.status === "in_progress")
+        .length,
     [maintenance],
   );
-
   const missingCoordinatesCount = Math.max(properties.length - mappedCount, 0);
 
-  // Partial setup: occupied properties with no active lease (need attention)
-  const activeLeasePropertyIds = useMemo(
-    () => new Set(leases.filter((l) => l.status === "active").map((l) => l.propertyId)),
-    [leases],
-  );
-  const partialSetupCount = useMemo(
-    () =>
-      properties.filter((p) => p.status === "occupied" && !activeLeasePropertyIds.has(p.id)).length,
-    [properties, activeLeasePropertyIds],
-  );
-
-  const hasIssues =
-    expiringLeasesCount > 0 ||
-    openMaintenanceCount > 0 ||
-    missingCoordinatesCount > 0 ||
-    partialSetupCount > 0;
-
-  // ── Tenant portal home ───────────────────────────────────────────────────────
   const tenantHome = useMemo(() => {
-    const tenant = tenants.find((t) => t.email === session?.user?.email) ?? tenants[0];
+    const tenant = tenants[0];
     const activeLease = tenant ? getActiveLease(tenant.id, leases) : null;
     const property = properties.find(
-      (p) => p.id === (activeLease?.propertyId ?? tenant?.propertyId),
+      (item) => item.id === (activeLease?.propertyId ?? tenant?.propertyId),
     );
-    const paidReceipts = receipts.filter((r) => r.status === "paid");
-    return { tenant, activeLease, property, paidReceipts };
-  }, [leases, properties, receipts, tenants, session]);
+    const paidReceipts = receipts.filter((receipt) => receipt.status === "paid");
 
-  if (!isOwnerPortal) {
-    // ── Tenant view (unchanged structure, trimmed) ─────────────────────────────
-    return (
-      <div className="space-y-6">
+    return { tenant, activeLease, property, paidReceipts };
+  }, [leases, properties, receipts, tenants]);
+
+  return (
+    <div className="space-y-6">
+      {isOwnerPortal ? (
+        <>
+          <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.2),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
+            <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+              <div className="space-y-4">
+                <Badge
+                  variant="outline"
+                  className="w-fit border-blue-500/20 bg-blue-500/10 text-blue-200"
+                >
+                  Portfolio workspace
+                </Badge>
+                <div className="space-y-2">
+                  <h1 className="flex items-center gap-2 text-3xl font-semibold tracking-tight text-zinc-50">
+                    <Building2 className="h-8 w-8" />
+                    Portfolio
+                  </h1>
+                  <p className="max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">
+                    Manage portfolio health, occupancy, and rent potential without burying the main
+                    list under too many competing cards.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button onClick={() => propertiesViewRef.current?.openDialog()} className="gap-2">
+                    <Plus className="h-4 w-4" />
+                    Add Property
+                  </Button>
+                  <Button variant="outline" onClick={() => setActiveTab("map")} className="gap-2">
+                    <MapPin className="h-4 w-4" />
+                    Open map
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-3 xl:w-[520px]">
+                <StatCard
+                  label="Tracked units"
+                  value={`${properties.length}`}
+                  detail={`${occupiedCount} occupied`}
+                />
+                <StatCard
+                  label="Occupancy"
+                  value={`${occupancyRate}%`}
+                  detail={`${Math.max(properties.length - occupiedCount, 0)} vacancy slots`}
+                />
+                <StatCard
+                  label="Run rate"
+                  value={formatCurrency(monthlyRunRate)}
+                  detail={`${mappedCount}/${properties.length || 0} on map`}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* Slim attention strip */}
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-zinc-950/70 px-4 py-3">
+            <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
+              Attention
+            </span>
+            <button
+              type="button"
+              onClick={() => setActiveTab("properties")}
+              className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200 transition-colors hover:border-amber-400/60"
+            >
+              <Clock3 className="h-3.5 w-3.5" />
+              <span className="font-semibold text-zinc-50">{expiringLeasesCount}</span>
+              leases ending 30d
+            </button>
+            <button
+              type="button"
+              onClick={() => router.push(`/${locale}/maintenance`)}
+              className="flex items-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-xs text-orange-200 transition-colors hover:border-orange-400/60"
+            >
+              <Wrench className="h-3.5 w-3.5" />
+              <span className="font-semibold text-zinc-50">{openMaintenanceCount}</span>
+              open tickets
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("map")}
+              className="flex items-center gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs text-blue-200 transition-colors hover:border-blue-400/60"
+            >
+              <AlertTriangle className="h-3.5 w-3.5" />
+              <span className="font-semibold text-zinc-50">{missingCoordinatesCount}</span>
+              missing coords
+            </button>
+            <div className="ml-auto">
+              <ExportButton
+                data={exportConfig.data}
+                filename={`${activeTab}-export`}
+                columns={exportConfig.columns}
+              />
+            </div>
+          </div>
+        </>
+      ) : (
         <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
           <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
             <div className="space-y-4">
@@ -275,148 +289,29 @@ export function AssetsView(): React.ReactElement {
             </div>
           </div>
         </section>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="properties" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              <span className="hidden sm:inline">Home details</span>
-            </TabsTrigger>
-            <TabsTrigger value="map" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              <span className="hidden sm:inline">Map</span>
-            </TabsTrigger>
-          </TabsList>
-          <TabsContent value="map" className="mt-0">
-            <PropertiesView
-              ref={propertiesViewRef}
-              viewMode="map"
-              density="compact"
-              showPageHeader={false}
-              highlightedPropertyId={highlightedPropertyId ?? undefined}
-            />
-          </TabsContent>
-          <TabsContent value="properties" className="mt-0">
-            <PropertiesView
-              ref={propertiesViewRef}
-              viewMode="list"
-              density="compact"
-              showPageHeader={false}
-              onLocateOnMap={handleLocateOnMap}
-            />
-          </TabsContent>
-        </Tabs>
-      </div>
-    );
-  }
-
-  // ── Owner portal view (refactored) ────────────────────────────────────────────
-  return (
-    <div className="space-y-5">
-      {/* ── Zone 1: Primary Action ───────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-zinc-50">
-            <Building2 className="h-6 w-6 shrink-0" />
-            Portfolio
-          </h1>
-          {properties.length > 0 ? (
-            <p className="mt-0.5 text-sm text-zinc-500">
-              {properties.length} unit{properties.length !== 1 ? "s" : ""} &middot; {occupancyRate}%
-              occupied &middot; {formatCurrency(monthlyRunRate)}/mo run rate
-            </p>
-          ) : (
-            <p className="mt-0.5 text-sm text-zinc-500">No properties yet — add your first one.</p>
-          )}
-        </div>
-
-        <div className="flex shrink-0 items-center gap-2">
-          {partialSetupCount > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => propertiesViewRef.current?.openDialog()}
-              className="gap-1.5 border-amber-500/40 text-amber-300 hover:border-amber-400/60 hover:text-amber-200"
-            >
-              <AlertTriangle className="h-3.5 w-3.5" />
-              Continue Setup
-            </Button>
-          )}
-          <Button onClick={() => propertiesViewRef.current?.openDialog()} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Property
-          </Button>
-          <ExportButton
-            data={exportConfig.data}
-            filename={`${activeTab}-export`}
-            columns={exportConfig.columns}
-          />
-        </div>
-      </div>
-
-      {/* ── Zone 2: Issues / Attention ───────────────────────────────────────── */}
-      {hasIssues && (
-        <div className="space-y-2">
-          <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-            Needs attention
-          </p>
-          <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-            {expiringLeasesCount > 0 && (
-              <IssueAlert
-                icon={Clock3}
-                count={expiringLeasesCount}
-                label={expiringLeasesCount === 1 ? "lease expiring" : "leases expiring"}
-                sublabel="Active lease ends within 30 days"
-                color="amber"
-                onClick={() => router.push(`/${locale}/leases`)}
-              />
-            )}
-            {openMaintenanceCount > 0 && (
-              <IssueAlert
-                icon={Wrench}
-                count={openMaintenanceCount}
-                label={openMaintenanceCount === 1 ? "open ticket" : "open tickets"}
-                sublabel="Maintenance requests awaiting action"
-                color="orange"
-                onClick={() => router.push(`/${locale}/maintenance`)}
-              />
-            )}
-            {partialSetupCount > 0 && (
-              <IssueAlert
-                icon={AlertTriangle}
-                count={partialSetupCount}
-                label={partialSetupCount === 1 ? "property incomplete" : "properties incomplete"}
-                sublabel="Occupied with no active lease on file"
-                color="amber"
-                onClick={() => setActiveTab("properties")}
-              />
-            )}
-            {missingCoordinatesCount > 0 && (
-              <IssueAlert
-                icon={MapPin}
-                count={missingCoordinatesCount}
-                label={missingCoordinatesCount === 1 ? "missing location" : "missing locations"}
-                sublabel="Address not mapped — fix to enable map view"
-                color="blue"
-                onClick={() => setActiveTab("map")}
-              />
-            )}
-          </div>
-        </div>
       )}
 
-      {/* ── Zone 3: Management (Filters + Table) ────────────────────────────── */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center gap-2">
-          <TabsList className="grid w-full max-w-xs grid-cols-2">
+          <TabsList
+            className={`grid w-full ${isOwnerPortal ? "max-w-lg grid-cols-3" : "max-w-md grid-cols-2"}`}
+          >
             <TabsTrigger value="properties" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
-              <span className="hidden sm:inline">List</span>
+              <span className="hidden sm:inline">
+                {isOwnerPortal ? "Portfolio list" : "Home details"}
+              </span>
             </TabsTrigger>
             <TabsTrigger value="map" className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
               <span className="hidden sm:inline">Map</span>
             </TabsTrigger>
+            {isOwnerPortal && (
+              <TabsTrigger value="buildings" className="flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                <span className="hidden sm:inline">Buildings</span>
+              </TabsTrigger>
+            )}
           </TabsList>
         </div>
 
@@ -439,6 +334,12 @@ export function AssetsView(): React.ReactElement {
             onLocateOnMap={handleLocateOnMap}
           />
         </TabsContent>
+
+        {isOwnerPortal && (
+          <TabsContent value="buildings" className="mt-0">
+            <BuildingsView />
+          </TabsContent>
+        )}
       </Tabs>
     </div>
   );

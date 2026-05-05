@@ -7,7 +7,6 @@ import {
   FileText,
   Home,
   Mail,
-  Settings,
   Users,
   Wallet,
   Wrench,
@@ -60,6 +59,7 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         labelKey: "navigation.buildings",
         icon: Building2,
         roles: ["owner"],
+        hidden: true,
       },
       {
         key: "tenants",
@@ -81,8 +81,8 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
       {
         key: "financials",
         href: "/financials",
-        label: "Payments",
-        labelKey: "navigation.payments",
+        label: "Financials",
+        labelKey: "navigation.financials",
         icon: Wallet,
         roles: ["owner", "tenant"],
         mobilePrimary: true,
@@ -96,11 +96,6 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         roles: ["owner", "tenant"],
         mobilePrimary: true,
       },
-    ],
-  },
-  {
-    group: "Context",
-    items: [
       {
         key: "leases",
         href: "/leases",
@@ -108,14 +103,6 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         labelKey: "navigation.leases",
         icon: FileText,
         roles: ["owner", "tenant"],
-      },
-      {
-        key: "settings",
-        href: "/settings",
-        label: "Settings",
-        labelKey: "navigation.settings",
-        icon: Settings,
-        roles: ["owner"],
       },
     ],
   },

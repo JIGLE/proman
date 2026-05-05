@@ -24,6 +24,7 @@
     "tenants": "Personas",
     "leases": "Contratos",
     "payments": "Pagos",
+    "financials": "Finanzas",
     "maintenance": "Mantenimiento",
     "settings": "Configuración",
     "correspondence": "Correspondencia",
@@ -170,11 +171,12 @@
   },
   "landing": {
     "eyebrow": "Operaciones de alquiler para Portugal y España",
-    "hero": "Cobra alquileres más rápido. Recibos e impuestos resueltos.",
+    "hero": "Cobra alquileres. Emite recibos. Cumple la ley.",
     "subtitle": "ProMan da a propietarios y gestores un flujo único desde el seguimiento del pago hasta el recibo con contexto fiscal PT/ES.",
     "cta": "Entrar",
+    "headerCta": "Empezar",
     "demoCta": "Probar Demo Gratuita",
-    "secondaryCta": "Ver el flujo",
+    "secondaryCta": "Ver cómo funciona",
     "microcopy": "Sin tarjeta. Sin configuración. Demostración guiada en menos de 2 minutos.",
     "chips": {
       "simple": "Un flujo del cobro al recibo",
@@ -236,6 +238,42 @@
       "ownerDescription": "Ve la cartera completa, inquilinos, pagos, documentos y flujos fiscales.",
       "tenantTitle": "Explorar como Inquilino",
       "tenantDescription": "Ve una vivienda, un contrato, pagos, recibos y documentos compartidos."
+    },
+    "features": {
+      "eyebrow": "Qué incluye",
+      "title": "Todo lo que necesita un propietario, nada más",
+      "items": {
+        "rentCollection": {
+          "title": "Cobro de Alquileres",
+          "description": "Controla fechas de vencimiento, registra pagos y hace seguimiento de alquileres pendientes."
+        },
+        "receipts": {
+          "title": "Recibos Instantáneos",
+          "description": "Emite recibos de alquiler conformes en cuanto se registra un pago. Listo para PDF."
+        },
+        "taxCompliance": {
+          "title": "Cumplimiento Fiscal PT/ES",
+          "description": "Perfiles fiscales vinculados a cada propiedad. Listo para exportar a AT y Hacienda."
+        },
+        "maintenance": {
+          "title": "Gestión de Mantenimiento",
+          "description": "Registra tickets, asigna proveedores, controla costes. Los gastos se vinculan automáticamente."
+        },
+        "leaseManagement": {
+          "title": "Gestión de Contratos",
+          "description": "Crea, renueva y finaliza contratos. Alertas de renovación automática."
+        },
+        "tenantPortal": {
+          "title": "Portal del Inquilino",
+          "description": "Los inquilinos acceden a su contrato, pagos y recibos — menos correos para ti."
+        }
+      }
+    },
+    "closingCta": {
+      "title": "¿Listo para simplificar tus alquileres?",
+      "subtitle": "Prueba el flujo completo gratis — propiedades, inquilinos, contratos y recibos en un solo lugar.",
+      "primary": "Probar Demo Gratuita",
+      "secondary": "Entrar en tu cuenta"
     }
   },
   "errors": {
@@ -650,7 +688,9 @@
     "tooManyRequests": "Demasiadas solicitudes. Por favor intente de nuevo en {retryAfter} segundos."
   },
   "footer": {
-    "copyright": "© {year} Proman. Todos los derechos reservados."
+    "copyright": "© {year} Proman. Todos los derechos reservados.",
+    "privacy": "Política de Privacidad",
+    "terms": "Términos de Servicio"
   },
   "pageHeader": {
     "filter": "Filtrar",

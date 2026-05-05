@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   Users,
   Mail,
@@ -11,10 +11,13 @@ import {
   FileText,
   Wrench,
   DollarSign,
+  Link2,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/utils";
 import { useCurrency } from "@/lib/contexts/currency-context";
+import { useCsrf } from "@/lib/contexts/csrf-context";
+import { useToast } from "@/lib/contexts/toast-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -25,6 +28,7 @@ import { EntityLink } from "@/components/shared/entity-link";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { getActiveLease as findActiveLease } from "@/lib/utils/lease-helpers";
 import { buildLocalizedFinancialReviewPath } from "@/lib/utils/financial-navigation";
+import { TenantDetailModal } from "@/components/features/tenant/tenant-detail-modal";
 
 interface TenantDetailViewProps {
   tenantId: string;
@@ -39,10 +43,13 @@ const PAYMENT_STATUS_VARIANT: Record<string, "default" | "secondary" | "destruct
 export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const { state } = useApp();
   const { formatCurrency } = useCurrency();
+  const { token: csrfToken } = useCsrf();
+  const { success, error } = useToast();
   const pathname = usePathname();
   const router = useRouter();
   const locale = pathname.split("/")[1] || "pt";
   const [activeTab, setActiveTab] = useTabPersistence("tenant-detail", "overview");
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const tenant = state.tenants.find((t) => t.id === tenantId);
 
@@ -89,6 +96,20 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const openTickets = relatedMaintenance.filter(
     (m) => m.status === "open" || m.status === "in_progress",
   ).length;
+
+  const handleCopyPortalLink = async () => {
+    try {
+      const res = await fetch(`/api/tenants/${tenantId}/portal-link`, {
+        headers: { "x-csrf-token": csrfToken ?? "" },
+      });
+      if (!res.ok) throw new Error("Failed to generate link");
+      const data = await res.json();
+      await navigator.clipboard.writeText(data.portalUrl);
+      success("Portal link copied to clipboard");
+    } catch {
+      error("Could not generate portal link");
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -139,10 +160,19 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           >
             <FileText className="h-4 w-4 mr-1" /> Documents
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={handleCopyPortalLink}>
+            <Link2 className="h-4 w-4 mr-1" /> Portal Link
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              window.location.href = `mailto:${tenant.email}`;
+            }}
+          >
             <Mail className="h-4 w-4 mr-1" /> Contact
           </Button>
-          <Button variant="outline" size="sm">
+          <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)}>
             <Edit className="h-4 w-4 mr-1" /> Edit
           </Button>
         </div>
@@ -417,6 +447,12 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           )}
         </TabsContent>
       </Tabs>
+
+      <TenantDetailModal
+        tenant={tenant}
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+      />
     </div>
   );
 }

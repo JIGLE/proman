@@ -9,7 +9,6 @@ import {
   Monitor,
   Bell,
   Globe,
-  Wallet,
   Shield,
   Save,
   Info,
@@ -397,10 +396,7 @@ export function SettingsView(): React.ReactElement {
               <p className="text-sm text-muted-foreground">{session?.user?.name || "Not set"}</p>
             </div>
             <div className="pt-2">
-              <Button variant="outline" size="sm" disabled>
-                <Wallet className="h-4 w-4 mr-2" />
-                Manage Subscription
-              </Button>
+              <p className="text-xs text-muted-foreground">Subscription management coming soon.</p>
             </div>
             {appVersion && (
               <div className="pt-4 border-t border-border">

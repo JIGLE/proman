@@ -24,6 +24,7 @@
     "tenants": "People",
     "leases": "Leases",
     "payments": "Payments",
+    "financials": "Financials",
     "maintenance": "Maintenance",
     "settings": "Settings",
     "correspondence": "Correspondence",
@@ -170,11 +171,12 @@
   },
   "landing": {
     "eyebrow": "Portugal & Spain rental operations",
-    "hero": "Get rent paid faster. Receipts and taxes handled.",
+    "hero": "Collect rent. Issue receipts. Stay compliant.",
     "subtitle": "ProMan gives landlords and managers one clear flow from payment follow-up to receipt and PT/ES tax context.",
     "cta": "Sign in",
+    "headerCta": "Get started",
     "demoCta": "Try Free Demo",
-    "secondaryCta": "See the workflow",
+    "secondaryCta": "See how it works",
     "microcopy": "No card. No setup. Guided walkthrough in under 2 minutes.",
     "chips": {
       "simple": "One flow from rent to receipt",
@@ -236,6 +238,42 @@
       "ownerDescription": "See the full portfolio, tenants, payments, documents, and tax workflows.",
       "tenantTitle": "Explore as Tenant",
       "tenantDescription": "See one property, one lease, payments, receipts, and shared documents."
+    },
+    "features": {
+      "eyebrow": "What's included",
+      "title": "Everything a landlord needs, nothing they don't",
+      "items": {
+        "rentCollection": {
+          "title": "Rent Collection",
+          "description": "Track due dates, log payments, and follow up on overdue rent — all in one queue."
+        },
+        "receipts": {
+          "title": "Instant Receipts",
+          "description": "Issue compliant rent receipts the moment a payment is logged. PDF-ready."
+        },
+        "taxCompliance": {
+          "title": "PT/ES Tax Compliance",
+          "description": "Tax profiles stay linked to each property. Export-ready for AT and Hacienda."
+        },
+        "maintenance": {
+          "title": "Maintenance Tracking",
+          "description": "Log tickets, assign vendors, track costs. Expenses auto-link to the property."
+        },
+        "leaseManagement": {
+          "title": "Lease Management",
+          "description": "Create, renew, and terminate leases. Auto-renew alerts keep you ahead of deadlines."
+        },
+        "tenantPortal": {
+          "title": "Tenant Portal",
+          "description": "Tenants see their own lease, payments, and receipts — fewer emails for you."
+        }
+      }
+    },
+    "closingCta": {
+      "title": "Ready to simplify your rentals?",
+      "subtitle": "Try the full workflow free — properties, tenants, leases, and receipts in one place.",
+      "primary": "Try Free Demo",
+      "secondary": "Sign in to your account"
     }
   },
   "errors": {
@@ -650,7 +688,9 @@
     "tooManyRequests": "Too many requests. Please try again in {retryAfter} seconds."
   },
   "footer": {
-    "copyright": "© {year} Proman. All rights reserved."
+    "copyright": "© {year} Proman. All rights reserved.",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
   },
   "pageHeader": {
     "filter": "Filter",

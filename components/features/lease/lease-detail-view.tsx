@@ -133,15 +133,6 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
           <Button variant="outline" size="sm" onClick={handleEdit}>
             <Edit className="h-4 w-4 mr-1" /> Edit
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            className="text-red-500 hover:text-red-600"
-            onClick={handleTerminate}
-            disabled={lease.status === "terminated"}
-          >
-            <XCircle className="h-4 w-4 mr-1" /> Terminate
-          </Button>
         </div>
       </div>
 
@@ -289,6 +280,25 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
           )}
         </CardContent>
       </Card>
+      {/* Danger Zone */}
+      <div className="rounded-xl border border-red-800/30 p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <XCircle className="h-4 w-4 text-red-500" />
+          <h3 className="text-sm font-semibold text-red-500">Danger Zone</h3>
+        </div>
+        <p className="text-sm text-[var(--color-muted-foreground)]">
+          Terminating a lease is permanent and cannot be undone. The lease will be marked as
+          terminated and the tenant will no longer have an active lease.
+        </p>
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={handleTerminate}
+          disabled={lease.status === "terminated"}
+        >
+          <XCircle className="h-4 w-4 mr-1" /> Terminate Lease
+        </Button>
+      </div>
     </div>
   );
 }
