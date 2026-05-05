@@ -243,8 +243,14 @@ export function proxy(request: NextRequest) {
   if (pathnameHasLocale) {
     response = NextResponse.next();
   } else if (pathname === "/") {
-    // If path is just /, redirect to /en
-    response = NextResponse.redirect(new URL(`/${defaultLocale}`, request.url), { status: 307 });
+    // Detect preferred locale from Accept-Language header, fall back to defaultLocale
+    const acceptLanguage = request.headers.get("accept-language") ?? "";
+    const preferred = acceptLanguage
+      .split(",")
+      .map((part) => part.split(";")[0].trim().slice(0, 2).toLowerCase())
+      .find((lang) => (locales as readonly string[]).includes(lang));
+    const detectedLocale = (preferred ?? defaultLocale) as typeof defaultLocale;
+    response = NextResponse.redirect(new URL(`/${detectedLocale}`, request.url), { status: 307 });
   } else {
     // For any other path without locale, prepend default locale
     // This handles /path -> /en/path

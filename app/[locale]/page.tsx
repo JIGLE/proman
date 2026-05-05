@@ -8,7 +8,10 @@ import {
   KeyRound,
   Play,
   ReceiptText,
+  ScrollText,
   ShieldCheck,
+  Users,
+  Wrench,
 } from "lucide-react";
 import {
   LandingAnalyticsObserver,
@@ -17,11 +20,6 @@ import {
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { Button } from "@/components/ui/button";
 import { getTranslations } from "next-intl/server";
-
-import pkg from "@/package.json";
-
-const isDemoEnabled =
-  process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true" || process.env.NODE_ENV !== "production";
 
 interface Props {
   params: Promise<{ locale: string }>;
@@ -68,6 +66,15 @@ export default async function LandingPage({ params }: Props) {
     },
   ];
 
+  const featureItems = [
+    { key: "rentCollection", icon: AlarmClock },
+    { key: "receipts", icon: ReceiptText },
+    { key: "taxCompliance", icon: ShieldCheck },
+    { key: "maintenance", icon: Wrench },
+    { key: "leaseManagement", icon: ScrollText },
+    { key: "tenantPortal", icon: Users },
+  ] as const;
+
   const demoOptions = [
     {
       key: "owner",
@@ -93,19 +100,24 @@ export default async function LandingPage({ params }: Props) {
             <Building2 className="h-7 w-7 text-blue-500" />
             <span className="text-xl font-bold">Proman</span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <LanguageSelector />
             <TrackedLandingLink
               href="/auth/signin"
               eventName="landing.signin_click"
               eventData={{ location: "header" }}
             >
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-zinc-700 text-zinc-300 hover:border-zinc-600 hover:text-zinc-50"
-              >
+              <Button variant="ghost" size="sm" className="text-zinc-300 hover:text-zinc-50">
                 {t("cta")}
+              </Button>
+            </TrackedLandingLink>
+            <TrackedLandingLink
+              href={`/${locale}/demo?perspective=owner`}
+              eventName="landing.demo_start"
+              eventData={{ location: "header", perspective: "owner" }}
+            >
+              <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700">
+                {t("headerCta")} <ArrowRight className="ml-1 h-3.5 w-3.5" />
               </Button>
             </TrackedLandingLink>
           </div>
@@ -113,8 +125,9 @@ export default async function LandingPage({ params }: Props) {
       </header>
 
       <main className="px-4 pb-16 pt-28">
-        <LandingAnalyticsObserver locale={locale} demoEnabled={isDemoEnabled} />
+        <LandingAnalyticsObserver locale={locale} demoEnabled={true} />
 
+        {/* Hero */}
         <section className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[0.98fr_1.02fr] lg:items-center">
           <div className="space-y-7">
             <div className="inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-sm text-blue-200">
@@ -128,23 +141,21 @@ export default async function LandingPage({ params }: Props) {
             </div>
 
             <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-              {isDemoEnabled && (
-                <TrackedLandingLink
-                  href={`/${locale}/demo?perspective=owner`}
-                  eventName="landing.demo_start"
-                  eventData={{ location: "hero_primary", perspective: "owner" }}
-                >
-                  <Button
-                    size="xl"
-                    className="h-12 gap-2 bg-blue-600 px-8 text-base text-white hover:bg-blue-700"
-                  >
-                    <Play className="h-4 w-4" />
-                    {t("demoCta")}
-                  </Button>
-                </TrackedLandingLink>
-              )}
               <TrackedLandingLink
-                href="#product-flow"
+                href={`/${locale}/demo?perspective=owner`}
+                eventName="landing.demo_start"
+                eventData={{ location: "hero_primary", perspective: "owner" }}
+              >
+                <Button
+                  size="xl"
+                  className="h-12 gap-2 bg-blue-600 px-8 text-base text-white hover:bg-blue-700"
+                >
+                  <Play className="h-4 w-4" />
+                  {t("demoCta")}
+                </Button>
+              </TrackedLandingLink>
+              <TrackedLandingLink
+                href="#how-it-works"
                 eventName="landing.workflow_cta_click"
                 eventData={{ location: "hero_secondary" }}
               >
@@ -165,7 +176,7 @@ export default async function LandingPage({ params }: Props) {
               {trustChips.map((chip) => (
                 <div
                   key={chip}
-                  className="rounded-full border border-zinc-700 bg-zinc-900/70 px-3 py-1 text-xs font-medium text-zinc-200"
+                  className="rounded-full border border-zinc-600 bg-zinc-800/80 px-3 py-1 text-xs font-medium text-zinc-100"
                 >
                   {chip}
                 </div>
@@ -173,10 +184,7 @@ export default async function LandingPage({ params }: Props) {
             </div>
           </div>
 
-          <div
-            id="product-flow"
-            className="rounded-[28px] border border-zinc-800 bg-zinc-900/70 p-4 shadow-2xl shadow-black/30"
-          >
+          <div className="hidden rounded-[28px] border border-zinc-800 bg-zinc-900/70 p-4 shadow-2xl shadow-black/30 lg:block">
             <div className="overflow-hidden rounded-[22px] border border-zinc-800 bg-zinc-950">
               <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
                 <div>
@@ -286,7 +294,39 @@ export default async function LandingPage({ params }: Props) {
           </div>
         </section>
 
-        <section className="mx-auto mt-14 max-w-6xl rounded-[28px] border border-zinc-800 bg-zinc-900/55 p-6 sm:p-8">
+        {/* Features */}
+        <section className="mx-auto mt-20 max-w-6xl">
+          <div className="text-center">
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+              {t("features.eyebrow")}
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold text-zinc-50 sm:text-3xl">
+              {t("features.title")}
+            </h2>
+          </div>
+          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {featureItems.map(({ key, icon: Icon }) => (
+              <div
+                key={key}
+                className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-3"
+              >
+                <div className="rounded-lg bg-blue-500/10 p-2 w-fit">
+                  <Icon className="h-5 w-5 text-blue-300" />
+                </div>
+                <p className="text-base font-semibold text-zinc-100">
+                  {t(`features.items.${key}.title`)}
+                </p>
+                <p className="text-sm text-zinc-400">{t(`features.items.${key}.description`)}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* How It Works */}
+        <section
+          id="how-it-works"
+          className="mx-auto mt-14 max-w-6xl rounded-[28px] border border-zinc-800 bg-zinc-900/55 p-6 sm:p-8"
+        >
           <div className="max-w-2xl">
             <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
               {t("howItWorks.eyebrow")}
@@ -311,10 +351,29 @@ export default async function LandingPage({ params }: Props) {
               </div>
             ))}
           </div>
+
+          <div className="mt-8 flex justify-center">
+            <TrackedLandingLink
+              href={`/${locale}/demo?perspective=owner`}
+              eventName="landing.demo_start"
+              eventData={{ location: "how_it_works_cta", perspective: "owner" }}
+            >
+              <Button size="lg" className="gap-2 bg-blue-600 text-white hover:bg-blue-700">
+                <Play className="h-4 w-4" />
+                {t("demoCta")}
+              </Button>
+            </TrackedLandingLink>
+          </div>
         </section>
 
-        {isDemoEnabled && (
-          <section className="mx-auto mt-6 grid max-w-6xl gap-3 md:grid-cols-2">
+        {/* Demo Cards */}
+        <section className="mx-auto mt-6 max-w-6xl">
+          <div className="mb-5 text-center">
+            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">{t("demo.label")}</p>
+            <h2 className="mt-2 text-xl font-semibold text-zinc-50">{t("demo.title")}</h2>
+            <p className="mt-1 text-sm text-zinc-400">{t("demo.subtitle")}</p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
             {demoOptions.map((option) => (
               <TrackedLandingLink
                 key={option.key}
@@ -341,14 +400,53 @@ export default async function LandingPage({ params }: Props) {
                 </div>
               </TrackedLandingLink>
             ))}
-          </section>
-        )}
+          </div>
+        </section>
+
+        {/* Closing CTA */}
+        <section className="mx-auto mt-20 max-w-2xl px-4 py-12 text-center">
+          <h2 className="text-2xl font-bold text-zinc-50 sm:text-3xl">{t("closingCta.title")}</h2>
+          <p className="mt-4 text-base text-zinc-400">{t("closingCta.subtitle")}</p>
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <TrackedLandingLink
+              href={`/${locale}/demo?perspective=owner`}
+              eventName="landing.demo_start"
+              eventData={{ location: "closing_cta", perspective: "owner" }}
+            >
+              <Button size="lg" className="gap-2 bg-blue-600 text-white hover:bg-blue-700">
+                <Play className="h-4 w-4" />
+                {t("closingCta.primary")}
+              </Button>
+            </TrackedLandingLink>
+            <TrackedLandingLink
+              href="/auth/signin"
+              eventName="landing.signin_click"
+              eventData={{ location: "closing_cta" }}
+            >
+              <Button
+                size="lg"
+                variant="outline"
+                className="border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-zinc-50"
+              >
+                {t("closingCta.secondary")}
+              </Button>
+            </TrackedLandingLink>
+          </div>
+        </section>
       </main>
 
       <footer className="mt-auto border-t border-zinc-800 px-4 py-8">
         <div className="mx-auto max-w-6xl text-center text-sm text-zinc-500">
           <p>{tFooter("copyright", { year: new Date().getFullYear().toString() })}</p>
-          <p className="mt-1 text-zinc-600">v{pkg.version}</p>
+          <div className="mt-2 flex items-center justify-center gap-4 text-xs text-zinc-600">
+            <a href={`/${locale}/privacy`} className="hover:text-zinc-400 transition-colors">
+              {tFooter("privacy")}
+            </a>
+            <span>·</span>
+            <a href={`/${locale}/terms`} className="hover:text-zinc-400 transition-colors">
+              {tFooter("terms")}
+            </a>
+          </div>
         </div>
       </footer>
     </div>

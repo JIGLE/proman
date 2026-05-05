@@ -18,6 +18,12 @@ const localeFlags: Record<Locale, string> = {
   es: "🇪🇸",
 };
 
+const localeCodes: Record<Locale, string> = {
+  pt: "PT",
+  en: "EN",
+  es: "ES",
+};
+
 interface LanguageSelectorProps {
   /** Compact mode shows only the flag/icon */
   compact?: boolean;
@@ -59,7 +65,12 @@ export function LanguageSelector({ compact = false, className }: LanguageSelecto
           {compact ? (
             <Globe className="h-4 w-4" />
           ) : (
-            <span className="text-base leading-none">{localeFlags[currentLocale]}</span>
+            <>
+              <span className="text-base leading-none">{localeFlags[currentLocale]}</span>
+              <span className="text-xs font-medium tracking-wide">
+                {localeCodes[currentLocale]}
+              </span>
+            </>
           )}
         </Button>
       </DropdownMenuTrigger>

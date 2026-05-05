@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { defaultLocale } from "@/lib/i18n/config";
 
 export default async function Home() {
   // If user is authenticated, go straight to dashboard
@@ -7,11 +8,11 @@ export default async function Home() {
     const { getAuthOptions } = await import("@/lib/services/auth/auth");
     const session = await getServerSession(getAuthOptions());
     if (session?.user) {
-      redirect("/pt/dashboard");
+      redirect(`/${defaultLocale}/dashboard`);
     }
   } catch (e) {
     // redirect() throws a special error — re-throw it
     if (e && typeof e === "object" && "digest" in e) throw e;
   }
-  redirect("/pt");
+  redirect(`/${defaultLocale}`);
 }
