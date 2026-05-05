@@ -268,7 +268,7 @@ jobs:
       - name: Trigger Deploy to GHCR workflow (with cluster update)
         # TODO: pin actions/github-script to a commit SHA for supply chain hardening:
         # https://github.com/actions/github-script/tags → copy the full SHA of the latest release
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
