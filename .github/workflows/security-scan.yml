@@ -125,6 +125,7 @@ jobs:
     name: CodeQL Security Analysis
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    continue-on-error: true # Requires GitHub Advanced Security (unavailable on free private repos)
     permissions:
       actions: read
       contents: read
@@ -156,6 +157,7 @@ jobs:
     name: Dependency Review
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
+    continue-on-error: true # Requires GitHub Advanced Security (unavailable on free private repos)
 
     steps:
       - uses: actions/checkout@v6
