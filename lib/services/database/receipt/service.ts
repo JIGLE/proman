@@ -10,6 +10,7 @@ export const receiptService = {
     return receipts.map((r) => ({
       ...r,
       description: r.description || undefined,
+      leaseId: (r as unknown as { leaseId: string | null }).leaseId ?? undefined,
       date: r.date.toISOString().split("T")[0],
       tenantName: r.tenant.name,
       propertyName: r.property.name,
@@ -28,6 +29,7 @@ export const receiptService = {
     return {
       ...receiptData,
       description: receiptData.description ?? undefined,
+      leaseId: (receiptData as unknown as { leaseId: string | null }).leaseId ?? undefined,
       date: receipt.date.toISOString().split("T")[0],
       tenantName: receipt.tenant.name,
       propertyName: receipt.property.name,
@@ -60,6 +62,7 @@ export const receiptService = {
     return {
       ...receiptData,
       description: receiptData.description ?? undefined,
+      leaseId: (receiptData as unknown as { leaseId: string | null }).leaseId ?? undefined,
       date: receipt.date.toISOString().split("T")[0],
       tenantName: receipt.tenant.name,
       propertyName: receipt.property.name,
@@ -92,6 +95,7 @@ export const receiptService = {
     return {
       ...receiptData,
       description: receiptData.description ?? undefined,
+      leaseId: (receiptData as unknown as { leaseId: string | null }).leaseId ?? undefined,
       date: receipt.date.toISOString().split("T")[0],
       tenantName: receipt.tenant.name,
       propertyName: receipt.property.name,

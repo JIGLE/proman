@@ -83,6 +83,7 @@ export const correspondenceService = {
     });
     return correspondence.map((c) => ({
       ...c,
+      propertyId: (c as unknown as { propertyId: string | null }).propertyId ?? undefined,
       tenantName: c.tenant.name,
       sentAt: c.sentAt?.toISOString(),
       createdAt: c.createdAt.toISOString(),
@@ -99,6 +100,8 @@ export const correspondenceService = {
     const correspondenceData = correspondence;
     return {
       ...correspondenceData,
+      propertyId:
+        (correspondenceData as unknown as { propertyId: string | null }).propertyId ?? undefined,
       tenantName: correspondence.tenant.name,
       sentAt: correspondence.sentAt?.toISOString(),
       createdAt: correspondence.createdAt.toISOString(),
@@ -125,6 +128,8 @@ export const correspondenceService = {
     const correspondenceData = correspondence;
     return {
       ...correspondenceData,
+      propertyId:
+        (correspondenceData as unknown as { propertyId: string | null }).propertyId ?? undefined,
       tenantName: correspondence.tenant.name,
       sentAt: correspondence.sentAt?.toISOString(),
       createdAt: correspondence.createdAt.toISOString(),
@@ -152,6 +157,8 @@ export const correspondenceService = {
     const correspondenceData = correspondence;
     return {
       ...correspondenceData,
+      propertyId:
+        (correspondenceData as unknown as { propertyId: string | null }).propertyId ?? undefined,
       tenantName: correspondence.tenant.name,
       sentAt: correspondence.sentAt?.toISOString(),
       createdAt: correspondence.createdAt.toISOString(),

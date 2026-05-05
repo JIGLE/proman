@@ -1,12 +1,13 @@
 [![CI](https://github.com/JIGLE/ProMan/actions/workflows/ci.yml/badge.svg)](https://github.com/JIGLE/ProMan/actions/workflows/ci.yml)
 [![Security Scan](https://github.com/JIGLE/ProMan/actions/workflows/security-scan.yml/badge.svg)](https://github.com/JIGLE/ProMan/actions/workflows/security-scan.yml)
 [![Deploy to GHCR](https://github.com/JIGLE/ProMan/actions/workflows/deploy-ghcr.yml/badge.svg)](https://github.com/JIGLE/ProMan/actions/workflows/deploy-ghcr.yml)
+[![Production Gate](https://github.com/JIGLE/ProMan/actions/workflows/production.yml/badge.svg)](https://github.com/JIGLE/ProMan/actions/workflows/production.yml)
 
 # ProMan — Property Management Dashboard
 
 A modern, self-hosted property management platform built for landlords and property managers in **Portugal and Spain**. Track properties, tenants, leases, receipts, expenses, maintenance, and correspondence with Iberian-focused tax and legal compliance tooling.
 
-> **v1.11.0** — Production-ready baseline for the 2026 Portuguese and Spanish rental market. See [RELEASES.md](RELEASES.md) for the full changelog.
+> **v1.13.0** — Production-ready baseline for the 2026 Portuguese and Spanish rental market. See [RELEASES.md](RELEASES.md) for the full changelog.
 
 ## Features
 
@@ -20,7 +21,7 @@ A modern, self-hosted property management platform built for landlords and prope
 - **Tenant self-service portal** — secure JWT-based access for tenants
 - **Document management** — upload, categorize, HTML/PDF generation
 - **Insights dashboard** — occupancy, revenue, ROI analytics
-- **Internationalization** — English, Portuguese, Spanish (236 keys, full parity)
+- **Internationalization** — English, Portuguese, Spanish (370 keys, full parity)
 
 ### 🇵🇹 Portugal Compliance
 
@@ -92,7 +93,7 @@ Proman ships a Helm chart at [`helm/proman/`](helm/proman/) targeting the TrueNA
 helm install proman ./helm/proman \
   -f helm/proman/values-truenas.yaml \
   --namespace ix-app \
-  --set image.tag=1.7.1
+  --set image.tag=1.13.0
 ```
 
 ### Configuration
@@ -113,7 +114,7 @@ Replace `<POOL_NAME>` with your TrueNAS pool name before deploying, or set it vi
 ## Testing
 
 ```bash
-npm test                # Unit tests (Vitest) — 52 files, 541 tests
+npm test                # Unit tests (Vitest) — 62 files, 682 tests
 npm run test:coverage   # With coverage report
 npm run test:e2e        # E2E tests (Playwright)
 npm run lint            # ESLint
@@ -158,15 +159,17 @@ helm/proman/          → Helm chart with TrueNAS SCALE values
 
 ### Required Environment Variables
 
-| Variable             | Required    | Description                                     |
-| -------------------- | ----------- | ----------------------------------------------- |
-| `DATABASE_URL`       | ✅ Yes      | SQLite path: `file:/data/proman.sqlite`         |
-| `NEXTAUTH_URL`       | ✅ Yes      | Public URL of the application                   |
-| `NEXTAUTH_SECRET`    | ✅ Yes      | Session signing secret (min 32 chars)           |
-| `INIT_SECRET`        | Recommended | Protects DB init and debug endpoints            |
-| `CRON_SECRET`        | ✅ Yes      | Bearer token for `/api/cron/notifications`      |
-| `PII_ENCRYPTION_KEY` | ✅ Prod     | 64-char hex key for AES-256-GCM PII encryption  |
-| `ENABLE_DEMO_LOGIN`  | ✅ Prod     | Set `false` in production to disable demo login |
+| Variable               | Required    | Description                                                  |
+| ---------------------- | ----------- | ------------------------------------------------------------ |
+| `DATABASE_URL`         | ✅ Yes      | SQLite path: `file:/data/proman.sqlite`                      |
+| `NEXTAUTH_URL`         | ✅ Yes      | Public URL of the application                                |
+| `NEXTAUTH_SECRET`      | ✅ Yes      | Session signing secret (min 32 chars)                        |
+| `GOOGLE_CLIENT_ID`     | OAuth only  | Google OAuth client ID (required if `ENABLE_OAUTH=true`)     |
+| `GOOGLE_CLIENT_SECRET` | OAuth only  | Google OAuth client secret (required if `ENABLE_OAUTH=true`) |
+| `INIT_SECRET`          | Recommended | Protects DB init and debug endpoints                         |
+| `CRON_SECRET`          | ✅ Yes      | Bearer token for `/api/cron/notifications`                   |
+| `PII_ENCRYPTION_KEY`   | ✅ Prod     | 64-char hex key for AES-256-GCM PII encryption               |
+| `ENABLE_DEMO_LOGIN`    | ✅ Prod     | Set `false` in production to disable demo login              |
 
 ### Portugal-Specific (optional)
 
