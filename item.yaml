@@ -1,7 +1,7 @@
 name: proman
 title: ProMan
-version: 1.12.1
-app_version: "1.12.1"
+version: 1.14.0
+app_version: "1.14.0"
 icon: https://raw.githubusercontent.com/JIGLE/proman/main/public/proman-icon.svg
 description: Property Management System — track leases, tenants, properties, and payments.
 home: https://github.com/JIGLE/proman
