@@ -47,12 +47,12 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: "npm"
@@ -84,7 +84,7 @@ jobs:
         run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
 
       - name: Setup Helm
-        uses: azure/setup-helm@v5
+        uses: azure/setup-helm@v4
 
       - name: Verify project before release
         run: |
@@ -238,7 +238,7 @@ jobs:
           fi
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.new_version }}
           name: Release v${{ steps.version.outputs.new_version }}
@@ -260,7 +260,7 @@ jobs:
           user_email: github-actions[bot]@users.noreply.github.com
 
       - name: Upload Helm chart artifact
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: release-charts
           path: release-charts
@@ -268,7 +268,7 @@ jobs:
       - name: Trigger Deploy to GHCR workflow (with cluster update)
         # TODO: pin actions/github-script to a commit SHA for supply chain hardening:
         # https://github.com/actions/github-script/tags → copy the full SHA of the latest release
-        uses: actions/github-script@v9
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
