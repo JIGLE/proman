@@ -12,6 +12,7 @@ import React, {
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import {
+  Building,
   Property,
   Tenant,
   Receipt,
@@ -32,6 +33,7 @@ import { usePortalAccess } from "@/lib/contexts/portal-context";
 import { isPublicPagePath } from "@/lib/utils/public-route";
 
 interface AppState {
+  buildings: Building[];
   properties: Property[];
   tenants: Tenant[];
   receipts: Receipt[];
@@ -48,6 +50,7 @@ interface AppState {
 type AppAction =
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "SET_ERROR"; payload: string | null }
+  | { type: "SET_BUILDINGS"; payload: Building[] }
   | { type: "SET_PROPERTIES"; payload: Property[] }
   | { type: "SET_TENANTS"; payload: Tenant[] }
   | { type: "SET_RECEIPTS"; payload: Receipt[] }
@@ -59,6 +62,7 @@ type AppAction =
   | { type: "SET_LEASES"; payload: Lease[] };
 
 const initialState: AppState = {
+  buildings: [],
   properties: [],
   tenants: [],
   receipts: [],
@@ -78,6 +82,8 @@ function appReducer(state: AppState, action: AppAction): AppState {
       return { ...state, loading: action.payload };
     case "SET_ERROR":
       return { ...state, error: action.payload };
+    case "SET_BUILDINGS":
+      return { ...state, buildings: action.payload };
     case "SET_PROPERTIES":
       return { ...state, properties: action.payload };
     case "SET_TENANTS":
@@ -108,6 +114,9 @@ function appReducer(state: AppState, action: AppAction): AppState {
 interface AppContextValue {
   state: AppState;
   dispatch: React.Dispatch<AppAction>;
+  addBuilding: (data: Partial<Building>) => Promise<void>;
+  updateBuilding: (id: string, data: Partial<Building>) => Promise<void>;
+  deleteBuilding: (id: string) => Promise<void>;
   addProperty: (data: Partial<Property>) => Promise<void>;
   updateProperty: (id: string, data: Partial<Property>) => Promise<void>;
   deleteProperty: (id: string) => Promise<void>;
@@ -189,6 +198,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         dispatch({ type: "SET_LOADING", payload: true });
         dispatch({ type: "SET_ERROR", payload: null });
         dispatch({ type: "SET_PROPERTIES", payload: getDemoData<Property>("properties") });
+        dispatch({ type: "SET_BUILDINGS", payload: getDemoData<Building>("buildings") });
         dispatch({ type: "SET_TENANTS", payload: getDemoData<Tenant>("tenants") });
         dispatch({ type: "SET_RECEIPTS", payload: getDemoData<Receipt>("receipts") });
         dispatch({
@@ -223,6 +233,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
 
         const [
           propertiesRes,
+          buildingsRes,
           tenantsRes,
           receiptsRes,
           templatesRes,
@@ -233,6 +244,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
           leasesRes,
         ] = await Promise.all([
           apiFetch<{ data: Property[] }>("/api/properties", csrfToken),
+          apiFetch<{ data: Building[] }>("/api/buildings", csrfToken),
           apiFetch<{ data: Tenant[] }>("/api/tenants", csrfToken),
           apiFetch<{ data: Receipt[] }>("/api/receipts", csrfToken),
           apiFetch<{ data: CorrespondenceTemplate[] }>("/api/correspondence/templates", csrfToken),
@@ -246,6 +258,10 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         dispatch({
           type: "SET_PROPERTIES",
           payload: (propertiesRes.data ?? propertiesRes) as Property[],
+        });
+        dispatch({
+          type: "SET_BUILDINGS",
+          payload: (buildingsRes.data ?? buildingsRes) as Building[],
         });
         dispatch({
           type: "SET_TENANTS",
@@ -328,6 +344,22 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
         isDemo,
       }),
     [csrfToken, userId, showError, showSuccess, isDemo, state.properties],
+  );
+
+  const buildingActions = useMemo(
+    () =>
+      createEntityActions<Building>({
+        endpoint: "/api/buildings",
+        getItems: () => state.buildings,
+        setItems: (items) => dispatch({ type: "SET_BUILDINGS", payload: items }),
+        showError,
+        showSuccess,
+        csrfToken,
+        userId,
+        entityName: "building",
+        isDemo,
+      }),
+    [csrfToken, userId, showError, showSuccess, isDemo, state.buildings],
   );
 
   const tenantActions = useMemo(
@@ -523,6 +555,9 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
     () => ({
       state: scopedState,
       dispatch,
+      addBuilding: (d) => buildingActions.add(d) as unknown as Promise<void>,
+      updateBuilding: (id, d) => buildingActions.update(id, d) as unknown as Promise<void>,
+      deleteBuilding: (id) => buildingActions.remove(id),
       addProperty: (d) => propertyActions.add(d) as unknown as Promise<void>,
       updateProperty: (id, d) => propertyActions.update(id, d) as unknown as Promise<void>,
       deleteProperty: (id) => propertyActions.remove(id),
@@ -556,6 +591,7 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
       scopedState,
       dispatch,
       refreshData,
+      buildingActions,
       propertyActions,
       tenantActions,
       receiptActions,
