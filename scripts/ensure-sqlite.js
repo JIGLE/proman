@@ -246,44 +246,22 @@ try {
   log("All sqlite tables present:", allTables);
   log("Table count:", allRows.length);
 
-  // Schema column sync: check for missing columns on the properties table and run
-  // `prisma db push` (additive-only, no --accept-data-loss) if any are absent.
-  // This handles the common case where new columns were added to schema.prisma after
-  // the DB was first initialised — without this, Prisma throws 500 on INSERT.
+  // Schema sync: run `prisma db push` (additive-only, no --accept-data-loss) on every
+  // startup so any new columns added to schema.prisma since the DB was first initialised
+  // are applied automatically. `prisma db push` is idempotent — it is a no-op when the
+  // schema already matches the database, so the overhead on normal starts is negligible.
+  db.close();
   if (autoSchemaSync) {
     try {
-      const requiredPropertyColumns = [
-        "buildingId",
-        "buildingName",
-        "currency",
-        "incomeSplitMode",
-        "distributionFrequency",
-        "createdByOwnerId",
-        "isZonaTensionada",
-        "cadasterReference",
-      ];
-      const colRows = db.prepare("PRAGMA table_info(properties)").all();
-      db.close();
-      const presentCols = new Set(colRows.map((r) => String(r.name)));
-      const missingCols = requiredPropertyColumns.filter((c) => !presentCols.has(c));
-
-      if (missingCols.length > 0) {
-        log(
-          "Missing columns in properties table:",
-          missingCols.join(", "),
-          "— running schema sync (prisma db push).",
-        );
-        execSync("npx prisma db push --schema=prisma/schema.prisma", {
-          stdio: "inherit",
-          env: { ...process.env, DATABASE_URL: dbUrl },
-          timeout: 60000,
-        });
-        log("Schema sync completed successfully.");
-      } else {
-        log("All expected properties columns present; no schema sync needed.");
-      }
+      log("Running schema sync (prisma db push --schema=prisma/schema.prisma)...");
+      execSync("npx prisma db push --schema=prisma/schema.prisma", {
+        stdio: "inherit",
+        env: { ...process.env, DATABASE_URL: dbUrl },
+        timeout: 60000,
+      });
+      log("Schema sync completed successfully.");
     } catch (syncErr) {
-      log("Schema sync check failed (non-fatal):", syncErr && syncErr.message);
+      log("Schema sync failed (non-fatal):", syncErr && syncErr.message);
     }
   }
 
