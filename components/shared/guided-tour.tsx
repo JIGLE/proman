@@ -141,15 +141,6 @@ export function GuidedTour({
     onComplete();
   }, [storageKey, onComplete]);
 
-  // Auto-dismiss tour after 15 seconds of inactivity to avoid blocking the experience
-  useEffect(() => {
-    if (!isActive) return;
-    const autoDismiss = setTimeout(() => {
-      finish();
-    }, 15000);
-    return () => clearTimeout(autoDismiss);
-  }, [isActive, currentStep, finish]);
-
   const next = useCallback(() => {
     if (currentStep < steps.length - 1) {
       setCurrentStep((s) => s + 1);
@@ -206,7 +197,7 @@ export function GuidedTour({
           transition={{ duration: 0.2 }}
           className="fixed z-[10000] w-80 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-4 shadow-xl"
           style={{
-            top: position.top,
+            top: Math.max(8, Math.min(position.top, window.innerHeight - 220)),
             left: Math.max(8, Math.min(position.left, window.innerWidth - 328)),
           }}
           onClick={(e) => e.stopPropagation()}
@@ -230,9 +221,17 @@ export function GuidedTour({
 
           {/* Footer */}
           <div className="mt-4 flex items-center justify-between">
-            <span className="text-[10px] text-[var(--color-text-muted)]">
-              {currentStep + 1} / {steps.length}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] text-[var(--color-text-muted)]">
+                {currentStep + 1} / {steps.length}
+              </span>
+              <button
+                onClick={finish}
+                className="text-[10px] text-[var(--color-text-muted)] hover:text-[var(--color-text-secondary)] underline underline-offset-2 transition-colors"
+              >
+                Skip tour
+              </button>
+            </div>
             <div className="flex items-center gap-2">
               {currentStep > 0 && (
                 <button

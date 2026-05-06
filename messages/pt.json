@@ -1,4 +1,46 @@
 {
+  "portfolio": {
+    "badge": "Área do portfólio",
+    "title": "Portfólio",
+    "addProperty": "Adicionar imóvel",
+    "openMap": "Abrir mapa",
+    "stats": {
+      "trackedUnits": "Unidades geridas",
+      "occupied": "{count} ocupadas",
+      "occupancy": "Ocupação",
+      "vacancySlots": "{count} vagas disponíveis",
+      "runRate": "Receita mensal",
+      "onMap": "{mapped}/{total} no mapa"
+    },
+    "attention": {
+      "label": "Atenção",
+      "expiringLeases": "{count} contratos a expirar em 30d",
+      "openTickets": "{count} pedidos em aberto",
+      "missingCoords": "{count} coordenadas em falta"
+    },
+    "tabs": {
+      "portfolioList": "Lista do portfólio",
+      "homeDetails": "A minha casa",
+      "map": "Mapa",
+      "buildings": "Edifícios"
+    },
+    "tenant": {
+      "badge": "Portfólio",
+      "myHome": "A minha casa",
+      "payments": "Pagamentos",
+      "myLease": "O meu contrato",
+      "myDocuments": "Os meus documentos",
+      "monthlyRent": "Renda mensal",
+      "leaseEnds": "Contrato termina em {date}",
+      "noLease": "Sem contrato carregado",
+      "receipts": "Recibos",
+      "paidRecords": "Registos pagos disponíveis",
+      "homeSummary": "Resumo do imóvel",
+      "addressUnavailable": "Endereço do imóvel não disponível",
+      "mapAvailable": "A vista de mapa está disponível para a sua casa.",
+      "mapUnavailable": "A vista de mapa aparecerá quando as coordenadas estiverem disponíveis."
+    }
+  },
   "settings": {
     "title": "Configurações",
     "description": "Gerencie as configurações da sua conta e preferências",

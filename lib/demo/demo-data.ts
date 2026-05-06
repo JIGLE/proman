@@ -19,6 +19,7 @@
  */
 
 import type {
+  Building,
   Property,
   Tenant,
   Receipt,
@@ -1308,6 +1309,33 @@ export const DEMO_DOCUMENTS: DemoDocument[] = [
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// BUILDINGS
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const DEMO_BUILDINGS: Building[] = [
+  {
+    id: "demo-building-1",
+    userId: DEMO_USER_ID,
+    name: "Sunset Apartments",
+    address: "Rua Dom Pedro V 74",
+    city: "Lisboa",
+    country: "PT",
+    createdAt: "2024-01-15T10:00:00Z",
+    updatedAt: "2026-03-01T14:30:00Z",
+  },
+  {
+    id: "demo-building-2",
+    userId: DEMO_USER_ID,
+    name: "Ribeira Flats",
+    address: "Cais da Ribeira 22",
+    city: "Porto",
+    country: "PT",
+    createdAt: "2024-03-10T09:00:00Z",
+    updatedAt: "2026-02-15T11:00:00Z",
+  },
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
 // AGGREGATION  (unchanged API surface)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1337,7 +1365,7 @@ const DEMO_DATA_MAP: Record<DemoEntityType, unknown[]> = {
   maintenance: DEMO_MAINTENANCE,
   leases: DEMO_LEASES,
   contacts: [],
-  buildings: [],
+  buildings: DEMO_BUILDINGS,
 };
 
 /** Get demo data for a given entity type. Returns a deep copy. */

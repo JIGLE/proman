@@ -2,10 +2,9 @@
 
 import { useMemo, useRef, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
-  AlertTriangle,
   Building2,
-  Clock3,
   CreditCard,
   FileText,
   MapPin,
@@ -13,7 +12,6 @@ import {
   Receipt,
   ShieldCheck,
   Sparkles,
-  Wrench,
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
@@ -40,6 +38,15 @@ function StatCard({ label, value, detail }: { label: string; value: string; deta
   );
 }
 
+function TabBadge({ count }: { count: number }) {
+  if (count === 0) return null;
+  return (
+    <span className="ml-1.5 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-amber-300">
+      {count}
+    </span>
+  );
+}
+
 export function AssetsView(): React.ReactElement {
   const [activeTab, setActiveTab] = useTabPersistence("assets", "properties");
   const [highlightedPropertyId, setHighlightedPropertyId] = useState<string | null>(null);
@@ -49,8 +56,9 @@ export function AssetsView(): React.ReactElement {
   const router = useRouter();
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "pt";
-  const { properties, leases, maintenance, receipts, tenants } = state;
+  const { properties, leases, receipts, tenants } = state;
   const propertiesViewRef = useRef<PropertiesViewRef>(null);
+  const t = useTranslations("portfolio");
 
   const handleLocateOnMap = (propertyId: string) => {
     setHighlightedPropertyId(propertyId);
@@ -94,12 +102,6 @@ export function AssetsView(): React.ReactElement {
       return endDate >= now && endDate <= inThirtyDays;
     }).length;
   }, [leases]);
-  const openMaintenanceCount = useMemo(
-    () =>
-      maintenance.filter((ticket) => ticket.status === "open" || ticket.status === "in_progress")
-        .length,
-    [maintenance],
-  );
   const missingCoordinatesCount = Math.max(properties.length - mappedCount, 0);
 
   const tenantHome = useMemo(() => {
@@ -116,99 +118,47 @@ export function AssetsView(): React.ReactElement {
   return (
     <div className="space-y-6">
       {isOwnerPortal ? (
-        <>
-          <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.2),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-              <div className="space-y-4">
-                <Badge
-                  variant="outline"
-                  className="w-fit border-blue-500/20 bg-blue-500/10 text-blue-200"
-                >
-                  Portfolio workspace
-                </Badge>
-                <div className="space-y-2">
-                  <h1 className="flex items-center gap-2 text-3xl font-semibold tracking-tight text-zinc-50">
-                    <Building2 className="h-8 w-8" />
-                    Portfolio
-                  </h1>
-                  <p className="max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">
-                    Manage portfolio health, occupancy, and rent potential without burying the main
-                    list under too many competing cards.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button onClick={() => propertiesViewRef.current?.openDialog()} className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Property
-                  </Button>
-                  <Button variant="outline" onClick={() => setActiveTab("map")} className="gap-2">
-                    <MapPin className="h-4 w-4" />
-                    Open map
-                  </Button>
-                </div>
-              </div>
-
-              <div className="grid gap-3 md:grid-cols-3 xl:w-[520px]">
-                <StatCard
-                  label="Tracked units"
-                  value={`${properties.length}`}
-                  detail={`${occupiedCount} occupied`}
-                />
-                <StatCard
-                  label="Occupancy"
-                  value={`${occupancyRate}%`}
-                  detail={`${Math.max(properties.length - occupiedCount, 0)} vacancy slots`}
-                />
-                <StatCard
-                  label="Run rate"
-                  value={formatCurrency(monthlyRunRate)}
-                  detail={`${mappedCount}/${properties.length || 0} on map`}
-                />
+        <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.2),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
+          <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
+            <div className="flex flex-wrap items-center gap-3">
+              <Building2 className="h-7 w-7 shrink-0 text-zinc-400" />
+              <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">{t("title")}</h1>
+              <Badge variant="outline" className="border-blue-500/20 bg-blue-500/10 text-blue-200">
+                {t("badge")}
+              </Badge>
+              <div className="flex flex-wrap gap-2 xl:ml-4">
+                <Button onClick={() => propertiesViewRef.current?.openDialog()} className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  {t("addProperty")}
+                </Button>
+                <Button variant="outline" onClick={() => setActiveTab("map")} className="gap-2">
+                  <MapPin className="h-4 w-4" />
+                  {t("openMap")}
+                </Button>
               </div>
             </div>
-          </section>
 
-          {/* Slim attention strip */}
-          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-zinc-950/70 px-4 py-3">
-            <span className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-              Attention
-            </span>
-            <button
-              type="button"
-              onClick={() => setActiveTab("properties")}
-              className="flex items-center gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-1.5 text-xs text-amber-200 transition-colors hover:border-amber-400/60"
-            >
-              <Clock3 className="h-3.5 w-3.5" />
-              <span className="font-semibold text-zinc-50">{expiringLeasesCount}</span>
-              leases ending 30d
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push(`/${locale}/maintenance`)}
-              className="flex items-center gap-2 rounded-lg border border-orange-500/30 bg-orange-500/10 px-3 py-1.5 text-xs text-orange-200 transition-colors hover:border-orange-400/60"
-            >
-              <Wrench className="h-3.5 w-3.5" />
-              <span className="font-semibold text-zinc-50">{openMaintenanceCount}</span>
-              open tickets
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("map")}
-              className="flex items-center gap-2 rounded-lg border border-blue-500/30 bg-blue-500/10 px-3 py-1.5 text-xs text-blue-200 transition-colors hover:border-blue-400/60"
-            >
-              <AlertTriangle className="h-3.5 w-3.5" />
-              <span className="font-semibold text-zinc-50">{missingCoordinatesCount}</span>
-              missing coords
-            </button>
-            <div className="ml-auto">
-              <ExportButton
-                data={exportConfig.data}
-                filename={`${activeTab}-export`}
-                columns={exportConfig.columns}
+            <div className="grid grid-cols-3 gap-3 xl:w-[480px]">
+              <StatCard
+                label={t("stats.trackedUnits")}
+                value={`${properties.length}`}
+                detail={t("stats.occupied", { count: occupiedCount })}
+              />
+              <StatCard
+                label={t("stats.occupancy")}
+                value={`${occupancyRate}%`}
+                detail={t("stats.vacancySlots", {
+                  count: Math.max(properties.length - occupiedCount, 0),
+                })}
+              />
+              <StatCard
+                label={t("stats.runRate")}
+                value={formatCurrency(monthlyRunRate)}
+                detail={t("stats.onMap", { mapped: mappedCount, total: properties.length || 0 })}
               />
             </div>
           </div>
-        </>
+        </section>
       ) : (
         <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
           <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
@@ -217,50 +167,44 @@ export function AssetsView(): React.ReactElement {
                 variant="outline"
                 className="w-fit border-blue-500/20 bg-blue-500/10 text-blue-200"
               >
-                Portfolio
+                {t("tenant.badge")}
               </Badge>
-              <div className="space-y-2">
-                <h1 className="flex items-center gap-2 text-3xl font-semibold tracking-tight text-zinc-50">
-                  <Building2 className="h-8 w-8" />
-                  {tenantHome.property?.name ?? "My home"}
-                </h1>
-                <p className="text-sm leading-6 text-zinc-300 sm:text-base">
-                  Keep the essentials for your home in one place: lease, payments, receipts, and
-                  shared documents.
-                </p>
-              </div>
+              <h1 className="flex items-center gap-2 text-3xl font-semibold tracking-tight text-zinc-50">
+                <Building2 className="h-8 w-8" />
+                {tenantHome.property?.name ?? t("tenant.myHome")}
+              </h1>
               <div className="flex flex-wrap gap-2">
                 <Button variant="outline" onClick={() => router.push(`/${locale}/financials`)}>
                   <CreditCard className="mr-2 h-4 w-4" />
-                  Payments
+                  {t("tenant.payments")}
                 </Button>
                 <Button variant="outline" onClick={() => router.push(`/${locale}/leases`)}>
                   <Receipt className="mr-2 h-4 w-4" />
-                  My lease
+                  {t("tenant.myLease")}
                 </Button>
                 <Button variant="outline" onClick={() => router.push(`/${locale}/documents`)}>
                   <FileText className="mr-2 h-4 w-4" />
-                  My documents
+                  {t("tenant.myDocuments")}
                 </Button>
               </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
               <StatCard
-                label="Monthly rent"
+                label={t("tenant.monthlyRent")}
                 value={formatCurrency(
                   tenantHome.activeLease?.monthlyRent ?? tenantHome.property?.rent ?? 0,
                 )}
                 detail={
                   tenantHome.activeLease
-                    ? `Lease ends ${tenantHome.activeLease.endDate}`
-                    : "No lease loaded"
+                    ? t("tenant.leaseEnds", { date: tenantHome.activeLease.endDate })
+                    : t("tenant.noLease")
                 }
               />
               <StatCard
-                label="Receipts"
+                label={t("tenant.receipts")}
                 value={`${tenantHome.paidReceipts.length}`}
-                detail="Paid records available"
+                detail={t("tenant.paidRecords")}
               />
               <Card className="border-white/10 bg-zinc-950/70 md:col-span-2">
                 <CardContent className="p-5">
@@ -268,10 +212,10 @@ export function AssetsView(): React.ReactElement {
                     <div>
                       <div className="flex items-center gap-2">
                         <ShieldCheck className="h-5 w-5 text-blue-300" />
-                        <p className="font-medium text-zinc-50">Home summary</p>
+                        <p className="font-medium text-zinc-50">{t("tenant.homeSummary")}</p>
                       </div>
                       <p className="mt-2 text-sm text-zinc-400">
-                        {tenantHome.property?.address ?? "Property address not available"}
+                        {tenantHome.property?.address ?? t("tenant.addressUnavailable")}
                       </p>
                     </div>
                     <Badge variant="outline" className="capitalize">
@@ -281,8 +225,8 @@ export function AssetsView(): React.ReactElement {
                   <div className="mt-4 flex items-center gap-2 text-sm text-zinc-400">
                     <Sparkles className="h-4 w-4 text-blue-300" />
                     {tenantHome.property?.latitude && tenantHome.property?.longitude
-                      ? "Map view is available for your home."
-                      : "Map view will appear once coordinates are available."}
+                      ? t("tenant.mapAvailable")
+                      : t("tenant.mapUnavailable")}
                   </div>
                 </CardContent>
               </Card>
@@ -299,20 +243,27 @@ export function AssetsView(): React.ReactElement {
             <TabsTrigger value="properties" className="flex items-center gap-2">
               <Building2 className="h-4 w-4" />
               <span className="hidden sm:inline">
-                {isOwnerPortal ? "Portfolio list" : "Home details"}
+                {isOwnerPortal ? t("tabs.portfolioList") : t("tabs.homeDetails")}
               </span>
+              {isOwnerPortal && <TabBadge count={expiringLeasesCount} />}
             </TabsTrigger>
             <TabsTrigger value="map" className="flex items-center gap-2">
               <MapPin className="h-4 w-4" />
-              <span className="hidden sm:inline">Map</span>
+              <span className="hidden sm:inline">{t("tabs.map")}</span>
+              {isOwnerPortal && <TabBadge count={missingCoordinatesCount} />}
             </TabsTrigger>
             {isOwnerPortal && (
               <TabsTrigger value="buildings" className="flex items-center gap-2">
                 <Building2 className="h-4 w-4" />
-                <span className="hidden sm:inline">Buildings</span>
+                <span className="hidden sm:inline">{t("tabs.buildings")}</span>
               </TabsTrigger>
             )}
           </TabsList>
+          <ExportButton
+            data={exportConfig.data}
+            filename={`${activeTab}-export`}
+            columns={exportConfig.columns}
+          />
         </div>
 
         <TabsContent value="map" className="mt-0">

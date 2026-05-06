@@ -1,4 +1,46 @@
 {
+  "portfolio": {
+    "badge": "Portfolio workspace",
+    "title": "Portfolio",
+    "addProperty": "Add Property",
+    "openMap": "Open map",
+    "stats": {
+      "trackedUnits": "Tracked units",
+      "occupied": "{count} occupied",
+      "occupancy": "Occupancy",
+      "vacancySlots": "{count} vacancy slots",
+      "runRate": "Run rate",
+      "onMap": "{mapped}/{total} on map"
+    },
+    "attention": {
+      "label": "Attention",
+      "expiringLeases": "{count} leases ending 30d",
+      "openTickets": "{count} open tickets",
+      "missingCoords": "{count} missing coords"
+    },
+    "tabs": {
+      "portfolioList": "Portfolio list",
+      "homeDetails": "Home details",
+      "map": "Map",
+      "buildings": "Buildings"
+    },
+    "tenant": {
+      "badge": "Portfolio",
+      "myHome": "My home",
+      "payments": "Payments",
+      "myLease": "My lease",
+      "myDocuments": "My documents",
+      "monthlyRent": "Monthly rent",
+      "leaseEnds": "Lease ends {date}",
+      "noLease": "No lease loaded",
+      "receipts": "Receipts",
+      "paidRecords": "Paid records available",
+      "homeSummary": "Home summary",
+      "addressUnavailable": "Property address not available",
+      "mapAvailable": "Map view is available for your home.",
+      "mapUnavailable": "Map view will appear once coordinates are available."
+    }
+  },
   "settings": {
     "title": "Settings",
     "description": "Manage your account settings and preferences",

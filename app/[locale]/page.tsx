@@ -18,6 +18,8 @@ import {
   TrackedLandingLink,
 } from "@/components/shared/landing-analytics";
 import { LanguageSelector } from "@/components/shared/language-selector";
+import { LandingHero, LandingHeroItem } from "@/components/shared/landing-hero";
+import { LocaleSelectOverlay } from "@/components/shared/locale-select-overlay";
 import { Button } from "@/components/ui/button";
 import { getTranslations } from "next-intl/server";
 
@@ -94,6 +96,7 @@ export default async function LandingPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-zinc-900 text-zinc-50">
+      <LocaleSelectOverlay currentLocale={locale} />
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
           <div className="flex items-center gap-2">
@@ -129,60 +132,70 @@ export default async function LandingPage({ params }: Props) {
 
         {/* Hero */}
         <section className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[0.98fr_1.02fr] lg:items-center">
-          <div className="space-y-7">
-            <div className="inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-sm text-blue-200">
-              {t("eyebrow")}
-            </div>
-            <div className="space-y-4">
-              <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-zinc-50 sm:text-5xl">
-                {t("hero")}
-              </h1>
-              <p className="max-w-xl text-lg text-zinc-300">{t("subtitle")}</p>
-            </div>
+          <LandingHero>
+            <LandingHeroItem>
+              <div className="inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-sm text-blue-200">
+                {t("eyebrow")}
+              </div>
+            </LandingHeroItem>
+            <LandingHeroItem>
+              <div className="space-y-4">
+                <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-zinc-50 sm:text-5xl">
+                  {t("hero")}
+                </h1>
+                <p className="max-w-xl text-lg text-zinc-300">{t("subtitle")}</p>
+              </div>
+            </LandingHeroItem>
 
-            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-              <TrackedLandingLink
-                href={`/${locale}/demo?perspective=owner`}
-                eventName="landing.demo_start"
-                eventData={{ location: "hero_primary", perspective: "owner" }}
-              >
-                <Button
-                  size="xl"
-                  className="h-12 gap-2 bg-blue-600 px-8 text-base text-white hover:bg-blue-700"
+            <LandingHeroItem>
+              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                <TrackedLandingLink
+                  href={`/${locale}/demo?perspective=owner`}
+                  eventName="landing.demo_start"
+                  eventData={{ location: "hero_primary", perspective: "owner" }}
                 >
-                  <Play className="h-4 w-4" />
-                  {t("demoCta")}
-                </Button>
-              </TrackedLandingLink>
-              <TrackedLandingLink
-                href="#how-it-works"
-                eventName="landing.workflow_cta_click"
-                eventData={{ location: "hero_secondary" }}
-              >
-                <Button
-                  size="xl"
-                  variant="outline"
-                  className="h-12 gap-2 border-zinc-700 px-8 text-base text-zinc-200 hover:border-zinc-500 hover:text-zinc-50"
+                  <Button
+                    size="xl"
+                    className="h-12 gap-2 bg-blue-600 px-8 text-base text-white hover:bg-blue-700"
+                  >
+                    <Play className="h-4 w-4" />
+                    {t("demoCta")}
+                  </Button>
+                </TrackedLandingLink>
+                <TrackedLandingLink
+                  href="#how-it-works"
+                  eventName="landing.workflow_cta_click"
+                  eventData={{ location: "hero_secondary" }}
                 >
-                  {t("secondaryCta")}
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </TrackedLandingLink>
-            </div>
+                  <Button
+                    size="xl"
+                    variant="outline"
+                    className="h-12 gap-2 border-zinc-700 px-8 text-base text-zinc-200 hover:border-zinc-500 hover:text-zinc-50"
+                  >
+                    {t("secondaryCta")}
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </TrackedLandingLink>
+              </div>
+            </LandingHeroItem>
 
-            <p className="text-sm text-zinc-300">{t("microcopy")}</p>
+            <LandingHeroItem>
+              <p className="text-sm text-zinc-300">{t("microcopy")}</p>
+            </LandingHeroItem>
 
-            <div className="flex flex-wrap items-center gap-2">
-              {trustChips.map((chip) => (
-                <div
-                  key={chip}
-                  className="rounded-full border border-zinc-600 bg-zinc-800/80 px-3 py-1 text-xs font-medium text-zinc-100"
-                >
-                  {chip}
-                </div>
-              ))}
-            </div>
-          </div>
+            <LandingHeroItem>
+              <div className="flex flex-wrap items-center gap-2">
+                {trustChips.map((chip) => (
+                  <div
+                    key={chip}
+                    className="rounded-full border border-zinc-600 bg-zinc-800/80 px-3 py-1 text-xs font-medium text-zinc-100"
+                  >
+                    {chip}
+                  </div>
+                ))}
+              </div>
+            </LandingHeroItem>
+          </LandingHero>
 
           <div className="hidden rounded-[28px] border border-zinc-800 bg-zinc-900/70 p-4 shadow-2xl shadow-black/30 lg:block">
             <div className="overflow-hidden rounded-[22px] border border-zinc-800 bg-zinc-950">

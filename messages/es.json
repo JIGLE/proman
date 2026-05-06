@@ -1,4 +1,46 @@
 {
+  "portfolio": {
+    "badge": "Área del portafolio",
+    "title": "Portafolio",
+    "addProperty": "Añadir propiedad",
+    "openMap": "Abrir mapa",
+    "stats": {
+      "trackedUnits": "Unidades gestionadas",
+      "occupied": "{count} ocupadas",
+      "occupancy": "Ocupación",
+      "vacancySlots": "{count} plazas libres",
+      "runRate": "Ingresos mensuales",
+      "onMap": "{mapped}/{total} en el mapa"
+    },
+    "attention": {
+      "label": "Atención",
+      "expiringLeases": "{count} contratos que vencen en 30d",
+      "openTickets": "{count} tickets abiertos",
+      "missingCoords": "{count} coordenadas faltantes"
+    },
+    "tabs": {
+      "portfolioList": "Lista del portafolio",
+      "homeDetails": "Mi hogar",
+      "map": "Mapa",
+      "buildings": "Edificios"
+    },
+    "tenant": {
+      "badge": "Portafolio",
+      "myHome": "Mi hogar",
+      "payments": "Pagos",
+      "myLease": "Mi contrato",
+      "myDocuments": "Mis documentos",
+      "monthlyRent": "Renta mensual",
+      "leaseEnds": "Contrato termina el {date}",
+      "noLease": "Sin contrato cargado",
+      "receipts": "Recibos",
+      "paidRecords": "Registros pagados disponibles",
+      "homeSummary": "Resumen del hogar",
+      "addressUnavailable": "Dirección de la propiedad no disponible",
+      "mapAvailable": "La vista de mapa está disponible para tu hogar.",
+      "mapUnavailable": "La vista de mapa aparecerá cuando las coordenadas estén disponibles."
+    }
+  },
   "settings": {
     "title": "Configuración",
     "description": "Gestiona la configuración de tu cuenta y preferencias",
