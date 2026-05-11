@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM node:26-alpine AS builder
 
 # Cache bust - this RUN command uses the ARG, forcing all subsequent layers to rebuild
 ARG CACHE_BUST
@@ -48,7 +48,7 @@ RUN DATABASE_URL="file:./build.db" \
 RUN echo "{\"version\":\"${BUILD_VERSION}\",\"git_commit\":\"${GIT_COMMIT}\",\"build_time\":\"${BUILD_TIME}\",\"node_env\":\"production\"}" > public/version.json
 
 # ── Development stage (used by docker-compose --profile dev) ──────────────────
-FROM node:22-alpine AS development
+FROM node:26-alpine AS development
 
 WORKDIR /app
 
@@ -72,7 +72,7 @@ ENV NODE_ENV=development
 CMD ["npm", "run", "dev"]
 
 # ── Production runner stage ───────────────────────────────────────────────────
-FROM node:22-alpine AS runner
+FROM node:26-alpine AS runner
 
 # OCI image labels — TrueNAS SCALE reads these for "App Version" / "Version" display
 ARG BUILD_VERSION
