@@ -1508,6 +1508,12 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         <span className="truncate text-xs text-zinc-500">
                                           {property.streetAddress || property.address}
                                         </span>
+                                        {property.status === "vacant" &&
+                                          Number(property.rent) > 0 && (
+                                            <span className="text-[10px] text-red-400/70">
+                                              −{formatCurrency(Number(property.rent))}/mo vacant
+                                            </span>
+                                          )}
                                         {(() => {
                                           const action = getNextAction(property, {
                                             hasActiveLease: activeLeasePropertyIds.has(property.id),

@@ -121,6 +121,19 @@ export function AssetsView(): React.ReactElement {
     : 0;
   const monthlyRunRate = properties.reduce((sum, p) => sum + (p.rent || 0), 0);
 
+  const lastMonthTotal = useMemo(() => {
+    const now = new Date();
+    const prevMonth = now.getMonth() === 0 ? 11 : now.getMonth() - 1;
+    const prevYear = now.getMonth() === 0 ? now.getFullYear() - 1 : now.getFullYear();
+    return receipts
+      .filter((r) => {
+        if (r.status !== "paid") return false;
+        const d = new Date((r as unknown as { date?: string }).date ?? r.createdAt);
+        return d.getMonth() === prevMonth && d.getFullYear() === prevYear;
+      })
+      .reduce((sum, r) => sum + r.amount, 0);
+  }, [receipts]);
+
   const tenantHome = useMemo(() => {
     const tenant = tenants[0];
     const activeLease = tenant ? getActiveLease(tenant.id, leases) : null;
@@ -235,6 +248,20 @@ export function AssetsView(): React.ReactElement {
                 <span className="font-medium text-[var(--color-foreground)]">
                   {formatCurrency(monthlyRunRate)}/mo
                 </span>
+                {lastMonthTotal > 0 &&
+                  (() => {
+                    const delta = monthlyRunRate - lastMonthTotal;
+                    const isPositive = delta >= 0;
+                    return (
+                      <span
+                        className={`text-xs ${isPositive ? "text-emerald-400" : "text-red-400"}`}
+                      >
+                        {" "}
+                        ({isPositive ? "+" : ""}
+                        {formatCurrency(delta)} vs last mo)
+                      </span>
+                    );
+                  })()}
               </>
             )}
           </p>
