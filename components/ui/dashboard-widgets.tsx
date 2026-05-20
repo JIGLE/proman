@@ -114,8 +114,8 @@ export function DashboardWidget({
                           : "text-zinc-400",
                     )}
                   >
-                    {change.value > 0 && <TrendingUp className="h-3 w-3" />}
-                    {change.value < 0 && <TrendingDown className="h-3 w-3" />}
+                    {change.value > 0 && <TrendingUp className="h-3 w-3" aria-hidden="true" />}
+                    {change.value < 0 && <TrendingDown className="h-3 w-3" aria-hidden="true" />}
                     {Math.abs(change.value).toFixed(1)}%
                   </div>
 

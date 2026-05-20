@@ -7,6 +7,7 @@ import {
   FileText,
   Home,
   Mail,
+  Settings,
   Users,
   Wallet,
   Wrench,
@@ -27,12 +28,14 @@ export interface PortalNavItem {
 
 export interface PortalNavGroup {
   group: string;
+  groupLabelKey: string;
   items: PortalNavItem[];
 }
 
 export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
   {
-    group: "Workspace",
+    group: "Operations",
+    groupLabelKey: "navigation.operationsGroup",
     items: [
       {
         key: "dashboard",
@@ -46,28 +49,20 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
       {
         key: "properties",
         href: "/portfolio",
-        label: "Portfolio",
+        label: "Properties",
         labelKey: "navigation.properties",
         icon: Building2,
         roles: ["owner", "tenant"],
         mobilePrimary: true,
       },
       {
-        key: "buildings",
-        href: "/buildings",
-        label: "Buildings",
-        labelKey: "navigation.buildings",
-        icon: Building2,
-        roles: ["owner"],
-        hidden: true,
-      },
-      {
         key: "tenants",
         href: "/people",
-        label: "People",
+        label: "Tenants",
         labelKey: "navigation.tenants",
         icon: Users,
         roles: ["owner"],
+        mobilePrimary: true,
       },
       {
         key: "maintenance",
@@ -88,15 +83,6 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         mobilePrimary: true,
       },
       {
-        key: "documents",
-        href: "/documents",
-        label: "Documents",
-        labelKey: "navigation.documents",
-        icon: FileBox,
-        roles: ["owner", "tenant"],
-        mobilePrimary: true,
-      },
-      {
         key: "leases",
         href: "/leases",
         label: "Leases",
@@ -107,7 +93,8 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
     ],
   },
   {
-    group: "Insights",
+    group: "Intelligence",
+    groupLabelKey: "navigation.intelligenceGroup",
     items: [
       {
         key: "analytics",
@@ -126,11 +113,33 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         roles: ["owner"],
       },
       {
+        key: "documents",
+        href: "/documents",
+        label: "Documents",
+        labelKey: "navigation.documents",
+        icon: FileBox,
+        roles: ["owner", "tenant"],
+      },
+      {
         key: "correspondence",
         href: "/correspondence",
         label: "Correspondence",
         labelKey: "navigation.correspondence",
         icon: Mail,
+        roles: ["owner"],
+      },
+    ],
+  },
+  {
+    group: "System",
+    groupLabelKey: "navigation.systemGroup",
+    items: [
+      {
+        key: "settings",
+        href: "/settings",
+        label: "Settings",
+        labelKey: "navigation.settings",
+        icon: Settings,
         roles: ["owner"],
       },
     ],

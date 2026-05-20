@@ -109,7 +109,7 @@ const emptyStateConfig: Record<
     icon: Receipt,
     title: "No payments recorded",
     description:
-      "Start recording rent payments to track your revenue and generate financial reports automatically.",
+      "Start recording rent payments to track your revenue and generate financial reports automatically. Go to a lease to record the first payment.",
     actionLabel: "Record Payment",
     gradient: "from-amber-500/20 to-orange-500/20",
     accentColor: "text-amber-400",
@@ -118,7 +118,7 @@ const emptyStateConfig: Record<
     icon: FileText,
     title: "No leases created",
     description:
-      "Create lease agreements to formalize tenant relationships and automate renewal reminders.",
+      "Create lease agreements to formalise tenant relationships and automate renewal reminders. Start by adding a property and a tenant first.",
     actionLabel: "Create Lease",
     gradient: "from-violet-500/20 to-purple-500/20",
     accentColor: "text-violet-400",
@@ -169,7 +169,8 @@ const emptyStateConfig: Record<
   receipts: {
     icon: Receipt,
     title: "No receipts yet",
-    description: "Create payment receipts to keep a record of rent and other payments received.",
+    description:
+      "Create payment receipts to keep a record of rent and other payments received. Record a payment to generate receipts automatically.",
     actionLabel: "Create Receipt",
     gradient: "from-amber-500/20 to-orange-500/20",
     accentColor: "text-amber-400",

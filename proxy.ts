@@ -14,7 +14,7 @@ import { locales, defaultLocale } from "./lib/i18n/config";
 const DEMO_COOKIE_NAME = "proman_demo";
 
 /** Paths blocked during demo mode */
-const DEMO_BLOCKED_PATTERNS = ["/settings", "/api/user", "/api/debug"];
+const DEMO_BLOCKED_PATTERNS = ["/api/user", "/api/debug"];
 
 /**
  * Generate CSP nonce (Edge-compatible version)

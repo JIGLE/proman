@@ -4,8 +4,9 @@ import * as React from "react";
 import { useState, useCallback, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { Building2, ChevronLeft, ChevronRight, LogOut, Settings } from "lucide-react";
+import { Building2, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -109,7 +110,8 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
   const { data: session } = useSession();
   const pathname = usePathname();
   const { isDemoMode, demoPerspective } = useDemoMode();
-  const { navigation, isOwnerPortal } = usePortalAccess();
+  const { navigation } = usePortalAccess();
+  const t = useTranslations("navigation");
 
   useEffect(() => {
     try {
@@ -194,7 +196,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
             {!collapsed && (
               <div className="px-3 py-2">
                 <h3 className="text-[10px] font-semibold text-[var(--color-muted-foreground)] uppercase tracking-widest">
-                  {group.group}
+                  {t(group.groupLabelKey.replace("navigation.", "") as Parameters<typeof t>[0])}
                 </h3>
               </div>
             )}
@@ -207,6 +209,9 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                   (item.href !== "/dashboard" &&
                     pathname.startsWith(`/${currentLocale}${item.href}/`));
 
+                const translatedLabel = t(
+                  item.labelKey.replace("navigation.", "") as Parameters<typeof t>[0],
+                );
                 return (
                   <Link
                     key={item.key}
@@ -214,7 +219,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                     role="listitem"
                     onClick={() => onTabChange?.(item.key)}
                     aria-current={isActive ? "page" : undefined}
-                    title={collapsed ? item.label : undefined}
+                    title={collapsed ? translatedLabel : undefined}
                   >
                     <div
                       className={cn(
@@ -231,7 +236,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                           isActive && "text-[var(--color-primary)]",
                         )}
                       />
-                      {!collapsed && <span className="truncate">{item.label}</span>}
+                      {!collapsed && <span className="truncate">{translatedLabel}</span>}
                     </div>
                   </Link>
                 );
@@ -244,26 +249,6 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
           </div>
         ))}
       </nav>
-
-      {/* Settings Link (owner only) */}
-      {isOwnerPortal && (
-        <div className="flex-none border-t border-[var(--color-inner-border)] px-2 py-2">
-          <Link href={`/${currentLocale}/settings`} title={collapsed ? "Settings" : undefined}>
-            <div
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
-                collapsed && "justify-center px-2",
-                pathname === `/${currentLocale}/settings`
-                  ? "bg-[var(--color-sidebar-active)] text-[var(--color-primary)] ring-1 ring-[var(--color-primary)]/40"
-                  : "text-[var(--color-sidebar-text)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)]",
-              )}
-            >
-              <Settings className="h-[18px] w-[18px] shrink-0" />
-              {!collapsed && <span className="truncate">Settings</span>}
-            </div>
-          </Link>
-        </div>
-      )}
 
       {/* User Profile */}
       {session && (

@@ -1,6 +1,7 @@
 "use client";
 
 import { type ElementType, type ReactElement, useMemo, useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import {
@@ -9,13 +10,10 @@ import {
   BadgeEuro,
   Building2,
   CalendarClock,
-  CreditCard,
   FileText,
   Home,
   Mail,
   Phone,
-  Plus,
-  Receipt,
   ShieldCheck,
   Sparkles,
   UserRound,
@@ -85,10 +83,10 @@ function MetricCard({
   tone?: "default" | "danger" | "success" | "info";
 }) {
   const toneClasses = {
-    default: "border-white/10 bg-white/[0.03] text-zinc-100",
-    danger: "border-red-500/20 bg-red-500/10 text-red-50",
-    success: "border-emerald-500/20 bg-emerald-500/10 text-emerald-50",
-    info: "border-blue-500/20 bg-blue-500/10 text-blue-50",
+    default: "border-[var(--color-border)] bg-[var(--color-card)]",
+    danger: "border-[var(--color-destructive)]/20 bg-[var(--color-error-muted)]",
+    success: "border-[var(--color-success)]/20 bg-[var(--color-success-muted)]",
+    info: "border-[var(--color-info)]/20 bg-[var(--color-info-muted)]",
   };
 
   return (
@@ -96,43 +94,21 @@ function MetricCard({
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-sm text-zinc-400">{title}</p>
-            <p className="mt-2 text-3xl font-semibold tracking-tight text-zinc-50">{value}</p>
+            <p className="text-sm text-[var(--color-muted-foreground)]">{title}</p>
+            <p
+              className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-foreground)]"
+              aria-live="polite"
+            >
+              {value}
+            </p>
           </div>
-          <div className="rounded-2xl bg-black/20 p-3">
-            <Icon className="h-5 w-5 text-zinc-100" />
+          <div className="rounded-lg bg-[var(--color-surface-hover)] p-3">
+            <Icon className="h-5 w-5 text-[var(--color-foreground)]" />
           </div>
         </div>
-        <p className="mt-3 text-xs text-zinc-400">{subtitle}</p>
+        <p className="mt-3 text-xs text-[var(--color-muted-foreground)]">{subtitle}</p>
       </CardContent>
     </Card>
-  );
-}
-
-function ActionTile({
-  title,
-  subtitle,
-  icon: Icon,
-  onClick,
-}: {
-  title: string;
-  subtitle: string;
-  icon: ElementType;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex w-full items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-left transition hover:border-white/20 hover:bg-white/[0.07]"
-    >
-      <div className="rounded-xl bg-white/10 p-2">
-        <Icon className="h-4 w-4 text-zinc-100" />
-      </div>
-      <div className="min-w-0 flex-1">
-        <p className="font-medium text-zinc-50">{title}</p>
-        <p className="mt-1 text-sm text-zinc-400">{subtitle}</p>
-      </div>
-    </button>
   );
 }
 
@@ -146,13 +122,13 @@ function FeatureHighlightCard({
   description: string;
 }) {
   return (
-    <Card className="border border-white/10 bg-white/[0.02]">
+    <Card className="border border-[var(--color-border)] bg-[var(--color-card)]">
       <CardContent className="p-5">
-        <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10">
-          <Icon className="h-4 w-4 text-blue-400" />
+        <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-info-muted)]">
+          <Icon className="h-4 w-4 text-[var(--color-primary)]" />
         </div>
-        <h3 className="mb-1 text-sm font-semibold text-zinc-50">{title}</h3>
-        <p className="text-xs leading-5 text-zinc-400">{description}</p>
+        <h3 className="mb-1 text-sm font-semibold text-[var(--color-foreground)]">{title}</h3>
+        <p className="text-xs leading-5 text-[var(--color-muted-foreground)]">{description}</p>
       </CardContent>
     </Card>
   );
@@ -170,6 +146,7 @@ export function OverviewView({
   const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
+  const t = useTranslations("dashboard");
   const locale = pathname.split("/")[1] || "pt";
 
   const { properties = [], tenants = [], leases = [], receipts = [], loading } = state;
@@ -298,44 +275,44 @@ export function OverviewView({
     };
   }, [leases, properties, receipts, tenants, session]);
 
-  const firstName = session?.user?.name?.split(" ")[0] || "there";
+  const firstName = session?.user?.name?.split(" ")[0] || t("nameFallback");
 
   const onboardingSteps: OnboardingChecklistStep[] = [
     {
       id: "property",
-      label: "Add your first property",
-      description: "Start by adding a property — apartment, house, or commercial building.",
+      label: t("addPropertyLabel"),
+      description: t("addPropertyDesc"),
       completed: properties.length > 0,
       icon: Home,
       action: handleAddProperty,
-      actionLabel: "Add Property",
+      actionLabel: t("addPropertyAction"),
     },
     {
       id: "tenant",
-      label: "Add a tenant",
-      description: "Add tenant details and assign them to a property.",
+      label: t("addTenantLabel"),
+      description: t("addTenantDesc"),
       completed: tenants.length > 0,
       icon: UserRound,
       action: handleAddTenant,
-      actionLabel: "Add Tenant",
+      actionLabel: t("addTenantAction"),
     },
     {
       id: "lease",
-      label: "Create a lease",
-      description: "Define rent, dates, and terms for the tenancy.",
+      label: t("createLeaseLabel"),
+      description: t("createLeaseDesc"),
       completed: leases.length > 0,
       icon: FileText,
       action: handleAddLease,
-      actionLabel: "Create Lease",
+      actionLabel: t("createLeaseAction"),
     },
     {
       id: "payment",
-      label: "Record your first payment",
-      description: "Log your first rent payment to unlock revenue analytics.",
+      label: t("recordPaymentLabel"),
+      description: t("recordPaymentDesc"),
       completed: receipts.length > 0,
-      icon: Receipt,
+      icon: BadgeEuro,
       action: handleRecordPayment,
-      actionLabel: "Record Payment",
+      actionLabel: t("recordPaymentAction"),
     },
   ];
   const allStepsDone = onboardingSteps.every((s) => s.completed);
@@ -349,39 +326,39 @@ export function OverviewView({
     const richSteps: OnboardingChecklistStep[] = [
       {
         id: "property",
-        label: "Add your first property",
-        description: "Start with an apartment, house, or commercial unit.",
+        label: t("addPropertyLabel"),
+        description: t("addPropertyDesc2"),
         completed: false,
         icon: Home,
         action: handleAddProperty,
-        actionLabel: "Add Property",
+        actionLabel: t("addPropertyAction"),
       },
       {
         id: "tenant",
-        label: "Add a tenant",
-        description: "Add tenant details and assign them to a property.",
+        label: t("addTenantLabel"),
+        description: t("addTenantDesc"),
         completed: false,
         icon: UserRound,
         action: handleAddTenant,
-        actionLabel: "Add Tenant",
+        actionLabel: t("addTenantAction"),
       },
       {
         id: "lease",
-        label: "Create a lease",
-        description: "Define rent, dates, and terms for the tenancy.",
+        label: t("createLeaseLabel"),
+        description: t("createLeaseDesc"),
         completed: false,
         icon: FileText,
         action: handleAddLease,
-        actionLabel: "Create Lease",
+        actionLabel: t("createLeaseAction"),
       },
       {
         id: "payment",
-        label: "Record your first payment",
-        description: "Log your first rent payment to unlock revenue analytics.",
+        label: t("recordPaymentLabel"),
+        description: t("recordPaymentDesc"),
         completed: false,
-        icon: Receipt,
+        icon: BadgeEuro,
         action: handleRecordPayment,
-        actionLabel: "Record Payment",
+        actionLabel: t("recordPaymentAction"),
       },
     ];
     return (
@@ -390,18 +367,18 @@ export function OverviewView({
         <div className="grid gap-4 sm:grid-cols-3">
           <FeatureHighlightCard
             icon={Building2}
-            title="Properties"
-            description="Track units, addresses, rent amounts, and occupancy status in one place."
+            title={t("featPropertiesTitle")}
+            description={t("featPropertiesDesc")}
           />
           <FeatureHighlightCard
             icon={UserRound}
-            title="Tenants & Leases"
-            description="Manage tenant profiles, lease terms, and payment histories effortlessly."
+            title={t("featTenantsTitle")}
+            description={t("featTenantsDesc")}
           />
           <FeatureHighlightCard
             icon={BadgeEuro}
-            title="Financials"
-            description="Monitor income, overdue rent, and expenses with automatic summaries."
+            title={t("featFinancialsTitle")}
+            description={t("featFinancialsDesc")}
           />
         </div>
       </div>
@@ -412,117 +389,91 @@ export function OverviewView({
     return (
       <div className="space-y-6">
         {showChecklist && <OnboardingChecklist steps={onboardingSteps} />}
-        <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.25),_transparent_35%),radial-gradient(circle_at_bottom_right,_rgba(16,185,129,0.18),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
-          <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-            <div className="space-y-5">
-              <div className="inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-500/10 px-3 py-1 text-sm text-blue-200">
-                <Sparkles className="h-4 w-4" />
-                Daily operations for {firstName}
-              </div>
-              <div className="space-y-3">
-                <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-zinc-50 sm:text-4xl">
-                  Stay ahead of overdue rent, expiring leases, and receipt follow-up.
-                </h1>
-                <p className="max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">
-                  Your owner workspace highlights what needs attention first, keeps cash flow
-                  visible, and gives you direct paths into payments, tenants, and portfolio
-                  activity.
-                </p>
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                <ActionTile
-                  title="Add property"
-                  subtitle="Expand the portfolio with a new unit."
-                  icon={Plus}
-                  onClick={handleAddProperty}
-                />
-                <ActionTile
-                  title="Add tenant"
-                  subtitle="Assign a resident and start the lease flow."
-                  icon={UserRound}
-                  onClick={handleAddTenant}
-                />
-                <ActionTile
-                  title="Record payment"
-                  subtitle="Issue the payment record and prepare the receipt."
-                  icon={Receipt}
-                  onClick={handleRecordPayment}
-                />
-              </div>
+        <section className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
+          <div className="mb-6 space-y-3">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary)]/20 bg-[var(--color-info-muted)] px-3 py-1 text-sm text-[var(--color-primary)]">
+              <Sparkles className="h-4 w-4" />
+              {t("dailyOps", { firstName })}
             </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <MetricCard
-                title="Overdue rent"
-                value={formatCurrency(dashboardData.overdueRent)}
-                subtitle={`${dashboardData.overdueQueue.length} tenant${dashboardData.overdueQueue.length === 1 ? "" : "s"} need follow-up`}
-                icon={AlertTriangle}
-                tone="danger"
-              />
-              <MetricCard
-                title="Collected this month"
-                value={formatCurrency(dashboardData.monthlyIncome)}
-                subtitle="Paid rent already posted this month"
-                icon={BadgeEuro}
-                tone="success"
-              />
-              <MetricCard
-                title="Occupancy"
-                value={`${dashboardData.occupancyRate.toFixed(0)}%`}
-                subtitle={`${properties.length} properties currently tracked`}
-                icon={Building2}
-                tone="info"
-              />
-              <MetricCard
-                title="Receipts pending"
-                value={`${dashboardData.pendingReceipts}`}
-                subtitle="Records still waiting for review or output"
-                icon={FileText}
-              />
-            </div>
+            <h1 className="max-w-2xl text-2xl font-semibold tracking-tight text-[var(--color-foreground)]">
+              {t("ownerTitle")}
+            </h1>
+            <p className="max-w-2xl text-sm leading-6 text-[var(--color-muted-foreground)]">
+              {t("ownerSubtitle")}
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <MetricCard
+              title={t("overdueRentMetric")}
+              value={formatCurrency(dashboardData.overdueRent)}
+              subtitle={t("tenantsFollowUp", { count: dashboardData.overdueQueue.length })}
+              icon={AlertTriangle}
+              tone="danger"
+            />
+            <MetricCard
+              title={t("collectedThisMonth")}
+              value={formatCurrency(dashboardData.monthlyIncome)}
+              subtitle={t("paidRentPosted")}
+              icon={BadgeEuro}
+              tone="success"
+            />
+            <MetricCard
+              title={t("occupancyMetric")}
+              value={`${dashboardData.occupancyRate.toFixed(0)}%`}
+              subtitle={t("propertiesTracked", { count: properties.length })}
+              icon={Building2}
+              tone="info"
+            />
           </div>
         </section>
 
         <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
-          <Card className="border-white/10 bg-zinc-950/70">
+          <Card className="border-[var(--color-border)] bg-[var(--color-card)]">
             <CardHeader className="flex flex-row items-center justify-between gap-4">
               <div>
-                <CardTitle>Action queue</CardTitle>
-                <p className="mt-1 text-sm text-zinc-400">
-                  Prioritize collection and contract tasks before they become problems.
+                <CardTitle>{t("actionQueue")}</CardTitle>
+                <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                  {t("actionQueueSubtitle")}
                 </p>
               </div>
               <Button variant="outline" size="sm" onClick={handleRecordPayment}>
-                Open payments
+                {t("openPayments")}
               </Button>
             </CardHeader>
             <CardContent className="grid gap-6 lg:grid-cols-2">
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-zinc-100">Overdue rent</h3>
+                  <h3 className="text-sm font-semibold text-[var(--color-foreground)]">
+                    {t("overdueRentMetric")}
+                  </h3>
                   <Badge variant="destructive">{dashboardData.overdueQueue.length}</Badge>
                 </div>
                 {dashboardData.overdueQueue.length === 0 ? (
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">
-                    No overdue payments today.
+                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-4 text-sm text-[var(--color-muted-foreground)]">
+                    {t("noOverduePayments")}
                   </div>
                 ) : (
                   dashboardData.overdueQueue.map((item) => (
                     <div
                       key={item.id}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-4"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-medium text-zinc-50">{item.tenantName}</p>
-                          <p className="text-sm text-zinc-400">{item.propertyName}</p>
+                          <p className="font-medium text-[var(--color-foreground)]">
+                            {item.tenantName}
+                          </p>
+                          <p className="text-sm text-[var(--color-muted-foreground)]">
+                            {item.propertyName}
+                          </p>
                         </div>
                         <div className="text-right">
-                          <p className="font-semibold text-zinc-50">
+                          <p className="font-semibold text-[var(--color-foreground)]">
                             {formatCurrency(item.amountDue)}
                           </p>
-                          <p className="text-xs text-red-300">Due {formatDate(item.dueDate)}</p>
+                          <p className="text-xs text-red-300">
+                            {t("dueDateLabel", { date: formatDate(item.dueDate) })}
+                          </p>
                         </div>
                       </div>
                       <div className="mt-4 flex gap-2">
@@ -530,10 +481,10 @@ export function OverviewView({
                           size="sm"
                           onClick={() => navigate(`/financials?tab=receipts&tenantId=${item.id}`)}
                         >
-                          Review payment
+                          {t("reviewPayment")}
                         </Button>
                         <Button variant="outline" size="sm" onClick={handleAddLease}>
-                          Review lease
+                          {t("reviewLease")}
                         </Button>
                       </div>
                     </div>
@@ -543,27 +494,33 @@ export function OverviewView({
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-zinc-100">Lease follow-up</h3>
+                  <h3 className="text-sm font-semibold text-[var(--color-foreground)]">
+                    {t("leaseFollowUp")}
+                  </h3>
                   <Badge variant="secondary">{dashboardData.expiringLeases.length}</Badge>
                 </div>
                 {dashboardData.expiringLeases.length === 0 ? (
-                  <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">
-                    No active leases need review right now.
+                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-4 text-sm text-[var(--color-muted-foreground)]">
+                    {t("noLeasesNeedReview")}
                   </div>
                 ) : (
                   dashboardData.expiringLeases.map((lease) => (
                     <div
                       key={lease.id}
-                      className="rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                      className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-4"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="font-medium text-zinc-50">{lease.propertyName}</p>
-                          <p className="text-sm text-zinc-400">{lease.tenantName}</p>
+                          <p className="font-medium text-[var(--color-foreground)]">
+                            {lease.propertyName}
+                          </p>
+                          <p className="text-sm text-[var(--color-muted-foreground)]">
+                            {lease.tenantName}
+                          </p>
                         </div>
                         <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1 text-xs font-medium text-amber-200">
                           <CalendarClock className="h-3.5 w-3.5" />
-                          Ends {formatDate(lease.endDate)}
+                          {t("endsDate", { date: formatDate(lease.endDate) })}
                         </div>
                       </div>
                     </div>
@@ -574,12 +531,12 @@ export function OverviewView({
           </Card>
 
           <div className="space-y-4">
-            <Card className="border-white/10 bg-zinc-950/70">
+            <Card className="border-[var(--color-border)] bg-[var(--color-card)]">
               <CardHeader className="flex flex-row items-center justify-between gap-4">
                 <div>
-                  <CardTitle>Recent payments</CardTitle>
-                  <p className="mt-1 text-sm text-zinc-400">
-                    Latest payment activity across the portfolio.
+                  <CardTitle>{t("recentPayments")}</CardTitle>
+                  <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                    {t("latestPaymentActivity")}
                   </p>
                 </div>
                 <Button
@@ -587,28 +544,36 @@ export function OverviewView({
                   size="sm"
                   onClick={() => navigate("/financials?tab=receipts")}
                 >
-                  See all
+                  {t("seeAll")}
                   <ArrowRight className="ml-1 h-4 w-4" />
                 </Button>
               </CardHeader>
               <CardContent className="space-y-3">
                 {dashboardData.recentPayments.length === 0 ? (
-                  <p className="text-sm text-zinc-400">No payments recorded yet.</p>
+                  <p className="text-sm text-[var(--color-muted-foreground)]">
+                    {t("noPaymentsRecorded")}
+                  </p>
                 ) : (
                   dashboardData.recentPayments.map((receipt) => (
                     <div
                       key={receipt.id}
-                      className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                      className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-4"
                     >
                       <div>
-                        <p className="font-medium text-zinc-50">{receipt.tenantName}</p>
-                        <p className="text-sm text-zinc-400">{receipt.propertyName}</p>
+                        <p className="font-medium text-[var(--color-foreground)]">
+                          {receipt.tenantName}
+                        </p>
+                        <p className="text-sm text-[var(--color-muted-foreground)]">
+                          {receipt.propertyName}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-zinc-50">
+                        <p className="font-semibold text-[var(--color-foreground)]">
                           {formatCurrency(receipt.amount)}
                         </p>
-                        <p className="text-xs text-zinc-400">{formatDate(receipt.date)}</p>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">
+                          {formatDate(receipt.date)}
+                        </p>
                       </div>
                     </div>
                   ))
@@ -616,30 +581,36 @@ export function OverviewView({
               </CardContent>
             </Card>
 
-            <Card className="border-white/10 bg-zinc-950/70">
+            <Card className="border-[var(--color-border)] bg-[var(--color-card)]">
               <CardHeader>
-                <CardTitle>Owner highlights</CardTitle>
-                <p className="mt-1 text-sm text-zinc-400">
-                  Keep rent, leases, and receipt output moving without leaving the dashboard.
+                <CardTitle>{t("thisWeekActivity")}</CardTitle>
+                <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                  {t("thisWeekActivitySubtitle")}
                 </p>
               </CardHeader>
               <CardContent className="grid gap-3">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-sm text-zinc-400">Tracked tenants</p>
-                  <p className="mt-1 text-xl font-semibold text-zinc-50">{tenants.length}</p>
+                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-4">
+                  <p className="text-sm text-[var(--color-muted-foreground)]">
+                    {t("trackedTenants")}
+                  </p>
+                  <p className="mt-1 text-xl font-semibold text-[var(--color-foreground)]">
+                    {tenants.length}
+                  </p>
                 </div>
-                <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-                  <p className="text-sm text-zinc-400">Active leases</p>
-                  <p className="mt-1 text-xl font-semibold text-zinc-50">
+                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-4">
+                  <p className="text-sm text-[var(--color-muted-foreground)]">
+                    {t("activeLeasesCount")}
+                  </p>
+                  <p className="mt-1 text-xl font-semibold text-[var(--color-foreground)]">
                     {leases.filter((lease) => lease.status === "active").length}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button variant="outline" onClick={() => navigate("/portfolio")}>
-                    Open portfolio
+                    {t("openPortfolio")}
                   </Button>
                   <Button variant="outline" onClick={() => navigate("/documents")}>
-                    Open documents
+                    {t("openDocuments")}
                   </Button>
                 </div>
               </CardContent>
@@ -665,158 +636,139 @@ export function OverviewView({
 
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.25),_transparent_40%),radial-gradient(circle_at_bottom_right,_rgba(168,85,247,0.18),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
-        <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-          <div className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-sm text-zinc-200">
-              <ShieldCheck className="h-4 w-4" />
-              Tenant workspace
-            </div>
-            <div className="space-y-3">
-              <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-zinc-50 sm:text-4xl">
-                Keep your lease, payments, and shared documents in one calm place.
-              </h1>
-              <p className="max-w-2xl text-sm leading-6 text-zinc-300 sm:text-base">
-                Review the next rent amount, confirm your lease details, and open the latest
-                receipts without digging through owner-focused tools.
-              </p>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <ActionTile
-                title="Review payments"
-                subtitle="Open your payment history and receipts."
-                icon={CreditCard}
-                onClick={() => navigate("/financials")}
-              />
-              <ActionTile
-                title="Open documents"
-                subtitle="Download your latest lease and receipts."
-                icon={FileText}
-                onClick={() => navigate("/documents")}
-              />
-              <ActionTile
-                title="View lease"
-                subtitle="Check term, rent, and renewal details."
-                icon={Receipt}
-                onClick={() => navigate("/leases")}
-              />
-            </div>
+      <section className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
+        <div className="mb-6 space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-3 py-1 text-sm text-[var(--color-muted-foreground)]">
+            <ShieldCheck className="h-4 w-4" />
+            {t("tenantWorkspaceLabel")}
           </div>
+          <h1 className="max-w-2xl text-2xl font-semibold tracking-tight text-[var(--color-foreground)]">
+            {t("tenantTitle")}
+          </h1>
+          <p className="max-w-2xl text-sm leading-6 text-[var(--color-muted-foreground)]">
+            {t("tenantSubtitle")}
+          </p>
+        </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <MetricCard
-              title="Next rent"
-              value={formatCurrency(nextRent)}
-              subtitle={
-                dashboardData.nextPaymentDate
-                  ? `Upcoming payment target for ${formatDate(dashboardData.nextPaymentDate.toISOString())}`
-                  : "No active lease"
-              }
-              icon={BadgeEuro}
-              tone="info"
-            />
-            <MetricCard
-              title="Receipts available"
-              value={`${paidReceipts.length}`}
-              subtitle="Paid records you can review or download"
-              icon={FileText}
-              tone="success"
-            />
-            <Card className={cn("border shadow-sm", statusTone)}>
-              <CardContent className="p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm text-zinc-300">Payment status</p>
-                    <p className="mt-2 text-3xl font-semibold capitalize tracking-tight text-zinc-50">
-                      {paymentStatus}
-                    </p>
-                  </div>
-                  <div className="rounded-2xl bg-black/20 p-3">
-                    <AlertTriangle className="h-5 w-5 text-zinc-100" />
-                  </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <MetricCard
+            title={t("nextRent")}
+            value={formatCurrency(nextRent)}
+            subtitle={
+              dashboardData.nextPaymentDate
+                ? t("dueDateLabel", {
+                    date: formatDate(dashboardData.nextPaymentDate.toISOString()),
+                  })
+                : t("noActiveLease")
+            }
+            icon={BadgeEuro}
+            tone="info"
+          />
+          <Card className={cn("border shadow-sm", statusTone)}>
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm opacity-80">{t("paymentStatusLabel")}</p>
+                  <p className="mt-2 text-3xl font-semibold capitalize tracking-tight">
+                    {paymentStatus}
+                  </p>
                 </div>
-                <p className="mt-3 text-xs text-zinc-300">
-                  {paymentStatus === "paid"
-                    ? "Your latest rent record is marked as received."
-                    : paymentStatus === "overdue"
-                      ? "A payment needs attention. Review your receipts or contact the owner."
-                      : "Your next payment is pending. Review your recent payment history."}
-                </p>
-              </CardContent>
-            </Card>
-            <MetricCard
-              title="Lease ends"
-              value={activeLease ? formatDate(activeLease.endDate) : "—"}
-              subtitle="Current contract end date"
-              icon={CalendarClock}
-            />
-          </div>
+                <div className="rounded-lg bg-black/10 p-3">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+              </div>
+              <p className="mt-3 text-xs opacity-80">
+                {paymentStatus === "paid"
+                  ? t("paymentStatusPaid")
+                  : paymentStatus === "overdue"
+                    ? t("paymentStatusOverdue")
+                    : t("paymentStatusPending")}
+              </p>
+            </CardContent>
+          </Card>
+          <MetricCard
+            title={t("leaseEnds")}
+            value={activeLease ? formatDate(activeLease.endDate) : "—"}
+            subtitle={t("leaseEndsSubtitle")}
+            icon={CalendarClock}
+          />
         </div>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card className="border-white/10 bg-zinc-950/70">
+        <Card className="border-[var(--color-border)] bg-[var(--color-card)]">
           <CardHeader>
-            <CardTitle>My lease</CardTitle>
-            <p className="mt-1 text-sm text-zinc-400">
-              Everything you need about your current home and agreement.
+            <CardTitle>{t("myLease")}</CardTitle>
+            <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+              {t("myLeaseSubtitle")}
             </p>
           </CardHeader>
           <CardContent className="grid gap-4 lg:grid-cols-2">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-5">
               <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-white/10 p-3">
-                  <Home className="h-5 w-5 text-zinc-100" />
+                <div className="rounded-lg bg-[var(--color-secondary)] p-3">
+                  <Home className="h-5 w-5 text-[var(--color-foreground)]" />
                 </div>
                 <div>
-                  <p className="font-medium text-zinc-50">{home?.name ?? "Your property"}</p>
-                  <p className="text-sm text-zinc-400">
-                    {home?.address ?? "Address not available"}
+                  <p className="font-medium text-[var(--color-foreground)]">
+                    {home?.name ?? t("yourProperty")}
+                  </p>
+                  <p className="text-sm text-[var(--color-muted-foreground)]">
+                    {home?.address ?? t("addressUnavailable")}
                   </p>
                 </div>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-zinc-500">Monthly rent</p>
-                  <p className="mt-1 text-lg font-semibold text-zinc-50">
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-muted-foreground)]">
+                    {t("monthlyRentLabel")}
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-[var(--color-foreground)]">
                     {formatCurrency(nextRent)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-zinc-500">Lease status</p>
-                  <p className="mt-1 text-lg font-semibold capitalize text-zinc-50">
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-muted-foreground)]">
+                    {t("leaseStatusLabel")}
+                  </p>
+                  <p className="mt-1 text-lg font-semibold capitalize text-[var(--color-foreground)]">
                     {activeLease?.status ?? "Active"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-zinc-500">Start date</p>
-                  <p className="mt-1 text-sm font-medium text-zinc-200">
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-muted-foreground)]">
+                    {t("startDateLabel")}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-[var(--color-foreground)]">
                     {formatDate(activeLease?.startDate)}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs uppercase tracking-wide text-zinc-500">End date</p>
-                  <p className="mt-1 text-sm font-medium text-zinc-200">
+                  <p className="text-xs uppercase tracking-wide text-[var(--color-muted-foreground)]">
+                    {t("endDateLabel")}
+                  </p>
+                  <p className="mt-1 text-sm font-medium text-[var(--color-foreground)]">
                     {formatDate(activeLease?.endDate)}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-zinc-50">What you can do now</p>
-                  <p className="text-sm text-zinc-400">
-                    Open the main tenant tasks directly from here.
+                  <p className="font-medium text-[var(--color-foreground)]">
+                    {t("whatYouCanDoNow")}
+                  </p>
+                  <p className="text-sm text-[var(--color-muted-foreground)]">
+                    {t("whatYouCanDoNowSubtitle")}
                   </p>
                 </div>
-                <Sparkles className="h-5 w-5 text-blue-300" />
+                <Sparkles className="h-5 w-5 text-[var(--color-primary)]" />
               </div>
               <div className="mt-4 grid gap-3">
                 <Button onClick={() => navigate("/financials")} className="justify-between">
-                  Payment history
+                  {t("paymentHistory")}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
@@ -824,7 +776,7 @@ export function OverviewView({
                   onClick={() => navigate("/documents")}
                   className="justify-between"
                 >
-                  Shared documents
+                  {t("sharedDocuments")}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
                 <Button
@@ -832,7 +784,7 @@ export function OverviewView({
                   onClick={() => navigate("/portfolio")}
                   className="justify-between"
                 >
-                  Property overview
+                  {t("propertyOverview")}
                   <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
@@ -840,51 +792,63 @@ export function OverviewView({
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-zinc-950/70">
+        <Card className="border-[var(--color-border)] bg-[var(--color-card)]">
           <CardHeader className="flex flex-row items-center justify-between gap-4">
             <div>
-              <CardTitle>Recent receipts</CardTitle>
-              <p className="mt-1 text-sm text-zinc-400">
-                Latest payment confirmations linked to your lease.
+              <CardTitle>{t("recentReceipts")}</CardTitle>
+              <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                {t("recentReceiptsSubtitle")}
               </p>
             </div>
             <Button variant="ghost" size="sm" onClick={() => navigate("/financials")}>
-              Open all
+              {t("openAll")}
               <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </CardHeader>
           <CardContent className="space-y-3">
             {paidReceipts.length === 0 ? (
-              <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4 text-sm text-zinc-400">
-                No receipts are available yet.
+              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-4 text-sm text-[var(--color-muted-foreground)]">
+                {t("noReceiptsYet")}
               </div>
             ) : (
               paidReceipts.slice(0, 4).map((receipt) => (
                 <div
                   key={receipt.id}
-                  className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-4"
+                  className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-4"
                 >
                   <div>
-                    <p className="font-medium text-zinc-50">{receipt.propertyName}</p>
-                    <p className="text-sm text-zinc-400">{formatDate(receipt.date)}</p>
+                    <p className="font-medium text-[var(--color-foreground)]">
+                      {receipt.propertyName}
+                    </p>
+                    <p className="text-sm text-[var(--color-muted-foreground)]">
+                      {formatDate(receipt.date)}
+                    </p>
                   </div>
                   <div className="text-right">
-                    <p className="font-semibold text-zinc-50">{formatCurrency(receipt.amount)}</p>
-                    <p className="text-xs capitalize text-zinc-400">{receipt.type}</p>
+                    <p className="font-semibold text-[var(--color-foreground)]">
+                      {formatCurrency(receipt.amount)}
+                    </p>
+                    <p className="text-xs capitalize text-[var(--color-muted-foreground)]">
+                      {receipt.type}
+                    </p>
                   </div>
                 </div>
               ))
             )}
 
-            <div className="rounded-2xl border border-blue-500/20 bg-blue-500/10 p-4">
-              <p className="text-sm font-medium text-blue-100">Need help?</p>
+            <div className="rounded-lg border border-[var(--color-info-muted)] bg-[var(--color-info-muted)] p-4">
+              <p className="text-sm font-medium text-[var(--color-primary)]">{t("needHelp")}</p>
               {ownerContact ? (
                 <div className="mt-2 space-y-2">
-                  <p className="text-sm text-blue-200/80">Contact your property owner:</p>
-                  <p className="text-sm font-medium text-blue-100">{ownerContact.name}</p>
+                  <p className="text-sm text-[var(--color-muted-foreground)]">
+                    {t("contactOwnerLabel")}
+                  </p>
+                  <p className="text-sm font-medium text-[var(--color-foreground)]">
+                    {ownerContact.name}
+                  </p>
                   <a
                     href={`mailto:${ownerContact.email}`}
-                    className="flex items-center gap-2 text-sm text-blue-300 hover:text-blue-100 transition-colors"
+                    className="flex items-center gap-2 text-sm text-[var(--color-primary)] hover:text-[var(--color-foreground)] transition-colors"
                   >
                     <Mail className="h-3.5 w-3.5 shrink-0" />
                     {ownerContact.email}
@@ -892,7 +856,7 @@ export function OverviewView({
                   {ownerContact.phone && (
                     <a
                       href={`tel:${ownerContact.phone}`}
-                      className="flex items-center gap-2 text-sm text-blue-300 hover:text-blue-100 transition-colors"
+                      className="flex items-center gap-2 text-sm text-[var(--color-primary)] hover:text-[var(--color-foreground)] transition-colors"
                     >
                       <Phone className="h-3.5 w-3.5 shrink-0" />
                       {ownerContact.phone}
@@ -900,9 +864,8 @@ export function OverviewView({
                   )}
                 </div>
               ) : (
-                <p className="mt-1 text-sm text-blue-200/80">
-                  Use your lease and receipt history as the source of truth before contacting the
-                  owner.
+                <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+                  {t("useLeaseHistory")}
                 </p>
               )}
             </div>

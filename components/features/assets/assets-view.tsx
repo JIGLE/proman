@@ -7,16 +7,12 @@ import {
   Building2,
   CreditCard,
   FileText,
-  MapPin,
   Plus,
   Receipt,
   ShieldCheck,
   Sparkles,
 } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { PropertiesView, PropertiesViewRef } from "@/components/features/property/property-list";
-import { BuildingsView } from "@/components/features/property/buildings-view";
 import { ExportButton, ExportColumn } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 import { Button } from "@/components/ui/button";
@@ -25,10 +21,34 @@ import { Badge } from "@/components/ui/badge";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { getActiveLease } from "@/lib/utils/lease-helpers";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-function StatCard({ label, value, detail }: { label: string; value: string; detail: string }) {
+function TenantStatCard({
+  label,
+  value,
+  detail,
+}: {
+  label: string;
+  value: string;
+  detail: string;
+}) {
   return (
-    <Card className="border-white/10 bg-zinc-950/70">
+    <Card>
       <CardContent className="p-4">
         <div className="text-sm text-muted-foreground">{label}</div>
         <div className="mt-1 text-2xl font-semibold text-[var(--color-foreground)]">{value}</div>
@@ -38,19 +58,8 @@ function StatCard({ label, value, detail }: { label: string; value: string; deta
   );
 }
 
-function TabBadge({ count }: { count: number }) {
-  if (count === 0) return null;
-  return (
-    <span className="ml-1.5 rounded-full bg-amber-500/20 px-1.5 py-0.5 text-[10px] font-semibold leading-none text-amber-300">
-      {count}
-    </span>
-  );
-}
-
 export function AssetsView(): React.ReactElement {
-  const [activeTab, setActiveTab] = useTabPersistence("assets", "properties");
-  const [highlightedPropertyId, setHighlightedPropertyId] = useState<string | null>(null);
-  const { state } = useApp();
+  const { state, addBuilding } = useApp();
   const { isOwnerPortal } = usePortalAccess();
   const { formatCurrency } = useCurrency();
   const router = useRouter();
@@ -60,12 +69,35 @@ export function AssetsView(): React.ReactElement {
   const propertiesViewRef = useRef<PropertiesViewRef>(null);
   const t = useTranslations("portfolio");
 
-  const handleLocateOnMap = (propertyId: string) => {
-    setHighlightedPropertyId(propertyId);
-    setActiveTab("map");
+  // Add-building dialog state
+  const [buildingDialogOpen, setBuildingDialogOpen] = useState(false);
+  const [buildingForm, setBuildingForm] = useState({
+    name: "",
+    address: "",
+    city: "",
+    country: "PT",
+  });
+  const [buildingSubmitting, setBuildingSubmitting] = useState(false);
+
+  const handleAddBuilding = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!buildingForm.name.trim()) return;
+    setBuildingSubmitting(true);
+    try {
+      await addBuilding({
+        name: buildingForm.name.trim(),
+        address: buildingForm.address.trim(),
+        city: buildingForm.city.trim(),
+        country: buildingForm.country,
+      });
+      setBuildingDialogOpen(false);
+      setBuildingForm({ name: "", address: "", city: "", country: "PT" });
+    } finally {
+      setBuildingSubmitting(false);
+    }
   };
 
-  const propertyColumns = [
+  const propertyColumns: ExportColumn[] = [
     { key: "name", label: "Name" },
     { key: "address", label: "Address" },
     { key: "type", label: "Type" },
@@ -75,34 +107,11 @@ export function AssetsView(): React.ReactElement {
     { key: "rent", label: "Rent" },
   ];
 
-  const exportConfig =
-    activeTab === "properties"
-      ? ({ data: properties, columns: propertyColumns } satisfies {
-          data: unknown[];
-          columns: ExportColumn[];
-        })
-      : ({ data: [], columns: [] } satisfies { data: unknown[]; columns: ExportColumn[] });
-
-  const occupiedCount = properties.filter((property) => property.status === "occupied").length;
+  const occupiedCount = properties.filter((p) => p.status === "occupied").length;
   const occupancyRate = properties.length
     ? Math.round((occupiedCount / properties.length) * 100)
     : 0;
-  const monthlyRunRate = properties.reduce((sum, property) => sum + (property.rent || 0), 0);
-  const mappedCount = properties.filter(
-    (property) => typeof property.latitude === "number" && typeof property.longitude === "number",
-  ).length;
-  const expiringLeasesCount = useMemo(() => {
-    const now = new Date();
-    const inThirtyDays = new Date();
-    inThirtyDays.setDate(inThirtyDays.getDate() + 30);
-
-    return leases.filter((lease) => {
-      if (lease.status !== "active") return false;
-      const endDate = new Date(lease.endDate);
-      return endDate >= now && endDate <= inThirtyDays;
-    }).length;
-  }, [leases]);
-  const missingCoordinatesCount = Math.max(properties.length - mappedCount, 0);
+  const monthlyRunRate = properties.reduce((sum, p) => sum + (p.rent || 0), 0);
 
   const tenantHome = useMemo(() => {
     const tenant = tenants[0];
@@ -110,66 +119,24 @@ export function AssetsView(): React.ReactElement {
     const property = properties.find(
       (item) => item.id === (activeLease?.propertyId ?? tenant?.propertyId),
     );
-    const paidReceipts = receipts.filter((receipt) => receipt.status === "paid");
-
+    const paidReceipts = receipts.filter((r) => r.status === "paid");
     return { tenant, activeLease, property, paidReceipts };
   }, [leases, properties, receipts, tenants]);
 
-  return (
-    <div className="space-y-6">
-      {isOwnerPortal ? (
-        <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.2),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
-          <div className="flex flex-col gap-5 xl:flex-row xl:items-center xl:justify-between">
-            <div className="flex flex-wrap items-center gap-3">
-              <Building2 className="h-7 w-7 shrink-0 text-zinc-400" />
-              <h1 className="text-2xl font-semibold tracking-tight text-zinc-50">{t("title")}</h1>
-              <Badge variant="outline" className="border-blue-500/20 bg-blue-500/10 text-blue-200">
-                {t("badge")}
-              </Badge>
-              <div className="flex flex-wrap gap-2 xl:ml-4">
-                <Button onClick={() => propertiesViewRef.current?.openDialog()} className="gap-2">
-                  <Plus className="h-4 w-4" />
-                  {t("addProperty")}
-                </Button>
-                <Button variant="outline" onClick={() => setActiveTab("map")} className="gap-2">
-                  <MapPin className="h-4 w-4" />
-                  {t("openMap")}
-                </Button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 xl:w-[480px]">
-              <StatCard
-                label={t("stats.trackedUnits")}
-                value={`${properties.length}`}
-                detail={t("stats.occupied", { count: occupiedCount })}
-              />
-              <StatCard
-                label={t("stats.occupancy")}
-                value={`${occupancyRate}%`}
-                detail={t("stats.vacancySlots", {
-                  count: Math.max(properties.length - occupiedCount, 0),
-                })}
-              />
-              <StatCard
-                label={t("stats.runRate")}
-                value={formatCurrency(monthlyRunRate)}
-                detail={t("stats.onMap", { mapped: mappedCount, total: properties.length || 0 })}
-              />
-            </div>
-          </div>
-        </section>
-      ) : (
-        <section className="overflow-hidden rounded-[28px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.18),_transparent_35%),linear-gradient(180deg,rgba(24,24,27,0.98),rgba(9,9,11,1))] p-6 shadow-2xl shadow-black/20">
+  if (!isOwnerPortal) {
+    // ── Tenant view ─────────────────────────────────────────────────────────────
+    return (
+      <div className="space-y-6">
+        <section className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
           <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
             <div className="space-y-4">
               <Badge
                 variant="outline"
-                className="w-fit border-blue-500/20 bg-blue-500/10 text-blue-200"
+                className="w-fit border-[var(--color-primary)]/20 bg-[var(--color-info-muted)] text-[var(--color-primary)]"
               >
                 {t("tenant.badge")}
               </Badge>
-              <h1 className="flex items-center gap-2 text-3xl font-semibold tracking-tight text-zinc-50">
+              <h1 className="flex items-center gap-2 text-2xl font-semibold tracking-tight text-[var(--color-foreground)]">
                 <Building2 className="h-8 w-8" />
                 {tenantHome.property?.name ?? t("tenant.myHome")}
               </h1>
@@ -190,7 +157,7 @@ export function AssetsView(): React.ReactElement {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
-              <StatCard
+              <TenantStatCard
                 label={t("tenant.monthlyRent")}
                 value={formatCurrency(
                   tenantHome.activeLease?.monthlyRent ?? tenantHome.property?.rent ?? 0,
@@ -201,20 +168,22 @@ export function AssetsView(): React.ReactElement {
                     : t("tenant.noLease")
                 }
               />
-              <StatCard
+              <TenantStatCard
                 label={t("tenant.receipts")}
                 value={`${tenantHome.paidReceipts.length}`}
                 detail={t("tenant.paidRecords")}
               />
-              <Card className="border-white/10 bg-zinc-950/70 md:col-span-2">
+              <Card className="md:col-span-2">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-4">
                     <div>
                       <div className="flex items-center gap-2">
-                        <ShieldCheck className="h-5 w-5 text-blue-300" />
-                        <p className="font-medium text-zinc-50">{t("tenant.homeSummary")}</p>
+                        <ShieldCheck className="h-5 w-5 text-[var(--color-primary)]" />
+                        <p className="font-medium text-[var(--color-foreground)]">
+                          {t("tenant.homeSummary")}
+                        </p>
                       </div>
-                      <p className="mt-2 text-sm text-zinc-400">
+                      <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
                         {tenantHome.property?.address ?? t("tenant.addressUnavailable")}
                       </p>
                     </div>
@@ -222,8 +191,8 @@ export function AssetsView(): React.ReactElement {
                       {tenantHome.property?.status ?? "active"}
                     </Badge>
                   </div>
-                  <div className="mt-4 flex items-center gap-2 text-sm text-zinc-400">
-                    <Sparkles className="h-4 w-4 text-blue-300" />
+                  <div className="mt-4 flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
+                    <Sparkles className="h-4 w-4 text-[var(--color-primary)]" />
                     {tenantHome.property?.latitude && tenantHome.property?.longitude
                       ? t("tenant.mapAvailable")
                       : t("tenant.mapUnavailable")}
@@ -233,65 +202,134 @@ export function AssetsView(): React.ReactElement {
             </div>
           </div>
         </section>
-      )}
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <div className="flex items-center gap-2">
-          <TabsList
-            className={`grid w-full ${isOwnerPortal ? "max-w-lg grid-cols-3" : "max-w-md grid-cols-2"}`}
-          >
-            <TabsTrigger value="properties" className="flex items-center gap-2">
-              <Building2 className="h-4 w-4" />
-              <span className="hidden sm:inline">
-                {isOwnerPortal ? t("tabs.portfolioList") : t("tabs.homeDetails")}
-              </span>
-              {isOwnerPortal && <TabBadge count={expiringLeasesCount} />}
-            </TabsTrigger>
-            <TabsTrigger value="map" className="flex items-center gap-2">
-              <MapPin className="h-4 w-4" />
-              <span className="hidden sm:inline">{t("tabs.map")}</span>
-              {isOwnerPortal && <TabBadge count={missingCoordinatesCount} />}
-            </TabsTrigger>
-            {isOwnerPortal && (
-              <TabsTrigger value="buildings" className="flex items-center gap-2">
-                <Building2 className="h-4 w-4" />
-                <span className="hidden sm:inline">{t("tabs.buildings")}</span>
-              </TabsTrigger>
+        <PropertiesView ref={propertiesViewRef} density="compact" showPageHeader={false} />
+      </div>
+    );
+  }
+
+  // ── Owner portal view ──────────────────────────────────────────────────────────
+  return (
+    <div className="space-y-5">
+      {/* Compact page header */}
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight text-[var(--color-foreground)]">
+            {t("title")}
+          </h1>
+          <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
+            {properties.length} {t("stats.trackedUnits").toLowerCase()}
+            {properties.length > 0 && (
+              <>
+                {" · "}
+                {occupiedCount} occupied ({occupancyRate}%)
+                {" · "}
+                <span className="font-medium text-[var(--color-foreground)]">
+                  {formatCurrency(monthlyRunRate)}/mo
+                </span>
+              </>
             )}
-          </TabsList>
-          <ExportButton
-            data={exportConfig.data}
-            filename={`${activeTab}-export`}
-            columns={exportConfig.columns}
-          />
+          </p>
         </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setBuildingDialogOpen(true)}
+            className="gap-2"
+          >
+            <Building2 className="h-4 w-4" />
+            Add building
+          </Button>
+          <ExportButton data={properties} filename="properties-export" columns={propertyColumns} />
+          <Button onClick={() => propertiesViewRef.current?.openDialog()} className="gap-2">
+            <Plus className="h-4 w-4" />
+            {t("addProperty")}
+          </Button>
+        </div>
+      </div>
 
-        <TabsContent value="map" className="mt-0">
-          <PropertiesView
-            ref={propertiesViewRef}
-            viewMode="map"
-            density="compact"
-            showPageHeader={false}
-            highlightedPropertyId={highlightedPropertyId ?? undefined}
-          />
-        </TabsContent>
+      {/* Properties list — handles list, table and map view internally */}
+      <PropertiesView
+        ref={propertiesViewRef}
+        density="compact"
+        showPageHeader={false}
+        showMapToggle
+      />
 
-        <TabsContent value="properties" className="mt-0">
-          <PropertiesView
-            ref={propertiesViewRef}
-            viewMode="list"
-            density="compact"
-            showPageHeader={false}
-            onLocateOnMap={handleLocateOnMap}
-          />
-        </TabsContent>
-
-        {isOwnerPortal && (
-          <TabsContent value="buildings" className="mt-0">
-            <BuildingsView />
-          </TabsContent>
-        )}
-      </Tabs>
+      {/* Add Building dialog */}
+      <Dialog open={buildingDialogOpen} onOpenChange={setBuildingDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Building</DialogTitle>
+            <DialogDescription>
+              Create a building to group related properties together.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleAddBuilding} className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label htmlFor="building-name">Building Name *</Label>
+              <Input
+                id="building-name"
+                placeholder="e.g. Riverside Apartments"
+                value={buildingForm.name}
+                onChange={(e) => setBuildingForm((f) => ({ ...f, name: e.target.value }))}
+                required
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor="building-city">City</Label>
+                <Input
+                  id="building-city"
+                  value={buildingForm.city}
+                  onChange={(e) => setBuildingForm((f) => ({ ...f, city: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="building-country">Country</Label>
+                <Select
+                  value={buildingForm.country}
+                  onValueChange={(v) => setBuildingForm((f) => ({ ...f, country: v }))}
+                >
+                  <SelectTrigger id="building-country">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PT">Portugal</SelectItem>
+                    <SelectItem value="ES">Spain</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="building-address">Address</Label>
+              <Input
+                id="building-address"
+                value={buildingForm.address}
+                onChange={(e) => setBuildingForm((f) => ({ ...f, address: e.target.value }))}
+              />
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setBuildingDialogOpen(false)}
+                disabled={buildingSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                loading={buildingSubmitting}
+                disabled={!buildingForm.name.trim()}
+              >
+                Create Building
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

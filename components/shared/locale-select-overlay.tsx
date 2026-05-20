@@ -46,6 +46,8 @@ export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }
     if (selecting) return;
     setSelecting(code);
     localStorage.setItem(STORAGE_KEY, code);
+    // Keep the locale cookie in sync so root redirects respect the choice
+    document.cookie = `proman-locale=${code}; Path=/; Max-Age=31536000; SameSite=Lax`;
     // Animate out, then navigate
     setTimeout(() => {
       setVisible(false);

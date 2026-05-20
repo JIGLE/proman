@@ -8,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
 import { useDemoMode } from "@/lib/contexts/demo-context";
 
@@ -24,6 +25,7 @@ export function MobileBottomNav({
   const pathname = usePathname();
   const { mobilePrimaryNavigation, isOwnerPortal } = usePortalAccess();
   const { isDemoMode } = useDemoMode();
+  const tNav = useTranslations("navigation");
   const user = session?.user;
   const initials =
     user?.name
@@ -36,7 +38,7 @@ export function MobileBottomNav({
   const currentLocale = pathname.split("/")[1] || "pt";
   const primaryNavItems = mobilePrimaryNavigation.map((item) => ({
     id: item.key,
-    label: item.label,
+    label: tNav(item.labelKey.replace("navigation.", "") as Parameters<typeof tNav>[0]),
     icon: item.icon,
     href: item.href,
   }));
@@ -116,7 +118,7 @@ export function MobileBottomNav({
               </div>
               <div className="flex items-center gap-1">
                 <LanguageSelector compact />
-                {isOwnerPortal && !isDemoMode && (
+                {isOwnerPortal && (
                   <Link
                     href={`/${currentLocale}/settings`}
                     className="inline-flex items-center justify-center h-8 w-8 rounded-md text-[var(--color-muted-foreground)] hover:bg-[var(--color-hover)] hover:text-[var(--color-foreground)]"
@@ -163,15 +165,20 @@ export function MobileHeader({
   return (
     <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-[var(--color-background)]/95 backdrop-blur border-b border-[var(--color-border)] md:hidden">
       <div className="flex items-center gap-3">
-        <Building2 className="h-6 w-6 text-accent-primary" />
+        <Building2 className="h-6 w-6 text-accent-primary" aria-hidden="true" />
         <h1 className="text-lg font-semibold text-[var(--color-foreground)]">{title}</h1>
       </div>
       {onMenuClick && (
         <button
           onClick={onMenuClick}
-          className="p-2 rounded-lg text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-hover)] transition-colors active:scale-95 touch-manipulation"
+          className="p-2.5 rounded-lg text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-hover)] transition-colors active:scale-95 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
+          aria-label={showMenu ? "Close menu" : "Open menu"}
         >
-          {showMenu ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          {showMenu ? (
+            <X className="h-5 w-5" aria-hidden="true" />
+          ) : (
+            <Menu className="h-5 w-5" aria-hidden="true" />
+          )}
         </button>
       )}
     </header>

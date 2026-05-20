@@ -181,6 +181,15 @@ export default async function LandingPage({ params }: Props) {
 
             <LandingHeroItem>
               <p className="text-sm text-zinc-300">{t("microcopy")}</p>
+              <p className="text-sm text-zinc-400 mt-2">
+                {t("tenantPortalNote")}{" "}
+                <a
+                  href="/tenant-portal"
+                  className="underline underline-offset-4 text-zinc-300 hover:text-zinc-50 transition-colors"
+                >
+                  {t("tenantPortalLink")} →
+                </a>
+              </p>
             </LandingHeroItem>
 
             <LandingHeroItem>

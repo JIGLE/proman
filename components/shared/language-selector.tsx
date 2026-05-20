@@ -42,6 +42,10 @@ export function LanguageSelector({ compact = false, className }: LanguageSelecto
 
   const switchLocale = (newLocale: Locale) => {
     if (newLocale === currentLocale) return;
+    // Persist preference in a cookie so root redirects and demo mode respect it
+    if (typeof document !== "undefined") {
+      document.cookie = `proman-locale=${newLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    }
     // Replace the locale segment in the URL
     const newSegments = [...segments];
     newSegments[1] = newLocale;

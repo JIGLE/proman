@@ -1,7 +1,16 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import { Plus, AlertCircle, Clock, CheckCircle, XCircle, MoreVertical, User } from "lucide-react";
+import {
+  Plus,
+  AlertCircle,
+  Clock,
+  CheckCircle,
+  XCircle,
+  MoreVertical,
+  User,
+  AlertTriangle,
+} from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
 import {
@@ -173,6 +182,16 @@ export function MaintenanceView(): React.ReactElement {
     return { total, count: open.length, withCost };
   }, [filteredTickets]);
 
+  const statusCounts = useMemo(
+    () => ({
+      open: maintenance.filter((t) => t.status === "open").length,
+      inProgress: maintenance.filter((t) => t.status === "in_progress").length,
+      resolved: maintenance.filter((t) => t.status === "resolved").length,
+      urgent: maintenance.filter((t) => t.priority === "urgent").length,
+    }),
+    [maintenance],
+  );
+
   const handleEdit = (ticket: MaintenanceTicket) => {
     dialog.openEditDialog(ticket, (t) => ({
       propertyId: t.propertyId,
@@ -227,11 +246,11 @@ export function MaintenanceView(): React.ReactElement {
       case "medium":
         return "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20";
       case "high":
-        return "bg-orange-900/20 text-orange-400 border-orange-900";
+        return "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20";
       case "urgent":
         return "bg-[var(--color-error-muted)] text-[var(--color-error)] border-[var(--color-error)]/20";
       default:
-        return "bg-zinc-800 text-zinc-400";
+        return "bg-[var(--color-secondary)] text-[var(--color-muted-foreground)]";
     }
   };
 
@@ -244,7 +263,7 @@ export function MaintenanceView(): React.ReactElement {
       case "resolved":
         return <CheckCircle className="w-4 h-4 text-green-500" />;
       case "closed":
-        return <XCircle className="w-4 h-4 text-zinc-500" />;
+        return <XCircle className="w-4 h-4 text-[var(--color-muted-foreground)]" />;
     }
   };
 
@@ -283,7 +302,7 @@ export function MaintenanceView(): React.ReactElement {
                   New Ticket
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-zinc-900 border-zinc-800 sm:max-w-[600px]">
+              <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                   <DialogTitle>
                     {dialog.editingItem ? "Edit Maintenance Ticket" : "Create Maintenance Ticket"}
@@ -483,6 +502,48 @@ export function MaintenanceView(): React.ReactElement {
             </Dialog>
           </PageHeader>
 
+          {/* Status strip */}
+          {maintenance.length > 0 && (
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3">
+                <AlertCircle className="h-4 w-4 shrink-0 text-[var(--color-info)]" />
+                <div>
+                  <p className="text-xs text-[var(--color-muted-foreground)]">Open</p>
+                  <p className="text-lg font-semibold text-[var(--color-foreground)]">
+                    {statusCounts.open}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3">
+                <Clock className="h-4 w-4 shrink-0 text-[var(--color-warning)]" />
+                <div>
+                  <p className="text-xs text-[var(--color-muted-foreground)]">In Progress</p>
+                  <p className="text-lg font-semibold text-[var(--color-foreground)]">
+                    {statusCounts.inProgress}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3">
+                <CheckCircle className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
+                <div>
+                  <p className="text-xs text-[var(--color-muted-foreground)]">Resolved</p>
+                  <p className="text-lg font-semibold text-[var(--color-foreground)]">
+                    {statusCounts.resolved}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 rounded-lg border border-[var(--color-destructive)]/20 bg-[var(--color-error-muted)] px-4 py-3">
+                <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--color-destructive)]" />
+                <div>
+                  <p className="text-xs text-[var(--color-muted-foreground)]">Urgent</p>
+                  <p className="text-lg font-semibold text-[var(--color-destructive)]">
+                    {statusCounts.urgent}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Search and Filter */}
           <SearchFilter
             searchPlaceholder="Search by title, description, or assignee..."
@@ -529,7 +590,7 @@ export function MaintenanceView(): React.ReactElement {
                   "rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors",
                   categoryFilter === cat
                     ? "border-accent-primary bg-accent-primary/10 text-accent-primary"
-                    : "border-zinc-700 bg-transparent text-zinc-400 hover:border-zinc-500",
+                    : "border-[var(--color-border)] bg-transparent text-[var(--color-muted-foreground)] hover:border-[var(--color-foreground)]/50",
                 )}
               >
                 {cat === "all" ? "All categories" : cat}
@@ -539,22 +600,25 @@ export function MaintenanceView(): React.ReactElement {
 
           {/* Cost summary bar */}
           {costSummary.count > 0 && (
-            <div className="flex items-center gap-6 rounded-lg border border-zinc-800 bg-zinc-900/50 px-4 py-2.5 text-sm">
-              <span className="text-zinc-400">
-                <span className="font-medium text-zinc-200">{costSummary.count}</span> open ticket
+            <div className="flex items-center gap-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-4 py-2.5 text-sm">
+              <span className="text-[var(--color-muted-foreground)]">
+                <span className="font-medium text-[var(--color-foreground)]">
+                  {costSummary.count}
+                </span>{" "}
+                open ticket
                 {costSummary.count !== 1 ? "s" : ""}
               </span>
               {costSummary.withCost > 0 && (
                 <>
-                  <span className="text-zinc-700">|</span>
-                  <span className="text-zinc-400">
+                  <span className="text-[var(--color-border)]">|</span>
+                  <span className="text-[var(--color-muted-foreground)]">
                     Est. cost:{" "}
-                    <span className="font-medium text-zinc-200">
+                    <span className="font-medium text-[var(--color-foreground)]">
                       {formatCurrency(costSummary.total)}
                     </span>
                   </span>
                   {costSummary.withCost < costSummary.count && (
-                    <span className="text-zinc-500 text-xs">
+                    <span className="text-[var(--color-muted-foreground)] text-xs">
                       ({costSummary.count - costSummary.withCost} without estimate)
                     </span>
                   )}
@@ -579,11 +643,11 @@ export function MaintenanceView(): React.ReactElement {
                 onAction={maintenance.length === 0 ? dialog.openDialog : undefined}
               />
             ) : (
-              <div className="rounded-lg border border-zinc-800 bg-zinc-900">
+              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
                 <Table>
                   <TableHeader>
-                    <TableRow className="border-zinc-800 hover:bg-transparent">
-                      <TableHead className="text-zinc-400">
+                    <TableRow className="border-[var(--color-border)] hover:bg-transparent">
+                      <TableHead className="text-[var(--color-muted-foreground)]">
                         <SortableHeader
                           sortKey="title"
                           label="Title"
@@ -591,8 +655,10 @@ export function MaintenanceView(): React.ReactElement {
                           onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
                         />
                       </TableHead>
-                      <TableHead className="text-zinc-400">Property</TableHead>
-                      <TableHead className="text-zinc-400">
+                      <TableHead className="text-[var(--color-muted-foreground)]">
+                        Property
+                      </TableHead>
+                      <TableHead className="text-[var(--color-muted-foreground)]">
                         <SortableHeader
                           sortKey="priority"
                           label="Priority"
@@ -600,7 +666,7 @@ export function MaintenanceView(): React.ReactElement {
                           onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
                         />
                       </TableHead>
-                      <TableHead className="text-zinc-400">
+                      <TableHead className="text-[var(--color-muted-foreground)]">
                         <SortableHeader
                           sortKey="status"
                           label="Status"
@@ -608,26 +674,30 @@ export function MaintenanceView(): React.ReactElement {
                           onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
                         />
                       </TableHead>
-                      <TableHead className="text-zinc-400">Created</TableHead>
-                      <TableHead className="text-zinc-400">Vendor</TableHead>
-                      <TableHead className="text-zinc-400">Scheduled</TableHead>
-                      <TableHead className="text-zinc-400 w-10"></TableHead>
+                      <TableHead className="text-[var(--color-muted-foreground)]">
+                        Created
+                      </TableHead>
+                      <TableHead className="text-[var(--color-muted-foreground)]">Vendor</TableHead>
+                      <TableHead className="text-[var(--color-muted-foreground)]">
+                        Scheduled
+                      </TableHead>
+                      <TableHead className="text-[var(--color-muted-foreground)] w-10"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {sortedTickets.map((ticket) => (
                       <TableRow
                         key={ticket.id}
-                        className="border-zinc-800 hover:bg-zinc-800/50 cursor-pointer"
+                        className="border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] cursor-pointer"
                         onClick={() => {
                           setSelectedTicket(ticket);
                           setIsDetailOpen(true);
                         }}
                       >
-                        <TableCell className="text-sm font-medium text-zinc-100">
+                        <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
                           {ticket.title}
                         </TableCell>
-                        <TableCell className="text-sm text-zinc-400">
+                        <TableCell className="text-sm text-[var(--color-muted-foreground)]">
                           {ticket.propertyName || "Unknown"}
                         </TableCell>
                         <TableCell>
@@ -639,12 +709,12 @@ export function MaintenanceView(): React.ReactElement {
                           </Badge>
                         </TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2 text-sm text-zinc-400">
+                          <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
                             {getStatusIcon(ticket.status)}
                             <span className="capitalize">{ticket.status.replace("_", " ")}</span>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-zinc-400">
+                        <TableCell className="text-sm text-[var(--color-muted-foreground)]">
                           <div className="flex items-center gap-1">
                             {ticket.isTenantReport && (
                               <User className="h-3.5 w-3.5 text-blue-400" />
@@ -652,10 +722,10 @@ export function MaintenanceView(): React.ReactElement {
                             {new Date(ticket.createdAt).toLocaleDateString()}
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm text-zinc-400">
+                        <TableCell className="text-sm text-[var(--color-muted-foreground)]">
                           {ticket.vendorName || ticket.assignedTo || "—"}
                         </TableCell>
-                        <TableCell className="text-sm text-zinc-400">
+                        <TableCell className="text-sm text-[var(--color-muted-foreground)]">
                           {ticket.scheduledDate
                             ? new Date(ticket.scheduledDate).toLocaleDateString()
                             : "—"}
@@ -667,18 +737,15 @@ export function MaintenanceView(): React.ReactElement {
                                 <MoreVertical className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              align="end"
-                              className="bg-zinc-900 border-zinc-800"
-                            >
+                            <DropdownMenuContent align="end" className="">
                               <DropdownMenuItem
-                                className="text-zinc-300 focus:bg-zinc-800 cursor-pointer"
+                                className="focus:bg-[var(--color-surface-hover)] cursor-pointer"
                                 onClick={() => handleEdit(ticket)}
                               >
                                 Edit Details
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-zinc-300 focus:bg-zinc-800 cursor-pointer p-0"
+                                className="focus:bg-[var(--color-surface-hover)] cursor-pointer p-0"
                                 onSelect={(e) => e.preventDefault()}
                               >
                                 <Select
@@ -687,7 +754,7 @@ export function MaintenanceView(): React.ReactElement {
                                     handleUpdateStatus(ticket, value as MaintenanceStatus)
                                   }
                                 >
-                                  <SelectTrigger className="border-0 bg-transparent h-auto px-2 py-1.5 text-zinc-300 shadow-none focus:ring-0">
+                                  <SelectTrigger className="border-0 bg-transparent h-auto px-2 py-1.5 text-[var(--color-foreground)] shadow-none focus:ring-0">
                                     <SelectValue placeholder="Update Status" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -699,7 +766,7 @@ export function MaintenanceView(): React.ReactElement {
                                 </Select>
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-red-400 focus:bg-zinc-800 cursor-pointer"
+                                className="text-[var(--color-destructive)] focus:bg-[var(--color-surface-hover)] cursor-pointer"
                                 onClick={() => handleDelete(ticket)}
                               >
                                 Delete
@@ -717,7 +784,7 @@ export function MaintenanceView(): React.ReactElement {
             <>
               {/* Sortable Column Headers */}
               {filteredTickets.length > 0 && (
-                <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
+                <div className="flex items-center gap-4 px-4 py-2 bg-[var(--color-surface-hover)] rounded-lg border border-[var(--color-border)]">
                   <div className="flex-1">
                     <SortableHeader
                       sortKey="title"
@@ -771,7 +838,7 @@ export function MaintenanceView(): React.ReactElement {
                   sortedTickets.map((ticket) => (
                     <Card
                       key={ticket.id}
-                      className="bg-zinc-900 border-zinc-800 cursor-pointer hover:border-zinc-600 transition-colors"
+                      className="cursor-pointer hover:border-[var(--color-foreground)]/30 transition-colors"
                       onClick={() => {
                         setSelectedTicket(ticket);
                         setIsDetailOpen(true);
@@ -800,18 +867,15 @@ export function MaintenanceView(): React.ReactElement {
                                 <MoreVertical className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent
-                              align="end"
-                              className="bg-zinc-900 border-zinc-800"
-                            >
+                            <DropdownMenuContent align="end" className="">
                               <DropdownMenuItem
-                                className="text-zinc-300 focus:bg-zinc-800 cursor-pointer"
+                                className="focus:bg-[var(--color-surface-hover)] cursor-pointer"
                                 onClick={() => handleEdit(ticket)}
                               >
                                 Edit Details
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-zinc-300 focus:bg-zinc-800 cursor-pointer p-0"
+                                className="focus:bg-[var(--color-surface-hover)] cursor-pointer p-0"
                                 onSelect={(e) => e.preventDefault()}
                               >
                                 <Select
@@ -820,7 +884,7 @@ export function MaintenanceView(): React.ReactElement {
                                     handleUpdateStatus(ticket, value as MaintenanceStatus)
                                   }
                                 >
-                                  <SelectTrigger className="border-0 bg-transparent h-auto px-2 py-1.5 text-zinc-300 shadow-none focus:ring-0">
+                                  <SelectTrigger className="border-0 bg-transparent h-auto px-2 py-1.5 text-[var(--color-foreground)] shadow-none focus:ring-0">
                                     <SelectValue placeholder="Update Status" />
                                   </SelectTrigger>
                                   <SelectContent>
@@ -832,7 +896,7 @@ export function MaintenanceView(): React.ReactElement {
                                 </Select>
                               </DropdownMenuItem>
                               <DropdownMenuItem
-                                className="text-red-400 focus:bg-zinc-800 cursor-pointer"
+                                className="text-[var(--color-destructive)] focus:bg-[var(--color-surface-hover)] cursor-pointer"
                                 onClick={() => handleDelete(ticket)}
                               >
                                 Delete
@@ -840,7 +904,7 @@ export function MaintenanceView(): React.ReactElement {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                        <CardTitle className="text-lg font-semibold text-zinc-50 line-clamp-1">
+                        <CardTitle className="text-lg font-semibold text-[var(--color-foreground)] line-clamp-1">
                           {ticket.title}
                         </CardTitle>
                         <CardDescription className="line-clamp-1">
@@ -848,22 +912,22 @@ export function MaintenanceView(): React.ReactElement {
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="pb-3">
-                        <p className="text-sm text-zinc-400 line-clamp-3 mb-4">
+                        <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-3 mb-4">
                           {ticket.description}
                         </p>
                         <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2 text-zinc-400">
+                          <div className="flex items-center gap-2 text-[var(--color-muted-foreground)]">
                             {getStatusIcon(ticket.status)}
                             <span className="capitalize">{ticket.status.replace("_", " ")}</span>
                           </div>
                           {(ticket.estimatedCost ?? ticket.cost) != null && (
-                            <span className="font-medium text-zinc-300">
+                            <span className="font-medium text-[var(--color-foreground)]">
                               {formatCurrency((ticket.estimatedCost ?? ticket.cost)!)}
                             </span>
                           )}
                         </div>
                       </CardContent>
-                      <CardFooter className="pt-3 border-t border-zinc-800 text-xs text-zinc-500 flex justify-between">
+                      <CardFooter className="pt-3 border-t border-[var(--color-border)] text-xs text-[var(--color-muted-foreground)] flex justify-between">
                         <span>Created {new Date(ticket.createdAt).toLocaleDateString()}</span>
                         {(ticket.vendorName || ticket.assignedTo) && (
                           <span>Vendor: {ticket.vendorName || ticket.assignedTo}</span>

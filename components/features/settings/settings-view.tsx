@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/lib/contexts/toast-context";
 
 interface UserSettings {
@@ -215,289 +216,320 @@ export function SettingsView(): React.ReactElement {
         )}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Appearance */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sun className="h-5 w-5" />
-              Appearance
-            </CardTitle>
-            <CardDescription>Customize how the app looks</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Theme</Label>
-              <div className="flex gap-2">
-                {[
-                  { value: "light", icon: Sun, label: "Light" },
-                  { value: "dark", icon: Moon, label: "Dark" },
-                  { value: "system", icon: Monitor, label: "System" },
-                ].map((option) => (
-                  <Button
-                    key={option.value}
-                    variant={settings.theme === option.value ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => updateSetting("theme", option.value as UserSettings["theme"])}
-                    className="flex-1"
-                  >
-                    <option.icon className="h-4 w-4 mr-1" />
-                    {option.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
+      <Tabs defaultValue="account">
+        <TabsList className="w-full sm:w-auto">
+          <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="organization">Organization</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="system">System</TabsTrigger>
+          <TabsTrigger value="billing">Billing</TabsTrigger>
+        </TabsList>
 
-            <div className="space-y-2">
-              <Label>Language</Label>
-              <Select
-                value={settings.language}
-                onValueChange={(value) => updateSetting("language", value)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select language" />
-                </SelectTrigger>
-                <SelectContent>
-                  {languages.map((lang) => (
-                    <SelectItem key={lang.value} value={lang.value}>
-                      {lang.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Regional */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5" />
-              Regional
-            </CardTitle>
-            <CardDescription>Currency and tax settings</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Default Currency</Label>
-              <Select
-                value={settings.defaultCurrency}
-                onValueChange={(value) =>
-                  updateSetting("defaultCurrency", value as UserSettings["defaultCurrency"])
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select currency" />
-                </SelectTrigger>
-                <SelectContent>
-                  {currencies.map((currency) => (
-                    <SelectItem key={currency.value} value={currency.value}>
-                      {currency.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Default Tax Country</Label>
-              <Select
-                value={settings.defaultTaxCountry || ""}
-                onValueChange={(value) => updateSetting("defaultTaxCountry", value || null)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select country" />
-                </SelectTrigger>
-                <SelectContent>
-                  {countries.map((country) => (
-                    <SelectItem key={country.value} value={country.value}>
-                      {country.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Used for tax calculations on new properties
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Notifications */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Notifications
-            </CardTitle>
-            <CardDescription>Configure email notifications</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Email Notifications</Label>
-                <p className="text-xs text-muted-foreground">
-                  Receive email updates about your properties
+        {/* Account tab */}
+        <TabsContent value="account" className="mt-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Account Information
+              </CardTitle>
+              <CardDescription>Your personal account details</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-1">
+                <Label>Email</Label>
+                <p className="text-sm text-muted-foreground">
+                  {session?.user?.email || "Not available"}
                 </p>
               </div>
-              <Switch
-                checked={settings.emailNotifications}
-                onCheckedChange={(checked) => updateSetting("emailNotifications", checked)}
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Tax Year Reminders</Label>
-                <p className="text-xs text-muted-foreground">
-                  Get reminded in January to generate tax forms
-                </p>
+              <div className="space-y-1">
+                <Label>Name</Label>
+                <p className="text-sm text-muted-foreground">{session?.user?.name || "Not set"}</p>
               </div>
-              <Switch
-                checked={settings.taxReminderNotifications}
-                onCheckedChange={(checked) => updateSetting("taxReminderNotifications", checked)}
-              />
-            </div>
+              {appVersion && (
+                <div className="pt-4 border-t border-border">
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <Info className="h-3.5 w-3.5" />
+                    <span>ProMan v{appVersion}</span>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Income Distribution Alerts</Label>
-                <p className="text-xs text-muted-foreground">
-                  Notify when distributions are calculated
-                </p>
-              </div>
-              <Switch
-                checked={settings.distributionNotifications}
-                onCheckedChange={(checked) => updateSetting("distributionNotifications", checked)}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Account Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              Account
-            </CardTitle>
-            <CardDescription>Your account information</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Email</Label>
-              <p className="text-sm text-muted-foreground">
-                {session?.user?.email || "Not available"}
-              </p>
-            </div>
-            <div className="space-y-2">
-              <Label>Name</Label>
-              <p className="text-sm text-muted-foreground">{session?.user?.name || "Not set"}</p>
-            </div>
-            <div className="pt-2">
-              <p className="text-xs text-muted-foreground">Subscription management coming soon.</p>
-            </div>
-            {appVersion && (
-              <div className="pt-4 border-t border-border">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Info className="h-3.5 w-3.5" />
-                  <span>ProMan v{appVersion}</span>
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Sun className="h-5 w-5" />
+                Appearance
+              </CardTitle>
+              <CardDescription>Customize how the app looks and feels</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Theme</Label>
+                <div className="flex gap-2">
+                  {[
+                    { value: "light", icon: Sun, label: "Light" },
+                    { value: "dark", icon: Moon, label: "Dark" },
+                    { value: "system", icon: Monitor, label: "System" },
+                  ].map((option) => (
+                    <Button
+                      key={option.value}
+                      variant={settings.theme === option.value ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => updateSetting("theme", option.value as UserSettings["theme"])}
+                      className="flex-1"
+                    >
+                      <option.icon className="h-4 w-4 mr-1" />
+                      {option.label}
+                    </Button>
+                  ))}
                 </div>
               </div>
-            )}
-          </CardContent>
-        </Card>
-        {/* System Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Server className="h-5 w-5" />
-              System
-            </CardTitle>
-            <CardDescription>Server and database status</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {systemLoading ? (
-              <div className="flex items-center justify-center h-16">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+
+              <div className="space-y-2">
+                <Label>Language</Label>
+                <Select
+                  value={settings.language}
+                  onValueChange={(value) => updateSetting("language", value)}
+                >
+                  <SelectTrigger className="max-w-xs">
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {languages.map((lang) => (
+                      <SelectItem key={lang.value} value={lang.value}>
+                        {lang.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-            ) : systemInfo ? (
-              <>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Database className="h-4 w-4 text-muted-foreground" />
-                    <Label>Database</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-block h-2 w-2 rounded-full ${
-                        systemInfo.checks.database.status === "healthy"
-                          ? "bg-emerald-500"
-                          : systemInfo.checks.database.status === "mock"
-                            ? "bg-amber-500"
-                            : "bg-red-500"
-                      }`}
-                    />
-                    <span className="text-sm text-muted-foreground capitalize">
-                      {systemInfo.checks.database.status}
-                    </span>
-                    {systemInfo.checks.database.latency_ms > 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        ({systemInfo.checks.database.latency_ms}ms)
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Organization tab */}
+        <TabsContent value="organization" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Globe className="h-5 w-5" />
+                Regional Settings
+              </CardTitle>
+              <CardDescription>Currency and tax configuration for your portfolio</CardDescription>
+            </CardHeader>
+            <CardContent className="max-w-sm space-y-4">
+              <div className="space-y-2">
+                <Label>Default Currency</Label>
+                <Select
+                  value={settings.defaultCurrency}
+                  onValueChange={(value) =>
+                    updateSetting("defaultCurrency", value as UserSettings["defaultCurrency"])
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select currency" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {currencies.map((currency) => (
+                      <SelectItem key={currency.value} value={currency.value}>
+                        {currency.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Default Tax Country</Label>
+                <Select
+                  value={settings.defaultTaxCountry || ""}
+                  onValueChange={(value) => updateSetting("defaultTaxCountry", value || null)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {countries.map((country) => (
+                      <SelectItem key={country.value} value={country.value}>
+                        {country.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Used as the default for tax calculations on new properties
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Notifications tab */}
+        <TabsContent value="notifications" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Bell className="h-5 w-5" />
+                Email Notifications
+              </CardTitle>
+              <CardDescription>Choose which email alerts you receive</CardDescription>
+            </CardHeader>
+            <CardContent className="max-w-lg space-y-6">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>All Email Notifications</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Receive email updates about your properties
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.emailNotifications}
+                  onCheckedChange={(checked) => updateSetting("emailNotifications", checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Tax Year Reminders</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Get reminded in January to generate tax forms
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.taxReminderNotifications}
+                  onCheckedChange={(checked) => updateSetting("taxReminderNotifications", checked)}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Income Distribution Alerts</Label>
+                  <p className="text-xs text-muted-foreground">
+                    Notify when distributions are calculated
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.distributionNotifications}
+                  onCheckedChange={(checked) => updateSetting("distributionNotifications", checked)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* System tab */}
+        <TabsContent value="system" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Server className="h-5 w-5" />
+                System Status
+              </CardTitle>
+              <CardDescription>Server, database, and service health</CardDescription>
+            </CardHeader>
+            <CardContent className="max-w-lg space-y-4">
+              {systemLoading ? (
+                <div className="flex items-center justify-center h-16">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                </div>
+              ) : systemInfo ? (
+                <>
+                  <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
+                    <div className="flex items-center gap-2">
+                      <Database className="h-4 w-4 text-muted-foreground" />
+                      <Label>Database</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-block h-2 w-2 rounded-full ${
+                          systemInfo.checks.database.status === "healthy"
+                            ? "bg-[var(--color-success)]"
+                            : systemInfo.checks.database.status === "mock"
+                              ? "bg-amber-500"
+                              : "bg-[var(--color-destructive)]"
+                        }`}
+                      />
+                      <span className="text-sm text-muted-foreground capitalize">
+                        {systemInfo.checks.database.status}
                       </span>
-                    )}
+                      {systemInfo.checks.database.latency_ms > 0 && (
+                        <span className="text-xs text-muted-foreground">
+                          ({systemInfo.checks.database.latency_ms}ms)
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Activity className="h-4 w-4 text-muted-foreground" />
-                    <Label>Uptime</Label>
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    {Math.floor(systemInfo.uptime / 3600)}h{" "}
-                    {Math.floor((systemInfo.uptime % 3600) / 60)}m
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <HardDrive className="h-4 w-4 text-muted-foreground" />
-                    <Label>Environment</Label>
-                  </div>
-                  <span className="text-sm text-muted-foreground capitalize">
-                    {systemInfo.environment}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Bell className="h-4 w-4 text-muted-foreground" />
-                    <Label>Email Service</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span
-                      className={`inline-block h-2 w-2 rounded-full ${
-                        systemInfo.checks.email.status === "configured"
-                          ? "bg-emerald-500"
-                          : "bg-amber-500"
-                      }`}
-                    />
-                    <span className="text-sm text-muted-foreground capitalize">
-                      {systemInfo.checks.email.status}
+                  <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
+                    <div className="flex items-center gap-2">
+                      <Activity className="h-4 w-4 text-muted-foreground" />
+                      <Label>Uptime</Label>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {Math.floor(systemInfo.uptime / 3600)}h{" "}
+                      {Math.floor((systemInfo.uptime % 3600) / 60)}m
                     </span>
                   </div>
-                </div>
-                <div className="pt-2">
-                  <Button variant="outline" size="sm" onClick={fetchSystemInfo}>
-                    Refresh
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <p className="text-sm text-muted-foreground">Unable to fetch system information</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                  <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
+                    <div className="flex items-center gap-2">
+                      <HardDrive className="h-4 w-4 text-muted-foreground" />
+                      <Label>Environment</Label>
+                    </div>
+                    <span className="text-sm text-muted-foreground capitalize">
+                      {systemInfo.environment}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between py-2">
+                    <div className="flex items-center gap-2">
+                      <Bell className="h-4 w-4 text-muted-foreground" />
+                      <Label>Email Service</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`inline-block h-2 w-2 rounded-full ${
+                          systemInfo.checks.email.status === "configured"
+                            ? "bg-[var(--color-success)]"
+                            : "bg-amber-500"
+                        }`}
+                      />
+                      <span className="text-sm text-muted-foreground capitalize">
+                        {systemInfo.checks.email.status}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="pt-2">
+                    <Button variant="outline" size="sm" onClick={fetchSystemInfo}>
+                      Refresh
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">Unable to fetch system information</p>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Billing tab */}
+        <TabsContent value="billing" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Info className="h-5 w-5" />
+                Subscription &amp; Billing
+              </CardTitle>
+              <CardDescription>Manage your plan and payment details</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground">
+                Subscription management is coming soon. Contact support for billing questions.
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

@@ -17,7 +17,6 @@ import {
 import { LeaseCalendar } from "@/components/ui/lease-calendar";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { useApp } from "@/lib/contexts/app-context";
-import { useTranslations } from "next-intl";
 import { tokens, getPropertyTypeColor } from "@/lib/design-tokens";
 import {
   Building2,
@@ -82,7 +81,6 @@ export function AnalyticsDashboard(): React.ReactElement {
   const { state } = useApp();
   const { properties, tenants, receipts, leases, expenses } = state;
   const { formatCurrency } = useCurrency();
-  const t = useTranslations();
 
   // State for analytics data
   const [isLoading, setIsLoading] = React.useState(false);
@@ -355,13 +353,11 @@ export function AnalyticsDashboard(): React.ReactElement {
             <Home className="h-4 w-4" />
             <span>Proman</span>
             <span>/</span>
-            <span className="text-zinc-200">Analytics Dashboard</span>
+            <span className="text-zinc-200">Analytics</span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-zinc-50">
-            {t("navigation.dashboard")} Analytics
-          </h2>
+          <h2 className="text-2xl font-bold tracking-tight text-zinc-50">Portfolio analytics</h2>
           <p className="text-sm text-zinc-400 mt-1">
-            Comprehensive property management insights and KPIs
+            Track rent income, occupancy, and lease health across your properties.
           </p>
         </div>
 

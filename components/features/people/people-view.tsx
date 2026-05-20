@@ -70,10 +70,10 @@ export function PeopleView(): React.ReactElement {
           <div>
             <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-2">
               <Users className="h-8 w-8" />
-              People
+              Tenants
             </h1>
             <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-              Manage tenants, co-owners, and maintenance contacts from one workspace
+              Your tenants, property co-owners, and maintenance contacts.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -86,7 +86,7 @@ export function PeopleView(): React.ReactElement {
         </div>
 
         {/* People Statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Total Tenants</div>
             <div className="text-2xl font-bold text-[var(--color-foreground)]">
@@ -102,12 +102,6 @@ export function PeopleView(): React.ReactElement {
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Total Owners</div>
             <div className="text-2xl font-bold text-[var(--color-foreground)]">{owners.length}</div>
-          </div>
-          <div className="bg-zinc-900 border border-red-500/20 rounded-lg p-4 bg-red-500/5">
-            <div className="text-sm text-muted-foreground mb-1">Overdue Payments</div>
-            <div className="text-2xl font-bold text-red-400">
-              {tenants.filter((t) => t.paymentStatus === "overdue").length}
-            </div>
           </div>
         </div>
       </div>
@@ -125,14 +119,14 @@ export function PeopleView(): React.ReactElement {
             </TabsTrigger>
             <TabsTrigger value="owners" className="flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
-              <span>Owners</span>
+              <span>Co-owners</span>
               <span className="ml-1 rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs">
                 {owners.length}
               </span>
             </TabsTrigger>
             <TabsTrigger value="contacts" className="flex items-center gap-2">
               <Wrench className="h-4 w-4" />
-              <span>Contacts</span>
+              <span>Maintenance contacts</span>
             </TabsTrigger>
           </TabsList>
           {activeTab === "tenants" && (

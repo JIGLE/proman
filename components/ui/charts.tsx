@@ -18,6 +18,7 @@ interface ChartProps {
   showTrend?: boolean;
   showValues?: boolean;
   type?: "bar" | "line" | "pie" | "area";
+  ariaLabel?: string;
 }
 
 // Simple Bar Chart Component
@@ -29,13 +30,18 @@ export function BarChart({
   className,
   showTrend = false,
   showValues = true,
+  ariaLabel,
 }: ChartProps) {
   const maxValue = Math.max(...data.map((d) => d.value));
   const minValue = Math.min(...data.map((d) => d.value));
   const range = maxValue - minValue;
 
   return (
-    <div className={cn("space-y-4", className)}>
+    <div
+      className={cn("space-y-4", className)}
+      role="img"
+      aria-label={ariaLabel ?? title ?? "Bar chart"}
+    >
       {(title || subtitle) && (
         <div className="space-y-1">
           {title && (
@@ -70,9 +76,9 @@ export function BarChart({
                       )}
                     >
                       {item.trend > 0 ? (
-                        <TrendingUp className="h-3 w-3" />
+                        <TrendingUp className="h-3 w-3" aria-hidden="true" />
                       ) : (
-                        <TrendingDown className="h-3 w-3" />
+                        <TrendingDown className="h-3 w-3" aria-hidden="true" />
                       )}
                       {Math.abs(item.trend)}%
                     </div>
@@ -494,7 +500,7 @@ export function MetricCard({
       <div className="flex items-start justify-between mb-4">
         <div className="space-y-1">
           <p className="text-heading-small font-medium text-zinc-400">{title}</p>
-          <p className="text-display-medium font-bold text-zinc-50">
+          <p className="text-display-medium font-bold text-zinc-50" aria-live="polite">
             {typeof value === "number" ? value.toLocaleString() : value}
           </p>
         </div>
@@ -511,8 +517,8 @@ export function MetricCard({
                 change > 0 ? "text-green-400" : change < 0 ? "text-red-400" : "text-zinc-400",
               )}
             >
-              {change > 0 && <TrendingUp className="h-4 w-4" />}
-              {change < 0 && <TrendingDown className="h-4 w-4" />}
+              {change > 0 && <TrendingUp className="h-4 w-4" aria-hidden="true" />}
+              {change < 0 && <TrendingDown className="h-4 w-4" aria-hidden="true" />}
               {Math.abs(change)}%
             </div>
           )}

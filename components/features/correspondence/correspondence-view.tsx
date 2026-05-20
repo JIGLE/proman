@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { FileText, Plus, Edit, Trash2, Send } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,16 @@ import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 
 export type CorrespondenceViewProps = Record<string, never>;
 
+const TEMPLATE_VARIABLES = [
+  { key: "{{tenant_name}}", label: "Tenant name" },
+  { key: "{{property_name}}", label: "Property" },
+  { key: "{{property_address}}", label: "Address" },
+  { key: "{{rent_amount}}", label: "Rent amount" },
+  { key: "{{due_date}}", label: "Due date" },
+  { key: "{{lease_start}}", label: "Lease start" },
+  { key: "{{lease_end}}", label: "Lease end" },
+] as const;
+
 export function CorrespondenceView(): React.ReactElement {
   const { state, addTemplate, updateTemplate, deleteTemplate, addCorrespondence } = useApp();
   const { templates, correspondence: _correspondence, tenants, loading } = state;
@@ -54,6 +64,24 @@ export function CorrespondenceView(): React.ReactElement {
   const [isBatchOpen, setIsBatchOpen] = useState(false);
   const [selectedRecipientIds, setSelectedRecipientIds] = useState<string[]>([]);
   const [generatingBatch, setGeneratingBatch] = useState(false);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+
+  const insertVariable = (variable: string) => {
+    const textarea = contentRef.current;
+    const current = dialog.formData.content || "";
+    if (!textarea) {
+      dialog.updateFormData({ content: current + variable });
+      return;
+    }
+    const start = textarea.selectionStart ?? current.length;
+    const end = textarea.selectionEnd ?? current.length;
+    const newValue = current.substring(0, start) + variable + current.substring(end);
+    dialog.updateFormData({ content: newValue });
+    requestAnimationFrame(() => {
+      textarea.setSelectionRange(start + variable.length, start + variable.length);
+      textarea.focus();
+    });
+  };
 
   const initialFormData: TemplateFormData = {
     name: "",
@@ -268,7 +296,9 @@ export function CorrespondenceView(): React.ReactElement {
           <div className="flex justify-between items-center">
             <div>
               <h2 className="text-3xl font-bold tracking-tight text-zinc-50">Correspondence</h2>
-              <p className="text-zinc-400">Manage templates and send communications</p>
+              <p className="text-zinc-400">
+                Write notices, rent reminders, and lease renewals for your tenants.
+              </p>
             </div>
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogTrigger asChild>
@@ -283,7 +313,8 @@ export function CorrespondenceView(): React.ReactElement {
                     {dialog.editingItem ? "Edit Template" : "Create Template"}
                   </DialogTitle>
                   <DialogDescription>
-                    Create or edit correspondence templates with variable placeholders
+                    Create a reusable template. Use the placeholders below to insert tenant and
+                    property details automatically.
                   </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={dialog.handleSubmit} className="space-y-6">
@@ -351,20 +382,39 @@ export function CorrespondenceView(): React.ReactElement {
                     label="Email Content"
                     required
                     error={dialog.formErrors.content}
-                    hint="Use {{variable_name}} for dynamic content. Available: {{tenant_name}}, {{property_name}}, {{rent_amount}}, {{lease_start}}, {{lease_end}}"
-                    tooltip="Template content with variable placeholders"
+                    tooltip="Insert placeholders to personalise the message for each tenant"
                   >
-                    <EnhancedTextarea
-                      id="content"
-                      value={dialog.formData.content}
-                      onChange={(e) => dialog.updateFormData({ content: e.target.value })}
-                      rows={8}
-                      placeholder="Enter email content with {{variable}} placeholders..."
-                      maxLength={5000}
-                      showCharCount
-                      autoResize
-                      required
-                    />
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-xs text-zinc-400 mb-1.5">
+                          Click to insert a placeholder:
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {TEMPLATE_VARIABLES.map(({ key, label }) => (
+                            <button
+                              key={key}
+                              type="button"
+                              onClick={() => insertVariable(key)}
+                              className="inline-flex items-center rounded border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300 hover:bg-zinc-700 hover:text-zinc-50 transition-colors font-mono"
+                            >
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <EnhancedTextarea
+                        ref={contentRef}
+                        id="content"
+                        value={dialog.formData.content}
+                        onChange={(e) => dialog.updateFormData({ content: e.target.value })}
+                        rows={8}
+                        placeholder="Write your message here. Click the placeholders above to insert tenant or property details."
+                        maxLength={5000}
+                        showCharCount
+                        autoResize
+                        required
+                      />
+                    </div>
                   </FormField>
 
                   <FormActions align="right">

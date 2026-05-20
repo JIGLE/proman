@@ -443,7 +443,7 @@ function KPITile({
             )}
           >
             {change >= 0 ? (
-              <TrendingUp className="h-3 w-3" />
+              <TrendingUp className="h-3 w-3" aria-hidden="true" />
             ) : (
               <TrendingDown className="h-3 w-3" />
             )}

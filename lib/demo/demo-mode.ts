@@ -34,7 +34,7 @@ export const DEMO_CREDENTIALS = {
 };
 
 /** Routes that are blocked in demo mode */
-export const DEMO_BLOCKED_PATHS = ["/settings", "/api/user", "/api/debug"] as const;
+export const DEMO_BLOCKED_PATHS = ["/api/user", "/api/debug"] as const;
 
 /**
  * Check if a request is in demo mode (server-side, from request headers).

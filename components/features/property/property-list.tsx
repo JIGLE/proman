@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, forwardRef, useImperativeHandle } from "react";
+import { useTranslations } from "next-intl";
 import {
   Building2,
   MapPin,
@@ -9,6 +10,8 @@ import {
   ChevronDown,
   Plus,
   ExternalLink,
+  Pencil,
+  Trash2,
 } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
 import { SortableHeader } from "@/components/ui/sortable-header";
@@ -65,7 +68,7 @@ import { PageHeader } from "@/components/shared/page-header";
 
 // ─── Next Action derivation ────────────────────────────────────────────────────
 type NextAction = {
-  label: string;
+  labelKey: string;
   urgency: "urgent" | "warning" | "info" | "ok";
 };
 
@@ -86,21 +89,21 @@ function getNextAction(
   },
 ): NextAction {
   if (property.status === "occupied" && !hasActiveLease) {
-    return { label: "Add lease", urgency: "urgent" };
+    return { labelKey: "addLease", urgency: "urgent" };
   }
   if (isExpiring) {
-    return { label: "Renew lease", urgency: "warning" };
+    return { labelKey: "renewLease", urgency: "warning" };
   }
   if (hasOpenTickets) {
-    return { label: "Review tickets", urgency: "warning" };
+    return { labelKey: "reviewTickets", urgency: "warning" };
   }
   if (property.status === "vacant" && !hasTenant) {
-    return { label: "Find tenant", urgency: "info" };
+    return { labelKey: "findTenant", urgency: "info" };
   }
   if (isMissingMap) {
-    return { label: "Verify address", urgency: "info" };
+    return { labelKey: "verifyAddress", urgency: "info" };
   }
-  return { label: "All good", urgency: "ok" };
+  return { labelKey: "allGood", urgency: "ok" };
 }
 
 const nextActionStyles: Record<NextAction["urgency"], string> = {
@@ -117,6 +120,7 @@ export type PropertiesViewProps = {
   highlightedPropertyId?: string;
   density?: "comfortable" | "compact";
   showPageHeader?: boolean;
+  showMapToggle?: boolean;
 };
 
 export type PropertiesViewRef = {
@@ -131,10 +135,19 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
       onLocateOnMap,
       highlightedPropertyId,
       showPageHeader = true,
+      showMapToggle = false,
     }: PropertiesViewProps,
     ref,
   ): React.ReactElement {
-    const { state, addProperty, updateProperty, deleteProperty } = useApp();
+    const {
+      state,
+      addProperty,
+      updateProperty,
+      deleteProperty,
+      addBuilding: _addBuilding,
+      updateBuilding,
+      deleteBuilding,
+    } = useApp();
     const {
       properties = [],
       tenants = [],
@@ -148,6 +161,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const router = useRouter();
     const pathname = usePathname();
     const locale = pathname.split("/")[1] || "pt";
+    const tNextAction = useTranslations("property.nextAction");
     const confirmDialog = useConfirmDialog();
     // Property detail modal state
     const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
@@ -161,21 +175,71 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
 
-    // Data view mode state with localStorage persistence
-    const [dataViewMode, setDataViewMode] = useState<DataViewMode>("grid");
+    // Data view mode state with localStorage persistence (grid | table | map)
+    const [dataViewMode, setDataViewMode] = useState<DataViewMode>(
+      viewMode === "map" ? "map" : "grid",
+    );
     useEffect(() => {
+      if (viewMode === "map") return;
       const saved = localStorage.getItem("proman-properties-view-mode");
       if (saved === "grid" || saved === "table") setDataViewMode(saved);
-    }, []);
+    }, [viewMode]);
     const handleViewModeChange = useCallback((mode: DataViewMode) => {
       setDataViewMode(mode);
-      localStorage.setItem("proman-properties-view-mode", mode);
+      if (mode !== "map") localStorage.setItem("proman-properties-view-mode", mode);
     }, []);
+
+    // Building edit dialog state
+    const [editingBuilding, setEditingBuilding] = useState<Building | null>(null);
+    const [buildingEditForm, setBuildingEditForm] = useState({
+      name: "",
+      address: "",
+      city: "",
+      country: "PT",
+    });
+    const [buildingEditSubmitting, setBuildingEditSubmitting] = useState(false);
+
+    const openEditBuilding = useCallback((building: Building) => {
+      setEditingBuilding(building);
+      setBuildingEditForm({
+        name: building.name,
+        address: building.address ?? "",
+        city: building.city ?? "",
+        country: building.country ?? "PT",
+      });
+    }, []);
+
+    const handleBuildingEditSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!editingBuilding || !buildingEditForm.name.trim()) return;
+      setBuildingEditSubmitting(true);
+      try {
+        await updateBuilding(editingBuilding.id, {
+          name: buildingEditForm.name.trim(),
+          address: buildingEditForm.address.trim(),
+          city: buildingEditForm.city.trim(),
+          country: buildingEditForm.country,
+        });
+        setEditingBuilding(null);
+      } finally {
+        setBuildingEditSubmitting(false);
+      }
+    };
+
+    const buildingDeleteConfirm = useConfirmDialog();
 
     // Search and filter state
     const [searchQuery, setSearchQuery] = useState("");
-    const [typeFilter, setTypeFilter] = useState<string>("all");
-    const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [typeFilter, setTypeFilter] = useState<string>(() =>
+      typeof window !== "undefined"
+        ? (localStorage.getItem("proman-properties-type-filter") ?? "all")
+        : "all",
+    );
+    const [statusFilter, setStatusFilter] = useState<string>(() =>
+      typeof window !== "undefined"
+        ? (localStorage.getItem("proman-properties-status-filter") ?? "all")
+        : "all",
+    );
     const [operationalFilter, setOperationalFilter] = useState<string>("all");
 
     // Collapsible building sections
@@ -956,129 +1020,277 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
               </DialogContent>
             </Dialog>
 
-            {/* Conditional rendering based on viewMode prop */}
-            {viewMode === "map" ? (
-              <div className="space-y-6">
-                <PropertyMap
-                  highlightedPropertyId={highlightedPropertyId}
-                  onSelectProperty={handleMapPropertySelect}
-                />
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Slim operational filter strip */}
-                <div className="flex items-center gap-2 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-2.5 scrollbar-none">
-                  <span className="mr-1 hidden shrink-0 text-xs font-medium uppercase tracking-wider text-zinc-500 sm:inline">
-                    Filter
-                  </span>
-                  {[
-                    { key: "all", label: "All", count: properties.length, color: "" },
-                    {
-                      key: "needs-attention",
-                      label: "Needs attention",
-                      count: needsAttentionPropertyIds.size,
-                      color: "text-red-300",
-                    },
-                    {
-                      key: "lease-renewal",
-                      label: "Lease renewal",
-                      count: expiringLeasePropertyIds.size,
-                      color: "text-amber-300",
-                    },
-                    {
-                      key: "open-maintenance",
-                      label: "Maintenance",
-                      count: openMaintenancePropertyIds.size,
-                      color: "text-orange-300",
-                    },
-                    {
-                      key: "missing-map",
-                      label: "Missing map",
-                      count: missingMapPropertyIds.size,
-                      color: "text-blue-300",
-                    },
-                  ].map((opt) => {
-                    const isActive = operationalFilter === opt.key;
-                    return (
-                      <button
-                        key={opt.key}
-                        type="button"
-                        onClick={() => setOperationalFilter(opt.key)}
+            <div className="space-y-4">
+              {/* Slim operational filter strip */}
+              <div className="flex items-center gap-2 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-2.5 scrollbar-none">
+                <span className="mr-1 hidden shrink-0 text-xs font-medium uppercase tracking-wider text-zinc-500 sm:inline">
+                  Filter
+                </span>
+                {[
+                  { key: "all", label: "All", count: properties.length, color: "" },
+                  {
+                    key: "needs-attention",
+                    label: "Needs attention",
+                    count: needsAttentionPropertyIds.size,
+                    color: "text-red-300",
+                  },
+                  {
+                    key: "lease-renewal",
+                    label: "Lease renewal",
+                    count: expiringLeasePropertyIds.size,
+                    color: "text-amber-300",
+                  },
+                  {
+                    key: "open-maintenance",
+                    label: "Maintenance",
+                    count: openMaintenancePropertyIds.size,
+                    color: "text-orange-300",
+                  },
+                  {
+                    key: "missing-map",
+                    label: "Missing map",
+                    count: missingMapPropertyIds.size,
+                    color: "text-blue-300",
+                  },
+                ].map((opt) => {
+                  const isActive = operationalFilter === opt.key;
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      onClick={() => setOperationalFilter(opt.key)}
+                      className={cn(
+                        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                        isActive
+                          ? "bg-accent-primary text-white"
+                          : "border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200",
+                      )}
+                    >
+                      <span className="hidden sm:inline">{opt.label}</span>
+                      <span className="inline sm:hidden">
+                        {opt.key === "all"
+                          ? "All"
+                          : opt.key
+                              .split("-")
+                              .map((w) => w[0].toUpperCase())
+                              .join("")}
+                      </span>
+                      <span
                         className={cn(
-                          "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
-                          isActive
-                            ? "bg-accent-primary text-white"
-                            : "border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200",
+                          "font-semibold",
+                          isActive ? "text-white" : opt.color || "text-zinc-300",
                         )}
                       >
-                        <span className="hidden sm:inline">{opt.label}</span>
-                        <span className="inline sm:hidden">
-                          {opt.key === "all"
-                            ? "All"
-                            : opt.key
-                                .split("-")
-                                .map((w) => w[0].toUpperCase())
-                                .join("")}
-                        </span>
-                        <span
-                          className={cn(
-                            "font-semibold",
-                            isActive ? "text-white" : opt.color || "text-zinc-300",
-                          )}
-                        >
-                          {opt.count}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+                        {opt.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
 
-                {/* Search, Filter, and View Toggle */}
-                <div className="flex items-start gap-2">
-                  <div className="min-w-0 flex-1">
-                    <SearchFilter
-                      searchPlaceholder="Search properties by name or address..."
-                      onSearchChange={setSearchQuery}
-                      onFilterChange={(key, value) => {
-                        if (key === "type") setTypeFilter(value);
-                        if (key === "status") setStatusFilter(value);
-                      }}
-                      filters={[
-                        {
-                          key: "type",
-                          label: "Type",
-                          options: [
-                            { label: "All Types", value: "all" },
-                            { label: "Apartment", value: "apartment" },
-                            { label: "House", value: "house" },
-                            { label: "Commercial", value: "commercial" },
-                            { label: "Land", value: "land" },
-                            { label: "Other", value: "other" },
-                          ],
-                          defaultValue: "all",
-                        },
-                        {
-                          key: "status",
-                          label: "Status",
-                          options: [
-                            { label: "All Statuses", value: "all" },
-                            { label: "Occupied", value: "occupied" },
-                            { label: "Vacant", value: "vacant" },
-                            { label: "Maintenance", value: "maintenance" },
-                          ],
-                          defaultValue: "all",
-                        },
-                      ]}
-                    />
-                  </div>
-                  <div className="shrink-0 pt-0.5">
-                    <DataViewToggle mode={dataViewMode} onChange={handleViewModeChange} />
-                  </div>
+              {/* Search, Filter, and View Toggle */}
+              <div className="flex items-start gap-2">
+                <div className="min-w-0 flex-1">
+                  <SearchFilter
+                    searchPlaceholder="Search properties by name or address..."
+                    onSearchChange={setSearchQuery}
+                    onFilterChange={(key, value) => {
+                      if (key === "type") {
+                        setTypeFilter(value);
+                        localStorage.setItem("proman-properties-type-filter", value);
+                      }
+                      if (key === "status") {
+                        setStatusFilter(value);
+                        localStorage.setItem("proman-properties-status-filter", value);
+                      }
+                    }}
+                    filters={[
+                      {
+                        key: "type",
+                        label: "Type",
+                        options: [
+                          { label: "All Types", value: "all" },
+                          { label: "Apartment", value: "apartment" },
+                          { label: "House", value: "house" },
+                          { label: "Commercial", value: "commercial" },
+                          { label: "Land", value: "land" },
+                          { label: "Other", value: "other" },
+                        ],
+                        defaultValue: "all",
+                      },
+                      {
+                        key: "status",
+                        label: "Status",
+                        options: [
+                          { label: "All Statuses", value: "all" },
+                          { label: "Occupied", value: "occupied" },
+                          { label: "Vacant", value: "vacant" },
+                          { label: "Maintenance", value: "maintenance" },
+                        ],
+                        defaultValue: "all",
+                      },
+                    ]}
+                  />
                 </div>
+                <div className="shrink-0 pt-0.5">
+                  <DataViewToggle
+                    mode={dataViewMode}
+                    onChange={handleViewModeChange}
+                    showMap={showMapToggle}
+                  />
+                </div>
+              </div>
 
-                {dataViewMode === "table" ? (
-                  /* Table View */
-                  filteredProperties.length === 0 ? (
+              {dataViewMode === "map" ? (
+                /* Map View */
+                <div className="overflow-hidden rounded-lg border border-zinc-800">
+                  <PropertyMap
+                    highlightedPropertyId={highlightedPropertyId}
+                    onSelectProperty={handleMapPropertySelect}
+                  />
+                </div>
+              ) : dataViewMode === "table" ? (
+                /* Table View */
+                filteredProperties.length === 0 ? (
+                  <EmptyStateIllustration
+                    type={properties.length === 0 ? "properties" : "generic"}
+                    title={properties.length === 0 ? undefined : "No properties found"}
+                    description={
+                      properties.length === 0 ? undefined : "Try adjusting your search or filters"
+                    }
+                    onAction={properties.length === 0 ? dialog.openDialog : undefined}
+                  />
+                ) : (
+                  <div className="rounded-lg border border-zinc-800 bg-zinc-900">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-zinc-800 hover:bg-transparent">
+                          <TableHead className="text-zinc-400">
+                            <SortableHeader
+                              sortKey="name"
+                              label="Name"
+                              currentSort={getSortDirection("name")}
+                              onSort={(key) => requestSort(key as keyof Property)}
+                            />
+                          </TableHead>
+                          <TableHead className="text-zinc-400">Address</TableHead>
+                          <TableHead className="text-zinc-400">
+                            <SortableHeader
+                              sortKey="type"
+                              label="Type"
+                              currentSort={getSortDirection("type")}
+                              onSort={(key) => requestSort(key as keyof Property)}
+                            />
+                          </TableHead>
+                          <TableHead className="text-zinc-400">Bedrooms</TableHead>
+                          <TableHead className="text-zinc-400">
+                            <SortableHeader
+                              sortKey="rent"
+                              label="Rent"
+                              currentSort={getSortDirection("rent")}
+                              onSort={(key) => requestSort(key as keyof Property)}
+                            />
+                          </TableHead>
+                          <TableHead className="text-zinc-400">
+                            <SortableHeader
+                              sortKey="status"
+                              label="Status"
+                              currentSort={getSortDirection("status")}
+                              onSort={(key) => requestSort(key as keyof Property)}
+                            />
+                          </TableHead>
+                          <TableHead className="text-zinc-400">Next Action</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {buildingGroups.flatMap((group) => {
+                          const showHeader =
+                            group.properties.length > 1 || group.building !== undefined;
+                          const headerRow = showHeader ? (
+                            <TableRow
+                              key={`header-${group.buildingId}`}
+                              className="border-zinc-800 hover:bg-transparent"
+                            >
+                              <TableCell colSpan={7} className="bg-zinc-800/40 py-2 px-4">
+                                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                                  {group.buildingName}
+                                </span>
+                                {group.buildingAddress && (
+                                  <span className="ml-2 text-xs text-zinc-500">
+                                    {group.buildingAddress}
+                                  </span>
+                                )}
+                              </TableCell>
+                            </TableRow>
+                          ) : null;
+                          const propertyRows = group.properties.map((property) => (
+                            <TableRow
+                              key={property.id}
+                              className="border-zinc-800 cursor-pointer hover:bg-zinc-800/50"
+                              onClick={() => {
+                                setSelectedProperty(property);
+                                setIsDetailModalOpen(true);
+                                onPropertySelect?.(property.id);
+                              }}
+                            >
+                              <TableCell className="text-sm font-medium text-zinc-100">
+                                {property.name}
+                              </TableCell>
+                              <TableCell className="text-sm text-zinc-400">
+                                {property.address}
+                              </TableCell>
+                              <TableCell className="text-sm text-zinc-400 capitalize">
+                                {property.type}
+                              </TableCell>
+                              <TableCell className="text-sm text-zinc-400">
+                                {property.bedrooms}
+                              </TableCell>
+                              <TableCell className="text-sm font-medium text-zinc-100">
+                                {formatCurrency(Number(property.rent))}
+                              </TableCell>
+                              <TableCell>{getStatusBadge(property.status)}</TableCell>
+                              <TableCell>
+                                {(() => {
+                                  const propTenants = tenants.filter(
+                                    (t) => t.propertyId === property.id,
+                                  );
+                                  const hasActiveLease = activeLeasePropertyIds.has(property.id);
+                                  const isExpiring = expiringLeasePropertyIds.has(property.id);
+                                  const hasOpenTickets = openMaintenancePropertyIds.has(
+                                    property.id,
+                                  );
+                                  const isMissingMap = missingMapPropertyIds.has(property.id);
+                                  const action = getNextAction(property, {
+                                    hasActiveLease,
+                                    isExpiring,
+                                    hasOpenTickets,
+                                    isMissingMap,
+                                    hasTenant: propTenants.length > 0,
+                                  });
+                                  if (action.urgency === "ok") return null;
+                                  return (
+                                    <span
+                                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${nextActionStyles[action.urgency]}`}
+                                    >
+                                      {tNextAction(
+                                        action.labelKey as Parameters<typeof tNextAction>[0],
+                                      )}
+                                    </span>
+                                  );
+                                })()}
+                              </TableCell>
+                            </TableRow>
+                          ));
+                          return headerRow ? [headerRow, ...propertyRows] : propertyRows;
+                        })}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )
+              ) : (
+                <>
+                  {/* List View — full-width property rows grouped by building */}
+                  {filteredProperties.length === 0 ? (
                     <EmptyStateIllustration
                       type={properties.length === 0 ? "properties" : "generic"}
                       title={properties.length === 0 ? undefined : "No properties found"}
@@ -1088,470 +1300,368 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                       onAction={properties.length === 0 ? dialog.openDialog : undefined}
                     />
                   ) : (
-                    <div className="rounded-lg border border-zinc-800 bg-zinc-900">
-                      <Table>
-                        <TableHeader>
-                          <TableRow className="border-zinc-800 hover:bg-transparent">
-                            <TableHead className="text-zinc-400">
-                              <SortableHeader
-                                sortKey="name"
-                                label="Name"
-                                currentSort={getSortDirection("name")}
-                                onSort={(key) => requestSort(key as keyof Property)}
-                              />
-                            </TableHead>
-                            <TableHead className="text-zinc-400">Address</TableHead>
-                            <TableHead className="text-zinc-400">
-                              <SortableHeader
-                                sortKey="type"
-                                label="Type"
-                                currentSort={getSortDirection("type")}
-                                onSort={(key) => requestSort(key as keyof Property)}
-                              />
-                            </TableHead>
-                            <TableHead className="text-zinc-400">Bedrooms</TableHead>
-                            <TableHead className="text-zinc-400">
-                              <SortableHeader
-                                sortKey="rent"
-                                label="Rent"
-                                currentSort={getSortDirection("rent")}
-                                onSort={(key) => requestSort(key as keyof Property)}
-                              />
-                            </TableHead>
-                            <TableHead className="text-zinc-400">
-                              <SortableHeader
-                                sortKey="status"
-                                label="Status"
-                                currentSort={getSortDirection("status")}
-                                onSort={(key) => requestSort(key as keyof Property)}
-                              />
-                            </TableHead>
-                            <TableHead className="text-zinc-400">Next Action</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {buildingGroups.flatMap((group) => {
-                            const showHeader =
-                              group.properties.length > 1 || group.building !== undefined;
-                            const headerRow = showHeader ? (
-                              <TableRow
-                                key={`header-${group.buildingId}`}
-                                className="border-zinc-800 hover:bg-transparent"
+                    <div className="space-y-3">
+                      {buildingGroups.map((building) => {
+                        const isCollapsed = collapsedBuildings.has(building.buildingId);
+                        return (
+                          <div
+                            key={building.buildingId}
+                            className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/60"
+                          >
+                            {/* Building section header — collapsible */}
+                            <div className="flex w-full items-center justify-between hover:bg-zinc-800/50 transition-colors">
+                              <button
+                                type="button"
+                                onClick={() => toggleBuilding(building.buildingId)}
+                                className="flex flex-1 items-center gap-3 min-w-0 px-4 py-3 text-left"
                               >
-                                <TableCell colSpan={7} className="bg-zinc-800/40 py-2 px-4">
-                                  <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
-                                    {group.buildingName}
-                                  </span>
-                                  {group.buildingAddress && (
-                                    <span className="ml-2 text-xs text-zinc-500">
-                                      {group.buildingAddress}
-                                    </span>
-                                  )}
-                                </TableCell>
-                              </TableRow>
-                            ) : null;
-                            const propertyRows = group.properties.map((property) => (
-                              <TableRow
-                                key={property.id}
-                                className="border-zinc-800 cursor-pointer hover:bg-zinc-800/50"
-                                onClick={() => {
-                                  setSelectedProperty(property);
-                                  setIsDetailModalOpen(true);
-                                  onPropertySelect?.(property.id);
-                                }}
-                              >
-                                <TableCell className="text-sm font-medium text-zinc-100">
-                                  {property.name}
-                                </TableCell>
-                                <TableCell className="text-sm text-zinc-400">
-                                  {property.address}
-                                </TableCell>
-                                <TableCell className="text-sm text-zinc-400 capitalize">
-                                  {property.type}
-                                </TableCell>
-                                <TableCell className="text-sm text-zinc-400">
-                                  {property.bedrooms}
-                                </TableCell>
-                                <TableCell className="text-sm font-medium text-zinc-100">
-                                  {formatCurrency(Number(property.rent))}
-                                </TableCell>
-                                <TableCell>{getStatusBadge(property.status)}</TableCell>
-                                <TableCell>
-                                  {(() => {
-                                    const propTenants = tenants.filter(
-                                      (t) => t.propertyId === property.id,
-                                    );
-                                    const hasActiveLease = activeLeasePropertyIds.has(property.id);
-                                    const isExpiring = expiringLeasePropertyIds.has(property.id);
-                                    const hasOpenTickets = openMaintenancePropertyIds.has(
-                                      property.id,
-                                    );
-                                    const isMissingMap = missingMapPropertyIds.has(property.id);
-                                    const action = getNextAction(property, {
-                                      hasActiveLease,
-                                      isExpiring,
-                                      hasOpenTickets,
-                                      isMissingMap,
-                                      hasTenant: propTenants.length > 0,
+                                <Building2 className="h-4 w-4 shrink-0 text-zinc-500" />
+                                <div className="min-w-0 text-left">
+                                  <p className="text-sm font-semibold text-zinc-100 truncate">
+                                    {building.buildingName}
+                                  </p>
+                                  <p className="flex items-center gap-1 text-xs text-zinc-500 truncate">
+                                    <MapPin className="h-3 w-3 shrink-0" />
+                                    {building.buildingAddress}
+                                  </p>
+                                </div>
+                              </button>
+                              <div className="flex shrink-0 items-center gap-1 px-3">
+                                <span className="text-xs text-zinc-500 mr-1">
+                                  {building.properties.length} unit
+                                  {building.properties.length !== 1 ? "s" : ""}
+                                </span>
+                                <button
+                                  type="button"
+                                  title="Add unit to this building"
+                                  onClick={() => {
+                                    dialog.openDialog();
+                                    dialog.updateFormData({
+                                      buildingId: building.buildingId,
+                                      buildingName: building.buildingName,
+                                      address: building.buildingAddress,
+                                      streetAddress: building.buildingAddress.split(",")[0],
                                     });
-                                    if (action.urgency === "ok") return null;
-                                    return (
-                                      <span
-                                        className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${nextActionStyles[action.urgency]}`}
-                                      >
-                                        {action.label}
-                                      </span>
-                                    );
-                                  })()}
-                                </TableCell>
-                              </TableRow>
-                            ));
-                            return headerRow ? [headerRow, ...propertyRows] : propertyRows;
-                          })}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  )
-                ) : (
-                  <>
-                    {/* List View — full-width property rows grouped by building */}
-                    {filteredProperties.length === 0 ? (
-                      <EmptyStateIllustration
-                        type={properties.length === 0 ? "properties" : "generic"}
-                        title={properties.length === 0 ? undefined : "No properties found"}
-                        description={
-                          properties.length === 0
-                            ? undefined
-                            : "Try adjusting your search or filters"
-                        }
-                        onAction={properties.length === 0 ? dialog.openDialog : undefined}
-                      />
-                    ) : (
-                      <div className="space-y-3">
-                        {buildingGroups.map((building) => {
-                          const isCollapsed = collapsedBuildings.has(building.buildingId);
-                          return (
-                            <div
-                              key={building.buildingId}
-                              className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/60"
-                            >
-                              {/* Building section header — collapsible */}
-                              <div className="flex w-full items-center justify-between hover:bg-zinc-800/50 transition-colors">
+                                  }}
+                                  className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
+                                >
+                                  <Plus className="h-3.5 w-3.5" />
+                                </button>
+                                {building.building && (
+                                  <>
+                                    <button
+                                      type="button"
+                                      title="Edit building"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        openEditBuilding(building.building!);
+                                      }}
+                                      className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      title="Delete building"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        buildingDeleteConfirm.confirm(
+                                          {
+                                            title: "Delete Building",
+                                            description: `Delete "${building.buildingName}"? Properties in this building will not be deleted.`,
+                                            confirmLabel: "Delete Building",
+                                            variant: "destructive",
+                                          },
+                                          async () => {
+                                            await deleteBuilding(building.building!.id);
+                                          },
+                                        );
+                                      }}
+                                      className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-red-400 transition-colors"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </button>
+                                  </>
+                                )}
                                 <button
                                   type="button"
                                   onClick={() => toggleBuilding(building.buildingId)}
-                                  className="flex flex-1 items-center gap-3 min-w-0 px-4 py-3 text-left"
+                                  className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
                                 >
-                                  <Building2 className="h-4 w-4 shrink-0 text-zinc-500" />
-                                  <div className="min-w-0 text-left">
-                                    <p className="text-sm font-semibold text-zinc-100 truncate">
-                                      {building.buildingName}
-                                    </p>
-                                    <p className="flex items-center gap-1 text-xs text-zinc-500 truncate">
-                                      <MapPin className="h-3 w-3 shrink-0" />
-                                      {building.buildingAddress}
-                                    </p>
-                                  </div>
+                                  <ChevronDown
+                                    className={cn(
+                                      "h-4 w-4 transition-transform duration-200",
+                                      isCollapsed && "-rotate-90",
+                                    )}
+                                  />
                                 </button>
-                                <div className="flex shrink-0 items-center gap-1 px-3">
-                                  <span className="text-xs text-zinc-500 mr-1">
-                                    {building.properties.length} unit
-                                    {building.properties.length !== 1 ? "s" : ""}
-                                  </span>
-                                  <button
-                                    type="button"
-                                    title="Add unit to this building"
-                                    onClick={() => {
-                                      dialog.openDialog();
-                                      dialog.updateFormData({
-                                        buildingId: building.buildingId,
-                                        buildingName: building.buildingName,
-                                        address: building.buildingAddress,
-                                        streetAddress: building.buildingAddress.split(",")[0],
-                                      });
-                                    }}
-                                    className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
-                                  >
-                                    <Plus className="h-3.5 w-3.5" />
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => toggleBuilding(building.buildingId)}
-                                    className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
-                                  >
-                                    <ChevronDown
-                                      className={cn(
-                                        "h-4 w-4 transition-transform duration-200",
-                                        isCollapsed && "-rotate-90",
-                                      )}
-                                    />
-                                  </button>
-                                </div>
                               </div>
+                            </div>
 
-                              {/* Property rows */}
-                              {!isCollapsed && (
-                                <div className="divide-y divide-zinc-800 border-t border-zinc-800">
-                                  {building.properties.map((property) => {
-                                    const activeLease = leases.find(
-                                      (l) => l.propertyId === property.id && l.status === "active",
-                                    );
-                                    const propTenants = tenants.filter(
-                                      (t) => t.propertyId === property.id,
-                                    );
-                                    const openTickets = maintenance.filter(
-                                      (m) =>
-                                        m.propertyId === property.id && m.status !== "resolved",
-                                    );
-                                    const isSelected = bulkSelection.isSelected(property.id);
-                                    const hasAttention = needsAttentionPropertyIds.has(property.id);
-                                    const isExpiring = expiringLeasePropertyIds.has(property.id);
-                                    const isMissingMap = missingMapPropertyIds.has(property.id);
+                            {/* Property rows */}
+                            {!isCollapsed && (
+                              <div className="divide-y divide-zinc-800 border-t border-zinc-800">
+                                {building.properties.map((property) => {
+                                  const activeLease = leases.find(
+                                    (l) => l.propertyId === property.id && l.status === "active",
+                                  );
+                                  const propTenants = tenants.filter(
+                                    (t) => t.propertyId === property.id,
+                                  );
+                                  const openTickets = maintenance.filter(
+                                    (m) => m.propertyId === property.id && m.status !== "resolved",
+                                  );
+                                  const isSelected = bulkSelection.isSelected(property.id);
+                                  const hasAttention = needsAttentionPropertyIds.has(property.id);
+                                  const isExpiring = expiringLeasePropertyIds.has(property.id);
+                                  const isMissingMap = missingMapPropertyIds.has(property.id);
 
-                                    return (
+                                  return (
+                                    <div
+                                      key={property.id}
+                                      className={cn(
+                                        "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40",
+                                        hasAttention && "border-l-2",
+                                        hasAttention &&
+                                          isExpiring &&
+                                          openTickets.length > 0 &&
+                                          "border-l-amber-500/60 bg-amber-500/[0.04]",
+                                        hasAttention &&
+                                          isExpiring &&
+                                          openTickets.length === 0 &&
+                                          "border-l-amber-400/70 bg-amber-500/[0.04]",
+                                        hasAttention &&
+                                          !isExpiring &&
+                                          openTickets.length > 0 &&
+                                          "border-l-orange-500/60 bg-orange-500/[0.04]",
+                                        hasAttention &&
+                                          !isExpiring &&
+                                          openTickets.length === 0 &&
+                                          "border-l-red-400/60 bg-red-500/[0.04]",
+                                        isSelected && "bg-zinc-800/60",
+                                      )}
+                                    >
+                                      {/* Checkbox — 32px tap target for mobile */}
                                       <div
-                                        key={property.id}
-                                        className={cn(
-                                          "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40",
-                                          hasAttention && "border-l-2",
-                                          hasAttention &&
-                                            isExpiring &&
-                                            openTickets.length > 0 &&
-                                            "border-l-amber-500/60 bg-amber-500/[0.04]",
-                                          hasAttention &&
-                                            isExpiring &&
-                                            openTickets.length === 0 &&
-                                            "border-l-amber-400/70 bg-amber-500/[0.04]",
-                                          hasAttention &&
-                                            !isExpiring &&
-                                            openTickets.length > 0 &&
-                                            "border-l-orange-500/60 bg-orange-500/[0.04]",
-                                          hasAttention &&
-                                            !isExpiring &&
-                                            openTickets.length === 0 &&
-                                            "border-l-red-400/60 bg-red-500/[0.04]",
-                                          isSelected && "bg-zinc-800/60",
-                                        )}
+                                        className="flex shrink-0 items-center justify-center min-w-[32px] min-h-[32px]"
+                                        onClick={(e) => e.stopPropagation()}
                                       >
-                                        {/* Checkbox — 32px tap target for mobile */}
-                                        <div
-                                          className="flex shrink-0 items-center justify-center min-w-[32px] min-h-[32px]"
-                                          onClick={(e) => e.stopPropagation()}
-                                        >
-                                          <Checkbox
-                                            checked={isSelected}
-                                            onCheckedChange={() =>
-                                              bulkSelection.toggleSelection(property.id)
-                                            }
-                                          />
-                                        </div>
+                                        <Checkbox
+                                          checked={isSelected}
+                                          onCheckedChange={() =>
+                                            bulkSelection.toggleSelection(property.id)
+                                          }
+                                        />
+                                      </div>
 
-                                        {/* Name + street address + next action */}
-                                        <div
-                                          className="flex min-w-0 flex-1 cursor-pointer flex-col"
-                                          onClick={() => {
-                                            setSelectedProperty(property);
-                                            setIsDetailModalOpen(true);
-                                            onPropertySelect?.(property.id);
-                                          }}
-                                        >
-                                          <span className="truncate text-sm font-medium text-zinc-100">
-                                            {property.name}
-                                          </span>
-                                          <span className="truncate text-xs text-zinc-500">
-                                            {property.streetAddress || property.address}
-                                          </span>
-                                          {(() => {
-                                            const action = getNextAction(property, {
-                                              hasActiveLease: activeLeasePropertyIds.has(
-                                                property.id,
-                                              ),
-                                              isExpiring,
-                                              hasOpenTickets: openTickets.length > 0,
-                                              isMissingMap,
-                                              hasTenant: propTenants.length > 0,
-                                            });
-                                            if (action.urgency === "ok") return null;
-                                            return (
-                                              <span
-                                                className={`mt-0.5 w-fit rounded-full border px-1.5 py-0.5 text-[10px] font-medium leading-none ${nextActionStyles[action.urgency]}`}
-                                              >
-                                                {action.label}
-                                              </span>
-                                            );
-                                          })()}
-                                        </div>
-
-                                        {/* Type · bed · bath */}
-                                        <div className="hidden shrink-0 flex-col items-end gap-0.5 text-xs text-zinc-500 xl:flex">
-                                          <span className="capitalize">{property.type}</span>
-                                          <span>
-                                            {property.bedrooms}bd · {property.bathrooms}ba
-                                          </span>
-                                        </div>
-
-                                        <div className="hidden shrink-0 items-center gap-1 md:flex">
-                                          {propTenants.length > 0 && (
-                                            <button
-                                              type="button"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                router.push(
-                                                  `/${locale}/tenants?propertyId=${property.id}`,
-                                                );
-                                              }}
-                                              className="rounded transition-opacity hover:opacity-70"
+                                      {/* Name + street address + next action */}
+                                      <div
+                                        className="flex min-w-0 flex-1 cursor-pointer flex-col"
+                                        onClick={() => {
+                                          setSelectedProperty(property);
+                                          setIsDetailModalOpen(true);
+                                          onPropertySelect?.(property.id);
+                                        }}
+                                      >
+                                        <span className="truncate text-sm font-medium text-zinc-100">
+                                          {property.name}
+                                        </span>
+                                        <span className="truncate text-xs text-zinc-500">
+                                          {property.streetAddress || property.address}
+                                        </span>
+                                        {(() => {
+                                          const action = getNextAction(property, {
+                                            hasActiveLease: activeLeasePropertyIds.has(property.id),
+                                            isExpiring,
+                                            hasOpenTickets: openTickets.length > 0,
+                                            isMissingMap,
+                                            hasTenant: propTenants.length > 0,
+                                          });
+                                          if (action.urgency === "ok") return null;
+                                          return (
+                                            <span
+                                              className={`mt-0.5 w-fit rounded-full border px-1.5 py-0.5 text-[10px] font-medium leading-none ${nextActionStyles[action.urgency]}`}
                                             >
-                                              <RelationshipBadge
-                                                variant="tenant"
-                                                label={
-                                                  propTenants.length === 1 ? "tenant" : "tenants"
-                                                }
-                                                count={propTenants.length}
-                                              />
-                                            </button>
-                                          )}
-                                          {activeLease && (
-                                            <button
-                                              type="button"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                router.push(
-                                                  `/${locale}/leases?propertyId=${property.id}`,
-                                                );
-                                              }}
-                                              className="rounded transition-opacity hover:opacity-70"
-                                            >
-                                              <RelationshipBadge
-                                                variant="lease"
-                                                label="lease"
-                                                count={1}
-                                              />
-                                            </button>
-                                          )}
-                                          {openTickets.length > 0 && (
-                                            <button
-                                              type="button"
-                                              onClick={(e) => {
-                                                e.stopPropagation();
-                                                router.push(
-                                                  `/${locale}/maintenance?propertyId=${property.id}`,
-                                                );
-                                              }}
-                                              className="rounded transition-opacity hover:opacity-70"
-                                            >
-                                              <RelationshipBadge
-                                                variant="maintenance"
-                                                label={
-                                                  openTickets.length === 1 ? "ticket" : "tickets"
-                                                }
-                                                count={openTickets.length}
-                                              />
-                                            </button>
-                                          )}
-                                        </div>
+                                              {tNextAction(
+                                                action.labelKey as Parameters<
+                                                  typeof tNextAction
+                                                >[0],
+                                              )}
+                                            </span>
+                                          );
+                                        })()}
+                                      </div>
 
-                                        {/* Lease end date */}
-                                        <div className="hidden w-[88px] shrink-0 flex-col items-end text-xs lg:flex">
-                                          {activeLease ? (
-                                            <>
-                                              <span className="text-zinc-500">Lease ends</span>
-                                              <span
-                                                className={cn(
-                                                  "font-medium",
-                                                  isExpiring ? "text-amber-300" : "text-zinc-300",
-                                                )}
-                                              >
-                                                {new Date(activeLease.endDate).toLocaleDateString(
-                                                  "pt-PT",
-                                                  {
-                                                    day: "numeric",
-                                                    month: "short",
-                                                    year: "numeric",
-                                                  },
-                                                )}
-                                              </span>
-                                            </>
-                                          ) : null}
-                                        </div>
+                                      {/* Type · bed · bath */}
+                                      <div className="hidden shrink-0 flex-col items-end gap-0.5 text-xs text-zinc-500 xl:flex">
+                                        <span className="capitalize">{property.type}</span>
+                                        <span>
+                                          {property.bedrooms}bd · {property.bathrooms}ba
+                                        </span>
+                                      </div>
 
-                                        {/* Rent */}
-                                        <div className="w-[80px] shrink-0 text-right text-sm font-semibold text-zinc-100">
-                                          {formatCurrency(Number(property.rent))}
-                                        </div>
-
-                                        {/* Status badge */}
-                                        <div className="shrink-0">
-                                          {getStatusBadge(property.status)}
-                                        </div>
-
-                                        {/* Needs-attention shortcut — navigate to detail page */}
-                                        {hasAttention && (
+                                      <div className="hidden shrink-0 items-center gap-1 md:flex">
+                                        {propTenants.length > 0 && (
                                           <button
                                             type="button"
-                                            title="View details"
                                             onClick={(e) => {
                                               e.stopPropagation();
-                                              router.push(`/${locale}/portfolio/${property.id}`);
+                                              router.push(
+                                                `/${locale}/tenants?propertyId=${property.id}`,
+                                              );
                                             }}
-                                            className="shrink-0 rounded-md p-1.5 text-amber-500 transition-colors hover:bg-zinc-700 hover:text-amber-300"
+                                            className="rounded transition-opacity hover:opacity-70"
                                           >
-                                            <ExternalLink className="h-3.5 w-3.5" />
+                                            <RelationshipBadge
+                                              variant="tenant"
+                                              label={
+                                                propTenants.length === 1 ? "tenant" : "tenants"
+                                              }
+                                              count={propTenants.length}
+                                            />
                                           </button>
                                         )}
+                                        {activeLease && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              router.push(
+                                                `/${locale}/leases?propertyId=${property.id}`,
+                                              );
+                                            }}
+                                            className="rounded transition-opacity hover:opacity-70"
+                                          >
+                                            <RelationshipBadge
+                                              variant="lease"
+                                              label="lease"
+                                              count={1}
+                                            />
+                                          </button>
+                                        )}
+                                        {openTickets.length > 0 && (
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              router.push(
+                                                `/${locale}/maintenance?propertyId=${property.id}`,
+                                              );
+                                            }}
+                                            className="rounded transition-opacity hover:opacity-70"
+                                          >
+                                            <RelationshipBadge
+                                              variant="maintenance"
+                                              label={
+                                                openTickets.length === 1 ? "ticket" : "tickets"
+                                              }
+                                              count={openTickets.length}
+                                            />
+                                          </button>
+                                        )}
+                                      </div>
 
-                                        {/* Locate on map button */}
+                                      {/* Lease end date */}
+                                      <div className="hidden w-[88px] shrink-0 flex-col items-end text-xs lg:flex">
+                                        {activeLease ? (
+                                          <>
+                                            <span className="text-zinc-500">Lease ends</span>
+                                            <span
+                                              className={cn(
+                                                "font-medium",
+                                                isExpiring ? "text-amber-300" : "text-zinc-300",
+                                              )}
+                                            >
+                                              {new Date(activeLease.endDate).toLocaleDateString(
+                                                "pt-PT",
+                                                {
+                                                  day: "numeric",
+                                                  month: "short",
+                                                  year: "numeric",
+                                                },
+                                              )}
+                                            </span>
+                                          </>
+                                        ) : null}
+                                      </div>
+
+                                      {/* Rent */}
+                                      <div className="w-[80px] shrink-0 text-right text-sm font-semibold text-zinc-100">
+                                        {formatCurrency(Number(property.rent))}
+                                      </div>
+
+                                      {/* Status badge */}
+                                      <div className="shrink-0">
+                                        {getStatusBadge(property.status)}
+                                      </div>
+
+                                      {/* Needs-attention shortcut — navigate to detail page */}
+                                      {hasAttention && (
                                         <button
                                           type="button"
-                                          title={
-                                            isMissingMap
-                                              ? "No coordinates — click to fix address"
-                                              : "Locate on map"
-                                          }
+                                          title="View details"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            if (isMissingMap) {
-                                              dialog.openEditDialog(property);
-                                            } else {
-                                              onLocateOnMap?.(property.id);
-                                            }
+                                            router.push(`/${locale}/portfolio/${property.id}`);
                                           }}
-                                          className={cn(
-                                            "shrink-0 rounded-md p-1.5 transition-colors",
-                                            isMissingMap
-                                              ? "text-amber-600 hover:bg-zinc-700 hover:text-amber-400"
-                                              : "text-zinc-500 hover:bg-zinc-700 hover:text-blue-300",
-                                          )}
+                                          className="shrink-0 rounded-md p-1.5 text-amber-500 transition-colors hover:bg-zinc-700 hover:text-amber-300"
                                         >
-                                          <MapPin className="h-4 w-4" />
+                                          <ExternalLink className="h-3.5 w-3.5" />
                                         </button>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })}
+                                      )}
 
-                        {/* Bulk Action Bar */}
-                        <BulkActionBar
-                          selectedCount={bulkSelection.selectedCount}
-                          totalCount={sortedProperties.length}
-                          itemLabel="properties"
-                          actions={bulkActions}
-                          onSelectAll={() => bulkSelection.selectAll(sortedProperties)}
-                          onClearSelection={bulkSelection.clearSelection}
-                          isAllSelected={bulkSelection.isAllSelected(sortedProperties)}
-                          isPartiallySelected={bulkSelection.isPartiallySelected(sortedProperties)}
-                          selectedIds={Array.from(bulkSelection.selectedIds)}
-                        />
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
+                                      {/* Locate on map button */}
+                                      <button
+                                        type="button"
+                                        title={
+                                          isMissingMap
+                                            ? "No coordinates — click to fix address"
+                                            : "Locate on map"
+                                        }
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (isMissingMap) {
+                                            dialog.openEditDialog(property);
+                                          } else {
+                                            handleViewModeChange("map");
+                                            onLocateOnMap?.(property.id);
+                                          }
+                                        }}
+                                        className={cn(
+                                          "shrink-0 rounded-md p-1.5 transition-colors",
+                                          isMissingMap
+                                            ? "text-amber-600 hover:bg-zinc-700 hover:text-amber-400"
+                                            : "text-zinc-500 hover:bg-zinc-700 hover:text-blue-300",
+                                        )}
+                                      >
+                                        <MapPin className="h-4 w-4" />
+                                      </button>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* Bulk Action Bar */}
+                      <BulkActionBar
+                        selectedCount={bulkSelection.selectedCount}
+                        totalCount={sortedProperties.length}
+                        itemLabel="properties"
+                        actions={bulkActions}
+                        onSelectAll={() => bulkSelection.selectAll(sortedProperties)}
+                        onClearSelection={bulkSelection.clearSelection}
+                        isAllSelected={bulkSelection.isAllSelected(sortedProperties)}
+                        isPartiallySelected={bulkSelection.isPartiallySelected(sortedProperties)}
+                        selectedIds={Array.from(bulkSelection.selectedIds)}
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         )}
 
@@ -1571,7 +1681,77 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
             setSelectedProperty(null);
           }}
         />
+        {/* Building edit dialog */}
+        <Dialog open={!!editingBuilding} onOpenChange={(open) => !open && setEditingBuilding(null)}>
+          <DialogContent className="bg-zinc-900 border-zinc-800 max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Building</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={handleBuildingEditSubmit} className="space-y-4 pt-2">
+              <div className="space-y-2">
+                <Label htmlFor="edit-bld-name">Building Name *</Label>
+                <Input
+                  id="edit-bld-name"
+                  value={buildingEditForm.name}
+                  onChange={(e) => setBuildingEditForm((f) => ({ ...f, name: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor="edit-bld-city">City</Label>
+                  <Input
+                    id="edit-bld-city"
+                    value={buildingEditForm.city}
+                    onChange={(e) => setBuildingEditForm((f) => ({ ...f, city: e.target.value }))}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="edit-bld-country">Country</Label>
+                  <Select
+                    value={buildingEditForm.country}
+                    onValueChange={(v) => setBuildingEditForm((f) => ({ ...f, country: v }))}
+                  >
+                    <SelectTrigger id="edit-bld-country">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PT">Portugal</SelectItem>
+                      <SelectItem value="ES">Spain</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-bld-address">Address</Label>
+                <Input
+                  id="edit-bld-address"
+                  value={buildingEditForm.address}
+                  onChange={(e) => setBuildingEditForm((f) => ({ ...f, address: e.target.value }))}
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setEditingBuilding(null)}
+                  disabled={buildingEditSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  loading={buildingEditSubmitting}
+                  disabled={!buildingEditForm.name.trim()}
+                >
+                  Save Changes
+                </Button>
+              </div>
+            </form>
+          </DialogContent>
+        </Dialog>
         <ConfirmationDialog dialog={confirmDialog} />
+        <ConfirmationDialog dialog={buildingDeleteConfirm} />
       </>
     );
   },

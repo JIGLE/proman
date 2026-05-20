@@ -83,7 +83,12 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
     // Search and filter state
     const [searchQuery, setSearchQuery] = useState("");
     const [propertyFilter, setPropertyFilter] = useState<string>("all");
-    const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [statusFilter, setStatusFilter] = useState<string>(() => {
+      if (typeof window !== "undefined") {
+        return localStorage.getItem("proman-tenants-status-filter") ?? "all";
+      }
+      return "all";
+    });
 
     // Bulk selection
     const bulkSelection = useBulkSelection<Tenant>();
@@ -451,7 +456,10 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
               onSearchChange={setSearchQuery}
               onFilterChange={(key, value) => {
                 if (key === "property") setPropertyFilter(value);
-                if (key === "status") setStatusFilter(value);
+                if (key === "status") {
+                  setStatusFilter(value);
+                  localStorage.setItem("proman-tenants-status-filter", value);
+                }
               }}
               filters={[
                 {

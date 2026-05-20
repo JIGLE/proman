@@ -15,6 +15,7 @@ import {
   Trash2,
   Download,
   MoreHorizontal,
+  Clock,
 } from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
@@ -368,6 +369,17 @@ export function LeasesView(): React.ReactElement {
     getSortDirection,
   } = useSortableData(filteredLeases);
 
+  const expiringSoon = useMemo(() => {
+    const now = new Date();
+    const cutoff = new Date(now);
+    cutoff.setDate(cutoff.getDate() + 60);
+    return leases.filter((l) => {
+      if (l.status !== "active") return false;
+      const end = new Date(l.endDate);
+      return end >= now && end <= cutoff;
+    });
+  }, [leases]);
+
   if (loading) {
     return <LoadingState variant="cards" count={6} />;
   }
@@ -436,7 +448,7 @@ export function LeasesView(): React.ReactElement {
                 Add Lease
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-zinc-900 border-zinc-800">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-[var(--color-foreground)]">
                   {editingLease ? "Edit Lease" : "Create New Lease"}
@@ -497,7 +509,7 @@ export function LeasesView(): React.ReactElement {
                         </SelectTrigger>
                         <SelectContent>
                           {properties.length === 0 ? (
-                            <div className="p-4 text-center text-sm text-zinc-400">
+                            <div className="p-4 text-center text-sm text-[var(--color-muted-foreground)]">
                               No properties available. Create a property first.
                             </div>
                           ) : (
@@ -505,7 +517,9 @@ export function LeasesView(): React.ReactElement {
                               <SelectItem key={property.id} value={property.id}>
                                 <div className="flex flex-col">
                                   <span className="font-medium">{property.name}</span>
-                                  <span className="text-xs text-zinc-400">{property.address}</span>
+                                  <span className="text-xs text-[var(--color-muted-foreground)]">
+                                    {property.address}
+                                  </span>
                                 </div>
                               </SelectItem>
                             ))
@@ -513,8 +527,8 @@ export function LeasesView(): React.ReactElement {
                         </SelectContent>
                       </Select>
                       {properties.length === 0 && (
-                        <div className="rounded-lg border border-zinc-800 bg-zinc-800/30 p-4 text-center">
-                          <p className="text-sm text-zinc-400 mb-2">
+                        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-4 text-center">
+                          <p className="text-sm text-[var(--color-muted-foreground)] mb-2">
                             No properties found. Create a property first.
                           </p>
                           <Button
@@ -549,7 +563,7 @@ export function LeasesView(): React.ReactElement {
                         </SelectTrigger>
                         <SelectContent>
                           {tenants.length === 0 ? (
-                            <div className="p-4 text-center text-sm text-zinc-400">
+                            <div className="p-4 text-center text-sm text-[var(--color-muted-foreground)]">
                               No tenants available. Create a tenant first.
                             </div>
                           ) : (
@@ -557,7 +571,9 @@ export function LeasesView(): React.ReactElement {
                               <SelectItem key={tenant.id} value={tenant.id}>
                                 <div className="flex flex-col">
                                   <span className="font-medium">{tenant.name}</span>
-                                  <span className="text-xs text-zinc-400">{tenant.email}</span>
+                                  <span className="text-xs text-[var(--color-muted-foreground)]">
+                                    {tenant.email}
+                                  </span>
                                 </div>
                               </SelectItem>
                             ))
@@ -565,8 +581,8 @@ export function LeasesView(): React.ReactElement {
                         </SelectContent>
                       </Select>
                       {tenants.length === 0 && (
-                        <div className="rounded-lg border border-zinc-800 bg-zinc-800/30 p-4 text-center">
-                          <p className="text-sm text-zinc-400 mb-2">
+                        <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-4 text-center">
+                          <p className="text-sm text-[var(--color-muted-foreground)] mb-2">
                             No tenants found. Create a tenant first.
                           </p>
                           <Button
@@ -730,18 +746,18 @@ export function LeasesView(): React.ReactElement {
                         />
                         <Label
                           htmlFor="contractFile"
-                          className="flex items-center gap-2 px-4 py-2 bg-zinc-800 border border-zinc-600 rounded-md cursor-pointer hover:bg-zinc-700 transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 bg-[var(--color-secondary)] border border-[var(--color-border)] rounded-md cursor-pointer hover:bg-[var(--color-surface-hover)] transition-colors"
                         >
                           <Upload className="w-4 h-4" />
                           {contractFile ? contractFile.name : "Choose PDF file"}
                         </Label>
                         {contractFile && (
-                          <span className="text-sm text-zinc-400">
+                          <span className="text-sm text-[var(--color-muted-foreground)]">
                             {(contractFile.size / 1024 / 1024).toFixed(2)} MB
                           </span>
                         )}
                       </div>
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-[var(--color-muted-foreground)]">
                         Maximum file size: 5MB. PDF format only.
                       </p>
                     </div>
@@ -805,16 +821,37 @@ export function LeasesView(): React.ReactElement {
           <DataViewToggle mode={dataViewMode} onChange={handleViewModeChange} />
         </div>
 
+        {expiringSoon.length > 0 && (
+          <div className="flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-4 text-sm">
+            <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
+            <div>
+              <p className="font-medium text-amber-600 dark:text-amber-400">
+                {expiringSoon.length} lease{expiringSoon.length > 1 ? "s" : ""} expiring within 60
+                days
+              </p>
+              <p className="mt-1 text-[var(--color-muted-foreground)]">
+                {expiringSoon
+                  .map((l) => {
+                    const tenant = tenants.find((t) => t.id === l.tenantId)?.name ?? "Unknown";
+                    const end = new Date(l.endDate).toLocaleDateString();
+                    return `${tenant} (${end})`;
+                  })
+                  .join(" · ")}
+              </p>
+            </div>
+          </div>
+        )}
+
         {dataViewMode === "table" ? (
           /* Table View */
           filteredLeases.length === 0 ? (
             leases.length === 0 && (properties.length === 0 || tenants.length === 0) ? (
               <div className="flex flex-col items-center justify-center py-16 text-center">
-                <FileText className="h-12 w-12 text-zinc-600 mb-4" />
-                <h3 className="text-lg font-semibold text-zinc-200 mb-2">
+                <FileText className="h-12 w-12 text-[var(--color-muted-foreground)] mb-4" />
+                <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
                   Get started with leases
                 </h3>
-                <p className="text-sm text-zinc-400 mb-6 max-w-md">
+                <p className="text-sm text-[var(--color-muted-foreground)] mb-6 max-w-md">
                   To create your first lease, you&apos;ll need at least one property and one tenant.
                 </p>
                 <div className="flex items-center gap-3">
@@ -850,13 +887,13 @@ export function LeasesView(): React.ReactElement {
               />
             )
           ) : (
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900">
+            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-zinc-800 hover:bg-transparent">
-                    <TableHead className="text-zinc-400">Property</TableHead>
-                    <TableHead className="text-zinc-400">Tenant</TableHead>
-                    <TableHead className="text-zinc-400">
+                  <TableRow className="border-[var(--color-border)] hover:bg-transparent">
+                    <TableHead className="text-[var(--color-muted-foreground)]">Property</TableHead>
+                    <TableHead className="text-[var(--color-muted-foreground)]">Tenant</TableHead>
+                    <TableHead className="text-[var(--color-muted-foreground)]">
                       <SortableHeader
                         sortKey="startDate"
                         label="Start"
@@ -864,8 +901,8 @@ export function LeasesView(): React.ReactElement {
                         onSort={(key) => requestSort(key as keyof Lease)}
                       />
                     </TableHead>
-                    <TableHead className="text-zinc-400">End</TableHead>
-                    <TableHead className="text-zinc-400">
+                    <TableHead className="text-[var(--color-muted-foreground)]">End</TableHead>
+                    <TableHead className="text-[var(--color-muted-foreground)]">
                       <SortableHeader
                         sortKey="monthlyRent"
                         label="Monthly Rent"
@@ -873,7 +910,7 @@ export function LeasesView(): React.ReactElement {
                         onSort={(key) => requestSort(key as keyof Lease)}
                       />
                     </TableHead>
-                    <TableHead className="text-zinc-400">
+                    <TableHead className="text-[var(--color-muted-foreground)]">
                       <SortableHeader
                         sortKey="status"
                         label="Status"
@@ -881,23 +918,30 @@ export function LeasesView(): React.ReactElement {
                         onSort={(key) => requestSort(key as keyof Lease)}
                       />
                     </TableHead>
-                    <TableHead className="text-zinc-400 w-24">Actions</TableHead>
+                    <TableHead className="text-[var(--color-muted-foreground)] w-24">
+                      Actions
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sortedLeases.map((lease: Lease) => (
-                    <TableRow key={lease.id} className="border-zinc-800 hover:bg-zinc-800/50">
-                      <TableCell className="text-sm text-zinc-100">
+                    <TableRow
+                      key={lease.id}
+                      className="border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
+                    >
+                      <TableCell className="text-sm text-[var(--color-foreground)]">
                         {lease.property?.name}
                       </TableCell>
-                      <TableCell className="text-sm text-zinc-400">{lease.tenant?.name}</TableCell>
-                      <TableCell className="text-sm text-zinc-400">
+                      <TableCell className="text-sm text-[var(--color-muted-foreground)]">
+                        {lease.tenant?.name}
+                      </TableCell>
+                      <TableCell className="text-sm text-[var(--color-muted-foreground)]">
                         {new Date(lease.startDate).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="text-sm text-zinc-400">
+                      <TableCell className="text-sm text-[var(--color-muted-foreground)]">
                         {new Date(lease.endDate).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="text-sm font-medium text-zinc-100">
+                      <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
                         {formatCurrency(lease.monthlyRent)}
                       </TableCell>
                       <TableCell>{getStatusBadge(lease.status)}</TableCell>
@@ -933,7 +977,7 @@ export function LeasesView(): React.ReactElement {
           <>
             {/* Sortable Column Headers */}
             {filteredLeases.length > 0 && (
-              <div className="flex items-center gap-4 px-4 py-2 bg-zinc-900/50 rounded-lg border border-zinc-800">
+              <div className="flex items-center gap-4 px-4 py-2 bg-[var(--color-surface-hover)] rounded-lg border border-[var(--color-border)]">
                 <div className="flex-1">
                   <SortableHeader
                     sortKey="startDate"
@@ -967,11 +1011,11 @@ export function LeasesView(): React.ReactElement {
                 <div className="col-span-full">
                   {leases.length === 0 && (properties.length === 0 || tenants.length === 0) ? (
                     <div className="flex flex-col items-center justify-center py-16 text-center">
-                      <FileText className="h-12 w-12 text-zinc-600 mb-4" />
-                      <h3 className="text-lg font-semibold text-zinc-200 mb-2">
+                      <FileText className="h-12 w-12 text-[var(--color-muted-foreground)] mb-4" />
+                      <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
                         Get started with leases
                       </h3>
-                      <p className="text-sm text-zinc-400 mb-6 max-w-md">
+                      <p className="text-sm text-[var(--color-muted-foreground)] mb-6 max-w-md">
                         To create your first lease, you&apos;ll need at least one property and one
                         tenant.
                       </p>
@@ -1012,12 +1056,12 @@ export function LeasesView(): React.ReactElement {
                 sortedLeases.map((lease: Lease) => (
                   <Card
                     key={lease.id}
-                    className="overflow-hidden transition-all hover:shadow-lg hover:shadow-zinc-900/50 cursor-pointer"
+                    className="overflow-hidden transition-all hover:shadow-lg cursor-pointer"
                     onClick={() => router.push(`/${locale}/leases/${lease.id}`)}
                   >
-                    <div className="aspect-video w-full bg-gradient-to-br from-zinc-800 to-zinc-900 relative">
+                    <div className="aspect-video w-full bg-[var(--color-secondary)] relative">
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <FileText className="h-16 w-16 text-zinc-700" />
+                        <FileText className="h-16 w-16 text-[var(--color-muted-foreground)]" />
                       </div>
                       <div className="absolute top-3 right-3">{getStatusBadge(lease.status)}</div>
                     </div>
@@ -1048,12 +1092,12 @@ export function LeasesView(): React.ReactElement {
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-zinc-400">Rent</span>
+                        <span className="text-[var(--color-muted-foreground)]">Rent</span>
                         <span className="font-semibold text-[var(--color-foreground)]">
                           {formatCurrency(lease.monthlyRent)}/mo
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-zinc-400">
+                      <div className="flex items-center gap-4 text-sm text-[var(--color-muted-foreground)]">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
                           <span>{new Date(lease.startDate).toLocaleDateString()}</span>
@@ -1063,7 +1107,9 @@ export function LeasesView(): React.ReactElement {
                       </div>
                       {lease.contractFile && (
                         <div className="flex items-center justify-between">
-                          <span className="text-sm text-zinc-400">Contract</span>
+                          <span className="text-sm text-[var(--color-muted-foreground)]">
+                            Contract
+                          </span>
                           <Button
                             variant="outline"
                             size="sm"

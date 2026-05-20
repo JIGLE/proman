@@ -153,9 +153,9 @@ export function FinancialsContainer() {
       {isOwnerPortal ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           <button type="button" onClick={() => setActiveTab("queue")} className="text-left w-full">
-            <Card className="border-red-500/20 bg-red-500/5 cursor-pointer hover:ring-1 hover:ring-red-500/30 transition-all">
+            <Card className="border-[var(--color-destructive)]/20 bg-[var(--color-error-muted)] cursor-pointer hover:ring-1 hover:ring-[var(--color-destructive)]/30 transition-all">
               <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-red-300">
+                <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-destructive)]">
                   <AlertTriangle className="h-4 w-4" />
                   Overdue rent
                 </CardTitle>
@@ -176,7 +176,7 @@ export function FinancialsContainer() {
             onClick={() => setActiveTab("receipts")}
             className="text-left w-full"
           >
-            <Card className="cursor-pointer hover:ring-1 hover:ring-white/10 transition-all">
+            <Card className="cursor-pointer hover:ring-1 hover:ring-[var(--color-border)] transition-all">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
                   <BadgeEuro className="h-4 w-4 text-emerald-400" />
@@ -199,7 +199,7 @@ export function FinancialsContainer() {
             onClick={() => setActiveTab("receipts")}
             className="text-left w-full"
           >
-            <Card className="cursor-pointer hover:ring-1 hover:ring-white/10 transition-all">
+            <Card className="cursor-pointer hover:ring-1 hover:ring-[var(--color-border)] transition-all">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
                   <Receipt className="h-4 w-4 text-blue-400" />
@@ -218,7 +218,7 @@ export function FinancialsContainer() {
           </button>
 
           <button type="button" onClick={() => setActiveTab("tax")} className="text-left w-full">
-            <Card className="cursor-pointer hover:ring-1 hover:ring-white/10 transition-all">
+            <Card className="cursor-pointer hover:ring-1 hover:ring-[var(--color-border)] transition-all">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
                   <FileText className="h-4 w-4 text-amber-400" />
@@ -238,9 +238,9 @@ export function FinancialsContainer() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card className="border-blue-500/20 bg-blue-500/5">
+          <Card className="border-[var(--color-primary)]/20 bg-[var(--color-info-muted)]">
             <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-blue-200">
+              <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-primary)]">
                 <BadgeEuro className="h-4 w-4" />
                 Next rent
               </CardTitle>
@@ -317,7 +317,7 @@ export function FinancialsContainer() {
             {isOwnerPortal && (
               <TabsTrigger value="queue" className="flex items-center gap-2">
                 <Grid3X3 className="h-4 w-4" />
-                <span>Action Queue</span>
+                <span>Due &amp; Overdue</span>
               </TabsTrigger>
             )}
             <TabsTrigger value="receipts" className="flex items-center gap-2">

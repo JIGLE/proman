@@ -1,13 +1,9 @@
-import { Suspense } from "react";
-import { BuildingsView } from "@/components/features/property/buildings-view";
-import { GenericPageSkeleton } from "@/components/ui/page-skeletons";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default function BuildingsPage() {
-  return (
-    <Suspense fallback={<GenericPageSkeleton />}>
-      <BuildingsView />
-    </Suspense>
-  );
+export default function BuildingsPage({ params }: { params: Promise<{ locale: string }> }) {
+  // Buildings management is now integrated into the Properties page.
+  void params;
+  redirect("../portfolio");
 }

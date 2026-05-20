@@ -364,7 +364,7 @@ export function FinancialsView(): React.ReactElement {
             <Card className="bg-zinc-900 border-zinc-800">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium text-zinc-400">Total Income</CardTitle>
-                <TrendingUp className="h-4 w-4 text-green-500" />
+                <TrendingUp className="h-4 w-4 text-green-500" aria-hidden="true" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold text-[var(--color-foreground)]">
