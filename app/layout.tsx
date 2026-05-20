@@ -16,8 +16,9 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "ProMan - Property Management",
-  description: "Professional property management dashboard",
+  title: "Proman — Property Management",
+  description:
+    "Proman gives landlords and property managers in Portugal and Spain one clear flow from rent collection to compliant receipts and tax exports.",
 };
 
 export default async function RootLayout({
