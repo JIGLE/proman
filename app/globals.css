@@ -114,6 +114,9 @@
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
   --font-size-4xl: 2.25rem;
+
+  /* ── Display font (Syne) — headings & hero ───────── */
+  --font-display: var(--font-syne, "Syne", system-ui, sans-serif);
   --line-height-tight: 1.25;
   --line-height-snug: 1.375;
   --line-height-normal: 1.5;

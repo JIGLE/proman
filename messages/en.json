@@ -421,6 +421,50 @@
         }
       }
     },
+    "pricing": {
+      "eyebrow": "Simple pricing",
+      "title": "Start free. Scale when you need to.",
+      "subtitle": "Every plan includes the full workflow. Upgrade for more properties and team access.",
+      "selfHostedNote": "Prefer to self-host? The open-source version is always free.",
+      "selfHostedLink": "Deploy on your own server →",
+      "monthly": "/mo",
+      "free": {
+        "name": "Free",
+        "price": "€0",
+        "description": "For landlords getting started.",
+        "cta": "Get started free",
+        "f1": "1 property",
+        "f2": "Unlimited tenants & leases",
+        "f3": "AT-compatible receipts",
+        "f4": "Tenant self-service portal",
+        "f5": "Basic reporting"
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "€19",
+        "badge": "Most popular",
+        "description": "For active landlords with a growing portfolio.",
+        "cta": "Start free trial",
+        "f1": "Up to 10 properties",
+        "f2": "AT electronic receipt generation",
+        "f3": "IRS / IRPF tax exports",
+        "f4": "Compliance alerts & deadlines",
+        "f5": "Email correspondence",
+        "f6": "Document storage"
+      },
+      "business": {
+        "name": "Business",
+        "price": "€49",
+        "description": "For property managers running larger portfolios.",
+        "cta": "Contact sales",
+        "f1": "Unlimited properties",
+        "f2": "Team access (up to 5 users)",
+        "f3": "NRUA export (Spain)",
+        "f4": "SAF-T PT export",
+        "f5": "Priority support",
+        "f6": "API access"
+      }
+    },
     "closingCta": {
       "title": "Ready to simplify your rentals?",
       "subtitle": "Try the full workflow free — properties, tenants, leases, and receipts in one place.",

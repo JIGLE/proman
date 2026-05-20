@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans, Syne } from "next/font/google";
 // Development-only server patch to help locate React.Children.only failures
 import "@/lib/dev/patch-react-children-only";
 import "./globals.css";
@@ -13,6 +13,13 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
   display: "swap",
   weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const syne = Syne({
+  subsets: ["latin"],
+  variable: "--font-syne",
+  display: "swap",
+  weight: ["600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -46,7 +53,7 @@ export default async function RootLayout({
   return (
     <html
       lang={defaultLocale}
-      className={plusJakartaSans.variable}
+      className={`${plusJakartaSans.variable} ${syne.variable}`}
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >

@@ -421,8 +421,51 @@
         }
       }
     },
+    "pricing": {
+      "eyebrow": "Precios sencillos",
+      "title": "Empieza gratis. Escala cuando lo necesites.",
+      "subtitle": "Todos los planes incluyen el flujo completo. Mejora para más propiedades y acceso de equipo.",
+      "selfHostedNote": "¿Prefieres alojarlo tú mismo? La versión open-source es siempre gratuita.",
+      "selfHostedLink": "Desplegar en tu servidor →",
+      "monthly": "/mes",
+      "free": {
+        "name": "Gratuito",
+        "price": "€0",
+        "description": "Para propietarios que están empezando.",
+        "cta": "Empezar gratis",
+        "f1": "1 propiedad",
+        "f2": "Inquilinos y contratos ilimitados",
+        "f3": "Recibos compatibles con AT",
+        "f4": "Portal self-service para inquilinos",
+        "f5": "Informes básicos"
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "€19",
+        "badge": "Más popular",
+        "description": "Para propietarios activos con una cartera en crecimiento.",
+        "cta": "Iniciar prueba gratuita",
+        "f1": "Hasta 10 propiedades",
+        "f2": "Generación de recibos electrónicos AT",
+        "f3": "Exportaciones fiscales IRS / IRPF",
+        "f4": "Alertas y plazos de cumplimiento",
+        "f5": "Correspondencia por email",
+        "f6": "Almacenamiento de documentos"
+      },
+      "business": {
+        "name": "Business",
+        "price": "€49",
+        "description": "Para gestores de propiedades con carteras más grandes.",
+        "cta": "Contactar con ventas",
+        "f1": "Propiedades ilimitadas",
+        "f2": "Acceso de equipo (hasta 5 usuarios)",
+        "f3": "Exportación NRUA (España)",
+        "f4": "Exportación SAF-T PT",
+        "f5": "Soporte prioritario",
+        "f6": "Acceso API"
+      }
+    },
     "closingCta": {
-      "title": "¿Listo para simplificar tus alquileres?",
       "subtitle": "Prueba el flujo completo gratis — propiedades, inquilinos, contratos y recibos en un solo lugar.",
       "primary": "Probar Demo Gratuita",
       "secondary": "Entrar en tu cuenta"

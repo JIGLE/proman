@@ -421,8 +421,51 @@
         }
       }
     },
+    "pricing": {
+      "eyebrow": "Preços simples",
+      "title": "Comece de graça. Escale quando precisar.",
+      "subtitle": "Todos os planos incluem o fluxo completo. Faça upgrade para mais imóveis e acesso de equipa.",
+      "selfHostedNote": "Prefere instalar no seu servidor? A versão open-source é sempre gratuita.",
+      "selfHostedLink": "Instalar no seu servidor →",
+      "monthly": "/mês",
+      "free": {
+        "name": "Gratuito",
+        "price": "€0",
+        "description": "Para senhorios a começar.",
+        "cta": "Começar gratuitamente",
+        "f1": "1 imóvel",
+        "f2": "Inquilinos e contratos ilimitados",
+        "f3": "Recibos compatíveis com AT",
+        "f4": "Portal self-service para inquilinos",
+        "f5": "Relatórios básicos"
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "€19",
+        "badge": "Mais popular",
+        "description": "Para senhorios ativos com portfolio em crescimento.",
+        "cta": "Iniciar trial gratuito",
+        "f1": "Até 10 imóveis",
+        "f2": "Geração de recibos eletrónicos AT",
+        "f3": "Exportações fiscais IRS / IRPF",
+        "f4": "Alertas e prazos de conformidade",
+        "f5": "Correspondência por email",
+        "f6": "Armazenamento de documentos"
+      },
+      "business": {
+        "name": "Business",
+        "price": "€49",
+        "description": "Para gestores de imóveis com portfolios maiores.",
+        "cta": "Contactar vendas",
+        "f1": "Imóveis ilimitados",
+        "f2": "Acesso de equipa (até 5 utilizadores)",
+        "f3": "Exportação NRUA (Espanha)",
+        "f4": "Exportação SAF-T PT",
+        "f5": "Suporte prioritário",
+        "f6": "Acesso API"
+      }
+    },
     "closingCta": {
-      "title": "Pronto para simplificar os seus arrendamentos?",
       "subtitle": "Experimente o fluxo completo gratuitamente — imóveis, inquilinos, contratos e recibos num só lugar.",
       "primary": "Ver demo",
       "secondary": "Entrar na sua conta"

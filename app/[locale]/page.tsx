@@ -155,7 +155,7 @@ export default async function LandingPage({ params }: Props) {
             </LandingHeroItem>
 
             <LandingHeroItem>
-              <h1 className="text-[40px] font-bold leading-[1.1] tracking-[-0.03em] text-zinc-50 sm:text-5xl">
+              <h1 className="font-display text-[40px] font-bold leading-[1.08] tracking-[-0.04em] text-zinc-50 sm:text-5xl">
                 {t("hero")}
               </h1>
             </LandingHeroItem>
@@ -371,7 +371,7 @@ export default async function LandingPage({ params }: Props) {
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
               {t("features.eyebrow")}
             </p>
-            <h2 className="mt-4 text-[28px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-3xl">
+            <h2 className="font-display mt-4 text-[28px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-3xl">
               {t("features.title")}
             </h2>
           </div>
@@ -480,7 +480,7 @@ export default async function LandingPage({ params }: Props) {
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
               {t("timeline.eyebrow")}
             </p>
-            <h2 className="mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-[28px]">
+            <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-[28px]">
               {t("timeline.title")}
             </h2>
             <p className="mt-3 text-sm text-zinc-500">{t("timeline.subtitle")}</p>
@@ -541,7 +541,7 @@ export default async function LandingPage({ params }: Props) {
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
               {t("howItWorks.eyebrow")}
             </p>
-            <h2 className="mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-[28px]">
+            <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-[28px]">
               {t("howItWorks.title")}
             </h2>
             <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">
@@ -595,7 +595,7 @@ export default async function LandingPage({ params }: Props) {
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
               {t("demo.label")}
             </p>
-            <h2 className="mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50">
+            <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50">
               {t("demo.title")}
             </h2>
             <p className="mt-3 text-sm text-zinc-500">{t("demo.subtitle")}</p>
@@ -663,8 +663,149 @@ export default async function LandingPage({ params }: Props) {
         </section>
 
         {/* â”€â”€ Closing CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <section className="mx-auto mt-28 max-w-6xl px-4">
+          <div className="mb-12 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/25 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
+              {t("pricing.eyebrow")}
+            </div>
+            <h2 className="font-display mt-4 text-[28px] font-bold tracking-[-0.03em] text-zinc-50 sm:text-4xl">
+              {t("pricing.title")}
+            </h2>
+            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-zinc-500">
+              {t("pricing.subtitle")}
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-3">
+            {/* Free */}
+            <div className="flex flex-col rounded-2xl border border-white/[0.06] bg-zinc-900/40 p-6">
+              <p className="text-sm font-semibold text-zinc-400">{t("pricing.free.name")}</p>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="text-4xl font-bold tracking-tight text-zinc-50">
+                  {t("pricing.free.price")}
+                </span>
+                <span className="text-sm text-zinc-600">{t("pricing.monthly")}</span>
+              </div>
+              <p className="mt-2 text-[13px] text-zinc-600">{t("pricing.free.description")}</p>
+              <ul className="my-6 flex-1 space-y-3">
+                {[
+                  t("pricing.free.f1"),
+                  t("pricing.free.f2"),
+                  t("pricing.free.f3"),
+                  t("pricing.free.f4"),
+                  t("pricing.free.f5"),
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-zinc-400">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-zinc-600" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <TrackedLandingLink
+                href="/auth/signin"
+                eventName="landing.pricing_cta"
+                eventData={{ plan: "free" }}
+              >
+                <Button
+                  variant="outline"
+                  className="w-full border-white/10 text-zinc-300 hover:bg-white/5 hover:text-zinc-50"
+                >
+                  {t("pricing.free.cta")}
+                </Button>
+              </TrackedLandingLink>
+            </div>
+
+            {/* Pro — highlighted */}
+            <div className="relative flex flex-col rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-indigo-950/40 to-zinc-900/60 p-6 shadow-xl shadow-indigo-950/30">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo-600 px-3 py-0.5 text-[11px] font-semibold text-white">
+                {t("pricing.pro.badge")}
+              </span>
+              <p className="text-sm font-semibold text-indigo-300">{t("pricing.pro.name")}</p>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="text-4xl font-bold tracking-tight text-zinc-50">
+                  {t("pricing.pro.price")}
+                </span>
+                <span className="text-sm text-zinc-500">{t("pricing.monthly")}</span>
+              </div>
+              <p className="mt-2 text-[13px] text-zinc-500">{t("pricing.pro.description")}</p>
+              <ul className="my-6 flex-1 space-y-3">
+                {[
+                  t("pricing.pro.f1"),
+                  t("pricing.pro.f2"),
+                  t("pricing.pro.f3"),
+                  t("pricing.pro.f4"),
+                  t("pricing.pro.f5"),
+                  t("pricing.pro.f6"),
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-zinc-300">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-400" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <TrackedLandingLink
+                href={`/${locale}/demo?perspective=owner`}
+                eventName="landing.pricing_cta"
+                eventData={{ plan: "pro" }}
+              >
+                <Button className="w-full bg-indigo-600 font-semibold text-white hover:bg-indigo-500">
+                  {t("pricing.pro.cta")}
+                </Button>
+              </TrackedLandingLink>
+            </div>
+
+            {/* Business */}
+            <div className="flex flex-col rounded-2xl border border-white/[0.06] bg-zinc-900/40 p-6">
+              <p className="text-sm font-semibold text-zinc-400">{t("pricing.business.name")}</p>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="text-4xl font-bold tracking-tight text-zinc-50">
+                  {t("pricing.business.price")}
+                </span>
+                <span className="text-sm text-zinc-600">{t("pricing.monthly")}</span>
+              </div>
+              <p className="mt-2 text-[13px] text-zinc-600">{t("pricing.business.description")}</p>
+              <ul className="my-6 flex-1 space-y-3">
+                {[
+                  t("pricing.business.f1"),
+                  t("pricing.business.f2"),
+                  t("pricing.business.f3"),
+                  t("pricing.business.f4"),
+                  t("pricing.business.f5"),
+                  t("pricing.business.f6"),
+                ].map((f) => (
+                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-zinc-400">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-zinc-600" />
+                    {f}
+                  </li>
+                ))}
+              </ul>
+              <a href="mailto:hello@proman.app">
+                <Button
+                  variant="outline"
+                  className="w-full border-white/10 text-zinc-300 hover:bg-white/5 hover:text-zinc-50"
+                >
+                  {t("pricing.business.cta")}
+                </Button>
+              </a>
+            </div>
+          </div>
+
+          <p className="mt-8 text-center text-[13px] text-zinc-600">
+            {t("pricing.selfHostedNote")}{" "}
+            <a
+              href="https://github.com/JIGLE/proman"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-zinc-500 underline-offset-4 transition-colors hover:text-zinc-300 hover:underline"
+            >
+              {t("pricing.selfHostedLink")}
+            </a>
+          </p>
+        </section>
+
         <section className="mx-auto mt-28 max-w-lg px-4 text-center">
-          <h2 className="text-[28px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-3xl">
+          <h2 className="font-display text-[28px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-3xl">
             {t("closingCta.title")}
           </h2>
           <p className="mt-4 text-[15px] leading-relaxed text-zinc-500">
