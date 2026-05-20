@@ -18,7 +18,21 @@ const plusJakartaSans = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Proman — Property Management",
   description:
-    "Proman gives landlords and property managers in Portugal and Spain one clear flow from rent collection to compliant receipts and tax exports.",
+    "Proman automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+  openGraph: {
+    title: "Proman — Property Management",
+    description:
+      "Proman automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+    type: "website",
+    locale: "en_US",
+    siteName: "Proman",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Proman — Property Management",
+    description:
+      "Proman automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+  },
 };
 
 export default async function RootLayout({
