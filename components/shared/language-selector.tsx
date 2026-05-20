@@ -59,7 +59,7 @@ export function LanguageSelector({ compact = false, className }: LanguageSelecto
           variant="ghost"
           size="sm"
           className={cn(
-            "gap-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-surface-hover)]",
+            "gap-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/5",
             compact ? "h-9 w-9 p-0" : "h-9 px-2.5",
             className,
           )}
@@ -70,7 +70,7 @@ export function LanguageSelector({ compact = false, className }: LanguageSelecto
             <Globe className="h-4 w-4" />
           ) : (
             <>
-              <span className="text-base leading-none">{localeFlags[currentLocale]}</span>
+              <Globe className="h-3.5 w-3.5" />
               <span className="text-xs font-medium tracking-wide">
                 {localeCodes[currentLocale]}
               </span>

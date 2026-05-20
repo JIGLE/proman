@@ -303,6 +303,8 @@
     "subtitle": "ProMan da a propietarios y gestores un flujo único desde el seguimiento del pago hasta el recibo con contexto fiscal PT/ES.",
     "cta": "Entrar",
     "headerCta": "Empezar",
+    "navHowItWorks": "Cómo funciona",
+    "navWorkflow": "Flujo",
     "demoCta": "Probar Demo Gratuita",
     "secondaryCta": "Ver cómo funciona",
     "microcopy": "Sin tarjeta. Sin configuración. Demostración guiada en menos de 2 minutos.",
@@ -318,6 +320,14 @@
       "title": "Del alquiler vencido al registro fiscal listo",
       "subtitle": "Un único flujo, no un panel fragmentado.",
       "badge": "Flujo del propietario",
+      "kpi": {
+        "overdueLabel": "Vencido hoy",
+        "overdueHint": "1 propiedad",
+        "collectedLabel": "Cobrado este mes",
+        "collectedHint": "4 pagos",
+        "receiptsLabel": "Recibos emitidos",
+        "receiptsHint": "1 pendiente"
+      },
       "steps": {
         "detect": {
           "title": "Alquiler vencido detectado",
@@ -367,11 +377,23 @@
       "ownerTitle": "Explorar como Propietario",
       "ownerDescription": "Ve la cartera completa, inquilinos, pagos, documentos y flujos fiscales.",
       "tenantTitle": "Explorar como Inquilino",
-      "tenantDescription": "Ve una vivienda, un contrato, pagos, recibos y documentos compartidos."
+      "tenantDescription": "Ve una vivienda, un contrato, pagos, recibos y documentos compartidos.",
+      "owner": {
+        "f1": "Vista completa de la cartera",
+        "f2": "Pagos, contratos y recibos",
+        "f3": "Flujos fiscales PT/ES"
+      },
+      "tenant": {
+        "f1": "Tu contrato y pagos",
+        "f2": "Acceso a recibos",
+        "f3": "Documentos compartidos"
+      }
     },
     "features": {
       "eyebrow": "Qué incluye",
       "title": "Todo lo que necesita un propietario, nada más",
+      "primaryBadge": "Flujo principal",
+      "primaryCta": "Ver cómo fluyen los pagos",
       "items": {
         "rentCollection": {
           "title": "Cobro de Alquileres",
@@ -404,6 +426,43 @@
       "subtitle": "Prueba el flujo completo gratis — propiedades, inquilinos, contratos y recibos en un solo lugar.",
       "primary": "Probar Demo Gratuita",
       "secondary": "Entrar en tu cuenta"
+    },
+    "trust": {
+      "items": {
+        "records": "Registros listos para auditoría",
+        "export": "Datos listos para exportar",
+        "pt_es": "Perfiles fiscales PT/ES",
+        "roles": "Roles de propietario e inquilino",
+        "documents": "Almacenamiento seguro de documentos",
+        "operations": "Operaciones centralizadas"
+      }
+    },
+    "timeline": {
+      "eyebrow": "El ciclo de cobro",
+      "title": "Un flujo. Del alquiler vencido al registro fiscal listo.",
+      "subtitle": "Cada paso registrado, cada registro vinculado.",
+      "steps": {
+        "due": {
+          "title": "Alquiler vencido",
+          "description": "El contrato aparece en la cola de hoy"
+        },
+        "reminder": {
+          "title": "Recordatorio enviado",
+          "description": "Inquilino notificado automáticamente"
+        },
+        "payment": {
+          "title": "Pago registrado",
+          "description": "Importe registrado con marca de tiempo"
+        },
+        "receipt": {
+          "title": "Recibo emitido",
+          "description": "PDF generado y vinculado al pago"
+        },
+        "export": {
+          "title": "Exportación lista",
+          "description": "Registro listo para Hacienda o AT"
+        }
+      }
     }
   },
   "errors": {

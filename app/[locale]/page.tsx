@@ -1,9 +1,11 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import {
   AlarmClock,
   ArrowRight,
   BadgeEuro,
+  Bell,
   Building2,
+  CheckCircle2,
   Globe2,
   KeyRound,
   Play,
@@ -45,7 +47,47 @@ export default async function LandingPage({ params }: Props) {
   const t = await getTranslations("landing");
   const tFooter = await getTranslations("footer");
 
-  const trustChips = [t("chips.simple"), t("chips.compliance"), t("chips.workflow")];
+  const trustItems = [
+    t("trust.items.records"),
+    t("trust.items.export"),
+    t("trust.items.pt_es"),
+    t("trust.items.roles"),
+    t("trust.items.documents"),
+    t("trust.items.operations"),
+  ];
+
+  const timelineSteps = [
+    {
+      icon: AlarmClock,
+      color: "text-red-400",
+      title: t("timeline.steps.due.title"),
+      description: t("timeline.steps.due.description"),
+    },
+    {
+      icon: Bell,
+      color: "text-amber-400",
+      title: t("timeline.steps.reminder.title"),
+      description: t("timeline.steps.reminder.description"),
+    },
+    {
+      icon: BadgeEuro,
+      color: "text-blue-400",
+      title: t("timeline.steps.payment.title"),
+      description: t("timeline.steps.payment.description"),
+    },
+    {
+      icon: ReceiptText,
+      color: "text-violet-400",
+      title: t("timeline.steps.receipt.title"),
+      description: t("timeline.steps.receipt.description"),
+    },
+    {
+      icon: Globe2,
+      color: "text-emerald-400",
+      title: t("timeline.steps.export.title"),
+      description: t("timeline.steps.export.description"),
+    },
+  ];
 
   const howItWorksSteps = [
     {
@@ -68,87 +110,85 @@ export default async function LandingPage({ params }: Props) {
     },
   ];
 
-  const featureItems = [
-    { key: "rentCollection", icon: AlarmClock },
-    { key: "receipts", icon: ReceiptText },
-    { key: "taxCompliance", icon: ShieldCheck },
-    { key: "maintenance", icon: Wrench },
-    { key: "leaseManagement", icon: ScrollText },
-    { key: "tenantPortal", icon: Users },
-  ] as const;
-
-  const demoOptions = [
-    {
-      key: "owner",
-      icon: ShieldCheck,
-      title: t("demo.ownerTitle"),
-      description: t("demo.ownerDescription"),
-      href: `/${locale}/demo?perspective=owner`,
-    },
-    {
-      key: "tenant",
-      icon: KeyRound,
-      title: t("demo.tenantTitle"),
-      description: t("demo.tenantDescription"),
-      href: `/${locale}/demo?perspective=tenant`,
-    },
-  ];
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-zinc-900 text-zinc-50">
+    <div className="min-h-screen bg-[#09090e] text-zinc-50">
       <LocaleSelectOverlay currentLocale={locale} />
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
+
+      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#09090e]/80 backdrop-blur-md">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2">
-            <Building2 className="h-7 w-7 text-blue-500" />
-            <span className="text-xl font-bold">Proman</span>
+            <Building2 className="h-6 w-6 text-blue-500" />
+            <span className="text-lg font-semibold tracking-tight">Proman</span>
           </div>
-          <div className="flex items-center gap-2">
-            <LanguageSelector />
-            <TrackedLandingLink
-              href="/auth/signin"
-              eventName="landing.signin_click"
-              eventData={{ location: "header" }}
+          <nav className="hidden md:flex items-center gap-1">
+            <a
+              href="#how-it-works"
+              className="px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-100 transition-colors"
             >
-              <Button variant="ghost" size="sm" className="text-zinc-300 hover:text-zinc-50">
-                {t("cta")}
-              </Button>
-            </TrackedLandingLink>
+              {t("navHowItWorks")}
+            </a>
+            <a
+              href="#workflow"
+              className="px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-100 transition-colors"
+            >
+              {t("navWorkflow")}
+            </a>
+          </nav>
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:block">
+              <LanguageSelector />
+            </div>
+            <div className="hidden sm:block h-4 w-px bg-white/10" />
+            <div className="hidden sm:block">
+              <TrackedLandingLink
+                href="/auth/signin"
+                eventName="landing.signin_click"
+                eventData={{ location: "header" }}
+              >
+                <Button variant="ghost" size="sm" className="text-zinc-300 hover:text-zinc-50">
+                  {t("cta")}
+                </Button>
+              </TrackedLandingLink>
+            </div>
             <TrackedLandingLink
               href={`/${locale}/demo?perspective=owner`}
               eventName="landing.demo_start"
               eventData={{ location: "header", perspective: "owner" }}
             >
-              <Button size="sm" className="bg-blue-600 text-white hover:bg-blue-700">
-                {t("headerCta")} <ArrowRight className="ml-1 h-3.5 w-3.5" />
+              <Button className="h-9 px-4 text-[13px] font-semibold gap-1.5 bg-blue-600 text-white shadow-sm shadow-blue-950 hover:bg-blue-500">
+                {t("headerCta")} <ArrowRight className="h-3.5 w-3.5" />
               </Button>
             </TrackedLandingLink>
           </div>
         </div>
       </header>
 
-      <main className="px-4 pb-16 pt-28">
+      <main className="px-4 pb-24 pt-28">
         <LandingAnalyticsObserver locale={locale} demoEnabled={true} />
 
-        {/* Hero */}
-        <section className="mx-auto grid max-w-6xl gap-14 lg:grid-cols-[0.98fr_1.02fr] lg:items-center">
+        {/* â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <section className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.88fr_1.12fr] lg:items-start">
           <LandingHero>
             <LandingHeroItem>
-              <div className="inline-flex items-center rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-sm text-blue-200">
+              <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/25 bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-300">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-blue-400" />
                 {t("eyebrow")}
               </div>
             </LandingHeroItem>
+
             <LandingHeroItem>
-              <div className="space-y-4">
-                <h1 className="max-w-2xl text-4xl font-bold tracking-tight text-zinc-50 sm:text-5xl">
-                  {t("hero")}
-                </h1>
-                <p className="max-w-xl text-lg text-zinc-300">{t("subtitle")}</p>
-              </div>
+              <h1 className="text-[40px] font-bold leading-[1.1] tracking-[-0.03em] text-zinc-50 sm:text-5xl">
+                {t("hero")}
+              </h1>
             </LandingHeroItem>
 
             <LandingHeroItem>
-              <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+              <p className="max-w-md text-[16px] leading-relaxed text-zinc-400">{t("subtitle")}</p>
+            </LandingHeroItem>
+
+            <LandingHeroItem>
+              <div className="flex flex-wrap gap-3">
                 <TrackedLandingLink
                   href={`/${locale}/demo?perspective=owner`}
                   eventName="landing.demo_start"
@@ -156,222 +196,403 @@ export default async function LandingPage({ params }: Props) {
                 >
                   <Button
                     size="xl"
-                    className="h-12 gap-2 bg-blue-600 px-8 text-base text-white hover:bg-blue-700"
+                    className="h-11 gap-2 bg-blue-600 px-7 text-[15px] font-semibold text-white shadow-lg shadow-blue-950 hover:bg-blue-500"
                   >
-                    <Play className="h-4 w-4" />
+                    <Play className="h-3.5 w-3.5" />
                     {t("demoCta")}
                   </Button>
                 </TrackedLandingLink>
                 <TrackedLandingLink
-                  href="#how-it-works"
+                  href="#workflow"
                   eventName="landing.workflow_cta_click"
                   eventData={{ location: "hero_secondary" }}
                 >
                   <Button
                     size="xl"
-                    variant="outline"
-                    className="h-12 gap-2 border-zinc-700 px-8 text-base text-zinc-200 hover:border-zinc-500 hover:text-zinc-50"
+                    variant="ghost"
+                    className="h-11 gap-2 px-5 text-[15px] text-zinc-400 hover:text-zinc-100"
                   >
                     {t("secondaryCta")}
-                    <ArrowRight className="h-4 w-4" />
+                    <ArrowRight className="h-3.5 w-3.5" />
                   </Button>
                 </TrackedLandingLink>
               </div>
             </LandingHeroItem>
 
             <LandingHeroItem>
-              <p className="text-sm text-zinc-300">{t("microcopy")}</p>
-              <p className="text-sm text-zinc-400 mt-2">
-                {t("tenantPortalNote")}{" "}
-                <a
-                  href="/tenant-portal"
-                  className="underline underline-offset-4 text-zinc-300 hover:text-zinc-50 transition-colors"
-                >
-                  {t("tenantPortalLink")} →
-                </a>
-              </p>
-            </LandingHeroItem>
-
-            <LandingHeroItem>
-              <div className="flex flex-wrap items-center gap-2">
-                {trustChips.map((chip) => (
-                  <div
-                    key={chip}
-                    className="rounded-full border border-zinc-600 bg-zinc-800/80 px-3 py-1 text-xs font-medium text-zinc-100"
+              <div className="space-y-1.5">
+                <p className="text-sm text-zinc-500">{t("microcopy")}</p>
+                <p className="text-sm text-zinc-500">
+                  {t("tenantPortalNote")}{" "}
+                  <a
+                    href="/tenant-portal"
+                    className="text-zinc-400 underline-offset-4 transition-colors hover:text-zinc-200 hover:underline"
                   >
-                    {chip}
-                  </div>
-                ))}
+                    {t("tenantPortalLink")} â†’
+                  </a>
+                </p>
               </div>
             </LandingHeroItem>
           </LandingHero>
 
-          <div className="hidden rounded-[28px] border border-zinc-800 bg-zinc-900/70 p-4 shadow-2xl shadow-black/30 lg:block">
-            <div className="overflow-hidden rounded-[22px] border border-zinc-800 bg-zinc-950">
-              <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.24em] text-zinc-500">
-                    {t("preview.label")}
-                  </p>
-                  <h2 className="mt-1 text-lg font-semibold text-zinc-100">{t("preview.title")}</h2>
-                  <p className="mt-1 text-sm text-zinc-500">{t("preview.subtitle")}</p>
-                </div>
-                <div className="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-300">
-                  {t("preview.badge")}
-                </div>
-              </div>
+          {/* â”€â”€ Product Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          <div className="relative hidden lg:block">
+            <div className="pointer-events-none absolute -inset-10 -z-10 rounded-[48px] bg-blue-600/5 blur-3xl" />
 
-              <div className="grid gap-4 p-4 lg:grid-cols-[1.08fr_0.92fr]">
-                <div className="space-y-3">
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-red-500/10 text-xs font-semibold text-red-300">
-                          1
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-zinc-100">
-                            {t("preview.steps.detect.title")}
-                          </p>
-                          <p className="text-xs text-zinc-500">
-                            {t("preview.steps.detect.description")}
-                          </p>
-                        </div>
-                      </div>
-                      <p className="text-sm font-semibold text-red-300">EUR 950</p>
+            <div className="rounded-[22px] border border-white/[0.08] bg-zinc-900/80 p-3 shadow-2xl shadow-black/60 ring-1 ring-white/[0.03]">
+              <div className="overflow-hidden rounded-[16px] border border-white/[0.05] bg-zinc-950">
+                {/* Chrome bar */}
+                <div className="flex items-center justify-between border-b border-white/[0.05] px-4 py-3">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex gap-1.5">
+                      <div className="h-2 w-2 rounded-full bg-zinc-800" />
+                      <div className="h-2 w-2 rounded-full bg-zinc-800" />
+                      <div className="h-2 w-2 rounded-full bg-zinc-800" />
                     </div>
+                    <div className="h-3.5 w-px bg-zinc-800" />
+                    <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-600">
+                      {t("preview.label")}
+                    </span>
                   </div>
-
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-blue-500/10 text-xs font-semibold text-blue-300">
-                          2
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-zinc-100">
-                            {t("preview.steps.receipt.title")}
-                          </p>
-                          <p className="text-xs text-zinc-500">
-                            {t("preview.steps.receipt.description")}
-                          </p>
-                        </div>
-                      </div>
-                      <Building2 className="h-4 w-4 text-blue-300" />
-                    </div>
-                  </div>
-
-                  <div className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-start gap-3">
-                        <div className="mt-0.5 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/10 text-xs font-semibold text-emerald-300">
-                          3
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-zinc-100">
-                            {t("preview.steps.compliance.title")}
-                          </p>
-                          <p className="text-xs text-zinc-500">
-                            {t("preview.steps.compliance.description")}
-                          </p>
-                        </div>
-                      </div>
-                      <ShieldCheck className="h-4 w-4 text-emerald-300" />
-                    </div>
-                  </div>
+                  <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-400">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                    {t("preview.badge")}
+                  </span>
                 </div>
 
-                <div className="rounded-2xl border border-blue-500/30 bg-zinc-900 p-4">
-                  <div className="flex items-center gap-2 text-sm text-zinc-300">
-                    <BadgeEuro className="h-4 w-4 text-blue-300" />
-                    {t("preview.result.title")}
-                  </div>
-                  <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-                    <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
-                      {t("preview.result.netLabel")}
+                {/* KPI strip */}
+                <div className="grid grid-cols-3 divide-x divide-white/[0.04] border-b border-white/[0.04]">
+                  <div className="px-4 py-4">
+                    <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-zinc-600">
+                      {t("preview.kpi.overdueLabel")}
                     </p>
-                    <p className="mt-2 text-3xl font-semibold text-zinc-50">EUR 897</p>
-                    <div className="mt-4 space-y-2 text-sm">
-                      <div className="flex items-center justify-between text-zinc-400">
-                        <span>{t("preview.result.receipt")}</span>
-                        <span className="font-medium text-zinc-100">
-                          {t("preview.result.done")}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between text-zinc-400">
-                        <span>{t("preview.result.compliance")}</span>
-                        <span className="font-medium text-zinc-100">PT / ES</span>
-                      </div>
-                      <div className="flex items-center justify-between text-zinc-400">
-                        <span>{t("preview.result.export")}</span>
-                        <span className="font-medium text-zinc-100">
-                          {t("preview.result.ready")}
-                        </span>
-                      </div>
-                    </div>
+                    <p className="mt-1.5 text-[22px] font-bold tabular-nums tracking-tight text-red-400">
+                      EUR 950
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-zinc-600">
+                      {t("preview.kpi.overdueHint")}
+                    </p>
                   </div>
+                  <div className="px-4 py-4">
+                    <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-zinc-600">
+                      {t("preview.kpi.collectedLabel")}
+                    </p>
+                    <p className="mt-1.5 text-[22px] font-bold tabular-nums tracking-tight text-zinc-100">
+                      EUR 3 800
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-zinc-600">
+                      {t("preview.kpi.collectedHint")}
+                    </p>
+                  </div>
+                  <div className="px-4 py-4">
+                    <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-zinc-600">
+                      {t("preview.kpi.receiptsLabel")}
+                    </p>
+                    <p className="mt-1.5 text-[22px] font-bold tabular-nums tracking-tight text-zinc-100">
+                      4 / 5
+                    </p>
+                    <p className="mt-0.5 text-[10px] text-zinc-600">
+                      {t("preview.kpi.receiptsHint")}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Active workflow steps */}
+                <div className="space-y-1.5 p-4">
+                  <p className="mb-3 text-[9px] font-medium uppercase tracking-[0.18em] text-zinc-600">
+                    {t("preview.title")}
+                  </p>
+
+                  {/* Step 1 â€” active */}
+                  <div className="flex items-center gap-3 rounded-xl bg-zinc-900 px-3.5 py-3 ring-1 ring-red-500/20">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500/15 text-[10px] font-bold text-red-400">
+                      1
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12px] font-semibold leading-tight text-zinc-100">
+                        {t("preview.steps.detect.title")}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-zinc-500">
+                        {t("preview.steps.detect.description")}
+                      </p>
+                    </div>
+                    <span className="shrink-0 text-[12px] font-semibold tabular-nums text-red-400">
+                      EUR 950
+                    </span>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div className="flex items-center gap-3 rounded-xl bg-zinc-900/60 px-3.5 py-3">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-500/10 text-[10px] font-bold text-blue-400">
+                      2
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12px] font-medium leading-tight text-zinc-300">
+                        {t("preview.steps.receipt.title")}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-zinc-600">
+                        {t("preview.steps.receipt.description")}
+                      </p>
+                    </div>
+                    <Building2 className="h-3.5 w-3.5 shrink-0 text-blue-400/50" />
+                  </div>
+
+                  {/* Step 3 */}
+                  <div className="flex items-center gap-3 rounded-xl bg-zinc-900/60 px-3.5 py-3">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-[10px] font-bold text-emerald-400">
+                      3
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[12px] font-medium leading-tight text-zinc-300">
+                        {t("preview.steps.compliance.title")}
+                      </p>
+                      <p className="mt-0.5 text-[10px] text-zinc-600">
+                        {t("preview.steps.compliance.description")}
+                      </p>
+                    </div>
+                    <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-400/50" />
+                  </div>
+                </div>
+
+                {/* Result footer */}
+                <div className="flex items-center justify-between border-t border-white/[0.04] bg-zinc-900/30 px-4 py-2.5">
+                  <div className="flex items-center gap-3 text-[10px] text-zinc-600">
+                    <span>
+                      {t("preview.result.receipt")}:{" "}
+                      <span className="text-zinc-400">{t("preview.result.done")}</span>
+                    </span>
+                    <span className="h-2.5 w-px bg-zinc-800" />
+                    <span>
+                      {t("preview.result.export")}:{" "}
+                      <span className="text-zinc-400">{t("preview.result.ready")}</span>
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-semibold tracking-wide text-zinc-600">
+                    PT / ES
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         </section>
 
-        {/* Features */}
-        <section className="mx-auto mt-20 max-w-6xl">
+        {/* â”€â”€ Trust Strip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <div className="mx-auto mt-16 max-w-6xl">
+          <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
+            {trustItems.map((item) => (
+              <div key={item} className="flex items-center gap-2 text-sm text-zinc-500">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-zinc-700" />
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* â”€â”€ Features â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <section className="mx-auto mt-24 max-w-6xl">
           <div className="text-center">
-            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
               {t("features.eyebrow")}
             </p>
-            <h2 className="mt-3 text-2xl font-semibold text-zinc-50 sm:text-3xl">
+            <h2 className="mt-4 text-[28px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-3xl">
               {t("features.title")}
             </h2>
           </div>
-          <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {featureItems.map(({ key, icon: Icon }) => (
-              <div
-                key={key}
-                className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 space-y-3"
-              >
-                <div className="rounded-lg bg-blue-500/10 p-2 w-fit">
-                  <Icon className="h-5 w-5 text-blue-300" />
+
+          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {/* Primary: Rent Collection â€” spans 2 cols */}
+            <div className="space-y-4 rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-950/25 to-zinc-900/60 p-6 sm:col-span-2">
+              <div className="flex items-start justify-between">
+                <div className="rounded-xl bg-blue-500/15 p-2.5">
+                  <AlarmClock className="h-5 w-5 text-blue-400" />
                 </div>
-                <p className="text-base font-semibold text-zinc-100">
-                  {t(`features.items.${key}.title`)}
-                </p>
-                <p className="text-sm text-zinc-400">{t(`features.items.${key}.description`)}</p>
+                <span className="rounded-full border border-blue-500/20 bg-blue-500/8 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-blue-400">
+                  {t("features.primaryBadge")}
+                </span>
               </div>
-            ))}
+              <div>
+                <p className="text-lg font-bold text-zinc-50">
+                  {t("features.items.rentCollection.title")}
+                </p>
+                <p className="mt-2 text-[15px] leading-relaxed text-zinc-400">
+                  {t("features.items.rentCollection.description")}
+                </p>
+              </div>
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-blue-400">
+                {t("features.primaryCta")} <ArrowRight className="h-3.5 w-3.5" />
+              </div>
+            </div>
+
+            {/* Instant Receipts */}
+            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5">
+              <div className="w-fit rounded-lg bg-zinc-800/70 p-2">
+                <ReceiptText className="h-4 w-4 text-zinc-300" />
+              </div>
+              <p className="text-[15px] font-semibold text-zinc-100">
+                {t("features.items.receipts.title")}
+              </p>
+              <p className="text-sm text-zinc-500">{t("features.items.receipts.description")}</p>
+            </div>
+
+            {/* Tax Compliance */}
+            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5">
+              <div className="w-fit rounded-lg bg-zinc-800/70 p-2">
+                <ShieldCheck className="h-4 w-4 text-zinc-300" />
+              </div>
+              <p className="text-[15px] font-semibold text-zinc-100">
+                {t("features.items.taxCompliance.title")}
+              </p>
+              <p className="text-sm text-zinc-500">
+                {t("features.items.taxCompliance.description")}
+              </p>
+            </div>
+
+            {/* Maintenance */}
+            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5">
+              <div className="w-fit rounded-lg bg-zinc-800/70 p-2">
+                <Wrench className="h-4 w-4 text-zinc-300" />
+              </div>
+              <p className="text-[15px] font-semibold text-zinc-100">
+                {t("features.items.maintenance.title")}
+              </p>
+              <p className="text-sm text-zinc-500">{t("features.items.maintenance.description")}</p>
+            </div>
+
+            {/* Lease Management */}
+            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5">
+              <div className="w-fit rounded-lg bg-zinc-800/70 p-2">
+                <ScrollText className="h-4 w-4 text-zinc-300" />
+              </div>
+              <p className="text-[15px] font-semibold text-zinc-100">
+                {t("features.items.leaseManagement.title")}
+              </p>
+              <p className="text-sm text-zinc-500">
+                {t("features.items.leaseManagement.description")}
+              </p>
+            </div>
+
+            {/* Tenant Portal â€” full width */}
+            <div className="rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5 sm:col-span-2 lg:col-span-3">
+              <div className="flex items-center gap-4">
+                <div className="w-fit shrink-0 rounded-lg bg-zinc-800/70 p-2">
+                  <Users className="h-4 w-4 text-zinc-300" />
+                </div>
+                <div>
+                  <p className="text-[15px] font-semibold text-zinc-100">
+                    {t("features.items.tenantPortal.title")}
+                  </p>
+                  <p className="mt-0.5 text-sm text-zinc-500">
+                    {t("features.items.tenantPortal.description")}
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
-        {/* How It Works */}
+        {/* â”€â”€ Workflow Timeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <section
+          id="workflow"
+          className="mx-auto mt-16 max-w-6xl overflow-hidden rounded-3xl px-6 py-12 sm:px-10"
+          style={{
+            background:
+              "radial-gradient(ellipse at 50% -10%, rgba(59,130,246,0.08) 0%, transparent 60%), #0d0d14",
+          }}
+        >
+          <div className="text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
+              {t("timeline.eyebrow")}
+            </p>
+            <h2 className="mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-[28px]">
+              {t("timeline.title")}
+            </h2>
+            <p className="mt-3 text-sm text-zinc-500">{t("timeline.subtitle")}</p>
+          </div>
+
+          {/* Desktop: horizontal */}
+          <div className="relative mt-12 hidden items-start md:flex">
+            <div className="absolute left-[9%] right-[9%] top-5 h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent" />
+            {timelineSteps.map((step) => {
+              const Icon = step.icon;
+              return (
+                <div
+                  key={step.title}
+                  className="relative flex flex-1 flex-col items-center px-3 text-center"
+                >
+                  <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950 shadow-lg shadow-black/40">
+                    <Icon className={`h-4 w-4 ${step.color}`} />
+                  </div>
+                  <p className="mt-4 text-[13px] font-semibold text-zinc-200">{step.title}</p>
+                  <p className="mt-1 max-w-[110px] text-[11px] leading-snug text-zinc-600">
+                    {step.description}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Mobile: vertical */}
+          <div className="mt-8 md:hidden">
+            {timelineSteps.map((step, i) => {
+              const Icon = step.icon;
+              return (
+                <div key={step.title} className="flex gap-4">
+                  <div className="flex flex-col items-center">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950">
+                      <Icon className={`h-3.5 w-3.5 ${step.color}`} />
+                    </div>
+                    {i < timelineSteps.length - 1 && (
+                      <div className="my-1 min-h-[24px] w-px flex-1 bg-zinc-800/60" />
+                    )}
+                  </div>
+                  <div className="pb-5">
+                    <p className="text-[13px] font-semibold text-zinc-200">{step.title}</p>
+                    <p className="mt-0.5 text-[12px] text-zinc-500">{step.description}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        {/* â”€â”€ How It Works â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <section
           id="how-it-works"
-          className="mx-auto mt-14 max-w-6xl rounded-[28px] border border-zinc-800 bg-zinc-900/55 p-6 sm:p-8"
+          className="mx-auto mt-6 max-w-6xl rounded-3xl border border-white/[0.05] bg-zinc-900/50 p-8 sm:p-10"
         >
-          <div className="max-w-2xl">
-            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">
+          <div className="max-w-xl">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
               {t("howItWorks.eyebrow")}
             </p>
-            <h2 className="mt-3 text-2xl font-semibold text-zinc-50 sm:text-3xl">
+            <h2 className="mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-[28px]">
               {t("howItWorks.title")}
             </h2>
-            <p className="mt-3 text-sm text-zinc-300 sm:text-base">{t("howItWorks.subtitle")}</p>
+            <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">
+              {t("howItWorks.subtitle")}
+            </p>
           </div>
 
           <div className="mt-8 grid gap-3 md:grid-cols-3">
-            {howItWorksSteps.map((step, index) => (
-              <div key={step.key} className="rounded-2xl border border-zinc-800 bg-zinc-900/80 p-5">
-                <div className="flex items-center justify-between">
-                  <div className="rounded-lg bg-blue-500/10 p-2">
-                    <step.icon className="h-5 w-5 text-blue-300" />
+            {howItWorksSteps.map((step, index) => {
+              const Icon = step.icon;
+              return (
+                <div
+                  key={step.key}
+                  className="rounded-2xl border border-white/[0.05] bg-zinc-950/60 p-5"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="rounded-lg bg-zinc-800/80 p-2">
+                      <Icon className="h-4 w-4 text-zinc-400" />
+                    </div>
+                    <span className="text-[11px] font-bold tracking-[0.2em] text-zinc-700">
+                      0{index + 1}
+                    </span>
                   </div>
-                  <span className="text-xs font-semibold text-zinc-500">0{index + 1}</span>
+                  <p className="mt-4 text-[15px] font-semibold text-zinc-100">{step.title}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-zinc-500">{step.description}</p>
                 </div>
-                <p className="mt-4 text-base font-semibold text-zinc-100">{step.title}</p>
-                <p className="mt-2 text-sm text-zinc-400">{step.description}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="mt-8 flex justify-center">
@@ -380,7 +601,10 @@ export default async function LandingPage({ params }: Props) {
               eventName="landing.demo_start"
               eventData={{ location: "how_it_works_cta", perspective: "owner" }}
             >
-              <Button size="lg" className="gap-2 bg-blue-600 text-white hover:bg-blue-700">
+              <Button
+                size="lg"
+                className="gap-2 bg-blue-600 font-semibold text-white shadow-lg shadow-blue-950 hover:bg-blue-500"
+              >
                 <Play className="h-4 w-4" />
                 {t("demoCta")}
               </Button>
@@ -388,54 +612,97 @@ export default async function LandingPage({ params }: Props) {
           </div>
         </section>
 
-        {/* Demo Cards */}
-        <section className="mx-auto mt-6 max-w-6xl">
-          <div className="mb-5 text-center">
-            <p className="text-xs uppercase tracking-[0.2em] text-zinc-500">{t("demo.label")}</p>
-            <h2 className="mt-2 text-xl font-semibold text-zinc-50">{t("demo.title")}</h2>
-            <p className="mt-1 text-sm text-zinc-400">{t("demo.subtitle")}</p>
+        {/* â”€â”€ Demo Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <section className="mx-auto mt-16 max-w-6xl">
+          <div className="mb-8 text-center">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
+              {t("demo.label")}
+            </p>
+            <h2 className="mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50">
+              {t("demo.title")}
+            </h2>
+            <p className="mt-3 text-sm text-zinc-500">{t("demo.subtitle")}</p>
           </div>
-          <div className="grid gap-3 md:grid-cols-2">
-            {demoOptions.map((option) => (
-              <TrackedLandingLink
-                key={option.key}
-                href={option.href}
-                eventName="landing.demo_start"
-                eventData={{ location: "demo_card", perspective: option.key }}
-                className="rounded-[24px] border border-zinc-800 bg-zinc-900/65 p-5 transition-colors hover:border-zinc-700"
-              >
-                <div className="flex items-start gap-4">
-                  <div className="rounded-xl bg-blue-600/10 p-3">
-                    <option.icon className="h-5 w-5 text-blue-400" />
-                  </div>
-                  <div className="min-w-0 flex-1 space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-semibold">{option.title}</h3>
-                      <Play className="h-4 w-4 text-zinc-500" />
-                    </div>
-                    <p className="text-sm text-zinc-400">{option.description}</p>
-                    <div className="mt-4 flex items-center gap-2 text-sm font-medium text-blue-300">
-                      {t("demo.cardCta")}
-                      <ArrowRight className="h-4 w-4" />
-                    </div>
-                  </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            {/* Owner â€” operational, portfolio-focused */}
+            <TrackedLandingLink
+              href={`/${locale}/demo?perspective=owner`}
+              eventName="landing.demo_start"
+              eventData={{ location: "demo_card", perspective: "owner" }}
+              className="group rounded-[22px] border border-zinc-800 bg-zinc-900/70 p-6 transition-all hover:border-zinc-700 hover:bg-zinc-900"
+            >
+              <div className="flex items-center justify-between">
+                <div className="rounded-xl border border-zinc-700/50 bg-zinc-800 p-3">
+                  <ShieldCheck className="h-5 w-5 text-zinc-300" />
                 </div>
-              </TrackedLandingLink>
-            ))}
+                <div className="flex items-center gap-1.5 text-sm text-zinc-600 transition-colors group-hover:text-zinc-300">
+                  {t("demo.cardCta")} <ArrowRight className="h-3.5 w-3.5" />
+                </div>
+              </div>
+              <h3 className="mt-5 text-lg font-bold text-zinc-50">{t("demo.ownerTitle")}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+                {t("demo.ownerDescription")}
+              </p>
+              <div className="mt-5 space-y-2">
+                {[t("demo.owner.f1"), t("demo.owner.f2"), t("demo.owner.f3")].map((f) => (
+                  <div key={f} className="flex items-center gap-2 text-[13px] text-zinc-500">
+                    <div className="h-1 w-1 shrink-0 rounded-full bg-zinc-600" />
+                    {f}
+                  </div>
+                ))}
+              </div>
+            </TrackedLandingLink>
+
+            {/* Tenant â€” simplified, self-service */}
+            <TrackedLandingLink
+              href={`/${locale}/demo?perspective=tenant`}
+              eventName="landing.demo_start"
+              eventData={{ location: "demo_card", perspective: "tenant" }}
+              className="group rounded-[22px] border border-blue-500/20 bg-gradient-to-br from-blue-950/20 to-zinc-900/50 p-6 transition-all hover:border-blue-500/35"
+            >
+              <div className="flex items-center justify-between">
+                <div className="rounded-xl border border-blue-500/25 bg-blue-500/10 p-3">
+                  <KeyRound className="h-5 w-5 text-blue-400" />
+                </div>
+                <div className="flex items-center gap-1.5 text-sm text-zinc-600 transition-colors group-hover:text-blue-400">
+                  {t("demo.cardCta")} <ArrowRight className="h-3.5 w-3.5" />
+                </div>
+              </div>
+              <h3 className="mt-5 text-lg font-bold text-zinc-50">{t("demo.tenantTitle")}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+                {t("demo.tenantDescription")}
+              </p>
+              <div className="mt-5 space-y-2">
+                {[t("demo.tenant.f1"), t("demo.tenant.f2"), t("demo.tenant.f3")].map((f) => (
+                  <div key={f} className="flex items-center gap-2 text-[13px] text-zinc-500">
+                    <div className="h-1 w-1 shrink-0 rounded-full bg-blue-600/50" />
+                    {f}
+                  </div>
+                ))}
+              </div>
+            </TrackedLandingLink>
           </div>
         </section>
 
-        {/* Closing CTA */}
-        <section className="mx-auto mt-20 max-w-2xl px-4 py-12 text-center">
-          <h2 className="text-2xl font-bold text-zinc-50 sm:text-3xl">{t("closingCta.title")}</h2>
-          <p className="mt-4 text-base text-zinc-400">{t("closingCta.subtitle")}</p>
+        {/* â”€â”€ Closing CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        <section className="mx-auto mt-28 max-w-lg px-4 text-center">
+          <h2 className="text-[28px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-3xl">
+            {t("closingCta.title")}
+          </h2>
+          <p className="mt-4 text-[15px] leading-relaxed text-zinc-500">
+            {t("closingCta.subtitle")}
+          </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
             <TrackedLandingLink
               href={`/${locale}/demo?perspective=owner`}
               eventName="landing.demo_start"
               eventData={{ location: "closing_cta", perspective: "owner" }}
             >
-              <Button size="lg" className="gap-2 bg-blue-600 text-white hover:bg-blue-700">
+              <Button
+                size="lg"
+                className="gap-2 bg-blue-600 font-semibold text-white shadow-lg shadow-blue-950 hover:bg-blue-500"
+              >
                 <Play className="h-4 w-4" />
                 {t("closingCta.primary")}
               </Button>
@@ -445,11 +712,7 @@ export default async function LandingPage({ params }: Props) {
               eventName="landing.signin_click"
               eventData={{ location: "closing_cta" }}
             >
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-zinc-50"
-              >
+              <Button size="lg" variant="ghost" className="text-zinc-500 hover:text-zinc-200">
                 {t("closingCta.secondary")}
               </Button>
             </TrackedLandingLink>
@@ -457,15 +720,15 @@ export default async function LandingPage({ params }: Props) {
         </section>
       </main>
 
-      <footer className="mt-auto border-t border-zinc-800 px-4 py-8">
-        <div className="mx-auto max-w-6xl text-center text-sm text-zinc-500">
+      <footer className="mt-16 border-t border-white/[0.04] px-4 py-10">
+        <div className="mx-auto max-w-6xl text-center text-sm text-zinc-600">
           <p>{tFooter("copyright", { year: new Date().getFullYear().toString() })}</p>
-          <div className="mt-2 flex items-center justify-center gap-4 text-xs text-zinc-600">
-            <a href={`/${locale}/privacy`} className="hover:text-zinc-400 transition-colors">
+          <div className="mt-2 flex items-center justify-center gap-4 text-xs text-zinc-700">
+            <a href={`/${locale}/privacy`} className="transition-colors hover:text-zinc-400">
               {tFooter("privacy")}
             </a>
-            <span>·</span>
-            <a href={`/${locale}/terms`} className="hover:text-zinc-400 transition-colors">
+            <span>Â·</span>
+            <a href={`/${locale}/terms`} className="transition-colors hover:text-zinc-400">
               {tFooter("terms")}
             </a>
           </div>

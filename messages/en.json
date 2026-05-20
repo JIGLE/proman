@@ -303,6 +303,8 @@
     "subtitle": "ProMan gives landlords and managers one clear flow from payment follow-up to receipt and PT/ES tax context.",
     "cta": "Sign in",
     "headerCta": "Get started",
+    "navHowItWorks": "How it works",
+    "navWorkflow": "Workflow",
     "demoCta": "Try Free Demo",
     "secondaryCta": "See how it works",
     "microcopy": "No card. No setup. Guided walkthrough in under 2 minutes.",
@@ -318,6 +320,14 @@
       "title": "From overdue rent to tax-ready records",
       "subtitle": "A single workflow, not a fragmented dashboard.",
       "badge": "Owner workflow",
+      "kpi": {
+        "overdueLabel": "Overdue today",
+        "overdueHint": "1 property",
+        "collectedLabel": "Collected this month",
+        "collectedHint": "4 payments",
+        "receiptsLabel": "Receipts issued",
+        "receiptsHint": "1 pending"
+      },
       "steps": {
         "detect": {
           "title": "Overdue rent detected",
@@ -367,11 +377,23 @@
       "ownerTitle": "Explore as Owner",
       "ownerDescription": "See the full portfolio, tenants, payments, documents, and tax workflows.",
       "tenantTitle": "Explore as Tenant",
-      "tenantDescription": "See one property, one lease, payments, receipts, and shared documents."
+      "tenantDescription": "See one property, one lease, payments, receipts, and shared documents.",
+      "owner": {
+        "f1": "Full portfolio view",
+        "f2": "Payments, leases and receipts",
+        "f3": "PT/ES tax workflows"
+      },
+      "tenant": {
+        "f1": "Your lease and payments",
+        "f2": "Receipt access",
+        "f3": "Shared documents"
+      }
     },
     "features": {
       "eyebrow": "What's included",
       "title": "Everything a landlord needs, nothing they don't",
+      "primaryBadge": "Core workflow",
+      "primaryCta": "See how payments flow",
       "items": {
         "rentCollection": {
           "title": "Rent Collection",
@@ -404,6 +426,43 @@
       "subtitle": "Try the full workflow free — properties, tenants, leases, and receipts in one place.",
       "primary": "Try Free Demo",
       "secondary": "Sign in to your account"
+    },
+    "trust": {
+      "items": {
+        "records": "Audit-ready records",
+        "export": "Export-ready data",
+        "pt_es": "PT/ES tax profiles",
+        "roles": "Owner & tenant roles",
+        "documents": "Secure document storage",
+        "operations": "Centralized operations"
+      }
+    },
+    "timeline": {
+      "eyebrow": "The collection loop",
+      "title": "One workflow. From rent due to export ready.",
+      "subtitle": "Every step tracked, every record linked.",
+      "steps": {
+        "due": {
+          "title": "Rent due",
+          "description": "Contract shows in today's queue"
+        },
+        "reminder": {
+          "title": "Reminder sent",
+          "description": "Tenant notified automatically"
+        },
+        "payment": {
+          "title": "Payment logged",
+          "description": "Amount recorded with timestamp"
+        },
+        "receipt": {
+          "title": "Receipt issued",
+          "description": "PDF generated, linked to payment"
+        },
+        "export": {
+          "title": "Export ready",
+          "description": "Tax-ready record for AT or Hacienda"
+        }
+      }
     }
   },
   "errors": {

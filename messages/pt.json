@@ -303,6 +303,8 @@
     "subtitle": "O ProMan dá a senhorios e gestores um fluxo único do seguimento de pagamento ao recibo com contexto fiscal PT/ES.",
     "cta": "Entrar",
     "headerCta": "Começar",
+    "navHowItWorks": "Como funciona",
+    "navWorkflow": "Fluxo",
     "demoCta": "Ver demo",
     "secondaryCta": "Ver como funciona",
     "microcopy": "Sem cartão. Sem configuração. Demonstração guiada em menos de 2 minutos.",
@@ -318,6 +320,14 @@
       "title": "Da renda em atraso ao registo fiscal pronto",
       "subtitle": "Um fluxo único, sem dashboard fragmentado.",
       "badge": "Fluxo do proprietário",
+      "kpi": {
+        "overdueLabel": "Vencido hoje",
+        "overdueHint": "1 imóvel",
+        "collectedLabel": "Cobrado este mês",
+        "collectedHint": "4 pagamentos",
+        "receiptsLabel": "Recibos emitidos",
+        "receiptsHint": "1 pendente"
+      },
       "steps": {
         "detect": {
           "title": "Renda em atraso identificada",
@@ -367,11 +377,23 @@
       "ownerTitle": "Explorar como Proprietário",
       "ownerDescription": "Veja portfólio completo, inquilinos, pagamentos, documentos e fluxos fiscais.",
       "tenantTitle": "Explorar como Inquilino",
-      "tenantDescription": "Veja um imóvel, um contrato, pagamentos, recibos e documentos partilhados."
+      "tenantDescription": "Veja um imóvel, um contrato, pagamentos, recibos e documentos partilhados.",
+      "owner": {
+        "f1": "Vista completa do portfólio",
+        "f2": "Pagamentos, contratos e recibos",
+        "f3": "Fluxos fiscais PT/ES"
+      },
+      "tenant": {
+        "f1": "O seu contrato e pagamentos",
+        "f2": "Acesso a recibos",
+        "f3": "Documentos partilhados"
+      }
     },
     "features": {
       "eyebrow": "O que está incluído",
       "title": "Tudo o que um senhorio precisa, nada do que não precisa",
+      "primaryBadge": "Fluxo principal",
+      "primaryCta": "Ver como fluem os pagamentos",
       "items": {
         "rentCollection": {
           "title": "Cobrança de Rendas",
@@ -404,6 +426,43 @@
       "subtitle": "Experimente o fluxo completo gratuitamente — imóveis, inquilinos, contratos e recibos num só lugar.",
       "primary": "Ver demo",
       "secondary": "Entrar na sua conta"
+    },
+    "trust": {
+      "items": {
+        "records": "Registos prontos para auditoria",
+        "export": "Dados prontos para exportação",
+        "pt_es": "Perfis fiscais PT/ES",
+        "roles": "Perfis de proprietário e inquilino",
+        "documents": "Armazenamento seguro de documentos",
+        "operations": "Operações centralizadas"
+      }
+    },
+    "timeline": {
+      "eyebrow": "O ciclo de cobrança",
+      "title": "Um fluxo. Da renda vencida ao registo fiscal pronto.",
+      "subtitle": "Cada passo registado, cada registo ligado.",
+      "steps": {
+        "due": {
+          "title": "Renda vencida",
+          "description": "Contrato aparece na fila de hoje"
+        },
+        "reminder": {
+          "title": "Lembrete enviado",
+          "description": "Inquilino notificado automaticamente"
+        },
+        "payment": {
+          "title": "Pagamento registado",
+          "description": "Valor registado com data e hora"
+        },
+        "receipt": {
+          "title": "Recibo emitido",
+          "description": "PDF gerado e ligado ao pagamento"
+        },
+        "export": {
+          "title": "Exportação pronta",
+          "description": "Registo pronto para a AT"
+        }
+      }
     }
   },
   "errors": {
