@@ -7,6 +7,7 @@ import {
   Building2,
   CreditCard,
   FileText,
+  Home,
   Plus,
   Receipt,
   ShieldCheck,
@@ -30,6 +31,13 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Select,
   SelectContent,
@@ -232,20 +240,28 @@ export function AssetsView(): React.ReactElement {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setBuildingDialogOpen(true)}
-            className="gap-2"
-          >
-            <Building2 className="h-4 w-4" />
-            Add building
-          </Button>
           <ExportButton data={properties} filename="properties-export" columns={propertyColumns} />
-          <Button onClick={() => propertiesViewRef.current?.openDialog()} className="gap-2">
-            <Plus className="h-4 w-4" />
-            {t("addProperty")}
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button className="gap-2">
+                <Plus className="h-4 w-4" />
+                Add
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-52">
+              <DropdownMenuItem onClick={() => propertiesViewRef.current?.openDialog()}>
+                <Home className="mr-2 h-3.5 w-3.5" />
+                New property
+                <span className="ml-auto text-[11px] text-zinc-500">standalone unit</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setBuildingDialogOpen(true)}>
+                <Building2 className="mr-2 h-3.5 w-3.5" />
+                New building
+                <span className="ml-auto text-[11px] text-zinc-500">group of units</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
 

@@ -15,18 +15,13 @@ import {
   ExternalLink,
   FileText,
   MapPin,
+  MoreHorizontal,
   Receipt as ReceiptIcon,
   Trash2,
   Users,
   Wrench,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -45,13 +40,20 @@ import type { Property, Lease, Tenant, Receipt, MaintenanceTicket } from "@/lib/
 import { useApp } from "@/lib/contexts/app-context";
 import { useToast } from "@/lib/contexts/toast-context";
 import { propertySchema, type PropertyFormData } from "@/lib/schemas/property.schema";
+import { buildFinancialReviewPath } from "@/lib/utils/financial-navigation";
 import UnitsView from "./units-view";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
-import { useCurrency } from "@/lib/contexts/currency-context";
-import { buildFinancialReviewPath } from "@/lib/utils/financial-navigation";
-import { usePortalAccess } from "@/lib/contexts/portal-context";
 import { cn } from "@/lib/utils/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import { usePortalAccess } from "@/lib/contexts/portal-context";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -398,13 +400,18 @@ export function PropertyDetailModal({
 
   return (
     <>
-      <Dialog
+      <Sheet
         open={isOpen}
         onOpenChange={(open) => {
           if (!open) onClose();
         }}
       >
-        <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col overflow-hidden border-zinc-800 bg-zinc-900 p-0">
+        <SheetContent
+          side="right"
+          className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:w-[520px] sm:max-w-[520px]"
+        >
+          <SheetTitle className="sr-only">{property?.name ?? "Property details"}</SheetTitle>
+          <SheetDescription className="sr-only">Property detail panel</SheetDescription>
           {isEditing ? (
             <EditView
               formData={formData}
@@ -436,8 +443,8 @@ export function PropertyDetailModal({
               onDelete={isOwnerPortal ? handleDelete : undefined}
             />
           )}
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
       <ConfirmationDialog dialog={confirmDialog} />
     </>
   );
@@ -498,9 +505,8 @@ function ViewContent({
   // ── Zone 1: Status + Health ──────────────────────────────────────────────
   return (
     <div className="flex flex-col">
-      <DialogTitle className="sr-only">{property.name}</DialogTitle>
       {/* Header */}
-      <div className="border-b border-zinc-800 px-5 py-4">
+      <div className="border-b border-zinc-800 px-5 py-4 pr-12">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
@@ -515,23 +521,49 @@ function ViewContent({
               {property.city ? `, ${property.city}` : ""}
             </p>
           </div>
-          {/* Health chip */}
-          <div
-            className={cn(
-              "shrink-0 flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
-              issues.length === 0
-                ? "border-success/30 bg-success/10 text-success"
-                : hasUrgent
-                  ? "border-red-500/30 bg-red-500/10 text-red-300"
-                  : "border-amber-500/30 bg-amber-500/10 text-amber-300",
+          <div className="flex shrink-0 items-center gap-1.5">
+            {/* Health chip */}
+            <div
+              className={cn(
+                "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium",
+                issues.length === 0
+                  ? "border-success/30 bg-success/10 text-success"
+                  : hasUrgent
+                    ? "border-red-500/30 bg-red-500/10 text-red-300"
+                    : "border-amber-500/30 bg-amber-500/10 text-amber-300",
+              )}
+            >
+              {issues.length === 0 ? (
+                <CheckCircle className="h-3 w-3" />
+              ) : (
+                <AlertTriangle className="h-3 w-3" />
+              )}
+              {healthLabel}
+            </div>
+            {/* Overflow menu — Edit + Delete safely separated */}
+            {isOwnerPortal && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+                  >
+                    <MoreHorizontal className="h-4 w-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem onClick={onStartEdit}>
+                    <Edit className="mr-2 h-3.5 w-3.5" />
+                    Edit property
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-red-400 focus:text-red-300" onClick={onDelete}>
+                    <Trash2 className="mr-2 h-3.5 w-3.5" />
+                    Delete property
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
-          >
-            {issues.length === 0 ? (
-              <CheckCircle className="h-3 w-3" />
-            ) : (
-              <AlertTriangle className="h-3 w-3" />
-            )}
-            {healthLabel}
           </div>
         </div>
       </div>
@@ -561,17 +593,6 @@ function ViewContent({
               <ExternalLink className="h-3.5 w-3.5" />
               Full page
             </Button>
-            {isOwnerPortal && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onStartEdit}
-                className="gap-1.5 ml-auto text-zinc-400 hover:text-zinc-200"
-              >
-                <Edit className="h-3.5 w-3.5" />
-                Edit
-              </Button>
-            )}
           </div>
         )}
 
@@ -930,21 +951,17 @@ function ViewContent({
         </Tabs>
       </div>
 
-      {/* ── Sticky footer ─────────────────────────────────────────────────── */}
-      {isOwnerPortal && (
-        <div className="flex items-center justify-between border-t border-zinc-800 px-5 py-3">
+      {/* ── Sticky footer — single primary action only ───────────────────────── */}
+      {isOwnerPortal && primaryAction && (
+        <div className="flex items-center justify-end border-t border-zinc-800 px-5 py-3">
           <Button
-            variant="ghost"
+            onClick={primaryAction.onClick}
+            variant={primaryAction.urgency === "urgent" ? "destructive" : "default"}
             size="sm"
-            onClick={onDelete}
-            className="gap-1.5 text-zinc-500 hover:text-red-400"
+            className="gap-1.5"
           >
-            <Trash2 className="h-3.5 w-3.5" />
-            Delete
-          </Button>
-          <Button size="sm" onClick={onStartEdit} className="gap-1.5">
-            <Edit className="h-3.5 w-3.5" />
-            Edit property
+            <primaryAction.icon className="h-3.5 w-3.5" />
+            {primaryAction.label}
           </Button>
         </div>
       )}
@@ -970,10 +987,8 @@ function EditView({
   return (
     <div className="flex flex-col overflow-hidden">
       <div className="border-b border-zinc-800 px-5 py-4">
-        <DialogHeader>
-          <DialogTitle className="text-[var(--color-foreground)]">Edit Property</DialogTitle>
-          <DialogDescription>Update property information</DialogDescription>
-        </DialogHeader>
+        <h2 className="text-base font-semibold text-[var(--color-foreground)]">Edit Property</h2>
+        <p className="text-sm text-zinc-500">Update property information</p>
       </div>
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

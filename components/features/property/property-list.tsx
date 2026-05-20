@@ -12,7 +12,15 @@ import {
   ExternalLink,
   Pencil,
   Trash2,
+  MoreHorizontal,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useRouter, usePathname } from "next/navigation";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { getCountryName, resolveCountryCode } from "@/lib/utils/country";
@@ -1030,7 +1038,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                   { key: "all", label: "All", count: properties.length, color: "" },
                   {
                     key: "needs-attention",
-                    label: "Needs attention",
+                    label: "Action needed",
                     count: needsAttentionPropertyIds.size,
                     color: "text-red-300",
                   },
@@ -1045,12 +1053,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     label: "Maintenance",
                     count: openMaintenancePropertyIds.size,
                     color: "text-orange-300",
-                  },
-                  {
-                    key: "missing-map",
-                    label: "Missing map",
-                    count: missingMapPropertyIds.size,
-                    color: "text-blue-300",
                   },
                 ].map((opt) => {
                   const isActive = operationalFilter === opt.key;
@@ -1331,58 +1333,67 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                   {building.properties.length} unit
                                   {building.properties.length !== 1 ? "s" : ""}
                                 </span>
-                                <button
-                                  type="button"
-                                  title="Add unit to this building"
-                                  onClick={() => {
-                                    dialog.openDialog();
-                                    dialog.updateFormData({
-                                      buildingId: building.buildingId,
-                                      buildingName: building.buildingName,
-                                      address: building.buildingAddress,
-                                      streetAddress: building.buildingAddress.split(",")[0],
-                                    });
-                                  }}
-                                  className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
-                                >
-                                  <Plus className="h-3.5 w-3.5" />
-                                </button>
-                                {building.building && (
-                                  <>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
                                     <button
                                       type="button"
-                                      title="Edit building"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        openEditBuilding(building.building!);
-                                      }}
+                                      onClick={(e) => e.stopPropagation()}
                                       className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
                                     >
-                                      <Pencil className="h-3.5 w-3.5" />
+                                      <MoreHorizontal className="h-4 w-4" />
                                     </button>
-                                    <button
-                                      type="button"
-                                      title="Delete building"
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        buildingDeleteConfirm.confirm(
-                                          {
-                                            title: "Delete Building",
-                                            description: `Delete "${building.buildingName}"? Properties in this building will not be deleted.`,
-                                            confirmLabel: "Delete Building",
-                                            variant: "destructive",
-                                          },
-                                          async () => {
-                                            await deleteBuilding(building.building!.id);
-                                          },
-                                        );
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-44">
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        dialog.openDialog();
+                                        dialog.updateFormData({
+                                          buildingId: building.buildingId,
+                                          buildingName: building.buildingName,
+                                          address: building.buildingAddress,
+                                          streetAddress: building.buildingAddress.split(",")[0],
+                                        });
                                       }}
-                                      className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-red-400 transition-colors"
                                     >
-                                      <Trash2 className="h-3.5 w-3.5" />
-                                    </button>
-                                  </>
-                                )}
+                                      <Plus className="mr-2 h-3.5 w-3.5" />
+                                      Add unit
+                                    </DropdownMenuItem>
+                                    {building.building && (
+                                      <>
+                                        <DropdownMenuItem
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            openEditBuilding(building.building!);
+                                          }}
+                                        >
+                                          <Pencil className="mr-2 h-3.5 w-3.5" />
+                                          Edit building
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                        <DropdownMenuItem
+                                          className="text-red-400 focus:text-red-300"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            buildingDeleteConfirm.confirm(
+                                              {
+                                                title: "Delete Building",
+                                                description: `Delete "${building.buildingName}"? Properties in this building will not be deleted.`,
+                                                confirmLabel: "Delete Building",
+                                                variant: "destructive",
+                                              },
+                                              async () => {
+                                                await deleteBuilding(building.building!.id);
+                                              },
+                                            );
+                                          }}
+                                        >
+                                          <Trash2 className="mr-2 h-3.5 w-3.5" />
+                                          Delete building
+                                        </DropdownMenuItem>
+                                      </>
+                                    )}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
                                 <button
                                   type="button"
                                   onClick={() => toggleBuilding(building.buildingId)}
@@ -1455,6 +1466,34 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                       </div>
 
                                       {/* Name + street address + next action */}
+                                      {/* Health dot */}
+                                      {(() => {
+                                        const action = getNextAction(property, {
+                                          hasActiveLease: activeLeasePropertyIds.has(property.id),
+                                          isExpiring,
+                                          hasOpenTickets: openTickets.length > 0,
+                                          isMissingMap,
+                                          hasTenant: propTenants.length > 0,
+                                        });
+                                        if (action.urgency === "ok" || action.urgency === "info")
+                                          return null;
+                                        return (
+                                          <span
+                                            className={cn(
+                                              "mt-0.5 h-2 w-2 shrink-0 rounded-full",
+                                              action.urgency === "urgent"
+                                                ? "bg-red-500"
+                                                : "bg-amber-400",
+                                            )}
+                                          />
+                                        );
+                                      })()}
+
+                                      {/* Status badge — moved to second position */}
+                                      <div className="hidden shrink-0 sm:block">
+                                        {getStatusBadge(property.status)}
+                                      </div>
+
                                       <div
                                         className="flex min-w-0 flex-1 cursor-pointer flex-col"
                                         onClick={() => {
@@ -1561,28 +1600,43 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         )}
                                       </div>
 
-                                      {/* Lease end date */}
-                                      <div className="hidden w-[88px] shrink-0 flex-col items-end text-xs lg:flex">
-                                        {activeLease ? (
-                                          <>
-                                            <span className="text-zinc-500">Lease ends</span>
-                                            <span
-                                              className={cn(
-                                                "font-medium",
-                                                isExpiring ? "text-amber-300" : "text-zinc-300",
-                                              )}
-                                            >
-                                              {new Date(activeLease.endDate).toLocaleDateString(
-                                                "pt-PT",
-                                                {
-                                                  day: "numeric",
-                                                  month: "short",
-                                                  year: "numeric",
-                                                },
-                                              )}
-                                            </span>
-                                          </>
-                                        ) : null}
+                                      {/* Lease end date — urgency gradient */}
+                                      <div className="hidden w-[96px] shrink-0 flex-col items-end text-xs lg:flex">
+                                        {activeLease
+                                          ? (() => {
+                                              const daysLeft = Math.ceil(
+                                                (new Date(activeLease.endDate).getTime() -
+                                                  Date.now()) /
+                                                  (1000 * 60 * 60 * 24),
+                                              );
+                                              const urgencyClass =
+                                                daysLeft <= 14
+                                                  ? "text-red-400"
+                                                  : daysLeft <= 60
+                                                    ? "text-amber-300"
+                                                    : "text-zinc-300";
+                                              return (
+                                                <>
+                                                  <span className="text-zinc-500">
+                                                    {daysLeft <= 14
+                                                      ? daysLeft <= 0
+                                                        ? "Expired"
+                                                        : `${daysLeft}d left`
+                                                      : "Lease ends"}
+                                                  </span>
+                                                  <span className={cn("font-medium", urgencyClass)}>
+                                                    {new Date(
+                                                      activeLease.endDate,
+                                                    ).toLocaleDateString("pt-PT", {
+                                                      day: "numeric",
+                                                      month: "short",
+                                                      year: "numeric",
+                                                    })}
+                                                  </span>
+                                                </>
+                                              );
+                                            })()
+                                          : null}
                                       </div>
 
                                       {/* Rent */}
@@ -1590,8 +1644,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         {formatCurrency(Number(property.rent))}
                                       </div>
 
-                                      {/* Status badge */}
-                                      <div className="shrink-0">
+                                      {/* Status badge — visible on mobile only (desktop shows it before name) */}
+                                      <div className="shrink-0 sm:hidden">
                                         {getStatusBadge(property.status)}
                                       </div>
 
