@@ -172,8 +172,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const tNextAction = useTranslations("property.nextAction");
     const confirmDialog = useConfirmDialog();
     // Property detail modal state
-    const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
-    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    // Removed: selectedProperty, isDetailModalOpen (now handled by router/modal route)
 
     // Form UI state — collapsible sections
     const [showManualFields, setShowManualFields] = useState(false);
@@ -637,11 +636,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
       (propertyId: string) => {
         const selected = properties.find((property) => property.id === propertyId);
         if (!selected) return;
-        setSelectedProperty(selected);
-        setIsDetailModalOpen(true);
+        // Open property detail via route modal query param
+        router.push(`/${locale}/portfolio?modal=${selected.id}`);
         onPropertySelect?.(selected.id);
       },
-      [onPropertySelect, properties],
+      [onPropertySelect, properties, router, locale],
     );
 
     return (
@@ -1230,10 +1229,10 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               key={property.id}
                               className="border-zinc-800 cursor-pointer hover:bg-zinc-800/50"
                               onClick={() => {
-                                setSelectedProperty(property);
-                                setIsDetailModalOpen(true);
-                                onPropertySelect?.(property.id);
-                              }}
+                                  // Open property detail via route modal query param
+                                  router.push(`/${locale}/portfolio?modal=${property.id}`);
+                                  onPropertySelect?.(property.id);
+                                }}
                             >
                               <TableCell className="text-sm font-medium text-zinc-100">
                                 {property.name}
@@ -1497,8 +1496,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                       <div
                                         className="flex min-w-0 flex-1 cursor-pointer flex-col"
                                         onClick={() => {
-                                          setSelectedProperty(property);
-                                          setIsDetailModalOpen(true);
+                                          router.push(`/${locale}/portfolio?modal=${property.id}`);
                                           onPropertySelect?.(property.id);
                                         }}
                                       >
@@ -1662,7 +1660,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           title="View details"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            router.push(`/${locale}/portfolio/${property.id}`);
+                                            router.push(`/${locale}/portfolio?modal=${property.id}`);
                                           }}
                                           className="shrink-0 rounded-md p-1.5 text-amber-500 transition-colors hover:bg-zinc-700 hover:text-amber-300"
                                         >
@@ -1725,27 +1723,13 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
           </div>
         )}
 
-        {/* Property Detail Modal */}
-        <PropertyDetailModal
-          property={selectedProperty}
-          isOpen={isDetailModalOpen}
-          onClose={() => {
-            setIsDetailModalOpen(false);
-            setSelectedProperty(null);
-          }}
-          onEdit={(updatedProperty) => {
-            setSelectedProperty(updatedProperty);
-          }}
-          onDelete={() => {
-            setIsDetailModalOpen(false);
-            setSelectedProperty(null);
-          }}
-        />
+        {/* Property Detail Modal removed: now handled by intercepting route */}
         {/* Building edit dialog */}
         <Dialog open={!!editingBuilding} onOpenChange={(open) => !open && setEditingBuilding(null)}>
           <DialogContent className="bg-zinc-900 border-zinc-800 max-w-md">
             <DialogHeader>
               <DialogTitle>Edit Building</DialogTitle>
+              <DialogDescription>Edit building details</DialogDescription>
             </DialogHeader>
             <form onSubmit={handleBuildingEditSubmit} className="space-y-4 pt-2">
               <div className="space-y-2">

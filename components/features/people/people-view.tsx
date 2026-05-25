@@ -70,10 +70,10 @@ export function PeopleView(): React.ReactElement {
           <div>
             <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-2">
               <Users className="h-8 w-8" />
-              Tenants
+              People
             </h1>
             <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-              Your tenants, property co-owners, and maintenance contacts.
+              Manage tenants, property owners, and service providers.
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -94,7 +94,7 @@ export function PeopleView(): React.ReactElement {
             </div>
           </div>
           <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">Current Leases</div>
+            <div className="text-sm text-muted-foreground mb-1">Active Tenants</div>
             <div className="text-2xl font-bold text-green-500">
               {tenants.filter((t) => new Date(t.leaseEnd) > new Date()).length}
             </div>
@@ -119,14 +119,14 @@ export function PeopleView(): React.ReactElement {
             </TabsTrigger>
             <TabsTrigger value="owners" className="flex items-center gap-2">
               <Briefcase className="h-4 w-4" />
-              <span>Co-owners</span>
+              <span>Owners</span>
               <span className="ml-1 rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs">
                 {owners.length}
               </span>
             </TabsTrigger>
             <TabsTrigger value="contacts" className="flex items-center gap-2">
               <Wrench className="h-4 w-4" />
-              <span>Maintenance contacts</span>
+              <span>Service Providers</span>
             </TabsTrigger>
           </TabsList>
           {activeTab === "tenants" && (

@@ -8,18 +8,18 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props) {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "footer" });
+  const { locale: _locale } = await params;
+  const t = await getTranslations("footer");
   return {
     title: `${t("terms")} — Proman`,
-    description: "Terms and conditions governing your use of the Proman platform.",
+    description: "Terms and conditions governing the use of Proman.",
     robots: { index: false },
   };
 }
 
 export default async function TermsPage({ params }: Props) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "footer" });
+  const t = await getTranslations("footer");
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-300">
@@ -32,7 +32,7 @@ export default async function TermsPage({ params }: Props) {
           >
             Proman
           </Link>
-          <LanguageSelector locale={locale} />
+          <LanguageSelector />
         </div>
       </header>
 

@@ -8,8 +8,8 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props) {
-  const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "footer" });
+  const { locale: _locale } = await params;
+  const t = await getTranslations("footer");
   return {
     title: `${t("privacy")} — Proman`,
     description: "How Proman collects, uses, and protects your personal data.",
@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: Props) {
 
 export default async function PrivacyPage({ params }: Props) {
   const { locale } = await params;
-  const t = await getTranslations({ locale, namespace: "footer" });
+  const t = await getTranslations("footer");
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-300">
@@ -32,7 +32,7 @@ export default async function PrivacyPage({ params }: Props) {
           >
             Proman
           </Link>
-          <LanguageSelector locale={locale} />
+          <LanguageSelector />
         </div>
       </header>
 

@@ -1,16 +1,37 @@
 /**
- * API Route: POST /api/compliance/rent-receipts
+ * API Route: /api/compliance/rent-receipts
  * GET  — List receipts for authenticated user
  * POST — Create a new Recibo de Renda Eletrónico
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import { createRentReceipt, listRentReceipts } from "@/lib/compliance/rent-receipts-pt";
 import { logAudit } from "@/lib/services/audit-log";
+import { withErrorHandler } from "@/lib/utils/error-handling";
+import { withRateLimit } from "@/lib/utils/rate-limit";
 import type { RentReceiptInput } from "@/lib/compliance/rent-receipts-pt";
 
-export async function GET(request: NextRequest) {
+// ─── Request body schema ────────────────────────────────────────────────────
+const rentReceiptPostSchema = z.object({
+  tenantId: z.string().cuid(),
+  propertyId: z.string().cuid(),
+  leaseId: z.string().cuid().optional(),
+  landlordNif: z.string().min(9).max(9),
+  tenantNif: z.string().min(9).max(9).optional(),
+  propertyAddress: z.string().min(5),
+  cadasterReference: z.string().optional(),
+  rentAmount: z.number().positive(),
+  withholdingRate: z.number().min(0).max(1).optional(),
+  paymentDate: z.string().datetime(),
+  periodStart: z.string().datetime(),
+  periodEnd: z.string().datetime(),
+  isRendaAcessivel: z.boolean().optional(),
+});
+
+// ─── Handlers ──────────────────────────────────────────────────────────────
+async function handleGet(request: NextRequest): Promise<NextResponse> {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
   const { userId } = authResult;
@@ -44,12 +65,20 @@ export async function GET(request: NextRequest) {
   return NextResponse.json(result);
 }
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest): Promise<NextResponse> {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
   const { userId } = authResult;
 
-  const body = await request.json();
+  const rawBody: unknown = await request.json();
+  const parsed = rentReceiptPostSchema.safeParse(rawBody);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
+      { status: 400 },
+    );
+  }
+  const body = parsed.data;
 
   const input: RentReceiptInput = {
     userId,
@@ -93,3 +122,6 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json(result, { status: 201 });
 }
+
+export const GET = withErrorHandler(withRateLimit(handleGet));
+export const POST = withErrorHandler(withRateLimit(handlePost));

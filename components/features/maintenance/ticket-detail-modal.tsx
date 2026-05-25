@@ -14,7 +14,7 @@ import {
   Wrench,
   XCircle,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -216,6 +216,9 @@ export function TicketDetailModal({
                   <DialogTitle className="truncate text-base font-semibold">
                     {ticket.title}
                   </DialogTitle>
+                  <DialogDescription className="sr-only">
+                    Maintenance ticket: {ticket.title}. Status: {ticket.status}.
+                  </DialogDescription>
                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     <span
                       className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${STATUS_COLORS[ticket.status] ?? STATUS_COLORS.open}`}

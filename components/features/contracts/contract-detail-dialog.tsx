@@ -1,6 +1,6 @@
 "use client";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Building2, User, DollarSign, Edit, Trash2 } from "lucide-react";
@@ -65,7 +65,9 @@ export function ContractDetailDialog({
                 <DialogTitle className="text-2xl font-bold text-[var(--color-foreground)]">
                   Contract Details
                 </DialogTitle>
-                <p className="text-sm text-muted-foreground mt-1">Lease ID: {lease.id}</p>
+                <DialogDescription className="text-sm text-muted-foreground mt-1">
+                  Lease ID: {lease.id}
+                </DialogDescription>
               </div>
               <Badge variant="outline" className={`${statusColors[lease.status]} shrink-0`}>
                 {lease.status.charAt(0).toUpperCase() + lease.status.slice(1)}

@@ -75,6 +75,15 @@ export async function POST(request: NextRequest): Promise<Response | NextRespons
       return createErrorResponse(new ValidationError(validation.errors.join("; ")), 400, request);
     }
 
+    // Warn if digital signing key is not configured — AT-certified submission requires it
+    const signingKeyConfigured = Boolean(process.env.SAFT_SIGNING_KEY_PATH);
+    if (!signingKeyConfigured) {
+      console.warn(
+        "[SAF-T] SAFT_SIGNING_KEY_PATH not set — export will use HMAC fallback (not AT-certified). " +
+          "Configure a certified private key before submitting to Autoridade Tributária.",
+      );
+    }
+
     // Generate SAF-T XML
     const xml = await generateSAFTPT(userId, {
       ...options,
@@ -98,12 +107,17 @@ export async function POST(request: NextRequest): Promise<Response | NextRespons
     // Generate filename
     const filename = `SAF-T_${options.companyInfo.nif}_${options.fiscalYear}_${options.startMonth.toString().padStart(2, "0")}-${options.endMonth.toString().padStart(2, "0")}.xml`;
 
-    const result: SAFTExportResult = {
+    const result: SAFTExportResult & { signed: boolean; signingWarning?: string } = {
       success: true,
       xml,
       filename,
       invoiceCount,
       totalAmount,
+      signed: signingKeyConfigured,
+      ...(!signingKeyConfigured && {
+        signingWarning:
+          "Export generated without a certified digital signature. Configure SAFT_SIGNING_KEY_PATH before submitting to the Autoridade Tributária.",
+      }),
       period: {
         fiscalYear: options.fiscalYear,
         startDate: `${options.fiscalYear}-${options.startMonth.toString().padStart(2, "0")}-01`,

@@ -27,15 +27,18 @@ const SheetOverlay = React.forwardRef<
 ));
 SheetOverlay.displayName = "SheetOverlay";
 
-type SheetSide = "left" | "right" | "top" | "bottom";
+type SheetSide = "left" | "right" | "top" | "bottom" | "center";
 
 const sheetVariants: Record<SheetSide, string> = {
   right:
-    "inset-y-0 right-0 h-full w-full border-l sm:w-[520px] data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
+    "inset-y-0 right-0 h-full w-full border-l sm:w-[520px] lg:inset-0 lg:w-full lg:h-full lg:border-0 lg:rounded-none data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
   left: "inset-y-0 left-0 h-full w-full border-r sm:w-[520px] data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
   top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
   bottom:
     "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+  // Center variant: full-screen on mobile, centered floating modal on large screens
+  center:
+    "inset-0 h-full w-full md:inset-auto md:left-1/2 md:top-16 md:translate-x-[-50%] md:transform md:w-[75vw] md:max-w-5xl md:h-[calc(100vh-6.5rem)] md:rounded-xl md:border md:border-zinc-800 md:shadow-2xl md:ring-1 md:ring-zinc-900/20 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
 };
 
 interface SheetContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
@@ -62,7 +65,7 @@ const SheetContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-md p-1.5 text-zinc-400 opacity-70 ring-offset-zinc-900 transition-opacity hover:opacity-100 hover:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:ring-offset-2 disabled:pointer-events-none">
+      <DialogPrimitive.Close aria-label="Close" className="absolute right-4 top-4 z-50 rounded-md p-1.5 text-zinc-400 opacity-70 ring-offset-zinc-900 transition-opacity hover:opacity-100 hover:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:ring-offset-2 disabled:pointer-events-none">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>

@@ -485,6 +485,15 @@ export const DEMO_OWNERS: Owner[] = [
     address: "Rua dos Proprietários 100, Lisboa, 1100-001, Portugal",
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2026-02-15T10:00:00Z",
+    properties: [
+      { id: "demo-po-1", propertyId: "demo-prop-1", ownerId: "demo-owner-1", ownershipPercentage: 70, createdAt: "2024-01-10T00:00:00Z", updatedAt: "2024-01-10T00:00:00Z", property: { id: "demo-prop-1", name: "Sunset Apt. 2A" } as never },
+      { id: "demo-po-3", propertyId: "demo-prop-10", ownerId: "demo-owner-1", ownershipPercentage: 70, createdAt: "2024-02-05T00:00:00Z", updatedAt: "2024-02-05T00:00:00Z", property: { id: "demo-prop-10", name: "Sunset Apt. 1B" } as never },
+      { id: "demo-po-5", propertyId: "demo-prop-2", ownerId: "demo-owner-1", ownershipPercentage: 100, createdAt: "2024-03-25T00:00:00Z", updatedAt: "2024-03-25T00:00:00Z", property: { id: "demo-prop-2", name: "Downtown Office Suite" } as never },
+      { id: "demo-po-6", propertyId: "demo-prop-3", ownerId: "demo-owner-1", ownershipPercentage: 100, createdAt: "2024-06-15T00:00:00Z", updatedAt: "2024-06-15T00:00:00Z", property: { id: "demo-prop-3", name: "Riverside House" } as never },
+      { id: "demo-po-7", propertyId: "demo-prop-4", ownerId: "demo-owner-1", ownershipPercentage: 100, createdAt: "2024-08-10T00:00:00Z", updatedAt: "2024-08-10T00:00:00Z", property: { id: "demo-prop-4", name: "Marina View Condo" } as never },
+      { id: "demo-po-8", propertyId: "demo-prop-5", ownerId: "demo-owner-1", ownershipPercentage: 100, createdAt: "2025-01-15T00:00:00Z", updatedAt: "2025-01-15T00:00:00Z", property: { id: "demo-prop-5", name: "Coimbra Student Flat" } as never },
+      { id: "demo-po-9", propertyId: "demo-prop-6", ownerId: "demo-owner-1", ownershipPercentage: 100, createdAt: "2025-06-05T00:00:00Z", updatedAt: "2025-06-05T00:00:00Z", property: { id: "demo-prop-6", name: "Alfama Heritage Loft" } as never },
+    ],
   },
   {
     id: "demo-owner-2",
@@ -495,6 +504,15 @@ export const DEMO_OWNERS: Owner[] = [
     address: "Av. da República 200, Lisboa, 1050-191, Portugal",
     createdAt: "2024-02-15T00:00:00Z",
     updatedAt: "2026-01-20T14:30:00Z",
+    properties: [
+      { id: "demo-po-2", propertyId: "demo-prop-1", ownerId: "demo-owner-2", ownershipPercentage: 30, createdAt: "2024-01-10T00:00:00Z", updatedAt: "2024-01-10T00:00:00Z", property: { id: "demo-prop-1", name: "Sunset Apt. 2A" } as never },
+      { id: "demo-po-4", propertyId: "demo-prop-10", ownerId: "demo-owner-2", ownershipPercentage: 30, createdAt: "2024-02-05T00:00:00Z", updatedAt: "2024-02-05T00:00:00Z", property: { id: "demo-prop-10", name: "Sunset Apt. 1B" } as never },
+      { id: "demo-po-10", propertyId: "demo-prop-11", ownerId: "demo-owner-2", ownershipPercentage: 100, createdAt: "2024-09-05T00:00:00Z", updatedAt: "2024-09-05T00:00:00Z", property: { id: "demo-prop-11", name: "Ribeira Flat No. 3" } as never },
+      { id: "demo-po-11", propertyId: "demo-prop-12", ownerId: "demo-owner-2", ownershipPercentage: 100, createdAt: "2024-09-05T00:00:00Z", updatedAt: "2024-09-05T00:00:00Z", property: { id: "demo-prop-12", name: "Ribeira Flat No. 4" } as never },
+      { id: "demo-po-12", propertyId: "demo-prop-7", ownerId: "demo-owner-2", ownershipPercentage: 100, createdAt: "2025-04-05T00:00:00Z", updatedAt: "2025-04-05T00:00:00Z", property: { id: "demo-prop-7", name: "Eixample Apartment" } as never },
+      { id: "demo-po-13", propertyId: "demo-prop-8", ownerId: "demo-owner-2", ownershipPercentage: 100, createdAt: "2025-07-20T00:00:00Z", updatedAt: "2025-07-20T00:00:00Z", property: { id: "demo-prop-8", name: "Chamberí Studio" } as never },
+      { id: "demo-po-14", propertyId: "demo-prop-9", ownerId: "demo-owner-2", ownershipPercentage: 100, createdAt: "2024-11-05T00:00:00Z", updatedAt: "2024-11-05T00:00:00Z", property: { id: "demo-prop-9", name: "Valencia Office" } as never },
+    ],
   },
 ];
 
@@ -698,6 +716,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   // ── April 2026 ──
   {
     id: "demo-receipt-1",
+    number: "REC-2026-016",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-1",
     tenantName: "Maria Silva",
@@ -713,6 +732,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   },
   {
     id: "demo-receipt-r9",
+    number: "REC-2026-017",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-9",
     tenantName: "Sofia Costa",
@@ -728,6 +748,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   },
   {
     id: "demo-receipt-r10",
+    number: "REC-2026-018",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-10",
     tenantName: "RC Consultores Lda.",
@@ -743,6 +764,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   },
   {
     id: "demo-receipt-2",
+    number: "REC-2026-019",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-2",
     tenantName: "TechStart Lda.",
@@ -759,6 +781,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   {
     // SCENARIO 2 — overdue / pending for April: João Mendes didn't pay
     id: "demo-receipt-3",
+    number: "REC-2026-020",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-3",
     tenantName: "João Mendes",
@@ -774,6 +797,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   },
   {
     id: "demo-receipt-4",
+    number: "REC-2026-021",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-4",
     tenantName: "Ana Ferreira",
@@ -789,6 +813,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   },
   {
     id: "demo-receipt-9",
+    number: "REC-2026-022",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-6",
     tenantName: "Lucía García",
@@ -804,6 +829,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   },
   {
     id: "demo-receipt-10",
+    number: "REC-2026-023",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-7",
     tenantName: "Miguel Rodríguez",
@@ -819,6 +845,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   },
   {
     id: "demo-receipt-11",
+    number: "REC-2026-024",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-8",
     tenantName: "Innovación Digital SL",
@@ -835,6 +862,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   // ── March 2026 ──
   {
     id: "demo-receipt-5",
+    number: "REC-2026-007",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-1",
     tenantName: "Maria Silva",
@@ -850,6 +878,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   },
   {
     id: "demo-receipt-r11",
+    number: "REC-2026-008",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-9",
     tenantName: "Sofia Costa",
@@ -865,6 +894,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   },
   {
     id: "demo-receipt-6",
+    number: "REC-2026-009",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-2",
     tenantName: "TechStart Lda.",
@@ -880,6 +910,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   },
   {
     id: "demo-receipt-7",
+    number: "REC-2026-010",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-3",
     tenantName: "João Mendes",
@@ -895,6 +926,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   },
   {
     id: "demo-receipt-8",
+    number: "REC-2026-011",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-4",
     tenantName: "Ana Ferreira",
@@ -911,6 +943,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   // ── February 2026 (partial — selected properties) ──
   {
     id: "demo-receipt-f1",
+    number: "REC-2026-001",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-1",
     tenantName: "Maria Silva",
@@ -926,6 +959,7 @@ export const DEMO_RECEIPTS: Receipt[] = [
   },
   {
     id: "demo-receipt-f2",
+    number: "REC-2026-002",
     userId: DEMO_USER_ID,
     tenantId: "demo-tenant-2",
     tenantName: "TechStart Lda.",
@@ -950,10 +984,13 @@ export const DEMO_EXPENSES: Expense[] = [
     id: "demo-expense-1",
     userId: DEMO_USER_ID,
     propertyId: "demo-prop-1",
-    category: "maintenance",
+    category: "repairs",
     amount: 180,
     date: "2026-03-15",
     description: "Reparação da canalização — cozinha",
+    isDeductible: true,
+    vendorName: "Canalizações Rápidas Lda.",
+    vendorVat: "PT501234567",
     createdAt: "2026-03-15T14:00:00Z",
     updatedAt: "2026-03-16T10:00:00Z",
   },
@@ -961,10 +998,12 @@ export const DEMO_EXPENSES: Expense[] = [
     id: "demo-expense-2",
     userId: DEMO_USER_ID,
     propertyId: "demo-prop-2",
-    category: "utilities",
+    category: "electricity",
     amount: 420,
     date: "2026-03-05",
     description: "Fatura de eletricidade — Fevereiro 2026",
+    isDeductible: true,
+    vendorName: "EDP Comercial",
     createdAt: "2026-03-05T09:00:00Z",
     updatedAt: "2026-03-06T08:00:00Z",
   },
@@ -972,10 +1011,13 @@ export const DEMO_EXPENSES: Expense[] = [
     id: "demo-expense-3",
     userId: DEMO_USER_ID,
     propertyId: "demo-prop-1",
-    category: "insurance",
+    category: "building_insurance",
     amount: 600,
     date: "2026-01-01",
     description: "Seguro do imóvel — Prémio anual",
+    isDeductible: true,
+    vendorName: "Fidelidade Seguros",
+    vendorVat: "PT500917595",
     createdAt: "2026-01-01T10:00:00Z",
     updatedAt: "2026-01-01T10:30:00Z",
   },
@@ -987,6 +1029,8 @@ export const DEMO_EXPENSES: Expense[] = [
     amount: 250,
     date: "2026-02-20",
     description: "Substituição de vidro — sala de estar",
+    isDeductible: true,
+    vendorName: "Vidraçaria Moderna",
     createdAt: "2026-02-20T16:00:00Z",
     updatedAt: "2026-02-21T09:00:00Z",
   },
@@ -998,6 +1042,9 @@ export const DEMO_EXPENSES: Expense[] = [
     amount: 4200,
     date: "2026-03-01",
     description: "Obra de renovação — cozinha e casa de banho (fase 1)",
+    isDeductible: true,
+    vendorName: "Remodelações Alfama Lda.",
+    vendorVat: "PT509876543",
     createdAt: "2026-03-01T11:00:00Z",
     updatedAt: "2026-03-01T11:00:00Z",
   },
@@ -1009,8 +1056,48 @@ export const DEMO_EXPENSES: Expense[] = [
     amount: 310,
     date: "2026-04-05",
     description: "Substituição de torneiras — casa de banho",
+    isDeductible: true,
+    vendorName: "Canalizações Rápidas Lda.",
     createdAt: "2026-04-05T10:00:00Z",
     updatedAt: "2026-04-05T10:00:00Z",
+  },
+  {
+    id: "demo-expense-7",
+    userId: DEMO_USER_ID,
+    propertyId: "demo-prop-1",
+    category: "imi",
+    amount: 280,
+    date: "2026-02-28",
+    description: "IMI 2025 — 2.ª prestação",
+    isDeductible: true,
+    createdAt: "2026-02-28T09:00:00Z",
+    updatedAt: "2026-02-28T09:00:00Z",
+  },
+  {
+    id: "demo-expense-8",
+    userId: DEMO_USER_ID,
+    propertyId: "demo-prop-7",
+    category: "ibi",
+    amount: 390,
+    date: "2026-01-20",
+    description: "IBI 2026 — Eixample Apartment, Barcelona",
+    isDeductible: true,
+    createdAt: "2026-01-20T10:00:00Z",
+    updatedAt: "2026-01-20T10:00:00Z",
+  },
+  {
+    id: "demo-expense-9",
+    userId: DEMO_USER_ID,
+    propertyId: "demo-prop-2",
+    category: "management_fees",
+    amount: 168,
+    date: "2026-04-01",
+    description: "Honorários de gestão — Abril 2026 (6% renda)",
+    isDeductible: true,
+    vendorName: "Savills Portugal",
+    vendorVat: "PT501111222",
+    createdAt: "2026-04-01T09:00:00Z",
+    updatedAt: "2026-04-01T09:00:00Z",
   },
 ];
 

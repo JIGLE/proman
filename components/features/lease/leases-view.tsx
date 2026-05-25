@@ -16,6 +16,8 @@ import {
   Download,
   MoreHorizontal,
   Clock,
+  TrendingUp,
+  Mail,
 } from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
@@ -56,6 +58,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/ui/loading-state";
+import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils/utils";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { SearchFilter } from "@/components/ui/search-filter";
 import { ExportButton } from "@/components/ui/export-button";
@@ -98,6 +102,12 @@ export function LeasesView(): React.ReactElement {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [taxRegimeFilter, setTaxRegimeFilter] = useState<string>("all");
+
+  // Bulk selection state
+  const [selectedLeaseIds, setSelectedLeaseIds] = useState<Set<string>>(new Set());
+  const [bulkIncreaseOpen, setBulkIncreaseOpen] = useState(false);
+  const [bulkPct, setBulkPct] = useState("");
+  const [bulkApplying, setBulkApplying] = useState(false);
 
   // Data view mode state with localStorage persistence
   const [dataViewMode, setDataViewMode] = useState<DataViewMode>("grid");
@@ -306,6 +316,87 @@ export function LeasesView(): React.ReactElement {
         success("Lease deleted successfully");
       },
     );
+  };
+
+  const toggleLeaseSelection = (id: string) => {
+    setSelectedLeaseIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = (visibleIds: string[]) => {
+    if (selectedLeaseIds.size === visibleIds.length && visibleIds.every((id) => selectedLeaseIds.has(id))) {
+      setSelectedLeaseIds(new Set());
+    } else {
+      setSelectedLeaseIds(new Set(visibleIds));
+    }
+  };
+
+  const handleBulkRentIncrease = async () => {
+    const pct = parseFloat(bulkPct);
+    if (isNaN(pct) || pct <= 0 || pct > 100) return;
+    setBulkApplying(true);
+    try {
+      for (const id of selectedLeaseIds) {
+        const lease = leases.find((l) => l.id === id);
+        if (!lease) continue;
+        const newRent = Math.round(lease.monthlyRent * (1 + pct / 100) * 100) / 100;
+        await updateLease(id, { monthlyRent: newRent });
+      }
+      success(`Rent increased by ${pct}% for ${selectedLeaseIds.size} lease(s).`);
+      setBulkIncreaseOpen(false);
+      setBulkPct("");
+      setSelectedLeaseIds(new Set());
+    } catch {
+      error("Failed to apply rent increase. Please try again.");
+    } finally {
+      setBulkApplying(false);
+    }
+  };
+
+  const handleDownloadNotices = () => {
+    const pct = parseFloat(bulkPct);
+    const today = new Date().toLocaleDateString();
+    const lines: string[] = [];
+    for (const id of selectedLeaseIds) {
+      const lease = leases.find((l) => l.id === id);
+      const tenant = tenants.find((t) => t.id === lease?.tenantId);
+      const property = properties.find((p) => p.id === lease?.propertyId);
+      if (!lease || !tenant || !property) continue;
+      const newRent = isNaN(pct)
+        ? lease.monthlyRent
+        : Math.round(lease.monthlyRent * (1 + pct / 100) * 100) / 100;
+      lines.push(
+        `Dear ${tenant.name},`,
+        ``,
+        `We are writing to inform you that the monthly rent for the property at`,
+        `${property.address} will be updated as follows:`,
+        ``,
+        `  Current rent: ${formatCurrency(lease.monthlyRent)}/month`,
+        `  New rent:     ${formatCurrency(newRent)}/month${isNaN(pct) ? "" : ` (${pct}% increase)`}`,
+        `  Effective:    ${today}`,
+        ``,
+        `If you have any questions, please contact us.`,
+        ``,
+        `Kind regards,`,
+        `Property Management`,
+        ``,
+        `${"─".repeat(60)}`,
+        ``,
+      );
+    }
+    const blob = new Blob([lines.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `rent-increase-notices-${new Date().toISOString().split("T")[0]}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   // Auto-open wizard when navigating from LeaseDetailView with ?action=edit|renew&id=X
@@ -887,10 +978,126 @@ export function LeasesView(): React.ReactElement {
               />
             )
           ) : (
+            <>
+              {/* Bulk actions bar */}
+              {selectedLeaseIds.size > 0 && (
+                <div className="flex items-center gap-3 px-4 py-2.5 bg-indigo-950/60 border border-indigo-800/50 rounded-lg">
+                  <span className="text-sm font-medium text-indigo-300">
+                    {selectedLeaseIds.size} lease{selectedLeaseIds.size !== 1 ? "s" : ""} selected
+                  </span>
+                  <div className="ml-auto flex items-center gap-2">
+                    <Dialog open={bulkIncreaseOpen} onOpenChange={setBulkIncreaseOpen}>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline" className="border-indigo-700 text-indigo-300 hover:text-indigo-100">
+                          <TrendingUp className="h-4 w-4 mr-1.5" />
+                          Increase Rent
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="sm:max-w-[380px]">
+                        <DialogHeader>
+                          <DialogTitle>Bulk Rent Increase</DialogTitle>
+                          <DialogDescription>
+                            Apply a percentage increase to {selectedLeaseIds.size} selected lease{selectedLeaseIds.size !== 1 ? "s" : ""}.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 pt-2">
+                          <div className="space-y-1.5">
+                            <Label htmlFor="bulk-pct">Increase percentage (%)</Label>
+                            <div className="flex gap-2">
+                              <Input
+                                id="bulk-pct"
+                                type="number"
+                                min="0.1"
+                                max="100"
+                                step="0.1"
+                                placeholder="e.g. 3.5"
+                                value={bulkPct}
+                                onChange={(e) => setBulkPct(e.target.value)}
+                                className="flex-1"
+                              />
+                              <span className="flex items-center text-sm text-zinc-400">%</span>
+                            </div>
+                          </div>
+
+                          {/* Preview */}
+                          {bulkPct && !isNaN(parseFloat(bulkPct)) && parseFloat(bulkPct) > 0 && (
+                            <div className="rounded-md bg-zinc-900 border border-zinc-800 divide-y divide-zinc-800 text-sm max-h-48 overflow-y-auto">
+                              {[...selectedLeaseIds].map((id) => {
+                                const lease = leases.find((l) => l.id === id);
+                                if (!lease) return null;
+                                const tenant = tenants.find((t) => t.id === lease.tenantId);
+                                const newRent = Math.round(
+                                  lease.monthlyRent * (1 + parseFloat(bulkPct) / 100) * 100,
+                                ) / 100;
+                                return (
+                                  <div key={id} className="flex items-center justify-between px-3 py-2">
+                                    <span className="text-zinc-400 truncate max-w-[180px]">
+                                      {tenant?.name ?? id}
+                                    </span>
+                                    <span className="text-zinc-500 line-through mr-2">
+                                      {formatCurrency(lease.monthlyRent)}
+                                    </span>
+                                    <span className="text-green-400 font-medium">
+                                      {formatCurrency(newRent)}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={handleDownloadNotices}
+                              disabled={!bulkPct || isNaN(parseFloat(bulkPct))}
+                            >
+                              <Mail className="h-4 w-4 mr-1.5" />
+                              Download Notices
+                            </Button>
+                            <Button
+                              size="sm"
+                              onClick={handleBulkRentIncrease}
+                              disabled={
+                                bulkApplying ||
+                                !bulkPct ||
+                                isNaN(parseFloat(bulkPct)) ||
+                                parseFloat(bulkPct) <= 0
+                              }
+                            >
+                              {bulkApplying ? "Applying…" : "Apply Increase"}
+                            </Button>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-zinc-500 hover:text-zinc-300"
+                      onClick={() => setSelectedLeaseIds(new Set())}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+              )}
+
             <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
               <Table>
                 <TableHeader>
                   <TableRow className="border-[var(--color-border)] hover:bg-transparent">
+                    <TableHead className="w-10 pl-4">
+                      <Checkbox
+                        checked={
+                          sortedLeases.length > 0 &&
+                          sortedLeases.every((l) => selectedLeaseIds.has(l.id))
+                        }
+                        onChange={() => toggleSelectAll(sortedLeases.map((l) => l.id))}
+                        aria-label="Select all leases"
+                      />
+                    </TableHead>
                     <TableHead className="text-[var(--color-muted-foreground)]">Property</TableHead>
                     <TableHead className="text-[var(--color-muted-foreground)]">Tenant</TableHead>
                     <TableHead className="text-[var(--color-muted-foreground)]">
@@ -927,8 +1134,18 @@ export function LeasesView(): React.ReactElement {
                   {sortedLeases.map((lease: Lease) => (
                     <TableRow
                       key={lease.id}
-                      className="border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]"
+                      className={cn(
+                        "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]",
+                        selectedLeaseIds.has(lease.id) && "bg-indigo-950/30",
+                      )}
                     >
+                      <TableCell className="pl-4 w-10">
+                        <Checkbox
+                          checked={selectedLeaseIds.has(lease.id)}
+                          onChange={() => toggleLeaseSelection(lease.id)}
+                          aria-label={`Select lease for ${lease.tenant?.name ?? lease.id}`}
+                        />
+                      </TableCell>
                       <TableCell className="text-sm text-[var(--color-foreground)]">
                         {lease.property?.name}
                       </TableCell>
@@ -972,6 +1189,7 @@ export function LeasesView(): React.ReactElement {
                 </TableBody>
               </Table>
             </div>
+            </>
           )
         ) : (
           <>

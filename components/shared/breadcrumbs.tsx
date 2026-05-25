@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
+import { useApp } from "@/lib/contexts/app-context";
 
 /** Human-readable labels for known route segments */
 const SEGMENT_LABELS: Record<string, string> = {
@@ -42,6 +43,7 @@ interface BreadcrumbsProps {
 
 export function Breadcrumbs({ overrides, className }: BreadcrumbsProps) {
   const pathname = usePathname();
+  const { state } = useApp();
 
   // Split pathname: /pt/properties/123 → ["pt", "properties", "123"]
   const segments = pathname.split("/").filter(Boolean);
@@ -61,7 +63,23 @@ export function Breadcrumbs({ overrides, className }: BreadcrumbsProps) {
 
     // Check for overrides first (for dynamic segments like entity ids)
     const override = overrides?.[segment];
-    const label = override?.label || SEGMENT_LABELS[segment] || decodeURIComponent(segment);
+
+    let label: string;
+    if (override?.label) {
+      label = override.label;
+    } else if (SEGMENT_LABELS[segment]) {
+      label = SEGMENT_LABELS[segment];
+    } else {
+      // Try to resolve the segment as an entity ID
+      const property = state.properties?.find((p) => p.id === segment);
+      const tenant = state.tenants?.find((t) => t.id === segment);
+      const lease = state.leases?.find((l) => l.id === segment);
+      label =
+        property?.name ||
+        tenant?.name ||
+        (lease ? `Lease ${lease.id.slice(0, 8)}` : null) ||
+        decodeURIComponent(segment);
+    }
 
     return { segment, href: override?.href || href, label, isLast };
   });

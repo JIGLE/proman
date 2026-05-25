@@ -403,8 +403,7 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                             <ul className="text-xs text-zinc-400 space-y-1">
                               {owner.properties.map((p) => (
                                 <li key={p.id}>
-                                  {/* We need propertyName here, likely need to populate it on fetch */}
-                                  {p.property?.name ?? "Property"} - {p.ownershipPercentage}%
+                                  {p.property?.name ?? "Property"} &mdash; {p.ownershipPercentage}%
                                 </li>
                               ))}
                             </ul>
@@ -412,6 +411,37 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                             <p className="text-xs text-zinc-500 italic">No properties assigned</p>
                           )}
                         </div>
+
+                        {/* Revenue share summary */}
+                        {owner.properties && owner.properties.length > 0 && (() => {
+                          const ownerIncome = owner.properties.reduce((sum, po) => {
+                            const propIncome = receipts
+                              .filter((r) => r.propertyId === po.propertyId && r.status === "paid")
+                              .reduce((s, r) => s + r.amount, 0);
+                            return sum + propIncome * (po.ownershipPercentage / 100);
+                          }, 0);
+                          const ownerExpenses = owner.properties.reduce((sum, po) => {
+                            const propExp = expenses
+                              .filter((e) => e.propertyId === po.propertyId)
+                              .reduce((s, e) => s + e.amount, 0);
+                            return sum + propExp * (po.ownershipPercentage / 100);
+                          }, 0);
+                          const net = ownerIncome - ownerExpenses;
+                          return (
+                            <div className="pt-2 border-t border-zinc-800 grid grid-cols-2 gap-2 text-xs">
+                              <div>
+                                <p className="text-zinc-500">Income share</p>
+                                <p className="font-semibold text-green-400">{formatCurrency(ownerIncome)}</p>
+                              </div>
+                              <div>
+                                <p className="text-zinc-500">Net share</p>
+                                <p className={cn("font-semibold", net >= 0 ? "text-green-400" : "text-red-400")}>
+                                  {formatCurrency(net)}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         <Button
                           variant="outline"

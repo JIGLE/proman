@@ -61,7 +61,8 @@ const initialFormData: UnitFormData = {
 };
 
 export default function UnitsView({ propertyId }: UnitsViewProps) {
-  const _t = useTranslations("Units");
+  const t = useTranslations("Units");
+  const tActions = useTranslations("actions");
   const [units, setUnits] = useState<Unit[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -116,11 +117,11 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
 
   const handleSave = async () => {
     if (!formData.number.trim()) {
-      toast.error("Unit number is required");
+      toast.error(t("unitNumberRequired"));
       return;
     }
     if (!formData.propertyId && !propertyId) {
-      toast.error("Property is required");
+      toast.error(t("propertyRequired"));
       return;
     }
 
@@ -140,7 +141,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
       const url = editingUnit ? `/api/units/${editingUnit.id}` : "/api/units";
       const method = editingUnit ? "PUT" : "POST";
       await apiFetch(url, csrfToken, method, payload);
-      toast.success(editingUnit ? "Unit updated" : "Unit created");
+      toast.success(editingUnit ? t("editUnit") : t("addUnit"));
       closeModal();
       await fetchUnits();
     } catch (err) {
@@ -156,7 +157,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
     setUnits(units.filter((u) => u.id !== unitId));
     try {
       await apiFetch(`/api/units/${unitId}`, csrfToken, "DELETE");
-      toast.success("Unit deleted");
+      toast.success(t("deleteUnit"));
     } catch (err) {
       setUnits(previousUnits);
       const msg = err instanceof Error ? err.message : "Failed to delete unit";
@@ -200,7 +201,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {editingUnit ? "Edit Unit" : "Add Unit"}
+                {editingUnit ? t("editUnit") : t("addUnit")}
               </h2>
               <button onClick={closeModal} className="text-gray-500 hover:text-gray-700">
                 <X className="w-5 h-5" />
@@ -209,7 +210,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
             <div className="space-y-3">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Unit Number *
+                  {t("unitNumber")} *
                 </label>
                 <input
                   type="text"
@@ -222,7 +223,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Floor
+                    {t("floor")}
                   </label>
                   <input
                     type="number"
@@ -233,7 +234,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Size (m²)
+                    {t("size")}
                   </label>
                   <input
                     type="number"
@@ -246,7 +247,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Bedrooms
+                    {t("bedrooms")}
                   </label>
                   <input
                     type="number"
@@ -257,7 +258,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Bathrooms
+                    {t("bathrooms")}
                   </label>
                   <input
                     type="number"
@@ -269,7 +270,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Status
+                  {t("status")}
                 </label>
                 <select
                   value={formData.status}
@@ -281,15 +282,15 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                   }
                   className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 >
-                  <option value="vacant">Vacant</option>
-                  <option value="occupied">Occupied</option>
-                  <option value="maintenance">Maintenance</option>
-                  <option value="reserved">Reserved</option>
+                  <option value="vacant">{t("status_vacant")}</option>
+                  <option value="occupied">{t("status_occupied")}</option>
+                  <option value="maintenance">{t("status_maintenance")}</option>
+                  <option value="reserved">{t("status_reserved")}</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Notes
+                  {t("notes")}
                 </label>
                 <textarea
                   value={formData.notes}
@@ -304,7 +305,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                 onClick={closeModal}
                 className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
               >
-                Cancel
+                {tActions("cancel")}
               </button>
               <button
                 onClick={handleSave}
@@ -312,7 +313,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
               >
                 {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-                {editingUnit ? "Update" : "Create"}
+                {editingUnit ? tActions("save") : tActions("create")}
               </button>
             </div>
           </div>
@@ -322,13 +323,13 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
       {filteredUnits.length === 0 ? (
         <EmptyStateIllustration
           type="units"
-          title={propertyId ? "No units in this property" : "No units yet"}
+          title={propertyId ? t("noUnitsInProperty") : t("noUnitsYet")}
           description={
             propertyId
-              ? "This property has no units added yet."
-              : "Start by adding units to your properties"
+              ? t("addFirstUnit")
+              : t("startByAdding")
           }
-          actionLabel="Add Your First Unit"
+          actionLabel={t("addUnit")}
           onAction={openAddModal}
         />
       ) : (
@@ -342,42 +343,42 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                 <div className="flex items-center gap-2">
                   <Home className="w-5 h-5 text-blue-600" />
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Unit {unit.number}
-                  </h3>
-                </div>
+                  {t("unit")} {unit.number}
+                </h3>
+              </div>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
                     unit.status,
                   )}`}
                 >
-                  {unit.status}
+                  {t(`status_${unit.status}`)}
                 </span>
               </div>
 
               <div className="space-y-2 mb-4">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <span className="font-medium">Property:</span> {unit.property.name}
+                  <span className="font-medium">{t("property")}:</span> {unit.property.name}
                 </p>
                 {unit.floor !== null && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <span className="font-medium">Floor:</span> {unit.floor}
+                    <span className="font-medium">{t("floor")}:</span> {unit.floor}
                   </p>
                 )}
                 {unit.sizeSqM && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <span className="font-medium">Size:</span> {unit.sizeSqM} m²
+                    <span className="font-medium">{t("size")}:</span> {unit.sizeSqM} m²
                   </p>
                 )}
                 {(unit.bedrooms || unit.bathrooms) && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    {unit.bedrooms && `${unit.bedrooms} bed`}
+                    {unit.bedrooms && `${unit.bedrooms} ${t("bedrooms")}`}
                     {unit.bedrooms && unit.bathrooms && " • "}
-                    {unit.bathrooms && `${unit.bathrooms} bath`}
+                    {unit.bathrooms && `${unit.bathrooms} ${t("bathrooms")}`}
                   </p>
                 )}
                 {unit.leases.length > 0 && (
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    <span className="font-medium">Tenant:</span> {unit.leases[0].tenant.name}
+                    <span className="font-medium">{t("tenant")}:</span> {unit.leases[0].tenant.name}
                   </p>
                 )}
               </div>
@@ -388,16 +389,15 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                   className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"
                 >
                   <Edit2 className="w-3.5 h-3.5" />
-                  Edit
+                  {tActions("edit")}
                 </button>
                 <button
                   onClick={() => {
                     confirmDialog.confirm(
                       {
-                        title: "Delete Unit",
-                        description:
-                          "This unit will be permanently removed. This action cannot be undone.",
-                        confirmLabel: "Delete Unit",
+                        title: t("deleteConfirmTitle"),
+                        description: t("deleteConfirmDescription"),
+                        confirmLabel: t("deleteUnit"),
                         variant: "destructive",
                       },
                       async () => {
@@ -408,7 +408,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                   className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  Delete
+                  {t("deleteUnit")}
                 </button>
               </div>
             </div>

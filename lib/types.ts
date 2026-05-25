@@ -65,6 +65,7 @@ export interface Tenant {
 
 export interface Receipt {
   id: string;
+  number?: string;
   userId: string;
   tenantId: string;
   tenantName: string;
@@ -179,6 +180,9 @@ export interface Expense {
   category: string;
   description?: string;
   receiptImage?: string;
+  isDeductible?: boolean;
+  vendorName?: string;
+  vendorVat?: string;
   createdAt: string;
   updatedAt: string;
 }

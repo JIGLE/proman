@@ -1,16 +1,30 @@
 /**
- * API Route: POST /api/compliance/nrua
+ * API Route: /api/compliance/nrua
  * GET  — List NRUA registrations for authenticated user
  * POST — Export a lease to NRUA (Ventanilla Única Digital)
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import { exportLeaseToNRUA, validateNifNie } from "@/lib/compliance/nrua-export";
 import { logAudit } from "@/lib/services/audit-log";
+import { withErrorHandler } from "@/lib/utils/error-handling";
+import { withRateLimit } from "@/lib/utils/rate-limit";
 import { getPrismaClient } from "@/lib/services/database/database";
 
-export async function GET(request: NextRequest) {
+// ─── Request body schema ────────────────────────────────────────────────────
+const nruaPostSchema = z.object({
+  leaseId: z.string().cuid(),
+  landlordNif: z
+    .string()
+    .min(9)
+    .refine((v) => validateNifNie(v), { message: "Valid landlord NIF/NIE is required" }),
+  landlordName: z.string().min(2),
+});
+
+// ─── Handlers ──────────────────────────────────────────────────────────────
+async function handleGet(request: NextRequest): Promise<NextResponse> {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
@@ -47,35 +61,28 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ registrations, total, page, limit });
 }
 
-export async function POST(request: NextRequest) {
+async function handlePost(request: NextRequest): Promise<NextResponse> {
   const authResult = await requireAuth(request);
   if (authResult instanceof NextResponse) return authResult;
 
   const { userId } = authResult;
-  const body = await request.json();
-  const { leaseId, landlordNif, landlordName } = body;
-
-  if (!leaseId) {
+  const rawBody: unknown = await request.json();
+  const parsed = nruaPostSchema.safeParse(rawBody);
+  if (!parsed.success) {
     await logAudit({
       userId,
       action: "EXPORT_NRUA_REGISTRATION",
       resourceType: "Lease",
-      details: { success: false, reason: "missing_lease_id" },
+      details: { success: false, reason: "validation_failed", errors: parsed.error.flatten() },
     });
-    return NextResponse.json({ error: "leaseId is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
+      { status: 400 },
+    );
   }
-  if (!landlordNif || !validateNifNie(landlordNif)) {
-    await logAudit({
-      userId,
-      action: "EXPORT_NRUA_REGISTRATION",
-      resourceType: "Lease",
-      resourceId: leaseId,
-      details: { success: false, reason: "invalid_landlord_nif" },
-    });
-    return NextResponse.json({ error: "Valid landlord NIF/NIE is required" }, { status: 400 });
-  }
+  const { leaseId, landlordNif, landlordName } = parsed.data;
 
-  const result = await exportLeaseToNRUA(leaseId, landlordNif, landlordName || "", userId);
+  const result = await exportLeaseToNRUA(leaseId, landlordNif, landlordName, userId);
 
   await logAudit({
     userId,
@@ -99,3 +106,6 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json(result, { status: 201 });
 }
+
+export const GET = withErrorHandler(withRateLimit(handleGet));
+export const POST = withErrorHandler(withRateLimit(handlePost));

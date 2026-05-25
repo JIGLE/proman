@@ -50,8 +50,9 @@ export function FinancialsView(): React.ReactElement {
   const { properties, receipts, expenses, loading } = state;
   const { formatCurrency } = useCurrency();
 
-  const [timeRange, setTimeRange] = useState("all"); // all, month, year
+  const [timeRange, setTimeRange] = useState("month"); // all, month, year
   const [selectedCountry, setSelectedCountry] = useState<"PT" | "ES">("PT");
+  const [receiptStatusFilter, setReceiptStatusFilter] = useState<"all" | "paid" | "pending">("all");
 
   const dialog = useFormDialog<ExpenseFormData>({
     schema: expenseSchema,
@@ -59,8 +60,9 @@ export function FinancialsView(): React.ReactElement {
       propertyId: "",
       amount: 0,
       date: new Date().toISOString().split("T")[0],
-      category: "",
+      category: "other" as const,
       description: "",
+      isDeductible: true,
     },
     onSubmit: async (data) => {
       await addExpense(data);
@@ -177,6 +179,35 @@ export function FinancialsView(): React.ReactElement {
 
   const getCategoryColor = (category: string) => getExpenseCategoryColor(category);
 
+  const formatCategoryLabel = (category: string) =>
+    category.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+  // Group receipts by month for table display
+  const groupedReceipts = useMemo(() => {
+    const filtered =
+      receiptStatusFilter === "all"
+        ? metrics.filteredReceipts
+        : metrics.filteredReceipts.filter((r) => r.status === receiptStatusFilter);
+    const sorted = [...filtered].sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+    const groups: Record<string, typeof sorted> = {};
+    sorted.forEach((r) => {
+      const key = r.date.substring(0, 7);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(r);
+    });
+    return Object.entries(groups).map(([key, recs]) => ({
+      key,
+      monthLabel: new Date(key + "-01").toLocaleString("default", {
+        month: "long",
+        year: "numeric",
+      }),
+      monthTotal: recs.filter((r) => r.status === "paid").reduce((s, r) => s + r.amount, 0),
+      receipts: recs,
+    }));
+  }, [metrics.filteredReceipts, receiptStatusFilter]);
+
   // Prepare chart data
   const _expenseCategoryData = Object.entries(metrics.expensesByCategory).map(
     ([category, amount]) => ({
@@ -280,7 +311,7 @@ export function FinancialsView(): React.ReactElement {
                       <Label htmlFor="category">Category</Label>
                       <Select
                         value={dialog.formData.category}
-                        onValueChange={(val) => dialog.updateFormData({ category: val })}
+                        onValueChange={(val) => dialog.updateFormData({ category: val as ExpenseFormData["category"] })}
                       >
                         <SelectTrigger
                           id="category"
@@ -511,75 +542,117 @@ export function FinancialsView(): React.ReactElement {
             </Card>
           )}
 
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Recent Income */}
+          <div className="space-y-4">
+            {/* Income & Receipts table */}
             <Card className="bg-zinc-900 border-zinc-800">
-              <CardHeader>
-                <CardTitle>Recent Income</CardTitle>
-                <CardDescription>Latest rent payments received</CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Income &amp; Receipts</CardTitle>
+                  <CardDescription>Rent payments received</CardDescription>
+                </div>
+                <Select
+                  value={receiptStatusFilter}
+                  onValueChange={(v) => setReceiptStatusFilter(v as "all" | "paid" | "pending")}
+                >
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All</SelectItem>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                  </SelectContent>
+                </Select>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {metrics.filteredReceipts.slice(0, 5).map((receipt) => (
-                    <div key={receipt.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="p-2 bg-green-900/20 rounded-full">
-                          <DollarSign className="w-4 h-4 text-green-500" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-zinc-200">
-                            {receipt.propertyName}
-                          </p>
-                          <p className="text-xs text-zinc-500">
-                            {new Date(receipt.date).toLocaleDateString()}
-                          </p>
-                        </div>
+                {groupedReceipts.length === 0 ? (
+                  <p className="text-sm text-zinc-500 text-center py-4">No income records found</p>
+                ) : (
+                  groupedReceipts.map(({ key, monthLabel, monthTotal, receipts: monthRecs }) => (
+                    <div key={key} className="mb-5">
+                      <div className="flex items-center justify-between mb-2 pb-1 border-b border-zinc-700">
+                        <h4 className="text-sm font-semibold text-zinc-300">{monthLabel}</h4>
+                        <span className="text-sm font-semibold text-green-400">
+                          {formatCurrency(monthTotal)}
+                        </span>
                       </div>
-                      <div className="text-sm font-bold text-green-500">
-                        +{formatCurrency(receipt.amount)}
+                      <div className="space-y-1">
+                        {monthRecs.map((receipt) => (
+                          <div
+                            key={receipt.id}
+                            className="flex items-center gap-3 text-sm py-1.5 border-b border-zinc-800/60 last:border-0"
+                          >
+                            <span className="text-zinc-500 text-xs font-mono w-28 shrink-0">
+                              {receipt.number ?? receipt.id.slice(0, 8)}
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-zinc-200 truncate">{receipt.tenantName}</p>
+                              <p className="text-zinc-500 text-xs truncate">{receipt.propertyName}</p>
+                            </div>
+                            <span
+                              className={cn(
+                                "text-xs px-2 py-0.5 rounded-full font-medium shrink-0",
+                                receipt.status === "paid"
+                                  ? "bg-green-900/40 text-green-400"
+                                  : "bg-yellow-900/40 text-yellow-400",
+                              )}
+                            >
+                              {receipt.status}
+                            </span>
+                            <span
+                              className={cn(
+                                "font-semibold text-sm shrink-0",
+                                receipt.status === "paid" ? "text-green-400" : "text-yellow-400",
+                              )}
+                            >
+                              {formatCurrency(receipt.amount)}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  ))}
-                  {metrics.filteredReceipts.length === 0 && (
-                    <p className="text-sm text-zinc-500 text-center py-4">
-                      No income records found
-                    </p>
-                  )}
-                </div>
+                  ))
+                )}
               </CardContent>
             </Card>
 
-            {/* Recent Expenses */}
+            {/* Expenses */}
             <Card className="bg-zinc-900 border-zinc-800">
               <CardHeader>
-                <CardTitle>Recent Expenses</CardTitle>
+                <CardTitle>Expenses</CardTitle>
                 <CardDescription>Latest tracked property costs</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {metrics.filteredExpenses.slice(0, 5).map((expense) => (
-                    <div key={expense.id} className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="p-2 bg-red-900/20 rounded-full">
-                          <FileText className="w-4 h-4 text-red-500" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-zinc-200">{expense.category}</p>
-                          <p className="text-xs text-zinc-500">
-                            {expense.propertyName ? expense.propertyName : "Unknown Property"} •{" "}
-                            {new Date(expense.date).toLocaleDateString()}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="text-sm font-bold text-red-500">
-                        -{formatCurrency(expense.amount)}
-                      </div>
-                    </div>
-                  ))}
-                  {metrics.filteredExpenses.length === 0 && (
+                <div className="space-y-3">
+                  {metrics.filteredExpenses.length === 0 ? (
                     <p className="text-sm text-zinc-500 text-center py-4">
                       No expense records found
                     </p>
+                  ) : (
+                    metrics.filteredExpenses
+                      .slice()
+                      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                      .map((expense) => (
+                        <div key={expense.id} className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-red-900/20 rounded-full shrink-0">
+                              <FileText className="w-4 h-4 text-red-500" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-zinc-200">
+                                {formatCategoryLabel(expense.category)}
+                              </p>
+                              <p className="text-xs text-zinc-500 truncate">
+                                {expense.propertyName ?? "Unknown Property"} &bull;{" "}
+                                {new Date(expense.date).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-sm font-bold text-red-500 shrink-0">
+                            -{formatCurrency(expense.amount)}
+                          </div>
+                        </div>
+                      ))
                   )}
                 </div>
               </CardContent>

@@ -52,7 +52,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal } from "lucide-react";
+import { useCurrency } from "@/lib/contexts/currency-context";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
 
 // ─── Types ────────────────────────────────────────────────────────────────────

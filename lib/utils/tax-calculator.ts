@@ -67,6 +67,8 @@ export interface TaxCalculationInput {
   isRentReducedVsPrior?: boolean; // rent reduced ≥5% vs. prior contract
   totalUnitsOwned?: number; // for grandes tenedores
   unitsInStressedZones?: number;
+  /** ISO date string or Date — used to distinguish pre-2024 vs new contracts for Spain IRPF deduction */
+  leaseStartDate?: Date | string;
 }
 
 export interface TaxCalculationResult {
@@ -148,8 +150,14 @@ export class TaxCalculator {
     }
 
     // ── Standard progressive brackets (Categoria F — Rendimentos Prediais) ──
-    // Deductible expenses capped at 15% of gross income
-    const maxDeductible = Math.min(annualRentalIncome * 0.15, deductibleExpenses);
+    // Art. 41.º CIRS: actual allowable expenses are deductible in full for individual landlords
+    // (maintenance, IMI, insurance, condominium fees). No percentage cap applies.
+    const maxDeductible = Math.min(deductibleExpenses, annualRentalIncome);
+    if (deductibleExpenses > annualRentalIncome * 0.5) {
+      warnings.push(
+        `Deductible expenses (€${deductibleExpenses.toFixed(0)}) exceed 50% of gross income — please verify with a tax advisor.`,
+      );
+    }
     const taxableIncome = Math.max(0, annualRentalIncome - maxDeductible);
 
     let taxAmount = 0;
@@ -165,25 +173,26 @@ export class TaxCalculator {
       remaining -= taxableInBracket;
     }
 
-    // Ownership bonus (5% per year, max 15%)
-    const ownershipBonus = Math.min(yearsOfOwnership * 0.05, 0.15);
-    const finalTaxAmount = taxAmount * (1 - ownershipBonus);
+    // NOTE: A duration-based tax reduction is NOT provided for by the current Código do IRS
+    // (Categoria F, Art. 41.º-72.º). The result reflects statutory rates only.
+    warnings.push(
+      "This estimate is based on statutory IRS brackets. Consult a certified tax advisor (TOC) for your annual settlement.",
+    );
 
     return {
       grossIncome: annualRentalIncome,
       netIncome: annualRentalIncome - deductibleExpenses,
       taxableIncome,
       taxRate: marginalRate,
-      taxAmount: finalTaxAmount,
-      quarterlyPayment: finalTaxAmount / 4,
-      annualSettlement: finalTaxAmount,
-      effectiveRate: annualRentalIncome > 0 ? (finalTaxAmount / annualRentalIncome) * 100 : 0,
+      taxAmount,
+      quarterlyPayment: taxAmount / 4,
+      annualSettlement: taxAmount,
+      effectiveRate: annualRentalIncome > 0 ? (taxAmount / annualRentalIncome) * 100 : 0,
       deductions: {
-        total: deductibleExpenses + taxableIncome * ownershipBonus,
+        total: maxDeductible,
         breakdown: {
           expenses: deductibleExpenses,
-          ownershipBonus: taxableIncome * ownershipBonus,
-          maxDeductible,
+          allowedDeduction: maxDeductible,
         },
       },
       appliedRegime: "portugal_categoria_f_standard",
@@ -241,9 +250,17 @@ export class TaxCalculator {
         appliedTier = "base_50pct";
       }
     } else {
-      // Outside stressed zones: standard 50% deduction for residential
-      stressedZoneReduction = ES_STRESSED_ZONE_DEDUCTIONS.BASE;
-      appliedTier = "standard_50pct";
+      // Outside stressed zones: Ley de Vivienda (Ley 12/2023, effective 2024-01-01) changed the
+      // base deduction from 60% to 50% for new contracts. Pre-existing contracts keep 60%.
+      const leaseStart = input.leaseStartDate ? new Date(input.leaseStartDate) : null;
+      const isNewContract = leaseStart ? leaseStart >= new Date("2024-01-01") : true;
+      if (isNewContract) {
+        stressedZoneReduction = ES_STRESSED_ZONE_DEDUCTIONS.BASE; // 50%
+        appliedTier = "standard_50pct_new_contract";
+      } else {
+        stressedZoneReduction = 0.6; // 60% maintained for contracts signed before 2024-01-01
+        appliedTier = "standard_60pct_existing_contract";
+      }
     }
 
     const taxableIncome = netRentalIncome * (1 - stressedZoneReduction);

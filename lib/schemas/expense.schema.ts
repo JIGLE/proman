@@ -1,26 +1,95 @@
 import { z } from "zod";
 
+// ─── Expense Categories ──────────────────────────────────────────────────────
+// Used across both Portugal and Spain. IRS/IRPF deductibility is indicated
+// by the DEDUCTIBLE_CATEGORIES set below.
+
 export const EXPENSE_CATEGORIES = [
-  "Maintenance",
-  "Repairs",
-  "Utilities",
-  "Insurance",
-  "Taxes",
-  "Mortgage",
-  "Management Fees",
-  "Cleaning",
-  "Legal",
-  "Other",
+  // Property taxes
+  "imi",               // PT: Imposto Municipal sobre Imóveis
+  "ibi",               // ES: Impuesto sobre Bienes Inmuebles
+  "stamp_duty",        // Stamp duty / Imposto de Selo
+  "other_tax",         // Other property-related taxes
+  // Insurance
+  "building_insurance",   // Building / structure insurance
+  "contents_insurance",   // Contents / fixtures insurance
+  "liability_insurance",  // Landlord liability insurance
+  // Common / building expenses
+  "condominium_fees",  // Condominium / HOA monthly fees
+  "stair_lighting",    // Common area lighting
+  "cleaning",          // Cleaning services (common areas or unit)
+  "gardening",         // Garden / landscaping
+  "elevator",          // Elevator maintenance contract
+  "security",          // Security services
+  // Maintenance & repairs
+  "repairs",           // General repairs
+  "maintenance",       // Preventive / scheduled maintenance
+  "appliances",        // Appliance repair or replacement
+  // Utilities (when paid by landlord)
+  "water",
+  "electricity",
+  "gas",
+  "internet",
+  "utilities",         // Generic utilities (backward compat)
+  // Financial / administrative
+  "mortgage_interest", // Mortgage interest payments
+  "management_fees",   // Property management company fees
+  "legal_fees",        // Legal costs (lease drafting, disputes)
+  "accountant_fees",   // Tax advisor / TOC / gestor fees
+  // Fallback
+  "other",
 ] as const;
 
 export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
 
+/**
+ * Categories that are generally deductible for IRS (PT) Categoria F
+ * and IRPF (ES) Rendimientos del Capital Inmobiliario.
+ * This is indicative — always confirm with a certified accountant (TOC/gestor).
+ */
+export const DEDUCTIBLE_CATEGORIES = new Set<ExpenseCategory>([
+  "imi",
+  "ibi",
+  "building_insurance",
+  "contents_insurance",
+  "liability_insurance",
+  "condominium_fees",
+  "repairs",
+  "maintenance",
+  "appliances",
+  "mortgage_interest",
+  "management_fees",
+  "legal_fees",
+  "accountant_fees",
+  "cleaning",
+  "gardening",
+  "elevator",
+  "security",
+  "utilities",
+  "water",
+  "electricity",
+  "gas",
+  "internet",
+]);
+
+export function isDefaultDeductible(category: ExpenseCategory): boolean {
+  return DEDUCTIBLE_CATEGORIES.has(category);
+}
+
+// ─── Schema ──────────────────────────────────────────────────────────────────
+
 export const expenseSchema = z.object({
   propertyId: z.string().min(1, "Property is required"),
+  unitId: z.string().cuid().optional().nullable(),
+  leaseId: z.string().cuid().optional().nullable(),
   amount: z.number().min(0.01, "Amount must be greater than 0"),
   date: z.string().refine((date) => !isNaN(Date.parse(date)), "Invalid date"),
-  category: z.string().min(1, "Category is required"),
-  description: z.string().max(200, "Description too long").optional(),
+  category: z.enum(EXPENSE_CATEGORIES, { error: "Invalid category" }),
+  description: z.string().max(500, "Description too long").optional(),
+  isDeductible: z.boolean().default(true),
+  vendorName: z.string().max(150, "Vendor name too long").optional(),
+  vendorVat: z.string().max(20, "VAT/NIF too long").optional(),
+  receiptImage: z.string().optional(),
 });
 
 export const createExpenseSchema = expenseSchema;

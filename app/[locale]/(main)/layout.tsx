@@ -9,7 +9,13 @@ import { AppTour } from "@/components/shared/app-tour";
 import { ScenarioRunner } from "@/components/shared/scenario-runner";
 import { PortalAccessGuard } from "@/components/shared/portal-access-guard";
 
-export default function MainLayout({ children }: { children: React.ReactNode }) {
+export default function MainLayout({
+  children,
+  modal,
+}: {
+  children: React.ReactNode;
+  modal?: React.ReactNode;
+}) {
   return (
     <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
       {/* Skip Navigation Links for Accessibility */}
@@ -47,6 +53,8 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
 
       {/* Demo Scenario Runner FAB */}
       <ScenarioRunner />
+      {/* Intercepting modal slot */}
+      {modal}
     </div>
   );
 }
