@@ -23,10 +23,10 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -67,7 +67,7 @@ jobs:
 
       - name: Upload audit report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: npm-audit-report
           path: audit-report.json
@@ -80,10 +80,10 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -99,7 +99,7 @@ jobs:
 
       - name: Upload security report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: security-report
           path: security-report.json
@@ -137,19 +137,19 @@ jobs:
         language: ["javascript"]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v3
+        uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
           queries: security-and-quality
 
       - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
+        uses: github/codeql-action/autobuild@v4
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v3
+        uses: github/codeql-action/analyze@v4
         with:
           category: "/language:${{ matrix.language }}"
 
@@ -160,10 +160,10 @@ jobs:
     continue-on-error: true # Requires GitHub Advanced Security (unavailable on free private repos)
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Dependency Review
-        uses: actions/dependency-review-action@v4
+        uses: actions/dependency-review-action@v5
         with:
           fail-on-severity: critical
           deny-licenses: GPL-2.0, GPL-3.0
@@ -174,12 +174,12 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: TruffleHog Secret Scan
-        uses: trufflesecurity/trufflehog@v3.95.2
+        uses: trufflesecurity/trufflehog@v3.95.3
         with:
           path: ./
           base: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
@@ -194,13 +194,13 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: TruffleHog Unverified Scan
         id: trufflehog-unverified
-        uses: trufflesecurity/trufflehog@v3.95.2
+        uses: trufflesecurity/trufflehog@v3.95.3
         with:
           path: ./
           base: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
@@ -227,7 +227,7 @@ jobs:
 
     steps:
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         continue-on-error: true
 
       - name: Generate summary
