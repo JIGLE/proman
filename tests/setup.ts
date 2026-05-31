@@ -7,6 +7,8 @@ import {
 import prismaMock from "./helpers/prisma-mock";
 import "@testing-library/jest-dom/vitest";
 
+import en from "../public/locales/en/common.json";
+
 // Use an explicit render helper for tests that need Intl / Currency contexts.
 // Tests should import `renderWithProviders` from `tests/helpers/render-with-providers`.
 
@@ -32,6 +34,29 @@ vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
   NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
+
+// Mock react-i18next used by some components (legacy/localized components).
+// Return real English strings from `public/locales/en/common.json` so tests
+// that assert labels (e.g., "Upload Document") pass.
+vi.mock("react-i18next", () => {
+  function lookup(key: string) {
+    const parts = key.split(".");
+    let cur: any = en;
+    for (const p of parts) {
+      if (cur && typeof cur === "object" && p in cur) cur = cur[p];
+      else return key;
+    }
+    return typeof cur === "string" ? cur : key;
+  }
+
+  return {
+    useTranslation: () => ({
+      t: (k: string) => lookup(k),
+      i18n: { changeLanguage: vi.fn(), language: "en" },
+    }),
+    Trans: ({ children }: { children: React.ReactNode }) => children,
+  };
+});
 
 // Mock currency context - used by many components
 vi.mock("@/lib/contexts/currency-context", () => ({

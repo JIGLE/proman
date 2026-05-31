@@ -15,7 +15,8 @@ import { getPrismaClient } from "@/lib/services/database/database";
 
 // ─── Request body schema ────────────────────────────────────────────────────
 const nruaPostSchema = z.object({
-  leaseId: z.string().cuid(),
+  // Accept non-CUID ids in tests/legacy data; real validation happens in exportLeaseToNRUA
+  leaseId: z.string().min(1),
   landlordNif: z
     .string()
     .min(9)

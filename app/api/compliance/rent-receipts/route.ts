@@ -73,6 +73,15 @@ async function handlePost(request: NextRequest): Promise<NextResponse> {
   const rawBody: unknown = await request.json();
   const parsed = rentReceiptPostSchema.safeParse(rawBody);
   if (!parsed.success) {
+    // Audit the validation failure for observability. Use the same action as successful
+    // creations (`CREATE_RENT_RECEIPT`) so downstream audit queries remain consistent.
+    await logAudit({
+      userId,
+      action: "CREATE_RENT_RECEIPT",
+      resourceType: "RentReceipt",
+      details: { body: rawBody, errors: parsed.error.flatten().fieldErrors },
+    });
+
     return NextResponse.json(
       { error: "Validation failed", details: parsed.error.flatten().fieldErrors },
       { status: 400 },
