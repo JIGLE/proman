@@ -146,7 +146,7 @@ interface AppContextValue {
   refreshData: () => Promise<void>;
 }
 
-const AppContext = createContext<AppContextValue | null>(null);
+export const AppContext = createContext<AppContextValue | null>(null);
 
 // ---------------------------------------------------------------------------
 // Provider
