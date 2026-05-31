@@ -3,6 +3,7 @@ import * as sgMail from '@sendgrid/mail';
 import type { MailDataRequired, ClientResponse } from '@sendgrid/mail';
 import { getPrismaClient } from '@/lib/database';
 import type { PrismaClient } from '@prisma/client';
+import { formatCurrency } from '@/lib/currency';
 
 // Initialize SendGrid with API key
 const sendGridClient = sgMail as unknown as {
@@ -42,13 +43,13 @@ export const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Rent Payment Reminder</h2>
         <p>Dear {{tenantName}},</p>
-        <p>This is a friendly reminder that your rent payment of $\{{rentAmount}} for <strong>{{propertyAddress}}</strong> is due on {{dueDate}}.</p>
+        <p>This is a friendly reminder that your rent payment of {{rentAmount}} for <strong>{{propertyAddress}}</strong> is due on {{dueDate}}.</p>
         <p>Please ensure your payment is made by the due date to avoid any late fees.</p>
         <div style="background-color: #f8f9fa; padding: 15px; margin: 20px 0; border-radius: 5px;">
           <h3>Payment Details:</h3>
           <ul>
             <li><strong>Property:</strong> {{propertyAddress}}</li>
-            <li><strong>Amount Due:</strong> $\{{rentAmount}}</li>
+            <li><strong>Amount Due:</strong> {{rentAmount}}</li>
             <li><strong>Due Date:</strong> {{dueDate}}</li>
             <li><strong>Payment Method:</strong> {{paymentMethod}}</li>
           </ul>
@@ -74,7 +75,7 @@ export const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
           <ul>
             <li><strong>Current Lease End:</strong> {{currentLeaseEnd}}</li>
             <li><strong>Proposed New Term:</strong> {{newLeaseTerm}}</li>
-            <li><strong>New Monthly Rent:</strong> $\{{newRentAmount}}</li>
+            <li><strong>New Monthly Rent:</strong> {{newRentAmount}}</li>
             <li><strong>Renewal Deadline:</strong> {{renewalDeadline}}</li>
           </ul>
         </div>
@@ -222,21 +223,61 @@ export class EmailService {
       return { success: false, error: `Template ${templateId} not found` };
     }
 
-    // Replace variables in subject and content
-    let subject = customSubject || template.subject;
-    let htmlContent = template.htmlContent;
+    // Render template with centralized formatting and escaping
+    const renderTemplate = (tpl: string) => {
+      // shallow copy so we don't modify the original variables
+      const vars: Record<string, string> = {};
 
-    Object.entries(variables).forEach(([key, value]) => {
-      const regex = new RegExp(`{{${key}}}`, 'g');
-      subject = subject.replace(regex, String(value));
-      htmlContent = htmlContent.replace(regex, String(value));
-    });
+      const currencyKeyRegex = /amount|rent|price|total|balance/i;
+
+      // Determine currency fallback order: explicit currency fields, env, default EUR
+      const defaultCurrency = (variables && (variables['currency'] || variables['currencyCode'] || variables['preferredCurrency'])) as string | undefined || process.env.DEFAULT_CURRENCY || 'EUR';
+
+      const escapeHtml = (s: string) =>
+        s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+
+      Object.entries(variables || {}).forEach(([k, v]) => {
+        // If value looks numeric and key suggests money, format as currency
+        let out: string;
+        if (v === null || v === undefined) {
+          out = '';
+        } else if (typeof v === 'number') {
+          if (currencyKeyRegex.test(k)) {
+            out = formatCurrency(v, defaultCurrency as string);
+          } else {
+            out = String(v);
+          }
+        } else if (typeof v === 'string') {
+          // detect numeric strings
+          const n = Number(v.replace(/[^0-9.-]/g, ''));
+          if (!Number.isNaN(n) && currencyKeyRegex.test(k)) {
+            out = formatCurrency(n, defaultCurrency as string);
+          } else {
+            out = v;
+          }
+        } else {
+          out = String(v);
+        }
+
+        // escape for HTML content
+        vars[k] = escapeHtml(out);
+      });
+
+      // Replace tokens
+      return tpl.replace(/{{([a-zA-Z0-9_\-]+)}}/g, (_m, p1) => vars[p1] ?? '');
+    };
+
+    const subject = customSubject || template.subject;
+    const renderedSubject = renderTemplate(subject);
+    const renderedHtml = renderTemplate(template.htmlContent);
+    const renderedText = template.textContent ? renderTemplate(template.textContent) : undefined;
 
     return this.sendEmail({
       to: recipientEmail,
       from: process.env.FROM_EMAIL || 'noreply@proman.app',
-      subject,
-      html: htmlContent,
+      subject: renderedSubject,
+      html: renderedHtml,
+      text: renderedText,
       templateId,
     }, userId);
   }
