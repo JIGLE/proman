@@ -33,6 +33,15 @@ vi.mock("next-intl", () => ({
   NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+// Mock react-i18next used by some components (legacy/localized components)
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (k: string) => k,
+    i18n: { changeLanguage: vi.fn(), language: "en" },
+  }),
+  Trans: ({ children }: { children: React.ReactNode }) => children,
+}));
+
 // Mock currency context - used by many components
 vi.mock("@/lib/contexts/currency-context", () => ({
   useCurrency: () => ({
