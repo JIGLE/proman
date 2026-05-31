@@ -6,6 +6,8 @@ vi.mock('@/lib/toast-context', () => ({
   useToast: () => ({ success: vi.fn(), error: vi.fn() }),
 }));
 
+// AppContext is globally mocked in tests/setup.ts
+
 describe('LeaseManagement', () => {
   const tenantResponse = [
     {

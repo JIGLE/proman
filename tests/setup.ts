@@ -33,6 +33,47 @@ vi.mock("next-intl", () => ({
   NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+// Mock react-i18next for components that use `useTranslation`
+import { readFileSync } from "fs";
+import { resolve } from "path";
+import * as React from 'react';
+
+let commonTranslations: Record<string, any> = {};
+try {
+  const p = resolve(__dirname, "..", "public", "locales", "en", "common.json");
+  commonTranslations = JSON.parse(readFileSync(p, "utf8"));
+} catch (e) {
+  // fallback to empty translations
+  commonTranslations = {};
+}
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (key: string) => {
+      const parts = key.split(".");
+      let cur: any = commonTranslations;
+      for (const p of parts) {
+        if (cur && typeof cur === "object" && p in cur) cur = cur[p];
+        else return key;
+      }
+      return typeof cur === "string" ? cur : key;
+    },
+    i18n: {
+      changeLanguage: async () => {},
+    },
+  }),
+}));
+
+// Provide a lightweight mock for the app context so components can import it in tests
+vi.mock("@/lib/app-context-db", () => {
+  const AppContext = React.createContext(null);
+  const AppProvider = ({ children }: { children: any }) => children;
+  const useApp = () => {
+    throw new Error('useApp must be used within an AppProvider');
+  };
+  return { AppContext, AppProvider, useApp };
+});
+
 // Mock currency context - used by many components
 vi.mock("@/lib/contexts/currency-context", () => ({
   useCurrency: () => ({

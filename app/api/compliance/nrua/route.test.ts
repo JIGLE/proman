@@ -89,17 +89,18 @@ describe("Compliance NRUA route", () => {
     const request = new NextRequest("http://localhost:3000/api/compliance/nrua", {
       method: "POST",
       body: JSON.stringify({
-        leaseId: "lease-456",
+        leaseId: "c12345678901234567890",
         landlordNif: "12345678Z",
         landlordName: "Owner Name",
       }),
+      headers: { "content-type": "application/json" },
     });
 
     const response = await POST(request);
     const payload = await response.json();
 
     expect(exportLeaseToNRUAMock).toHaveBeenCalledWith(
-      "lease-456",
+      "c12345678901234567890",
       "12345678Z",
       "Owner Name",
       "user-123",
@@ -111,7 +112,7 @@ describe("Compliance NRUA route", () => {
         userId: "user-123",
         action: "EXPORT_NRUA_REGISTRATION",
         resourceType: "Lease",
-        resourceId: "lease-456",
+        resourceId: "c12345678901234567890",
       }),
     );
   });
