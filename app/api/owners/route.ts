@@ -1,84 +1,66 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { Session } from 'next-auth';
-import { getPrismaClient } from '@/lib/database';
-import { getAuthOptions } from "@/lib/auth";
-import { ownerSchema } from '@/lib/validation';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import { getPrismaClient } from "@/lib/services/database/database";
+import { ownerSchema } from "@/lib/schemas/owner.schema";
+import { isMockMode } from "@/lib/config/data-mode";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
+import { createSuccessResponse, withErrorHandler } from "@/lib/utils/error-handling";
+import { withRateLimit } from "@/lib/utils/rate-limit";
 
-export async function GET(): Promise<NextResponse> {
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const session = await getServerSession(getAuthOptions() as any) as Session | null;
-        if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+async function handleGet(request: NextRequest): Promise<Response> {
+  const demo = handleDemoGet(request, "owners");
+  if (demo.response) return demo.response;
 
-        const prisma = getPrismaClient();
+  if (isMockMode) {
+    return createSuccessResponse([]);
+  }
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
 
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
+  const { userId } = authResult;
+  const prisma = getPrismaClient();
 
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        }
+  const owners = await prisma.owner.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    include: {
+      properties: {
+        include: {
+          property: true,
+        },
+      },
+    },
+  });
 
-        const owners = await prisma.owner.findMany({
-            where: { userId: user.id },
-            orderBy: { createdAt: 'desc' },
-            include: {
-                properties: {
-                    include: {
-                        property: true,
-                    },
-                },
-            },
-        });
-
-        return NextResponse.json(owners);
-    } catch (error) {
-        console.error('Error fetching owners:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch owners' },
-            { status: 500 }
-        );
-    }
+  return createSuccessResponse(owners);
 }
 
-export async function POST(req: Request): Promise<NextResponse> {
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const session = await getServerSession(getAuthOptions() as any) as Session | null;
-        if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+async function handlePost(request: NextRequest): Promise<Response> {
+  const demo = await handleDemoMutation(request, "owners");
+  if (demo.response) return demo.response;
 
-        const prisma = getPrismaClient();
+  if (isMockMode) {
+    return createSuccessResponse({ error: "Write operations not supported in mock mode" }, 403);
+  }
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
 
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
+  const { userId } = authResult;
+  const prisma = getPrismaClient();
 
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        }
+  const json = await request.json();
+  const body = ownerSchema.parse(json);
 
-        const json = await req.json();
-        const body = ownerSchema.parse(json);
+  const owner = await prisma.owner.create({
+    data: {
+      ...body,
+      userId,
+    },
+  });
 
-        const owner = await prisma.owner.create({
-            data: {
-                ...body,
-                userId: user.id,
-            },
-        });
-
-        return NextResponse.json(owner);
-    } catch (error) {
-        console.error('Error creating owner:', error);
-        return NextResponse.json(
-            { error: 'Failed to create owner' },
-            { status: 500 }
-        );
-    }
+  return createSuccessResponse(owner, 201);
 }
+
+export const GET = withErrorHandler(withRateLimit(handleGet));
+export const POST = withErrorHandler(withRateLimit(handlePost));
+export const OPTIONS = handleOptions;

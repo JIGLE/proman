@@ -33,13 +33,13 @@ function AuthErrorContent(): React.ReactElement {
     setLoadingDebug(true);
     setDebugError(null);
     try {
-      const res = await fetch('/api/debug/db');
+      const res = await fetch("/api/debug/db");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = await res.json();
       setDebugInfo(json);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
-      setDebugError(message || 'Failed to fetch debug info');
+      setDebugError(message || "Failed to fetch debug info");
     } finally {
       setLoadingDebug(false);
     }
@@ -48,10 +48,10 @@ function AuthErrorContent(): React.ReactElement {
   const copyDebug = async () => {
     try {
       await navigator.clipboard.writeText(JSON.stringify(debugInfo, null, 2));
-      alert('Debug info copied to clipboard');
+      alert("Debug info copied to clipboard");
     } catch (err) {
       console.error(err);
-      alert('Unable to copy');
+      alert("Unable to copy");
     }
   };
 
@@ -62,12 +62,25 @@ function AuthErrorContent(): React.ReactElement {
         <p className="text-zinc-300 mb-4">{getErrorMessage(error)}</p>
 
         <div className="text-sm text-zinc-400 mb-4 space-y-2 text-left">
-          <p><strong>Quick checks:</strong></p>
+          <p>
+            <strong>Quick checks:</strong>
+          </p>
           <ul className="list-disc pl-5 space-y-1">
-            <li>Ensure <code>NEXTAUTH_URL</code> is set to <code>https://proman.mj25.eu</code>.</li>
-            <li>Confirm Google OAuth client has redirect URI <code>https://proman.mj25.eu/api/auth/callback/google</code>.</li>
-            <li>Verify <code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code>, and <code>NEXTAUTH_SECRET</code> are defined in the TrueNAS SCALE app environment.</li>
-            <li>Check database health: <code>/api/debug/db</code> (shows DB exists/writable and user count).</li>
+            <li>
+              Ensure <code>NEXTAUTH_URL</code> is set to <code>https://proman.mj25.eu</code>.
+            </li>
+            <li>
+              Confirm Google OAuth client has redirect URI{" "}
+              <code>https://proman.mj25.eu/api/auth/callback/google</code>.
+            </li>
+            <li>
+              Verify <code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code>, and{" "}
+              <code>NEXTAUTH_SECRET</code> are defined in the TrueNAS SCALE app environment.
+            </li>
+            <li>
+              Check database health: <code>/api/debug/db</code> (shows DB exists/writable and user
+              count).
+            </li>
           </ul>
         </div>
 
@@ -81,16 +94,38 @@ function AuthErrorContent(): React.ReactElement {
         </div>
 
         <div className="mt-4 text-left">
-          <Button variant="ghost" onClick={() => { setShowDetails(s => !s); if (!showDetails && !debugInfo) fetchDebugInfo(); }} className="mb-2">
-            {showDetails ? 'Hide diagnostics' : 'Show diagnostics'}
+          <Button
+            variant="ghost"
+            onClick={() => {
+              setShowDetails((s) => !s);
+              if (!showDetails && !debugInfo) fetchDebugInfo();
+            }}
+            className="mb-2"
+          >
+            {showDetails ? "Hide diagnostics" : "Show diagnostics"}
           </Button>
 
           {showDetails && (
             <div className="bg-zinc-900 border border-zinc-800 rounded p-3 text-sm text-zinc-200">
-              <p className="mb-2">Error type: <strong>{error || 'Unknown'}</strong></p>
-              <p className="mb-2">Helpful links:
-                <br />- <a className="text-sky-400" href="https://console.cloud.google.com/apis/credentials">Google Cloud Console (Credentials)</a>
-                <br />- <a className="text-sky-400" href="https://next-auth.js.org/getting-started/introduction">NextAuth docs</a>
+              <p className="mb-2">
+                Error type: <strong>{error || "Unknown"}</strong>
+              </p>
+              <p className="mb-2">
+                Helpful links:
+                <br />-{" "}
+                <a
+                  className="text-sky-400"
+                  href="https://console.cloud.google.com/apis/credentials"
+                >
+                  Google Cloud Console (Credentials)
+                </a>
+                <br />-{" "}
+                <a
+                  className="text-sky-400"
+                  href="https://next-auth.js.org/getting-started/introduction"
+                >
+                  NextAuth docs
+                </a>
               </p>
 
               <div className="mt-3">
@@ -99,9 +134,13 @@ function AuthErrorContent(): React.ReactElement {
                 {debugError && <p className="text-rose-400">{debugError}</p>}
                 {showDebug && (
                   <>
-                    <pre className="max-h-48 overflow-auto text-xs bg-zinc-950 p-2 border border-zinc-800 rounded mt-2">{JSON.stringify(debugInfo, null, 2)}</pre>
+                    <pre className="max-h-48 overflow-auto text-xs bg-zinc-950 p-2 border border-zinc-800 rounded mt-2">
+                      {JSON.stringify(debugInfo, null, 2)}
+                    </pre>
                     <div className="flex gap-2 mt-2">
-                      <Button size="sm" onClick={copyDebug}>Copy</Button>
+                      <Button size="sm" onClick={copyDebug}>
+                        Copy
+                      </Button>
                       <Button size="sm" variant="outline" asChild>
                         <Link href="/api/debug/db">Open raw</Link>
                       </Button>
@@ -115,13 +154,15 @@ function AuthErrorContent(): React.ReactElement {
               </div>
 
               <div className="mt-3 text-xs text-zinc-400">
-                <p>If you need to temporarily allow sign-ins while diagnosing DB issues, set <code>NEXTAUTH_ALLOW_DB_FAILURE=true</code> and restart the app (development only).</p>
+                <p>
+                  If you need to temporarily allow sign-ins while diagnosing DB issues, set{" "}
+                  <code>NEXTAUTH_ALLOW_DB_FAILURE=true</code> and restart the app (development
+                  only).
+                </p>
               </div>
-
             </div>
           )}
         </div>
-
       </div>
     </div>
   );
@@ -129,13 +170,15 @@ function AuthErrorContent(): React.ReactElement {
 
 export default function AuthError(): React.ReactElement {
   return (
-    <Suspense fallback={
-      <div className="flex h-screen items-center justify-center bg-zinc-950">
-        <div className="text-center">
-          <p className="text-zinc-400">Loading...</p>
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center bg-zinc-950">
+          <div className="text-center">
+            <p className="text-zinc-400">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <AuthErrorContent />
     </Suspense>
   );

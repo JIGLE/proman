@@ -1,54 +1,45 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./lib/i18n/config.ts");
 
 const nextConfig: NextConfig = {
   compress: true,
-  output: 'standalone',
+  output: "standalone",
+  serverExternalPackages: ["redis", "puppeteer"],
   experimental: {
-    optimizePackageImports: ['lucide-react', '@radix-ui/react-slot', 'recharts'],
+    optimizePackageImports: ["lucide-react", "@radix-ui/react-slot", "framer-motion"],
   },
   images: {
-    unoptimized: true,
+    remotePatterns: [{ protocol: "https", hostname: "**" }],
+  },
+  // Configure turbopack with explicit root to avoid lockfile detection issues
+  turbopack: {
+    root: process.cwd(),
   },
   async headers() {
     return [
       {
         // Apply to all routes
-        source: '/(.*)',
+        source: "/(.*)",
         headers: [
+          // CSP is handled dynamically by proxy.ts (with nonces for scripts)
+          // Only set non-CSP security headers here as fallback
           {
-            key: 'X-Frame-Options',
-            value: 'DENY',
+            key: "X-Frame-Options",
+            value: "DENY",
           },
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
+            key: "X-Content-Type-Options",
+            value: "nosniff",
           },
           {
-            key: 'Referrer-Policy',
-            value: 'strict-origin-when-cross-origin',
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
           },
           {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
-          {
-            key: 'Strict-Transport-Security',
-            value: 'max-age=31536000; includeSubDomains; preload',
-          },
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://*.googleusercontent.com",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: https: blob:",
-              "connect-src 'self' https://accounts.google.com https://*.googleusercontent.com",
-              "frame-src 'self' https://accounts.google.com",
-              "object-src 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-            ].join('; '),
+            key: "Permissions-Policy",
+            value: "camera=(), microphone=(), geolocation=()",
           },
         ],
       },
@@ -56,4 +47,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

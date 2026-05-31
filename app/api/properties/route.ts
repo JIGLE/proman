@@ -1,33 +1,71 @@
-import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
-import { propertyService } from '@/lib/database';
-import { sanitizeForDatabase, sanitizeNumber } from '@/lib/sanitize';
-import { withRateLimit } from '@/lib/rate-limit';
-import { z } from 'zod';
+import { NextRequest } from "next/server";
+import {
+  getAccessContext,
+  handleOptions,
+  requireOwnerAccess,
+} from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { propertyService } from "@/lib/services/database/property";
+import { sanitizeForDatabase, sanitizeNumber } from "@/lib/utils/sanitize";
+import { withRateLimit } from "@/lib/utils/rate-limit";
+import { propertySchema } from "@/lib/schemas/property.schema";
+import { getPaginationFromRequest, createPaginatedResponse } from "@/lib/utils/pagination";
+import { getPrismaClient } from "@/lib/services/database/database";
+import { ZodError } from "zod";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 
-const createPropertySchema = z.object({
-  name: z.string().min(1).max(200),
-  address: z.string().min(1).max(500),
-  type: z.enum(['apartment', 'house', 'condo', 'townhouse', 'other']),
-  bedrooms: z.number().min(0).max(100),
-  bathrooms: z.number().min(0).max(100),
-  rent: z.number().min(0),
-  status: z.enum(['occupied', 'vacant', 'maintenance']).default('vacant'),
-  description: z.string().max(1000).optional(),
-  image: z.string().url().optional(),
-});
-
-// GET /api/properties - Get all properties for the authenticated user
+// GET /api/properties - Get all properties for the authenticated user (with pagination)
 async function handleGet(request: NextRequest): Promise<Response> {
-  const authResult = await requireAuth(request);
+  const demo = handleDemoGet(request, "properties");
+  if (demo.response) return demo.response;
+
+  const authResult = await getAccessContext(request);
   if (authResult instanceof Response) return authResult;
 
-  const { userId } = authResult;
+  const { scopeUserId, portalRole, propertyId } = authResult;
 
   try {
-    const properties = await propertyService.getAll(userId);
-    return createSuccessResponse(properties);
+    // Check if pagination is requested
+    const url = new URL(request.url);
+    const usePagination = url.searchParams.has("page") || url.searchParams.has("limit");
+
+    if (usePagination) {
+      // Paginated response
+      const pagination = getPaginationFromRequest(request, 50, 100);
+      const prisma = getPrismaClient();
+
+      const [properties, total] = await Promise.all([
+        prisma.property.findMany({
+          where:
+            portalRole === "tenant" && propertyId
+              ? { userId: scopeUserId, id: propertyId }
+              : { userId: scopeUserId },
+          skip: pagination.skip,
+          take: pagination.limit,
+          orderBy: { createdAt: "desc" },
+        }),
+        prisma.property.count({
+          where:
+            portalRole === "tenant" && propertyId
+              ? { userId: scopeUserId, id: propertyId }
+              : { userId: scopeUserId },
+        }),
+      ]);
+
+      return createSuccessResponse(createPaginatedResponse(properties, total, pagination));
+    } else {
+      // Legacy: Return all properties (backward compatible)
+      const properties = await propertyService.getAll(scopeUserId);
+      return createSuccessResponse(
+        portalRole === "tenant" && propertyId
+          ? properties.filter((property) => property.id === propertyId)
+          : properties,
+      );
+    }
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);
   }
@@ -35,37 +73,45 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
 // POST /api/properties - Create a new property
 async function handlePost(request: NextRequest): Promise<Response> {
-  const authResult = await requireAuth(request);
+  const demo = await handleDemoMutation(request, "properties");
+  if (demo.response) return demo.response;
+
+  const authResult = await requireOwnerAccess(request);
   if (authResult instanceof Response) return authResult;
 
-  const { userId } = authResult;
+  const { scopeUserId } = authResult;
 
   try {
     const body = await request.json();
 
+    // Validate with shared schema
+    const validatedData = propertySchema.parse(body);
+
     // Sanitize input
-    const sanitizedBody = {
-      ...body,
-      name: sanitizeForDatabase(body.name),
-      address: sanitizeForDatabase(body.address),
-      description: body.description ? sanitizeForDatabase(body.description) : undefined,
-      image: body.image ? sanitizeForDatabase(body.image) : undefined,
-      bedrooms: sanitizeNumber(body.bedrooms, 0, 0, 100),
-      bathrooms: sanitizeNumber(body.bathrooms, 0, 0, 100),
-      rent: sanitizeNumber(body.rent, 0, 0),
+    const sanitizedData = {
+      ...validatedData,
+      name: sanitizeForDatabase(validatedData.name),
+      address: sanitizeForDatabase(validatedData.address),
+      description: validatedData.description
+        ? sanitizeForDatabase(validatedData.description)
+        : undefined,
+      streetAddress: validatedData.streetAddress
+        ? sanitizeForDatabase(validatedData.streetAddress)
+        : undefined,
+      city: validatedData.city ? sanitizeForDatabase(validatedData.city) : undefined,
+      bedrooms: sanitizeNumber(validatedData.bedrooms, 0, 0, 20),
+      bathrooms: sanitizeNumber(validatedData.bathrooms, 0, 0, 20),
+      rent: sanitizeNumber(validatedData.rent, 0, 0),
     };
 
-    // Validate input
-    const validatedData = createPropertySchema.parse(sanitizedBody);
-
-    const property = await propertyService.create(userId, validatedData);
+    const property = await propertyService.create(scopeUserId, sanitizedData);
     return createSuccessResponse(property, 201);
   } catch (error) {
-    if (error instanceof z.ZodError) {
+    if (error instanceof ZodError) {
       return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
-        request
+        request,
       );
     }
     return createErrorResponse(error as Error, 500, request);

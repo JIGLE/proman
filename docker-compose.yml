@@ -1,17 +1,88 @@
-version: '3.8'
+version: "3.8"
 
 services:
-  proman:
+  # Production deployment (from registry)
+  proman-prod:
     image: ghcr.io/jigle/proman:latest
     ports:
-      - "3000:3000"
+      - "3001:3000"
     env_file:
       - .env
     volumes:
       - ./data:/app/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:3000/api/ready"]
+      interval: 15s
+      timeout: 5s
       retries: 3
+      start_period: 30s
+      start_interval: 5s
+    labels:
+      com.truenas.app.name: "ProMan"
+      com.truenas.app.version: "1.10.2"
+      com.truenas.app.icon: "https://raw.githubusercontent.com/JIGLE/proman/main/public/proman-icon.svg"
+      org.opencontainers.image.title: "ProMan"
+      org.opencontainers.image.description: "Property Management System"
+      org.opencontainers.image.source: "https://github.com/JIGLE/proman"
+    profiles:
+      - prod
+
+  # Local development (build from source)
+  proman-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "3000:3000"
+    environment:
+      # Database
+      DATABASE_URL: file:./dev.db
+
+      # NextAuth Configuration
+      NEXTAUTH_URL: http://localhost:3000
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-dev-secret-change-in-production}
+
+      # Google OAuth (configure in Google Cloud Console)
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+
+      # Email Configuration (SendGrid)
+      SENDGRID_API_KEY: ${SENDGRID_API_KEY:-}
+      SENDGRID_FROM_EMAIL: ${SENDGRID_FROM_EMAIL:-noreply@example.com}
+      SENDGRID_WEBHOOK_PUBLIC_KEY: ${SENDGRID_WEBHOOK_PUBLIC_KEY:-}
+
+      # Debug Endpoints (safe for local dev)
+      DEBUG_MODE: "true"
+      INIT_SECRET: ${INIT_SECRET:-dev-init-secret}
+
+      # Application Settings
+      NODE_ENV: development
+      NEXT_PUBLIC_APP_VERSION: 1.14.1
+
+    volumes:
+      # Hot reload for development
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+      - ./dev.db:/app/dev.db
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:3000/api/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+      start_interval: 5s
+    profiles:
+      - dev
+
+volumes:
+  dev_data:
+
+networks:
+  default:
+    name: proman-network

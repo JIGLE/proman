@@ -13,10 +13,10 @@ spec:
         app: proman
     spec:
       securityContext:
-        fsGroup: 1000
+        fsGroup: 1001
       containers:
         - name: proman
-          image: ghcr.io/jigle/proman:<version>  # use a specific tag (avoid latest)
+          image: ghcr.io/jigle/proman:<version> # use a specific tag (avoid latest)
           imagePullPolicy: IfNotPresent
           env:
             - name: NODE_ENV
@@ -47,13 +47,42 @@ spec:
                 secretKeyRef:
                   name: proman-secrets
                   key: INIT_SECRET
-            - name: NEXTAUTH_ALLOW_DB_FAILURE
-              value: "false"
           ports:
             - containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/ready
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+          startupProbe:
+            httpGet:
+              path: /api/ready
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
           volumeMounts:
             - name: proman-data
-              mountPath: /data
+              mountPath: /app/data
       volumes:
         - name: proman-data
           persistentVolumeClaim:

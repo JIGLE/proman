@@ -1,20 +1,25 @@
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/utils";
 
-export interface InputProps
-  extends React.InputHTMLAttributes<HTMLInputElement> {}
+export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
   ({ className, type, value, onChange, readOnly, ...props }, ref) => {
-    const controlledWithoutOnChange = value !== undefined && onChange === undefined && readOnly === undefined
+    const controlledWithoutOnChange =
+      value !== undefined && onChange === undefined && readOnly === undefined;
 
     return (
       <input
         type={type}
         className={cn(
-          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-          className
+          "flex h-10 w-full rounded-md border border-[var(--color-border)] bg-[var(--color-input)] px-3 py-2 text-sm shadow-sm transition-all duration-200 ring-offset-background",
+          "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-[var(--color-foreground)]",
+          "placeholder:text-[var(--color-muted-foreground)]",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-2 focus-visible:border-[var(--color-focus)]",
+          "hover:border-[var(--color-border-hover)] hover:shadow-md",
+          "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-[var(--color-surface-disabled)]",
+          className,
         )}
         ref={ref}
         value={value}
@@ -22,9 +27,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         readOnly={controlledWithoutOnChange ? true : readOnly}
         {...props}
       />
-    )
-  }
-)
-Input.displayName = "Input"
+    );
+  },
+);
+Input.displayName = "Input";
 
-export { Input }
+export { Input };

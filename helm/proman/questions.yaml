@@ -1,0 +1,140 @@
+groups:
+  - name: Application
+    description: Core application settings.
+  - name: Storage
+    description: Persistent storage for the SQLite database.
+  - name: Networking
+    description: Service exposure configuration.
+  - name: Advanced
+    description: Optional overrides and integrations.
+
+questions:
+  # ── Application ─────────────────────────────────────────────────
+  - variable: app
+    group: Application
+    label: Application Settings
+    schema:
+      type: dict
+      attrs:
+        - variable: nextauthUrl
+          label: Application URL
+          description: >
+            The full URL users use to access ProMan (protocol + host + port).
+            Examples: https://proman.example.com  or  http://192.168.1.50:30080
+          schema:
+            type: string
+            required: true
+            default: "http://localhost:30080"
+        - variable: nextauthSecret
+          label: Auth Secret (leave empty to auto-generate)
+          description: >
+            Session signing secret (min 32 chars). Auto-generated on first
+            install if left empty. Generate manually with: openssl rand -base64 32
+          schema:
+            type: string
+            default: ""
+        - variable: initSecret
+          label: Init Secret (leave empty to auto-generate)
+          description: >
+            Protects the /api/debug/db/init endpoint. Auto-generated on first
+            install if left empty. Generate manually with: openssl rand -hex 32
+          schema:
+            type: string
+            default: ""
+
+  # ── Storage ─────────────────────────────────────────────────────
+  - variable: persistence
+    group: Storage
+    label: Storage
+    schema:
+      type: dict
+      attrs:
+        - variable: enabled
+          label: Enable Persistence
+          schema:
+            type: boolean
+            default: true
+        - variable: hostPath
+          label: Host Path (TrueNAS dataset)
+          description: >
+            Path to a dataset on your TrueNAS pool.
+            Example: /mnt/pools/mypool/apps/proman/data
+          schema:
+            type: string
+            required: true
+            default: /mnt/pools/<POOL_NAME>/apps/proman/data
+
+  # ── Networking ──────────────────────────────────────────────────
+  - variable: service
+    group: Networking
+    label: Service
+    schema:
+      type: dict
+      attrs:
+        - variable: type
+          label: Service Type
+          schema:
+            type: string
+            default: NodePort
+            enum:
+              - NodePort
+              - ClusterIP
+        - variable: nodePort
+          label: NodePort
+          description: External port to access the app (30000-32767).
+          schema:
+            type: int
+            default: 30080
+            min: 30000
+            max: 32767
+
+  # ── Advanced ────────────────────────────────────────────────────
+  - variable: image
+    group: Advanced
+    label: Container Image
+    schema:
+      type: dict
+      attrs:
+        - variable: repository
+          label: Repository
+          schema:
+            type: string
+            default: ghcr.io/jigle/proman
+        - variable: tag
+          label: Tag (empty = chart appVersion)
+          schema:
+            type: string
+            default: ""
+
+  - variable: env
+    group: Advanced
+    label: Extra Environment Variables
+    description: >
+      Additional env vars for optional integrations (Google OAuth, SendGrid, etc.).
+      DATABASE_URL, NEXTAUTH_URL, NEXTAUTH_SECRET, and INIT_SECRET are set
+      automatically — do NOT add them here.
+    schema:
+      type: list
+      default: []
+      items:
+        - variable: envvar
+          schema:
+            type: dict
+            attrs:
+              - variable: name
+                label: Name
+                schema:
+                  type: string
+                  required: true
+              - variable: value
+                label: Value
+                schema:
+                  type: string
+                  required: true
+
+portals:
+  web_portal:
+    protocols:
+      - name: HTTP
+        port: 30080
+        host: "$node_ip"

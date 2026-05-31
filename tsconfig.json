@@ -18,9 +18,19 @@
         "name": "next"
       }
     ],
-    "types": ["vitest/globals", "vite/client", "@testing-library/jest-dom"],
+    "types": [],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@/ui/*": ["./components/ui/*"],
+      "@/features/*": ["./components/features/*"],
+      "@/shared/*": ["./components/shared/*"],
+      "@/layouts/*": ["./components/layouts/*"],
+      "@/services/*": ["./lib/services/*"],
+      "@/hooks/*": ["./lib/hooks/*"],
+      "@/utils/*": ["./lib/utils/*"],
+      "@/schemas/*": ["./lib/schemas/*"],
+      "@/types/*": ["./types/*"],
+      "@/api/*": ["./app/api/*"]
     },
     "forceConsistentCasingInFileNames": true
   },
@@ -28,9 +38,9 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
+    "**/*.mts",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
-    "**/*.mts"
+    ".next/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
 }

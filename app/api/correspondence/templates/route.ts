@@ -1,14 +1,26 @@
-import { NextRequest } from 'next/server';
-import { handleOptions } from '@/lib/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
-import { templateService } from '@/lib/database';
-import { sanitizeForDatabase } from '@/lib/sanitize';
-import { z } from 'zod';
+import { NextRequest } from "next/server";
+import { handleOptions, requireAuth } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { templateService } from "@/lib/services/database/correspondence";
+import { sanitizeForDatabase } from "@/lib/utils/sanitize";
+import { z } from "zod";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 
 // Validation schemas
 const createTemplateSchema = z.object({
   name: z.string().min(1).max(200),
-  type: z.enum(['welcome', 'rent_reminder', 'eviction_notice', 'maintenance_request', 'lease_renewal', 'custom']),
+  type: z.enum([
+    "welcome",
+    "rent_reminder",
+    "eviction_notice",
+    "maintenance_request",
+    "lease_renewal",
+    "custom",
+  ]),
   subject: z.string().min(1).max(500),
   content: z.string().min(1).max(10000),
   variables: z.array(z.string()).default([]),
@@ -18,6 +30,12 @@ const _updateTemplateSchema = createTemplateSchema.partial();
 
 // GET /api/correspondence/templates - Get all correspondence templates
 async function handleGet(request: NextRequest): Promise<Response> {
+  const demo = handleDemoGet(request, "templates");
+  if (demo.response) return demo.response;
+
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
+
   try {
     const templates = await templateService.getAll();
     return createSuccessResponse(templates);
@@ -28,6 +46,11 @@ async function handleGet(request: NextRequest): Promise<Response> {
 
 // POST /api/correspondence/templates - Create a new correspondence template
 async function handlePost(request: NextRequest): Promise<Response> {
+  const demo = await handleDemoMutation(request, "templates");
+  if (demo.response) return demo.response;
+
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
   try {
     const body = await request.json();
 
@@ -47,9 +70,9 @@ async function handlePost(request: NextRequest): Promise<Response> {
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
-        request
+        request,
       );
     }
     return createErrorResponse(error as Error, 500, request);

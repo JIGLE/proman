@@ -1,101 +1,82 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { Session } from 'next-auth';
-import { getPrismaClient } from '@/lib/database';
-import { getAuthOptions } from "@/lib/auth";
-import { expenseSchema } from '@/lib/validation';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import { getPrismaClient } from "@/lib/services/database/database";
+import { expenseSchema } from "@/lib/schemas/expense.schema";
+import { isMockMode } from "@/lib/config/data-mode";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
+import { createSuccessResponse, withErrorHandler } from "@/lib/utils/error-handling";
+import { withRateLimit } from "@/lib/utils/rate-limit";
 
-export async function GET(): Promise<NextResponse> {
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const session = await getServerSession(getAuthOptions() as any) as Session | null;
-        if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+async function handleGet(request: NextRequest): Promise<Response> {
+  const demo = handleDemoGet(request, "expenses");
+  if (demo.response) return demo.response;
 
-        const prisma = getPrismaClient();
+  if (isMockMode) {
+    return createSuccessResponse([]);
+  }
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
 
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
+  const { userId } = authResult;
+  const prisma = getPrismaClient();
 
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        }
+  const expenses = await prisma.expense.findMany({
+    where: { userId },
+    orderBy: { date: "desc" },
+    include: {
+      property: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
 
-        const expenses = await prisma.expense.findMany({
-            where: { userId: user.id },
-            orderBy: { date: 'desc' },
-            include: {
-                property: {
-                    select: {
-                        name: true,
-                    },
-                },
-            },
-        });
+  const transformedExpenses = expenses.map((expense) => ({
+    ...expense,
+    propertyName: expense.property.name,
+  }));
 
-        // Transform expenses to include propertyName flat
-        const transformedExpenses = expenses.map((expense) => ({
-            ...expense,
-            propertyName: expense.property.name,
-        }));
-
-        return NextResponse.json(transformedExpenses);
-    } catch (error) {
-        console.error('Error fetching expenses:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch expenses' },
-            { status: 500 }
-        );
-    }
+  return createSuccessResponse(transformedExpenses);
 }
 
-export async function POST(req: Request): Promise<NextResponse> {
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const session = await getServerSession(getAuthOptions() as any) as Session | null;
-        if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+async function handlePost(request: NextRequest): Promise<Response> {
+  const demo = await handleDemoMutation(request, "expenses");
+  if (demo.response) return demo.response;
 
-        const prisma = getPrismaClient();
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
 
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
+  const { userId } = authResult;
+  const prisma = getPrismaClient();
 
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        }
+  const json = await request.json();
+  const body = expenseSchema.parse(json);
 
-        const json = await req.json();
-        const body = expenseSchema.parse(json);
+  const expense = await prisma.expense.create({
+    data: {
+      ...body,
+      userId,
+      date: new Date(body.date),
+    },
+    include: {
+      property: {
+        select: {
+          name: true,
+        },
+      },
+    },
+  });
 
-        const expense = await prisma.expense.create({
-            data: {
-                ...body,
-                userId: user.id,
-                date: new Date(body.date),
-            },
-            include: {
-                property: {
-                    select: {
-                        name: true,
-                    },
-                },
-            },
-        });
-
-        return NextResponse.json({
-            ...expense,
-            propertyName: expense.property.name,
-        });
-    } catch (error) {
-        console.error('Error creating expense:', error);
-        return NextResponse.json(
-            { error: 'Failed to create expense' },
-            { status: 500 }
-        );
-    }
+  return createSuccessResponse(
+    {
+      ...expense,
+      propertyName: expense.property.name,
+    },
+    201,
+  );
 }
+
+export const GET = withErrorHandler(withRateLimit(handleGet));
+export const POST = withErrorHandler(withRateLimit(handlePost));
+export const OPTIONS = handleOptions;

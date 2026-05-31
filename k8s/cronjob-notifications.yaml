@@ -1,0 +1,61 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: proman-notifications
+  labels:
+    app: proman
+    component: cron
+spec:
+  # Run daily at 08:00 UTC (covers PT/ES morning)
+  schedule: "0 8 * * *"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      activeDeadlineSeconds: 300
+      template:
+        metadata:
+          labels:
+            app: proman
+            component: cron
+        spec:
+          restartPolicy: OnFailure
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1001
+          containers:
+            - name: notify
+              image: curlimages/curl:latest
+              env:
+                - name: APP_URL
+                  value: "http://proman.default.svc.cluster.local:3000"
+                - name: CRON_SECRET
+                  valueFrom:
+                    secretKeyRef:
+                      name: proman-secrets
+                      key: CRON_SECRET
+              command:
+                - sh
+                - -c
+                - |
+                  set -e
+                  echo "Running notification automation..."
+                  STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+                    -X POST "${APP_URL}/api/cron/notifications" \
+                    -H "Authorization: Bearer ${CRON_SECRET}" \
+                    -H "Content-Type: application/json")
+                  echo "Response status: ${STATUS}"
+                  if [ "${STATUS}" != "200" ]; then
+                    echo "Notification cron failed with HTTP ${STATUS}"
+                    exit 1
+                  fi
+                  echo "Notification automation completed successfully"
+              resources:
+                requests:
+                  cpu: 10m
+                  memory: 32Mi
+                limits:
+                  cpu: 100m
+                  memory: 64Mi

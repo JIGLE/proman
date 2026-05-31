@@ -1,101 +1,104 @@
-import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth/next';
-import { Session } from 'next-auth';
-import { getPrismaClient } from '@/lib/database';
-import { getAuthOptions } from "@/lib/auth";
-import { maintenanceSchema } from '@/lib/validation';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { withRateLimit } from "@/lib/utils/rate-limit";
+import { getPrismaClient } from "@/lib/services/database/database";
+import { maintenanceSchema } from "@/lib/schemas/maintenance.schema";
+import { isMockMode } from "@/lib/config/data-mode";
+import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
+import { ZodError } from "zod";
 
-export async function GET(): Promise<NextResponse> {
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const session = await getServerSession(getAuthOptions() as any) as Session | null;
-        if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+const ticketInclude = {
+  property: { select: { name: true } },
+  tenant: { select: { name: true } },
+};
 
-        const prisma = getPrismaClient();
-
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
-
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        }
-
-        const tickets = await prisma.maintenanceTicket.findMany({
-            where: { userId: user.id },
-            orderBy: { createdAt: 'desc' },
-            include: {
-                property: {
-                    select: { name: true },
-                },
-                tenant: {
-                    select: { name: true },
-                },
-            },
-        });
-
-        // Transform to flat structure
-        const transformedTickets = tickets.map((ticket) => ({
-            ...ticket,
-            propertyName: ticket.property.name,
-            tenantName: ticket.tenant?.name,
-        }));
-
-        return NextResponse.json(transformedTickets);
-    } catch (error) {
-        console.error('Error fetching maintenance tickets:', error);
-        return NextResponse.json(
-            { error: 'Failed to fetch tickets' },
-            { status: 500 }
-        );
-    }
+function flattenTicket(
+  ticket: Record<string, unknown> & {
+    property: { name: string };
+    tenant?: { name: string } | null;
+  },
+) {
+  const images = ticket.images;
+  return {
+    ...ticket,
+    propertyName: ticket.property.name,
+    tenantName: ticket.tenant?.name,
+    images: typeof images === "string" ? (JSON.parse(images) as string[]) : (images ?? []),
+  };
 }
 
-export async function POST(req: Request): Promise<NextResponse> {
-    try {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const session = await getServerSession(getAuthOptions() as any) as Session | null;
-        if (!session?.user?.email) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-        }
+async function handleGet(request: NextRequest): Promise<Response> {
+  const demo = handleDemoGet(request, "maintenance");
+  if (demo.response) return demo.response;
 
-        const prisma = getPrismaClient();
+  if (isMockMode) {
+    return createSuccessResponse([]);
+  }
 
-        const user = await prisma.user.findUnique({
-            where: { email: session.user.email },
-        });
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
 
-        if (!user) {
-            return NextResponse.json({ error: 'User not found' }, { status: 404 });
-        }
+  const { userId } = authResult;
+  const prisma = getPrismaClient();
 
-        const json = await req.json();
-        const body = maintenanceSchema.parse(json);
+  const tickets = await prisma.maintenanceTicket.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    include: ticketInclude,
+  });
 
-        const ticket = await prisma.maintenanceTicket.create({
-            data: {
-                ...body,
-                userId: user.id,
-                images: '[]', // Default empty JSON array for now as image upload is complex
-            },
-            include: {
-                property: { select: { name: true } },
-                tenant: { select: { name: true } },
-            },
-        });
-
-        return NextResponse.json({
-            ...ticket,
-            propertyName: ticket.property.name,
-            tenantName: ticket.tenant?.name,
-        });
-    } catch (error) {
-        console.error('Error creating ticket:', error);
-        return NextResponse.json(
-            { error: 'Failed to create ticket' },
-            { status: 500 }
-        );
-    }
+  return createSuccessResponse(tickets.map(flattenTicket));
 }
+
+async function handlePost(request: NextRequest): Promise<Response> {
+  const demo = await handleDemoMutation(request, "maintenance");
+  if (demo.response) return demo.response;
+
+  if (isMockMode) {
+    return createErrorResponse(
+      new Error("Write operations not supported in mock mode"),
+      403,
+      request,
+    );
+  }
+
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
+
+  const { userId } = authResult;
+  const prisma = getPrismaClient();
+
+  try {
+    const json = await request.json();
+    const body = maintenanceSchema.parse(json);
+
+    const ticket = await prisma.maintenanceTicket.create({
+      data: {
+        ...body,
+        userId,
+        images: "[]",
+      },
+      include: ticketInclude,
+    });
+
+    return createSuccessResponse(flattenTicket(ticket), 201);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      return createErrorResponse(
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
+        400,
+        request,
+      );
+    }
+    return createErrorResponse(error as Error, 500, request);
+  }
+}
+
+export const GET = withErrorHandler(withRateLimit(handleGet));
+export const POST = withErrorHandler(withRateLimit(handlePost));
+export const OPTIONS = handleOptions;

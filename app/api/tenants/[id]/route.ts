@@ -1,9 +1,13 @@
-import { NextRequest } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
-import { createErrorResponse, createSuccessResponse, withErrorHandler } from '@/lib/error-handling';
-import { tenantService } from '@/lib/database';
-import { sanitizeForDatabase, sanitizeEmail, sanitizeNumber } from '@/lib/sanitize';
-import { z } from 'zod';
+import { NextRequest } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import {
+  createErrorResponse,
+  createSuccessResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
+import { tenantService } from "@/lib/services/database/tenant";
+import { sanitizeForDatabase, sanitizeEmail, sanitizeNumber } from "@/lib/utils/sanitize";
+import { z } from "zod";
 
 // Validation schema for updates
 const updateTenantSchema = z.object({
@@ -14,12 +18,15 @@ const updateTenantSchema = z.object({
   rent: z.number().min(0).optional(),
   leaseStart: z.string().datetime().optional(),
   leaseEnd: z.string().datetime().optional(),
-  paymentStatus: z.enum(['paid', 'overdue', 'pending']).optional(),
+  paymentStatus: z.enum(["paid", "overdue", "pending"]).optional(),
   notes: z.string().max(1000).optional(),
 });
 
 // GET /api/tenants/[id] - Get a specific tenant
-async function handleGet(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+async function handleGet(
+  request: NextRequest,
+  context?: { params?: Record<string, string> | Promise<Record<string, string>> },
+): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -28,15 +35,15 @@ async function handleGet(request: NextRequest, context?: { params?: Record<strin
   let id: string | undefined;
   if (context?.params) {
     const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
-    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    const resolved = maybe instanceof Promise ? await maybe : maybe;
     id = resolved?.id;
   }
-  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
+  if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
   try {
     const tenant = await tenantService.getById(userId, id);
 
     if (!tenant) {
-      return createErrorResponse(new Error('Tenant not found'), 404, request);
+      return createErrorResponse(new Error("Tenant not found"), 404, request);
     }
 
     return createSuccessResponse(tenant);
@@ -46,7 +53,10 @@ async function handleGet(request: NextRequest, context?: { params?: Record<strin
 }
 
 // PUT /api/tenants/[id] - Update a specific tenant
-async function handlePut(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+async function handlePut(
+  request: NextRequest,
+  context?: { params?: Record<string, string> | Promise<Record<string, string>> },
+): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -54,15 +64,18 @@ async function handlePut(request: NextRequest, context?: { params?: Record<strin
 
   try {
     // Resolve id from context params
-    const maybeParams = context?.params as Record<string, string> | Promise<Record<string, string>> | undefined;
+    const maybeParams = context?.params as
+      | Record<string, string>
+      | Promise<Record<string, string>>
+      | undefined;
     const resolvedParams = maybeParams instanceof Promise ? await maybeParams : maybeParams;
     const id = resolvedParams?.id;
-    if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
+    if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
 
     // First check if tenant exists and user owns it
     const existingTenant = await tenantService.getById(userId, id);
     if (!existingTenant) {
-      return createErrorResponse(new Error('Tenant not found'), 404, request);
+      return createErrorResponse(new Error("Tenant not found"), 404, request);
     }
 
     const body = await request.json();
@@ -86,9 +99,9 @@ async function handlePut(request: NextRequest, context?: { params?: Record<strin
   } catch (error) {
     if (error instanceof z.ZodError) {
       return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map(e => e.message).join(', ')}`),
+        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
         400,
-        request
+        request,
       );
     }
     return createErrorResponse(error as Error, 500, request);
@@ -96,7 +109,10 @@ async function handlePut(request: NextRequest, context?: { params?: Record<strin
 }
 
 // DELETE /api/tenants/[id] - Delete a specific tenant
-async function handleDelete(request: NextRequest, context?: { params?: Record<string, string> | Promise<Record<string, string>> }): Promise<Response> {
+async function handleDelete(
+  request: NextRequest,
+  context?: { params?: Record<string, string> | Promise<Record<string, string>> },
+): Promise<Response> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
 
@@ -104,20 +120,20 @@ async function handleDelete(request: NextRequest, context?: { params?: Record<st
   let id: string | undefined;
   if (context?.params) {
     const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
-    const resolved = (maybe instanceof Promise) ? await maybe : maybe;
+    const resolved = maybe instanceof Promise ? await maybe : maybe;
     id = resolved?.id;
   }
-  if (!id) return createErrorResponse(new Error('Invalid request: missing id'), 400, request);
+  if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
 
   try {
     // First check if tenant exists and user owns it
     const existingTenant = await tenantService.getById(userId, id);
     if (!existingTenant) {
-      return createErrorResponse(new Error('Tenant not found'), 404, request);
+      return createErrorResponse(new Error("Tenant not found"), 404, request);
     }
 
     await tenantService.delete(userId, id);
-    return createSuccessResponse({ message: 'Tenant deleted successfully' });
+    return createSuccessResponse({ message: "Tenant deleted successfully" });
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);
   }

@@ -1,6 +1,12 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# ===========================================
+# PROMAN - GITIGNORE
+# ===========================================
+# Updated: February 4, 2026
+# Production-ready ignore rules
 
-# dependencies
+# ===========================================
+# 1. Dependencies
+# ===========================================
 /node_modules
 /.pnp
 .pnp.*
@@ -10,47 +16,115 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
+# ===========================================
+# 2. Environment Files (NEVER COMMIT)
+# ===========================================
+.env
+.env.local
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# next.js
+# Exception: Template file for reference
+!.env.example
+
+# ===========================================
+# 3. Next.js Build Output
+# ===========================================
 /.next/
 /out/
-
-# production
 /build
+/dist/
 
-# misc
-.DS_Store
-*.pem
+# ===========================================
+# 4. Testing & Coverage
+# ===========================================
+/coverage
+/playwright-report/
+/playwright/.cache/
+/playwright/.auth/
+/test-results/
+/blob-report/
+*.spec.js.snap
 
-# debug
+# ===========================================
+# 5. Databases (Local Development Only)
+# ===========================================
+dev.db
+dev.db-journal
+ci-test.db
+tests/*.db
+tmp/
+
+# ===========================================
+# 6. TypeScript
+# ===========================================
+*.tsbuildinfo
+next-env.d.ts
+
+# ===========================================
+# 7. Logs
+# ===========================================
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+*.log
 
-# env files (can opt-in for committing if needed)
-.env*
+# ===========================================
+# 8. Operating System Files
+# ===========================================
+.DS_Store
+*.pem
+Thumbs.db
+desktop.ini
 
-# vercel
-.vercel
+# ===========================================
+# 9. IDE & Editors
+# ===========================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+*~
 
-# local db (do not commit development DB)
-dev.db
+# ===========================================
+# 10. Security & Monitoring Reports
+# ===========================================
+security-report.json
+security-reports/
+load-tests/reports/
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# ===========================================
+# 11. Build Artifacts & Docker
+# ===========================================
 proman_local_image.tar
 proman_image.tar
-
 /lib/generated/prisma
 
-# local temp DBs
-tmp/
-
-# Local release artifacts
+# ===========================================
+# 12. Temporary & Local Files
+# ===========================================
+verify-output.txt
+eslint-output.txt
+test-output.txt
+test-results.txt
+final-test.txt
+*-output.txt
+*-results.txt
 /release-charts-local/
 /release-charts-temp/
 /tmp-release-charts/
+.vercel
+
+# ===========================================
+# 13. Legacy/Deprecated
+# ===========================================
+.eslintrc.cjs
+.eslintrc.json
+eslint.config.cjs

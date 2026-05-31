@@ -1,11 +1,37 @@
 "use client";
 
+/** Currency codes supported by the application (mirrors the Prisma Currency enum). */
+export type Currency = "EUR" | "DKK" | "USD" | "GBP";
+
+export interface Building {
+  id: string;
+  userId: string;
+  name: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Property {
   id: string;
   userId: string;
   name: string;
   address: string;
-  type: "apartment" | "house" | "condo" | "townhouse" | "other";
+  // Enhanced address fields
+  streetAddress?: string;
+  city?: string;
+  zipCode?: string;
+  country?: string;
+  latitude?: number;
+  longitude?: number;
+  addressVerified?: boolean;
+  // Building grouping
+  buildingId?: string;
+  buildingName?: string;
+
+  type: "apartment" | "house" | "condo" | "townhouse" | "commercial" | "other";
   bedrooms: number;
   bathrooms: number;
   rent: number;
@@ -24,8 +50,11 @@ export interface Tenant {
   phone: string;
   propertyId?: string;
   propertyName?: string;
+  /** @deprecated Derive from active lease's monthlyRent via getActiveLease() */
   rent: number;
+  /** @deprecated Derive from active lease's startDate via getActiveLease() */
   leaseStart: string;
+  /** @deprecated Derive from active lease's endDate via getActiveLease() */
   leaseEnd: string;
   paymentStatus: "paid" | "overdue" | "pending";
   lastPayment?: string;
@@ -36,11 +65,13 @@ export interface Tenant {
 
 export interface Receipt {
   id: string;
+  number?: string;
   userId: string;
   tenantId: string;
   tenantName: string;
   propertyId: string;
   propertyName: string;
+  leaseId?: string;
   amount: number;
   date: string;
   type: "rent" | "deposit" | "maintenance" | "other";
@@ -53,7 +84,13 @@ export interface Receipt {
 export interface CorrespondenceTemplate {
   id: string;
   name: string;
-  type: "welcome" | "rent_reminder" | "eviction_notice" | "maintenance_request" | "lease_renewal" | "custom";
+  type:
+    | "welcome"
+    | "rent_reminder"
+    | "eviction_notice"
+    | "maintenance_request"
+    | "lease_renewal"
+    | "custom";
   subject: string;
   content: string;
   variables: string[];
@@ -67,6 +104,7 @@ export interface Correspondence {
   templateId: string;
   tenantId: string;
   tenantName: string;
+  propertyId?: string;
   subject: string;
   content: string;
   status: "draft" | "sent" | "delivered";
@@ -98,6 +136,40 @@ export interface PropertyOwner {
   updatedAt: string;
 }
 
+export interface Lease {
+  id: string;
+  userId: string;
+  propertyId: string;
+  propertyName?: string;
+  property?: {
+    name: string;
+    address: string;
+  };
+  tenantId: string;
+  tenantName?: string;
+  tenant?: {
+    name: string;
+    email: string;
+  };
+  unitId?: string;
+  unitName?: string;
+  startDate: string;
+  endDate: string;
+  monthlyRent: number;
+  deposit: number;
+  currency?: string;
+  contractFile?: Buffer;
+  contractFileName?: string;
+  contractFileSize?: number;
+  taxRegime?: string;
+  status: "active" | "expiring" | "expired" | "terminated" | "pending" | "draft";
+  autoRenew: boolean;
+  renewalNoticeDays: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Expense {
   id: string;
   userId: string;
@@ -108,12 +180,15 @@ export interface Expense {
   category: string;
   description?: string;
   receiptImage?: string;
+  isDeductible?: boolean;
+  vendorName?: string;
+  vendorVat?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export type MaintenanceStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
-export type MaintenancePriority = 'low' | 'medium' | 'high' | 'urgent';
+export type MaintenanceStatus = "open" | "in_progress" | "resolved" | "closed";
+export type MaintenancePriority = "low" | "medium" | "high" | "urgent";
 
 export interface MaintenanceTicket {
   id: string;
@@ -122,13 +197,23 @@ export interface MaintenanceTicket {
   propertyName?: string;
   tenantId?: string;
   tenantName?: string;
+  unitId?: string;
   title: string;
   description: string;
   status: MaintenanceStatus;
   priority: MaintenancePriority;
-  images: string; // JSON string
-  cost?: number;
-  assignedTo?: string;
+  category?: string;
+  images?: string[];
+  cost?: number; // @deprecated — use estimatedCost
+  estimatedCost?: number;
+  actualCost?: number;
+  scheduledDate?: string;
+  dueDate?: string;
+  assignedTo?: string; // @deprecated — use vendorName
+  vendorName?: string;
+  vendorPhone?: string;
+  invoiceRef?: string;
+  isTenantReport?: boolean;
   resolvedAt?: string;
   createdAt: string;
   updatedAt: string;
@@ -163,7 +248,16 @@ Please don't hesitate to contact us if you need anything.
 
 Best regards,
 Property Management Team`,
-    variables: ["tenant_name", "property_name", "lease_start", "lease_end", "property_address", "rent_amount", "bedrooms", "bathrooms"],
+    variables: [
+      "tenant_name",
+      "property_name",
+      "lease_start",
+      "lease_end",
+      "property_address",
+      "rent_amount",
+      "bedrooms",
+      "bathrooms",
+    ],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },

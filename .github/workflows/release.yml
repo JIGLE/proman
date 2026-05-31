@@ -1,0 +1,345 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: "Version bump type"
+        required: true
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      release_notes:
+        description: "Release notes (optional - will generate from commits if empty)"
+        required: false
+        default: ""
+      prerelease:
+        description: "Mark as pre-release"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Create Release
+    permissions:
+      contents: write
+      packages: write
+      actions: write
+      pull-requests: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ENABLE_RELEASE_NOTIFY: "false"
+    outputs:
+      version: ${{ steps.version.outputs.new_version }}
+      tag: ${{ steps.version.outputs.tag }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Calculate new version
+        id: version
+        run: |
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+          echo "Current version: $CURRENT_VERSION"
+
+          IFS='.' read -r MAJOR MINOR PATCH <<< "$CURRENT_VERSION"
+
+          case "${{ github.event.inputs.version_type }}" in
+            major) NEW_VERSION="$((MAJOR + 1)).0.0" ;;
+            minor) NEW_VERSION="${MAJOR}.$((MINOR + 1)).0" ;;
+            patch) NEW_VERSION="${MAJOR}.${MINOR}.$((PATCH + 1))" ;;
+          esac
+
+          echo "New version: $NEW_VERSION"
+          echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=v${NEW_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Install dependencies
+        run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
+
+      - name: Setup Helm
+        uses: azure/setup-helm@v4
+
+      - name: Verify project before release
+        run: |
+          npm run type-check
+          npm run lint -- --max-warnings=1000
+          npm run test:coverage
+        env:
+          DATABASE_URL: file:./release-test.db
+          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_SECRET: release-test-secret-minimum-32-characters
+          GOOGLE_CLIENT_ID: release-placeholder
+          GOOGLE_CLIENT_SECRET: release-placeholder
+
+      # ── Release branch ────────────────────────────────────────────────────
+      # All version bump commits go to release/vX.Y.Z, opened as a PR to main.
+      # This creates an audit trail for every release without requiring a PAT bypass.
+
+      - name: Create release branch
+        run: |
+          git checkout -b release/v${{ steps.version.outputs.new_version }}
+
+      - name: Bump package.json version
+        run: |
+          npm version ${{ steps.version.outputs.new_version }} --no-git-tag-version
+          npm install --package-lock-only
+
+      - name: Sync version across manifests (with verification)
+        run: |
+          NEW_VER="${{ steps.version.outputs.new_version }}"
+
+          # Helm Chart.yaml — field-anchored patterns
+          sed -i "s/^version: .*/version: ${NEW_VER}/" helm/proman/Chart.yaml
+          sed -i "s/^appVersion: .*/appVersion: \"${NEW_VER}\"/" helm/proman/Chart.yaml
+          CHART_VER=$(grep '^version:' helm/proman/Chart.yaml | awk '{print $2}')
+          if [ "$CHART_VER" != "$NEW_VER" ]; then
+            echo "::error::helm/proman/Chart.yaml version update failed (got: '$CHART_VER', expected: '$NEW_VER')"
+            exit 1
+          fi
+
+          # item.yaml (TrueNAS catalog)
+          sed -i "s/^version: .*/version: ${NEW_VER}/" item.yaml
+          sed -i "s/^app_version: .*/app_version: \"${NEW_VER}\"/" item.yaml
+          ITEM_VER=$(grep '^version:' item.yaml | awk '{print $2}')
+          if [ "$ITEM_VER" != "$NEW_VER" ]; then
+            echo "::error::item.yaml version update failed (got: '$ITEM_VER', expected: '$NEW_VER')"
+            exit 1
+          fi
+
+          # docker-compose.yml
+          sed -i "s/NEXT_PUBLIC_APP_VERSION:.*/NEXT_PUBLIC_APP_VERSION: ${NEW_VER}/" docker-compose.yml
+          DC_VER=$(grep 'NEXT_PUBLIC_APP_VERSION:' docker-compose.yml | awk '{print $2}')
+          if [ "$DC_VER" != "$NEW_VER" ]; then
+            echo "::error::docker-compose.yml version update failed (got: '$DC_VER', expected: '$NEW_VER')"
+            exit 1
+          fi
+
+          echo "All manifests verified at $NEW_VER"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+
+          if [ -z "$LATEST_TAG" ]; then
+            COMMITS=$(git log --oneline --pretty=format:"- %s" | head -20)
+          else
+            COMMITS=$(git log ${LATEST_TAG}..HEAD --oneline --pretty=format:"- %s")
+          fi
+
+          if [ -n "${{ github.event.inputs.release_notes }}" ]; then
+            NOTES="${{ github.event.inputs.release_notes }}"
+          else
+            NOTES="$COMMITS"
+          fi
+
+          cat > release_notes.md << EOF
+          ## What's Changed in v${{ steps.version.outputs.new_version }}
+
+          $NOTES
+
+          **Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG:-HEAD~10}...v${{ steps.version.outputs.new_version }}
+          EOF
+
+          cat release_notes.md
+
+      - name: Package Helm chart
+        run: |
+          mkdir -p release-charts
+          helm package helm/proman -d release-charts
+
+      - name: Create Helm repo index
+        run: |
+          OWNER=${GITHUB_REPOSITORY%%/*}
+          REPO=${GITHUB_REPOSITORY##*/}
+          URL="https://${OWNER}.github.io/${REPO}/release-charts"
+          echo "Generating Helm repo index with URL: $URL"
+          helm repo index release-charts --url "$URL"
+
+      - name: Commit version bump to release branch
+        run: |
+          git add package.json package-lock.json helm/proman/Chart.yaml item.yaml docker-compose.yml
+          git commit -m "chore(release): bump version to ${{ steps.version.outputs.new_version }}"
+          git push origin release/v${{ steps.version.outputs.new_version }}
+
+      - name: Open release PR
+        id: open-pr
+        # TODO: pin to SHA — see https://github.com/cli/cli pinning guidance
+        # Current: gh CLI bundled in ubuntu-latest runner
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_URL=$(gh pr create \
+            --base main \
+            --head release/v${{ steps.version.outputs.new_version }} \
+            --title "chore(release): v${{ steps.version.outputs.new_version }}" \
+            --body "$(cat release_notes.md)
+
+          ---
+          *Automated release PR created by the Release workflow. Auto-merging.*" \
+            --label "release")
+          echo "pr_url=${PR_URL}" >> $GITHUB_OUTPUT
+          PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
+          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
+          echo "Release PR: $PR_URL"
+
+      - name: Merge release PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Squash-merge the release branch into main for a clean history entry.
+          # If branch protection requires status checks, this step will fail until
+          # a PAT or GitHub App with bypass rights is configured for the release workflow.
+          gh pr merge ${{ steps.open-pr.outputs.pr_number }} \
+            --squash \
+            --subject "chore(release): v${{ steps.version.outputs.new_version }}" \
+            --delete-branch
+
+      - name: Create and push tag
+        run: |
+          # Pull main to get the squash-merge commit before tagging
+          git fetch origin main
+          git checkout main
+          git pull origin main
+
+          git fetch --tags
+          if git rev-parse -q --verify "refs/tags/v${{ steps.version.outputs.new_version }}" >/dev/null; then
+            echo "Tag v${{ steps.version.outputs.new_version }} already exists, skipping tag creation."
+          else
+            git tag -a v${{ steps.version.outputs.new_version }} -m "Release v${{ steps.version.outputs.new_version }}"
+            git push origin v${{ steps.version.outputs.new_version }}
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.new_version }}
+          name: Release v${{ steps.version.outputs.new_version }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: ${{ github.event.inputs.prerelease }}
+          generate_release_notes: true
+          files: release-charts/*.tgz
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish Helm charts to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: ./release-charts
+          user_name: github-actions[bot]
+          user_email: github-actions[bot]@users.noreply.github.com
+
+      - name: Upload Helm chart artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-charts
+          path: release-charts
+
+      - name: Trigger Deploy to GHCR workflow (with cluster update)
+        # TODO: pin actions/github-script to a commit SHA for supply chain hardening:
+        # https://github.com/actions/github-script/tags → copy the full SHA of the latest release
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const workflow_id = 'deploy-ghcr.yml'
+            const ref = 'refs/tags/v' + process.env.NEW_VERSION
+            const inputs = {
+              version: process.env.NEW_VERSION,
+              deploy_k8s: 'true',
+              kube_namespace: 'ix-app',
+              kube_deployment: 'proman',
+              kube_container: 'proman'
+            }
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id,
+              ref,
+              inputs
+            })
+        env:
+          NEW_VERSION: ${{ steps.version.outputs.new_version }}
+
+      - name: Release Summary
+        run: |
+          echo "## Release Created Successfully" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version**: v${{ steps.version.outputs.new_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Type**: ${{ github.event.inputs.version_type }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Pre-release**: ${{ github.event.inputs.prerelease }}" >> $GITHUB_STEP_SUMMARY
+          echo "**PR**: ${{ steps.open-pr.outputs.pr_url }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Notify running instance of new release (optional)
+        if: vars.ENABLE_RELEASE_NOTIFY == 'true'
+        env:
+          UPDATE_WEBHOOK_SECRET: ${{ secrets.UPDATE_WEBHOOK_SECRET }}
+          UPDATE_WEBHOOK_URL: ${{ secrets.UPDATE_WEBHOOK_URL }}
+        run: |
+          # Only run if both webhook secrets are provided
+          if [ -z "$UPDATE_WEBHOOK_URL" ] || [ -z "$UPDATE_WEBHOOK_SECRET" ]; then
+            echo "Webhook secrets not configured, skipping notification"
+            exit 0
+          fi
+
+          PAYLOAD='{"tag_name": "v${{ steps.version.outputs.new_version }}", "name":"v${{ steps.version.outputs.new_version }}", "html_url": "https://github.com/${{ github.repository }}/releases/tag/v${{ steps.version.outputs.new_version }}" }'
+          # Compute HMAC-SHA256 signature (hex) and send as X-Hub-Signature-256 header
+          SIG_HEX=$(printf '%s' "$PAYLOAD" | openssl dgst -sha256 -hmac "$UPDATE_WEBHOOK_SECRET" -hex | sed 's/^.* //') || true
+          SIG_HEADER="sha256=${SIG_HEX}"
+
+          # Retry up to 3 times with exponential backoff
+          MAX_RETRIES=3
+          RETRY=0
+          DELAY=5
+          while [ $RETRY -lt $MAX_RETRIES ]; do
+            HTTP_CODE=$(curl -sS -o /dev/null -w "%{http_code}" -X POST \
+              -H "Authorization: Bearer $UPDATE_WEBHOOK_SECRET" \
+              -H "X-Hub-Signature-256: $SIG_HEADER" \
+              -H "Content-Type: application/json" \
+              -d "$PAYLOAD" \
+              "$UPDATE_WEBHOOK_URL/api/updates" 2>/dev/null) || HTTP_CODE=0
+
+            if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+              echo "Webhook notification succeeded (HTTP ${HTTP_CODE})"
+              break
+            fi
+
+            RETRY=$((RETRY + 1))
+            if [ $RETRY -lt $MAX_RETRIES ]; then
+              echo "Webhook notification failed (HTTP ${HTTP_CODE}). Retrying in ${DELAY}s... (attempt ${RETRY}/${MAX_RETRIES})"
+              sleep $DELAY
+              DELAY=$((DELAY * 2))
+            else
+              echo "Webhook notification failed after ${MAX_RETRIES} attempts. Continuing release."
+            fi
+          done

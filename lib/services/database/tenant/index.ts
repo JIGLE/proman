@@ -1,0 +1,1 @@
+export { tenantService } from "./service";

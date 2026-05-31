@@ -1,30 +1,69 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Plus_Jakarta_Sans, Syne } from "next/font/google";
+// Development-only server patch to help locate React.Children.only failures
+import "@/lib/dev/patch-react-children-only";
 import "./globals.css";
-import { ClientProviders } from "@/components/client-providers";
-import VersionBadge from '@/components/version-badge';
+import { getNonce } from "@/lib/utils/csp-nonce";
+import UpdateBannerClient from "@/components/shared/update-banner-client";
+import { DevAuthProvider } from "@/components/shared/dev-auth";
+import { defaultLocale } from "@/lib/i18n/config";
 
-const inter = Inter({ subsets: ["latin"] });
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin"],
+  variable: "--font-jakarta",
+  display: "swap",
+  weight: ["300", "400", "500", "600", "700", "800"],
+});
+
+const syne = Syne({
+  subsets: ["latin"],
+  variable: "--font-syne",
+  display: "swap",
+  weight: ["600", "700", "800"],
+});
 
 export const metadata: Metadata = {
-  title: "Proman - Property Management Dashboard",
-  description: "Minimal property management dashboard",
+  title: "Proman — Property Management",
+  description:
+    "Proman automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+  openGraph: {
+    title: "Proman — Property Management",
+    description:
+      "Proman automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+    type: "website",
+    locale: "en_US",
+    siteName: "Proman",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Proman — Property Management",
+    description:
+      "Proman automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+  },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
-}): React.ReactElement {
+}): Promise<React.ReactElement> {
+  // Get CSP nonce for inline scripts/styles
+  const nonce = await getNonce();
+
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <ClientProviders>
+    <html
+      lang={defaultLocale}
+      className={`${plusJakartaSans.variable} ${syne.variable}`}
+      data-scroll-behavior="smooth"
+      suppressHydrationWarning
+    >
+      <head>{nonce && <meta name="csp-nonce" content={nonce} />}</head>
+      <body className={`${plusJakartaSans.className} antialiased`}>
+        <DevAuthProvider>
+          {/* Update banner (admin-only) */}
+          <UpdateBannerClient />
           {children}
-          <div style={{position: 'fixed', right: 12, bottom: 8}}>
-            <VersionBadge />
-          </div>
-        </ClientProviders>
+        </DevAuthProvider>
       </body>
     </html>
   );

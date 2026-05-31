@@ -1,191 +1,270 @@
-[![Publish Release](https://github.com/JIGLE/proman/actions/workflows/publish-ghcr.yml/badge.svg)](https://github.com/JIGLE/proman/actions/workflows/publish-ghcr.yml)
+[![CI](https://github.com/JIGLE/ProMan/actions/workflows/ci.yml/badge.svg)](https://github.com/JIGLE/ProMan/actions/workflows/ci.yml)
+[![Security Scan](https://github.com/JIGLE/ProMan/actions/workflows/security-scan.yml/badge.svg)](https://github.com/JIGLE/ProMan/actions/workflows/security-scan.yml)
+[![Deploy to GHCR](https://github.com/JIGLE/ProMan/actions/workflows/deploy-ghcr.yml/badge.svg)](https://github.com/JIGLE/ProMan/actions/workflows/deploy-ghcr.yml)
+[![Production Gate](https://github.com/JIGLE/ProMan/actions/workflows/production.yml/badge.svg)](https://github.com/JIGLE/ProMan/actions/workflows/production.yml)
 
-## Proman — TrueNAS SCALE Custom App install
+# ProMan — Property Management Dashboard
 
-This README provides concise, step-by-step instructions to install Proman as a Custom App on TrueNAS SCALE. Two main options are supported:
+A modern, self-hosted property management platform built for landlords and property managers in **Portugal and Spain**. Track properties, tenants, leases, receipts, expenses, maintenance, and correspondence with Iberian-focused tax and legal compliance tooling.
 
-- Registry-based install (pull `ghcr.io/jigle/proman:<tag>`) — use an explicit tag (e.g., `ghcr.io/jigle/proman:0.1.1`); avoid `latest` for production installs.
-- Local image tar (no registry) — useful when nodes cannot reach GHCR or you prefer local images.
+> **v1.13.0** — Production-ready baseline for the 2026 Portuguese and Spanish rental market. See [RELEASES.md](RELEASES.md) for the full changelog.
 
-### Prerequisites
-- TrueNAS SCALE with Apps enabled
-- A dataset for persistence (or allow the chart to create a PVC)
-- `kubectl` / `helm` (optional, for advanced installs)
+## Features
 
-### Option A — Install from GHCR (registry)
-1. In TrueNAS SCALE UI go to **Apps → Launch Docker Image** (or **Create App → Use YAML/Custom App**).
-2. Set image: `ghcr.io/jigle/proman:<version>` (use a specific tag; avoid `latest`).
-3. Configure environment variables:
-   - `NODE_ENV=production`
-   - `PORT=3000`
-   - `HOSTNAME=0.0.0.0` (default in image)
-   - `NEXTAUTH_URL=https://your.domain` (set to your external URL)
-   - `NEXTAUTH_SECRET` (set a secure random value)
-   - Any provider secrets (e.g. `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SENDGRID_API_KEY`).
+### Core
 
-Note: the image includes defaults (`HOSTNAME=0.0.0.0`, `PORT=3000`) and the container runs a pre-start check that will fail startup if `HOSTNAME` or `PORT` are missing or invalid. Set these values in the TrueNAS Apps UI or Helm `values.yaml` when installing.
-4. Ports: map container `3000` to a NodePort (or let SCALE assign one). Example: NodePort 30555 → container 3000.
-5. Storage: map a dataset (Host Path) to `/data` inside the container; this stores the SQLite DB (`/data/proman.sqlite`).
-6. Deploy and verify:
-   - In SCALE Apps UI confirm the app becomes `Running`.
-   - Health endpoint: `GET http://<node-ip>:<node-port>/api/health` should return `{ "status": "ok" }`.
+- **Multi-property management** — properties, units, tenants, owners with role-based access
+- **Financial tracking** — receipts, expenses, invoices, payment matrix, income distribution
+- **Maintenance** — ticket creation, assignment, status tracking with image uploads
+- **Leases & contracts** — lifecycle management, expiration alerts, bilingual PDF templates
+- **Correspondence** — templates, bulk generation, email delivery (SendGrid)
+- **Tenant self-service portal** — secure JWT-based access for tenants
+- **Document management** — upload, categorize, HTML/PDF generation
+- **Insights dashboard** — occupancy, revenue, ROI analytics
+- **Internationalization** — English, Portuguese, Spanish (370 keys, full parity)
 
-### Option B — Install using a local image tar (no registry)
-1. Build and save image tar locally (on your workstation):
-   ```bash
-   ./scripts/build-and-save.sh proman:local proman_local_image.tar
-   ```
-2. Copy the tar to each SCALE node and import it (example using SSH):
-   ```bash
-   scp proman_local_image.tar root@TRUENAS_NODE:/root/
-   # If SCALE node uses containerd/k3s:
-   ssh root@TRUENAS_NODE "ctr -n=k8s.io images import /root/proman_local_image.tar"
-   # Or if docker is available on the node:
-   ssh root@TRUENAS_NODE "docker load -i /root/proman_local_image.tar"
-   ```
-3. In the Apps UI use the image name you loaded (e.g., `proman:local`) and configure envs, ports and storage as in Option A.
+### 🇵🇹 Portugal Compliance
 
-### Option C — Install via Helm (advanced)
-1. From a machine with `kubectl`/`helm` configured for SCALE's k8s cluster:
-   ```bash
-   helm install proman ./helm/proman --set image.repository=ghcr.io/jigle/proman --set image.tag=<version>  # use a specific tag (avoid latest)
-   ```
-2. Customize `values.yaml` for `persistence`, `service.type` (NodePort/ClusterIP), and `ingress` before installing.
+- **Recibos de Renda Eletrónicos** — mandatory electronic rent receipts with AT-compatible XML payload generation, NIF validation, and 5-day deadline enforcement (`POST /api/compliance/rent-receipts`)
+- **2026 IRS brackets** — 9 progressive brackets (13.25% → 48%) with Renda Acessível flat 10% rate for rents ≤ €2,300/month
+- **SAF-T PT export** — RSA-SHA1 digital signature with invoice hash chain
 
-### Releases
+### 🇪🇸 Spain Compliance
 
-We publish Docker images to GitHub Container Registry (GHCR) and package the Helm chart with the app's release version. Use explicit image tags for installs and updates — avoid using `latest` for production.
+- **NRUA export workflow** — Ventanilla Única Digital payload generation and registration tracking for 2026 (`POST /api/compliance/nrua`)
+- **Ley de Vivienda 12/2023** — rent cap validation, stressed-zone deductions (50/60/70/90% tiers), grandes tenedores detection
+- **2026 IRPF brackets** — 6 progressive brackets (19% → 47%)
 
+### Payments & Security
 
-## Releases
+- **Payment integrations** — Stripe-backed card and SEPA Direct Debit flows are available when payment credentials are configured; Multibanco, MB WAY, and Bizum require additional provider/banking setup depending on region
+- **SEPA Direct Debit** — full mandate lifecycle (create, list, cancel)
+- **PII encryption** — AES-256-GCM field-level encryption for IBAN, NIF, and phone
 
-Releases are recorded here so you can see which image is pulled when restarting the app.
+## Tech Stack
 
-Release note template:
-- Date: YYYY-MM-DD  
-- Version: vX.Y.Z  
-- Image: `ghcr.io/jigle/proman:VERSION`  
-- Notes: short description
+| Layer      | Technology                                   |
+| ---------- | -------------------------------------------- |
+| Framework  | Next.js 16 (App Router)                      |
+| Language   | TypeScript (strict)                          |
+| Database   | Prisma ORM + **SQLite** (via better-sqlite3) |
+| Auth       | NextAuth.js (Google OAuth + Credentials)     |
+| UI         | shadcn/ui + Tailwind CSS v4 + Radix UI       |
+| Validation | Zod                                          |
+| Email      | SendGrid                                     |
+| Testing    | Vitest (unit) + Playwright (E2E)             |
+| Deployment | Docker / Kubernetes / Helm / TrueNAS SCALE   |
 
-Example:
-- Date: 2026-01-20  
-- Version: 0.2.0  
-- Image: `ghcr.io/jigle/proman:0.2.0`  
-- Notes: "Stability & TrueNAS SCALE support. Fixed CI/CD lint/test errors, added hostPath support to Helm chart, and resolved container prestart crash."
+## Quick Start
 
-- Date: 2026-01-10  
-- Version: 0.1.1  
-- Image: `ghcr.io/jigle/proman:0.1.1`  
-- Notes: "Bugfix: DB handling on first init."
-
-### How to release ✅
-
-Releases are created from the `publish-ghcr.yml` workflow. The recommended and safest method is to publish by creating an annotated tag `vX.Y.Z`. You can also run the workflow manually (via **Actions → Build and publish to GHCR → Run workflow**) and use the `dry_run` and `version` inputs for testing and overrides.
-
-**Credential requirements for publishing**
-
-- The workflow prefers a user-provided Personal Access Token stored as the repository secret `GHCR_PAT` (must include `packages: write`).
-- If `GHCR_PAT` is not present the workflow will **fall back to** using the built-in `GITHUB_TOKEN` (only if repository **Actions → Workflow permissions** include **packages: write**).
-- A new pre-publish job validates credentials by attempting a `docker login` to `ghcr.io` and will fail early if no usable credential is found.
-- If your `production` environment has protection rules, ensure the environment grants access to the needed secret (or add `GHCR_PAT` to the environment secrets) before running a non-dry-run publish.
-
-- Recommended (tag-based release):
-  1. Update the package version: `npm version X.Y.Z --no-git-tag-version`
-  2. Commit the change: `git add package.json package-lock.json && git commit -m "chore(release): X.Y.Z"`
-  3. Create a tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z"`
-  4. Push the tag: `git push origin vX.Y.Z`
-  - The workflow will build and push images, package the Helm chart, and create a Release automatically.
-
-- Manual dry-run (inspect artifacts without creating a Release):
-  - Go to **Actions → Build and publish to GHCR → Run workflow**.
-  - Set `dry_run=true` and optionally `version=X.Y.Z` to override.
-  - The workflow uploads `release-charts` as an artifact and shows a release-note preview for inspection.
-
-- Notes & safeguards:
-  - Tag-triggered runs assert that the tag version (without `v`) matches `package.json` — if they differ the run will fail and prompt you to resolve the mismatch.
-  - Use the `version` workflow input when using manual dispatch to override version detection.
-
-When restarting or updating the app in TrueNAS SCALE:
-- Use the specific image tag from the release (do not rely on `latest`).
-- Verify runtime version:
-  - GET `/version.json` (returns `{"version","git_commit","build_time"}`).
-  - `kubectl get deployment proman -o yaml` and inspect `metadata.annotations` for `app.kubernetes.io/version` or `proman.image`.
-
-### Post-install checks and troubleshooting
-- Check pod status and logs:
-  ```bash
-  kubectl get pods -l app=proman -n <namespace> -o wide
-  kubectl logs deployment/proman -n <namespace> --tail=200
-  kubectl describe pod <pod-name> -n <namespace>
-  ```
-- If the app is `Running` but unreachable externally:
-  - If you used NodePort, curl the node IP and port: `curl -v http://<node-ip>:<node-port>`.
-  - Use port-forward to test locally: `kubectl port-forward svc/proman 3000:80 -n <namespace>` then `curl http://localhost:3000`.
-- If you see database permission errors, confirm the dataset is mounted at `/data` and writable by the container (fsGroup in deployment can help).
-- Ensure `NEXTAUTH_URL` matches the externally reachable URL (used by NextAuth redirects).
-
-### Database initialization & recovery
-If you see an error like `no such table: main.users` the SQLite database file exists but the Prisma schema (tables) were not applied. The Helm chart includes a post-install/post-upgrade Job that will automatically apply the Prisma schema when `persistence.enabled` is true (it runs `npx prisma db push && npx prisma generate`). You have two safe options to initialize the schema.
-
-1) Use the built-in init endpoint (recommended)
-
-- If you configured `INIT_SECRET` (recommended), send Authorization header:
+### Development
 
 ```bash
-curl -sS -X POST -H "Authorization: Bearer $INIT_SECRET" http://<node-ip>:<node-port>/api/debug/db/init | jq
+npm install
+cp .env.example .env   # edit as needed
+npm run dev
 ```
 
-- If you did not set `INIT_SECRET` (dev/test):
+Open http://localhost:3000
+
+### Docker
 
 ```bash
-curl -sS -X POST http://<node-ip>:<node-port>/api/debug/db/init | jq
+# Build and run locally
+docker build -t proman:local .
+docker run --rm -p 3000:3000 \
+  -e DATABASE_URL=file:/data/proman.sqlite \
+  -e NEXTAUTH_SECRET=your-secret \
+  -v proman-data:/data \
+  proman:local
+
+# Or use Docker Compose
+docker-compose --profile prod up -d    # production (GHCR image)
+docker-compose --profile dev up -d     # development (build from source)
 ```
 
-- Expected success: `{ "ok": true, "dbPath": "/data/proman.sqlite", "pushOut": "...", "genOut": "..." }`
+## TrueNAS SCALE
 
-2) Run Prisma commands manually inside the running container or Pod
+Proman ships a Helm chart at [`helm/proman/`](helm/proman/) targeting the TrueNAS SCALE Kubernetes runtime.
 
-- Docker:
+### Install via Helm
 
 ```bash
-docker exec -it <container> sh -c 'npx prisma db push && npx prisma generate'
+helm install proman ./helm/proman \
+  -f helm/proman/values-truenas.yaml \
+  --namespace ix-app \
+  --set image.tag=1.13.0
 ```
 
-- Kubernetes:
+### Configuration
+
+Key settings in [`helm/proman/values-truenas.yaml`](helm/proman/values-truenas.yaml):
+
+| Setting                      | Default                                   | Description                                             |
+| ---------------------------- | ----------------------------------------- | ------------------------------------------------------- |
+| `service.type`               | `NodePort`                                | Exposes port 30080 on the TrueNAS host                  |
+| `persistence.hostPath`       | `/mnt/pools/<POOL_NAME>/apps/proman/data` | Pool path for persistent data                           |
+| `securityContext.runAsUser`  | `1001`                                    | UID for file ownership — match your dataset permissions |
+| `securityContext.runAsGroup` | `1001`                                    | GID for file ownership                                  |
+
+Replace `<POOL_NAME>` with your TrueNAS pool name before deploying, or set it via `--set`.
+
+> See [docs/truenas.md](docs/truenas.md) for a full step-by-step TrueNAS SCALE setup guide including dataset creation, dataset permissions, and the Kubernetes namespace configuration.
+
+## Testing
 
 ```bash
-kubectl exec -it <pod> -- npx prisma db push && kubectl exec -it <pod> -- npx prisma generate
+npm test                # Unit tests (Vitest) — 62 files, 682 tests
+npm run test:coverage   # With coverage report
+npm run test:e2e        # E2E tests (Playwright)
+npm run lint            # ESLint
+npm run type-check      # TypeScript check
 ```
 
-Verify tables exist:
+## Architecture
+
+```
+app/
+  [locale]/           → i18n-aware pages (dashboard, settings)
+  api/
+    compliance/       → Rent receipts (PT), NRUA (ES), rent cap validation
+    cron/             → Notification automation endpoint
+    leases/           → Lease CRUD + bilingual template generation
+    payments/         → SEPA DD mandates, Stripe webhooks
+    tax/              → SAF-T PT export
+    …                 → properties, tenants, invoices, etc.
+  auth/               → Sign-in / sign-out pages
+  tenant-portal/      → Self-service tenant portal
+components/
+  features/           → Domain components (property, financial, document, …)
+  layouts/            → Page layouts and navigation
+  shared/             → Reusable components (confirmation dialogs, etc.)
+  ui/                 → shadcn/ui primitives
+lib/
+  compliance/         → Rent receipts PT, NRUA ES modules
+  contexts/           → React contexts (app state, CSRF, toast, currency)
+  services/           → Database, auth, payments, email, PDF, notifications
+  schemas/            → Zod validation schemas
+  middleware/         → CSRF, rate limiting, security headers
+  tax/                → SAF-T PT generation
+  utils/              → API client, PII encryption, logger, env validation
+prisma/
+  schema.prisma       → 27 models, 23 enums (SQLite)
+  migrations/         → All database migrations
+k8s/                  → Deployment, Service, CronJob manifests
+helm/proman/          → Helm chart with TrueNAS SCALE values
+```
+
+## Configuration
+
+### Required Environment Variables
+
+| Variable               | Required    | Description                                                  |
+| ---------------------- | ----------- | ------------------------------------------------------------ |
+| `DATABASE_URL`         | ✅ Yes      | SQLite path: `file:/data/proman.sqlite`                      |
+| `NEXTAUTH_URL`         | ✅ Yes      | Public URL of the application                                |
+| `NEXTAUTH_SECRET`      | ✅ Yes      | Session signing secret (min 32 chars)                        |
+| `GOOGLE_CLIENT_ID`     | OAuth only  | Google OAuth client ID (required if `ENABLE_OAUTH=true`)     |
+| `GOOGLE_CLIENT_SECRET` | OAuth only  | Google OAuth client secret (required if `ENABLE_OAUTH=true`) |
+| `INIT_SECRET`          | Recommended | Protects DB init and debug endpoints                         |
+| `CRON_SECRET`          | ✅ Yes      | Bearer token for `/api/cron/notifications`                   |
+| `PII_ENCRYPTION_KEY`   | ✅ Prod     | 64-char hex key for AES-256-GCM PII encryption               |
+| `ENABLE_DEMO_LOGIN`    | ✅ Prod     | Set `false` in production to disable demo login              |
+
+### Portugal-Specific (optional)
+
+| Variable                  | Description                                      |
+| ------------------------- | ------------------------------------------------ |
+| `SAFT_SIGNING_KEY_PATH`   | Path to RSA PEM key for SAF-T PT digital signing |
+| `SAFT_CERTIFICATE_NUMBER` | AT software certificate number                   |
+
+See [.env.example](.env.example) for the complete list.
+
+### Feature Flags (opt-in)
+
+| Flag                | Default | Enables                               |
+| ------------------- | ------- | ------------------------------------- |
+| `ENABLE_STRIPE`     | `false` | Stripe payments                       |
+| `ENABLE_SENDGRID`   | `false` | SendGrid email delivery               |
+| `ENABLE_OAUTH`      | `false` | Google OAuth login                    |
+| `ENABLE_DEMO_LOGIN` | `true`  | Credentials demo login (disable prod) |
+
+## Deployment
+
+| Target        | Resources                                                           |
+| ------------- | ------------------------------------------------------------------- |
+| Docker        | [Dockerfile](Dockerfile) + [docker-compose.yml](docker-compose.yml) |
+| Kubernetes    | [k8s/](k8s/) — Deployment, Service, CronJob manifests               |
+| Helm          | [helm/proman/](helm/proman/) with TrueNAS values                    |
+| TrueNAS SCALE | [TrueNAS Guide](docs/truenas.md)                                    |
+
+Full deployment instructions: [docs/deployment.md](docs/deployment.md)
+
+### Notification Automation (CronJob)
+
+Automated daily notifications (rent reminders, overdue notices, lease renewals, receipt deadlines) are triggered via `POST /api/cron/notifications`. In Kubernetes, apply the included CronJob manifest:
 
 ```bash
-# inside host/container where /data is mounted
-sqlite3 /data/proman.sqlite '.tables'
+kubectl apply -f k8s/cronjob-notifications.yaml
 ```
 
-Temporary emergency fallback
+The CronJob runs at 08:00 UTC and authenticates with `CRON_SECRET`.
 
-- You can allow sign-ins while DB is broken (not recommended long-term) by setting the environment variable `NEXTAUTH_ALLOW_DB_FAILURE=true` in your App/Helm values. This bypasses DB-dependent creation and lets sign-in proceed.
+## Demo Mode
 
-Notes
-- The `POST /api/debug/db/init` route will create the DB file (if missing), run `npx prisma db push` and `npx prisma generate` (skipped in `NODE_ENV=test`). Protect it with `INIT_SECRET` in production to avoid unauthorized schema changes.
-- After successful init, retry the sign-in flow — the `signIn` callback will create the user record on first login if needed.
+ProMan includes a public demo mode for exploring the app without authentication:
 
-
-### Security & registry notes
-- Public GHCR image: `ghcr.io/jigle/proman:<tag>` is available and can be pulled without credentials; prefer a fixed tag (e.g., `ghcr.io/jigle/proman:0.1.1`) for reproducible deployments.
-- Private registry: if you use a private GHCR image set registry credentials (PAT with `read:packages`) in SCALE.
-
-### Removing the app
-- If installed via Helm: `helm uninstall proman` or remove via the SCALE Apps UI.
-
-If you want, I can:
-- Render a ready-to-install YAML (with your nodePort, hostname and secrets redacted), or
-- Help test a live install (port-forward, logs parsing) if you provide the cluster outputs.
-
-License: MIT
+```
+https://your-domain.com/demo
 ```
 
+- Uses read-only mock data (5 properties, 4 tenants, 4 leases)
+- No real user data is exposed
+- Mutations return simulated success without database writes
+- Settings and debug routes are blocked
+- Session expires after 1 hour
 
+## Database
 
+ProMan uses **SQLite** via Prisma ORM with the `better-sqlite3` adapter. Set up with:
+
+```bash
+npx prisma migrate deploy   # apply all pending migrations
+npx prisma generate         # regenerate client after schema changes
+```
+
+See [Database Strategy](docs/DATABASE_STRATEGY.md) for migrations, backups, and production guidance.
+
+## Security
+
+- CSRF token protection on all state-changing requests
+- Nonce-based Content Security Policy headers
+- Rate limiting (in-memory + Redis)
+- JWT session management with configurable expiration
+- AES-256-GCM PII encryption for sensitive fields (IBAN, NIF, phone)
+- Debug endpoints require `INIT_SECRET` authentication
+- SendGrid webhook signature verification
+- `ENABLE_DEMO_LOGIN=false` kill switch for production
+
+See [Security Guide](docs/SECURITY.md) for full details.
+
+## Documentation
+
+| Guide                                                  | Description                    |
+| ------------------------------------------------------ | ------------------------------ |
+| [Documentation Index](docs/README.md)                  | Links to all available guides  |
+| [Deployment Guide](docs/deployment.md)                 | Production setup instructions  |
+| [TrueNAS Guide](docs/truenas.md)                       | TrueNAS SCALE deployment       |
+| [Troubleshooting](docs/troubleshooting.md)             | Common issues and fixes        |
+| [Security Guide](docs/SECURITY.md)                     | Security architecture          |
+| [Database Strategy](docs/DATABASE_STRATEGY.md)         | Migrations, backups            |
+| [Metrics & Monitoring](docs/METRICS_AND_MONITORING.md) | Observability setup            |
+| [Releases](RELEASES.md)                                | Version history and changelogs |
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+
+## License
+
+Proprietary - All Rights Reserved. See [LICENSE](LICENSE).

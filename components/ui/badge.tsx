@@ -1,38 +1,68 @@
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
+import * as React from "react";
+import { cva, type VariantProps } from "class-variance-authority";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils/utils";
 
 const badgeVariants = cva(
-  "inline-flex items-center rounded-full border border-zinc-200 px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-zinc-950 focus:ring-offset-2 dark:border-zinc-800 dark:focus:ring-zinc-300",
+  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2",
   {
     variants: {
       variant: {
         default:
-          "border-transparent bg-zinc-900 text-zinc-50 hover:bg-zinc-900/80 dark:bg-zinc-50 dark:text-zinc-900 dark:hover:bg-zinc-50/80",
+          "border-transparent bg-[var(--color-primary)] text-[var(--color-primary-foreground)] hover:bg-[var(--color-primary)]/80",
         secondary:
-          "border-transparent bg-zinc-100 text-zinc-900 hover:bg-zinc-100/80 dark:bg-zinc-800 dark:text-zinc-50 dark:hover:bg-zinc-800/80",
+          "border-transparent bg-[var(--color-secondary)] text-[var(--color-secondary-foreground)] hover:bg-[var(--color-secondary)]/80",
         destructive:
-          "border-transparent bg-red-500 text-zinc-50 hover:bg-red-500/80 dark:bg-red-900 dark:text-zinc-50 dark:hover:bg-red-900/80",
+          "border-transparent bg-[var(--color-destructive)] text-[var(--color-destructive-foreground)] hover:bg-[var(--color-destructive)]/80",
         success:
-          "border-transparent bg-green-500 text-zinc-50 hover:bg-green-500/80 dark:bg-green-900 dark:text-zinc-50 dark:hover:bg-green-900/80",
-        outline: "text-zinc-950 dark:text-zinc-50",
+          "border-transparent bg-[var(--color-success)] text-[var(--color-success-foreground)] hover:bg-[var(--color-success)]/80",
+        warning:
+          "border-transparent bg-[var(--color-warning)] text-[var(--color-warning-foreground)] hover:bg-[var(--color-warning)]/80",
+        info: "border-transparent bg-[var(--color-info)] text-[var(--color-info-foreground)] hover:bg-[var(--color-info)]/80",
+        outline:
+          "border-[var(--color-border)] text-[var(--color-foreground)] hover:bg-[var(--color-hover)]",
+        ghost:
+          "border-transparent bg-[var(--color-muted)]/10 text-[var(--color-muted-foreground)] hover:bg-[var(--color-muted)]/20",
+      },
+      size: {
+        sm: "px-2 py-0.5 text-xs",
+        default: "px-2.5 py-0.5 text-xs",
+        lg: "px-3 py-1 text-sm",
+      },
+      emphasis: {
+        low: "font-medium",
+        medium: "font-semibold",
+        high: "font-bold",
       },
     },
     defaultVariants: {
       variant: "default",
+      size: "default",
+      emphasis: "medium",
     },
-  }
-)
+  },
+);
 
 interface BadgeProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof badgeVariants> {}
-
-function Badge({ className, variant, ...props }: BadgeProps): React.ReactElement {
-  return (
-    <div className={cn(badgeVariants({ variant }), className)} {...props} />
-  )
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof badgeVariants> {
+  icon?: React.ReactNode;
 }
 
-export { Badge, badgeVariants }
+function Badge({
+  className,
+  variant,
+  size,
+  emphasis,
+  icon,
+  children,
+  ...props
+}: BadgeProps): React.ReactElement {
+  return (
+    <div className={cn(badgeVariants({ variant, size, emphasis }), className)} {...props}>
+      {icon && <span className="mr-1 flex items-center">{icon}</span>}
+      {children}
+    </div>
+  );
+}
+
+export { Badge, badgeVariants };

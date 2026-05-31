@@ -1,0 +1,312 @@
+import { NextRequest, NextResponse } from "next/server";
+import type { Session } from "next-auth";
+import { getAuthOptions } from "@/lib/services/auth/auth";
+import { isMockMode } from "@/lib/config/data-mode";
+import { isDevAuthEnabled } from "@/lib/services/auth/dev-session";
+import {
+  isDemoRequest,
+  DEMO_USER,
+  getDemoPerspectiveFromRequest,
+  getDemoTenantIdFromRequest,
+} from "@/lib/demo/demo-mode";
+import { getPortalRoleFromSessionRole, type PortalRole } from "@/lib/portal/access";
+
+// Authentication middleware for API routes
+export async function requireAuth(_request: NextRequest): Promise<
+  | {
+      session: Session;
+      userId: string;
+    }
+  | NextResponse
+> {
+  try {
+    // Demo mode: return synthetic demo user without requiring a real session
+    if (isDemoRequest(_request)) {
+      const demoSession = {
+        user: { ...DEMO_USER },
+        expires: new Date(Date.now() + 3600_000).toISOString(),
+      } as Session;
+      return { session: demoSession, userId: DEMO_USER.id };
+    }
+
+    // Import next-auth lazily so tests can mock getServerSession before we call it
+    const mod = await import("next-auth/next").catch(() => import("next-auth"));
+    type GetServerSession = (opts?: ReturnType<typeof getAuthOptions>) => Promise<Session | null>;
+    const maybe = mod as { getServerSession?: GetServerSession };
+    const getServerSession = maybe.getServerSession;
+
+    // Call getServerSession at runtime (not module load time) so tests can stub it
+    const session = (await getServerSession?.(getAuthOptions())) ?? null;
+
+    if (!session) {
+      return new NextResponse(JSON.stringify({ error: "Authentication required" }), {
+        status: 401,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    // In dev auth mode, use session data directly without database lookup
+    if (isDevAuthEnabled()) {
+      const userId = session.user?.id || session.user?.email || "dev-user";
+      return { session, userId };
+    }
+
+    // In mock mode, use session data directly without database lookup
+    if (isMockMode) {
+      // Use email hash or session.user.id as a stable userId in mock mode
+      const userId = session.user?.id || session.user?.email || "mock-user";
+      return { session, userId };
+    }
+
+    // Prefer session user id when present to avoid unnecessary DB lookups on every request.
+    if (session.user?.id) {
+      return { session, userId: session.user.id };
+    }
+
+    // Fallback for session shapes that only contain email.
+    if (session.user?.email) {
+      // Find user in database — separate DB errors from "not found"
+      let user;
+      try {
+        const { getPrismaClient } = await import("@/lib/services/database/database");
+        const prisma = getPrismaClient();
+        user = await prisma.user.findUnique({
+          where: { email: session.user.email },
+        });
+      } catch (dbError: unknown) {
+        const msg = dbError instanceof Error ? dbError.message : String(dbError);
+        console.error("requireAuth: database error during user lookup:", msg);
+
+        if (msg.includes("no such table") || msg.includes("SQLITE_ERROR")) {
+          console.error(
+            "HINT: The database exists but has no tables. " +
+              "Run database initialization: POST /api/debug/db/init " +
+              "or exec into the container and run: npx prisma db push --schema=prisma/schema.prisma",
+          );
+        }
+
+        return new NextResponse(
+          JSON.stringify({
+            error: "Service temporarily unavailable",
+            detail: "Database connection error",
+          }),
+          {
+            status: 503,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      if (!user) {
+        // Do not auto-create users — they must register via a proper auth flow
+        return new NextResponse(
+          JSON.stringify({
+            error: "User account not found. Please sign up or contact an administrator.",
+          }),
+          {
+            status: 401,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      return { session, userId: user.id };
+    }
+
+    return new NextResponse(JSON.stringify({ error: "Authentication required" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  } catch (error: unknown) {
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const errName = error instanceof Error ? error.name : "UnknownError";
+    console.error("requireAuth error:", errName, errMsg);
+
+    // Distinguish database errors from auth errors
+    const isDbError =
+      errMsg.includes("no such table") ||
+      errMsg.includes("SQLITE_ERROR") ||
+      errMsg.includes("SQLite DB file") ||
+      errMsg.includes("Prisma") ||
+      errMsg.includes("database") ||
+      errMsg.includes("not writable") ||
+      errMsg.includes("does not exist");
+
+    if (isDbError) {
+      if (errMsg.includes("no such table") || errMsg.includes("SQLITE_ERROR")) {
+        console.error(
+          "HINT: The database exists but has no tables. " +
+            "Run database initialization: POST /api/debug/db/init " +
+            "or exec into the container and run: npx prisma db push --schema=prisma/schema.prisma",
+        );
+      }
+      return new NextResponse(
+        JSON.stringify({
+          error: "Service temporarily unavailable",
+          detail: "Database connection error",
+        }),
+        {
+          status: 503,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    return new NextResponse(
+      JSON.stringify({
+        error: "Authentication failed",
+      }),
+      {
+        status: 500,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+  }
+}
+
+// Authorization middleware for resource ownership
+export async function requireOwnership(
+  request: NextRequest,
+  resourceUserId: string,
+): Promise<void | NextResponse> {
+  const authResult = await requireAuth(request);
+
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
+  const { userId } = authResult;
+
+  if (userId !== resourceUserId) {
+    return new NextResponse(JSON.stringify({ error: "Access denied" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+export interface AccessContext {
+  session: Session;
+  userId: string;
+  scopeUserId: string;
+  portalRole: PortalRole;
+  tenantId?: string;
+  propertyId?: string;
+}
+
+export async function getAccessContext(
+  request: NextRequest,
+): Promise<AccessContext | NextResponse> {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+
+  const { session, userId } = authResult;
+
+  if (isDemoRequest(request)) {
+    const portalRole = getDemoPerspectiveFromRequest(request);
+    return {
+      session,
+      userId,
+      scopeUserId: DEMO_USER.id,
+      portalRole,
+      tenantId: portalRole === "tenant" ? getDemoTenantIdFromRequest(request) : undefined,
+    };
+  }
+
+  const portalRole = getPortalRoleFromSessionRole(session.user.role);
+  if (portalRole === "owner") {
+    return {
+      session,
+      userId,
+      scopeUserId: userId,
+      portalRole,
+    };
+  }
+
+  if (!session.user.email) {
+    return new NextResponse(JSON.stringify({ error: "Tenant access requires an email address" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  try {
+    const { getPrismaClient } = await import("@/lib/services/database/database");
+    const prisma = getPrismaClient();
+    const tenant = await prisma.tenant.findFirst({
+      where: { email: session.user.email },
+      select: { id: true, userId: true, propertyId: true },
+    });
+
+    if (!tenant) {
+      return new NextResponse(JSON.stringify({ error: "Tenant access is not configured" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
+    return {
+      session,
+      userId,
+      scopeUserId: tenant.userId,
+      portalRole,
+      tenantId: tenant.id,
+      propertyId: tenant.propertyId ?? undefined,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Failed to resolve tenant access";
+    return new NextResponse(JSON.stringify({ error: message }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+}
+
+// CORS headers for API responses
+export function corsHeaders(): Record<string, string> {
+  return {
+    "Access-Control-Allow-Origin": process.env.NEXTAUTH_URL || "http://localhost:3000",
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Credentials": "true",
+  };
+}
+
+// Handle OPTIONS requests for CORS
+export function handleOptions(): NextResponse {
+  return new NextResponse(null, {
+    status: 200,
+    headers: corsHeaders(),
+  });
+}
+
+export async function requireAdmin(request: NextRequest) {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof NextResponse) {
+    return authResult;
+  }
+  const { session } = authResult;
+  if (session.user.role !== "ADMIN") {
+    return new NextResponse(JSON.stringify({ error: "Forbidden: Admin access required" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  return authResult;
+}
+
+export async function requireOwnerAccess(request: NextRequest) {
+  const accessContext = await getAccessContext(request);
+  if (accessContext instanceof NextResponse) {
+    return accessContext;
+  }
+  if (accessContext.portalRole !== "owner") {
+    return new NextResponse(JSON.stringify({ error: "Forbidden: Owner access required" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  return accessContext;
+}

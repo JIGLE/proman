@@ -1,0 +1,69 @@
+import { describe, it, expect, vi, afterEach, beforeAll } from "vitest";
+import type { Session } from "next-auth";
+import { requireAuth, requireOwnership } from "@/lib/services/auth/auth-middleware";
+import { NextRequest } from "next/server";
+
+// Set DATABASE_URL before any imports that might check it
+beforeAll(() => {
+  process.env.DATABASE_URL = "file:./test.db";
+});
+
+vi.mock("next-auth/next", () => ({
+  getServerSession: vi.fn(),
+}));
+
+vi.mock("next-auth", () => ({
+  getServerSession: vi.fn(),
+}));
+
+const { mockGetPrismaClient } = vi.hoisted(() => ({
+  mockGetPrismaClient: vi.fn(),
+}));
+vi.mock("@/lib/services/database/database", () => ({
+  getPrismaClient: mockGetPrismaClient,
+}));
+
+import { mockGetServerSession, resetGetServerSession } from "@/tests/helpers/next-auth";
+
+describe("auth-middleware", () => {
+  afterEach(async () => {
+    await resetGetServerSession();
+  });
+
+  it("returns NextResponse when no session", async () => {
+    await mockGetServerSession(null);
+
+    const res = await requireAuth({} as NextRequest);
+    expect(res).toHaveProperty("status", 401);
+  });
+
+  it("returns session and userId when session present", async () => {
+    await mockGetServerSession({ user: { id: "user-1" } } as Session);
+
+    const res = await requireAuth({} as NextRequest);
+    expect((res as { userId?: string }).userId).toBe("user-1");
+  });
+
+  it("uses session user id without db lookup when both id and email exist", async () => {
+    await mockGetServerSession({ user: { id: "user-1", email: "u@example.com" } } as Session);
+
+    const res = await requireAuth({} as NextRequest);
+
+    expect((res as { userId?: string }).userId).toBe("user-1");
+    expect(mockGetPrismaClient).not.toHaveBeenCalled();
+  });
+
+  it("requireOwnership denies access when userId mismatch", async () => {
+    await mockGetServerSession({ user: { id: "user-1" } } as Session);
+
+    const res = await requireOwnership({} as NextRequest, "other");
+    expect(res).toHaveProperty("status", 403);
+  });
+
+  it("requireOwnership allows when userId matches", async () => {
+    await mockGetServerSession({ user: { id: "user-1" } } as Session);
+
+    const res = await requireOwnership({} as NextRequest, "user-1");
+    expect(res).toBeUndefined();
+  });
+});

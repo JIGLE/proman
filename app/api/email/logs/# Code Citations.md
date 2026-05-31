@@ -1,6 +1,7 @@
 # Code Citations
 
 ## License: Apache-2.0
+
 https://github.com/theatre-js/theatre/blob/ec4ad14839265b40565ec76e22f736cecaee2be1/packages/app/src/ui/components/ui/switch.tsx
 
 ```
@@ -33,8 +34,8 @@ Switch.displayName = SwitchPrimitives.Root.displayName
 export {
 ```
 
-
 ## License: unknown
+
 https://github.com/lacymorrow/cinematic/blob/174f07514c07898fe455f9fc1d3af0b992cb0015/src/components/ui/switch.tsx
 
 ```
@@ -67,8 +68,8 @@ Switch.displayName = SwitchPrimitives.Root.displayName
 export {
 ```
 
-
 ## License: unknown
+
 https://github.com/galenjiang/blog/blob/cfabc2873b679713d21b45a5a359feed5cb8e97d/components/ui/switch.tsx
 
 ```
@@ -101,8 +102,8 @@ Switch.displayName = SwitchPrimitives.Root.displayName
 export {
 ```
 
-
 ## License: unknown
+
 https://github.com/ghcpuman902/manglekuo.com/blob/53eba8b24dc2b24f071872b5bd737959efa50a2f/%40components/ui/label.jsx
 
 ```
@@ -132,8 +133,8 @@ Label.displayName = LabelPrimitive.Root.displayName
 export { Label }
 ```
 
-
 ## License: Apache-2.0
+
 https://github.com/theatre-js/theatre/blob/ec4ad14839265b40565ec76e22f736cecaee2be1/packages/app/src/ui/components/ui/label.tsx
 
 ```
@@ -163,8 +164,8 @@ Label.displayName = LabelPrimitive.Root.displayName
 export { Label }
 ```
 
-
 ## License: MIT
+
 https://github.com/phaneendra/urbanriders/blob/e88dfc6d40af15cced0dd31993c40adde037392e/components/ui/label.tsx
 
 ```
@@ -194,8 +195,8 @@ Label.displayName = LabelPrimitive.Root.displayName
 export { Label }
 ```
 
-
 ## License: MIT
+
 https://github.com/lacymorrow/lacymorrow.github.io/blob/d5fc90a081c414fe1a51c3aae9607b2b5554ef62/src/components/ui/label.tsx
 
 ```
@@ -225,8 +226,8 @@ Label.displayName = LabelPrimitive.Root.displayName
 export { Label }
 ```
 
-
 ## License: unknown
+
 https://github.com/ether/ether.github.com/blob/dcd5343d3a2875473bdb3dfdf71e050fd6865f2b/src/components/StyledModal.tsx
 
 ```
@@ -389,8 +390,8 @@ export {
   SelectScrollDownButton,
 ```
 
-
 ## License: Apache-2.0
+
 https://github.com/theatre-js/theatre/blob/ec4ad14839265b40565ec76e22f736cecaee2be1/packages/app/src/ui/components/ui/popover.tsx
 
 ```
@@ -553,8 +554,8 @@ export {
   SelectScrollDownButton,
 ```
 
-
 ## License: Apache-2.0
+
 https://github.com/theatre-js/theatre/blob/ec4ad14839265b40565ec76e22f736cecaee2be1/packages/app/src/ui/components/ui/select.tsx
 
 ```
@@ -717,8 +718,8 @@ export {
   SelectScrollDownButton,
 ```
 
-
 ## License: MIT
+
 https://github.com/phaneendra/urbanriders/blob/e88dfc6d40af15cced0dd31993c40adde037392e/components/ui/forms/Select/index.tsx
 
 ```
@@ -881,8 +882,8 @@ export {
   SelectScrollDownButton,
 ```
 
-
 ## License: unknown
+
 https://github.com/AndreiRailean/andreirailean.github.io/blob/3e17e53491e320f0cc13ae3ef1f78b4afabd2017/src/components/ui/dropdown-menu.tsx
 
 ```
@@ -1045,8 +1046,8 @@ export {
   SelectScrollDownButton,
 ```
 
-
 ## License: AGPL-3.0
+
 https://github.com/lukevella/rallly/blob/0bff7ba55ac209b685d7e1ab01d8609488a49ad3/packages/ui/select.tsx
 
 ```
@@ -1209,8 +1210,8 @@ export {
   SelectScrollDownButton,
 ```
 
-
 ## License: unknown
+
 https://github.com/galenjiang/blog/blob/cfabc2873b679713d21b45a5a359feed5cb8e97d/components/ui/context-menu.tsx
 
 ```
@@ -1373,8 +1374,8 @@ export {
   SelectScrollDownButton,
 ```
 
-
 ## License: unknown
+
 https://github.com/lacymorrow/cinematic/blob/174f07514c07898fe455f9fc1d3af0b992cb0015/src/components/ui/popover.tsx
 
 ```
@@ -1537,8 +1538,8 @@ export {
   SelectScrollDownButton,
 ```
 
-
 ## License: unknown
+
 https://github.com/lacymorrow/cinematic/blob/174f07514c07898fe455f9fc1d3af0b992cb0015/src/components/ui/select.tsx
 
 ```
@@ -1701,8 +1702,8 @@ export {
   SelectScrollDownButton,
 ```
 
-
 ## License: unknown
+
 https://github.com/armada-ths/ais/blob/05af612d6fc656fa0f22a3b97a264fca692a66b1/apps/dashboard/src/components/ui/select.tsx
 
 ```
@@ -1865,8 +1866,8 @@ export {
   SelectScrollDownButton,
 ```
 
-
 ## License: unknown
+
 https://github.com/galenjiang/blog/blob/cfabc2873b679713d21b45a5a359feed5cb8e97d/components/ui/select.tsx
 
 ```
@@ -2029,8 +2030,8 @@ export {
   SelectScrollDownButton,
 ```
 
-
 ## License: MIT
+
 https://github.com/sparrow-js/an-codeAI/blob/30fec5e789e079386c9868cf3ba8b97d6485f6df/components/components/ui/select.tsx
 
 ```
@@ -2193,8 +2194,8 @@ export {
   SelectScrollDownButton,
 ```
 
-
 ## License: unknown
+
 https://github.com/ghcpuman902/manglekuo.com/blob/53eba8b24dc2b24f071872b5bd737959efa50a2f/%40components/ui/input.jsx
 
 ```
@@ -2225,8 +2226,8 @@ Input.displayName = "Input"
 export { Input }
 ```
 
-
 ## License: unknown
+
 https://github.com/kvey/kvey.github.io/blob/0937dddbd0ebbe1d704da63068a7918e6d65773b/src/components/ui/input.tsx
 
 ```
@@ -2257,8 +2258,8 @@ Input.displayName = "Input"
 export { Input }
 ```
 
-
 ## License: unknown
+
 https://github.com/ghcpuman902/manglekuo.com/blob/53eba8b24dc2b24f071872b5bd737959efa50a2f/%40components/ui/input.jsx
 
 ```
@@ -2288,8 +2289,8 @@ Textarea.displayName = "Textarea"
 export {
 ```
 
-
 ## License: unknown
+
 https://github.com/kvey/kvey.github.io/blob/0937dddbd0ebbe1d704da63068a7918e6d65773b/src/components/ui/input.tsx
 
 ```
@@ -2319,8 +2320,8 @@ Textarea.displayName = "Textarea"
 export {
 ```
 
-
 ## License: unknown
+
 https://github.com/lacymorrow/cinematic/blob/174f07514c07898fe455f9fc1d3af0b992cb0015/src/components/ui/textarea.tsx
 
 ```
@@ -2350,8 +2351,8 @@ Textarea.displayName = "Textarea"
 export {
 ```
 
-
 ## License: MIT
+
 https://github.com/octet-stream/eri/blob/eeb01a9dd3ba772b5c4e0f1e1090a6bd7c4b901b/app/components/ui/Textarea.tsx
 
 ```
@@ -2381,8 +2382,8 @@ Textarea.displayName = "Textarea"
 export {
 ```
 
-
 ## License: unknown
+
 https://github.com/galenjiang/blog/blob/cfabc2873b679713d21b45a5a359feed5cb8e97d/components/ui/textarea.tsx
 
 ```
@@ -2412,8 +2413,8 @@ Textarea.displayName = "Textarea"
 export {
 ```
 
-
 ## License: Apache-2.0
+
 https://github.com/theatre-js/theatre/blob/ec4ad14839265b40565ec76e22f736cecaee2be1/packages/app/src/ui/components/ui/avatar.tsx
 
 ```
@@ -2466,8 +2467,8 @@ AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
 export { Avatar,
 ```
 
-
 ## License: MIT
+
 https://github.com/phaneendra/urbanriders/blob/e88dfc6d40af15cced0dd31993c40adde037392e/components/ui/data-display/Avatar/index.tsx
 
 ```
@@ -2520,8 +2521,8 @@ AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
 export { Avatar,
 ```
 
-
 ## License: unknown
+
 https://github.com/AndreiRailean/andreirailean.github.io/blob/3e17e53491e320f0cc13ae3ef1f78b4afabd2017/src/components/ui/avatar.tsx
 
 ```
@@ -2574,8 +2575,8 @@ AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
 export { Avatar,
 ```
 
-
 ## License: unknown
+
 https://github.com/mattjared/personal-site/blob/5224db68c4c8e03c579a3443500e2386f91c1742/%40/components/ui/avatar.tsx
 
 ```
@@ -2627,4 +2628,3 @@ AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName
 
 export { Avatar,
 ```
-
