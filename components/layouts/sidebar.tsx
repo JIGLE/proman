@@ -6,7 +6,9 @@ import { useSession, signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { Building2, ChevronLeft, ChevronRight, LogOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
+
+import { DomoraMark } from "@/components/shared/brand-logo";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -160,15 +162,15 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
             title="Expand Sidebar"
             aria-label="Expand Sidebar"
           >
-            <Building2 className="h-6 w-6 text-[var(--color-primary)]" />
+            <DomoraMark className="h-7 w-7" />
           </button>
         ) : (
           // Expanded: logo + collapse button
           <>
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              <Building2 className="h-6 w-6 text-[var(--color-primary)] shrink-0" />
-              <span className="text-lg font-semibold text-[var(--color-foreground)] truncate">
-                Proman
+              <DomoraMark className="h-7 w-7 shrink-0" />
+              <span className="font-display text-lg font-bold tracking-tight text-[var(--color-foreground)] truncate">
+                Domora
               </span>
             </div>
             <Button

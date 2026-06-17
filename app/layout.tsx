@@ -22,23 +22,28 @@ const syne = Syne({
   weight: ["600", "700", "800"],
 });
 
+const BRAND_TAGLINE = "Domora — Property management for European landlords";
+const BRAND_DESCRIPTION =
+  "Domora brings your properties, leases, receipts, expenses and tax compliance into one calm, private workspace — with rent-receipt and registry automation built for Portugal and Spain, and more of Europe to come.";
+
 export const metadata: Metadata = {
-  title: "Proman — Property Management",
-  description:
-    "Proman automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+  title: {
+    default: BRAND_TAGLINE,
+    template: "%s · Domora",
+  },
+  applicationName: "Domora",
+  description: BRAND_DESCRIPTION,
   openGraph: {
-    title: "Proman — Property Management",
-    description:
-      "Proman automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+    title: BRAND_TAGLINE,
+    description: BRAND_DESCRIPTION,
     type: "website",
     locale: "en_US",
-    siteName: "Proman",
+    siteName: "Domora",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Proman — Property Management",
-    description:
-      "Proman automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+    title: BRAND_TAGLINE,
+    description: BRAND_DESCRIPTION,
   },
 };
 

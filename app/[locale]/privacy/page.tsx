@@ -11,8 +11,8 @@ export async function generateMetadata({ params }: Props) {
   const { locale: _locale } = await params;
   const t = await getTranslations("footer");
   return {
-    title: `${t("privacy")} — Proman`,
-    description: "How Proman collects, uses, and protects your personal data.",
+    title: `${t("privacy")} — Domora`,
+    description: "How Domora collects, uses, and protects your personal data.",
     robots: { index: false },
   };
 }
@@ -30,7 +30,7 @@ export default async function PrivacyPage({ params }: Props) {
             href={`/${locale}`}
             className="text-sm font-semibold tracking-tight text-zinc-50 transition-opacity hover:opacity-80"
           >
-            Proman
+            Domora
           </Link>
           <LanguageSelector />
         </div>
@@ -53,7 +53,7 @@ export default async function PrivacyPage({ params }: Props) {
           <section>
             <h2 className="mb-3 text-lg font-semibold text-zinc-100">1. Introduction</h2>
             <p>
-              Proman (&ldquo;we&rdquo;, &ldquo;our&rdquo;, &ldquo;the platform&rdquo;) is committed
+              Domora (&ldquo;we&rdquo;, &ldquo;our&rdquo;, &ldquo;the platform&rdquo;) is committed
               to protecting your personal data in accordance with the General Data Protection
               Regulation (GDPR) and applicable national law. This policy explains what data we
               collect, how we use it, and your rights as a data subject.
@@ -89,7 +89,7 @@ export default async function PrivacyPage({ params }: Props) {
           <section>
             <h2 className="mb-3 text-lg font-semibold text-zinc-100">3. How We Use Your Data</h2>
             <ul className="ml-4 list-disc space-y-2 text-zinc-400">
-              <li>To provide, maintain, and improve the Proman service.</li>
+              <li>To provide, maintain, and improve the Domora service.</li>
               <li>
                 To generate tax-compliance documents (AT receipts, IRS / IRPF exports) on your
                 behalf.
@@ -132,7 +132,7 @@ export default async function PrivacyPage({ params }: Props) {
           <section>
             <h2 className="mb-3 text-lg font-semibold text-zinc-100">6. Cookies</h2>
             <p className="text-zinc-400">
-              Proman uses strictly necessary session cookies for authentication and CSRF protection.
+              Domora uses strictly necessary session cookies for authentication and CSRF protection.
               No third-party advertising or tracking cookies are used.
             </p>
           </section>
@@ -167,7 +167,7 @@ export default async function PrivacyPage({ params }: Props) {
 
         <div className="mt-16 border-t border-white/[0.06] pt-8">
           <Button variant="ghost" asChild className="text-zinc-500 hover:text-zinc-300">
-            <Link href={`/${locale}`}>&larr; Back to Proman</Link>
+            <Link href={`/${locale}`}>&larr; Back to Domora</Link>
           </Button>
         </div>
       </main>

@@ -11,8 +11,8 @@ export async function generateMetadata({ params }: Props) {
   const { locale: _locale } = await params;
   const t = await getTranslations("footer");
   return {
-    title: `${t("terms")} — Proman`,
-    description: "Terms and conditions governing the use of Proman.",
+    title: `${t("terms")} — Domora`,
+    description: "Terms and conditions governing the use of Domora.",
     robots: { index: false },
   };
 }
@@ -30,7 +30,7 @@ export default async function TermsPage({ params }: Props) {
             href={`/${locale}`}
             className="text-sm font-semibold tracking-tight text-zinc-50 transition-opacity hover:opacity-80"
           >
-            Proman
+            Domora
           </Link>
           <LanguageSelector />
         </div>
@@ -53,7 +53,7 @@ export default async function TermsPage({ params }: Props) {
           <section>
             <h2 className="mb-3 text-lg font-semibold text-zinc-100">1. Acceptance of Terms</h2>
             <p>
-              By creating an account or using the Proman platform you agree to be bound by these
+              By creating an account or using the Domora platform you agree to be bound by these
               Terms of Service. If you do not agree, you must not use the platform.
             </p>
             <p className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-400">
@@ -65,7 +65,7 @@ export default async function TermsPage({ params }: Props) {
           <section>
             <h2 className="mb-3 text-lg font-semibold text-zinc-100">2. Service Description</h2>
             <p className="text-zinc-400">
-              Proman is a property management platform designed to help landlords and property
+              Domora is a property management platform designed to help landlords and property
               managers in Portugal and Spain manage properties, tenants, leases, receipts, and
               tax-compliance obligations. The platform is provided &ldquo;as is&rdquo; and we make
               no warranty that it meets all applicable legal requirements in every jurisdiction.
@@ -84,7 +84,7 @@ export default async function TermsPage({ params }: Props) {
 
           <section>
             <h2 className="mb-3 text-lg font-semibold text-zinc-100">4. Acceptable Use</h2>
-            <p className="mb-3 text-zinc-400">You must not use Proman to:</p>
+            <p className="mb-3 text-zinc-400">You must not use Domora to:</p>
             <ul className="ml-4 list-disc space-y-2 text-zinc-400">
               <li>Violate any applicable law or regulation.</li>
               <li>Upload or store data to which you do not have legal rights.</li>
@@ -116,7 +116,7 @@ export default async function TermsPage({ params }: Props) {
           <section>
             <h2 className="mb-3 text-lg font-semibold text-zinc-100">6. Limitation of Liability</h2>
             <p className="text-zinc-400">
-              To the maximum extent permitted by law, Proman&apos;s aggregate liability for any
+              To the maximum extent permitted by law, Domora&apos;s aggregate liability for any
               claim arising from or related to the service is limited to the fees you paid in the
               three months preceding the claim. We are not liable for indirect, incidental, special,
               or consequential damages, including loss of data or lost profits.
@@ -126,7 +126,7 @@ export default async function TermsPage({ params }: Props) {
           <section>
             <h2 className="mb-3 text-lg font-semibold text-zinc-100">7. Intellectual Property</h2>
             <p className="text-zinc-400">
-              The Proman platform and its source code (excluding third-party dependencies) are
+              The Domora platform and its source code (excluding third-party dependencies) are
               released under the MIT licence. Your data remains yours; you grant us a limited
               licence to process it solely to provide the service.
             </p>
@@ -166,7 +166,7 @@ export default async function TermsPage({ params }: Props) {
 
         <div className="mt-16 border-t border-white/[0.06] pt-8">
           <Button variant="ghost" asChild className="text-zinc-500 hover:text-zinc-300">
-            <Link href={`/${locale}`}>&larr; Back to Proman</Link>
+            <Link href={`/${locale}`}>&larr; Back to Domora</Link>
           </Button>
         </div>
       </main>

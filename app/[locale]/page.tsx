@@ -19,6 +19,7 @@ import {
   LandingAnalyticsObserver,
   TrackedLandingLink,
 } from "@/components/shared/landing-analytics";
+import { DomoraMark } from "@/components/shared/brand-logo";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { LandingHero, LandingHeroItem } from "@/components/shared/landing-hero";
 import { LocaleSelectOverlay } from "@/components/shared/locale-select-overlay";
@@ -71,13 +72,13 @@ export default async function LandingPage({ params }: Props) {
     },
     {
       icon: BadgeEuro,
-      color: "text-indigo-400",
+      color: "text-teal-400",
       title: t("timeline.steps.payment.title"),
       description: t("timeline.steps.payment.description"),
     },
     {
       icon: ReceiptText,
-      color: "text-violet-400",
+      color: "text-orange-400",
       title: t("timeline.steps.receipt.title"),
       description: t("timeline.steps.receipt.description"),
     },
@@ -118,8 +119,8 @@ export default async function LandingPage({ params }: Props) {
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#09090e]/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2">
-            <Building2 className="h-6 w-6 text-indigo-500" />
-            <span className="text-lg font-semibold tracking-tight">Proman</span>
+            <DomoraMark className="h-7 w-7" />
+            <span className="font-display text-lg font-bold tracking-tight">Domora</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="hidden sm:block">
@@ -148,8 +149,8 @@ export default async function LandingPage({ params }: Props) {
         <section className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.88fr_1.12fr] lg:items-start">
           <LandingHero>
             <LandingHeroItem>
-              <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/25 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
+              <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/25 bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-300">
+                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal-400" />
                 {t("eyebrow")}
               </div>
             </LandingHeroItem>
@@ -173,7 +174,7 @@ export default async function LandingPage({ params }: Props) {
                 >
                   <Button
                     size="xl"
-                    className="h-11 gap-2 bg-indigo-600 px-7 text-[15px] font-semibold text-white shadow-lg shadow-indigo-950 hover:bg-indigo-500"
+                    className="h-11 gap-2 bg-teal-600 px-7 text-[15px] font-semibold text-white shadow-lg shadow-teal-950 hover:bg-teal-500"
                   >
                     <Play className="h-3.5 w-3.5" />
                     {t("demoCta")}
@@ -214,7 +215,7 @@ export default async function LandingPage({ params }: Props) {
 
           {/* â”€â”€ Product Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="relative hidden lg:block">
-            <div className="pointer-events-none absolute -inset-10 -z-10 rounded-[48px] bg-indigo-600/5 blur-3xl" />
+            <div className="pointer-events-none absolute -inset-10 -z-10 rounded-[48px] bg-teal-600/5 blur-3xl" />
 
             <div className="rounded-[22px] border border-white/[0.08] bg-zinc-900/80 p-3 shadow-2xl shadow-black/60 ring-1 ring-white/[0.03]">
               <div className="overflow-hidden rounded-[16px] border border-white/[0.05] bg-zinc-950">
@@ -300,7 +301,7 @@ export default async function LandingPage({ params }: Props) {
 
                   {/* Step 2 */}
                   <div className="flex items-center gap-3 rounded-xl bg-zinc-900/60 px-3.5 py-3">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-indigo-500/10 text-[10px] font-bold text-indigo-400">
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-500/10 text-[10px] font-bold text-teal-400">
                       2
                     </div>
                     <div className="min-w-0 flex-1">
@@ -311,7 +312,7 @@ export default async function LandingPage({ params }: Props) {
                         {t("preview.steps.receipt.description")}
                       </p>
                     </div>
-                    <Building2 className="h-3.5 w-3.5 shrink-0 text-indigo-400/50" />
+                    <Building2 className="h-3.5 w-3.5 shrink-0 text-teal-400/50" />
                   </div>
 
                   {/* Step 3 */}
@@ -378,12 +379,12 @@ export default async function LandingPage({ params }: Props) {
 
           <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {/* Primary: Rent Collection â€” spans 2 cols */}
-            <div className="space-y-4 rounded-2xl border border-indigo-500/20 bg-gradient-to-br from-indigo-950/25 to-zinc-900/60 p-6 sm:col-span-2">
+            <div className="space-y-4 rounded-2xl border border-teal-500/20 bg-gradient-to-br from-teal-950/25 to-zinc-900/60 p-6 sm:col-span-2">
               <div className="flex items-start justify-between">
-                <div className="rounded-xl bg-indigo-500/15 p-2.5">
-                  <AlarmClock className="h-5 w-5 text-indigo-400" />
+                <div className="rounded-xl bg-teal-500/15 p-2.5">
+                  <AlarmClock className="h-5 w-5 text-teal-400" />
                 </div>
-                <span className="rounded-full border border-indigo-500/20 bg-indigo-500/8 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-indigo-400">
+                <span className="rounded-full border border-teal-500/20 bg-teal-500/8 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-teal-400">
                   {t("features.primaryBadge")}
                 </span>
               </div>
@@ -395,7 +396,7 @@ export default async function LandingPage({ params }: Props) {
                   {t("features.items.rentCollection.description")}
                 </p>
               </div>
-              <div className="flex items-center gap-1.5 text-sm font-semibold text-indigo-400">
+              <div className="flex items-center gap-1.5 text-sm font-semibold text-teal-400">
                 {t("features.primaryCta")} <ArrowRight className="h-3.5 w-3.5" />
               </div>
             </div>
@@ -580,7 +581,7 @@ export default async function LandingPage({ params }: Props) {
             >
               <Button
                 size="lg"
-                className="gap-2 bg-indigo-600 font-semibold text-white shadow-lg shadow-indigo-950 hover:bg-indigo-500"
+                className="gap-2 bg-teal-600 font-semibold text-white shadow-lg shadow-teal-950 hover:bg-teal-500"
               >
                 <Play className="h-4 w-4" />
                 {t("demoCta")}
@@ -636,13 +637,13 @@ export default async function LandingPage({ params }: Props) {
               href={`/${locale}/demo?perspective=tenant`}
               eventName="landing.demo_start"
               eventData={{ location: "demo_card", perspective: "tenant" }}
-              className="group rounded-[22px] border border-indigo-500/20 bg-gradient-to-br from-indigo-950/20 to-zinc-900/50 p-6 transition-all hover:border-indigo-500/35"
+              className="group rounded-[22px] border border-teal-500/20 bg-gradient-to-br from-teal-950/20 to-zinc-900/50 p-6 transition-all hover:border-teal-500/35"
             >
               <div className="flex items-center justify-between">
-                <div className="rounded-xl border border-indigo-500/25 bg-indigo-500/10 p-3">
-                  <KeyRound className="h-5 w-5 text-indigo-400" />
+                <div className="rounded-xl border border-teal-500/25 bg-teal-500/10 p-3">
+                  <KeyRound className="h-5 w-5 text-teal-400" />
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-zinc-600 transition-colors group-hover:text-indigo-400">
+                <div className="flex items-center gap-1.5 text-sm text-zinc-600 transition-colors group-hover:text-teal-400">
                   {t("demo.cardCta")} <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </div>
@@ -653,7 +654,7 @@ export default async function LandingPage({ params }: Props) {
               <div className="mt-5 space-y-2">
                 {[t("demo.tenant.f1"), t("demo.tenant.f2"), t("demo.tenant.f3")].map((f) => (
                   <div key={f} className="flex items-center gap-2 text-[13px] text-zinc-500">
-                    <div className="h-1 w-1 shrink-0 rounded-full bg-indigo-600/50" />
+                    <div className="h-1 w-1 shrink-0 rounded-full bg-teal-600/50" />
                     {f}
                   </div>
                 ))}
@@ -665,8 +666,8 @@ export default async function LandingPage({ params }: Props) {
         {/* â”€â”€ Closing CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <section className="mx-auto mt-28 max-w-6xl px-4">
           <div className="mb-12 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-indigo-500/25 bg-indigo-500/10 px-3 py-1 text-xs font-medium text-indigo-300">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-indigo-400" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/25 bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-300">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal-400" />
               {t("pricing.eyebrow")}
             </div>
             <h2 className="font-display mt-4 text-[28px] font-bold tracking-[-0.03em] text-zinc-50 sm:text-4xl">
@@ -717,11 +718,11 @@ export default async function LandingPage({ params }: Props) {
             </div>
 
             {/* Pro — highlighted */}
-            <div className="relative flex flex-col rounded-2xl border border-indigo-500/40 bg-gradient-to-b from-indigo-950/40 to-zinc-900/60 p-6 shadow-xl shadow-indigo-950/30">
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-indigo-600 px-3 py-0.5 text-[11px] font-semibold text-white">
+            <div className="relative flex flex-col rounded-2xl border border-teal-500/40 bg-gradient-to-b from-teal-950/40 to-zinc-900/60 p-6 shadow-xl shadow-teal-950/30">
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-teal-600 px-3 py-0.5 text-[11px] font-semibold text-white">
                 {t("pricing.pro.badge")}
               </span>
-              <p className="text-sm font-semibold text-indigo-300">{t("pricing.pro.name")}</p>
+              <p className="text-sm font-semibold text-teal-300">{t("pricing.pro.name")}</p>
               <div className="mt-3 flex items-baseline gap-1">
                 <span className="text-4xl font-bold tracking-tight text-zinc-50">
                   {t("pricing.pro.price")}
@@ -739,7 +740,7 @@ export default async function LandingPage({ params }: Props) {
                   t("pricing.pro.f6"),
                 ].map((f) => (
                   <li key={f} className="flex items-start gap-2.5 text-[13px] text-zinc-300">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-indigo-400" />
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-400" />
                     {f}
                   </li>
                 ))}
@@ -749,7 +750,7 @@ export default async function LandingPage({ params }: Props) {
                 eventName="landing.pricing_cta"
                 eventData={{ plan: "pro" }}
               >
-                <Button className="w-full bg-indigo-600 font-semibold text-white hover:bg-indigo-500">
+                <Button className="w-full bg-teal-600 font-semibold text-white hover:bg-teal-500">
                   {t("pricing.pro.cta")}
                 </Button>
               </TrackedLandingLink>
@@ -819,7 +820,7 @@ export default async function LandingPage({ params }: Props) {
             >
               <Button
                 size="lg"
-                className="gap-2 bg-indigo-600 font-semibold text-white shadow-lg shadow-indigo-950 hover:bg-indigo-500"
+                className="gap-2 bg-teal-600 font-semibold text-white shadow-lg shadow-teal-950 hover:bg-teal-500"
               >
                 <Play className="h-4 w-4" />
                 {t("closingCta.primary")}

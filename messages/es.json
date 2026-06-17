@@ -302,7 +302,7 @@
   "landing": {
     "eyebrow": "Operaciones de alquiler para Portugal y España",
     "hero": "Cobra alquileres. Emite recibos. Cumple la ley.",
-    "subtitle": "Proman automatiza el ciclo mensual de cumplimiento para propietarios en Portugal y España — del seguimiento de pagos al recibo electrónico AT y las exportaciones fiscales IRS\u2009/\u2009IRPF.",
+    "subtitle": "Domora automatiza el ciclo mensual de cumplimiento para propietarios en Portugal y España — del seguimiento de pagos al recibo electrónico AT y las exportaciones fiscales IRS\u2009/\u2009IRPF.",
     "cta": "Entrar",
     "headerCta": "Empezar",
     "navHowItWorks": "Cómo funciona",
@@ -1013,7 +1013,7 @@
     "banner": "Modo Demo – Los cambios no se guardan",
     "exitButton": "Salir del Demo",
     "preparing": "Preparando el entorno de demostración...",
-    "title": "Proman Demo",
+    "title": "Domora Demo",
     "readOnly": "Esta funcionalidad es solo de lectura en modo demo",
     "changesNotSaved": "Modo demo: los cambios no se guardan"
   },
@@ -1027,7 +1027,7 @@
     "tooManyRequests": "Demasiadas solicitudes. Por favor intente de nuevo en {retryAfter} segundos."
   },
   "footer": {
-    "copyright": "© {year} Proman. Todos los derechos reservados.",
+    "copyright": "© {year} Domora. Todos los derechos reservados.",
     "privacy": "Política de Privacidad",
     "terms": "Términos de Servicio"
   },

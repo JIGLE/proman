@@ -250,7 +250,7 @@ export function SettingsView(): React.ReactElement {
                 <div className="pt-4 border-t border-border">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Info className="h-3.5 w-3.5" />
-                    <span>ProMan v{appVersion}</span>
+                    <span>Domora v{appVersion}</span>
                   </div>
                 </div>
               )}
