@@ -202,9 +202,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
       return;
     }
     if (ownershipTotal + pct > 100.001) {
-      setOwnerAssignError(
-        `Total would exceed 100% (current: ${ownershipTotal.toFixed(1)}%).`,
-      );
+      setOwnerAssignError(`Total would exceed 100% (current: ${ownershipTotal.toFixed(1)}%).`);
       return;
     }
     setOwnerAssignError("");
@@ -284,7 +282,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               <Building2 className="h-8 w-8 lg:h-10 lg:w-10 text-blue-500" />
             </div>
             <div>
-              <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-foreground)]">{property.name}</h1>
+              <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-foreground)]">
+                {property.name}
+              </h1>
               <div className="flex items-center gap-2 mt-1 text-sm text-[var(--color-muted-foreground)]">
                 <MapPin className="h-4 w-4" />
                 <span>{property.address}</span>
@@ -343,7 +343,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                       <Select
                         value={expenseDialog.formData.category}
                         onValueChange={(v) =>
-                          expenseDialog.updateFormData({ category: v as ExpenseFormData["category"] })
+                          expenseDialog.updateFormData({
+                            category: v as ExpenseFormData["category"],
+                          })
                         }
                       >
                         <SelectTrigger id="exp-category">
@@ -390,7 +392,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                       rows={2}
                       placeholder="Notes…"
                       value={expenseDialog.formData.description || ""}
-                      onChange={(e) => expenseDialog.updateFormData({ description: e.target.value })}
+                      onChange={(e) =>
+                        expenseDialog.updateFormData({ description: e.target.value })
+                      }
                     />
                   </div>
                   <div className="flex justify-end gap-2 pt-2">
@@ -424,7 +428,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               <DialogContent className="sm:max-w-[440px]">
                 <DialogHeader>
                   <DialogTitle>Record Payment</DialogTitle>
-                  <DialogDescription>Log a rent or deposit payment for {property.name}</DialogDescription>
+                  <DialogDescription>
+                    Log a rent or deposit payment for {property.name}
+                  </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={receiptDialog.handleSubmit} className="space-y-4 pt-1">
                   <div className="space-y-1.5">
@@ -543,7 +549,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             onClick={() => setActiveTab("tenants")}
           >
             <CardContent className="p-4">
-              <div className="text-sm text-[var(--color-muted-foreground)]">{t("stats.tenants")}</div>
+              <div className="text-sm text-[var(--color-muted-foreground)]">
+                {t("stats.tenants")}
+              </div>
               <div className="text-2xl font-bold mt-1">{relatedTenants.length}</div>
             </CardContent>
           </Card>
@@ -552,7 +560,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             onClick={() => setActiveTab("leases")}
           >
             <CardContent className="p-4">
-              <div className="text-sm text-[var(--color-muted-foreground)]">{t("stats.activeLeases")}</div>
+              <div className="text-sm text-[var(--color-muted-foreground)]">
+                {t("stats.activeLeases")}
+              </div>
               <div className="text-2xl font-bold text-green-500 mt-1">{activeLeases}</div>
             </CardContent>
           </Card>
@@ -561,7 +571,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             onClick={() => setActiveTab("finance")}
           >
             <CardContent className="p-4">
-              <div className="text-sm text-[var(--color-muted-foreground)]">{t("stats.revenue")}</div>
+              <div className="text-sm text-[var(--color-muted-foreground)]">
+                {t("stats.revenue")}
+              </div>
               <div className="text-2xl font-bold mt-1">{formatCurrency(totalRevenue)}</div>
             </CardContent>
           </Card>
@@ -570,7 +582,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             onClick={() => setActiveTab("maintenance")}
           >
             <CardContent className="p-4">
-              <div className="text-sm text-[var(--color-muted-foreground)]">{t("stats.openTickets")}</div>
+              <div className="text-sm text-[var(--color-muted-foreground)]">
+                {t("stats.openTickets")}
+              </div>
               <div className="text-2xl font-bold text-amber-500 mt-1">{openTickets}</div>
             </CardContent>
           </Card>
@@ -646,7 +660,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                   </div>
                   {property.description && (
                     <div className="col-span-2">
-                      <span className="text-[var(--color-muted-foreground)]">{t("description")}</span>
+                      <span className="text-[var(--color-muted-foreground)]">
+                        {t("description")}
+                      </span>
                       <p className="font-medium">{property.description}</p>
                     </div>
                   )}
@@ -809,9 +825,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                  {ownerAssignError && (
-                    <p className="text-xs text-red-400">{ownerAssignError}</p>
-                  )}
+                  {ownerAssignError && <p className="text-xs text-red-400">{ownerAssignError}</p>}
                   {Math.abs(ownershipTotal + Number(ownerAssignPct || 0) - 100) < 0.01 && (
                     <p className="text-xs text-green-400">Total will reach exactly 100% ✓</p>
                   )}
@@ -967,7 +981,10 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                 <span className="text-sm text-[var(--color-muted-foreground)]">
                   {relatedExpenses.length > 0 && (
                     <>
-                      {tFin("totalExpenses")}: <span className="font-semibold text-red-500">{formatCurrency(totalExpenses)}</span>
+                      {tFin("totalExpenses")}:{" "}
+                      <span className="font-semibold text-red-500">
+                        {formatCurrency(totalExpenses)}
+                      </span>
                     </>
                   )}
                 </span>

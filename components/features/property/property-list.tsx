@@ -1228,10 +1228,10 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               key={property.id}
                               className="border-zinc-800 cursor-pointer hover:bg-zinc-800/50"
                               onClick={() => {
-                                  // Open property detail via route modal query param
-                                  router.push(`/${locale}/portfolio?modal=${property.id}`);
-                                  onPropertySelect?.(property.id);
-                                }}
+                                // Open property detail via route modal query param
+                                router.push(`/${locale}/portfolio?modal=${property.id}`);
+                                onPropertySelect?.(property.id);
+                              }}
                             >
                               <TableCell className="text-sm font-medium text-zinc-100">
                                 {property.name}
@@ -1659,7 +1659,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           title="View details"
                                           onClick={(e) => {
                                             e.stopPropagation();
-                                            router.push(`/${locale}/portfolio?modal=${property.id}`);
+                                            router.push(
+                                              `/${locale}/portfolio?modal=${property.id}`,
+                                            );
                                           }}
                                           className="shrink-0 rounded-md p-1.5 text-amber-500 transition-colors hover:bg-zinc-700 hover:text-amber-300"
                                         >

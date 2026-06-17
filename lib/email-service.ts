@@ -1,16 +1,16 @@
 // Email service for correspondence functionality
-import * as sgMail from '@sendgrid/mail';
-import type { MailDataRequired, ClientResponse } from '@sendgrid/mail';
-import { getPrismaClient } from '@/lib/services/database';
-import type { PrismaClient } from '@prisma/client';
-import { formatCurrency } from '@/lib/currency';
+import * as sgMail from "@sendgrid/mail";
+import type { MailDataRequired, ClientResponse } from "@sendgrid/mail";
+import { getPrismaClient } from "@/lib/services/database";
+import type { PrismaClient } from "@prisma/client";
+import { formatCurrency } from "@/lib/currency";
 
 // Initialize SendGrid with API key
 const sendGridClient = sgMail as unknown as {
   setApiKey?: (k: string) => void;
   send: (msg: MailDataRequired) => Promise<[ClientResponse, unknown] | ClientResponse>;
 };
-if (process.env.SENDGRID_API_KEY && typeof sendGridClient.setApiKey === 'function') {
+if (process.env.SENDGRID_API_KEY && typeof sendGridClient.setApiKey === "function") {
   sendGridClient.setApiKey(process.env.SENDGRID_API_KEY);
 }
 
@@ -36,9 +36,9 @@ export interface EmailData {
 // Predefined email templates
 export const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
   rent_reminder: {
-    id: 'rent_reminder',
-    name: 'Rent Payment Reminder',
-    subject: 'Rent Payment Reminder - {{propertyAddress}}',
+    id: "rent_reminder",
+    name: "Rent Payment Reminder",
+    subject: "Rent Payment Reminder - {{propertyAddress}}",
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Rent Payment Reminder</h2>
@@ -59,12 +59,20 @@ export const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
         <p>Best regards,<br>{{landlordName}}<br>{{companyName}}</p>
       </div>
     `,
-    variables: ['tenantName', 'propertyAddress', 'rentAmount', 'dueDate', 'paymentMethod', 'landlordName', 'companyName']
+    variables: [
+      "tenantName",
+      "propertyAddress",
+      "rentAmount",
+      "dueDate",
+      "paymentMethod",
+      "landlordName",
+      "companyName",
+    ],
   },
   lease_renewal: {
-    id: 'lease_renewal',
-    name: 'Lease Renewal Notice',
-    subject: 'Lease Renewal Notice - {{propertyAddress}}',
+    id: "lease_renewal",
+    name: "Lease Renewal Notice",
+    subject: "Lease Renewal Notice - {{propertyAddress}}",
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Lease Renewal Notice</h2>
@@ -84,12 +92,21 @@ export const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
         <p>Best regards,<br>{{landlordName}}<br>{{companyName}}</p>
       </div>
     `,
-    variables: ['tenantName', 'propertyAddress', 'currentLeaseEnd', 'newLeaseTerm', 'newRentAmount', 'renewalDeadline', 'landlordName', 'companyName']
+    variables: [
+      "tenantName",
+      "propertyAddress",
+      "currentLeaseEnd",
+      "newLeaseTerm",
+      "newRentAmount",
+      "renewalDeadline",
+      "landlordName",
+      "companyName",
+    ],
   },
   maintenance_complete: {
-    id: 'maintenance_complete',
-    name: 'Maintenance Work Completed',
-    subject: 'Maintenance Work Completed - {{propertyAddress}}',
+    id: "maintenance_complete",
+    name: "Maintenance Work Completed",
+    subject: "Maintenance Work Completed - {{propertyAddress}}",
     htmlContent: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2 style="color: #333;">Maintenance Work Completed</h2>
@@ -109,8 +126,16 @@ export const EMAIL_TEMPLATES: Record<string, EmailTemplate> = {
         <p>Best regards,<br>{{landlordName}}<br>{{companyName}}</p>
       </div>
     `,
-    variables: ['tenantName', 'propertyAddress', 'workDescription', 'completionDate', 'contractorName', 'landlordName', 'companyName']
-  }
+    variables: [
+      "tenantName",
+      "propertyAddress",
+      "workDescription",
+      "completionDate",
+      "contractorName",
+      "landlordName",
+      "companyName",
+    ],
+  },
 };
 
 export class EmailService {
@@ -142,15 +167,18 @@ export class EmailService {
   /**
    * Send a single email
    */
-  public async sendEmail(emailData: EmailData, userId: string): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  public async sendEmail(
+    emailData: EmailData,
+    userId: string,
+  ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     if (!this.isReady()) {
-      return { success: false, error: 'Email service not configured' };
+      return { success: false, error: "Email service not configured" };
     }
 
     try {
       const msg = {
         to: emailData.to,
-        from: emailData.from || process.env.FROM_EMAIL || 'noreply@proman.app',
+        from: emailData.from || process.env.FROM_EMAIL || "noreply@proman.app",
         subject: emailData.subject,
         html: emailData.html,
         text: emailData.text,
@@ -163,27 +191,27 @@ export class EmailService {
 
       // Helper to safely extract headers from possible send result shapes
       const getHeaders = (r: unknown): Record<string, string> | undefined => {
-        if (!r || typeof r !== 'object') return undefined;
+        if (!r || typeof r !== "object") return undefined;
         return (r as { headers?: Record<string, string> }).headers;
       };
 
       if (Array.isArray(result) && result.length > 0) {
         const headers = getHeaders(result[0]);
-        const maybeMsgId = headers?.['x-message-id'];
-        if (typeof maybeMsgId === 'string') messageId = maybeMsgId;
+        const maybeMsgId = headers?.["x-message-id"];
+        if (typeof maybeMsgId === "string") messageId = maybeMsgId;
       } else {
         const headers = getHeaders(result);
-        const maybeMsgId = headers?.['x-message-id'];
-        if (typeof maybeMsgId === 'string') messageId = maybeMsgId;
+        const maybeMsgId = headers?.["x-message-id"];
+        if (typeof maybeMsgId === "string") messageId = maybeMsgId;
       }
 
       // Log the email in database for tracking
       await this.logEmail({
-        to: Array.isArray(emailData.to) ? emailData.to.join(', ') : emailData.to,
+        to: Array.isArray(emailData.to) ? emailData.to.join(", ") : emailData.to,
         from: String(msg.from),
         subject: emailData.subject,
         templateId: emailData.templateId,
-        status: 'sent',
+        status: "sent",
         messageId,
         userId,
       });
@@ -191,15 +219,15 @@ export class EmailService {
       return { success: true, messageId };
     } catch (error: unknown) {
       const errMsg = error instanceof Error ? error.message : String(error);
-      console.error('Email send error:', error);
+      console.error("Email send error:", error);
 
       // Log failed email
       await this.logEmail({
-        to: Array.isArray(emailData.to) ? emailData.to.join(', ') : emailData.to,
-        from: emailData.from || process.env.FROM_EMAIL || 'noreply@proman.app',
+        to: Array.isArray(emailData.to) ? emailData.to.join(", ") : emailData.to,
+        from: emailData.from || process.env.FROM_EMAIL || "noreply@proman.app",
         subject: emailData.subject,
         templateId: emailData.templateId,
-        status: 'failed',
+        status: "failed",
         error: errMsg,
         userId,
       });
@@ -216,7 +244,7 @@ export class EmailService {
     recipientEmail: string,
     variables: Record<string, unknown>,
     userId: string,
-    customSubject?: string
+    customSubject?: string,
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     const template = EMAIL_TEMPLATES[templateId];
     if (!template) {
@@ -231,25 +259,36 @@ export class EmailService {
       const currencyKeyRegex = /amount|rent|price|total|balance/i;
 
       // Determine currency fallback order: explicit currency fields, env, default EUR
-      const defaultCurrency = (variables && (variables['currency'] || variables['currencyCode'] || variables['preferredCurrency'])) as string | undefined || process.env.DEFAULT_CURRENCY || 'EUR';
+      const defaultCurrency =
+        ((variables &&
+          (variables["currency"] ||
+            variables["currencyCode"] ||
+            variables["preferredCurrency"])) as string | undefined) ||
+        process.env.DEFAULT_CURRENCY ||
+        "EUR";
 
       const escapeHtml = (s: string) =>
-        s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        s
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
 
       Object.entries(variables || {}).forEach(([k, v]) => {
         // If value looks numeric and key suggests money, format as currency
         let out: string;
         if (v === null || v === undefined) {
-          out = '';
-        } else if (typeof v === 'number') {
+          out = "";
+        } else if (typeof v === "number") {
           if (currencyKeyRegex.test(k)) {
             out = formatCurrency(v, defaultCurrency as string);
           } else {
             out = String(v);
           }
-        } else if (typeof v === 'string') {
+        } else if (typeof v === "string") {
           // detect numeric strings
-          const n = Number(v.replace(/[^0-9.-]/g, ''));
+          const n = Number(v.replace(/[^0-9.-]/g, ""));
           if (!Number.isNaN(n) && currencyKeyRegex.test(k)) {
             out = formatCurrency(n, defaultCurrency as string);
           } else {
@@ -264,7 +303,7 @@ export class EmailService {
       });
 
       // Replace tokens
-      return tpl.replace(/{{([a-zA-Z0-9_\-]+)}}/g, (_m, p1) => vars[p1] ?? '');
+      return tpl.replace(/{{([a-zA-Z0-9_\-]+)}}/g, (_m, p1) => vars[p1] ?? "");
     };
 
     const subject = customSubject || template.subject;
@@ -272,14 +311,17 @@ export class EmailService {
     const renderedHtml = renderTemplate(template.htmlContent);
     const renderedText = template.textContent ? renderTemplate(template.textContent) : undefined;
 
-    return this.sendEmail({
-      to: recipientEmail,
-      from: process.env.FROM_EMAIL || 'noreply@proman.app',
-      subject: renderedSubject,
-      html: renderedHtml,
-      text: renderedText,
-      templateId,
-    }, userId);
+    return this.sendEmail(
+      {
+        to: recipientEmail,
+        from: process.env.FROM_EMAIL || "noreply@proman.app",
+        subject: renderedSubject,
+        html: renderedHtml,
+        text: renderedText,
+        templateId,
+      },
+      userId,
+    );
   }
 
   /**
@@ -289,7 +331,7 @@ export class EmailService {
     emails: Array<{ email: string; templateId: string; variables: Record<string, unknown> }>,
     batchSize = 10,
     delayMs = 1000,
-    userId: string
+    userId: string,
   ): Promise<{ success: number; failed: number; errors: string[] }> {
     const results = { success: 0, failed: 0, errors: [] as string[] };
 
@@ -303,7 +345,7 @@ export class EmailService {
             emailData.email,
             emailData.variables as Record<string, unknown>,
             userId,
-            undefined
+            undefined,
           );
 
           if (result.success) {
@@ -323,7 +365,7 @@ export class EmailService {
 
       // Rate limiting delay between batches
       if (i + batchSize < emails.length) {
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     }
 
@@ -338,7 +380,7 @@ export class EmailService {
     from: string;
     subject: string;
     templateId?: string;
-    status: 'sent' | 'failed' | 'bounced' | 'delivered';
+    status: "sent" | "failed" | "bounced" | "delivered";
     messageId?: string;
     error?: string;
     userId: string;
@@ -359,7 +401,7 @@ export class EmailService {
         },
       });
     } catch (error: unknown) {
-      console.error('Failed to log email:', error);
+      console.error("Failed to log email:", error);
     }
   }
 
@@ -372,7 +414,7 @@ export class EmailService {
 
     const prisma: PrismaClient = getPrismaClient();
     const stats = await prisma.emailLog.groupBy({
-      by: ['status'],
+      by: ["status"],
       where: {
         sentAt: {
           gte: startDate,
@@ -383,10 +425,13 @@ export class EmailService {
       },
     });
 
-    return stats.reduce((acc: Record<string, number>, stat: { status: string; _count: { id: number } }) => {
-      acc[stat.status] = stat._count.id;
-      return acc;
-    }, {} as Record<string, number>);
+    return stats.reduce(
+      (acc: Record<string, number>, stat: { status: string; _count: { id: number } }) => {
+        acc[stat.status] = stat._count.id;
+        return acc;
+      },
+      {} as Record<string, number>,
+    );
   }
 }
 

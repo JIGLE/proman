@@ -8,18 +8,18 @@ ProMan is a self-hosted property management SaaS for landlords and property mana
 
 ## Tech Stack
 
-| Layer      | Technology                                          |
-| ---------- | --------------------------------------------------- |
-| Framework  | Next.js 16 (App Router, TypeScript strict)          |
-| Database   | Prisma ORM + SQLite (via better-sqlite3)            |
-| Auth       | NextAuth.js v4 (Google OAuth + credentials)         |
-| UI         | shadcn/ui + Tailwind CSS v4 + Radix UI + Framer     |
-| Validation | Zod v4                                              |
-| Email      | SendGrid                                            |
-| Testing    | Vitest (unit/integration) + Playwright (E2E)        |
-| i18n       | next-intl (EN / PT / ES)                            |
-| Payments   | Stripe (card + SEPA Direct Debit)                   |
-| Deploy     | Docker / Kubernetes / Helm / TrueNAS SCALE          |
+| Layer      | Technology                                      |
+| ---------- | ----------------------------------------------- |
+| Framework  | Next.js 16 (App Router, TypeScript strict)      |
+| Database   | Prisma ORM + SQLite (via better-sqlite3)        |
+| Auth       | NextAuth.js v4 (Google OAuth + credentials)     |
+| UI         | shadcn/ui + Tailwind CSS v4 + Radix UI + Framer |
+| Validation | Zod v4                                          |
+| Email      | SendGrid                                        |
+| Testing    | Vitest (unit/integration) + Playwright (E2E)    |
+| i18n       | next-intl (EN / PT / ES)                        |
+| Payments   | Stripe (card + SEPA Direct Debit)               |
+| Deploy     | Docker / Kubernetes / Helm / TrueNAS SCALE      |
 
 ## Key Commands
 
@@ -82,6 +82,7 @@ See `ROADMAP.md` for full task history. All Q3 sprints (Phases 0–7) are comple
 ## Environment
 
 Copy `.env.example` to `.env` before first run. Required vars:
+
 - `DATABASE_URL` — SQLite file path (e.g. `file:./dev.db`)
 - `NEXTAUTH_SECRET` — random secret for session signing
 - `NEXTAUTH_URL` — base URL (e.g. `http://localhost:3000`)
