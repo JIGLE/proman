@@ -4,7 +4,7 @@ export const dynamic = 'force-dynamic';
 
 import LeaseManagement from '@/components/lease-management'
 import { AppProvider } from '@/lib/app-context-db';
-import { Sidebar } from '@/components/sidebar';
+import { Sidebar } from '@/components/layouts/sidebar';
 
 export default function Page() {
   return (

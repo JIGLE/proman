@@ -12,7 +12,7 @@ async function walk(dir) {
   let entries;
   try {
     entries = await fs.readdir(dir, { withFileTypes: true });
-  } catch (err) {
+  } catch {
     return;
   }
 
@@ -26,7 +26,7 @@ async function walk(dir) {
       let content;
       try {
         content = await fs.readFile(p, 'utf8');
-      } catch (err) {
+      } catch {
         continue;
       }
       const lines = content.split(/\r?\n/);

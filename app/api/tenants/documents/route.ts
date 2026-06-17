@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
-import { getPrismaClient } from '@/lib/database';
+import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
+import { getPrismaClient } from '@/lib/services/database';
 import { saveLeaseDocument, fetchLeaseDocument, deleteLeaseDocument } from '@/lib/document-service';
 
 export const runtime = 'nodejs';
@@ -12,7 +12,6 @@ export async function POST(req: NextRequest): Promise<Response> {
   try {
     const authResult = await requireAuth(req);
     if (authResult instanceof NextResponse) return authResult;
-    const { userId } = authResult;
 
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
@@ -28,7 +27,7 @@ export async function POST(req: NextRequest): Promise<Response> {
       const saved = await saveLeaseDocument(prisma, file, tenantId, language);
       return NextResponse.json({ success: true, data: saved });
     } catch (err: unknown) {
-      const e: any = err as any;
+      const e = err as { code?: string; message?: string };
       if (e.code === 'UNSUPPORTED_TYPE') return NextResponse.json({ error: e.message }, { status: 415 });
       if (e.code === 'FILE_TOO_LARGE') return NextResponse.json({ error: e.message }, { status: 413 });
       if (e.code === 'NOT_FOUND') return NextResponse.json({ error: e.message }, { status: 404 });
@@ -56,30 +55,21 @@ export async function GET(req: NextRequest): Promise<Response> {
     }
 
     const prisma = getPrismaClient();
-
-    const doc = await prisma.leaseDocument.findUnique({
-      where: { id },
-      include: { tenant: true }
-    });
-
-    if (!doc || doc.tenant.userId !== userId) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+    try {
+      const fileRes = await fetchLeaseDocument(prisma, id, userId);
+      return new Response(fileRes.buffer, {
+        headers: {
+          'Content-Type': fileRes.contentType,
+          'Content-Disposition': `inline; filename="${encodeURIComponent(fileRes.filename)}"`,
+        }
+      });
+    } catch (err: unknown) {
+      const e = err as { code?: string; message?: string };
+      if (e.code === 'NOT_FOUND') return NextResponse.json({ error: e.message }, { status: 404 });
+      if (e.code === 'PHYSICAL_MISSING') return NextResponse.json({ error: e.message }, { status: 404 });
+      console.error('Error fetching document:', err);
+      return NextResponse.json({ error: 'Failed to fetch document' }, { status: 500 });
     }
-
-    const physicalPath = resolveStoredPath(process.env.UPLOADS_DIR ? path.resolve(process.env.UPLOADS_DIR) : path.resolve(process.cwd(), 'uploads', 'leases'), doc.filePath);
-    if (!fs.existsSync(physicalPath)) {
-      return NextResponse.json({ error: 'Physical file not found on server disk' }, { status: 404 });
-    }
-
-    const fileBuffer = await fs.promises.readFile(physicalPath);
-    const contentType = getMimeType(doc.filename);
-
-    return new Response(fileBuffer, {
-      headers: {
-        'Content-Type': contentType,
-        'Content-Disposition': `inline; filename="${encodeURIComponent(doc.filename)}"`,
-      }
-    });
   } catch (error) {
     console.error('Error fetching document:', error);
     return NextResponse.json({ error: 'Failed to fetch document' }, { status: 500 });
@@ -101,32 +91,15 @@ export async function DELETE(req: NextRequest): Promise<Response> {
     }
 
     const prisma = getPrismaClient();
-
-    const doc = await prisma.leaseDocument.findUnique({
-      where: { id },
-      include: { tenant: true }
-    });
-
-    if (!doc || doc.tenant.userId !== userId) {
-      return NextResponse.json({ error: 'Document not found' }, { status: 404 });
+    try {
+      await deleteLeaseDocument(prisma, id, userId);
+      return NextResponse.json({ success: true, message: 'Lease document successfully deleted.' });
+    } catch (err: unknown) {
+      const e = err as { code?: string; message?: string };
+      if (e.code === 'NOT_FOUND') return NextResponse.json({ error: e.message }, { status: 404 });
+      console.error('Error deleting document:', err);
+      return NextResponse.json({ error: 'Failed to delete document' }, { status: 500 });
     }
-
-    // Delete physical file
-    const physicalPathToDelete = resolveStoredPath(process.env.UPLOADS_DIR ? path.resolve(process.env.UPLOADS_DIR) : path.resolve(process.cwd(), 'uploads', 'leases'), doc.filePath);
-    if (fs.existsSync(physicalPathToDelete)) {
-      try {
-        fs.unlinkSync(physicalPathToDelete);
-      } catch (err) {
-        console.error('Error deleting physical file:', err);
-      }
-    }
-
-    // Delete DB record
-    await prisma.leaseDocument.delete({
-      where: { id }
-    });
-
-    return NextResponse.json({ success: true, message: 'Lease document successfully deleted.' });
   } catch (error) {
     console.error('Error deleting document:', error);
     return NextResponse.json({ error: 'Failed to delete document' }, { status: 500 });

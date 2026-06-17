@@ -8,16 +8,39 @@ import { Card, CardContent } from './ui/card';
 import { formatCurrency, getCurrencyForCountry } from '@/lib/currency';
 import { useToast } from '@/lib/toast-context';
 
+interface LeaseDocumentSummary {
+  id: string;
+  filename: string;
+}
+
+interface LeaseTenant {
+  id: string;
+  name?: string;
+  email?: string;
+  rent?: number;
+  propertyId?: string;
+  propertyName?: string;
+  leaseDocuments?: LeaseDocumentSummary[];
+}
+
+interface LeaseProperty {
+  id: string;
+  name?: string;
+  countryCode?: string;
+}
+
 export default function LeaseManagement(): React.ReactElement {
   const ctx = useContext(AppContext);
 
-  const [localTenants, setLocalTenants] = useState<any[]>([]);
-  const [localProperties, setLocalProperties] = useState<any[]>([]);
+  const [localTenants, setLocalTenants] = useState<LeaseTenant[]>([]);
+  const [localProperties, setLocalProperties] = useState<LeaseProperty[]>([]);
   const [localLoading, setLocalLoading] = useState(true);
 
   // If AppContext is available, prefer it; otherwise fall back to local fetch (tests/runtime without provider)
   const { state } = ctx ?? { state: { tenants: localTenants, properties: localProperties, loading: localLoading } };
-  const { tenants, properties, loading } = state;
+  const tenants = state.tenants as LeaseTenant[];
+  const properties = state.properties as LeaseProperty[];
+  const loading = state.loading;
 
   useEffect(() => {
     if (ctx) return;
@@ -37,7 +60,7 @@ export default function LeaseManagement(): React.ReactElement {
           const propsJson = await propsRes.json();
           const propsData = propsJson?.data ?? propsJson;
           if (mounted) setLocalProperties(propsData || []);
-        } catch (err) {
+        } catch {
           // ignore property load errors in fallback
           if (mounted) setLocalProperties([]);
         }
@@ -96,7 +119,7 @@ export default function LeaseManagement(): React.ReactElement {
                   <div className="mt-4 text-sm text-zinc-300">
                     <div className="font-medium text-zinc-200">{t('leases.documents') || 'Documents'}</div>
                     <ul className="mt-1 space-y-1">
-                      {tnt.leaseDocuments.map((d: any) => (
+                      {tnt.leaseDocuments.map((d) => (
                         <li key={d.id}><a href={`/api/tenants/documents?id=${d.id}`} className="text-blue-400 hover:underline">{d.filename}</a></li>
                       ))}
                     </ul>

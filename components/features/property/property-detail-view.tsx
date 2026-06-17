@@ -140,20 +140,6 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   });
 
   const property = state.properties.find((p) => p.id === propertyId);
-  if (!property) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full py-16">
-        <div className="text-2xl font-semibold text-red-500 mb-2">Property not found</div>
-        <div className="text-zinc-400 mb-4">ID: {propertyId}</div>
-        <button
-          className="px-4 py-2 bg-zinc-800 text-white rounded hover:bg-zinc-700"
-          onClick={() => router.back()}
-        >
-          Go Back
-        </button>
-      </div>
-    );
-  }
 
   // Related entities
   const relatedTenants = useMemo(

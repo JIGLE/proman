@@ -38,7 +38,7 @@ export function getCurrencyForCountry(countryCode?: string): string {
 export function formatCurrency(value: number, currency: string, locale?: string): string {
   try {
     return new Intl.NumberFormat(locale || undefined, { style: 'currency', currency }).format(value);
-  } catch (err) {
+  } catch {
     // Fallback: simple fixed formatting
     const rounded = Number.isFinite(value) ? value.toFixed(2) : String(value);
     return `${currency} ${rounded}`;

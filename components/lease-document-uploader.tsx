@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useToast } from '@/lib/toast-context';
 import { useTranslation } from 'react-i18next';
 
-export function LeaseDocumentUploader({ tenantId, onUploaded }: { tenantId: string; onUploaded?: (doc: any) => void; }) {
+export function LeaseDocumentUploader({ tenantId, onUploaded }: { tenantId: string; onUploaded?: (doc: unknown) => void; }) {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const { success, error } = useToast();

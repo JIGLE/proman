@@ -71,7 +71,6 @@ import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { AddressVerificationService, AddressSuggestion } from "@/lib/utils/address-verification";
 import PropertyMap from "./property-map";
-import { PropertyDetailModal } from "./property-detail-modal";
 import { PageHeader } from "@/components/shared/page-header";
 
 // ─── Next Action derivation ────────────────────────────────────────────────────

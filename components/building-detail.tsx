@@ -4,8 +4,26 @@ import React, { useEffect, useState } from 'react';
 import { LeaseDocumentUploader } from './lease-document-uploader';
 import { useTranslation } from 'react-i18next';
 
+interface LeaseDocumentSummary {
+  id: string;
+  filename: string;
+}
+
+interface BuildingTenant {
+  id: string;
+  name: string;
+  email: string;
+  leaseDocuments?: LeaseDocumentSummary[];
+}
+
+interface BuildingProperty {
+  name: string;
+  address: string;
+  tenants?: BuildingTenant[];
+}
+
 export default function BuildingDetail({ id }: { id: string }) {
-  const [property, setProperty] = useState<any>(null);
+  const [property, setProperty] = useState<BuildingProperty | null>(null);
   const [loading, setLoading] = useState(true);
   const { t } = useTranslation('common');
 
@@ -39,7 +57,7 @@ export default function BuildingDetail({ id }: { id: string }) {
         <div className="mt-2 space-y-4">
           {(property.tenants && property.tenants.length > 0) ? (
             <div className="space-y-4">
-              {property.tenants.map((tnt: any) => (
+              {property.tenants.map((tnt) => (
                 <div key={tnt.id} className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -56,7 +74,7 @@ export default function BuildingDetail({ id }: { id: string }) {
                     <div className="mt-4 rounded-lg bg-zinc-950/70 p-3">
                       <div className="text-xs uppercase tracking-[0.2em] text-zinc-500 mb-2">{t('leases.documents') || 'Documents'}</div>
                       <ul className="space-y-2 text-sm">
-                        {tnt.leaseDocuments.map((doc: any) => (
+                        {tnt.leaseDocuments.map((doc) => (
                           <li key={doc.id}>
                             <a href={`/api/leases/${tnt.id}/documents?id=${doc.id}`} className="text-blue-400 hover:underline">
                               {doc.filename}

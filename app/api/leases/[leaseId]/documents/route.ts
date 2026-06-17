@@ -1,40 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
-import { getPrismaClient } from '@/lib/database';
+import { requireAuth, handleOptions } from '@/lib/services/auth/auth-middleware';
+import { getPrismaClient } from '@/lib/services/database';
 import { saveLeaseDocument, fetchLeaseDocument, deleteLeaseDocument } from '@/lib/document-service';
 
 export const runtime = 'nodejs';
-
-function getMimeType(filename: string): string {
-  const ext = filename.split('.').pop()?.toLowerCase();
-  switch (ext) {
-    case 'pdf': return 'application/pdf';
-    case 'jpg':
-    case 'jpeg': return 'image/jpeg';
-    case 'png': return 'image/png';
-    case 'doc': return 'application/msword';
-    case 'docx': return 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-    case 'txt': return 'text/plain';
-    default: return 'application/octet-stream';
-  }
-}
-
-const MAX_UPLOAD_SIZE = 5 * 1024 * 1024; // 5 MB
-const ALLOWED_EXTS = ['pdf','jpg','jpeg','png','doc','docx','txt'];
-
-function resolveStoredPath(uploadsDir: string, storedPath: string) {
-  try {
-    if (path.isAbsolute(storedPath)) return storedPath;
-  } catch {}
-  return path.join(uploadsDir, storedPath);
-}
 
 // POST /api/leases/[leaseId]/documents - Upload a lease document linked to a tenant (leaseId==tenantId)
 export async function POST(req: NextRequest, context: { params: Promise<{ leaseId: string }> }): Promise<Response> {
   try {
     const authResult = await requireAuth(req);
     if (authResult instanceof NextResponse) return authResult;
-    const { userId } = authResult;
 
     const { leaseId } = await context.params;
     if (!leaseId) return NextResponse.json({ error: 'Missing leaseId in path' }, { status: 400 });
@@ -52,7 +27,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ leaseI
       const saved = await saveLeaseDocument(prisma, file, leaseId, language);
       return NextResponse.json({ success: true, data: saved });
     } catch (err: unknown) {
-      const e: any = err as any;
+      const e = err as { code?: string; message?: string };
       if (e.code === 'UNSUPPORTED_TYPE') return NextResponse.json({ error: e.message }, { status: 415 });
       if (e.code === 'FILE_TOO_LARGE') return NextResponse.json({ error: e.message }, { status: 413 });
       if (e.code === 'NOT_FOUND') return NextResponse.json({ error: e.message }, { status: 404 });
@@ -66,7 +41,7 @@ export async function POST(req: NextRequest, context: { params: Promise<{ leaseI
 }
 
 // GET /api/leases/[leaseId]/documents?id=<docId> - Download/view document (id required)
-export async function GET(req: NextRequest, context: { params: Promise<{ leaseId: string }> }): Promise<Response> {
+export async function GET(req: NextRequest, _context: { params: Promise<{ leaseId: string }> }): Promise<Response> {
   try {
     const authResult = await requireAuth(req);
     if (authResult instanceof NextResponse) return authResult;
@@ -89,7 +64,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ leaseId
         }
       });
     } catch (err: unknown) {
-      const e: any = err as any;
+      const e = err as { code?: string; message?: string };
       if (e.code === 'NOT_FOUND') return NextResponse.json({ error: e.message }, { status: 404 });
       if (e.code === 'PHYSICAL_MISSING') return NextResponse.json({ error: e.message }, { status: 404 });
       console.error('Error fetching document (leases alias):', err);
@@ -102,7 +77,7 @@ export async function GET(req: NextRequest, context: { params: Promise<{ leaseId
 }
 
 // DELETE /api/leases/[leaseId]/documents?id=<docId>
-export async function DELETE(req: NextRequest, context: { params: Promise<{ leaseId: string }> }): Promise<Response> {
+export async function DELETE(req: NextRequest, _context: { params: Promise<{ leaseId: string }> }): Promise<Response> {
   try {
     const authResult = await requireAuth(req);
     if (authResult instanceof NextResponse) return authResult;
@@ -120,7 +95,7 @@ export async function DELETE(req: NextRequest, context: { params: Promise<{ leas
       await deleteLeaseDocument(prisma, id, userId);
       return NextResponse.json({ success: true, message: 'Lease document successfully deleted.' });
     } catch (err: unknown) {
-      const e: any = err as any;
+      const e = err as { code?: string; message?: string };
       if (e.code === 'NOT_FOUND') return NextResponse.json({ error: e.message }, { status: 404 });
       console.error('Error deleting document (leases alias):', err);
       return NextResponse.json({ error: 'Failed to delete document' }, { status: 500 });

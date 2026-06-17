@@ -28,7 +28,7 @@ function readCache(): Record<string, { fetchedAt: number; data: RatesData }> | n
     if (!fs.existsSync(CACHE_FILE)) return null;
     const raw = fs.readFileSync(CACHE_FILE, 'utf8');
     return JSON.parse(raw);
-  } catch (err) {
+  } catch {
     return null;
   }
 }

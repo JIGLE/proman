@@ -1,7 +1,7 @@
 // Email service for correspondence functionality
 import * as sgMail from '@sendgrid/mail';
 import type { MailDataRequired, ClientResponse } from '@sendgrid/mail';
-import { getPrismaClient } from '@/lib/database';
+import { getPrismaClient } from '@/lib/services/database';
 import type { PrismaClient } from '@prisma/client';
 import { formatCurrency } from '@/lib/currency';
 

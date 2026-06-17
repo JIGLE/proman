@@ -1,5 +1,4 @@
-import { getPrismaClient } from './database';
-import { TaxEngine } from './tax-strategies';
+import { getPrismaClient } from './services/database';
 import { PropertyType, PropertyStatus, PaymentStatus, ReceiptType, ReceiptStatus, MaintenanceStatus, MaintenancePriority } from '@prisma/client';
 
 export async function seedDemoData(userId: string): Promise<void> {
@@ -7,7 +6,7 @@ export async function seedDemoData(userId: string): Promise<void> {
 
   // 1. Clean existing records for the sandbox user
   // Defensive: some developer DBs may be missing migrations/tables. Don't crash the API.
-  const safeDelete = async (action: () => Promise<any>, name: string) => {
+  const safeDelete = async (action: () => Promise<unknown>, name: string) => {
     try {
       await action();
     } catch (err: unknown) {
@@ -186,10 +185,6 @@ export async function seedDemoData(userId: string): Promise<void> {
   const dbTenants = [];
   for (const t of tenantsData) {
     const prop = dbProperties[t.propertyIndex];
-    
-    // Forecast tax metrics via engine
-    const annualRent = t.rent * 12;
-    const taxForecast = TaxEngine.calculateLeaseTax(prop.countryCode, annualRent, t.leaseStart, t.leaseEnd);
 
     const tenant = await prisma.tenant.create({
       data: {
@@ -202,8 +197,6 @@ export async function seedDemoData(userId: string): Promise<void> {
         leaseEnd: new Date(t.leaseEnd),
         paymentStatus: t.paymentStatus,
         notes: t.notes,
-        projectedTaxRate: taxForecast.projectedTaxRate,
-        annualTaxLiabilityForecast: taxForecast.annualTaxLiabilityForecast,
         propertyId: prop.id
       }
     });
@@ -238,14 +231,6 @@ export async function seedDemoData(userId: string): Promise<void> {
     const tenant = dbTenants[r.tenantIndex];
     const prop = dbProperties[r.propertyIndex];
 
-    // Compute duration in months
-    const diffTime = Math.abs(tenant.leaseEnd.getTime() - tenant.leaseStart.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    const leaseDurationInMonths = Math.max(1, Math.round(diffDays / 30));
-
-    const strategy = TaxEngine.getStrategy(prop.countryCode);
-    const taxCalculation = strategy.calculateReceiptTax(r.amount, leaseDurationInMonths, r.type);
-
     await prisma.receipt.create({
       data: {
         userId,
@@ -254,11 +239,7 @@ export async function seedDemoData(userId: string): Promise<void> {
         amount: r.amount,
         date: new Date(r.date),
         type: r.type,
-        status: 'paid' as ReceiptStatus,
-        taxCategory: 'rental_income',
-        taxableAmount: taxCalculation.taxableAmount,
-        estimatedTaxImpact: taxCalculation.estimatedTaxImpact,
-        taxPeriod: '2026'
+        status: 'paid' as ReceiptStatus
       }
     });
   }
@@ -274,8 +255,6 @@ export async function seedDemoData(userId: string): Promise<void> {
 
   for (const e of expensesData) {
     const prop = dbProperties[e.propertyIndex];
-    const strategy = TaxEngine.getStrategy(prop.countryCode);
-    const deductibility = strategy.evaluateExpenseDeductibility(e.category, e.amount);
 
     await prisma.expense.create({
       data: {
@@ -284,11 +263,7 @@ export async function seedDemoData(userId: string): Promise<void> {
         amount: e.amount,
         date: new Date(e.date),
         category: e.category,
-        description: e.description,
-        taxCategory: e.category,
-        deductibleStatus: deductibility.deductibleStatus,
-        deductibleAmount: deductibility.deductibleAmount,
-        taxAmortizationYears: deductibility.amortizationYears
+        description: e.description
       }
     });
   }
