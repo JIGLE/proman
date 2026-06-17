@@ -1,37 +1,29 @@
-import DOMPurify from "isomorphic-dompurify";
-
 /**
- * Sanitizes HTML input to prevent XSS attacks
- * @param input - The input to sanitize
- * @returns Sanitized string safe for HTML rendering
+ * Strip all HTML from a string, matching DOMPurify's ALLOWED_TAGS:[] behaviour:
+ * - script/style blocks are removed including their text content
+ * - all other tags are removed but their text content is kept
  */
+function stripAllHtml(html: string): string {
+  return html
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
+    .replace(/<[^>]*>/g, "")
+    .trim();
+}
+
 export function sanitizeHtml(input: unknown): string {
   if (typeof input !== "string" || input.length === 0) {
     return "";
   }
-
-  // Ensure we pass a string and explicitly disallow tags and attributes
-  return DOMPurify.sanitize(String(input), {
-    ALLOWED_TAGS: [], // No HTML tags allowed
-    ALLOWED_ATTR: [], // No attributes allowed
-  });
+  return stripAllHtml(input);
 }
 
-/**
- * Sanitizes input for database storage (removes potentially dangerous characters)
- * @param input - The input to sanitize
- * @returns Sanitized string safe for database storage
- */
 export function sanitizeForDatabase(input: unknown): string {
   if (typeof input !== "string") {
     return "";
   }
 
-  // First strip any HTML tags using DOMPurify (no tags allowed), then collapse whitespace
-  const stripped = DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [],
-  });
+  const stripped = stripAllHtml(input);
   return (
     String(stripped)
       // Remove named/numeric/hex HTML entities that may remain after sanitization
