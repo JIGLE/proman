@@ -75,6 +75,8 @@ export default function OgImage() {
       <div
         style={{
           marginTop: "auto",
+          display: "flex",
+          flexDirection: "column",
           color: "#fafafa",
           fontSize: 66,
           fontWeight: 700,
@@ -82,11 +84,9 @@ export default function OgImage() {
           letterSpacing: -2.5,
         }}
       >
-        Collect rent.
-        <br />
-        Issue receipts.
-        <br />
-        Stay compliant.
+        <span>Collect rent.</span>
+        <span>Issue receipts.</span>
+        <span>Stay compliant.</span>
       </div>
 
       {/* Descriptor */}
