@@ -53,7 +53,7 @@ test.describe("Localization", () => {
   test("English locale should work", async ({ page }) => {
     await page.goto("/en");
 
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // Page should load without errors
     const title = await page.title();
@@ -63,7 +63,7 @@ test.describe("Localization", () => {
   test("Portuguese locale should work", async ({ page }) => {
     await page.goto("/pt");
 
-    await page.waitForLoadState("networkidle");
+    await page.waitForLoadState("load");
 
     // Page should load without errors
     const title = await page.title();
