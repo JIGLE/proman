@@ -328,7 +328,10 @@ export function LeasesView(): React.ReactElement {
   };
 
   const toggleSelectAll = (visibleIds: string[]) => {
-    if (selectedLeaseIds.size === visibleIds.length && visibleIds.every((id) => selectedLeaseIds.has(id))) {
+    if (
+      selectedLeaseIds.size === visibleIds.length &&
+      visibleIds.every((id) => selectedLeaseIds.has(id))
+    ) {
       setSelectedLeaseIds(new Set());
     } else {
       setSelectedLeaseIds(new Set(visibleIds));
@@ -988,7 +991,11 @@ export function LeasesView(): React.ReactElement {
                   <div className="ml-auto flex items-center gap-2">
                     <Dialog open={bulkIncreaseOpen} onOpenChange={setBulkIncreaseOpen}>
                       <DialogTrigger asChild>
-                        <Button size="sm" variant="outline" className="border-indigo-700 text-indigo-300 hover:text-indigo-100">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="border-indigo-700 text-indigo-300 hover:text-indigo-100"
+                        >
                           <TrendingUp className="h-4 w-4 mr-1.5" />
                           Increase Rent
                         </Button>
@@ -997,7 +1004,8 @@ export function LeasesView(): React.ReactElement {
                         <DialogHeader>
                           <DialogTitle>Bulk Rent Increase</DialogTitle>
                           <DialogDescription>
-                            Apply a percentage increase to {selectedLeaseIds.size} selected lease{selectedLeaseIds.size !== 1 ? "s" : ""}.
+                            Apply a percentage increase to {selectedLeaseIds.size} selected lease
+                            {selectedLeaseIds.size !== 1 ? "s" : ""}.
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 pt-2">
@@ -1026,11 +1034,15 @@ export function LeasesView(): React.ReactElement {
                                 const lease = leases.find((l) => l.id === id);
                                 if (!lease) return null;
                                 const tenant = tenants.find((t) => t.id === lease.tenantId);
-                                const newRent = Math.round(
-                                  lease.monthlyRent * (1 + parseFloat(bulkPct) / 100) * 100,
-                                ) / 100;
+                                const newRent =
+                                  Math.round(
+                                    lease.monthlyRent * (1 + parseFloat(bulkPct) / 100) * 100,
+                                  ) / 100;
                                 return (
-                                  <div key={id} className="flex items-center justify-between px-3 py-2">
+                                  <div
+                                    key={id}
+                                    className="flex items-center justify-between px-3 py-2"
+                                  >
                                     <span className="text-zinc-400 truncate max-w-[180px]">
                                       {tenant?.name ?? id}
                                     </span>
@@ -1084,111 +1096,113 @@ export function LeasesView(): React.ReactElement {
                 </div>
               )}
 
-            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-[var(--color-border)] hover:bg-transparent">
-                    <TableHead className="w-10 pl-4">
-                      <Checkbox
-                        checked={
-                          sortedLeases.length > 0 &&
-                          sortedLeases.every((l) => selectedLeaseIds.has(l.id))
-                        }
-                        onChange={() => toggleSelectAll(sortedLeases.map((l) => l.id))}
-                        aria-label="Select all leases"
-                      />
-                    </TableHead>
-                    <TableHead className="text-[var(--color-muted-foreground)]">Property</TableHead>
-                    <TableHead className="text-[var(--color-muted-foreground)]">Tenant</TableHead>
-                    <TableHead className="text-[var(--color-muted-foreground)]">
-                      <SortableHeader
-                        sortKey="startDate"
-                        label="Start"
-                        currentSort={getSortDirection("startDate")}
-                        onSort={(key) => requestSort(key as keyof Lease)}
-                      />
-                    </TableHead>
-                    <TableHead className="text-[var(--color-muted-foreground)]">End</TableHead>
-                    <TableHead className="text-[var(--color-muted-foreground)]">
-                      <SortableHeader
-                        sortKey="monthlyRent"
-                        label="Monthly Rent"
-                        currentSort={getSortDirection("monthlyRent")}
-                        onSort={(key) => requestSort(key as keyof Lease)}
-                      />
-                    </TableHead>
-                    <TableHead className="text-[var(--color-muted-foreground)]">
-                      <SortableHeader
-                        sortKey="status"
-                        label="Status"
-                        currentSort={getSortDirection("status")}
-                        onSort={(key) => requestSort(key as keyof Lease)}
-                      />
-                    </TableHead>
-                    <TableHead className="text-[var(--color-muted-foreground)] w-24">
-                      Actions
-                    </TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {sortedLeases.map((lease: Lease) => (
-                    <TableRow
-                      key={lease.id}
-                      className={cn(
-                        "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]",
-                        selectedLeaseIds.has(lease.id) && "bg-indigo-950/30",
-                      )}
-                    >
-                      <TableCell className="pl-4 w-10">
+              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-[var(--color-border)] hover:bg-transparent">
+                      <TableHead className="w-10 pl-4">
                         <Checkbox
-                          checked={selectedLeaseIds.has(lease.id)}
-                          onChange={() => toggleLeaseSelection(lease.id)}
-                          aria-label={`Select lease for ${lease.tenant?.name ?? lease.id}`}
+                          checked={
+                            sortedLeases.length > 0 &&
+                            sortedLeases.every((l) => selectedLeaseIds.has(l.id))
+                          }
+                          onChange={() => toggleSelectAll(sortedLeases.map((l) => l.id))}
+                          aria-label="Select all leases"
                         />
-                      </TableCell>
-                      <TableCell className="text-sm text-[var(--color-foreground)]">
-                        {lease.property?.name}
-                      </TableCell>
-                      <TableCell className="text-sm text-[var(--color-muted-foreground)]">
-                        {lease.tenant?.name}
-                      </TableCell>
-                      <TableCell className="text-sm text-[var(--color-muted-foreground)]">
-                        {new Date(lease.startDate).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-sm text-[var(--color-muted-foreground)]">
-                        {new Date(lease.endDate).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
-                        {formatCurrency(lease.monthlyRent)}
-                      </TableCell>
-                      <TableCell>{getStatusBadge(lease.status)}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-7 w-7">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleEdit(lease)}>
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit Lease
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              className="text-destructive"
-                              onClick={() => handleDelete(lease.id)}
-                            >
-                              <Trash2 className="h-4 w-4 mr-2" />
-                              Delete Lease
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+                      </TableHead>
+                      <TableHead className="text-[var(--color-muted-foreground)]">
+                        Property
+                      </TableHead>
+                      <TableHead className="text-[var(--color-muted-foreground)]">Tenant</TableHead>
+                      <TableHead className="text-[var(--color-muted-foreground)]">
+                        <SortableHeader
+                          sortKey="startDate"
+                          label="Start"
+                          currentSort={getSortDirection("startDate")}
+                          onSort={(key) => requestSort(key as keyof Lease)}
+                        />
+                      </TableHead>
+                      <TableHead className="text-[var(--color-muted-foreground)]">End</TableHead>
+                      <TableHead className="text-[var(--color-muted-foreground)]">
+                        <SortableHeader
+                          sortKey="monthlyRent"
+                          label="Monthly Rent"
+                          currentSort={getSortDirection("monthlyRent")}
+                          onSort={(key) => requestSort(key as keyof Lease)}
+                        />
+                      </TableHead>
+                      <TableHead className="text-[var(--color-muted-foreground)]">
+                        <SortableHeader
+                          sortKey="status"
+                          label="Status"
+                          currentSort={getSortDirection("status")}
+                          onSort={(key) => requestSort(key as keyof Lease)}
+                        />
+                      </TableHead>
+                      <TableHead className="text-[var(--color-muted-foreground)] w-24">
+                        Actions
+                      </TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {sortedLeases.map((lease: Lease) => (
+                      <TableRow
+                        key={lease.id}
+                        className={cn(
+                          "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]",
+                          selectedLeaseIds.has(lease.id) && "bg-indigo-950/30",
+                        )}
+                      >
+                        <TableCell className="pl-4 w-10">
+                          <Checkbox
+                            checked={selectedLeaseIds.has(lease.id)}
+                            onChange={() => toggleLeaseSelection(lease.id)}
+                            aria-label={`Select lease for ${lease.tenant?.name ?? lease.id}`}
+                          />
+                        </TableCell>
+                        <TableCell className="text-sm text-[var(--color-foreground)]">
+                          {lease.property?.name}
+                        </TableCell>
+                        <TableCell className="text-sm text-[var(--color-muted-foreground)]">
+                          {lease.tenant?.name}
+                        </TableCell>
+                        <TableCell className="text-sm text-[var(--color-muted-foreground)]">
+                          {new Date(lease.startDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-sm text-[var(--color-muted-foreground)]">
+                          {new Date(lease.endDate).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
+                          {formatCurrency(lease.monthlyRent)}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(lease.status)}</TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(lease)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit Lease
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDelete(lease.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete Lease
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </>
           )
         ) : (

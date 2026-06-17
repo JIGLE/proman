@@ -1,6 +1,6 @@
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
-import BuildingDetail from '@/components/building-detail'
+import BuildingDetail from "@/components/building-detail";
 
 export default function Page({ params }: { params: { id: string } }) {
   const { id } = params;

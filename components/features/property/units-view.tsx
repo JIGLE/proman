@@ -324,11 +324,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
         <EmptyStateIllustration
           type="units"
           title={propertyId ? t("noUnitsInProperty") : t("noUnitsYet")}
-          description={
-            propertyId
-              ? t("addFirstUnit")
-              : t("startByAdding")
-          }
+          description={propertyId ? t("addFirstUnit") : t("startByAdding")}
           actionLabel={t("addUnit")}
           onAction={openAddModal}
         />
@@ -343,9 +339,9 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                 <div className="flex items-center gap-2">
                   <Home className="w-5 h-5 text-blue-600" />
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {t("unit")} {unit.number}
-                </h3>
-              </div>
+                    {t("unit")} {unit.number}
+                  </h3>
+                </div>
                 <span
                   className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
                     unit.status,
