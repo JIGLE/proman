@@ -5,17 +5,17 @@ import { saveLeaseDocument, fetchLeaseDocument, deleteLeaseDocument } from "@/li
 
 export const runtime = "nodejs";
 
-// POST /api/leases/[leaseId]/documents - Upload a lease document linked to a tenant (leaseId==tenantId)
+// POST /api/leases/[id]/documents - Upload a lease document linked to a tenant (id==tenantId)
 export async function POST(
   req: NextRequest,
-  context: { params: Promise<{ leaseId: string }> },
+  context: { params: Promise<{ id: string }> },
 ): Promise<Response> {
   try {
     const authResult = await requireAuth(req);
     if (authResult instanceof NextResponse) return authResult;
 
-    const { leaseId } = await context.params;
-    if (!leaseId) return NextResponse.json({ error: "Missing leaseId in path" }, { status: 400 });
+    const { id: leaseId } = await context.params;
+    if (!leaseId) return NextResponse.json({ error: "Missing id in path" }, { status: 400 });
 
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
@@ -48,10 +48,10 @@ export async function POST(
   }
 }
 
-// GET /api/leases/[leaseId]/documents?id=<docId> - Download/view document (id required)
+// GET /api/leases/[id]/documents?id=<docId> - Download/view document (id required)
 export async function GET(
   req: NextRequest,
-  _context: { params: Promise<{ leaseId: string }> },
+  _context: { params: Promise<{ id: string }> },
 ): Promise<Response> {
   try {
     const authResult = await requireAuth(req);
@@ -88,10 +88,10 @@ export async function GET(
   }
 }
 
-// DELETE /api/leases/[leaseId]/documents?id=<docId>
+// DELETE /api/leases/[id]/documents?id=<docId>
 export async function DELETE(
   req: NextRequest,
-  _context: { params: Promise<{ leaseId: string }> },
+  _context: { params: Promise<{ id: string }> },
 ): Promise<Response> {
   try {
     const authResult = await requireAuth(req);
