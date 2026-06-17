@@ -6,7 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useApp } from "@/lib/contexts/app-context";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
@@ -108,12 +114,14 @@ export function BuildingsView(): React.ReactElement {
     <>
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>{editingBuilding ? "Edit Building" : "Add Building"}</DialogTitle>
-              <DialogDescription>
-                {editingBuilding ? "Edit building details" : "Create a building to group related properties together."}
-              </DialogDescription>
-            </DialogHeader>
+          <DialogHeader>
+            <DialogTitle>{editingBuilding ? "Edit Building" : "Add Building"}</DialogTitle>
+            <DialogDescription>
+              {editingBuilding
+                ? "Edit building details"
+                : "Create a building to group related properties together."}
+            </DialogDescription>
+          </DialogHeader>
           <div className="space-y-4 mt-2">
             <div className="space-y-2">
               <Label htmlFor="bld-name">Name *</Label>

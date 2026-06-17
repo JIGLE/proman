@@ -6,36 +6,36 @@ import { z } from "zod";
 
 export const EXPENSE_CATEGORIES = [
   // Property taxes
-  "imi",               // PT: Imposto Municipal sobre Imóveis
-  "ibi",               // ES: Impuesto sobre Bienes Inmuebles
-  "stamp_duty",        // Stamp duty / Imposto de Selo
-  "other_tax",         // Other property-related taxes
+  "imi", // PT: Imposto Municipal sobre Imóveis
+  "ibi", // ES: Impuesto sobre Bienes Inmuebles
+  "stamp_duty", // Stamp duty / Imposto de Selo
+  "other_tax", // Other property-related taxes
   // Insurance
-  "building_insurance",   // Building / structure insurance
-  "contents_insurance",   // Contents / fixtures insurance
-  "liability_insurance",  // Landlord liability insurance
+  "building_insurance", // Building / structure insurance
+  "contents_insurance", // Contents / fixtures insurance
+  "liability_insurance", // Landlord liability insurance
   // Common / building expenses
-  "condominium_fees",  // Condominium / HOA monthly fees
-  "stair_lighting",    // Common area lighting
-  "cleaning",          // Cleaning services (common areas or unit)
-  "gardening",         // Garden / landscaping
-  "elevator",          // Elevator maintenance contract
-  "security",          // Security services
+  "condominium_fees", // Condominium / HOA monthly fees
+  "stair_lighting", // Common area lighting
+  "cleaning", // Cleaning services (common areas or unit)
+  "gardening", // Garden / landscaping
+  "elevator", // Elevator maintenance contract
+  "security", // Security services
   // Maintenance & repairs
-  "repairs",           // General repairs
-  "maintenance",       // Preventive / scheduled maintenance
-  "appliances",        // Appliance repair or replacement
+  "repairs", // General repairs
+  "maintenance", // Preventive / scheduled maintenance
+  "appliances", // Appliance repair or replacement
   // Utilities (when paid by landlord)
   "water",
   "electricity",
   "gas",
   "internet",
-  "utilities",         // Generic utilities (backward compat)
+  "utilities", // Generic utilities (backward compat)
   // Financial / administrative
   "mortgage_interest", // Mortgage interest payments
-  "management_fees",   // Property management company fees
-  "legal_fees",        // Legal costs (lease drafting, disputes)
-  "accountant_fees",   // Tax advisor / TOC / gestor fees
+  "management_fees", // Property management company fees
+  "legal_fees", // Legal costs (lease drafting, disputes)
+  "accountant_fees", // Tax advisor / TOC / gestor fees
   // Fallback
   "other",
 ] as const;

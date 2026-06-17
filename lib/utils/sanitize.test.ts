@@ -19,6 +19,27 @@ describe("sanitize utilities", () => {
     expect(sanitizeHtml(input)).toBe("Hello");
   });
 
+  it("sanitizeHtml never leaves a '<' in its output (no element can survive)", () => {
+    const payloads = [
+      "<script>alert(1)</script >x", // whitespace before close '>'
+      "<SCRIPT>bad()</SCRIPT>ok", // uppercase
+      "<script>x</script\n>after", // newline in close tag
+      "<scr<script>ipt>alert(1)</script>tail", // reconstitution attempt
+      "<img src=x onerror=alert(1)>caption", // attribute-based handler
+      "<style>body{color:red}</style>visible", // style block content removed
+      "<<script>alert(1)//<</script>", // nested angle brackets
+    ];
+    for (const p of payloads) {
+      expect(sanitizeHtml(p)).not.toContain("<");
+    }
+  });
+
+  it("sanitizeHtml removes script/style content while keeping surrounding text", () => {
+    expect(sanitizeHtml("<style>body{}</style>visible")).toBe("visible");
+    expect(sanitizeHtml("<SCRIPT>bad()</SCRIPT>ok")).toBe("ok");
+    expect(sanitizeHtml("<script>x</script >tail")).toBe("tail");
+  });
+
   it("sanitizeForDatabase trims and removes dangerous chars", () => {
     const input = "  <b>Test</b> & 'danger'\n";
     const out = sanitizeForDatabase(input);

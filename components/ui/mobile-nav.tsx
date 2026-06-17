@@ -10,7 +10,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
-import { useDemoMode } from "@/lib/contexts/demo-context";
 
 interface MobileNavProps {
   activeTab?: string;
@@ -24,7 +23,6 @@ export function MobileBottomNav({
   const { data: session } = useSession();
   const pathname = usePathname();
   const { mobilePrimaryNavigation, isOwnerPortal } = usePortalAccess();
-  const { isDemoMode } = useDemoMode();
   const tNav = useTranslations("navigation");
   const user = session?.user;
   const initials =

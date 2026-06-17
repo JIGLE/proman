@@ -105,7 +105,7 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
     };
 
     fetchData();
-  }, [token]);
+  }, [token, tErrors]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR" }).format(amount);

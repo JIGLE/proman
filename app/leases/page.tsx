@@ -1,22 +1,12 @@
 "use client";
 
-export const dynamic = 'force-dynamic';
+import dynamic from "next/dynamic";
 
-import LeaseManagement from '@/components/lease-management'
-import { AppProvider } from '@/lib/app-context-db';
-import { Sidebar } from '@/components/sidebar';
+// This experimental page composes canonical providers outside the [locale]
+// layout, so it can't be server-rendered. Render it client-only to keep it
+// out of the static prerender pass.
+const LeasesClient = dynamic(() => import("./leases-client"), { ssr: false });
 
 export default function Page() {
-  return (
-    <AppProvider>
-      <div className="flex h-screen overflow-hidden bg-zinc-950">
-        <Sidebar activeTab={"leases"} onTabChange={() => {}} />
-        <main className="flex-1 overflow-y-auto relative flex flex-col">
-          <div className="flex-1 container mx-auto p-6 md:p-8 lg:p-10">
-            <LeaseManagement />
-          </div>
-        </main>
-      </div>
-    </AppProvider>
-  );
+  return <LeasesClient />;
 }

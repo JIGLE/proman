@@ -5,29 +5,32 @@ import { saveLeaseDocument, fetchLeaseDocument, deleteLeaseDocument } from "@/li
 
 export const runtime = "nodejs";
 
-// Shared document handling implemented in lib/document-service
-
-// POST /api/tenants/documents - Upload a lease document
-export async function POST(req: NextRequest): Promise<Response> {
+// POST /api/leases/[id]/documents - Upload a lease document linked to a tenant (id==tenantId)
+export async function POST(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> },
+): Promise<Response> {
   try {
     const authResult = await requireAuth(req);
     if (authResult instanceof NextResponse) return authResult;
 
+    const { id: leaseId } = await context.params;
+    if (!leaseId) return NextResponse.json({ error: "Missing id in path" }, { status: 400 });
+
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
-    const tenantId = formData.get("tenantId") as string | null;
     const language = formData.get("language") as string | null;
 
-    if (!file || !tenantId || !language) {
+    if (!file || !language) {
       return NextResponse.json(
-        { error: "Missing required fields (file, tenantId, language)" },
+        { error: "Missing required fields (file, language)" },
         { status: 400 },
       );
     }
 
     const prisma = getPrismaClient();
     try {
-      const saved = await saveLeaseDocument(prisma, file, tenantId, language);
+      const saved = await saveLeaseDocument(prisma, file, leaseId, language);
       return NextResponse.json({ success: true, data: saved });
     } catch (err: unknown) {
       const e = err as { code?: string; message?: string };
@@ -36,17 +39,20 @@ export async function POST(req: NextRequest): Promise<Response> {
       if (e.code === "FILE_TOO_LARGE")
         return NextResponse.json({ error: e.message }, { status: 413 });
       if (e.code === "NOT_FOUND") return NextResponse.json({ error: e.message }, { status: 404 });
-      console.error("Error uploading lease document (tenants):", err);
+      console.error("Error uploading lease document (leases alias):", err);
       return NextResponse.json({ error: "Failed to upload lease document" }, { status: 500 });
     }
   } catch (error) {
-    console.error("Error uploading lease document:", error);
+    console.error("Error uploading lease document (leases alias):", error);
     return NextResponse.json({ error: "Failed to upload lease document" }, { status: 500 });
   }
 }
 
-// GET /api/tenants/documents - Download/view document or list documents
-export async function GET(req: NextRequest): Promise<Response> {
+// GET /api/leases/[id]/documents?id=<docId> - Download/view document (id required)
+export async function GET(
+  req: NextRequest,
+  _context: { params: Promise<{ id: string }> },
+): Promise<Response> {
   try {
     const authResult = await requireAuth(req);
     if (authResult instanceof NextResponse) return authResult;
@@ -73,17 +79,20 @@ export async function GET(req: NextRequest): Promise<Response> {
       if (e.code === "NOT_FOUND") return NextResponse.json({ error: e.message }, { status: 404 });
       if (e.code === "PHYSICAL_MISSING")
         return NextResponse.json({ error: e.message }, { status: 404 });
-      console.error("Error fetching document:", err);
+      console.error("Error fetching document (leases alias):", err);
       return NextResponse.json({ error: "Failed to fetch document" }, { status: 500 });
     }
   } catch (error) {
-    console.error("Error fetching document:", error);
+    console.error("Error fetching document (leases alias):", error);
     return NextResponse.json({ error: "Failed to fetch document" }, { status: 500 });
   }
 }
 
-// DELETE /api/tenants/documents - Delete document
-export async function DELETE(req: NextRequest): Promise<Response> {
+// DELETE /api/leases/[id]/documents?id=<docId>
+export async function DELETE(
+  req: NextRequest,
+  _context: { params: Promise<{ id: string }> },
+): Promise<Response> {
   try {
     const authResult = await requireAuth(req);
     if (authResult instanceof NextResponse) return authResult;
@@ -103,11 +112,11 @@ export async function DELETE(req: NextRequest): Promise<Response> {
     } catch (err: unknown) {
       const e = err as { code?: string; message?: string };
       if (e.code === "NOT_FOUND") return NextResponse.json({ error: e.message }, { status: 404 });
-      console.error("Error deleting document:", err);
+      console.error("Error deleting document (leases alias):", err);
       return NextResponse.json({ error: "Failed to delete document" }, { status: 500 });
     }
   } catch (error) {
-    console.error("Error deleting document:", error);
+    console.error("Error deleting document (leases alias):", error);
     return NextResponse.json({ error: "Failed to delete document" }, { status: 500 });
   }
 }

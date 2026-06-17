@@ -1,37 +1,99 @@
-import DOMPurify from "isomorphic-dompurify";
+function isAsciiLetter(ch: string): boolean {
+  return (ch >= "a" && ch <= "z") || (ch >= "A" && ch <= "Z");
+}
+
+function isHtmlSpace(ch: string): boolean {
+  return ch === " " || ch === "\t" || ch === "\n" || ch === "\r" || ch === "\f";
+}
 
 /**
- * Sanitizes HTML input to prevent XSS attacks
- * @param input - The input to sanitize
- * @returns Sanitized string safe for HTML rendering
+ * Skip a raw-text element (<script>/<style>) starting at `start`, returning the
+ * index just past its closing tag. The closing tag is matched case-insensitively
+ * and tolerates trailing whitespace (e.g. `</script >`), mirroring how the HTML
+ * parser terminates raw-text elements. If no valid close is found the remainder
+ * of the string is consumed.
  */
+function skipRawTextElement(html: string, start: number, tag: string): number {
+  const n = html.length;
+  const openEnd = html.indexOf(">", start);
+  if (openEnd === -1) return n; // unterminated opening tag → drop the rest
+
+  const lower = html.toLowerCase();
+  const needle = "</" + tag;
+  let i = openEnd + 1;
+  for (;;) {
+    const idx = lower.indexOf(needle, i);
+    if (idx === -1) return n; // no closing tag → drop the rest
+    const after = idx + needle.length;
+    const next = html[after];
+    // A valid end tag is followed by whitespace, '/', '>' or end-of-input.
+    if (after >= n || next === ">" || next === "/" || isHtmlSpace(next)) {
+      const gt = html.indexOf(">", after);
+      return gt === -1 ? n : gt + 1;
+    }
+    i = after;
+  }
+}
+
+/**
+ * Strip all HTML from a string, matching DOMPurify's ALLOWED_TAGS:[] behaviour:
+ * - <script> and <style> blocks are removed including their text content
+ * - all other tags are removed but their text content is kept
+ *
+ * Implemented as a single linear forward pass rather than regex filtering, so it
+ * is not vulnerable to reconstitution (e.g. `<scr<script>ipt>`) or malformed
+ * close-tag bypasses (e.g. `</script >`) the way a regex-based stripper would be.
+ */
+function stripAllHtml(html: string): string {
+  const n = html.length;
+  let out = "";
+  let i = 0;
+
+  while (i < n) {
+    const ch = html[i];
+    if (ch !== "<") {
+      out += ch;
+      i += 1;
+      continue;
+    }
+
+    // Read the tag name (letters following '<' or '</').
+    let j = i + 1;
+    if (html[j] === "/") j += 1;
+    let name = "";
+    while (j < n && isAsciiLetter(html[j])) {
+      name += html[j];
+      j += 1;
+    }
+    const lowerName = name.toLowerCase();
+
+    if (lowerName === "script" || lowerName === "style") {
+      i = skipRawTextElement(html, i, lowerName);
+      continue;
+    }
+
+    // Ordinary tag, comment, or stray '<': drop everything up to the next '>'.
+    const gt = html.indexOf(">", i + 1);
+    if (gt === -1) break; // unterminated '<…' → drop the rest
+    i = gt + 1;
+  }
+
+  return out.trim();
+}
+
 export function sanitizeHtml(input: unknown): string {
   if (typeof input !== "string" || input.length === 0) {
     return "";
   }
-
-  // Ensure we pass a string and explicitly disallow tags and attributes
-  return DOMPurify.sanitize(String(input), {
-    ALLOWED_TAGS: [], // No HTML tags allowed
-    ALLOWED_ATTR: [], // No attributes allowed
-  });
+  return stripAllHtml(input);
 }
 
-/**
- * Sanitizes input for database storage (removes potentially dangerous characters)
- * @param input - The input to sanitize
- * @returns Sanitized string safe for database storage
- */
 export function sanitizeForDatabase(input: unknown): string {
   if (typeof input !== "string") {
     return "";
   }
 
-  // First strip any HTML tags using DOMPurify (no tags allowed), then collapse whitespace
-  const stripped = DOMPurify.sanitize(input, {
-    ALLOWED_TAGS: [],
-    ALLOWED_ATTR: [],
-  });
+  const stripped = stripAllHtml(input);
   return (
     String(stripped)
       // Remove named/numeric/hex HTML entities that may remain after sanitization

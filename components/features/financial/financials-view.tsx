@@ -311,7 +311,9 @@ export function FinancialsView(): React.ReactElement {
                       <Label htmlFor="category">Category</Label>
                       <Select
                         value={dialog.formData.category}
-                        onValueChange={(val) => dialog.updateFormData({ category: val as ExpenseFormData["category"] })}
+                        onValueChange={(val) =>
+                          dialog.updateFormData({ category: val as ExpenseFormData["category"] })
+                        }
                       >
                         <SelectTrigger
                           id="category"
@@ -587,7 +589,9 @@ export function FinancialsView(): React.ReactElement {
                             </span>
                             <div className="flex-1 min-w-0">
                               <p className="text-zinc-200 truncate">{receipt.tenantName}</p>
-                              <p className="text-zinc-500 text-xs truncate">{receipt.propertyName}</p>
+                              <p className="text-zinc-500 text-xs truncate">
+                                {receipt.propertyName}
+                              </p>
                             </div>
                             <span
                               className={cn(

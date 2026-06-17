@@ -1,8 +1,11 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth, handleOptions } from '@/lib/auth-middleware';
-import { getPrismaClient } from '@/lib/database';
+import { NextRequest, NextResponse } from "next/server";
+import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
+import { getPrismaClient } from "@/lib/services/database";
 
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
+
+const SUPPORTED_CURRENCIES = ["EUR", "DKK", "USD", "GBP"] as const;
+type SupportedCurrency = (typeof SUPPORTED_CURRENCIES)[number];
 
 export async function GET(req: NextRequest) {
   try {
@@ -10,12 +13,11 @@ export async function GET(req: NextRequest) {
     if (auth instanceof NextResponse) return auth;
     const { userId } = auth;
     const prisma = getPrismaClient();
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
-    return NextResponse.json({ preferredCurrency: user.preferredCurrency || null });
+    const settings = await prisma.userSettings.findUnique({ where: { userId } });
+    return NextResponse.json({ preferredCurrency: settings?.defaultCurrency ?? null });
   } catch (err) {
-    console.error('Error fetching user preferences:', err);
-    return NextResponse.json({ error: 'Failed to fetch preferences' }, { status: 500 });
+    console.error("Error fetching user preferences:", err);
+    return NextResponse.json({ error: "Failed to fetch preferences" }, { status: 500 });
   }
 }
 
@@ -26,15 +28,27 @@ export async function POST(req: NextRequest) {
     const { userId } = auth;
     const body = await req.json();
     const preferredCurrency = body?.preferredCurrency;
-    if (!preferredCurrency || typeof preferredCurrency !== 'string' || !/^[A-Z]{3}$/.test(preferredCurrency)) {
-      return NextResponse.json({ error: 'Invalid preferredCurrency' }, { status: 400 });
+    if (
+      !preferredCurrency ||
+      typeof preferredCurrency !== "string" ||
+      !SUPPORTED_CURRENCIES.includes(preferredCurrency as SupportedCurrency)
+    ) {
+      return NextResponse.json(
+        { error: `Invalid preferredCurrency. Supported: ${SUPPORTED_CURRENCIES.join(", ")}` },
+        { status: 400 },
+      );
     }
+    const currency = preferredCurrency as SupportedCurrency;
     const prisma = getPrismaClient();
-    const updated = await prisma.user.update({ where: { id: userId }, data: { preferredCurrency } });
-    return NextResponse.json({ success: true, preferredCurrency: updated.preferredCurrency });
+    const settings = await prisma.userSettings.upsert({
+      where: { userId },
+      update: { defaultCurrency: currency },
+      create: { userId, defaultCurrency: currency },
+    });
+    return NextResponse.json({ success: true, preferredCurrency: settings.defaultCurrency });
   } catch (err) {
-    console.error('Error saving user preferences:', err);
-    return NextResponse.json({ error: 'Failed to save preferences' }, { status: 500 });
+    console.error("Error saving user preferences:", err);
+    return NextResponse.json({ error: "Failed to save preferences" }, { status: 500 });
   }
 }
 
