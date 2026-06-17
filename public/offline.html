@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Offline · Domora</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+      }
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+        background: #0b0e14;
+        color: #e2e8f0;
+        font-family:
+          "Plus Jakarta Sans", "Inter", system-ui, -apple-system, sans-serif;
+        text-align: center;
+      }
+      .card {
+        max-width: 380px;
+      }
+      .mark {
+        width: 72px;
+        height: 72px;
+        margin: 0 auto 24px;
+      }
+      h1 {
+        font-size: 1.5rem;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        margin: 0 0 8px;
+      }
+      p {
+        margin: 0 0 24px;
+        color: #94a3b8;
+        line-height: 1.6;
+      }
+      button {
+        appearance: none;
+        border: 0;
+        cursor: pointer;
+        border-radius: 0.75rem;
+        padding: 12px 24px;
+        font: inherit;
+        font-weight: 600;
+        color: #fff;
+        background: linear-gradient(135deg, #0d9488, #e8825a);
+      }
+      button:hover {
+        filter: brightness(1.08);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <svg class="mark" viewBox="0 0 128 128" role="img" aria-label="Domora">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#0d9488" />
+            <stop offset="100%" stop-color="#e8825a" />
+          </linearGradient>
+        </defs>
+        <rect width="128" height="128" rx="28" fill="#11151d" />
+        <path
+          d="M40 100V58a24 24 0 0 1 48 0v42"
+          fill="none"
+          stroke="url(#g)"
+          stroke-width="12"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path d="M33 100h62" fill="none" stroke="url(#g)" stroke-width="12" stroke-linecap="round" />
+        <circle cx="64" cy="61" r="7" fill="url(#g)" />
+      </svg>
+      <h1>You're offline</h1>
+      <p>
+        Domora can't reach the network right now. Check your connection — your
+        data is safe and will be here when you're back.
+      </p>
+      <button onclick="location.reload()">Try again</button>
+    </div>
+  </body>
+</html>
