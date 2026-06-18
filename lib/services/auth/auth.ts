@@ -194,6 +194,7 @@ function createBaseAuthOptions(): NextAuthOptions {
             name?: string;
             picture?: string;
             role?: string;
+            mfaPending?: boolean;
           };
           t.id = user.id;
           t.sub = user.id;
@@ -201,6 +202,50 @@ function createBaseAuthOptions(): NextAuthOptions {
           t.name = user.name ?? undefined;
           t.picture = user.image ?? undefined;
           t.role = (user as NextAuthUser & { role?: string }).role ?? t.role ?? "ADMIN";
+
+          // Check TOTP enrollment for non-mock users
+          if (!isMockMode && user.id && user.id !== "demo-user") {
+            try {
+              const prisma = getPrismaClient();
+              const dbUser = await prisma.user.findUnique({
+                where: { id: user.id },
+                select: { totpEnabled: true },
+              });
+              if (dbUser?.totpEnabled) {
+                t.mfaPending = true;
+              }
+            } catch {
+              // DB unavailable — allow login without MFA check
+            }
+          }
+        } else {
+          // Token refresh — if mfaPending is set, check if user has recently verified
+          const t = token as JWT & {
+            id?: string;
+            sub?: string;
+            mfaPending?: boolean;
+          };
+          if (t.mfaPending) {
+            const uid = t.sub || t.id;
+            if (uid && !isMockMode) {
+              try {
+                const prisma = getPrismaClient();
+                const dbUser = await prisma.user.findUnique({
+                  where: { id: uid },
+                  select: { totpVerifiedAt: true },
+                });
+                // Accept verification within the last 5 minutes
+                if (
+                  dbUser?.totpVerifiedAt &&
+                  Date.now() - dbUser.totpVerifiedAt.getTime() < 5 * 60 * 1000
+                ) {
+                  t.mfaPending = false;
+                }
+              } catch {
+                // DB unavailable — keep pending
+              }
+            }
+          }
         }
         return token;
       },
@@ -228,12 +273,14 @@ function createBaseAuthOptions(): NextAuthOptions {
               picture?: string;
               role?: string;
               isDevAuth?: boolean;
+              mfaPending?: boolean;
             };
             sessionUser.id = t.sub || t.id;
             if (t.email) sessionUser.email = t.email;
             if (t.name) sessionUser.name = t.name;
             if (t.picture) sessionUser.image = t.picture;
             session.user.role = t.role || session.user.role || "ADMIN";
+            (session as unknown as Record<string, unknown>).mfaPending = t.mfaPending ?? false;
 
             // If dev auth, update session expiry to 24 hours from now
             if (t.isDevAuth) {

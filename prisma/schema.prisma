@@ -28,6 +28,12 @@ model User {
   ificiStatus        Boolean   @default(false)  // PT IFICI regime (from 2024, replaces NHR)
   ificiYear          Int?      // Year IFICI status was granted
 
+  // MFA / TOTP fields
+  totpSecret      String?          // AES-256-GCM encrypted TOTP secret
+  totpEnabled     Boolean          @default(false)
+  totpBackupCodes String?          // JSON array of hashed one-time backup codes
+  totpVerifiedAt  DateTime?        // Set when user completes MFA challenge; jwt callback reads this
+
   accounts      Account[]
   sessions      Session[]
   auditLogs     AuditLog[] // GDPR logging
