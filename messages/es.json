@@ -959,7 +959,18 @@
         "maintenance": "Mantenimiento",
         "other": "Otro"
       }
-    }
+    },
+    "isRecurring": "Gasto recurrente",
+    "recurrenceRule": "Repetición",
+    "recurrenceMonthly": "Mensual",
+    "recurrenceQuarterly": "Trimestral",
+    "recurrenceAnnual": "Anual",
+    "recurrenceDay": "Generar el día",
+    "recurrenceEnd": "Finalizar después",
+    "generateRecurring": "Generar gastos recurrentes",
+    "recurringTemplate": "Plantilla recurrente",
+    "recurringToggleDesc": "Generar este gasto automáticamente según un horario definido",
+    "recurrenceEndPlaceholder": "Dejar vacío para nunca terminar"
   },
   "propertyDetail": {
     "tabs": {

@@ -959,7 +959,18 @@
         "maintenance": "Maintenance",
         "other": "Other"
       }
-    }
+    },
+    "isRecurring": "Repeating expense",
+    "recurrenceRule": "Repeat",
+    "recurrenceMonthly": "Monthly",
+    "recurrenceQuarterly": "Quarterly",
+    "recurrenceAnnual": "Annually",
+    "recurrenceDay": "Generate on day",
+    "recurrenceEnd": "Stop after",
+    "generateRecurring": "Generate recurring expenses",
+    "recurringTemplate": "Recurring template",
+    "recurringToggleDesc": "Automatically generate this expense on a schedule",
+    "recurrenceEndPlaceholder": "Leave blank for never"
   },
   "propertyDetail": {
     "tabs": {

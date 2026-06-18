@@ -959,7 +959,18 @@
         "maintenance": "Manutenção",
         "other": "Outro"
       }
-    }
+    },
+    "isRecurring": "Despesa recorrente",
+    "recurrenceRule": "Repetição",
+    "recurrenceMonthly": "Mensal",
+    "recurrenceQuarterly": "Trimestral",
+    "recurrenceAnnual": "Anual",
+    "recurrenceDay": "Gerar no dia",
+    "recurrenceEnd": "Terminar após",
+    "generateRecurring": "Gerar despesas recorrentes",
+    "recurringTemplate": "Modelo recorrente",
+    "recurringToggleDesc": "Gerar automaticamente esta despesa num horário definido",
+    "recurrenceEndPlaceholder": "Deixar vazio para nunca terminar"
   },
   "propertyDetail": {
     "tabs": {

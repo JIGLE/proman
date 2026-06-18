@@ -381,6 +381,12 @@ model Expense {
   isDeductible  Boolean  @default(true)  // Whether deductible for IRS/IRPF
   vendorName    String?  // Supplier/vendor name (useful for invoice records)
   vendorVat     String?  // Vendor NIF/VAT number for tax documentation
+  // Recurring expense fields (Wave 2.4)
+  isRecurring      Boolean   @default(false)
+  recurrenceRule   String?   // "monthly" | "quarterly" | "annual"
+  recurrenceDay    Int?      // Day of month to generate (1-28)
+  recurrenceEnd    DateTime? // Stop generating after this date (null = indefinite)
+  parentExpenseId  String?   // If this was auto-generated, points to the template expense
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -389,6 +395,8 @@ model Expense {
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   unit     Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
   lease    Lease?   @relation(fields: [leaseId], references: [id], onDelete: SetNull)
+  parentExpense    Expense?  @relation("RecurringExpenses", fields: [parentExpenseId], references: [id], onDelete: SetNull)
+  childExpenses    Expense[] @relation("RecurringExpenses")
 
   // Performance indexes
   @@index([userId])
@@ -398,6 +406,8 @@ model Expense {
   @@index([date])
   @@index([category])
   @@index([isDeductible])
+  @@index([isRecurring])
+  @@index([parentExpenseId])
   @@map("expenses")
 }
 

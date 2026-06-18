@@ -24,6 +24,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -35,6 +36,7 @@ import { useApp } from "@/lib/contexts/app-context";
 import {
   expenseSchema,
   EXPENSE_CATEGORIES,
+  RECURRENCE_RULES,
   type ExpenseFormData,
 } from "@/lib/schemas/expense.schema";
 import { cn } from "@/lib/utils/utils";
@@ -63,6 +65,9 @@ export function FinancialsView(): React.ReactElement {
       category: "other" as const,
       description: "",
       isDeductible: true,
+      isRecurring: false,
+      recurrenceDay: 1,
+      recurrenceEnd: null,
     },
     onSubmit: async (data) => {
       await addExpense(data);
@@ -377,6 +382,92 @@ export function FinancialsView(): React.ReactElement {
                       onChange={(e) => dialog.updateFormData({ description: e.target.value })}
                       placeholder="Details about the expense..."
                     />
+                  </div>
+
+                  {/* Recurring expense toggle */}
+                  <div className="space-y-3 border-t border-[var(--color-border)] pt-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="isRecurring" className="text-sm font-medium">
+                          Repeating expense
+                        </Label>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">
+                          Automatically generate this expense on a schedule
+                        </p>
+                      </div>
+                      <Switch
+                        id="isRecurring"
+                        checked={!!dialog.formData.isRecurring}
+                        onCheckedChange={(checked) =>
+                          dialog.updateFormData({
+                            isRecurring: checked,
+                            recurrenceRule: checked ? "monthly" : undefined,
+                            recurrenceDay: checked ? 1 : undefined,
+                            recurrenceEnd: null,
+                          })
+                        }
+                      />
+                    </div>
+
+                    {dialog.formData.isRecurring && (
+                      <div className="space-y-3 pl-1">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="recurrenceRule">Repeat</Label>
+                            <Select
+                              value={dialog.formData.recurrenceRule ?? "monthly"}
+                              onValueChange={(val) =>
+                                dialog.updateFormData({
+                                  recurrenceRule: val as typeof RECURRENCE_RULES[number],
+                                })
+                              }
+                            >
+                              <SelectTrigger id="recurrenceRule">
+                                <SelectValue placeholder="Select frequency" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="quarterly">Quarterly</SelectItem>
+                                <SelectItem value="annual">Annually</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="recurrenceDay">Generate on day</Label>
+                            <Input
+                              id="recurrenceDay"
+                              type="number"
+                              min={1}
+                              max={28}
+                              value={dialog.formData.recurrenceDay ?? 1}
+                              onChange={(e) =>
+                                dialog.updateFormData({
+                                  recurrenceDay: parseInt(e.target.value, 10) || undefined,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="recurrenceEnd">
+                            Stop after{" "}
+                            <span className="text-[var(--color-muted-foreground)] font-normal">
+                              (optional — leave blank for never)
+                            </span>
+                          </Label>
+                          <Input
+                            id="recurrenceEnd"
+                            type="date"
+                            value={dialog.formData.recurrenceEnd ?? ""}
+                            onChange={(e) =>
+                              dialog.updateFormData({
+                                recurrenceEnd: e.target.value || null,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex justify-end gap-2 pt-4">

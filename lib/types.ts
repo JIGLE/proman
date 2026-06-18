@@ -212,6 +212,12 @@ export interface Expense {
   isDeductible?: boolean;
   vendorName?: string;
   vendorVat?: string;
+  // Recurring expense fields (Wave 2.4)
+  isRecurring?: boolean;
+  recurrenceRule?: "monthly" | "quarterly" | "annual";
+  recurrenceDay?: number;
+  recurrenceEnd?: string | null;
+  parentExpenseId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
