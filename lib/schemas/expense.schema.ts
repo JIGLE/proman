@@ -76,6 +76,11 @@ export function isDefaultDeductible(category: ExpenseCategory): boolean {
   return DEDUCTIBLE_CATEGORIES.has(category);
 }
 
+// ─── Recurrence Rules ────────────────────────────────────────────────────────
+
+export const RECURRENCE_RULES = ["monthly", "quarterly", "annual"] as const;
+export type RecurrenceRule = (typeof RECURRENCE_RULES)[number];
+
 // ─── Schema ──────────────────────────────────────────────────────────────────
 
 export const expenseSchema = z.object({
@@ -90,6 +95,11 @@ export const expenseSchema = z.object({
   vendorName: z.string().max(150, "Vendor name too long").optional(),
   vendorVat: z.string().max(20, "VAT/NIF too long").optional(),
   receiptImage: z.string().optional(),
+  // Recurring expense fields (Wave 2.4)
+  isRecurring: z.boolean().default(false).optional(),
+  recurrenceRule: z.enum(RECURRENCE_RULES).optional(),
+  recurrenceDay: z.number().int().min(1).max(28).optional(),
+  recurrenceEnd: z.string().optional().nullable(),
 });
 
 export const createExpenseSchema = expenseSchema;

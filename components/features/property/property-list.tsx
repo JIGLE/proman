@@ -650,7 +650,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
           <div className="space-y-6">
             {showPageHeader && (
               <PageHeader
-                title="Portfolio"
+                title="Properties"
                 description="Manage your properties, occupancy, and rent coverage."
               />
             )}
@@ -1313,6 +1313,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               <button
                                 type="button"
                                 onClick={() => toggleBuilding(building.buildingId)}
+                                aria-expanded={!isCollapsed}
+                                aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${building.buildingName}`}
                                 className="flex flex-1 items-center gap-3 min-w-0 px-4 py-3 text-left"
                               >
                                 <Building2 className="h-4 w-4 shrink-0 text-zinc-500" />
@@ -1336,9 +1338,10 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                     <button
                                       type="button"
                                       onClick={(e) => e.stopPropagation()}
+                                      aria-label={`${building.buildingName} options`}
                                       className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
                                     >
-                                      <MoreHorizontal className="h-4 w-4" />
+                                      <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                                     </button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end" className="w-44">
@@ -1395,9 +1398,12 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                 <button
                                   type="button"
                                   onClick={() => toggleBuilding(building.buildingId)}
+                                  aria-expanded={!isCollapsed}
+                                  aria-label={isCollapsed ? "Expand building" : "Collapse building"}
                                   className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
                                 >
                                   <ChevronDown
+                                    aria-hidden="true"
                                     className={cn(
                                       "h-4 w-4 transition-transform duration-200",
                                       isCollapsed && "-rotate-90",
@@ -1656,6 +1662,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                       {hasAttention && (
                                         <button
                                           type="button"
+                                          aria-label={`View details for ${property.name}`}
                                           title="View details"
                                           onClick={(e) => {
                                             e.stopPropagation();
@@ -1665,13 +1672,18 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           }}
                                           className="shrink-0 rounded-md p-1.5 text-amber-500 transition-colors hover:bg-zinc-700 hover:text-amber-300"
                                         >
-                                          <ExternalLink className="h-3.5 w-3.5" />
+                                          <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
                                         </button>
                                       )}
 
                                       {/* Locate on map button */}
                                       <button
                                         type="button"
+                                        aria-label={
+                                          isMissingMap
+                                            ? `Fix address for ${property.name}`
+                                            : `Locate ${property.name} on map`
+                                        }
                                         title={
                                           isMissingMap
                                             ? "No coordinates — click to fix address"
@@ -1693,7 +1705,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                             : "text-zinc-500 hover:bg-zinc-700 hover:text-blue-300",
                                         )}
                                       >
-                                        <MapPin className="h-4 w-4" />
+                                        <MapPin className="h-4 w-4" aria-hidden="true" />
                                       </button>
                                     </div>
                                   );

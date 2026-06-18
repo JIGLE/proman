@@ -2,12 +2,15 @@ import type { ComponentType } from "react";
 import {
   BarChart2,
   Building2,
+  Calculator,
   FileBarChart,
   FileBox,
   FileText,
+  HardHat,
   Home,
   Mail,
   Settings,
+  ShieldCheck,
   Users,
   Wallet,
   Wrench,
@@ -58,7 +61,7 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
       {
         key: "people",
         href: "/people",
-        label: "People",
+        label: "Tenants",
         labelKey: "navigation.people",
         icon: Users,
         roles: ["owner"],
@@ -74,9 +77,17 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         mobilePrimary: true,
       },
       {
+        key: "vendors",
+        href: "/contacts",
+        label: "Vendors",
+        labelKey: "navigation.vendors",
+        icon: HardHat,
+        roles: ["owner"],
+      },
+      {
         key: "financials",
         href: "/financials",
-        label: "Financials",
+        label: "Accounts",
         labelKey: "navigation.financials",
         icon: Wallet,
         roles: ["owner", "tenant"],
@@ -93,7 +104,7 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
     ],
   },
   {
-    group: "Intelligence",
+    group: "Reports",
     groupLabelKey: "navigation.intelligenceGroup",
     items: [
       {
@@ -123,7 +134,7 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
       {
         key: "correspondence",
         href: "/correspondence",
-        label: "Correspondence",
+        label: "Messages",
         labelKey: "navigation.correspondence",
         icon: Mail,
         roles: ["owner"],
@@ -134,6 +145,22 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
     group: "System",
     groupLabelKey: "navigation.systemGroup",
     items: [
+      {
+        key: "compliance",
+        href: "/compliance/modelo179",
+        label: "Compliance",
+        labelKey: "navigation.compliance",
+        icon: ShieldCheck,
+        roles: ["owner"],
+      },
+      {
+        key: "tax-filing",
+        href: "/compliance/tax-filing",
+        label: "Tax Filing",
+        labelKey: "navigation.taxFiling",
+        icon: Calculator,
+        roles: ["owner"],
+      },
       {
         key: "settings",
         href: "/settings",
@@ -180,6 +207,7 @@ export function normalizePortalPath(pathname: string): string {
   if (normalized === "/overview") return "/dashboard";
   if (normalized === "/properties") return "/portfolio";
   if (normalized === "/tenants") return "/people";
+  if (normalized === "/vendors") return "/contacts";
   return normalized;
 }
 
@@ -188,5 +216,8 @@ export function canAccessPortalPath(role: PortalRole, pathname: string): boolean
   const allowedItems = PORTAL_NAV_GROUPS.flatMap((group) =>
     group.items.filter((item) => item.roles.includes(role)),
   );
-  return allowedItems.some((item) => item.href === normalizedPath);
+  // Match exact href OR check if the normalized path is a prefix of a nav item's href
+  return allowedItems.some(
+    (item) => item.href === normalizedPath || item.href.startsWith(normalizedPath + "/"),
+  );
 }

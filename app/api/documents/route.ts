@@ -39,6 +39,7 @@ const createDocumentSchema = z.object({
   unitId: z.string().optional(),
   ownerId: z.string().optional(),
   tenantId: z.string().optional(),
+  expiresAt: z.string().datetime().optional().nullable(),
 });
 
 // GET /api/documents - Get all documents with optional filters

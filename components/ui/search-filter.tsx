@@ -79,10 +79,11 @@ export function SearchFilter({
     <div className={cn("flex flex-col sm:flex-row gap-3", className)}>
       {/* Search Input */}
       <div className="relative flex-1">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" aria-hidden="true" />
         <Input
-          type="text"
+          type="search"
           placeholder={searchPlaceholder}
+          aria-label={searchPlaceholder}
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
           className="pl-9 pr-9"

@@ -4,12 +4,14 @@ import { useState, useMemo } from "react";
 import {
   DollarSign,
   Plus,
+  Zap,
   Calendar as CalendarIcon,
   FileText,
   Calculator,
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -32,9 +35,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useApp } from "@/lib/contexts/app-context";
+import { useToast } from "@/lib/contexts/toast-context";
 import {
   expenseSchema,
   EXPENSE_CATEGORIES,
+  RECURRENCE_RULES,
   type ExpenseFormData,
 } from "@/lib/schemas/expense.schema";
 import { cn } from "@/lib/utils/utils";
@@ -46,13 +51,16 @@ import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { PageHeader } from "@/components/shared/page-header";
 
 export function FinancialsView(): React.ReactElement {
-  const { state, addExpense } = useApp();
+  const { state, addExpense, addReceipt } = useApp();
   const { properties, receipts, expenses, loading } = state;
   const { formatCurrency } = useCurrency();
+  const { success: toastSuccess, error: toastError } = useToast();
+  const t = useTranslations("financial");
 
   const [timeRange, setTimeRange] = useState("month"); // all, month, year
   const [selectedCountry, setSelectedCountry] = useState<"PT" | "ES">("PT");
   const [receiptStatusFilter, setReceiptStatusFilter] = useState<"all" | "paid" | "pending">("all");
+  const [isBulkGenerating, setIsBulkGenerating] = useState(false);
 
   const dialog = useFormDialog<ExpenseFormData>({
     schema: expenseSchema,
@@ -63,6 +71,9 @@ export function FinancialsView(): React.ReactElement {
       category: "other" as const,
       description: "",
       isDeductible: true,
+      isRecurring: false,
+      recurrenceDay: 1,
+      recurrenceEnd: null,
     },
     onSubmit: async (data) => {
       await addExpense(data);
@@ -239,13 +250,47 @@ export function FinancialsView(): React.ReactElement {
 
   const categories = EXPENSE_CATEGORIES;
 
+  const handleBulkGenerate = async () => {
+    const month = new Date().toISOString().slice(0, 7); // YYYY-MM
+    setIsBulkGenerating(true);
+    try {
+      const res = await fetch("/api/receipts/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ month }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const msg = (errData as { error?: string })?.error ?? res.statusText;
+        toastError(msg);
+        return;
+      }
+      const data = (await res.json()) as {
+        data: { generated: import("@/lib/types").Receipt[]; skipped: number; errors: string[] };
+      };
+      const { generated, skipped } = data.data;
+      for (const receipt of generated) {
+        await addReceipt(receipt);
+      }
+      if (generated.length === 0) {
+        toastSuccess(t("bulkGenerateEmpty"));
+      } else {
+        toastSuccess(t("bulkGenerateSuccess", { count: generated.length, skipped }));
+      }
+    } catch {
+      toastError("Failed to generate receipts.");
+    } finally {
+      setIsBulkGenerating(false);
+    }
+  };
+
   return (
     <>
       {loading ? (
         <LoadingState variant="cards" count={6} />
       ) : receipts.length === 0 && expenses.length === 0 ? (
         <div className="space-y-6">
-          <PageHeader title="Financials" description="Track income, expenses, and cash flow" />
+          <PageHeader title="Accounts" description="Track income, expenses, and cash flow" />
           <EmptyStateIllustration
             type="expenses"
             title="No financial data yet"
@@ -254,7 +299,7 @@ export function FinancialsView(): React.ReactElement {
         </div>
       ) : (
         <div className="space-y-6">
-          <PageHeader title="Financials" description="Track income, expenses, and cash flow">
+          <PageHeader title="Accounts" description="Track income, expenses, and cash flow">
             <Select value={timeRange} onValueChange={setTimeRange}>
               <SelectTrigger className="w-[150px]">
                 <CalendarIcon className="w-4 h-4 mr-2" />
@@ -266,6 +311,16 @@ export function FinancialsView(): React.ReactElement {
                 <SelectItem value="year">This Year</SelectItem>
               </SelectContent>
             </Select>
+
+            <Button
+              variant="outline"
+              onClick={handleBulkGenerate}
+              disabled={isBulkGenerating}
+              className="flex items-center gap-2"
+            >
+              <Zap className="w-4 h-4" />
+              {isBulkGenerating ? "Generating…" : t("bulkGenerate")}
+            </Button>
 
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogTrigger asChild>
@@ -377,6 +432,92 @@ export function FinancialsView(): React.ReactElement {
                       onChange={(e) => dialog.updateFormData({ description: e.target.value })}
                       placeholder="Details about the expense..."
                     />
+                  </div>
+
+                  {/* Recurring expense toggle */}
+                  <div className="space-y-3 border-t border-[var(--color-border)] pt-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-0.5">
+                        <Label htmlFor="isRecurring" className="text-sm font-medium">
+                          Repeating expense
+                        </Label>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">
+                          Automatically generate this expense on a schedule
+                        </p>
+                      </div>
+                      <Switch
+                        id="isRecurring"
+                        checked={!!dialog.formData.isRecurring}
+                        onCheckedChange={(checked) =>
+                          dialog.updateFormData({
+                            isRecurring: checked,
+                            recurrenceRule: checked ? "monthly" : undefined,
+                            recurrenceDay: checked ? 1 : undefined,
+                            recurrenceEnd: null,
+                          })
+                        }
+                      />
+                    </div>
+
+                    {dialog.formData.isRecurring && (
+                      <div className="space-y-3 pl-1">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="recurrenceRule">Repeat</Label>
+                            <Select
+                              value={dialog.formData.recurrenceRule ?? "monthly"}
+                              onValueChange={(val) =>
+                                dialog.updateFormData({
+                                  recurrenceRule: val as (typeof RECURRENCE_RULES)[number],
+                                })
+                              }
+                            >
+                              <SelectTrigger id="recurrenceRule">
+                                <SelectValue placeholder="Select frequency" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="monthly">Monthly</SelectItem>
+                                <SelectItem value="quarterly">Quarterly</SelectItem>
+                                <SelectItem value="annual">Annually</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="recurrenceDay">Generate on day</Label>
+                            <Input
+                              id="recurrenceDay"
+                              type="number"
+                              min={1}
+                              max={28}
+                              value={dialog.formData.recurrenceDay ?? 1}
+                              onChange={(e) =>
+                                dialog.updateFormData({
+                                  recurrenceDay: parseInt(e.target.value, 10) || undefined,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="recurrenceEnd">
+                            Stop after{" "}
+                            <span className="text-[var(--color-muted-foreground)] font-normal">
+                              (optional — leave blank for never)
+                            </span>
+                          </Label>
+                          <Input
+                            id="recurrenceEnd"
+                            type="date"
+                            value={dialog.formData.recurrenceEnd ?? ""}
+                            onChange={(e) =>
+                              dialog.updateFormData({
+                                recurrenceEnd: e.target.value || null,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex justify-end gap-2 pt-4">

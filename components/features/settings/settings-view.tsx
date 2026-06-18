@@ -16,6 +16,10 @@ import {
   Database,
   HardDrive,
   Activity,
+  Landmark,
+  Lock,
+  CheckCircle2,
+  Copy,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/lib/contexts/toast-context";
 
 interface UserSettings {
@@ -42,6 +47,14 @@ interface UserSettings {
   distributionNotifications: boolean;
 }
 
+interface FiscalProfile {
+  fiscalResidency: string | null;
+  nhrStatus: boolean;
+  nhrYear: number | null;
+  ificiStatus: boolean;
+  ificiYear: number | null;
+}
+
 const defaultSettings: UserSettings = {
   theme: "system",
   language: "en",
@@ -50,6 +63,14 @@ const defaultSettings: UserSettings = {
   emailNotifications: true,
   taxReminderNotifications: true,
   distributionNotifications: true,
+};
+
+const defaultFiscalProfile: FiscalProfile = {
+  fiscalResidency: null,
+  nhrStatus: false,
+  nhrYear: null,
+  ificiStatus: false,
+  ificiYear: null,
 };
 
 const currencies = [
@@ -69,6 +90,16 @@ const languages = [
   { value: "en", label: "English" },
   { value: "es", label: "Español" },
   { value: "pt", label: "Português" },
+];
+
+const fiscalResidencyOptions = [
+  { value: "PT", label: "Portugal" },
+  { value: "ES", label: "Spain" },
+  { value: "FR", label: "France" },
+  { value: "DE", label: "Germany" },
+  { value: "IT", label: "Italy" },
+  { value: "GB", label: "United Kingdom" },
+  { value: "OTHER", label: "Other" },
 ];
 
 export function SettingsView(): React.ReactElement {
@@ -92,6 +123,22 @@ export function SettingsView(): React.ReactElement {
   } | null>(null);
   const [systemLoading, setSystemLoading] = useState(false);
 
+  // Fiscal profile state
+  const [fiscalProfile, setFiscalProfile] = useState<FiscalProfile>(defaultFiscalProfile);
+  const [fiscalLoading, setFiscalLoading] = useState(true);
+  const [fiscalSaving, setFiscalSaving] = useState(false);
+  const [fiscalHasChanges, setFiscalHasChanges] = useState(false);
+
+  // MFA / TOTP state
+  const [totpEnabled, setTotpEnabled] = useState(false);
+  const [totpLoading, setTotpLoading] = useState(true);
+  const [totpSetupStep, setTotpSetupStep] = useState<"idle" | "qr" | "verify" | "backup">("idle");
+  const [totpQr, setTotpQr] = useState("");
+  const [totpSecret, setTotpSecret] = useState("");
+  const [totpCode, setTotpCode] = useState("");
+  const [totpBackupCodes, setTotpBackupCodes] = useState<string[]>([]);
+  const [totpWorking, setTotpWorking] = useState(false);
+
   // Extract current locale from pathname
   const currentLocale = pathname.split("/")[1] || "en";
 
@@ -112,6 +159,8 @@ export function SettingsView(): React.ReactElement {
 
   useEffect(() => {
     loadSettings();
+    loadFiscalProfile();
+    loadTotpStatus();
     fetchSystemInfo();
     fetch("/version.json")
       .then((r) => r.json())
@@ -121,7 +170,6 @@ export function SettingsView(): React.ReactElement {
   }, []);
 
   const loadSettings = async () => {
-    // Only load settings if authenticated
     if (!session?.user) {
       setLoading(false);
       return;
@@ -141,6 +189,93 @@ export function SettingsView(): React.ReactElement {
     }
   };
 
+  const loadFiscalProfile = async () => {
+    try {
+      const response = await fetch("/api/user/fiscal-profile");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data) {
+          setFiscalProfile({ ...defaultFiscalProfile, ...data.data });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load fiscal profile:", err);
+    } finally {
+      setFiscalLoading(false);
+    }
+  };
+
+  const loadTotpStatus = async () => {
+    try {
+      const res = await fetch("/api/auth/totp/status");
+      if (res.ok) {
+        const d = await res.json();
+        setTotpEnabled(d.totpEnabled ?? false);
+      }
+    } catch {
+      // ignore
+    } finally {
+      setTotpLoading(false);
+    }
+  };
+
+  const startTotpSetup = async () => {
+    setTotpWorking(true);
+    try {
+      const res = await fetch("/api/auth/totp/setup");
+      if (!res.ok) throw new Error("Setup failed");
+      const d = await res.json();
+      setTotpQr(d.qrDataUrl);
+      setTotpSecret(d.secret);
+      setTotpCode("");
+      setTotpSetupStep("qr");
+    } catch {
+      showError("Failed to start TOTP setup");
+    } finally {
+      setTotpWorking(false);
+    }
+  };
+
+  const confirmTotpEnable = async () => {
+    setTotpWorking(true);
+    try {
+      const res = await fetch("/api/auth/totp/enable", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: totpCode }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        showError(d.error ?? "Invalid code");
+        return;
+      }
+      const d = await res.json();
+      setTotpBackupCodes(d.backupCodes);
+      setTotpEnabled(true);
+      setTotpSetupStep("backup");
+      success("Two-factor authentication enabled");
+    } catch {
+      showError("Failed to enable TOTP");
+    } finally {
+      setTotpWorking(false);
+    }
+  };
+
+  const disableTotp = async () => {
+    setTotpWorking(true);
+    try {
+      const res = await fetch("/api/auth/totp/disable", { method: "DELETE" });
+      if (!res.ok) throw new Error("Disable failed");
+      setTotpEnabled(false);
+      setTotpSetupStep("idle");
+      success("Two-factor authentication disabled");
+    } catch {
+      showError("Failed to disable TOTP");
+    } finally {
+      setTotpWorking(false);
+    }
+  };
+
   const updateSetting = <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
     setHasChanges(true);
@@ -150,6 +285,30 @@ export function SettingsView(): React.ReactElement {
       const newPath = pathname.replace(`/${currentLocale}`, `/${value}`);
       router.push(newPath);
     }
+  };
+
+  const updateFiscalProfile = <K extends keyof FiscalProfile>(key: K, value: FiscalProfile[K]) => {
+    setFiscalProfile((prev) => {
+      const next: FiscalProfile = { ...prev, [key]: value };
+      // Mutual exclusivity: toggling one disables the other
+      if (key === "nhrStatus" && value === true) {
+        next.ificiStatus = false;
+        next.ificiYear = null;
+      }
+      if (key === "ificiStatus" && value === true) {
+        next.nhrStatus = false;
+        next.nhrYear = null;
+      }
+      // Clear year when status disabled
+      if (key === "nhrStatus" && value === false) {
+        next.nhrYear = null;
+      }
+      if (key === "ificiStatus" && value === false) {
+        next.ificiYear = null;
+      }
+      return next;
+    });
+    setFiscalHasChanges(true);
   };
 
   const saveSettings = async () => {
@@ -164,8 +323,6 @@ export function SettingsView(): React.ReactElement {
       if (response.ok) {
         success("Settings saved successfully");
         setHasChanges(false);
-
-        // Apply theme immediately
         applyTheme(settings.theme);
       } else {
         showError("Failed to save settings");
@@ -174,6 +331,29 @@ export function SettingsView(): React.ReactElement {
       showError("Failed to save settings");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const saveFiscalProfile = async () => {
+    setFiscalSaving(true);
+    try {
+      const response = await fetch("/api/user/fiscal-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fiscalProfile),
+      });
+
+      if (response.ok) {
+        success("Tax profile saved successfully");
+        setFiscalHasChanges(false);
+      } else {
+        const errBody = await response.json().catch(() => ({}));
+        showError((errBody as { error?: string }).error ?? "Failed to save tax profile");
+      }
+    } catch {
+      showError("Failed to save tax profile");
+    } finally {
+      setFiscalSaving(false);
     }
   };
 
@@ -194,6 +374,8 @@ export function SettingsView(): React.ReactElement {
       </div>
     );
   }
+
+  const isPortugal = fiscalProfile.fiscalResidency === "PT";
 
   return (
     <div className="space-y-6">
@@ -220,7 +402,9 @@ export function SettingsView(): React.ReactElement {
         <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="organization">Organization</TabsTrigger>
+          <TabsTrigger value="tax">Tax &amp; Fiscal</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
+          <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
         </TabsList>
@@ -308,6 +492,82 @@ export function SettingsView(): React.ReactElement {
               </div>
             </CardContent>
           </Card>
+
+          {/* GDPR — data rights */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Your Data Rights (GDPR)
+              </CardTitle>
+              <CardDescription>
+                Export or permanently delete your personal data at any time
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-border p-4 space-y-2">
+                  <p className="text-sm font-medium">Export my data</p>
+                  <p className="text-xs text-muted-foreground">
+                    Download a JSON file containing all your account data, properties, tenants,
+                    leases, and audit history.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const res = await fetch("/api/user/export-data", { method: "POST" });
+                        if (!res.ok) throw new Error("Export failed");
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "domora-data.json";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      } catch {
+                        showError("Export failed. Please try again.");
+                      }
+                    }}
+                  >
+                    Export my data
+                  </Button>
+                </div>
+                <div className="rounded-lg border border-destructive/30 p-4 space-y-2">
+                  <p className="text-sm font-medium text-destructive">Delete my account</p>
+                  <p className="text-xs text-muted-foreground">
+                    Permanently delete your account and all associated data. This cannot be undone.
+                  </p>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={async () => {
+                      if (
+                        !window.confirm(
+                          "This will permanently delete your account and all data. Are you sure?",
+                        )
+                      )
+                        return;
+                      try {
+                        const res = await fetch("/api/user/delete-data", { method: "POST" });
+                        if (!res.ok) throw new Error("Delete failed");
+                        window.location.href = "/auth/signin";
+                      } catch {
+                        showError("Deletion failed. Please try again.");
+                      }
+                    }}
+                  >
+                    Delete my account
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Data retention: audit logs are kept for 7 years (legal obligation), email logs for
+                2 years, read notifications for 1 year. Automatic purge runs daily.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Organization tab */}
@@ -367,6 +627,154 @@ export function SettingsView(): React.ReactElement {
           </Card>
         </TabsContent>
 
+        {/* Tax & Fiscal Profile tab */}
+        <TabsContent value="tax" className="mt-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Landmark className="h-5 w-5" />
+                Tax &amp; Fiscal Profile
+              </CardTitle>
+              <CardDescription>
+                Your personal tax residency and special regime status — used to calculate the
+                correct tax rules on your rental income.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="max-w-lg space-y-6">
+              {fiscalLoading ? (
+                <div className="flex items-center justify-center h-16">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                </div>
+              ) : (
+                <>
+                  {/* Fiscal Residency */}
+                  <div className="space-y-2">
+                    <Label htmlFor="fiscal-residency">Fiscal residency country</Label>
+                    <Select
+                      value={fiscalProfile.fiscalResidency ?? ""}
+                      onValueChange={(v) => updateFiscalProfile("fiscalResidency", v || null)}
+                    >
+                      <SelectTrigger id="fiscal-residency" className="max-w-xs">
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fiscalResidencyOptions.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-[var(--color-muted-foreground)]">
+                      The country where you are tax resident — determines which tax rules apply to
+                      your rental income.
+                    </p>
+                  </div>
+
+                  {/* NHR Status — Portugal only */}
+                  {isPortugal && (
+                    <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-1 flex-1">
+                          <Label htmlFor="nhr-status">Non-Habitual Resident (NHR) status</Label>
+                          <p className="text-xs text-[var(--color-muted-foreground)]">
+                            NHR grants a flat 20% tax rate on Portuguese-source income for 10 years.
+                            Only valid if granted before Jan 2024.
+                          </p>
+                        </div>
+                        <Switch
+                          id="nhr-status"
+                          checked={fiscalProfile.nhrStatus}
+                          onCheckedChange={(v) => updateFiscalProfile("nhrStatus", v)}
+                          disabled={fiscalProfile.ificiStatus}
+                        />
+                      </div>
+                      {fiscalProfile.nhrStatus && (
+                        <div className="space-y-1.5">
+                          <Label htmlFor="nhr-year">Year granted</Label>
+                          <Input
+                            id="nhr-year"
+                            type="number"
+                            min={2009}
+                            max={2024}
+                            placeholder="e.g. 2022"
+                            className="max-w-xs"
+                            value={fiscalProfile.nhrYear ?? ""}
+                            onChange={(e) => {
+                              const v = e.target.value ? parseInt(e.target.value, 10) : null;
+                              updateFiscalProfile("nhrYear", v);
+                            }}
+                          />
+                        </div>
+                      )}
+                      {fiscalProfile.ificiStatus && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                          NHR is disabled because IFICI is active. NHR and IFICI are mutually
+                          exclusive.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* IFICI Status — Portugal only */}
+                  {isPortugal && (
+                    <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-1 flex-1">
+                          <Label htmlFor="ifici-status">IFICI regime (new NHR from 2024)</Label>
+                          <p className="text-xs text-[var(--color-muted-foreground)]">
+                            IFICI (Incentivo Fiscal à Investigação Científica e Inovação) replaced
+                            NHR for new applicants from 2024. Flat 20% rate.
+                          </p>
+                        </div>
+                        <Switch
+                          id="ifici-status"
+                          checked={fiscalProfile.ificiStatus}
+                          onCheckedChange={(v) => updateFiscalProfile("ificiStatus", v)}
+                          disabled={fiscalProfile.nhrStatus}
+                        />
+                      </div>
+                      {fiscalProfile.ificiStatus && (
+                        <div className="space-y-1.5">
+                          <Label htmlFor="ifici-year">Year granted</Label>
+                          <Input
+                            id="ifici-year"
+                            type="number"
+                            min={2024}
+                            max={2030}
+                            placeholder="e.g. 2024"
+                            className="max-w-xs"
+                            value={fiscalProfile.ificiYear ?? ""}
+                            onChange={(e) => {
+                              const v = e.target.value ? parseInt(e.target.value, 10) : null;
+                              updateFiscalProfile("ificiYear", v);
+                            }}
+                          />
+                        </div>
+                      )}
+                      {fiscalProfile.nhrStatus && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                          IFICI is disabled because NHR is active. NHR and IFICI are mutually
+                          exclusive.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={saveFiscalProfile}
+                    disabled={fiscalSaving || !fiscalHasChanges}
+                    className="w-full sm:w-auto"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {fiscalSaving ? "Saving..." : "Save Tax Profile"}
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Notifications tab */}
         <TabsContent value="notifications" className="mt-6">
           <Card>
@@ -421,7 +829,33 @@ export function SettingsView(): React.ReactElement {
         </TabsContent>
 
         {/* System tab */}
-        <TabsContent value="system" className="mt-6">
+        <TabsContent value="system" className="mt-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Landmark className="h-5 w-5" />
+                Tax Rules Store
+              </CardTitle>
+              <CardDescription>
+                Manage tax brackets, withholding rates, and deductible rates by country and year
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">
+                All tax rates are stored in the database — no hard-coded values. Update rules here
+                when new fiscal legislation is published.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(`/${currentLocale}/settings/tax-rules`)}
+              >
+                <Landmark className="h-4 w-4 mr-1.5" />
+                Open Tax Rules
+              </Button>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -508,6 +942,134 @@ export function SettingsView(): React.ReactElement {
               ) : (
                 <p className="text-sm text-muted-foreground">Unable to fetch system information</p>
               )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Security tab */}
+        <TabsContent value="security" className="mt-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Lock className="h-5 w-5" />
+                Two-Factor Authentication
+              </CardTitle>
+              <CardDescription>
+                Protect your account with an authenticator app (TOTP)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {totpLoading ? (
+                <p className="text-sm text-muted-foreground">Loading…</p>
+              ) : totpEnabled && totpSetupStep !== "backup" ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span>Two-factor authentication is enabled</span>
+                  </div>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={disableTotp}
+                    disabled={totpWorking}
+                  >
+                    Disable 2FA
+                  </Button>
+                </div>
+              ) : totpSetupStep === "idle" ? (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">
+                    Two-factor authentication adds an extra layer of security. After enabling, you
+                    will need your authenticator app each time you sign in.
+                  </p>
+                  <Button size="sm" onClick={startTotpSetup} disabled={totpWorking}>
+                    {totpWorking ? "Loading…" : "Set up 2FA"}
+                  </Button>
+                </div>
+              ) : totpSetupStep === "qr" ? (
+                <div className="space-y-4">
+                  <p className="text-sm text-muted-foreground">
+                    Scan this QR code with your authenticator app (Google Authenticator, Authy,
+                    etc.), then enter the 6-digit code to confirm.
+                  </p>
+                  {totpQr && (
+                    <picture>
+                      <img src={totpQr} alt="TOTP QR code" className="w-48 h-48 rounded-lg" />
+                    </picture>
+                  )}
+                  <details className="text-xs">
+                    <summary className="cursor-pointer text-muted-foreground">
+                      Can&apos;t scan? Enter manually
+                    </summary>
+                    <code className="block mt-2 p-2 bg-muted rounded text-xs break-all select-all">
+                      {totpSecret}
+                    </code>
+                  </details>
+                  <div className="space-y-2">
+                    <Label htmlFor="totp-code">Verification code</Label>
+                    <Input
+                      id="totp-code"
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="000000"
+                      maxLength={6}
+                      value={totpCode}
+                      onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, ""))}
+                      className="w-40 text-center tracking-widest text-lg"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      size="sm"
+                      onClick={confirmTotpEnable}
+                      disabled={totpWorking || totpCode.length !== 6}
+                    >
+                      {totpWorking ? "Verifying…" : "Enable 2FA"}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => setTotpSetupStep("idle")}
+                      disabled={totpWorking}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : totpSetupStep === "backup" ? (
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>Two-factor authentication has been enabled!</span>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Backup codes</p>
+                    <p className="text-sm text-muted-foreground">
+                      Save these codes somewhere safe. Each can be used once if you lose access to
+                      your authenticator app.
+                    </p>
+                    <div className="grid grid-cols-2 gap-1.5 p-3 bg-muted rounded-lg font-mono text-sm">
+                      {totpBackupCodes.map((c) => (
+                        <span key={c}>{c}</span>
+                      ))}
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5"
+                      onClick={() => {
+                        navigator.clipboard.writeText(totpBackupCodes.join("\n")).catch(() => {});
+                      }}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                      Copy codes
+                    </Button>
+                  </div>
+                  <Button size="sm" onClick={() => setTotpSetupStep("idle")}>
+                    Done
+                  </Button>
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         </TabsContent>

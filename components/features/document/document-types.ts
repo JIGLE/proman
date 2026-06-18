@@ -27,6 +27,7 @@ export interface Document {
   ownerName?: string;
   tenantId?: string;
   tenantName?: string;
+  expiresAt?: string | null;
   uploadedAt: string;
   createdAt: string;
   updatedAt: string;

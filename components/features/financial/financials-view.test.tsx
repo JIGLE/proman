@@ -63,7 +63,7 @@ vi.mock("@/lib/hooks/use-form-dialog", () => ({
 describe("FinancialsView", () => {
   it("renders empty state when no data", () => {
     render(<FinancialsView />);
-    expect(screen.getByText(/Financials/)).toBeDefined();
+    expect(screen.getByText(/Accounts/)).toBeDefined();
     expect(screen.getByText(/No financial data yet/)).toBeDefined();
   });
 });

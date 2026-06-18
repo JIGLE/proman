@@ -97,6 +97,11 @@ desktop.ini
 # 10. Security & Monitoring Reports
 # ===========================================
 security-report.json
+
+# ===========================================
+# 11. Claude Code agent worktrees (temp)
+# ===========================================
+.claude/worktrees/
 security-reports/
 load-tests/reports/
 

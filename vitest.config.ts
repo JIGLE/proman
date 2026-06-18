@@ -32,8 +32,9 @@ export default defineConfig({
       "**/.next/**",
       "**/dist/**",
       "**/build/**",
-      "**/e2e/**", // Exclude Playwright e2e tests
+      "**/e2e/**",
       "**/playwright/**",
+      "**/.claude/**",
     ],
     coverage: {
       provider: "v8",

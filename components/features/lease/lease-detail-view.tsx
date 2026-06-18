@@ -1,13 +1,33 @@
 "use client";
 
-import { useMemo } from "react";
-import { FileText, Edit, ArrowLeft, Calendar, RotateCcw, XCircle } from "lucide-react";
+import { useMemo, useState } from "react";
+import {
+  FileText,
+  Edit,
+  ArrowLeft,
+  Calendar,
+  RotateCcw,
+  XCircle,
+  CheckCircle2,
+  Clock,
+  Ban,
+} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/utils";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useApp } from "@/lib/contexts/app-context";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
@@ -33,6 +53,10 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
   const pathname = usePathname();
   const router = useRouter();
   const locale = pathname.split("/")[1] || "pt";
+
+  // Renewal offer dialog state
+  const [renewalOpen, setRenewalOpen] = useState(false);
+  const [renewalSubmitting, setRenewalSubmitting] = useState(false);
 
   const lease = state.leases.find((l) => l.id === leaseId);
 
@@ -72,8 +96,47 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
     router.push(`/${locale}/leases?action=edit&id=${lease.id}`);
   };
 
-  const handleRenew = () => {
-    router.push(`/${locale}/leases?action=renew&id=${lease.id}`);
+  const handleRenew = () => setRenewalOpen(true);
+
+  const handleRenewalSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!lease) return;
+    const fd = new FormData(e.currentTarget);
+    setRenewalSubmitting(true);
+    try {
+      const res = await fetch(`/api/leases/${lease.id}/renewal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          proposedRent: fd.get("proposedRent") ? Number(fd.get("proposedRent")) : undefined,
+          startDate: fd.get("startDate") || undefined,
+          endDate: fd.get("endDate") || undefined,
+          notes: fd.get("notes") || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      const updated = await res.json();
+      await updateLease(lease.id, updated);
+      success("Renewal offer sent");
+      setRenewalOpen(false);
+    } catch {
+      error("Failed to send renewal offer");
+    } finally {
+      setRenewalSubmitting(false);
+    }
+  };
+
+  const handleRenewalWithdraw = async () => {
+    if (!lease) return;
+    try {
+      const res = await fetch(`/api/leases/${lease.id}/renewal`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed");
+      const updated = await res.json();
+      await updateLease(lease.id, updated);
+      success("Renewal offer withdrawn");
+    } catch {
+      error("Failed to withdraw renewal offer");
+    }
   };
 
   const handleTerminate = () => {
@@ -114,7 +177,7 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
                 {lease.startDate} — {lease.endDate}
               </span>
             </div>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
               <Badge variant={STATUS_VARIANT[lease.status] || "secondary"}>{lease.status}</Badge>
               <span className="text-sm font-medium">{formatCurrency(lease.monthlyRent)}/mo</span>
               {lease.autoRenew && <Badge variant="outline">Auto-renew</Badge>}
@@ -123,13 +186,43 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
                   Expires in {daysUntilExpiry}d
                 </Badge>
               )}
+              {lease.renewalStatus === "offered" && (
+                <Badge variant="secondary" className="gap-1 text-sky-600 dark:text-sky-400">
+                  <Clock className="h-3 w-3" /> Renewal offered
+                </Badge>
+              )}
+              {lease.renewalStatus === "accepted" && (
+                <Badge variant="secondary" className="gap-1 text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="h-3 w-3" /> Renewal accepted
+                </Badge>
+              )}
+              {lease.renewalStatus === "declined" && (
+                <Badge variant="secondary" className="gap-1 text-[var(--color-destructive)]">
+                  <Ban className="h-3 w-3" /> Renewal declined
+                </Badge>
+              )}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleRenew}>
-            <RotateCcw className="h-4 w-4 mr-1" /> Renew
-          </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          {lease.status === "active" && (
+            <>
+              {!lease.renewalStatus || lease.renewalStatus === "declined" ? (
+                <Button variant="outline" size="sm" onClick={handleRenew}>
+                  <RotateCcw className="h-4 w-4 mr-1" /> Offer Renewal
+                </Button>
+              ) : lease.renewalStatus === "offered" ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRenewalWithdraw}
+                  className="text-[var(--color-muted-foreground)]"
+                >
+                  <XCircle className="h-4 w-4 mr-1" /> Withdraw Offer
+                </Button>
+              ) : null}
+            </>
+          )}
           <Button variant="outline" size="sm" onClick={handleEdit}>
             <Edit className="h-4 w-4 mr-1" /> Edit
           </Button>
@@ -299,6 +392,83 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
           <XCircle className="h-4 w-4 mr-1" /> Terminate Lease
         </Button>
       </div>
+
+      {/* Renewal Offer Dialog */}
+      <Dialog open={renewalOpen} onOpenChange={setRenewalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Offer Lease Renewal</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleRenewalSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="proposedRent">Proposed monthly rent</Label>
+              <Input
+                id="proposedRent"
+                name="proposedRent"
+                type="number"
+                step="0.01"
+                min="0"
+                defaultValue={lease?.monthlyRent}
+                placeholder={String(lease?.monthlyRent ?? "")}
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="startDate">New start date</Label>
+                <Input
+                  id="startDate"
+                  name="startDate"
+                  type="date"
+                  defaultValue={
+                    lease?.endDate
+                      ? new Date(new Date(lease.endDate).getTime() + 86400000)
+                          .toISOString()
+                          .slice(0, 10)
+                      : ""
+                  }
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="endDate">New end date</Label>
+                <Input
+                  id="endDate"
+                  name="endDate"
+                  type="date"
+                  defaultValue={
+                    lease?.endDate
+                      ? new Date(
+                          new Date(new Date(lease.endDate).getTime() + 86400000).setFullYear(
+                            new Date(new Date(lease.endDate).getTime() + 86400000).getFullYear() +
+                              1,
+                          ),
+                        )
+                          .toISOString()
+                          .slice(0, 10)
+                      : ""
+                  }
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="notes">Notes for tenant (optional)</Label>
+              <Textarea
+                id="notes"
+                name="notes"
+                rows={3}
+                placeholder="Any conditions or comments…"
+              />
+            </div>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setRenewalOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={renewalSubmitting}>
+                {renewalSubmitting ? "Sending…" : "Send Renewal Offer"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

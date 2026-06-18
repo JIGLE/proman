@@ -4,12 +4,15 @@ import { type ElementType, type ReactElement, useMemo, useState, useEffect } fro
 import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
   BadgeEuro,
   Building2,
   CalendarClock,
+  CheckCircle2 as CheckCircle2Icon,
+  FileCheck2,
   FileText,
   Home,
   Mail,
@@ -26,10 +29,77 @@ import {
   type OnboardingChecklistStep,
 } from "@/components/ui/onboarding-checklist";
 import { cn } from "@/lib/utils/utils";
+import { ActionPanel } from "@/components/features/dashboard/action-panel";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
 import { getActiveLease } from "@/lib/utils/lease-helpers";
+
+// ─── Modelo 179 Alert ────────────────────────────────────────────────────────
+
+function Modelo179Alert({ locale }: { locale: string }): ReactElement | null {
+  const [missingCount, setMissingCount] = useState<number | null>(null);
+  const [targetYear, setTargetYear] = useState<number | null>(null);
+
+  useEffect(() => {
+    const now = new Date();
+    const month = now.getMonth() + 1; // 1-based
+    // Only show alert Jan–Mar
+    if (month < 1 || month > 3) return;
+    const prevYear = now.getFullYear() - 1;
+    setTargetYear(prevYear);
+
+    // Fetch fiscal profile to check PT residency
+    fetch("/api/user/fiscal-profile")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data: { data?: { fiscalResidency?: string } } | null) => {
+        if (!data?.data || data.data.fiscalResidency !== "PT") return;
+        // Fetch leases and check modelo179 submissions for prevYear
+        return fetch(`/api/compliance/modelo179?year=${prevYear}`);
+      })
+      .then((r) => {
+        if (!r || !r.ok) return null;
+        return r.json();
+      })
+      .then(
+        (
+          json: {
+            data?: Array<{
+              modelo179Submissions: Array<{ status: string }>;
+            }>;
+          } | null,
+        ) => {
+          if (!json?.data) return;
+          const missing = json.data.filter((lease) => {
+            const sub = lease.modelo179Submissions[0];
+            return !sub || sub.status === "pending";
+          }).length;
+          if (missing > 0) setMissingCount(missing);
+        },
+      )
+      .catch(() => {});
+  }, []);
+
+  if (missingCount === null || missingCount === 0 || targetYear === null) return null;
+
+  return (
+    <Link
+      href={`/${locale}/compliance/modelo179`}
+      className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 transition-colors hover:bg-amber-500/10"
+    >
+      <div className="flex items-center gap-3">
+        <FileCheck2 className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+        <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+          {missingCount} lease{missingCount !== 1 ? "s" : ""} not registered with AT for{" "}
+          {targetYear} — Modelo 179 required
+        </span>
+      </div>
+      <Badge variant="secondary" className="tabular-nums">
+        {missingCount}
+      </Badge>
+    </Link>
+  );
+}
 
 export interface OverviewViewProps {
   onAddProperty?: () => void;
@@ -388,7 +458,18 @@ export function OverviewView({
   if (isOwnerPortal) {
     return (
       <div className="space-y-6">
+        {/* Action panel: always shown for owner portal */}
+        <ActionPanel />
+
+        {/* Onboarding checklist: only shown when incomplete; hidden when all done */}
         {showChecklist && <OnboardingChecklist steps={onboardingSteps} />}
+        {allStepsDone && (
+          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-success,_theme(colors.emerald.500))]/20 bg-emerald-500/5 px-3 py-1 text-sm text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2Icon className="h-3.5 w-3.5" />
+            {t("setupComplete")}
+          </div>
+        )}
+
         <section className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
           <div className="mb-6 space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary)]/20 bg-[var(--color-info-muted)] px-3 py-1 text-sm text-[var(--color-primary)]">
@@ -426,6 +507,8 @@ export function OverviewView({
             />
           </div>
         </section>
+
+        <Modelo179Alert locale={locale} />
 
         <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
           <Card className="border-[var(--color-border)] bg-[var(--color-card)]">

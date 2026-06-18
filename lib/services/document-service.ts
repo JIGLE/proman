@@ -39,6 +39,7 @@ export interface Document {
   ownerName?: string;
   tenantId?: string;
   tenantName?: string;
+  expiresAt?: string | null;
   uploadedAt: string; // alias for createdAt — kept for API backwards compatibility
   createdAt: string;
   updatedAt: string;
@@ -54,6 +55,7 @@ export interface CreateDocumentData {
   unitId?: string;
   ownerId?: string;
   tenantId?: string;
+  expiresAt?: string | null;
 }
 
 export interface UpdateDocumentData {
@@ -64,6 +66,7 @@ export interface UpdateDocumentData {
   unitId?: string | null;
   ownerId?: string | null;
   tenantId?: string | null;
+  expiresAt?: string | null;
 }
 
 export interface DocumentVersion {
@@ -292,6 +295,7 @@ export const documentService = {
       ownerName: doc.owner?.name,
       tenantId: doc.tenantId || undefined,
       tenantName: doc.tenant?.name,
+      expiresAt: doc.expiresAt?.toISOString() ?? null,
       uploadedAt: doc.createdAt.toISOString(),
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
@@ -333,6 +337,7 @@ export const documentService = {
       ownerName: doc.owner?.name,
       tenantId: doc.tenantId || undefined,
       tenantName: doc.tenant?.name,
+      expiresAt: doc.expiresAt?.toISOString() ?? null,
       uploadedAt: doc.createdAt.toISOString(),
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
@@ -378,6 +383,7 @@ export const documentService = {
         unitId: data.unitId || null,
         ownerId: data.ownerId || null,
         tenantId: data.tenantId || null,
+        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
       },
       include: {
         property: { select: { name: true } },
@@ -404,6 +410,7 @@ export const documentService = {
       ownerName: doc.owner?.name,
       tenantId: doc.tenantId || undefined,
       tenantName: doc.tenant?.name,
+      expiresAt: doc.expiresAt?.toISOString() ?? null,
       uploadedAt: doc.createdAt.toISOString(),
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),
@@ -433,6 +440,12 @@ export const documentService = {
         unitId: data.unitId,
         ownerId: data.ownerId,
         tenantId: data.tenantId,
+        expiresAt:
+          data.expiresAt !== undefined
+            ? data.expiresAt
+              ? new Date(data.expiresAt)
+              : null
+            : undefined,
       },
       include: {
         property: { select: { name: true } },
@@ -459,6 +472,7 @@ export const documentService = {
       ownerName: doc.owner?.name,
       tenantId: doc.tenantId || undefined,
       tenantName: doc.tenant?.name,
+      expiresAt: doc.expiresAt?.toISOString() ?? null,
       uploadedAt: doc.createdAt.toISOString(),
       createdAt: doc.createdAt.toISOString(),
       updatedAt: doc.updatedAt.toISOString(),

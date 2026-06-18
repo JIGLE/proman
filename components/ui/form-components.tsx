@@ -58,8 +58,17 @@ export function FormField({
           </Label>
           {tooltip && (
             <div className="relative group">
-              <Info className="w-4 h-4 text-muted-foreground cursor-help" />
-              <div className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 px-3 py-2 text-xs text-white bg-black rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-20 max-w-xs">
+              <button
+                type="button"
+                aria-label={tooltip}
+                className="rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <Info className="w-4 h-4 text-muted-foreground cursor-help" aria-hidden="true" />
+              </button>
+              <div
+                role="tooltip"
+                className="absolute left-1/2 transform -translate-x-1/2 bottom-full mb-2 px-3 py-2 text-xs text-white bg-black rounded-md opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200 whitespace-nowrap z-20 max-w-xs pointer-events-none"
+              >
                 {tooltip}
               </div>
             </div>

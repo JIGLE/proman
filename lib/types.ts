@@ -3,6 +3,25 @@
 /** Currency codes supported by the application (mirrors the Prisma Currency enum). */
 export type Currency = "EUR" | "DKK" | "USD" | "GBP";
 
+/** User fiscal profile (Wave 2.2) */
+export interface User {
+  id: string;
+  name?: string;
+  email: string;
+  emailVerified?: string;
+  image?: string;
+  imageConsent?: boolean;
+  role: "USER" | "ADMIN" | "MANAGER";
+  // Fiscal identity
+  fiscalResidency?: string; // ISO country code: "PT", "ES", "IT", "FR", etc.
+  nhrStatus: boolean; // PT Non-Habitual Resident (pre-2024)
+  nhrYear?: number; // Year NHR status was granted
+  ificiStatus: boolean; // PT IFICI regime (from 2024, replaces NHR)
+  ificiYear?: number; // Year IFICI status was granted
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Building {
   id: string;
   userId: string;
@@ -38,6 +57,9 @@ export interface Property {
   status: "occupied" | "vacant" | "maintenance";
   description?: string;
   image?: string;
+  // Fiscal / rental regime (Wave 2.2)
+  rentalRegime?: string; // "standard" | "acessivel" | "al" | "short_term"
+  propertyCountry?: string; // ISO country code (defaults to "PT")
   createdAt: string;
   updatedAt: string;
 }
@@ -166,6 +188,13 @@ export interface Lease {
   autoRenew: boolean;
   renewalNoticeDays: number;
   notes?: string;
+  renewalStatus?: "offered" | "accepted" | "declined" | "expired" | null;
+  renewalOfferedAt?: string | null;
+  renewalRespondedAt?: string | null;
+  renewalNotes?: string | null;
+  renewalProposedRent?: number | null;
+  renewalStartDate?: string | null;
+  renewalEndDate?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -183,6 +212,12 @@ export interface Expense {
   isDeductible?: boolean;
   vendorName?: string;
   vendorVat?: string;
+  // Recurring expense fields (Wave 2.4)
+  isRecurring?: boolean;
+  recurrenceRule?: "monthly" | "quarterly" | "annual";
+  recurrenceDay?: number;
+  recurrenceEnd?: string | null;
+  parentExpenseId?: string | null;
   createdAt: string;
   updatedAt: string;
 }

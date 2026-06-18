@@ -21,6 +21,19 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Fiscal identity fields
+  fiscalResidency    String?   // ISO country code: "PT", "ES", "IT", "FR", etc.
+  nhrStatus          Boolean   @default(false)  // PT Non-Habitual Resident (pre-2024)
+  nhrYear            Int?      // Year NHR status was granted
+  ificiStatus        Boolean   @default(false)  // PT IFICI regime (from 2024, replaces NHR)
+  ificiYear          Int?      // Year IFICI status was granted
+
+  // MFA / TOTP fields
+  totpSecret      String?          // AES-256-GCM encrypted TOTP secret
+  totpEnabled     Boolean          @default(false)
+  totpBackupCodes String?          // JSON array of hashed one-time backup codes
+  totpVerifiedAt  DateTime?        // Set when user completes MFA challenge; jwt callback reads this
+
   accounts      Account[]
   sessions      Session[]
   auditLogs     AuditLog[] // GDPR logging
@@ -43,6 +56,8 @@ model User {
   rentReceipts   RentReceipt[]
   settings       UserSettings?
   governmentVerifications GovernmentVerification[]
+  modelo179Submissions Modelo179Submission[]
+  taxFilings     TaxFiling[]
 }
 
 model EmailLog {
@@ -261,6 +276,9 @@ model Property {
   // Spain: Ley de Vivienda
   isZonaTensionada      Boolean             @default(false)
   cadasterReference     String?             // Referencia catastral (ES) or artigo matricial (PT)
+  // Fiscal / rental regime
+  rentalRegime          String              @default("standard")  // "standard" | "acessivel" | "al" | "short_term"
+  propertyCountry       String              @default("PT")        // ISO country code
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -370,6 +388,12 @@ model Expense {
   isDeductible  Boolean  @default(true)  // Whether deductible for IRS/IRPF
   vendorName    String?  // Supplier/vendor name (useful for invoice records)
   vendorVat     String?  // Vendor NIF/VAT number for tax documentation
+  // Recurring expense fields (Wave 2.4)
+  isRecurring      Boolean   @default(false)
+  recurrenceRule   String?   // "monthly" | "quarterly" | "annual"
+  recurrenceDay    Int?      // Day of month to generate (1-28)
+  recurrenceEnd    DateTime? // Stop generating after this date (null = indefinite)
+  parentExpenseId  String?   // If this was auto-generated, points to the template expense
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -378,6 +402,8 @@ model Expense {
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   unit     Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
   lease    Lease?   @relation(fields: [leaseId], references: [id], onDelete: SetNull)
+  parentExpense    Expense?  @relation("RecurringExpenses", fields: [parentExpenseId], references: [id], onDelete: SetNull)
+  childExpenses    Expense[] @relation("RecurringExpenses")
 
   // Performance indexes
   @@index([userId])
@@ -387,6 +413,8 @@ model Expense {
   @@index([date])
   @@index([category])
   @@index([isDeductible])
+  @@index([isRecurring])
+  @@index([parentExpenseId])
   @@map("expenses")
 }
 
@@ -491,6 +519,14 @@ model Lease {
   isZonaTensionada    Boolean  @default(false)
   priorContractRent   Float?   // Previous contract rent (for rent cap validation)
   notes               String?
+  // Renewal lifecycle
+  renewalStatus       String?   // null | "offered" | "accepted" | "declined" | "expired"
+  renewalOfferedAt    DateTime?
+  renewalRespondedAt  DateTime?
+  renewalNotes        String?
+  renewalProposedRent Float?
+  renewalStartDate    DateTime?
+  renewalEndDate      DateTime?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 
@@ -501,6 +537,7 @@ model Lease {
   unit     Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
   nruaRegistrations NRUARegistration[]
   expenses  Expense[]
+  modelo179Submissions Modelo179Submission[]
 
   @@index([userId])
   @@index([propertyId])
@@ -548,7 +585,9 @@ model Document {
   unitId      String?
   ownerId     String?
   tenantId    String?
-  
+
+  expiresAt   DateTime? // Optional expiry for insurance policies, certificates, permits
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -562,6 +601,7 @@ model Document {
   @@index([userId])
   @@index([propertyId])
   @@index([type])
+  @@index([expiresAt])
   @@map("documents")
 }
 
@@ -1163,4 +1203,74 @@ enum RentReceiptStatus {
   accepted      // Accepted by AT
   rejected      // Rejected by AT — needs correction
   cancelled     // Anulado
+}
+
+// ========================================
+// Tax Rule Store (Wave 3.1)
+// Legislation-driven tax brackets and rates
+// ========================================
+
+model TaxRule {
+  id            String   @id @default(cuid())
+  country       String   // "PT", "ES", "IT"
+  regime        String   // "STANDARD", "NHR", "IFICI", "AL", "RENDA_ACESSIVEL"
+  ruleType      String   // "INCOME_BRACKET", "DEDUCTIBLE_RATE", "WITHHOLDING_RATE", "FLAT_RATE"
+  year          Int
+  effectiveDate DateTime
+  payload       String   // JSON blob with the actual values
+  sourceUrl     String?  // Link to Diário da República / BOE
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([country, regime, ruleType, year])
+  @@index([country, year])
+  @@map("tax_rules")
+}
+
+model Modelo179Submission {
+  id           String    @id @default(cuid())
+  userId       String
+  leaseId      String
+  periodYear   Int
+  status       String    @default("pending")  // "pending" | "submitted" | "confirmed" | "rejected"
+  submittedAt  DateTime?
+  atReference  String?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lease Lease @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+
+  @@unique([leaseId, periodYear])
+  @@index([userId, periodYear])
+  @@map("modelo179_submissions")
+}
+
+model TaxFiling {
+  id                String   @id @default(cuid())
+  userId            String
+  year              Int
+  country           String   // "PT", "ES"
+  regime            String   // "STANDARD", "NHR", "IFICI", etc.
+  propertyIds       String   // JSON array of property IDs
+  grossIncome       Float
+  allowableExpenses Float
+  taxableIncome     Float
+  taxDue            Float
+  effectiveRate     Float
+  withholdingPaid   Float
+  balanceDue        Float
+  status            String   @default("draft") // "draft" | "final"
+  notes             String?  // JSON array from plugin
+  payload           String   // Full TaxCalculation JSON
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, year, country, regime])
+  @@index([userId, year])
+  @@map("tax_filings")
 }

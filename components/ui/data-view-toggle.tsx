@@ -21,6 +21,8 @@ export function DataViewToggle({
 }: DataViewToggleProps) {
   return (
     <div
+      role="group"
+      aria-label="View mode"
       className={cn("flex items-center gap-1 rounded-md border border-zinc-800 p-0.5", className)}
     >
       <Button
@@ -28,18 +30,22 @@ export function DataViewToggle({
         size="sm"
         className={cn("h-7 w-7 p-0", mode === "grid" && "bg-zinc-800 text-zinc-100")}
         onClick={() => onChange("grid")}
+        aria-label="Card view"
+        aria-pressed={mode === "grid"}
         title="Card view"
       >
-        <LayoutGrid className="h-3.5 w-3.5" />
+        <LayoutGrid className="h-3.5 w-3.5" aria-hidden="true" />
       </Button>
       <Button
         variant="ghost"
         size="sm"
         className={cn("h-7 w-7 p-0", mode === "table" && "bg-zinc-800 text-zinc-100")}
         onClick={() => onChange("table")}
+        aria-label="Table view"
+        aria-pressed={mode === "table"}
         title="Table view"
       >
-        <Table2 className="h-3.5 w-3.5" />
+        <Table2 className="h-3.5 w-3.5" aria-hidden="true" />
       </Button>
       {showMap && (
         <Button
@@ -47,9 +53,11 @@ export function DataViewToggle({
           size="sm"
           className={cn("h-7 w-7 p-0", mode === "map" && "bg-zinc-800 text-zinc-100")}
           onClick={() => onChange("map")}
+          aria-label="Map view"
+          aria-pressed={mode === "map"}
           title="Map view"
         >
-          <Map className="h-3.5 w-3.5" />
+          <Map className="h-3.5 w-3.5" aria-hidden="true" />
         </Button>
       )}
     </div>
