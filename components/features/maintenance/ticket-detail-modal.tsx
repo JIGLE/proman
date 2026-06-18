@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   AlertTriangle,
   Building2,
   Calendar,
+  Camera,
   CheckCircle,
   Edit,
+  Loader2,
   Phone,
+  Plus,
   Receipt,
   Trash2,
   User,
@@ -77,6 +80,66 @@ export function TicketDetailModal({
   const { formatCurrency } = useCurrency();
   const confirmDialog = useConfirmDialog();
   const [activeTab, setActiveTab] = useState("overview");
+  const [images, setImages] = useState<string[]>(ticket?.images ?? []);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Sync images when a different ticket is shown
+  useEffect(() => {
+    setImages(ticket?.images ?? []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticket?.id]);
+
+  const handleImageUpload = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file || !ticket) return;
+      setUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch(`/api/maintenance/${ticket.id}/images`, {
+          method: "POST",
+          body: formData,
+        });
+        if (!res.ok) {
+          const data = (await res.json()) as { error?: string };
+          throw new Error(data.error ?? "Upload failed");
+        }
+        const data = (await res.json()) as { images: string[] };
+        setImages(data.images);
+        await updateMaintenance(ticket.id, { images: data.images });
+        success("Photo uploaded");
+      } catch (err) {
+        error(err instanceof Error ? err.message : "Failed to upload photo");
+      } finally {
+        setUploading(false);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    },
+    [ticket, updateMaintenance, success, error],
+  );
+
+  const handleImageDelete = useCallback(
+    async (imageUrl: string) => {
+      if (!ticket) return;
+      const filename = imageUrl.split("/").pop();
+      if (!filename) return;
+      try {
+        const res = await fetch(`/api/maintenance/${ticket.id}/images/${filename}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) throw new Error("Delete failed");
+        const data = (await res.json()) as { images: string[] };
+        setImages(data.images);
+        await updateMaintenance(ticket.id, { images: data.images });
+        success("Photo removed");
+      } catch {
+        error("Failed to remove photo");
+      }
+    },
+    [ticket, updateMaintenance, success, error],
+  );
 
   if (!ticket) return null;
 
@@ -309,6 +372,9 @@ export function TicketDetailModal({
             <TabsList className="w-full justify-start">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="costs">Costs</TabsTrigger>
+              <TabsTrigger value="images">
+                Photos{images.length > 0 && ` (${images.length})`}
+              </TabsTrigger>
               <TabsTrigger value="activity">Activity</TabsTrigger>
             </TabsList>
 
@@ -461,6 +527,80 @@ export function TicketDetailModal({
                   </div>
                 )}
               </div>
+            </TabsContent>
+
+            {/* Photos tab */}
+            <TabsContent value="images" className="mt-4">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                className="sr-only"
+                onChange={handleImageUpload}
+                disabled={uploading}
+              />
+              {images.length === 0 ? (
+                <div className="rounded-md border border-dashed border-[var(--color-border)] p-8 text-center">
+                  <Camera className="mx-auto h-8 w-8 text-[var(--color-muted-foreground)] mb-2 opacity-40" />
+                  <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
+                    No photos attached yet
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={uploading}
+                    onClick={() => fileInputRef.current?.click()}
+                  >
+                    {uploading ? (
+                      <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                    ) : (
+                      <Plus className="h-3.5 w-3.5 mr-1.5" />
+                    )}
+                    Add photo
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+                    {images.map((url) => (
+                      <div
+                        key={url}
+                        className="group relative aspect-square overflow-hidden rounded-md border border-[var(--color-border)]"
+                      >
+                        <img
+                          src={url}
+                          alt="Maintenance photo"
+                          className="h-full w-full object-cover"
+                        />
+                        <button
+                          onClick={() => handleImageDelete(url)}
+                          className="absolute right-1 top-1 rounded-md bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
+                          aria-label="Remove photo"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    disabled={uploading}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-md border border-dashed border-[var(--color-border)] p-2 text-sm text-[var(--color-muted-foreground)] transition-colors hover:border-[var(--color-primary)] hover:text-[var(--color-primary)] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {uploading ? (
+                      <>
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Uploading…
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-3.5 w-3.5" />
+                        Add photo
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
             </TabsContent>
 
             {/* Activity tab */}
