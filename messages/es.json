@@ -188,7 +188,17 @@
     "noReceiptsYet": "Aún no hay recibos disponibles.",
     "needHelp": "¿Necesitas ayuda?",
     "contactOwnerLabel": "Contacta a tu propietario:",
-    "useLeaseHistory": "Usa el historial del contrato y los recibos como referencia antes de contactar al propietario."
+    "useLeaseHistory": "Usa el historial del contrato y los recibos como referencia antes de contactar al propietario.",
+    "actionPanelTitle": "Tareas de hoy",
+    "actionPanelSubtitle": "Lo que necesita tu atención ahora mismo.",
+    "rentDueAlert": "{count} de {total} contratos sin pagar este mes",
+    "overdueAlert": "{count} pago(s) vencido(s)",
+    "maintenanceOpenAlert": "{count} problema(s) de mantenimiento abierto(s) — el más antiguo lleva {days} días",
+    "leaseExpiringAlert": "El contrato de {property} vence en {days} día(s)",
+    "leaseExpiring90Alert": "{count} contrato(s) que vencen en los próximos 90 días",
+    "allClear": "Todo en orden",
+    "allClearDesc": "Sin rentas pendientes, pagos vencidos ni mantenimiento urgente.",
+    "setupComplete": "Configuración completa"
   },
   "greeting": {
     "morning": "Buenos días",

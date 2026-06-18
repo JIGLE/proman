@@ -10,6 +10,7 @@ import {
   BadgeEuro,
   Building2,
   CalendarClock,
+  CheckCircle2 as CheckCircle2Icon,
   FileText,
   Home,
   Mail,
@@ -26,6 +27,7 @@ import {
   type OnboardingChecklistStep,
 } from "@/components/ui/onboarding-checklist";
 import { cn } from "@/lib/utils/utils";
+import { ActionPanel } from "@/components/features/dashboard/action-panel";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
@@ -388,7 +390,18 @@ export function OverviewView({
   if (isOwnerPortal) {
     return (
       <div className="space-y-6">
+        {/* Action panel: always shown for owner portal */}
+        <ActionPanel />
+
+        {/* Onboarding checklist: only shown when incomplete; hidden when all done */}
         {showChecklist && <OnboardingChecklist steps={onboardingSteps} />}
+        {allStepsDone && (
+          <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-success,_theme(colors.emerald.500))]/20 bg-emerald-500/5 px-3 py-1 text-sm text-emerald-600 dark:text-emerald-400">
+            <CheckCircle2Icon className="h-3.5 w-3.5" />
+            {t("setupComplete")}
+          </div>
+        )}
+
         <section className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
           <div className="mb-6 space-y-3">
             <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-primary)]/20 bg-[var(--color-info-muted)] px-3 py-1 text-sm text-[var(--color-primary)]">

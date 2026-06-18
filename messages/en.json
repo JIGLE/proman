@@ -188,7 +188,17 @@
     "noReceiptsYet": "No receipts are available yet.",
     "needHelp": "Need help?",
     "contactOwnerLabel": "Contact your property owner:",
-    "useLeaseHistory": "Use your lease and receipt history as the source of truth before contacting the owner."
+    "useLeaseHistory": "Use your lease and receipt history as the source of truth before contacting the owner.",
+    "actionPanelTitle": "Today's action items",
+    "actionPanelSubtitle": "What needs your attention right now.",
+    "rentDueAlert": "{count} of {total} leases not yet paid this month",
+    "overdueAlert": "{count} payment(s) overdue",
+    "maintenanceOpenAlert": "{count} maintenance issue(s) open — oldest {days} days",
+    "leaseExpiringAlert": "{property} lease expires in {days} day(s)",
+    "leaseExpiring90Alert": "{count} lease(s) expiring within 90 days",
+    "allClear": "All clear",
+    "allClearDesc": "No outstanding rent, overdue payments, or urgent maintenance.",
+    "setupComplete": "Setup complete"
   },
   "greeting": {
     "morning": "Good morning",
