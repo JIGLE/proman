@@ -271,6 +271,6 @@ export const config = {
   // - Static files (images, fonts, etc.)
   // NOTE: API and auth routes ARE included so they get security headers
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|version\.json|.*\.(?:svg|png|jpg|jpeg|gif|webp|json)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|version\.json|sw\.js|manifest\.webmanifest|offline\.html|.*\.(?:svg|png|jpg|jpeg|gif|webp|json|webmanifest|txt|woff2?)$).*)",
   ],
 };

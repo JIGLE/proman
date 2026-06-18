@@ -9,12 +9,37 @@ const VARIANT_CONFIG: Record<
   BadgeVariant,
   { icon: React.ComponentType<{ className?: string }>; className: string }
 > = {
-  property: { icon: Building2, className: "bg-blue-500/10 text-blue-400 border-blue-500/20" },
-  tenant: { icon: Users, className: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" },
-  lease: { icon: FileText, className: "bg-purple-500/10 text-purple-400 border-purple-500/20" },
-  maintenance: { icon: Wrench, className: "bg-amber-500/10 text-amber-400 border-amber-500/20" },
-  expiry: { icon: Calendar, className: "bg-orange-500/10 text-orange-400 border-orange-500/20" },
-  overdue: { icon: AlertCircle, className: "bg-red-500/10 text-red-400 border-red-500/20" },
+  // Each entity type maps to a semantic / brand design token (no raw Tailwind colors).
+  property: {
+    icon: Building2,
+    className:
+      "bg-[color-mix(in_oklab,var(--color-info)_12%,transparent)] text-[var(--color-info)] border-[color-mix(in_oklab,var(--color-info)_25%,transparent)]",
+  },
+  tenant: {
+    icon: Users,
+    className:
+      "bg-[color-mix(in_oklab,var(--color-success)_12%,transparent)] text-[var(--color-success)] border-[color-mix(in_oklab,var(--color-success)_25%,transparent)]",
+  },
+  lease: {
+    icon: FileText,
+    className:
+      "bg-[color-mix(in_oklab,var(--color-primary)_12%,transparent)] text-[var(--color-primary)] border-[color-mix(in_oklab,var(--color-primary)_25%,transparent)]",
+  },
+  maintenance: {
+    icon: Wrench,
+    className:
+      "bg-[color-mix(in_oklab,var(--color-warning)_12%,transparent)] text-[var(--color-warning)] border-[color-mix(in_oklab,var(--color-warning)_25%,transparent)]",
+  },
+  expiry: {
+    icon: Calendar,
+    className:
+      "bg-[color-mix(in_oklab,var(--color-accent-secondary)_14%,transparent)] text-[var(--color-accent-secondary)] border-[color-mix(in_oklab,var(--color-accent-secondary)_28%,transparent)]",
+  },
+  overdue: {
+    icon: AlertCircle,
+    className:
+      "bg-[color-mix(in_oklab,var(--color-error)_12%,transparent)] text-[var(--color-error)] border-[color-mix(in_oklab,var(--color-error)_25%,transparent)]",
+  },
 };
 
 interface RelationshipBadgeProps {

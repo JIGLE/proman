@@ -27,7 +27,7 @@ export default function OgImage() {
           width: 520,
           height: 520,
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(99,102,241,0.18) 0%, transparent 65%)",
+          background: "radial-gradient(circle, rgba(13,148,136,0.20) 0%, transparent 65%)",
         }}
       />
       {/* Glow — bottom left */}
@@ -39,7 +39,7 @@ export default function OgImage() {
           width: 380,
           height: 380,
           borderRadius: "50%",
-          background: "radial-gradient(circle, rgba(129,140,248,0.07) 0%, transparent 70%)",
+          background: "radial-gradient(circle, rgba(232,130,90,0.10) 0%, transparent 70%)",
         }}
       />
 
@@ -50,14 +50,14 @@ export default function OgImage() {
             width: 52,
             height: 52,
             borderRadius: 12,
-            background: "rgba(99,102,241,0.15)",
-            border: "1.5px solid rgba(99,102,241,0.4)",
+            background: "rgba(13,148,136,0.15)",
+            border: "1.5px solid rgba(13,148,136,0.45)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <span style={{ color: "#818cf8", fontSize: 26, fontWeight: 700, lineHeight: 1 }}>P</span>
+          <span style={{ color: "#2dd4bf", fontSize: 26, fontWeight: 700, lineHeight: 1 }}>D</span>
         </div>
         <span
           style={{
@@ -67,7 +67,7 @@ export default function OgImage() {
             letterSpacing: -0.5,
           }}
         >
-          Proman
+          Domora
         </span>
       </div>
 
@@ -98,7 +98,7 @@ export default function OgImage() {
           lineHeight: 1.5,
         }}
       >
-        Property management built for landlords in Portugal and Spain.
+        Property management built for European landlords.
       </div>
 
       {/* Feature chips */}
@@ -107,9 +107,9 @@ export default function OgImage() {
           style={{
             padding: "8px 18px",
             borderRadius: 999,
-            border: "1px solid rgba(99,102,241,0.3)",
-            background: "rgba(99,102,241,0.08)",
-            color: "#a5b4fc",
+            border: "1px solid rgba(13,148,136,0.35)",
+            background: "rgba(13,148,136,0.10)",
+            color: "#5eead4",
             fontSize: 16,
             fontWeight: 500,
           }}
@@ -120,9 +120,9 @@ export default function OgImage() {
           style={{
             padding: "8px 18px",
             borderRadius: 999,
-            border: "1px solid rgba(99,102,241,0.3)",
-            background: "rgba(99,102,241,0.08)",
-            color: "#a5b4fc",
+            border: "1px solid rgba(13,148,136,0.35)",
+            background: "rgba(13,148,136,0.10)",
+            color: "#5eead4",
             fontSize: 16,
             fontWeight: 500,
           }}
@@ -133,9 +133,9 @@ export default function OgImage() {
           style={{
             padding: "8px 18px",
             borderRadius: 999,
-            border: "1px solid rgba(99,102,241,0.3)",
-            background: "rgba(99,102,241,0.08)",
-            color: "#a5b4fc",
+            border: "1px solid rgba(13,148,136,0.35)",
+            background: "rgba(13,148,136,0.10)",
+            color: "#5eead4",
             fontSize: 16,
             fontWeight: 500,
           }}
@@ -146,9 +146,9 @@ export default function OgImage() {
           style={{
             padding: "8px 18px",
             borderRadius: 999,
-            border: "1px solid rgba(99,102,241,0.3)",
-            background: "rgba(99,102,241,0.08)",
-            color: "#a5b4fc",
+            border: "1px solid rgba(13,148,136,0.35)",
+            background: "rgba(13,148,136,0.10)",
+            color: "#5eead4",
             fontSize: 16,
             fontWeight: 500,
           }}

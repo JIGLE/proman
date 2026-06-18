@@ -7,7 +7,7 @@ export default function Loading() {
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p className="text-sm text-muted-foreground" aria-live="polite">
           {/* Loading text kept minimal - i18n not available in loading boundaries */}
-          Proman
+          Domora
         </p>
       </div>
     </div>

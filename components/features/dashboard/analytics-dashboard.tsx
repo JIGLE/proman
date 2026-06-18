@@ -351,7 +351,7 @@ export function AnalyticsDashboard(): React.ReactElement {
         <div>
           <div className="flex items-center gap-2 text-sm text-zinc-400 mb-1">
             <Home className="h-4 w-4" />
-            <span>Proman</span>
+            <span>Domora</span>
             <span>/</span>
             <span className="text-zinc-200">Analytics</span>
           </div>

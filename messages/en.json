@@ -302,7 +302,7 @@
   "landing": {
     "eyebrow": "Portugal & Spain rental operations",
     "hero": "Collect rent. Issue receipts. Stay compliant.",
-    "subtitle": "Proman automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS\u2009/\u2009IRPF tax exports.",
+    "subtitle": "Domora automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS\u2009/\u2009IRPF tax exports.",
     "cta": "Sign in",
     "headerCta": "Get started",
     "navHowItWorks": "How it works",
@@ -1013,7 +1013,7 @@
     "banner": "Demo Mode – Changes are not saved",
     "exitButton": "Exit Demo",
     "preparing": "Preparing demo environment...",
-    "title": "Proman Demo",
+    "title": "Domora Demo",
     "readOnly": "This feature is read-only in demo mode",
     "changesNotSaved": "Demo mode: changes are not saved"
   },
@@ -1027,7 +1027,7 @@
     "tooManyRequests": "Too many requests. Please try again in {retryAfter} seconds."
   },
   "footer": {
-    "copyright": "© {year} Proman. All rights reserved.",
+    "copyright": "© {year} Domora. All rights reserved.",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
   },

@@ -76,7 +76,7 @@ function SignInContent() {
               </svg>
             </div>
 
-            <h1 className="text-2xl font-bold text-zinc-50 mb-2">Welcome to ProMan</h1>
+            <h1 className="text-2xl font-bold text-zinc-50 mb-2">Welcome to Domora</h1>
             <p className="text-zinc-400 mb-8">
               Sign in to access your property management dashboard
             </p>

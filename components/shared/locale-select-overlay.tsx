@@ -77,7 +77,7 @@ export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }
           >
             {/* Logo / brand mark */}
             <div className="text-center">
-              <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">ProMan</p>
+              <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Domora</p>
               <h1 className="mt-2 text-2xl font-semibold text-zinc-50">Choose your language</h1>
               <p className="mt-1.5 text-sm text-zinc-400">
                 Select a language to continue. You can change it later.

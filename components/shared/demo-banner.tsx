@@ -113,11 +113,11 @@ export function DemoBanner() {
         <div className="flex items-center gap-1.5 shrink-0">
           {!collapsed && (
             <>
-              <div className="inline-flex items-center gap-1 rounded bg-amber-900/15 p-0.5">
+              <div className="inline-flex items-center gap-1 rounded bg-black/10 p-0.5">
                 <button
                   onClick={() => switchDemoPerspective("owner")}
                   className={`rounded px-2 py-0.5 text-[10px] font-semibold transition-colors ${
-                    demoPerspective === "owner" ? "bg-amber-950/20" : ""
+                    demoPerspective === "owner" ? "bg-black/20" : ""
                   }`}
                 >
                   Owner
@@ -125,7 +125,7 @@ export function DemoBanner() {
                 <button
                   onClick={() => switchDemoPerspective("tenant")}
                   className={`rounded px-2 py-0.5 text-[10px] font-semibold transition-colors ${
-                    demoPerspective === "tenant" ? "bg-amber-950/20" : ""
+                    demoPerspective === "tenant" ? "bg-black/20" : ""
                   }`}
                 >
                   Tenant
@@ -136,8 +136,8 @@ export function DemoBanner() {
               <span
                 className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-mono tabular-nums ${
                   isLowTime
-                    ? "bg-red-900/30 text-red-100 animate-pulse"
-                    : "bg-amber-900/15 text-amber-950 dark:text-amber-100"
+                    ? "bg-rose-950/40 text-rose-50 animate-pulse"
+                    : "bg-black/10 text-amber-950 dark:text-amber-50"
                 }`}
                 title="Time remaining in demo session"
               >
@@ -149,7 +149,7 @@ export function DemoBanner() {
               {isLowTime && (
                 <button
                   onClick={handleExtend}
-                  className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-amber-950/25 hover:bg-amber-950/40 transition-colors"
+                  className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-black/20 hover:bg-black/30 transition-colors"
                   title="Extend demo by 15 minutes"
                 >
                   +15 min
@@ -159,7 +159,7 @@ export function DemoBanner() {
               {/* Restart Tour */}
               <button
                 onClick={handleRestartTour}
-                className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-amber-900/15 hover:bg-amber-900/25 transition-colors"
+                className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-black/10 hover:bg-black/20 transition-colors"
                 title="Restart guided tour"
               >
                 <PlayCircle className="h-3 w-3" />
@@ -169,7 +169,7 @@ export function DemoBanner() {
               {/* Reset Demo */}
               <button
                 onClick={handleReset}
-                className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-amber-900/15 hover:bg-amber-900/25 transition-colors"
+                className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-black/10 hover:bg-black/20 transition-colors"
                 title="Reset demo data to defaults"
               >
                 <RotateCcw className="h-3 w-3" />
@@ -179,7 +179,7 @@ export function DemoBanner() {
               {/* Exit Demo */}
               <button
                 onClick={exitDemo}
-                className="inline-flex items-center gap-1 rounded-md bg-amber-900/20 px-2.5 py-0.5 text-[10px] font-semibold hover:bg-amber-900/30 transition-colors"
+                className="inline-flex items-center gap-1 rounded-md bg-black/15 px-2.5 py-0.5 text-[10px] font-semibold hover:bg-black/25 transition-colors"
               >
                 <LogOut className="h-3 w-3" />
                 {t("demo.exitButton")}
@@ -190,7 +190,7 @@ export function DemoBanner() {
           {/* Collapse toggle */}
           <button
             onClick={() => setCollapsed((c) => !c)}
-            className="inline-flex items-center rounded p-0.5 hover:bg-amber-900/20 transition-colors"
+            className="inline-flex items-center rounded p-0.5 hover:bg-black/15 transition-colors"
             title={collapsed ? "Expand demo banner" : "Collapse demo banner"}
           >
             {collapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}

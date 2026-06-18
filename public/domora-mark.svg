@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="Domora">
+  <defs>
+    <linearGradient id="domoraMark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0d9488" />
+      <stop offset="100%" stop-color="#e8825a" />
+    </linearGradient>
+  </defs>
+  <rect width="128" height="128" rx="28" fill="#0b0e14" />
+  <!-- Arched doorway / threshold — "domus", reads as a D -->
+  <path d="M40 100V58a24 24 0 0 1 48 0v42" fill="none" stroke="url(#domoraMark)" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" />
+  <!-- Threshold -->
+  <path d="M33 100h62" fill="none" stroke="url(#domoraMark)" stroke-width="12" stroke-linecap="round" />
+  <!-- Light within the home -->
+  <circle cx="64" cy="61" r="7" fill="url(#domoraMark)" />
+</svg>

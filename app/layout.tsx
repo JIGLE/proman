@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Plus_Jakarta_Sans, Syne } from "next/font/google";
 // Development-only server patch to help locate React.Children.only failures
 import "@/lib/dev/patch-react-children-only";
 import "./globals.css";
 import { getNonce } from "@/lib/utils/csp-nonce";
 import UpdateBannerClient from "@/components/shared/update-banner-client";
+import { PwaRegister } from "@/components/shared/pwa-register";
 import { DevAuthProvider } from "@/components/shared/dev-auth";
 import { defaultLocale } from "@/lib/i18n/config";
 
@@ -22,24 +23,49 @@ const syne = Syne({
   weight: ["600", "700", "800"],
 });
 
+const BRAND_TAGLINE = "Domora — Property management for European landlords";
+const BRAND_DESCRIPTION =
+  "Domora brings your properties, leases, receipts, expenses and tax compliance into one calm, private workspace — with rent-receipt and registry automation built for Portugal and Spain, and more of Europe to come.";
+
 export const metadata: Metadata = {
-  title: "Proman — Property Management",
-  description:
-    "Proman automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+  title: {
+    default: BRAND_TAGLINE,
+    template: "%s · Domora",
+  },
+  applicationName: "Domora",
+  description: BRAND_DESCRIPTION,
   openGraph: {
-    title: "Proman — Property Management",
-    description:
-      "Proman automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+    title: BRAND_TAGLINE,
+    description: BRAND_DESCRIPTION,
     type: "website",
     locale: "en_US",
-    siteName: "Proman",
+    siteName: "Domora",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Proman — Property Management",
-    description:
-      "Proman automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+    title: BRAND_TAGLINE,
+    description: BRAND_DESCRIPTION,
   },
+  // Installable PWA / iOS home-screen support.
+  appleWebApp: {
+    capable: true,
+    title: "Domora",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#0d9488" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b0e14" },
+  ],
 };
 
 export default async function RootLayout({
@@ -63,6 +89,7 @@ export default async function RootLayout({
           {/* Update banner (admin-only) */}
           <UpdateBannerClient />
           {children}
+          <PwaRegister />
         </DevAuthProvider>
       </body>
     </html>
