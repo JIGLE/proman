@@ -182,7 +182,7 @@ export function ActionPanel(): ReactElement {
       results.push({
         id: "expiring-30d-no-offer",
         icon: CalendarClock,
-        message: t("leaseExpiringAlert", { property: propName, days: daysLeft }),
+        message: t("leaseExpiringNoRenewal", { property: propName, days: daysLeft }),
         count: noOfferExpiring.length,
         href: "/leases",
         severity: "critical",
@@ -193,7 +193,7 @@ export function ActionPanel(): ReactElement {
       results.push({
         id: "expiring-30d-awaiting",
         icon: CalendarClock,
-        message: t("renewalAwaiting", { count: awaitingResponse.length }),
+        message: t("leaseExpiringAwaiting", { count: awaitingResponse.length }),
         count: awaitingResponse.length,
         href: "/leases",
         severity: "warning",
@@ -204,7 +204,7 @@ export function ActionPanel(): ReactElement {
       results.push({
         id: "expiring-30d-accepted",
         icon: CalendarClock,
-        message: t("renewalAcceptedAlert", { count: renewalAccepted.length }),
+        message: t("leaseExpiringAccepted", { count: renewalAccepted.length }),
         count: renewalAccepted.length,
         href: "/leases",
         severity: "info",

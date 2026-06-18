@@ -194,10 +194,11 @@
     "rentDueAlert": "{count} of {total} leases not yet paid this month",
     "overdueAlert": "{count} payment(s) overdue",
     "maintenanceOpenAlert": "{count} maintenance issue(s) open — oldest {days} days",
-    "leaseExpiringAlert": "{property} lease expires in {days} day(s) — no renewal offered",
+    "leaseExpiringAlert": "{property} lease expires in {days} day(s)",
     "leaseExpiring90Alert": "{count} lease(s) expiring within 90 days",
-    "renewalAwaiting": "{count} lease(s) expiring soon — awaiting tenant response",
-    "renewalAcceptedAlert": "{count} renewal(s) accepted — create new lease",
+    "leaseExpiringNoRenewal": "{property} lease expires in {days} day(s) — no renewal offered",
+    "leaseExpiringAwaiting": "{count} lease(s) expiring — awaiting tenant response",
+    "leaseExpiringAccepted": "{count} lease(s) renewal accepted — create new lease",
     "allClear": "All clear",
     "allClearDesc": "No outstanding rent, overdue payments, or urgent maintenance.",
     "setupComplete": "Setup complete"
@@ -641,7 +642,16 @@
     "priorContractRent": "Prior Contract Rent",
     "stressedZone": "Stressed Housing Zone",
     "contractUpload": "Upload Contract",
-    "contractDownload": "Download Contract"
+    "contractDownload": "Download Contract",
+    "offerRenewal": "Offer Renewal",
+    "renewalOffered": "Renewal Offered",
+    "renewalAccepted": "Renewal Accepted",
+    "renewalDeclined": "Renewal Declined",
+    "renewalAwaiting": "Awaiting Tenant Response",
+    "proposedRent": "Proposed New Rent",
+    "newStartDate": "New Start Date",
+    "newEndDate": "New End Date",
+    "renewalNotes": "Notes for Tenant"
   },
   "maintenance": {
     "title": "Maintenance",
