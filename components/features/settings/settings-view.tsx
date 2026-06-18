@@ -753,7 +753,33 @@ export function SettingsView(): React.ReactElement {
         </TabsContent>
 
         {/* System tab */}
-        <TabsContent value="system" className="mt-6">
+        <TabsContent value="system" className="mt-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Landmark className="h-5 w-5" />
+                Tax Rules Store
+              </CardTitle>
+              <CardDescription>
+                Manage tax brackets, withholding rates, and deductible rates by country and year
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-3">
+                All tax rates are stored in the database — no hard-coded values. Update rules here
+                when new fiscal legislation is published.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => router.push(`/${currentLocale}/settings/tax-rules`)}
+              >
+                <Landmark className="h-4 w-4 mr-1.5" />
+                Open Tax Rules
+              </Button>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
