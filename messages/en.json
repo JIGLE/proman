@@ -211,6 +211,8 @@
     "leaseExpiringNoRenewal": "{property} lease expires in {days} day(s) — no renewal offered",
     "leaseExpiringAwaiting": "{count} lease(s) expiring — awaiting tenant response",
     "leaseExpiringAccepted": "{count} lease(s) renewal accepted — create new lease",
+    "docExpiryCritical": "{count} document(s) expiring within 14 days",
+    "docExpiryWarning": "{count} document(s) expiring within 60 days",
     "allClear": "All clear",
     "allClearDesc": "No outstanding rent, overdue payments, or urgent maintenance.",
     "setupComplete": "Setup complete"

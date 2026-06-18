@@ -578,7 +578,9 @@ model Document {
   unitId      String?
   ownerId     String?
   tenantId    String?
-  
+
+  expiresAt   DateTime? // Optional expiry for insurance policies, certificates, permits
+
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -592,6 +594,7 @@ model Document {
   @@index([userId])
   @@index([propertyId])
   @@index([type])
+  @@index([expiresAt])
   @@map("documents")
 }
 

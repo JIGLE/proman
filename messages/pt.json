@@ -211,6 +211,8 @@
     "leaseExpiringNoRenewal": "Contrato de {property} expira em {days} dia(s) — sem renovação oferecida",
     "leaseExpiringAwaiting": "{count} contrato(s) a expirar — aguardando resposta do inquilino",
     "leaseExpiringAccepted": "{count} renovação(ões) aceite(s) — criar novo contrato",
+    "docExpiryCritical": "{count} documento(s) a expirar em 14 dias",
+    "docExpiryWarning": "{count} documento(s) a expirar em 60 dias",
     "allClear": "Tudo em ordem",
     "allClearDesc": "Sem rendas em falta, pagamentos em atraso ou manutenção urgente.",
     "setupComplete": "Configuração concluída"

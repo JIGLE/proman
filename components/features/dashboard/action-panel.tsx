@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, type ReactElement } from "react";
+import { useMemo, useState, useEffect, type ReactElement } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -10,6 +10,7 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
+  FileWarning,
   Wrench,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,6 +74,14 @@ export function ActionPanel(): ReactElement {
   const locale = pathname.split("/")[1] || "pt";
 
   const { leases = [], receipts = [], maintenance = [], properties = [] } = state;
+
+  const [docExpiry, setDocExpiry] = useState<{ critical: number; warning: number } | null>(null);
+  useEffect(() => {
+    fetch("/api/documents/expiring")
+      .then((r) => r.json())
+      .then((d) => setDocExpiry(d.data ?? d))
+      .catch(() => null);
+  }, []);
 
   const alerts = useMemo<ActionAlert[]>(() => {
     const now = new Date();
@@ -233,8 +242,30 @@ export function ActionPanel(): ReactElement {
       });
     }
 
+    // --- 6. Document expiry ---
+    if (docExpiry?.critical) {
+      results.push({
+        id: "doc-expiry-critical",
+        icon: FileWarning,
+        message: t("docExpiryCritical", { count: docExpiry.critical }),
+        count: docExpiry.critical,
+        href: "/documents",
+        severity: "critical",
+      });
+    }
+    if (docExpiry?.warning) {
+      results.push({
+        id: "doc-expiry-warning",
+        icon: FileWarning,
+        message: t("docExpiryWarning", { count: docExpiry.warning }),
+        count: docExpiry.warning,
+        href: "/documents",
+        severity: "warning",
+      });
+    }
+
     return results;
-  }, [leases, receipts, maintenance, properties, t]);
+  }, [leases, receipts, maintenance, properties, t, docExpiry]);
 
   return (
     <Card className="border-[var(--color-border)] bg-[var(--color-card)]">

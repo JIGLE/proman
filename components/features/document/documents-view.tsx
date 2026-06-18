@@ -29,12 +29,21 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
-import { Download, Trash2, Search, Filter } from "lucide-react";
+import { Download, Trash2, Search, Filter, Clock } from "lucide-react";
 import type { DocumentType } from "./document-types";
 import { documentTypeConfig, formatFileSize, formatDocumentDate } from "./document-types";
 import { useDocuments } from "./use-documents";
 import { DocumentUploadDialog } from "./document-upload-dialog";
 import { DocumentTemplateDialog } from "./document-template-dialog";
+
+function getExpiryInfo(expiresAt: string | null | undefined) {
+  if (!expiresAt) return null;
+  const days = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86400000);
+  if (days < 0) return { label: "Expired", variant: "destructive" as const };
+  if (days <= 14) return { label: `Expires in ${days}d`, variant: "destructive" as const };
+  if (days <= 60) return { label: `Expires in ${days}d`, variant: "warning" as const };
+  return null;
+}
 
 export function DocumentsView() {
   const searchParams = useSearchParams();
@@ -291,6 +300,7 @@ export function DocumentsView() {
                     {groupDocs.map((doc) => {
                       const config = documentTypeConfig[doc.type];
                       const Icon = config.icon;
+                      const expiry = getExpiryInfo(doc.expiresAt);
                       return (
                         <div
                           key={doc.id}
@@ -306,6 +316,15 @@ export function DocumentsView() {
                                 <Badge variant="secondary" className={config.color}>
                                   {config.label}
                                 </Badge>
+                                {expiry && (
+                                  <Badge
+                                    variant={expiry.variant}
+                                    className="flex items-center gap-1"
+                                  >
+                                    <Clock className="h-3 w-3" />
+                                    {expiry.label}
+                                  </Badge>
+                                )}
                               </div>
                               <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                                 <span>{formatFileSize(doc.fileSize)}</span>

@@ -41,6 +41,7 @@ const emptyForm = {
   propertyId: "",
   tenantId: "",
   ownerId: "",
+  expiresAt: "",
   file: null as File | null,
 };
 
@@ -76,6 +77,7 @@ export function DocumentUploadDialog({ csrfToken, properties, tenants, owners, o
         propertyId: form.propertyId || undefined,
         tenantId: form.tenantId || undefined,
         ownerId: form.ownerId || undefined,
+        expiresAt: form.expiresAt ? new Date(form.expiresAt).toISOString() : undefined,
       });
 
       setOpen(false);
@@ -146,6 +148,15 @@ export function DocumentUploadDialog({ csrfToken, properties, tenants, owners, o
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
               placeholder="Brief description"
               rows={2}
+            />
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="expiresAt">Expiry date (optional)</Label>
+            <Input
+              id="expiresAt"
+              type="date"
+              value={form.expiresAt}
+              onChange={(e) => setForm((prev) => ({ ...prev, expiresAt: e.target.value }))}
             />
           </div>
           <div className="grid gap-2">
