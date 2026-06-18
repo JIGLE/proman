@@ -501,6 +501,11 @@ model Lease {
   isZonaTensionada    Boolean  @default(false)
   priorContractRent   Float?   // Previous contract rent (for rent cap validation)
   notes               String?
+  // Renewal workflow (Wave 2.1)
+  renewalStatus       String?   // null | "offered" | "accepted" | "declined" | "expired"
+  renewalOfferedAt    DateTime?
+  renewalRespondedAt  DateTime?
+  renewalNotes        String?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 

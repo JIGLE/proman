@@ -156,7 +156,7 @@ export function ActionPanel(): ReactElement {
       });
     }
 
-    // --- 4. Leases expiring within 30 days ---
+    // --- 4. Leases expiring within 30 days — bucketed by renewalStatus ---
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const soonExpiring = activeLeases.filter((l) => {
       const end = new Date(l.endDate);
@@ -175,14 +175,57 @@ export function ActionPanel(): ReactElement {
         properties.find((p) => p.id === soonest.propertyId)?.name ??
         soonest.property?.name ??
         "—";
-      results.push({
-        id: "expiring-30d",
-        icon: CalendarClock,
-        message: t("leaseExpiringAlert", { property: propName, days: daysLeft }),
-        count: soonExpiring.length,
-        href: "/leases",
-        severity: "critical",
-      });
+
+      // Bucket by renewalStatus
+      const noRenewal = soonExpiring.filter((l) => !l.renewalStatus);
+      const awaitingResponse = soonExpiring.filter((l) => l.renewalStatus === "offered");
+      const renewalAccepted = soonExpiring.filter((l) => l.renewalStatus === "accepted");
+
+      if (noRenewal.length > 0) {
+        results.push({
+          id: "expiring-30d-no-renewal",
+          icon: CalendarClock,
+          message: t("leaseExpiringNoRenewal", { property: propName, days: daysLeft }),
+          count: noRenewal.length,
+          href: "/leases",
+          severity: "critical",
+        });
+      }
+
+      if (awaitingResponse.length > 0) {
+        results.push({
+          id: "expiring-30d-awaiting",
+          icon: CalendarClock,
+          message: t("leaseExpiringAwaiting", { count: awaitingResponse.length }),
+          count: awaitingResponse.length,
+          href: "/leases",
+          severity: "warning",
+        });
+      }
+
+      if (renewalAccepted.length > 0) {
+        results.push({
+          id: "expiring-30d-accepted",
+          icon: CalendarClock,
+          message: t("leaseExpiringAccepted", { count: renewalAccepted.length }),
+          count: renewalAccepted.length,
+          href: "/leases",
+          severity: "info",
+        });
+      }
+
+      // Fallback: show old-style alert if none of the above buckets fired
+      // (e.g. all are "declined" or "expired" renewalStatus)
+      if (noRenewal.length === 0 && awaitingResponse.length === 0 && renewalAccepted.length === 0) {
+        results.push({
+          id: "expiring-30d",
+          icon: CalendarClock,
+          message: t("leaseExpiringAlert", { property: propName, days: daysLeft }),
+          count: soonExpiring.length,
+          href: "/leases",
+          severity: "critical",
+        });
+      }
     }
 
     // --- 5. Leases expiring within 90 days (secondary warning) ---

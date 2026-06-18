@@ -188,6 +188,11 @@ export interface Lease {
   autoRenew: boolean;
   renewalNoticeDays: number;
   notes?: string;
+  // Renewal workflow (Wave 2.1)
+  renewalStatus?: "offered" | "accepted" | "declined" | "expired" | null;
+  renewalOfferedAt?: string | null;
+  renewalRespondedAt?: string | null;
+  renewalNotes?: string | null;
   createdAt: string;
   updatedAt: string;
 }

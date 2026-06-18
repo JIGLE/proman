@@ -1,13 +1,24 @@
 "use client";
 
-import { useMemo } from "react";
-import { FileText, Edit, ArrowLeft, Calendar, RotateCcw, XCircle } from "lucide-react";
+import { useMemo, useState } from "react";
+import { FileText, Edit, ArrowLeft, Calendar, RotateCcw, XCircle, RefreshCw } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/utils";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useApp } from "@/lib/contexts/app-context";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
@@ -25,6 +36,12 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> = 
   terminated: "destructive",
 };
 
+/** Format a Date as a local YYYY-MM-DD string for date inputs */
+function toDateInputValue(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
 export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
   const { state, updateLease } = useApp();
   const { formatCurrency } = useCurrency();
@@ -33,6 +50,7 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
   const pathname = usePathname();
   const router = useRouter();
   const locale = pathname.split("/")[1] || "pt";
+  const t = useTranslations("leases");
 
   const lease = state.leases.find((l) => l.id === leaseId);
 
@@ -48,6 +66,14 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
         : [],
     [state.receipts, lease],
   );
+
+  // Renewal dialog state
+  const [renewalDialogOpen, setRenewalDialogOpen] = useState(false);
+  const [renewalSubmitting, setRenewalSubmitting] = useState(false);
+  const [proposedRent, setProposedRent] = useState<string>("");
+  const [newStartDate, setNewStartDate] = useState<string>("");
+  const [newEndDate, setNewEndDate] = useState<string>("");
+  const [renewalNotes, setRenewalNotes] = useState<string>("");
 
   if (!lease) {
     return (
@@ -67,6 +93,55 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
   const totalPaid = relatedReceipts
     .filter((r) => r.status === "paid")
     .reduce((sum, r) => sum + r.amount, 0);
+
+  // Renewal offer button visibility:
+  // - active lease AND expiring within 90 days AND renewalStatus is null or "declined"
+  const showOfferRenewal =
+    lease.status === "active" &&
+    daysUntilExpiry <= 90 &&
+    (lease.renewalStatus == null || lease.renewalStatus === "declined");
+
+  const openRenewalDialog = () => {
+    const endDate = new Date(lease.endDate);
+    const defaultStart = new Date(endDate.getTime() + 24 * 60 * 60 * 1000);
+    const defaultEnd = new Date(defaultStart.getTime() + 365 * 24 * 60 * 60 * 1000);
+    setProposedRent(String(lease.monthlyRent));
+    setNewStartDate(toDateInputValue(defaultStart));
+    setNewEndDate(toDateInputValue(defaultEnd));
+    setRenewalNotes("");
+    setRenewalDialogOpen(true);
+  };
+
+  const handleOfferRenewal = async () => {
+    setRenewalSubmitting(true);
+    try {
+      const res = await fetch(`/api/leases/${lease.id}/renewal`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          proposedRent: proposedRent ? Number(proposedRent) : undefined,
+          proposedStartDate: newStartDate || undefined,
+          proposedEndDate: newEndDate || undefined,
+          notes: renewalNotes || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to send renewal offer");
+      const data = (await res.json()) as { data?: unknown };
+      // Update lease in AppContext via updateLease
+      await updateLease(lease.id, {
+        renewalStatus: "offered",
+        renewalOfferedAt: new Date().toISOString(),
+        renewalNotes: renewalNotes || null,
+      });
+      void data;
+      success(t("renewalOffered"));
+      setRenewalDialogOpen(false);
+    } catch {
+      error(t("offerRenewal"));
+    } finally {
+      setRenewalSubmitting(false);
+    }
+  };
 
   const handleEdit = () => {
     router.push(`/${locale}/leases?action=edit&id=${lease.id}`);
@@ -114,7 +189,7 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
                 {lease.startDate} — {lease.endDate}
               </span>
             </div>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex items-center gap-3 mt-2 flex-wrap">
               <Badge variant={STATUS_VARIANT[lease.status] || "secondary"}>{lease.status}</Badge>
               <span className="text-sm font-medium">{formatCurrency(lease.monthlyRent)}/mo</span>
               {lease.autoRenew && <Badge variant="outline">Auto-renew</Badge>}
@@ -123,10 +198,30 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
                   Expires in {daysUntilExpiry}d
                 </Badge>
               )}
+              {/* Renewal status badges */}
+              {lease.renewalStatus === "offered" && (
+                <Badge variant="secondary" className="text-sky-600 dark:text-sky-400">
+                  {t("renewalAwaiting")}
+                </Badge>
+              )}
+              {lease.renewalStatus === "accepted" && (
+                <Badge variant="default" className="bg-emerald-600 text-white">
+                  {t("renewalAccepted")}
+                </Badge>
+              )}
+              {lease.renewalStatus === "declined" && (
+                <Badge variant="destructive">{t("renewalDeclined")}</Badge>
+              )}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {showOfferRenewal && (
+            <Button variant="outline" size="sm" onClick={openRenewalDialog}>
+              <RefreshCw className="h-4 w-4 mr-1" />
+              {t("offerRenewal")}
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={handleRenew}>
             <RotateCcw className="h-4 w-4 mr-1" /> Renew
           </Button>
@@ -135,6 +230,68 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
           </Button>
         </div>
       </div>
+
+      {/* Renewal Offer Dialog */}
+      <Dialog open={renewalDialogOpen} onOpenChange={setRenewalDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("offerRenewal")}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="proposed-rent">{t("proposedRent")}</Label>
+              <Input
+                id="proposed-rent"
+                type="number"
+                min={0}
+                step={0.01}
+                value={proposedRent}
+                onChange={(e) => setProposedRent(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="new-start-date">{t("newStartDate")}</Label>
+              <Input
+                id="new-start-date"
+                type="date"
+                value={newStartDate}
+                onChange={(e) => setNewStartDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="new-end-date">{t("newEndDate")}</Label>
+              <Input
+                id="new-end-date"
+                type="date"
+                value={newEndDate}
+                onChange={(e) => setNewEndDate(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="renewal-notes">{t("renewalNotes")}</Label>
+              <Textarea
+                id="renewal-notes"
+                rows={3}
+                value={renewalNotes}
+                onChange={(e) => setRenewalNotes(e.target.value)}
+                placeholder="Optional notes for the tenant"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setRenewalDialogOpen(false)}
+              disabled={renewalSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleOfferRenewal} disabled={renewalSubmitting}>
+              {renewalSubmitting ? "Sending…" : t("offerRenewal")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Linked Entities */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

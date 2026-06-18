@@ -196,6 +196,9 @@
     "maintenanceOpenAlert": "{count} problema(s) de mantenimiento abierto(s) — el más antiguo lleva {days} días",
     "leaseExpiringAlert": "El contrato de {property} vence en {days} día(s)",
     "leaseExpiring90Alert": "{count} contrato(s) que vencen en los próximos 90 días",
+    "leaseExpiringNoRenewal": "El contrato de {property} vence en {days} día(s) — sin renovación ofrecida",
+    "leaseExpiringAwaiting": "{count} contrato(s) venciendo — esperando respuesta del inquilino",
+    "leaseExpiringAccepted": "{count} renovación(es) aceptada(s) — crear nuevo contrato",
     "allClear": "Todo en orden",
     "allClearDesc": "Sin rentas pendientes, pagos vencidos ni mantenimiento urgente.",
     "setupComplete": "Configuración completa"
@@ -639,7 +642,16 @@
     "priorContractRent": "Alquiler del Contrato Anterior",
     "stressedZone": "Zona de Mercado Residencial Tensionado",
     "contractUpload": "Subir Contrato",
-    "contractDownload": "Descargar Contrato"
+    "contractDownload": "Descargar Contrato",
+    "offerRenewal": "Ofrecer Renovación",
+    "renewalOffered": "Renovación Ofrecida",
+    "renewalAccepted": "Renovación Aceptada",
+    "renewalDeclined": "Renovación Rechazada",
+    "renewalAwaiting": "Esperando Respuesta del Inquilino",
+    "proposedRent": "Nuevo Alquiler Propuesto",
+    "newStartDate": "Nueva Fecha de Inicio",
+    "newEndDate": "Nueva Fecha de Fin",
+    "renewalNotes": "Notas para el Inquilino"
   },
   "maintenance": {
     "title": "Mantenimiento",
