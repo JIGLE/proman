@@ -1,9 +1,5 @@
 FROM node:26-alpine AS builder
 
-# Cache bust - this RUN command uses the ARG, forcing all subsequent layers to rebuild
-ARG CACHE_BUST
-RUN echo "Cache bust: ${CACHE_BUST}"
-
 ARG BUILD_VERSION
 ARG GIT_COMMIT
 ARG BUILD_TIME
@@ -22,6 +18,11 @@ COPY package*.json ./
 COPY prisma ./prisma/
 COPY prisma.config.ts ./
 RUN npm install
+
+# Cache bust AFTER npm install so dependency layers are reused across runs.
+# Only application code rebuild is forced on every CI run.
+ARG CACHE_BUST
+RUN echo "Cache bust: ${CACHE_BUST}"
 
 # Copy source code and build (invalidates on code changes only)
 COPY next.config.ts tsconfig.json postcss.config.mjs eslint.config.js ./
