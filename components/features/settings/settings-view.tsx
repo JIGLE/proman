@@ -492,6 +492,82 @@ export function SettingsView(): React.ReactElement {
               </div>
             </CardContent>
           </Card>
+
+          {/* GDPR — data rights */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="h-5 w-5" />
+                Your Data Rights (GDPR)
+              </CardTitle>
+              <CardDescription>
+                Export or permanently delete your personal data at any time
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-lg border border-border p-4 space-y-2">
+                  <p className="text-sm font-medium">Export my data</p>
+                  <p className="text-xs text-muted-foreground">
+                    Download a JSON file containing all your account data, properties, tenants,
+                    leases, and audit history.
+                  </p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={async () => {
+                      try {
+                        const res = await fetch("/api/user/export-data", { method: "POST" });
+                        if (!res.ok) throw new Error("Export failed");
+                        const blob = await res.blob();
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = "domora-data.json";
+                        a.click();
+                        URL.revokeObjectURL(url);
+                      } catch {
+                        showError("Export failed. Please try again.");
+                      }
+                    }}
+                  >
+                    Export my data
+                  </Button>
+                </div>
+                <div className="rounded-lg border border-destructive/30 p-4 space-y-2">
+                  <p className="text-sm font-medium text-destructive">Delete my account</p>
+                  <p className="text-xs text-muted-foreground">
+                    Permanently delete your account and all associated data. This cannot be undone.
+                  </p>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={async () => {
+                      if (
+                        !window.confirm(
+                          "This will permanently delete your account and all data. Are you sure?",
+                        )
+                      )
+                        return;
+                      try {
+                        const res = await fetch("/api/user/delete-data", { method: "POST" });
+                        if (!res.ok) throw new Error("Delete failed");
+                        window.location.href = "/auth/signin";
+                      } catch {
+                        showError("Deletion failed. Please try again.");
+                      }
+                    }}
+                  >
+                    Delete my account
+                  </Button>
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Data retention: audit logs are kept for 7 years (legal obligation), email logs for
+                2 years, read notifications for 1 year. Automatic purge runs daily.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Organization tab */}
