@@ -245,7 +245,7 @@ export function FinancialsView(): React.ReactElement {
         <LoadingState variant="cards" count={6} />
       ) : receipts.length === 0 && expenses.length === 0 ? (
         <div className="space-y-6">
-          <PageHeader title="Financials" description="Track income, expenses, and cash flow" />
+          <PageHeader title="Accounts" description="Track income, expenses, and cash flow" />
           <EmptyStateIllustration
             type="expenses"
             title="No financial data yet"
@@ -254,7 +254,7 @@ export function FinancialsView(): React.ReactElement {
         </div>
       ) : (
         <div className="space-y-6">
-          <PageHeader title="Financials" description="Track income, expenses, and cash flow">
+          <PageHeader title="Accounts" description="Track income, expenses, and cash flow">
             <Select value={timeRange} onValueChange={setTimeRange}>
               <SelectTrigger className="w-[150px]">
                 <CalendarIcon className="w-4 h-4 mr-2" />

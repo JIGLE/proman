@@ -175,8 +175,8 @@ export function CommandPalette() {
   const categoryLabels: Record<string, string> = {
     action: "Quick Actions",
     navigation: "Navigation",
-    property: "Portfolio",
-    tenant: "People",
+    property: "Properties",
+    tenant: "Tenants",
     lease: "Leases",
   };
 

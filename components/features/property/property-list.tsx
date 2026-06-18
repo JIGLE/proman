@@ -650,7 +650,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
           <div className="space-y-6">
             {showPageHeader && (
               <PageHeader
-                title="Portfolio"
+                title="Properties"
                 description="Manage your properties, occupancy, and rent coverage."
               />
             )}
