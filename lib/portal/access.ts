@@ -58,7 +58,7 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
       {
         key: "people",
         href: "/people",
-        label: "People",
+        label: "Tenants",
         labelKey: "navigation.people",
         icon: Users,
         roles: ["owner"],
@@ -76,7 +76,7 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
       {
         key: "financials",
         href: "/financials",
-        label: "Financials",
+        label: "Accounts",
         labelKey: "navigation.financials",
         icon: Wallet,
         roles: ["owner", "tenant"],
@@ -93,7 +93,7 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
     ],
   },
   {
-    group: "Intelligence",
+    group: "Reports",
     groupLabelKey: "navigation.intelligenceGroup",
     items: [
       {
@@ -123,7 +123,7 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
       {
         key: "correspondence",
         href: "/correspondence",
-        label: "Correspondence",
+        label: "Messages",
         labelKey: "navigation.correspondence",
         icon: Mail,
         roles: ["owner"],

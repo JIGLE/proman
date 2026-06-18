@@ -21,6 +21,13 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  // Fiscal identity fields
+  fiscalResidency    String?   // ISO country code: "PT", "ES", "IT", "FR", etc.
+  nhrStatus          Boolean   @default(false)  // PT Non-Habitual Resident (pre-2024)
+  nhrYear            Int?      // Year NHR status was granted
+  ificiStatus        Boolean   @default(false)  // PT IFICI regime (from 2024, replaces NHR)
+  ificiYear          Int?      // Year IFICI status was granted
+
   accounts      Account[]
   sessions      Session[]
   auditLogs     AuditLog[] // GDPR logging
@@ -261,6 +268,9 @@ model Property {
   // Spain: Ley de Vivienda
   isZonaTensionada      Boolean             @default(false)
   cadasterReference     String?             // Referencia catastral (ES) or artigo matricial (PT)
+  // Fiscal / rental regime
+  rentalRegime          String              @default("standard")  // "standard" | "acessivel" | "al" | "short_term"
+  propertyCountry       String              @default("PT")        // ISO country code
   
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -1163,4 +1173,27 @@ enum RentReceiptStatus {
   accepted      // Accepted by AT
   rejected      // Rejected by AT — needs correction
   cancelled     // Anulado
+}
+
+// ========================================
+// Tax Rule Store (Wave 3.1)
+// Legislation-driven tax brackets and rates
+// ========================================
+
+model TaxRule {
+  id            String   @id @default(cuid())
+  country       String   // "PT", "ES", "IT"
+  regime        String   // "STANDARD", "NHR", "IFICI", "AL", "RENDA_ACESSIVEL"
+  ruleType      String   // "INCOME_BRACKET", "DEDUCTIBLE_RATE", "WITHHOLDING_RATE", "FLAT_RATE"
+  year          Int
+  effectiveDate DateTime
+  payload       String   // JSON blob with the actual values
+  sourceUrl     String?  // Link to Diário da República / BOE
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([country, regime, ruleType, year])
+  @@index([country, year])
+  @@map("tax_rules")
 }
