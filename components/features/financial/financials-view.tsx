@@ -4,12 +4,14 @@ import { useState, useMemo } from "react";
 import {
   DollarSign,
   Plus,
+  Zap,
   Calendar as CalendarIcon,
   FileText,
   Calculator,
   TrendingUp,
   TrendingDown,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "@/components/ui/button";
@@ -33,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useApp } from "@/lib/contexts/app-context";
+import { useToast } from "@/lib/contexts/toast-context";
 import {
   expenseSchema,
   EXPENSE_CATEGORIES,
@@ -48,13 +51,16 @@ import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { PageHeader } from "@/components/shared/page-header";
 
 export function FinancialsView(): React.ReactElement {
-  const { state, addExpense } = useApp();
+  const { state, addExpense, addReceipt } = useApp();
   const { properties, receipts, expenses, loading } = state;
   const { formatCurrency } = useCurrency();
+  const { success: toastSuccess, error: toastError } = useToast();
+  const t = useTranslations("financial");
 
   const [timeRange, setTimeRange] = useState("month"); // all, month, year
   const [selectedCountry, setSelectedCountry] = useState<"PT" | "ES">("PT");
   const [receiptStatusFilter, setReceiptStatusFilter] = useState<"all" | "paid" | "pending">("all");
+  const [isBulkGenerating, setIsBulkGenerating] = useState(false);
 
   const dialog = useFormDialog<ExpenseFormData>({
     schema: expenseSchema,
@@ -244,6 +250,40 @@ export function FinancialsView(): React.ReactElement {
 
   const categories = EXPENSE_CATEGORIES;
 
+  const handleBulkGenerate = async () => {
+    const month = new Date().toISOString().slice(0, 7); // YYYY-MM
+    setIsBulkGenerating(true);
+    try {
+      const res = await fetch("/api/receipts/bulk", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ month }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const msg = (errData as { error?: string })?.error ?? res.statusText;
+        toastError(msg);
+        return;
+      }
+      const data = (await res.json()) as {
+        data: { generated: import("@/lib/types").Receipt[]; skipped: number; errors: string[] };
+      };
+      const { generated, skipped } = data.data;
+      for (const receipt of generated) {
+        await addReceipt(receipt);
+      }
+      if (generated.length === 0) {
+        toastSuccess(t("bulkGenerateEmpty"));
+      } else {
+        toastSuccess(t("bulkGenerateSuccess", { count: generated.length, skipped }));
+      }
+    } catch {
+      toastError("Failed to generate receipts.");
+    } finally {
+      setIsBulkGenerating(false);
+    }
+  };
+
   return (
     <>
       {loading ? (
@@ -271,6 +311,16 @@ export function FinancialsView(): React.ReactElement {
                 <SelectItem value="year">This Year</SelectItem>
               </SelectContent>
             </Select>
+
+            <Button
+              variant="outline"
+              onClick={handleBulkGenerate}
+              disabled={isBulkGenerating}
+              className="flex items-center gap-2"
+            >
+              <Zap className="w-4 h-4" />
+              {isBulkGenerating ? "Generating…" : t("bulkGenerate")}
+            </Button>
 
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogTrigger asChild>
