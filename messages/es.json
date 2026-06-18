@@ -971,7 +971,10 @@
     "generateRecurring": "Generar gastos recurrentes",
     "recurringTemplate": "Plantilla recurrente",
     "recurringToggleDesc": "Generar este gasto automáticamente según un horario definido",
-    "recurrenceEndPlaceholder": "Dejar vacío para nunca terminar"
+    "recurrenceEndPlaceholder": "Dejar vacío para nunca terminar",
+    "bulkGenerate": "Generar recibos del mes",
+    "bulkGenerateSuccess": "Generados {count} recibos. {skipped} ya existían.",
+    "bulkGenerateEmpty": "Todos los recibos de este mes ya existen."
   },
   "propertyDetail": {
     "tabs": {

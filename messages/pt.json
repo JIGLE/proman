@@ -971,7 +971,10 @@
     "generateRecurring": "Gerar despesas recorrentes",
     "recurringTemplate": "Modelo recorrente",
     "recurringToggleDesc": "Gerar automaticamente esta despesa num horário definido",
-    "recurrenceEndPlaceholder": "Deixar vazio para nunca terminar"
+    "recurrenceEndPlaceholder": "Deixar vazio para nunca terminar",
+    "bulkGenerate": "Gerar recibos do mês",
+    "bulkGenerateSuccess": "Gerados {count} recibos. {skipped} já existiam.",
+    "bulkGenerateEmpty": "Todos os recibos deste mês já existem."
   },
   "propertyDetail": {
     "tabs": {
