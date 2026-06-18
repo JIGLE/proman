@@ -62,10 +62,7 @@ async function handlePost(request: NextRequest): Promise<Response> {
       userId,
       isRecurring: true,
       parentExpenseId: null,
-      OR: [
-        { recurrenceEnd: null },
-        { recurrenceEnd: { gte: now } },
-      ],
+      OR: [{ recurrenceEnd: null }, { recurrenceEnd: { gte: now } }],
     },
     include: {
       property: { select: { name: true } },
@@ -153,11 +150,7 @@ async function handlePost(request: NextRequest): Promise<Response> {
  * - quarterly: due if the template's original month falls in the same quarter cycle
  * - annual: due if the template's original month matches the current month
  */
-function isTemplateDueThisMonth(
-  rule: string,
-  currentMonth: number,
-  templateDate: Date,
-): boolean {
+function isTemplateDueThisMonth(rule: string, currentMonth: number, templateDate: Date): boolean {
   const templateMonth = new Date(templateDate).getMonth();
 
   switch (rule) {

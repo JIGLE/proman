@@ -70,7 +70,7 @@ function Modelo179Alert({ locale }: { locale: string }): ReactElement | null {
           } | null,
         ) => {
           if (!json?.data) return;
-          const missing = (json.data).filter((lease) => {
+          const missing = json.data.filter((lease) => {
             const sub = lease.modelo179Submissions[0];
             return !sub || sub.status === "pending";
           }).length;

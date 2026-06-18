@@ -13,11 +13,11 @@ export interface User {
   imageConsent?: boolean;
   role: "USER" | "ADMIN" | "MANAGER";
   // Fiscal identity
-  fiscalResidency?: string;   // ISO country code: "PT", "ES", "IT", "FR", etc.
-  nhrStatus: boolean;         // PT Non-Habitual Resident (pre-2024)
-  nhrYear?: number;           // Year NHR status was granted
-  ificiStatus: boolean;       // PT IFICI regime (from 2024, replaces NHR)
-  ificiYear?: number;         // Year IFICI status was granted
+  fiscalResidency?: string; // ISO country code: "PT", "ES", "IT", "FR", etc.
+  nhrStatus: boolean; // PT Non-Habitual Resident (pre-2024)
+  nhrYear?: number; // Year NHR status was granted
+  ificiStatus: boolean; // PT IFICI regime (from 2024, replaces NHR)
+  ificiYear?: number; // Year IFICI status was granted
   createdAt: string;
   updatedAt: string;
 }
@@ -58,8 +58,8 @@ export interface Property {
   description?: string;
   image?: string;
   // Fiscal / rental regime (Wave 2.2)
-  rentalRegime?: string;      // "standard" | "acessivel" | "al" | "short_term"
-  propertyCountry?: string;   // ISO country code (defaults to "PT")
+  rentalRegime?: string; // "standard" | "acessivel" | "al" | "short_term"
+  propertyCountry?: string; // ISO country code (defaults to "PT")
   createdAt: string;
   updatedAt: string;
 }

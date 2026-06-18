@@ -62,20 +62,17 @@ const statusConfig: Record<
   pending: {
     icon: Clock,
     label: "Pending",
-    badgeClass:
-      "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400",
+    badgeClass: "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400",
   },
   submitted: {
     icon: AlertCircle,
     label: "Submitted",
-    badgeClass:
-      "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-400",
+    badgeClass: "border-sky-500/30 bg-sky-500/10 text-sky-700 dark:text-sky-400",
   },
   confirmed: {
     icon: CheckCircle2,
     label: "Confirmed",
-    badgeClass:
-      "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+    badgeClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
   },
   rejected: {
     icon: XCircle,
@@ -98,10 +95,7 @@ function StatusBadge({ status }: { status: SubmissionStatus }) {
   );
 }
 
-function getSubmissionForYear(
-  lease: LeaseRow,
-  year: number,
-): Modelo179Submission | undefined {
+function getSubmissionForYear(lease: LeaseRow, year: number): Modelo179Submission | undefined {
   return lease.modelo179Submissions.find((s) => s.periodYear === year);
 }
 
@@ -278,9 +272,7 @@ export function Modelo179View(): React.ReactElement {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle>{t("modelo179Status")}</CardTitle>
-          <CardDescription>
-            {t("modelo179Subtitle")}
-          </CardDescription>
+          <CardDescription>{t("modelo179Subtitle")}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (

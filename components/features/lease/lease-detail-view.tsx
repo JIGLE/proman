@@ -1,14 +1,30 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { FileText, Edit, ArrowLeft, Calendar, RotateCcw, XCircle, CheckCircle2, Clock, Ban } from "lucide-react";
+import {
+  FileText,
+  Edit,
+  ArrowLeft,
+  Calendar,
+  RotateCcw,
+  XCircle,
+  CheckCircle2,
+  Clock,
+  Ban,
+} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils/utils";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -196,8 +212,12 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
                   <RotateCcw className="h-4 w-4 mr-1" /> Offer Renewal
                 </Button>
               ) : lease.renewalStatus === "offered" ? (
-                <Button variant="outline" size="sm" onClick={handleRenewalWithdraw}
-                  className="text-[var(--color-muted-foreground)]">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRenewalWithdraw}
+                  className="text-[var(--color-muted-foreground)]"
+                >
                   <XCircle className="h-4 w-4 mr-1" /> Withdraw Offer
                 </Button>
               ) : null}
@@ -418,7 +438,8 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
                     lease?.endDate
                       ? new Date(
                           new Date(new Date(lease.endDate).getTime() + 86400000).setFullYear(
-                            new Date(new Date(lease.endDate).getTime() + 86400000).getFullYear() + 1,
+                            new Date(new Date(lease.endDate).getTime() + 86400000).getFullYear() +
+                              1,
                           ),
                         )
                           .toISOString()
@@ -430,7 +451,12 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="notes">Notes for tenant (optional)</Label>
-              <Textarea id="notes" name="notes" rows={3} placeholder="Any conditions or comments…" />
+              <Textarea
+                id="notes"
+                name="notes"
+                rows={3}
+                placeholder="Any conditions or comments…"
+              />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setRenewalOpen(false)}>

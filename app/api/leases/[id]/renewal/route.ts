@@ -41,7 +41,11 @@ export async function POST(request: NextRequest, context: RouteContext): Promise
     : new Date(new Date(lease.endDate).getTime() + 24 * 60 * 60 * 1000);
   const renewalEndDate = body.endDate
     ? new Date(body.endDate)
-    : new Date(renewalStartDate.getFullYear() + 1, renewalStartDate.getMonth(), renewalStartDate.getDate());
+    : new Date(
+        renewalStartDate.getFullYear() + 1,
+        renewalStartDate.getMonth(),
+        renewalStartDate.getDate(),
+      );
 
   const updated = await prisma.lease.update({
     where: { id },
@@ -79,7 +83,10 @@ export async function PATCH(request: NextRequest, context: RouteContext): Promis
 
   const body = (await request.json()) as { response: "accepted" | "declined" };
   if (body.response !== "accepted" && body.response !== "declined") {
-    return NextResponse.json({ error: "response must be 'accepted' or 'declined'" }, { status: 400 });
+    return NextResponse.json(
+      { error: "response must be 'accepted' or 'declined'" },
+      { status: 400 },
+    );
   }
 
   const updated = await prisma.lease.update({

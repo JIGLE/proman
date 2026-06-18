@@ -48,16 +48,14 @@ const PT_NHR_FLAT_2025 = {
 const PT_IFICI_FLAT_2025 = {
   flatRate: 0.2,
   applicableIncome: "PT_SOURCE_RENTAL",
-  notes:
-    "IFICI (post-2024 replacement for NHR): flat 20% on Category F (rental) income",
+  notes: "IFICI (post-2024 replacement for NHR): flat 20% on Category F (rental) income",
 };
 
 // PT withholding rate on rental income (retenção na fonte — Categoria F)
 const PT_WITHHOLDING_2025 = {
   withholdingRate: 0.25,
   applicableTo: "RENTAL_INCOME_CATEGORY_F",
-  notes:
-    "Standard IRS withholding at source for rental income (Categoria F) — Art. 101 CIRS",
+  notes: "Standard IRS withholding at source for rental income (Categoria F) — Art. 101 CIRS",
 };
 
 // PT Renda Acessível deductible rate — 30% additional deduction on net rental income
@@ -65,8 +63,7 @@ const PT_RENDA_ACESSIVEL_2025 = {
   additionalDeductionPct: 0.3,
   maxDeductiblePct: 0.65,
   applicableTo: "RENDA_ACESSIVEL_LEASES",
-  notes:
-    "Programa Renda Acessível: additional 30% deduction on net rental income (Art. 71 EBF)",
+  notes: "Programa Renda Acessível: additional 30% deduction on net rental income (Art. 71 EBF)",
 };
 
 // ---------------------------------------------------------------------------
@@ -78,7 +75,7 @@ const ES_IRPF_2025_BRACKETS = {
   brackets: [
     { min: 0, max: 12450, rate: 0.19 },
     { min: 12450, max: 20200, rate: 0.24 },
-    { min: 20200, max: 35200, rate: 0.30 },
+    { min: 20200, max: 35200, rate: 0.3 },
     { min: 35200, max: 60000, rate: 0.37 },
     { min: 60000, max: 300000, rate: 0.45 },
     { min: 300000, max: null, rate: 0.47 },
@@ -131,8 +128,7 @@ const rules: TaxRuleSeed[] = [
     year: 2025,
     effectiveDate: new Date("2025-01-01"),
     payload: JSON.stringify(PT_IRS_2025_BRACKETS),
-    sourceUrl:
-      "https://diariodarepublica.pt/dr/detalhe/lei/82-e-2014-66015470",
+    sourceUrl: "https://diariodarepublica.pt/dr/detalhe/lei/82-e-2014-66015470",
     notes:
       "IRS 2025 income brackets — Categoria F rental income. Lei n.º 82-E/2014 (CIRS) as amended by OE2025.",
   },
@@ -143,8 +139,7 @@ const rules: TaxRuleSeed[] = [
     year: 2025,
     effectiveDate: new Date("2025-01-01"),
     payload: JSON.stringify(PT_WITHHOLDING_2025),
-    sourceUrl:
-      "https://diariodarepublica.pt/dr/detalhe/lei/82-e-2014-66015470",
+    sourceUrl: "https://diariodarepublica.pt/dr/detalhe/lei/82-e-2014-66015470",
     notes: "IRS withholding at source — Categoria F (Art. 101 CIRS).",
   },
   {
@@ -165,8 +160,7 @@ const rules: TaxRuleSeed[] = [
     year: 2025,
     effectiveDate: new Date("2025-01-01"),
     payload: JSON.stringify(PT_IFICI_FLAT_2025),
-    sourceUrl:
-      "https://diariodarepublica.pt/dr/detalhe/lei/82-e-2014-66015470",
+    sourceUrl: "https://diariodarepublica.pt/dr/detalhe/lei/82-e-2014-66015470",
     notes:
       "IFICI (Incentivo Fiscal à Investigação Científica e Inovação) flat 20% rate — OE2024 replacement for NHR regime.",
   },
@@ -190,10 +184,8 @@ const rules: TaxRuleSeed[] = [
     year: 2026,
     effectiveDate: new Date("2026-01-01"),
     payload: JSON.stringify(PT_IRS_2026_BRACKETS),
-    sourceUrl:
-      "https://diariodarepublica.pt/dr/detalhe/lei/82-e-2014-66015470",
-    notes:
-      "IRS 2026 income brackets — carried forward from 2025 pending OE2026 publication.",
+    sourceUrl: "https://diariodarepublica.pt/dr/detalhe/lei/82-e-2014-66015470",
+    notes: "IRS 2026 income brackets — carried forward from 2025 pending OE2026 publication.",
   },
   {
     country: "PT",
@@ -202,8 +194,7 @@ const rules: TaxRuleSeed[] = [
     year: 2026,
     effectiveDate: new Date("2026-01-01"),
     payload: JSON.stringify(PT_WITHHOLDING_2025),
-    sourceUrl:
-      "https://diariodarepublica.pt/dr/detalhe/lei/82-e-2014-66015470",
+    sourceUrl: "https://diariodarepublica.pt/dr/detalhe/lei/82-e-2014-66015470",
     notes: "IRS withholding 2026 — carried forward from 2025.",
   },
   {
@@ -223,8 +214,7 @@ const rules: TaxRuleSeed[] = [
     year: 2026,
     effectiveDate: new Date("2026-01-01"),
     payload: JSON.stringify(PT_IFICI_FLAT_2025),
-    sourceUrl:
-      "https://diariodarepublica.pt/dr/detalhe/lei/82-e-2014-66015470",
+    sourceUrl: "https://diariodarepublica.pt/dr/detalhe/lei/82-e-2014-66015470",
     notes: "IFICI flat rate 2026 — carried forward from 2025.",
   },
   {
@@ -246,8 +236,7 @@ const rules: TaxRuleSeed[] = [
     year: 2025,
     effectiveDate: new Date("2025-01-01"),
     payload: JSON.stringify(ES_IRPF_2025_BRACKETS),
-    sourceUrl:
-      "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
+    sourceUrl: "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
     notes:
       "IRPF 2025 general scale — Ley 35/2006 del IRPF as amended. Includes 60% rental expense deduction.",
   },
@@ -258,8 +247,7 @@ const rules: TaxRuleSeed[] = [
     year: 2025,
     effectiveDate: new Date("2025-01-01"),
     payload: JSON.stringify(ES_WITHHOLDING_2025),
-    sourceUrl:
-      "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
+    sourceUrl: "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
     notes:
       "IRPF withholding on rental income — Art. 101 LIRPF. Applies when payer is an entrepreneur/company.",
   },
@@ -270,10 +258,8 @@ const rules: TaxRuleSeed[] = [
     year: 2025,
     effectiveDate: new Date("2025-01-01"),
     payload: JSON.stringify(ES_NON_RESIDENT_2025),
-    sourceUrl:
-      "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527",
-    notes:
-      "IRNR (non-resident tax): 19% EU/EEA, 24% non-EU — RDL 5/2004 (Ley IRNR) Art. 25.",
+    sourceUrl: "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527",
+    notes: "IRNR (non-resident tax): 19% EU/EEA, 24% non-EU — RDL 5/2004 (Ley IRNR) Art. 25.",
   },
 
   // ---- Spain 2026 ----
@@ -284,10 +270,8 @@ const rules: TaxRuleSeed[] = [
     year: 2026,
     effectiveDate: new Date("2026-01-01"),
     payload: JSON.stringify(ES_IRPF_2026_BRACKETS),
-    sourceUrl:
-      "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
-    notes:
-      "IRPF 2026 general scale — carried forward from 2025 pending PGE2026 publication.",
+    sourceUrl: "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
+    notes: "IRPF 2026 general scale — carried forward from 2025 pending PGE2026 publication.",
   },
   {
     country: "ES",
@@ -296,8 +280,7 @@ const rules: TaxRuleSeed[] = [
     year: 2026,
     effectiveDate: new Date("2026-01-01"),
     payload: JSON.stringify(ES_WITHHOLDING_2025),
-    sourceUrl:
-      "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
+    sourceUrl: "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764",
     notes: "IRPF withholding 2026 — carried forward from 2025.",
   },
   {
@@ -307,8 +290,7 @@ const rules: TaxRuleSeed[] = [
     year: 2026,
     effectiveDate: new Date("2026-01-01"),
     payload: JSON.stringify(ES_NON_RESIDENT_2025),
-    sourceUrl:
-      "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527",
+    sourceUrl: "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527",
     notes: "IRNR flat rates 2026 — carried forward from 2025.",
   },
 ];
@@ -343,9 +325,7 @@ async function main() {
     });
 
     if (result) {
-      console.log(
-        `  ✓ ${rule.country} ${rule.regime} ${rule.ruleType} ${rule.year}`
-      );
+      console.log(`  ✓ ${rule.country} ${rule.regime} ${rule.ruleType} ${rule.year}`);
       created++;
     } else {
       skipped++;

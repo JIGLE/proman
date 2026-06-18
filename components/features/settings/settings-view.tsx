@@ -516,8 +516,8 @@ export function SettingsView(): React.ReactElement {
                         <div className="space-y-1 flex-1">
                           <Label htmlFor="nhr-status">Non-Habitual Resident (NHR) status</Label>
                           <p className="text-xs text-[var(--color-muted-foreground)]">
-                            NHR grants a flat 20% tax rate on Portuguese-source income for 10
-                            years. Only valid if granted before Jan 2024.
+                            NHR grants a flat 20% tax rate on Portuguese-source income for 10 years.
+                            Only valid if granted before Jan 2024.
                           </p>
                         </div>
                         <Switch
@@ -659,9 +659,7 @@ export function SettingsView(): React.ReactElement {
                 </div>
                 <Switch
                   checked={settings.distributionNotifications}
-                  onCheckedChange={(checked) =>
-                    updateSetting("distributionNotifications", checked)
-                  }
+                  onCheckedChange={(checked) => updateSetting("distributionNotifications", checked)}
                 />
               </div>
             </CardContent>

@@ -418,7 +418,7 @@ export function FinancialsView(): React.ReactElement {
                               value={dialog.formData.recurrenceRule ?? "monthly"}
                               onValueChange={(val) =>
                                 dialog.updateFormData({
-                                  recurrenceRule: val as typeof RECURRENCE_RULES[number],
+                                  recurrenceRule: val as (typeof RECURRENCE_RULES)[number],
                                 })
                               }
                             >
