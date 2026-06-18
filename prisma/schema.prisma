@@ -57,6 +57,7 @@ model User {
   settings       UserSettings?
   governmentVerifications GovernmentVerification[]
   modelo179Submissions Modelo179Submission[]
+  taxFilings     TaxFiling[]
 }
 
 model EmailLog {
@@ -1245,4 +1246,31 @@ model Modelo179Submission {
   @@unique([leaseId, periodYear])
   @@index([userId, periodYear])
   @@map("modelo179_submissions")
+}
+
+model TaxFiling {
+  id                String   @id @default(cuid())
+  userId            String
+  year              Int
+  country           String   // "PT", "ES"
+  regime            String   // "STANDARD", "NHR", "IFICI", etc.
+  propertyIds       String   // JSON array of property IDs
+  grossIncome       Float
+  allowableExpenses Float
+  taxableIncome     Float
+  taxDue            Float
+  effectiveRate     Float
+  withholdingPaid   Float
+  balanceDue        Float
+  status            String   @default("draft") // "draft" | "final"
+  notes             String?  // JSON array from plugin
+  payload           String   // Full TaxCalculation JSON
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, year, country, regime])
+  @@index([userId, year])
+  @@map("tax_filings")
 }

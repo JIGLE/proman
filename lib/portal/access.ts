@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import {
   BarChart2,
   Building2,
+  Calculator,
   FileBarChart,
   FileBox,
   FileText,
@@ -150,6 +151,14 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         label: "Compliance",
         labelKey: "navigation.compliance",
         icon: ShieldCheck,
+        roles: ["owner"],
+      },
+      {
+        key: "tax-filing",
+        href: "/compliance/tax-filing",
+        label: "Tax Filing",
+        labelKey: "navigation.taxFiling",
+        icon: Calculator,
         roles: ["owner"],
       },
       {
