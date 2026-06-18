@@ -72,6 +72,17 @@ export function SwipeableListItem({
     fired.current = false;
   };
 
+  // Keyboard equivalent for swipe actions (WCAG 2.1.1)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "ArrowRight" && startAction) {
+      e.preventDefault();
+      startAction.onAction();
+    } else if ((e.key === "ArrowLeft" || e.key === "Delete" || e.key === "Backspace") && endAction) {
+      e.preventDefault();
+      endAction.onAction();
+    }
+  };
+
   if (disabled) {
     return <div className={className}>{children}</div>;
   }
@@ -136,7 +147,18 @@ export function SwipeableListItem({
         }}
         onDragEnd={handleDragEnd}
         onClick={dragging ? (e) => e.stopPropagation() : undefined}
-        className="relative z-10 cursor-grab active:cursor-grabbing select-none"
+        onKeyDown={handleKeyDown}
+        tabIndex={startAction || endAction ? 0 : undefined}
+        aria-keyshortcuts={
+          startAction && endAction
+            ? "ArrowRight ArrowLeft"
+            : startAction
+              ? "ArrowRight"
+              : endAction
+                ? "ArrowLeft"
+                : undefined
+        }
+        className="relative z-10 cursor-grab active:cursor-grabbing select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       >
         {children}
       </motion.div>

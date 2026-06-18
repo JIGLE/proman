@@ -351,14 +351,14 @@ export function DocumentsView() {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)}>
-                              <Download className="h-4 w-4" />
+                            <Button variant="ghost" size="icon" onClick={() => handleDownload(doc)} aria-label="Download document">
+                              <Download className="h-4 w-4" aria-hidden="true" />
                             </Button>
                             {isOwnerPortal && (
                               <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                  <Button variant="ghost" size="icon">
-                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  <Button variant="ghost" size="icon" aria-label="Delete document">
+                                    <Trash2 className="h-4 w-4 text-destructive" aria-hidden="true" />
                                   </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>

@@ -99,6 +99,8 @@ export function BulkActionBar({
         {/* Selection toggle */}
         <button
           onClick={isAllSelected ? onClearSelection : onSelectAll}
+          aria-label={isAllSelected ? `Deselect all ${itemLabel}` : `Select all ${itemLabel}`}
+          aria-pressed={isAllSelected}
           className="p-1.5 rounded-lg hover:bg-[var(--color-hover)] transition-colors"
           title={isAllSelected ? "Deselect all" : "Select all"}
         >
@@ -150,8 +152,8 @@ export function BulkActionBar({
           {menuActions.length > 0 && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                  <MoreHorizontal className="h-4 w-4" />
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0" aria-label="More actions">
+                  <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
@@ -178,10 +180,11 @@ export function BulkActionBar({
         {/* Clear selection button */}
         <button
           onClick={onClearSelection}
+          aria-label="Clear selection"
           className="p-1.5 rounded-lg hover:bg-[var(--color-hover)] transition-colors ml-1"
           title="Clear selection"
         >
-          <X className="h-4 w-4 text-[var(--color-muted-foreground)]" />
+          <X className="h-4 w-4 text-[var(--color-muted-foreground)]" aria-hidden="true" />
         </button>
       </motion.div>
     </AnimatePresence>

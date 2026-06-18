@@ -199,19 +199,21 @@ export function EditableCell({
           data-editable-cell-action
           onClick={handleSave}
           disabled={isSaving}
+          aria-label="Save changes"
           className="p-1 rounded hover:bg-[var(--color-success)]/20 text-[var(--color-success)] transition-colors"
           title="Save"
         >
-          <Check className="h-3.5 w-3.5" />
+          <Check className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
         <button
           data-editable-cell-action
           onClick={handleCancel}
           disabled={isSaving}
+          aria-label="Cancel editing"
           className="p-1 rounded hover:bg-[var(--color-error)]/20 text-[var(--color-error)] transition-colors"
           title="Cancel"
         >
-          <X className="h-3.5 w-3.5" />
+          <X className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </div>
     );
@@ -221,6 +223,7 @@ export function EditableCell({
     <button
       onClick={handleStartEdit}
       disabled={disabled}
+      aria-label={disabled ? undefined : `Edit: ${displayValue}`}
       className={cn(
         "group flex items-center gap-1.5 text-left w-full",
         "hover:bg-[var(--color-hover)] rounded px-1 -mx-1 py-0.5 transition-colors",
@@ -231,7 +234,7 @@ export function EditableCell({
     >
       <span className="truncate">{displayValue}</span>
       {showEditIcon && !disabled && (
-        <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-50 flex-shrink-0 transition-opacity" />
+        <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-50 flex-shrink-0 transition-opacity" aria-hidden="true" />
       )}
     </button>
   );

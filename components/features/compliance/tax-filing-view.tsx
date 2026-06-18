@@ -186,8 +186,9 @@ export function TaxFilingView() {
                       size="icon"
                       onClick={() => setDeleteTarget(filing)}
                       className="text-[var(--color-muted-foreground)] hover:text-destructive"
+                      aria-label="Delete filing"
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
                   </div>
                 </div>
