@@ -5,6 +5,7 @@ import {
   FileBarChart,
   FileBox,
   FileText,
+  HardHat,
   Home,
   Mail,
   Settings,
@@ -73,6 +74,14 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         icon: Wrench,
         roles: ["owner"],
         mobilePrimary: true,
+      },
+      {
+        key: "vendors",
+        href: "/contacts",
+        label: "Vendors",
+        labelKey: "navigation.vendors",
+        icon: HardHat,
+        roles: ["owner"],
       },
       {
         key: "financials",
@@ -189,6 +198,7 @@ export function normalizePortalPath(pathname: string): string {
   if (normalized === "/overview") return "/dashboard";
   if (normalized === "/properties") return "/portfolio";
   if (normalized === "/tenants") return "/people";
+  if (normalized === "/vendors") return "/contacts";
   return normalized;
 }
 

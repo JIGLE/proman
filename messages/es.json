@@ -90,7 +90,8 @@
     "intelligenceGroup": "Informes",
     "systemGroup": "Sistema",
     "finance": "Finanzas",
-    "contacts": "Contactos",
+    "contacts": "Proveedores",
+    "vendors": "Proveedores",
     "contracts": "Contratos",
     "compliance": "Cumplimiento"
   },

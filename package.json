@@ -72,6 +72,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dotenv": "^17.3.1",
+    "file-type": "^22.0.1",
     "framer-motion": "^12.40.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
@@ -121,11 +122,11 @@
     "jsdom": "^27.4.0",
     "prettier": "^3.8.4",
     "prisma": "^7.8.0",
+    "react-i18next": "^13.0.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^8",
-    "vitest": "^4.1.9",
-    "react-i18next": "^13.0.0"
+    "vitest": "^4.1.9"
   },
   "overrides": {
     "@opentelemetry/api": "1.4.1",
