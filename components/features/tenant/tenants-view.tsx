@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
-import { Mail, Plus, MoreHorizontal, Trash2, Edit } from "lucide-react";
+import { Mail, Plus, MoreHorizontal, Trash2, Edit, Eye } from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
 import {
@@ -59,6 +59,7 @@ import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { PageHeader } from "@/components/shared/page-header";
+import { SwipeableListItem } from "@/components/ui/swipeable-list-item";
 
 export type TenantsViewProps = { density?: "comfortable" | "compact" };
 
@@ -647,12 +648,32 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         : false;
                       const isOverdue = tenant.paymentStatus === "overdue";
                       return (
-                        <div
+                        <SwipeableListItem
                           key={tenant.id}
                           className={cn(
-                            "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40 border-b border-zinc-800 last:border-b-0 cursor-pointer",
+                            "border-b border-zinc-800 last:border-b-0",
                             isOverdue && "border-l-2 border-l-red-500/60",
                             isSelected && "bg-zinc-800/60",
+                          )}
+                          startAction={{
+                            icon: <Eye className="h-5 w-5" />,
+                            label: "Open",
+                            className: "bg-accent-primary",
+                            onAction: () => {
+                              setSelectedTenant(tenant);
+                              setIsDetailModalOpen(true);
+                            },
+                          }}
+                          endAction={{
+                            icon: <Trash2 className="h-5 w-5" />,
+                            label: "Delete",
+                            className: "bg-destructive",
+                            onAction: () => handleDelete(tenant),
+                          }}
+                        >
+                        <div
+                          className={cn(
+                            "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40 cursor-pointer",
                           )}
                           onClick={() => {
                             setSelectedTenant(tenant);
@@ -776,6 +797,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
+                        </SwipeableListItem>
                       );
                     })}
                   </div>
