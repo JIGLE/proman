@@ -45,7 +45,17 @@
     "title": "Settings",
     "description": "Manage your account settings and preferences",
     "imageConsent": "Display Profile Image",
-    "imageConsentDesc": "Allow displaying your Google profile image in the app (GDPR compliant)."
+    "imageConsentDesc": "Allow displaying your Google profile image in the app (GDPR compliant).",
+    "taxProfile": "Tax & Fiscal Profile",
+    "fiscalResidency": "Fiscal residency country",
+    "fiscalResidencyHelp": "The country where you are tax resident — determines which tax rules apply to your rental income.",
+    "nhrStatus": "Non-Habitual Resident (NHR) status",
+    "nhrStatusHelp": "NHR grants a flat 20% tax rate on Portuguese-source income for 10 years. Only valid if granted before Jan 2024.",
+    "nhrYear": "Year granted",
+    "ificiStatus": "IFICI regime (new NHR from 2024)",
+    "ificiStatusHelp": "IFICI (Incentivo Fiscal à Investigação Científica e Inovação) replaced NHR for new applicants from 2024. Flat 20% rate.",
+    "ificiYear": "Year granted",
+    "taxRegimeMutuallyExclusive": "NHR and IFICI are mutually exclusive — only one can be active at a time."
   },
   "gdpr": {
     "title": "Your Data Rights (GDPR)",
@@ -81,7 +91,8 @@
     "systemGroup": "System",
     "finance": "Finance",
     "contacts": "Contacts",
-    "contracts": "Contracts"
+    "contracts": "Contracts",
+    "compliance": "Compliance"
   },
   "dashboard": {
     "welcome": "Welcome to your property management dashboard",
@@ -579,7 +590,17 @@
     "safTptDescription": "Generate SAF-T XML for Portuguese Tax Authority",
     "fiscalYear": "Fiscal Year",
     "generateExport": "Generate Export",
-    "downloadXml": "Download XML"
+    "downloadXml": "Download XML",
+    "modelo179Title": "Modelo 179 — Lease Registration",
+    "modelo179Subtitle": "Track annual lease registration submissions to Autoridade Tributária (AT)",
+    "modelo179Status": "Status",
+    "modelo179Pending": "Pending",
+    "modelo179Submitted": "Submitted",
+    "modelo179Confirmed": "Confirmed",
+    "modelo179Rejected": "Rejected",
+    "modelo179ATRef": "AT Reference",
+    "modelo179Export": "Export CSV",
+    "modelo179Alert": "{count} lease(s) not registered with AT for {year}"
   },
   "tax": {
     "title": "Tax Calculation",

@@ -45,7 +45,17 @@
     "title": "Configuración",
     "description": "Gestiona la configuración de tu cuenta y preferencias",
     "imageConsent": "Mostrar Imagen de Perfil",
-    "imageConsentDesc": "Permitir mostrar tu imagen de perfil de Google en la app (compatible con RGPD)."
+    "imageConsentDesc": "Permitir mostrar tu imagen de perfil de Google en la app (compatible con RGPD).",
+    "taxProfile": "Perfil Fiscal",
+    "fiscalResidency": "País de residencia fiscal",
+    "fiscalResidencyHelp": "El país donde eres residente fiscal — determina las reglas fiscales aplicables a tus ingresos por alquiler.",
+    "nhrStatus": "Estatuto de Residente No Habitual (RNH) — Portugal",
+    "nhrStatusHelp": "El RNH otorga una tasa plana del 20% sobre ingresos de fuente portuguesa durante 10 años. Solo válido si se concedió antes de ene. 2024.",
+    "nhrYear": "Año de concesión",
+    "ificiStatus": "Régimen IFICI — Portugal (nuevo RNH desde 2024)",
+    "ificiStatusHelp": "El IFICI sustituyó al RNH para nuevos solicitantes a partir de 2024. Tasa plana del 20%.",
+    "ificiYear": "Año de concesión",
+    "taxRegimeMutuallyExclusive": "RNH e IFICI son mutuamente excluyentes — solo uno puede estar activo a la vez."
   },
   "gdpr": {
     "title": "Tus Derechos de Datos (RGPD)",
@@ -81,7 +91,8 @@
     "systemGroup": "Sistema",
     "finance": "Finanzas",
     "contacts": "Contactos",
-    "contracts": "Contratos"
+    "contracts": "Contratos",
+    "compliance": "Cumplimiento"
   },
   "dashboard": {
     "welcome": "Bienvenido a tu panel de gestión inmobiliaria",
@@ -579,7 +590,17 @@
     "safTptDescription": "Generar fichero SAF-T XML para la Autoridade Tributária (PT)",
     "fiscalYear": "Año Fiscal",
     "generateExport": "Generar Exportación",
-    "downloadXml": "Descargar XML"
+    "downloadXml": "Descargar XML",
+    "modelo179Title": "Modelo 179 — Registro de Contratos de Arrendamiento (PT)",
+    "modelo179Subtitle": "Seguimiento de comunicaciones anuales de contratos a la Autoridade Tributária (AT) portuguesa",
+    "modelo179Status": "Estado",
+    "modelo179Pending": "Pendiente",
+    "modelo179Submitted": "Enviado",
+    "modelo179Confirmed": "Confirmado",
+    "modelo179Rejected": "Rechazado",
+    "modelo179ATRef": "Referencia AT",
+    "modelo179Export": "Exportar CSV",
+    "modelo179Alert": "{count} contrato(s) sin registrar en AT para {year}"
   },
   "tax": {
     "title": "Cálculo de Impuestos",

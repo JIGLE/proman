@@ -8,6 +8,7 @@ import {
   Home,
   Mail,
   Settings,
+  ShieldCheck,
   Users,
   Wallet,
   Wrench,
@@ -135,6 +136,14 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
     groupLabelKey: "navigation.systemGroup",
     items: [
       {
+        key: "compliance",
+        href: "/compliance/modelo179",
+        label: "Compliance",
+        labelKey: "navigation.compliance",
+        icon: ShieldCheck,
+        roles: ["owner"],
+      },
+      {
         key: "settings",
         href: "/settings",
         label: "Settings",
@@ -188,5 +197,8 @@ export function canAccessPortalPath(role: PortalRole, pathname: string): boolean
   const allowedItems = PORTAL_NAV_GROUPS.flatMap((group) =>
     group.items.filter((item) => item.roles.includes(role)),
   );
-  return allowedItems.some((item) => item.href === normalizedPath);
+  // Match exact href OR check if the normalized path is a prefix of a nav item's href
+  return allowedItems.some(
+    (item) => item.href === normalizedPath || item.href.startsWith(normalizedPath + "/"),
+  );
 }

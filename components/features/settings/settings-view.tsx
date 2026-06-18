@@ -16,6 +16,7 @@ import {
   Database,
   HardDrive,
   Activity,
+  Landmark,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -30,6 +31,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/lib/contexts/toast-context";
 
 interface UserSettings {
@@ -42,6 +44,14 @@ interface UserSettings {
   distributionNotifications: boolean;
 }
 
+interface FiscalProfile {
+  fiscalResidency: string | null;
+  nhrStatus: boolean;
+  nhrYear: number | null;
+  ificiStatus: boolean;
+  ificiYear: number | null;
+}
+
 const defaultSettings: UserSettings = {
   theme: "system",
   language: "en",
@@ -50,6 +60,14 @@ const defaultSettings: UserSettings = {
   emailNotifications: true,
   taxReminderNotifications: true,
   distributionNotifications: true,
+};
+
+const defaultFiscalProfile: FiscalProfile = {
+  fiscalResidency: null,
+  nhrStatus: false,
+  nhrYear: null,
+  ificiStatus: false,
+  ificiYear: null,
 };
 
 const currencies = [
@@ -69,6 +87,16 @@ const languages = [
   { value: "en", label: "English" },
   { value: "es", label: "Español" },
   { value: "pt", label: "Português" },
+];
+
+const fiscalResidencyOptions = [
+  { value: "PT", label: "Portugal" },
+  { value: "ES", label: "Spain" },
+  { value: "FR", label: "France" },
+  { value: "DE", label: "Germany" },
+  { value: "IT", label: "Italy" },
+  { value: "GB", label: "United Kingdom" },
+  { value: "OTHER", label: "Other" },
 ];
 
 export function SettingsView(): React.ReactElement {
@@ -92,6 +120,12 @@ export function SettingsView(): React.ReactElement {
   } | null>(null);
   const [systemLoading, setSystemLoading] = useState(false);
 
+  // Fiscal profile state
+  const [fiscalProfile, setFiscalProfile] = useState<FiscalProfile>(defaultFiscalProfile);
+  const [fiscalLoading, setFiscalLoading] = useState(true);
+  const [fiscalSaving, setFiscalSaving] = useState(false);
+  const [fiscalHasChanges, setFiscalHasChanges] = useState(false);
+
   // Extract current locale from pathname
   const currentLocale = pathname.split("/")[1] || "en";
 
@@ -112,6 +146,7 @@ export function SettingsView(): React.ReactElement {
 
   useEffect(() => {
     loadSettings();
+    loadFiscalProfile();
     fetchSystemInfo();
     fetch("/version.json")
       .then((r) => r.json())
@@ -121,7 +156,6 @@ export function SettingsView(): React.ReactElement {
   }, []);
 
   const loadSettings = async () => {
-    // Only load settings if authenticated
     if (!session?.user) {
       setLoading(false);
       return;
@@ -141,6 +175,22 @@ export function SettingsView(): React.ReactElement {
     }
   };
 
+  const loadFiscalProfile = async () => {
+    try {
+      const response = await fetch("/api/user/fiscal-profile");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data) {
+          setFiscalProfile({ ...defaultFiscalProfile, ...data.data });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load fiscal profile:", err);
+    } finally {
+      setFiscalLoading(false);
+    }
+  };
+
   const updateSetting = <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => {
     setSettings((prev) => ({ ...prev, [key]: value }));
     setHasChanges(true);
@@ -150,6 +200,30 @@ export function SettingsView(): React.ReactElement {
       const newPath = pathname.replace(`/${currentLocale}`, `/${value}`);
       router.push(newPath);
     }
+  };
+
+  const updateFiscalProfile = <K extends keyof FiscalProfile>(key: K, value: FiscalProfile[K]) => {
+    setFiscalProfile((prev) => {
+      const next: FiscalProfile = { ...prev, [key]: value };
+      // Mutual exclusivity: toggling one disables the other
+      if (key === "nhrStatus" && value === true) {
+        next.ificiStatus = false;
+        next.ificiYear = null;
+      }
+      if (key === "ificiStatus" && value === true) {
+        next.nhrStatus = false;
+        next.nhrYear = null;
+      }
+      // Clear year when status disabled
+      if (key === "nhrStatus" && value === false) {
+        next.nhrYear = null;
+      }
+      if (key === "ificiStatus" && value === false) {
+        next.ificiYear = null;
+      }
+      return next;
+    });
+    setFiscalHasChanges(true);
   };
 
   const saveSettings = async () => {
@@ -164,8 +238,6 @@ export function SettingsView(): React.ReactElement {
       if (response.ok) {
         success("Settings saved successfully");
         setHasChanges(false);
-
-        // Apply theme immediately
         applyTheme(settings.theme);
       } else {
         showError("Failed to save settings");
@@ -174,6 +246,29 @@ export function SettingsView(): React.ReactElement {
       showError("Failed to save settings");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const saveFiscalProfile = async () => {
+    setFiscalSaving(true);
+    try {
+      const response = await fetch("/api/user/fiscal-profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(fiscalProfile),
+      });
+
+      if (response.ok) {
+        success("Tax profile saved successfully");
+        setFiscalHasChanges(false);
+      } else {
+        const errBody = await response.json().catch(() => ({}));
+        showError((errBody as { error?: string }).error ?? "Failed to save tax profile");
+      }
+    } catch {
+      showError("Failed to save tax profile");
+    } finally {
+      setFiscalSaving(false);
     }
   };
 
@@ -194,6 +289,8 @@ export function SettingsView(): React.ReactElement {
       </div>
     );
   }
+
+  const isPortugal = fiscalProfile.fiscalResidency === "PT";
 
   return (
     <div className="space-y-6">
@@ -220,6 +317,7 @@ export function SettingsView(): React.ReactElement {
         <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="organization">Organization</TabsTrigger>
+          <TabsTrigger value="tax">Tax &amp; Fiscal</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
           <TabsTrigger value="billing">Billing</TabsTrigger>
@@ -367,6 +465,154 @@ export function SettingsView(): React.ReactElement {
           </Card>
         </TabsContent>
 
+        {/* Tax & Fiscal Profile tab */}
+        <TabsContent value="tax" className="mt-6 space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Landmark className="h-5 w-5" />
+                Tax &amp; Fiscal Profile
+              </CardTitle>
+              <CardDescription>
+                Your personal tax residency and special regime status — used to calculate the
+                correct tax rules on your rental income.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="max-w-lg space-y-6">
+              {fiscalLoading ? (
+                <div className="flex items-center justify-center h-16">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
+                </div>
+              ) : (
+                <>
+                  {/* Fiscal Residency */}
+                  <div className="space-y-2">
+                    <Label htmlFor="fiscal-residency">Fiscal residency country</Label>
+                    <Select
+                      value={fiscalProfile.fiscalResidency ?? ""}
+                      onValueChange={(v) => updateFiscalProfile("fiscalResidency", v || null)}
+                    >
+                      <SelectTrigger id="fiscal-residency" className="max-w-xs">
+                        <SelectValue placeholder="Select country" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fiscalResidencyOptions.map((opt) => (
+                          <SelectItem key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-[var(--color-muted-foreground)]">
+                      The country where you are tax resident — determines which tax rules apply to
+                      your rental income.
+                    </p>
+                  </div>
+
+                  {/* NHR Status — Portugal only */}
+                  {isPortugal && (
+                    <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-1 flex-1">
+                          <Label htmlFor="nhr-status">Non-Habitual Resident (NHR) status</Label>
+                          <p className="text-xs text-[var(--color-muted-foreground)]">
+                            NHR grants a flat 20% tax rate on Portuguese-source income for 10
+                            years. Only valid if granted before Jan 2024.
+                          </p>
+                        </div>
+                        <Switch
+                          id="nhr-status"
+                          checked={fiscalProfile.nhrStatus}
+                          onCheckedChange={(v) => updateFiscalProfile("nhrStatus", v)}
+                          disabled={fiscalProfile.ificiStatus}
+                        />
+                      </div>
+                      {fiscalProfile.nhrStatus && (
+                        <div className="space-y-1.5">
+                          <Label htmlFor="nhr-year">Year granted</Label>
+                          <Input
+                            id="nhr-year"
+                            type="number"
+                            min={2009}
+                            max={2024}
+                            placeholder="e.g. 2022"
+                            className="max-w-xs"
+                            value={fiscalProfile.nhrYear ?? ""}
+                            onChange={(e) => {
+                              const v = e.target.value ? parseInt(e.target.value, 10) : null;
+                              updateFiscalProfile("nhrYear", v);
+                            }}
+                          />
+                        </div>
+                      )}
+                      {fiscalProfile.ificiStatus && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                          NHR is disabled because IFICI is active. NHR and IFICI are mutually
+                          exclusive.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* IFICI Status — Portugal only */}
+                  {isPortugal && (
+                    <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="space-y-1 flex-1">
+                          <Label htmlFor="ifici-status">IFICI regime (new NHR from 2024)</Label>
+                          <p className="text-xs text-[var(--color-muted-foreground)]">
+                            IFICI (Incentivo Fiscal à Investigação Científica e Inovação) replaced
+                            NHR for new applicants from 2024. Flat 20% rate.
+                          </p>
+                        </div>
+                        <Switch
+                          id="ifici-status"
+                          checked={fiscalProfile.ificiStatus}
+                          onCheckedChange={(v) => updateFiscalProfile("ificiStatus", v)}
+                          disabled={fiscalProfile.nhrStatus}
+                        />
+                      </div>
+                      {fiscalProfile.ificiStatus && (
+                        <div className="space-y-1.5">
+                          <Label htmlFor="ifici-year">Year granted</Label>
+                          <Input
+                            id="ifici-year"
+                            type="number"
+                            min={2024}
+                            max={2030}
+                            placeholder="e.g. 2024"
+                            className="max-w-xs"
+                            value={fiscalProfile.ificiYear ?? ""}
+                            onChange={(e) => {
+                              const v = e.target.value ? parseInt(e.target.value, 10) : null;
+                              updateFiscalProfile("ificiYear", v);
+                            }}
+                          />
+                        </div>
+                      )}
+                      {fiscalProfile.nhrStatus && (
+                        <p className="text-xs text-amber-600 dark:text-amber-400">
+                          IFICI is disabled because NHR is active. NHR and IFICI are mutually
+                          exclusive.
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  <Button
+                    onClick={saveFiscalProfile}
+                    disabled={fiscalSaving || !fiscalHasChanges}
+                    className="w-full sm:w-auto"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    {fiscalSaving ? "Saving..." : "Save Tax Profile"}
+                  </Button>
+                </>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Notifications tab */}
         <TabsContent value="notifications" className="mt-6">
           <Card>
@@ -413,7 +659,9 @@ export function SettingsView(): React.ReactElement {
                 </div>
                 <Switch
                   checked={settings.distributionNotifications}
-                  onCheckedChange={(checked) => updateSetting("distributionNotifications", checked)}
+                  onCheckedChange={(checked) =>
+                    updateSetting("distributionNotifications", checked)
+                  }
                 />
               </div>
             </CardContent>

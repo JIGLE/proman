@@ -50,6 +50,7 @@ model User {
   rentReceipts   RentReceipt[]
   settings       UserSettings?
   governmentVerifications GovernmentVerification[]
+  modelo179Submissions Modelo179Submission[]
 }
 
 model EmailLog {
@@ -519,6 +520,7 @@ model Lease {
   unit     Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
   nruaRegistrations NRUARegistration[]
   expenses  Expense[]
+  modelo179Submissions Modelo179Submission[]
 
   @@index([userId])
   @@index([propertyId])
@@ -1204,4 +1206,24 @@ model TaxRule {
   @@unique([country, regime, ruleType, year])
   @@index([country, year])
   @@map("tax_rules")
+}
+
+model Modelo179Submission {
+  id           String    @id @default(cuid())
+  userId       String
+  leaseId      String
+  periodYear   Int
+  status       String    @default("pending")  // "pending" | "submitted" | "confirmed" | "rejected"
+  submittedAt  DateTime?
+  atReference  String?
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lease Lease @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+
+  @@unique([leaseId, periodYear])
+  @@index([userId, periodYear])
+  @@map("modelo179_submissions")
 }

@@ -45,7 +45,17 @@
     "title": "Configurações",
     "description": "Gerencie as configurações da sua conta e preferências",
     "imageConsent": "Exibir Imagem do Perfil",
-    "imageConsentDesc": "Permitir a exibição da sua imagem de perfil do Google no app (compatível com GDPR)."
+    "imageConsentDesc": "Permitir a exibição da sua imagem de perfil do Google no app (compatível com GDPR).",
+    "taxProfile": "Perfil Fiscal",
+    "fiscalResidency": "País de residência fiscal",
+    "fiscalResidencyHelp": "O país onde é residente fiscal — determina as regras fiscais aplicáveis às suas rendas.",
+    "nhrStatus": "Estatuto de Residente Não Habitual (RNH)",
+    "nhrStatusHelp": "O RNH confere uma taxa flat de 20% sobre rendimentos de fonte portuguesa por 10 anos. Válido apenas se concedido antes de jan. 2024.",
+    "nhrYear": "Ano de concessão",
+    "ificiStatus": "Regime IFICI (novo RNH desde 2024)",
+    "ificiStatusHelp": "O IFICI (Incentivo Fiscal à Investigação Científica e Inovação) substituiu o RNH para novos requerentes a partir de 2024. Taxa flat de 20%.",
+    "ificiYear": "Ano de concessão",
+    "taxRegimeMutuallyExclusive": "RNH e IFICI são mutuamente exclusivos — apenas um pode estar ativo de cada vez."
   },
   "gdpr": {
     "title": "Seus Direitos de Dados (GDPR)",
@@ -81,7 +91,8 @@
     "systemGroup": "Sistema",
     "finance": "Finanças",
     "contacts": "Contactos",
-    "contracts": "Contratos"
+    "contracts": "Contratos",
+    "compliance": "Conformidade"
   },
   "dashboard": {
     "welcome": "Bem-vindo ao seu painel de gestão de imóveis",
@@ -579,7 +590,17 @@
     "safTptDescription": "Gerar ficheiro SAF-T XML para a Autoridade Tributária",
     "fiscalYear": "Ano Fiscal",
     "generateExport": "Gerar Exportação",
-    "downloadXml": "Descarregar XML"
+    "downloadXml": "Descarregar XML",
+    "modelo179Title": "Modelo 179 — Comunicação de Contratos de Arrendamento",
+    "modelo179Subtitle": "Acompanhe as comunicações anuais de contratos à Autoridade Tributária (AT)",
+    "modelo179Status": "Estado",
+    "modelo179Pending": "Pendente",
+    "modelo179Submitted": "Submetido",
+    "modelo179Confirmed": "Confirmado",
+    "modelo179Rejected": "Rejeitado",
+    "modelo179ATRef": "Referência AT",
+    "modelo179Export": "Exportar CSV",
+    "modelo179Alert": "{count} contrato(s) não comunicado(s) à AT para {year}"
   },
   "tax": {
     "title": "Cálculo de Impostos",
