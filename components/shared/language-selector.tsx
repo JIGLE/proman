@@ -16,12 +16,14 @@ const localeFlags: Record<Locale, string> = {
   pt: "🇵🇹",
   en: "🇬🇧",
   es: "🇪🇸",
+  it: "🇮🇹",
 };
 
 const localeCodes: Record<Locale, string> = {
   pt: "PT",
   en: "EN",
   es: "ES",
+  it: "IT",
 };
 
 interface LanguageSelectorProps {

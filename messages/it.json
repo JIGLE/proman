@@ -1,0 +1,1222 @@
+{
+  "portfolio": {
+    "badge": "Area immobili",
+    "title": "Immobili",
+    "addProperty": "Aggiungi immobile",
+    "openMap": "Apri mappa",
+    "stats": {
+      "trackedUnits": "Immobili",
+      "occupied": "{count} occupati",
+      "occupancy": "Tasso occupazione",
+      "vacancySlots": "{count} posti liberi",
+      "runRate": "Entrate mensili",
+      "onMap": "{mapped}/{total} sulla mappa"
+    },
+    "attention": {
+      "label": "Attenzione",
+      "expiringLeases": "{count} contratti in scadenza (30 gg)",
+      "openTickets": "{count} ticket aperti",
+      "missingCoords": "{count} coordinate mancanti"
+    },
+    "tabs": {
+      "portfolioList": "Immobili",
+      "homeDetails": "Dettagli abitazione",
+      "map": "Mappa",
+      "buildings": "Edifici"
+    },
+    "tenant": {
+      "badge": "Portafoglio",
+      "myHome": "La mia casa",
+      "payments": "Pagamenti",
+      "myLease": "Il mio contratto",
+      "myDocuments": "I miei documenti",
+      "monthlyRent": "Canone mensile",
+      "leaseEnds": "Contratto scade {date}",
+      "noLease": "Nessun contratto caricato",
+      "receipts": "Ricevute",
+      "paidRecords": "Registrazioni di pagamento disponibili",
+      "homeSummary": "Riepilogo abitazione",
+      "addressUnavailable": "Indirizzo immobile non disponibile",
+      "mapAvailable": "La vista mappa è disponibile per la tua abitazione.",
+      "mapUnavailable": "La vista mappa sarà disponibile quando le coordinate saranno inserite."
+    }
+  },
+  "settings": {
+    "title": "Impostazioni",
+    "description": "Gestisci le impostazioni del tuo account e le preferenze",
+    "imageConsent": "Mostra immagine profilo",
+    "imageConsentDesc": "Consenti la visualizzazione dell'immagine del tuo profilo Google nell'app (conforme GDPR).",
+    "taxProfile": "Profilo fiscale",
+    "fiscalResidency": "Paese di residenza fiscale",
+    "fiscalResidencyHelp": "Il paese in cui sei fiscalmente residente — determina quali norme fiscali si applicano al tuo reddito da locazione.",
+    "nhrStatus": "Stato di Residente Non Abituale (NHR)",
+    "nhrStatusHelp": "Il regime NHR garantisce un'aliquota fissa del 20% sui redditi di fonte portoghese per 10 anni. Valido solo se concesso prima di gennaio 2024.",
+    "nhrYear": "Anno di concessione",
+    "ificiStatus": "Regime IFICI (nuovo NHR dal 2024)",
+    "ificiStatusHelp": "L'IFICI ha sostituito il regime NHR per i nuovi richiedenti dal 2024. Aliquota fissa del 20%.",
+    "ificiYear": "Anno di concessione",
+    "taxRegimeMutuallyExclusive": "NHR e IFICI si escludono a vicenda — solo uno può essere attivo contemporaneamente."
+  },
+  "gdpr": {
+    "title": "I tuoi diritti sui dati (GDPR)",
+    "description": "Ai sensi del GDPR hai il diritto di accedere, esportare o cancellare i tuoi dati personali.",
+    "export": "Esporta i miei dati",
+    "delete": "Cancella i miei dati"
+  },
+  "admin": {
+    "database": {
+      "title": "Vista database amministratore",
+      "description": "Vista in sola lettura delle tabelle del database. Accessi registrati per conformità GDPR."
+    }
+  },
+  "navigation": {
+    "dashboard": "Dashboard",
+    "home": "Home",
+    "properties": "Immobili",
+    "tenants": "Inquilini",
+    "people": "Inquilini",
+    "leases": "Contratti",
+    "payments": "Pagamenti",
+    "financials": "Conti",
+    "maintenance": "Manutenzione",
+    "settings": "Impostazioni",
+    "correspondence": "Messaggi",
+    "analytics": "Analisi",
+    "reports": "Report",
+    "documents": "Documenti",
+    "insights": "Insight",
+    "communicationGroup": "Comunicazioni",
+    "operationsGroup": "Operazioni",
+    "intelligenceGroup": "Report",
+    "systemGroup": "Sistema",
+    "finance": "Finanza",
+    "contacts": "Fornitori",
+    "vendors": "Fornitori",
+    "contracts": "Contratti",
+    "compliance": "Conformità",
+    "taxFiling": "Dichiarazione fiscale"
+  },
+  "dashboard": {
+    "welcome": "Benvenuto nella tua dashboard di gestione immobiliare",
+    "totalProperties": "Immobili totali",
+    "activeTenants": "Inquilini attivi",
+    "monthlyRevenue": "Entrate mensili",
+    "occupancyRate": "Tasso di occupazione",
+    "recentPayments": "Pagamenti recenti",
+    "propertyStatus": "Stato immobili",
+    "recentActivities": "Attività recenti",
+    "noActivity": "Nessuna attività ancora",
+    "addPropertiesToStart": "Aggiungi il tuo primo immobile per iniziare",
+    "addTenantsToSeeActivity": "Aggiungi inquilini e registra pagamenti per vedere l'attività qui",
+    "portfolioOverview": "Panoramica immobili",
+    "recentProperties": "Immobili recenti",
+    "viewAll": "Vedi tutti",
+    "achievements": "Traguardi",
+    "achievementsDescription": "Risultati raggiunti nella gestione del tuo portafoglio immobiliare",
+    "latestTenantPayments": "Ultimi pagamenti degli inquilini",
+    "currentPropertyConditions": "Condizioni attuali degli immobili",
+    "paid": "Pagato",
+    "latestPortfolioUpdates": "Ultimi aggiornamenti del portafoglio",
+    "activityFeedPlaceholder": "Il tuo feed di attività apparirà qui",
+    "portfolioBreakdown": "Suddivisione del portafoglio per tipo di immobile",
+    "noPropertyData": "Nessun dato immobiliare disponibile",
+    "startManagingPortfolio": "Inizia a gestire il tuo portafoglio",
+    "startManagingPortfolioDesc": "Aggiungi il tuo primo immobile per sbloccare statistiche, analisi e monitoraggio finanziario sull'intero portafoglio.",
+    "addYourFirstProperty": "Aggiungi il tuo primo immobile",
+    "nameFallback": "ciao",
+    "dailyOps": "Operazioni quotidiane per {firstName}",
+    "ownerTitle": "Tieni sotto controllo affitti scaduti, contratti in scadenza e solleciti ricevute.",
+    "ownerSubtitle": "Il tuo spazio di lavoro mette in evidenza ciò che richiede attenzione immediata e mantiene visibile il flusso di cassa.",
+    "overdueRentMetric": "Affitto scaduto",
+    "tenantsFollowUp": "{count} inquilini richiedono follow-up",
+    "collectedThisMonth": "Incassato questo mese",
+    "paidRentPosted": "Affitto pagato già registrato questo mese",
+    "occupancyMetric": "Occupazione",
+    "propertiesTracked": "{count} immobili monitorati",
+    "actionQueue": "Coda azioni",
+    "actionQueueSubtitle": "Dai priorità a riscossione e attività contrattuali prima che diventino problemi.",
+    "openPayments": "Pagamenti aperti",
+    "noOverduePayments": "Nessun pagamento scaduto oggi.",
+    "dueDateLabel": "Scadenza {date}",
+    "reviewPayment": "Revisiona pagamento",
+    "reviewLease": "Revisiona contratto",
+    "leaseFollowUp": "Follow-up contratto",
+    "noLeasesNeedReview": "Nessun contratto attivo richiede revisione al momento.",
+    "endsDate": "Termina {date}",
+    "latestPaymentActivity": "Ultima attività di pagamento nel portafoglio.",
+    "seeAll": "Vedi tutti",
+    "noPaymentsRecorded": "Nessun pagamento registrato ancora.",
+    "thisWeekActivity": "Attività di questa settimana",
+    "thisWeekActivitySubtitle": "Mantieni in movimento affitti, contratti e ricevute senza lasciare la dashboard.",
+    "trackedTenants": "Inquilini monitorati",
+    "activeLeasesCount": "Contratti attivi",
+    "openPortfolio": "Apri immobili",
+    "openDocuments": "Apri documenti",
+    "addPropertyLabel": "Aggiungi il tuo primo immobile",
+    "addPropertyDesc": "Inizia aggiungendo un immobile — appartamento, casa o edificio commerciale.",
+    "addPropertyDesc2": "Inizia con un appartamento, casa o unità commerciale.",
+    "addPropertyAction": "Aggiungi immobile",
+    "addTenantLabel": "Aggiungi un inquilino",
+    "addTenantDesc": "Inserisci i dati dell'inquilino e assegnalo a un immobile.",
+    "addTenantAction": "Aggiungi inquilino",
+    "createLeaseLabel": "Crea un contratto",
+    "createLeaseDesc": "Definisci affitto, date e condizioni per la locazione.",
+    "createLeaseAction": "Crea contratto",
+    "recordPaymentLabel": "Registra il primo pagamento",
+    "recordPaymentDesc": "Registra il tuo primo pagamento del canone per sbloccare le analisi sui ricavi.",
+    "recordPaymentAction": "Registra pagamento",
+    "featPropertiesTitle": "Immobili",
+    "featPropertiesDesc": "Monitora unità, indirizzi, importi canone e stato di occupazione in un unico posto.",
+    "featTenantsTitle": "Inquilini e contratti",
+    "featTenantsDesc": "Gestisci profili inquilini, condizioni contrattuali e storico pagamenti senza sforzo.",
+    "featFinancialsTitle": "Finanze",
+    "featFinancialsDesc": "Monitora entrate, affitti scaduti e spese con riepiloghi automatici.",
+    "tenantWorkspaceLabel": "Area inquilino",
+    "tenantTitle": "Tieni contratto, pagamenti e documenti condivisi in un unico posto tranquillo.",
+    "tenantSubtitle": "Controlla il prossimo affitto, conferma i dettagli del contratto e accedi alle ricevute in un unico posto.",
+    "nextRent": "Prossimo affitto",
+    "noActiveLease": "Nessun contratto attivo",
+    "paymentStatusLabel": "Stato pagamento",
+    "paymentStatusPaid": "Il tuo ultimo pagamento è stato registrato come ricevuto.",
+    "paymentStatusOverdue": "Un pagamento richiede attenzione. Contatta il proprietario.",
+    "paymentStatusPending": "Il tuo prossimo pagamento è in sospeso.",
+    "leaseEnds": "Fine contratto",
+    "leaseEndsSubtitle": "Data di scadenza del contratto attuale",
+    "myLease": "Il mio contratto",
+    "myLeaseSubtitle": "Tutto quello che ti serve sul tuo alloggio attuale e il contratto.",
+    "yourProperty": "Il tuo immobile",
+    "addressUnavailable": "Indirizzo non disponibile",
+    "monthlyRentLabel": "Canone mensile",
+    "leaseStatusLabel": "Stato contratto",
+    "startDateLabel": "Data di inizio",
+    "endDateLabel": "Data di fine",
+    "whatYouCanDoNow": "Cosa puoi fare ora",
+    "whatYouCanDoNowSubtitle": "Apri le attività principali dell'inquilino direttamente da qui.",
+    "paymentHistory": "Storico pagamenti",
+    "sharedDocuments": "Documenti condivisi",
+    "propertyOverview": "Panoramica immobile",
+    "recentReceipts": "Ricevute recenti",
+    "recentReceiptsSubtitle": "Ultime conferme di pagamento collegate al tuo contratto.",
+    "openAll": "Apri tutto",
+    "noReceiptsYet": "Nessuna ricevuta disponibile ancora.",
+    "needHelp": "Hai bisogno di aiuto?",
+    "contactOwnerLabel": "Contatta il proprietario dell'immobile:",
+    "useLeaseHistory": "Usa il tuo contratto e la cronologia delle ricevute come riferimento prima di contattare il proprietario.",
+    "actionPanelTitle": "Azioni di oggi",
+    "actionPanelSubtitle": "Cosa richiede la tua attenzione adesso.",
+    "rentDueAlert": "{count} di {total} contratti non ancora pagati questo mese",
+    "overdueAlert": "{count} pagamento/i scaduto/i",
+    "maintenanceOpenAlert": "{count} problema/i di manutenzione aperto/i — il più vecchio {days} giorni",
+    "leaseExpiringAlert": "Contratto {property} scade in {days} giorno/i",
+    "leaseExpiring90Alert": "{count} contratto/i in scadenza entro 90 giorni",
+    "leaseExpiringNoRenewal": "Contratto {property} scade in {days} giorno/i — nessun rinnovo proposto",
+    "leaseExpiringAwaiting": "{count} contratto/i in scadenza — in attesa risposta inquilino",
+    "leaseExpiringAccepted": "{count} rinnovo/i contratto accettato/i — crea nuovo contratto",
+    "docExpiryCritical": "{count} documento/i in scadenza entro 14 giorni",
+    "docExpiryWarning": "{count} documento/i in scadenza entro 60 giorni",
+    "allClear": "Tutto in regola",
+    "allClearDesc": "Nessun affitto in sospeso, pagamenti scaduti o manutenzione urgente.",
+    "setupComplete": "Configurazione completata"
+  },
+  "greeting": {
+    "morning": "Buongiorno",
+    "afternoon": "Buon pomeriggio",
+    "evening": "Buonasera",
+    "night": "Buonanotte"
+  },
+  "onboarding": {
+    "gettingStarted": "Inizia qui",
+    "complete": "completato",
+    "setupComplete": "Configurazione completata!",
+    "allSet": "Sei pronto per gestire i tuoi immobili",
+    "addFirstProperty": "Aggiungi il tuo primo immobile",
+    "addFirstPropertyDesc": "Inizia aggiungendo un immobile — appartamento, casa o edificio commerciale.",
+    "addTenant": "Aggiungi un inquilino",
+    "addTenantDesc": "Inserisci i dati dell'inquilino e assegnalo a un immobile.",
+    "recordPayment": "Registra un pagamento",
+    "recordPaymentDesc": "Registra il tuo primo pagamento del canone per sbloccare le analisi sui ricavi."
+  },
+  "emptyState": {
+    "properties": {
+      "title": "Nessun immobile ancora",
+      "description": "Aggiungi il tuo primo immobile per iniziare a gestire il portafoglio."
+    },
+    "tenants": {
+      "title": "Nessun inquilino ancora",
+      "description": "Una volta aggiunti gli immobili, inserisci gli inquilini per monitorare contratti e pagamenti."
+    },
+    "payments": {
+      "title": "Nessun pagamento registrato",
+      "description": "Inizia a registrare i pagamenti del canone per monitorare i ricavi."
+    },
+    "generic": {
+      "title": "Niente qui ancora",
+      "description": "Inizia aggiungendo il tuo primo elemento."
+    },
+    "leases": {
+      "title": "Nessun contratto ancora",
+      "description": "Crea contratti di locazione per formalizzare i rapporti con gli inquilini.",
+      "action": "Aggiungi primo contratto"
+    },
+    "maintenance": {
+      "title": "Nessun ticket di manutenzione",
+      "description": "Crea un nuovo ticket per monitorare le richieste di manutenzione.",
+      "action": "Crea ticket"
+    },
+    "correspondence": {
+      "title": "Nessun modello ancora",
+      "description": "Crea modelli di corrispondenza per semplificare le comunicazioni.",
+      "action": "Crea modello"
+    },
+    "reports": {
+      "title": "Nessun report disponibile",
+      "description": "I report vengono generati dai dati sugli immobili e finanziari."
+    },
+    "owners": {
+      "title": "Nessun proprietario ancora",
+      "description": "Aggiungi proprietari per monitorare la comproprietà degli immobili.",
+      "action": "Aggiungi primo proprietario"
+    },
+    "receipts": {
+      "title": "Nessuna ricevuta ancora",
+      "description": "Crea ricevute di pagamento per tenere traccia dei pagamenti ricevuti.",
+      "action": "Crea prima ricevuta"
+    },
+    "expenses": {
+      "title": "Nessuna spesa registrata",
+      "description": "Registra le spese degli immobili per monitorare i costi."
+    },
+    "invoices": {
+      "title": "Nessuna fattura ancora",
+      "description": "Crea fatture per gli inquilini per formalizzare gli obblighi di pagamento.",
+      "action": "Crea fattura"
+    },
+    "contracts": {
+      "title": "Nessun contratto trovato",
+      "description": "I contratti vengono creati dai contratti di locazione."
+    },
+    "documents": {
+      "title": "Nessun documento ancora",
+      "description": "Carica documenti per tenere in ordine i tuoi archivi.",
+      "action": "Carica documento"
+    },
+    "contacts": {
+      "title": "Nessun contatto trovato",
+      "description": "I contatti vengono popolati dai tuoi inquilini e proprietari."
+    },
+    "units": {
+      "title": "Nessuna unità ancora",
+      "description": "Aggiungi unità a questo immobile per monitorare i singoli spazi.",
+      "action": "Aggiungi prima unità"
+    },
+    "noResults": {
+      "title": "Nessun risultato trovato",
+      "description": "Prova a modificare la ricerca o i filtri."
+    }
+  },
+  "actions": {
+    "add": "Aggiungi",
+    "edit": "Modifica",
+    "delete": "Elimina",
+    "save": "Salva",
+    "create": "Crea",
+    "cancel": "Annulla",
+    "export": "Esporta",
+    "refresh": "Aggiorna",
+    "search": "Cerca",
+    "filter": "Filtra",
+    "viewAll": "Vedi tutti"
+  },
+  "landing": {
+    "eyebrow": "Gestione locazioni in Italia e non solo",
+    "hero": "Incassa affitti. Emetti ricevute. Rimani in regola.",
+    "subtitle": "Domora automatizza il ciclo di conformità mensile per i proprietari in Italia, Portogallo e Spagna — dal follow-up sui pagamenti alle ricevute elettroniche e alle esportazioni fiscali.",
+    "cta": "Accedi",
+    "headerCta": "Inizia",
+    "navHowItWorks": "Come funziona",
+    "navWorkflow": "Flusso di lavoro",
+    "demoCta": "Prova la demo gratuita",
+    "secondaryCta": "Scopri come funziona",
+    "microcopy": "Nessuna carta. Nessuna configurazione. Guida in meno di 2 minuti.",
+    "tenantPortalNote": "Sei un inquilino?",
+    "tenantPortalLink": "Accedi al tuo portale qui",
+    "chips": {
+      "simple": "Un flusso dall'affitto alla ricevuta",
+      "compliance": "Conformità fiscale in contesto",
+      "workflow": "Contratti, inquilini e pagamenti collegati"
+    },
+    "preview": {
+      "label": "Anteprima prodotto",
+      "title": "Dall'affitto scaduto ai documenti pronti per il fisco",
+      "subtitle": "Un unico flusso di lavoro, non una dashboard frammentata.",
+      "badge": "Area proprietario",
+      "kpi": {
+        "overdueLabel": "Scaduto oggi",
+        "overdueHint": "1 immobile",
+        "collectedLabel": "Incassato questo mese",
+        "collectedHint": "4 pagamenti",
+        "receiptsLabel": "Ricevute emesse",
+        "receiptsHint": "1 in attesa"
+      },
+      "steps": {
+        "detect": {
+          "title": "Affitto scaduto rilevato",
+          "description": "Visualizza la prossima azione del giorno in una coda."
+        },
+        "receipt": {
+          "title": "Pagamento registrato e ricevuta emessa",
+          "description": "Genera il documento senza lasciare il flusso."
+        },
+        "compliance": {
+          "title": "Contesto fiscale applicato",
+          "description": "Il profilo del paese rimane collegato allo stesso record di pagamento."
+        }
+      },
+      "result": {
+        "title": "Risultato",
+        "netLabel": "Affitto netto incassato oggi",
+        "receipt": "Stato ricevuta",
+        "compliance": "Profilo fiscale",
+        "export": "Esporta",
+        "done": "Emessa",
+        "ready": "Pronto"
+      }
+    },
+    "howItWorks": {
+      "eyebrow": "Come funziona",
+      "title": "Tre passi per chiudere il ciclo di riscossione",
+      "subtitle": "Scopri cosa succede tra l'affitto scaduto, l'emissione della ricevuta e l'output pronto per il fisco in un unico flusso.",
+      "collect": {
+        "title": "Dai priorità al lavoro di riscossione quotidiano",
+        "description": "La coda mostra chi necessita di follow-up immediato per contratto e immobile."
+      },
+      "issue": {
+        "title": "Registra il pagamento ed emetti istantaneamente",
+        "description": "Non appena il pagamento viene registrato, la ricevuta viene generata nello stesso flusso."
+      },
+      "report": {
+        "title": "Esporta con contesto fiscale",
+        "description": "I dati di pagamento e il profilo fiscale rimangono collegati per report e tracce di audit."
+      }
+    },
+    "demo": {
+      "label": "Modalità demo",
+      "title": "Esplora un portale da entrambe le prospettive",
+      "subtitle": "Inizia in modalità proprietario per il controllo completo del portafoglio o passa alla modalità inquilino per una vista self-service di un contratto.",
+      "cardCta": "Apri vista demo",
+      "ownerTitle": "Esplora come proprietario",
+      "ownerDescription": "Visualizza l'intero portafoglio, inquilini, pagamenti, documenti e flussi fiscali.",
+      "tenantTitle": "Esplora come inquilino",
+      "tenantDescription": "Visualizza un immobile, un contratto, pagamenti, ricevute e documenti condivisi.",
+      "owner": {
+        "f1": "Vista portafoglio completo",
+        "f2": "Pagamenti, contratti e ricevute",
+        "f3": "Flussi fiscali IT/PT/ES"
+      },
+      "tenant": {
+        "f1": "Il tuo contratto e pagamenti",
+        "f2": "Accesso alle ricevute",
+        "f3": "Documenti condivisi"
+      }
+    },
+    "features": {
+      "eyebrow": "Cosa è incluso",
+      "title": "Tutto quello che serve a un proprietario, niente di più",
+      "primaryBadge": "Flusso principale",
+      "primaryCta": "Scopri come fluiscono i pagamenti",
+      "items": {
+        "rentCollection": {
+          "title": "Riscossione affitti",
+          "description": "Monitora le scadenze, registra i pagamenti e segui gli affitti scaduti — tutto in una coda."
+        },
+        "receipts": {
+          "title": "Ricevute istantanee",
+          "description": "Emetti ricevute di locazione conformi al momento della registrazione del pagamento. Pronte in PDF."
+        },
+        "taxCompliance": {
+          "title": "Conformità fiscale IT/PT/ES",
+          "description": "I profili fiscali rimangono collegati a ogni immobile. Pronto per l'esportazione verso l'Agenzia delle Entrate e Hacienda."
+        },
+        "maintenance": {
+          "title": "Monitoraggio manutenzione",
+          "description": "Registra ticket, assegna fornitori, monitora i costi. Le spese si collegano automaticamente all'immobile."
+        },
+        "leaseManagement": {
+          "title": "Gestione contratti",
+          "description": "Crea, rinnova e risolvi contratti. Gli avvisi di rinnovo automatico ti tengono in anticipo sulle scadenze."
+        },
+        "tenantPortal": {
+          "title": "Portale inquilini",
+          "description": "Gli inquilini vedono il proprio contratto, pagamenti e ricevute — meno email per te."
+        }
+      }
+    },
+    "pricing": {
+      "eyebrow": "Prezzi semplici",
+      "title": "Inizia gratis. Scala quando ne hai bisogno.",
+      "subtitle": "Ogni piano include il flusso di lavoro completo. Passa a un piano superiore per più immobili e accesso del team.",
+      "selfHostedNote": "Preferisci il self-hosting? La versione open source è sempre gratuita.",
+      "selfHostedLink": "Distribuisci sul tuo server →",
+      "monthly": "/mese",
+      "free": {
+        "name": "Gratuito",
+        "price": "€0",
+        "description": "Per i proprietari che iniziano.",
+        "cta": "Inizia gratuitamente",
+        "f1": "1 immobile",
+        "f2": "Inquilini e contratti illimitati",
+        "f3": "Ricevute conformi",
+        "f4": "Portale self-service inquilini",
+        "f5": "Report di base"
+      },
+      "pro": {
+        "name": "Pro",
+        "price": "€19",
+        "badge": "Più popolare",
+        "description": "Per i proprietari attivi con un portafoglio in crescita.",
+        "cta": "Inizia prova gratuita",
+        "f1": "Fino a 10 immobili",
+        "f2": "Generazione ricevute elettroniche",
+        "f3": "Esportazioni fiscali IRS / IRPF / IRPEF",
+        "f4": "Avvisi e scadenze di conformità",
+        "f5": "Corrispondenza email",
+        "f6": "Archiviazione documenti"
+      },
+      "business": {
+        "name": "Business",
+        "price": "€49",
+        "description": "Per i gestori immobiliari con portafogli più grandi.",
+        "cta": "Contatta le vendite",
+        "f1": "Immobili illimitati",
+        "f2": "Accesso del team (fino a 5 utenti)",
+        "f3": "Esportazione NRUA (Spagna)",
+        "f4": "Esportazione SAF-T PT",
+        "f5": "Supporto prioritario",
+        "f6": "Accesso API"
+      }
+    },
+    "closingCta": {
+      "title": "Pronto a semplificare le tue locazioni?",
+      "subtitle": "Prova il flusso completo gratuitamente — immobili, inquilini, contratti e ricevute in un unico posto.",
+      "primary": "Prova la demo gratuita",
+      "secondary": "Accedi al tuo account"
+    },
+    "trust": {
+      "items": {
+        "records": "Registrazioni pronte per audit",
+        "export": "Dati pronti per l'esportazione",
+        "pt_es": "Profili fiscali IT/PT/ES",
+        "roles": "Ruoli proprietario e inquilino",
+        "documents": "Archiviazione sicura documenti",
+        "operations": "Operazioni centralizzate"
+      }
+    },
+    "timeline": {
+      "eyebrow": "Il ciclo di riscossione",
+      "title": "Un flusso di lavoro. Dalla scadenza dell'affitto all'esportazione pronta.",
+      "subtitle": "Ogni passaggio monitorato, ogni record collegato.",
+      "steps": {
+        "due": {
+          "title": "Affitto in scadenza",
+          "description": "Il contratto appare nella coda di oggi"
+        },
+        "reminder": {
+          "title": "Promemoria inviato",
+          "description": "Inquilino notificato automaticamente"
+        },
+        "payment": {
+          "title": "Pagamento registrato",
+          "description": "Importo registrato con timestamp"
+        },
+        "receipt": {
+          "title": "Ricevuta emessa",
+          "description": "PDF generato, collegato al pagamento"
+        },
+        "export": {
+          "title": "Esportazione pronta",
+          "description": "Record pronto per il fisco"
+        }
+      }
+    }
+  },
+  "errors": {
+    "notFound": {
+      "title": "Pagina non trovata",
+      "description": "La pagina che stai cercando non esiste o è stata spostata.",
+      "returnHome": "Torna alla dashboard"
+    },
+    "generic": {
+      "title": "Qualcosa è andato storto",
+      "description": "Si è verificato un errore imprevisto durante il caricamento di questa pagina.",
+      "fallbackMessage": "Prova ad aggiornare la pagina o contatta il supporto se il problema persiste.",
+      "tryAgain": "Riprova"
+    }
+  },
+  "compliance": {
+    "title": "Conformità",
+    "rentReceipts": "Ricevute di affitto",
+    "rentReceiptsPt": "Ricevute elettroniche di affitto",
+    "createReceipt": "Emetti ricevuta",
+    "receiptNumber": "Numero ricevuta",
+    "landlordNif": "Codice Fiscale proprietario",
+    "tenantNif": "Codice Fiscale inquilino",
+    "rentAmount": "Importo affitto",
+    "withholdingRate": "Aliquota ritenuta",
+    "paymentDate": "Data pagamento",
+    "rentalPeriod": "Periodo di locazione",
+    "receiptStatus": "Stato ricevuta",
+    "submitToAT": "Invia all'Agenzia delle Entrate",
+    "downloadPdf": "Scarica PDF",
+    "receiptCreated": "Ricevuta di affitto creata con successo",
+    "receiptDeadlineWarning": "Scadenza legale: la ricevuta deve essere emessa entro 5 giorni dal pagamento",
+    "nrua": "Registrazione NRUA",
+    "nruaTitle": "Registrazione contratto di locazione (NRUA)",
+    "nruaDescription": "Registra contratti di locazione con lo Sportello Unico Digitale della Spagna",
+    "registerContract": "Registra contratto",
+    "registrationStatus": "Stato registrazione",
+    "cadasterReference": "Riferimento catastale",
+    "municipalityCode": "Codice comune",
+    "contractType": "Tipo di contratto",
+    "primaryResidence": "Residenza principale",
+    "temporaryHousing": "Alloggio temporaneo",
+    "touristRental": "Locazione turistica",
+    "rentCap": "Verifica tetto affitto",
+    "rentCapTitle": "Legge sull'abitazione — Verifica tetto affitto",
+    "proposedRent": "Affitto mensile proposto",
+    "priorRent": "Affitto contratto precedente",
+    "zonaTensionada": "Zona di tensione abitativa",
+    "rentAllowed": "L'affitto è nei limiti legali",
+    "rentExceeded": "L'affitto supera il tetto legale",
+    "maxLegalRent": "Affitto massimo legale",
+    "granTenedor": "Grande proprietario (Gran Tenedor)",
+    "granTenedorWarning": "Sei classificato come grande proprietario — si applicano tetti d'affitto più severi",
+    "safTpt": "Esportazione SAF-T (PT)",
+    "safTptDescription": "Genera XML SAF-T per l'Autorità Tributaria portoghese",
+    "fiscalYear": "Anno fiscale",
+    "generateExport": "Genera esportazione",
+    "downloadXml": "Scarica XML",
+    "modelo179Title": "Modelo 179 — Registrazione locazione",
+    "modelo179Subtitle": "Monitora le dichiarazioni annuali di registrazione della locazione all'Autoridade Tributária (AT)",
+    "modelo179Status": "Stato",
+    "modelo179Pending": "In attesa",
+    "modelo179Submitted": "Inviato",
+    "modelo179Confirmed": "Confermato",
+    "modelo179Rejected": "Rifiutato",
+    "modelo179ATRef": "Riferimento AT",
+    "modelo179Export": "Esporta CSV",
+    "modelo179Alert": "{count} contratto/i non registrato/i presso AT per {year}"
+  },
+  "tax": {
+    "title": "Calcolo imposte",
+    "regime": "Regime fiscale",
+    "standardBrackets": "Scaglioni progressivi standard",
+    "rendaAcessivel": "Renda Acessível (aliquota fissa 10%)",
+    "rendaAcessivelDescription": "Programma affitto accessibile — aliquota IRS fissa 10% per affitti inferiori a €2.300/mese",
+    "rendaAcessivelThreshold": "Canone mensile massimo per il programma",
+    "stressedZone": "Deduzioni zona di tensione",
+    "deduction90": "Deduzione 90% — affitto ridotto ≥5% rispetto al contratto precedente",
+    "deduction70": "Deduzione 70% — prima locazione a inquilino 18-35 anni",
+    "deduction60": "Deduzione 60% — immobile riqualificato",
+    "deduction50": "Deduzione 50% — deduzione residenziale base",
+    "effectiveRate": "Aliquota effettiva",
+    "quarterlyPayment": "Pagamento trimestrale",
+    "annualTax": "Imposta annuale",
+    "taxableIncome": "Reddito imponibile",
+    "grossIncome": "Reddito lordo da locazione",
+    "deductions": "Deduzioni",
+    "brackets": "Scaglioni d'imposta"
+  },
+  "payments": {
+    "title": "Pagamenti",
+    "methods": "Metodi di pagamento",
+    "sepaMandate": "Mandato di addebito diretto SEPA",
+    "createMandate": "Crea mandato SEPA",
+    "cancelMandate": "Annulla mandato",
+    "mandateActive": "Attivo",
+    "mandateInactive": "Annullato",
+    "iban": "IBAN",
+    "accountHolder": "Intestatario del conto",
+    "multibanco": "Multibanco",
+    "multibancoEntity": "Entità",
+    "multibancoReference": "Riferimento",
+    "mbway": "MB WAY",
+    "bizum": "Bizum",
+    "bankTransfer": "Bonifico bancario",
+    "card": "Carta di credito/debito",
+    "cash": "Contanti",
+    "paymentStatus": "Stato pagamento",
+    "pending": "In attesa",
+    "processing": "In elaborazione",
+    "succeeded": "Riuscito",
+    "failed": "Fallito",
+    "refunded": "Rimborsato",
+    "cancelled": "Annullato"
+  },
+  "leases": {
+    "title": "Contratti",
+    "monthlyRent": "Canone mensile",
+    "deposit": "Deposito cauzionale",
+    "startDate": "Data di inizio",
+    "endDate": "Data di fine",
+    "autoRenew": "Rinnovo automatico",
+    "renewalNoticeDays": "Giorni di preavviso rinnovo",
+    "active": "Attivo",
+    "expired": "Scaduto",
+    "terminated": "Risolto",
+    "rendaAcessivel": "Programma Renda Acessível",
+    "priorContractRent": "Canone contratto precedente",
+    "stressedZone": "Zona di tensione abitativa",
+    "contractUpload": "Carica contratto",
+    "contractDownload": "Scarica contratto",
+    "offerRenewal": "Proponi rinnovo",
+    "renewalOffered": "Rinnovo proposto",
+    "renewalAccepted": "Rinnovo accettato",
+    "renewalDeclined": "Rinnovo rifiutato",
+    "renewalAwaiting": "In attesa risposta inquilino",
+    "proposedRent": "Nuovo canone proposto",
+    "newStartDate": "Nuova data di inizio",
+    "newEndDate": "Nuova data di fine",
+    "renewalNotes": "Note per l'inquilino"
+  },
+  "maintenance": {
+    "title": "Manutenzione",
+    "createTicket": "Crea ticket",
+    "priority": "Priorità",
+    "low": "Bassa",
+    "medium": "Media",
+    "high": "Alta",
+    "urgent": "Urgente",
+    "statusOpen": "Aperto",
+    "statusInProgress": "In corso",
+    "statusResolved": "Risolto",
+    "statusClosed": "Chiuso"
+  },
+  "documents": {
+    "title": "Documenti",
+    "upload": "Carica documento",
+    "type": "Tipo di documento",
+    "contract": "Contratto",
+    "invoice": "Fattura",
+    "receipt": "Ricevuta",
+    "photo": "Foto",
+    "floorPlan": "Planimetria",
+    "certificate": "Certificato"
+  },
+  "notifications": {
+    "title": "Notifiche",
+    "leaseExpiring": "Contratto in scadenza",
+    "paymentDue": "Pagamento in scadenza",
+    "paymentReceived": "Pagamento ricevuto",
+    "maintenanceCreated": "Richiesta di manutenzione creata",
+    "maintenanceCompleted": "Manutenzione completata",
+    "documentUploaded": "Documento caricato",
+    "rentReceiptDue": "Ricevuta affitto in scadenza",
+    "nruaRegistration": "Registrazione NRUA richiesta",
+    "markAllRead": "Segna tutto come letto"
+  },
+  "owners": {
+    "title": "Proprietari",
+    "role": "Ruolo proprietario",
+    "managingOwner": "Proprietario gestore",
+    "regularOwner": "Proprietario ordinario",
+    "ownershipPercentage": "Quota di proprietà %",
+    "taxResidence": "Paese di residenza fiscale",
+    "incomeDistribution": "Distribuzione del reddito"
+  },
+  "invoices": {
+    "title": "Fatture",
+    "number": "Numero fattura",
+    "amount": "Importo",
+    "dueDate": "Data scadenza",
+    "paidDate": "Data pagamento",
+    "statusPending": "In attesa",
+    "statusPaid": "Pagato",
+    "statusOverdue": "Scaduto",
+    "statusCancelled": "Annullato"
+  },
+  "tenantPortal": {
+    "landing": {
+      "title": "Portale inquilino",
+      "description": "Il link al tuo portale ti è stato inviato per email quando è stato configurato il contratto.",
+      "howToAccess": "Come accedere al tuo portale:",
+      "step1": "Controlla la tua casella di posta per un messaggio dal tuo proprietario o gestore.",
+      "step2": "Apri l'email e clicca sul pulsante o link \"Accedi al tuo portale\".",
+      "step3": "Se non riesci a trovare l'email, controlla la cartella spam o posta indesiderata.",
+      "contactManager": "Contatta il tuo gestore se hai bisogno di un nuovo link."
+    },
+    "errors": {
+      "invalidLink": "Link non valido o scaduto. Contatta il tuo gestore.",
+      "loadFailed": "Impossibile caricare i dati del portale. Riprova più tardi.",
+      "connectionFailed": "Connessione fallita. Verifica la tua connessione internet."
+    },
+    "main": {
+      "loading": "Caricamento portale...",
+      "accessError": "Errore di accesso",
+      "returnHome": "Torna alla home",
+      "yourRentalHome": "La tua abitazione in affitto",
+      "tenantPortalFor": "Portale inquilino per {name}",
+      "needHelp": "Hai bisogno di aiuto? Contatta il tuo gestore o invia un'email al supporto.",
+      "overview": "Panoramica",
+      "payments": "Pagamenti",
+      "receipts": "Ricevute",
+      "invoices": "Fatture",
+      "allCaughtUp": "Sei in regola",
+      "noDuePayments": "Nessun pagamento dovuto al momento. Il tuo prossimo affitto è pianificato come di consueto.",
+      "monthlyRent": "Canone mensile",
+      "paymentStatus": "Stato pagamento",
+      "leaseEnds": "Scadenza contratto",
+      "paymentOverdue": "Pagamento scaduto ({days} giorni)",
+      "paymentDueToday": "Pagamento dovuto oggi",
+      "paymentDueInDays": "Pagamento dovuto tra {days} giorni",
+      "payNow": "Paga ora",
+      "processing": "Elaborazione...",
+      "propertyDetails": "Dettagli immobile",
+      "property": "Immobile",
+      "address": "Indirizzo",
+      "leasePeriod": "Periodo contratto",
+      "maintenanceRequests": "Richieste di manutenzione",
+      "paymentHistory": "Storico pagamenti",
+      "yourRecentPayments": "I tuoi pagamenti recenti",
+      "noPaymentHistory": "Nessuno storico pagamenti disponibile",
+      "yourBillingHistory": "La tua cronologia fatturazione",
+      "noInvoices": "Nessuna fattura disponibile",
+      "due": "Scadenza",
+      "paid": "Pagato",
+      "pay": "Paga",
+      "current": "Corrente"
+    }
+  },
+  "calendar": {
+    "months": {
+      "jan": "Gen",
+      "feb": "Feb",
+      "mar": "Mar",
+      "apr": "Apr",
+      "may": "Mag",
+      "jun": "Giu",
+      "jul": "Lug",
+      "aug": "Ago",
+      "sep": "Set",
+      "oct": "Ott",
+      "nov": "Nov",
+      "dec": "Dic"
+    },
+    "monthsFull": {
+      "january": "Gennaio",
+      "february": "Febbraio",
+      "march": "Marzo",
+      "april": "Aprile",
+      "may": "Maggio",
+      "june": "Giugno",
+      "july": "Luglio",
+      "august": "Agosto",
+      "september": "Settembre",
+      "october": "Ottobre",
+      "november": "Novembre",
+      "december": "Dicembre"
+    },
+    "weekdays": {
+      "sun": "Dom",
+      "mon": "Lun",
+      "tue": "Mar",
+      "wed": "Mer",
+      "thu": "Gio",
+      "fri": "Ven",
+      "sat": "Sab"
+    }
+  },
+  "charts": {
+    "revenueTrend": "Andamento ricavi",
+    "propertyDistribution": "Distribuzione immobili",
+    "revenue": "Ricavi",
+    "expenses": "Spese",
+    "netIncome": "Reddito netto",
+    "income": "Reddito"
+  },
+  "forms": {
+    "fullName": "Nome completo",
+    "email": "Email",
+    "phone": "Telefono",
+    "address": "Indirizzo",
+    "country": "Paese",
+    "city": "Città",
+    "notes": "Note",
+    "description": "Descrizione",
+    "property": "Immobile",
+    "tenant": "Inquilino",
+    "unit": "Unità",
+    "type": "Tipo",
+    "status": "Stato",
+    "rent": "Affitto",
+    "bedrooms": "Camere da letto",
+    "bathrooms": "Bagni",
+    "leaseStart": "Inizio contratto",
+    "leaseEnd": "Fine contratto",
+    "allProperties": "Tutti gli immobili",
+    "saving": "Salvataggio...",
+    "selectProperty": "Seleziona immobile",
+    "selectTenant": "Seleziona inquilino"
+  },
+  "status": {
+    "active": "Attivo",
+    "inactive": "Inattivo",
+    "paid": "Pagato",
+    "pending": "In attesa",
+    "overdue": "Scaduto",
+    "all": "Tutti",
+    "occupied": "Occupato",
+    "vacant": "Libero"
+  },
+  "messages": {
+    "addedSuccess": "{item} aggiunto/a con successo!",
+    "updatedSuccess": "{item} aggiornato/a con successo!",
+    "deletedSuccess": "{count} {item} eliminato/i con successo",
+    "savedSuccess": "Impostazioni salvate con successo",
+    "confirmDelete": "Sei sicuro di voler eliminare {count} {item}?",
+    "confirmDeleteDescription": "Questa azione non può essere annullata.",
+    "noResults": "Nessun risultato trovato"
+  },
+  "properties": {
+    "addNew": "Aggiungi nuovo immobile",
+    "editProperty": "Modifica immobile",
+    "updateDetails": "Aggiorna i dettagli dell'immobile",
+    "enterInfo": "Inserisci le informazioni sull'immobile",
+    "deleteConfirm": "{count} immobile/i e tutti i dati associati verranno rimossi definitivamente",
+    "fields": {
+      "name": "Nome immobile",
+      "type": "Tipo di immobile",
+      "selectType": "Seleziona tipo",
+      "address": "Ricerca indirizzo completo",
+      "verified": "Verificato",
+      "bedrooms": "Camere da letto",
+      "bathrooms": "Bagni",
+      "monthlyRent": "Canone mensile",
+      "propertyStatus": "Stato immobile"
+    },
+    "types": {
+      "apartment": "Appartamento",
+      "house": "Casa",
+      "condo": "Condominio",
+      "townhouse": "Villetta a schiera",
+      "other": "Altro"
+    }
+  },
+  "financial": {
+    "title": "Finanze",
+    "description": "Monitora entrate, spese e flusso di cassa",
+    "addExpense": "Aggiungi spesa",
+    "recentTransactions": "Transazioni recenti",
+    "recordExpense": "Registra spesa",
+    "addExpenseDesc": "Aggiungi una nuova spesa immobiliare per monitorare i tuoi costi",
+    "saveExpense": "Salva spesa",
+    "totalIncome": "Entrate totali",
+    "totalExpenses": "Spese totali",
+    "netIncome": "Reddito netto",
+    "fromRent": "Da affitti e depositi",
+    "maintenanceEtc": "Manutenzione, riparazioni, ecc.",
+    "cashFlow": "Flusso di cassa per il periodo",
+    "allTime": "Tutto il periodo",
+    "thisMonth": "Questo mese",
+    "thisYear": "Quest'anno",
+    "categories": {
+      "maintenance": "Manutenzione",
+      "repairs": "Riparazioni",
+      "utilities": "Utenze",
+      "insurance": "Assicurazione",
+      "taxes": "Imposte",
+      "mortgage": "Mutuo",
+      "management": "Spese di gestione",
+      "other": "Altro",
+      "imi": "IMI – Imposta immobiliare (PT)",
+      "ibi": "IBI – Imposta immobiliare (ES)",
+      "stamp_duty": "Imposta di bollo",
+      "other_tax": "Altra imposta immobiliare",
+      "building_insurance": "Assicurazione fabbricato",
+      "contents_insurance": "Assicurazione contenuto",
+      "liability_insurance": "Assicurazione responsabilità civile proprietario",
+      "condominium_fees": "Spese condominiali",
+      "stair_lighting": "Illuminazione scale",
+      "cleaning": "Pulizie",
+      "gardening": "Giardinaggio",
+      "elevator": "Manutenzione ascensore",
+      "security": "Sicurezza",
+      "appliances": "Elettrodomestici",
+      "water": "Acqua",
+      "electricity": "Elettricità",
+      "gas": "Gas",
+      "internet": "Internet",
+      "mortgage_interest": "Interessi mutuo",
+      "management_fees": "Spese di gestione",
+      "legal_fees": "Spese legali",
+      "accountant_fees": "Spese dottore commercialista / CAF"
+    },
+    "deductibleLabel": "Deducibile fiscalmente",
+    "nonDeductibleLabel": "Non deducibile",
+    "vendorName": "Fornitore / Venditore",
+    "vendorVat": "Codice Fiscale / P.IVA fornitore",
+    "expenseDeductibilityNote": "Indicativo — conferma la deducibilità con il tuo commercialista.",
+    "receipts": {
+      "title": "Ricevute",
+      "type": {
+        "rent": "Affitto",
+        "deposit": "Deposito",
+        "maintenance": "Manutenzione",
+        "other": "Altro"
+      }
+    },
+    "isRecurring": "Spesa ricorrente",
+    "recurrenceRule": "Ripeti",
+    "recurrenceMonthly": "Mensile",
+    "recurrenceQuarterly": "Trimestrale",
+    "recurrenceAnnual": "Annuale",
+    "recurrenceDay": "Genera il giorno",
+    "recurrenceEnd": "Termina dopo",
+    "generateRecurring": "Genera spese ricorrenti",
+    "recurringTemplate": "Modello ricorrente",
+    "recurringToggleDesc": "Genera automaticamente questa spesa secondo una pianificazione",
+    "recurrenceEndPlaceholder": "Lascia vuoto per non terminare mai",
+    "bulkGenerate": "Genera le ricevute di questo mese",
+    "bulkGenerateSuccess": "Generate {count} ricevute. {skipped} già esistenti.",
+    "bulkGenerateEmpty": "Tutte le ricevute di questo mese esistono già."
+  },
+  "propertyDetail": {
+    "tabs": {
+      "overview": "Panoramica",
+      "tenants": "Inquilini",
+      "leases": "Contratti",
+      "maintenance": "Manutenzione",
+      "payments": "Pagamenti",
+      "expenses": "Spese",
+      "units": "Unità"
+    },
+    "stats": {
+      "tenants": "Inquilini",
+      "activeLeases": "Contratti attivi",
+      "revenue": "Ricavi",
+      "openTickets": "Ticket aperti",
+      "totalExpenses": "Spese totali",
+      "netIncome": "Reddito netto"
+    },
+    "actions": {
+      "reviewPayments": "Revisiona pagamenti",
+      "documents": "Documenti",
+      "backToProperties": "Torna agli immobili"
+    },
+    "notFound": "Immobile non trovato",
+    "status": {
+      "occupied": "Occupato",
+      "vacant": "Libero",
+      "maintenance": "In manutenzione"
+    },
+    "related": "Correlato",
+    "propertyDetails": "Dettagli immobile",
+    "monthlyRent": "Canone mensile",
+    "type": "Tipo",
+    "bedrooms": "Camere da letto",
+    "bathrooms": "Bagni",
+    "description": "Descrizione",
+    "vacantNotice": "L'immobile è libero",
+    "noRelatedEntities": "Nessuna entità correlata",
+    "createLease": "Crea contratto",
+    "expiresIn": "Scade in {days} giorno/i",
+    "renew": "Rinnova →",
+    "finance": {
+      "totalRevenue": "Ricavi totali",
+      "totalExpenses": "Spese totali",
+      "netOperatingIncome": "Reddito operativo netto",
+      "collectionRate": "Tasso di riscossione",
+      "noData": "Nessun dato finanziario disponibile per questo immobile ancora."
+    }
+  },
+  "Units": {
+    "addUnit": "Aggiungi unità",
+    "editUnit": "Modifica unità",
+    "deleteUnit": "Elimina unità",
+    "unitNumber": "Numero unità",
+    "floor": "Piano",
+    "size": "Dimensione (m²)",
+    "bedrooms": "Camere da letto",
+    "bathrooms": "Bagni",
+    "status": "Stato",
+    "notes": "Note",
+    "status_vacant": "Libero",
+    "status_occupied": "Occupato",
+    "status_maintenance": "In manutenzione",
+    "status_reserved": "Riservato",
+    "property": "Immobile",
+    "tenant": "Inquilino",
+    "unit": "Unità",
+    "noUnitsInProperty": "Questo immobile non ha ancora unità.",
+    "noUnitsYet": "Nessuna unità ancora",
+    "addFirstUnit": "Aggiungi la tua prima unità",
+    "startByAdding": "Inizia aggiungendo unità ai tuoi immobili",
+    "unitNumberRequired": "Il numero unità è obbligatorio",
+    "propertyRequired": "L'immobile è obbligatorio",
+    "deleteConfirmTitle": "Elimina unità",
+    "deleteConfirmDescription": "Questa unità verrà rimossa definitivamente. Questa azione non può essere annullata."
+  },
+  "quickActions": {
+    "title": "Azioni rapide",
+    "addProperty": "Aggiungi immobile",
+    "addTenant": "Aggiungi inquilino",
+    "createLease": "Crea contratto",
+    "recordPayment": "Registra pagamento",
+    "maintenanceTicket": "Ticket di manutenzione",
+    "sendCorrespondence": "Invia messaggio",
+    "generateInvoice": "Genera fattura",
+    "addPropertyDesc": "Registra un nuovo immobile nel tuo portafoglio",
+    "addTenantDesc": "Registra un nuovo inquilino",
+    "recordPaymentDesc": "Registra un pagamento di affitto o spesa",
+    "createLeaseDesc": "Redigi un nuovo contratto di locazione",
+    "maintenanceTicketDesc": "Segnala un problema o una richiesta",
+    "sendCorrespondenceDesc": "Invia email o notifica a un inquilino"
+  },
+  "insights": {
+    "title": "Insight",
+    "description": "Prestazioni e analisi del portafoglio",
+    "occupancyRate": "Tasso di occupazione",
+    "severity": {
+      "danger": "Critico",
+      "warning": "Attenzione",
+      "info": "Informazione"
+    }
+  },
+  "reports": {
+    "title": "Report",
+    "description": "Report finanziari e analisi degli immobili",
+    "income": "Entrate",
+    "expenses": "Spese",
+    "netIncome": "Reddito netto",
+    "profitMargin": "Margine di profitto",
+    "quarterly": "Trimestrale"
+  },
+  "correspondence": {
+    "title": "Corrispondenza",
+    "description": "Gestisci modelli e comunicazioni",
+    "types": {
+      "welcome": "Benvenuto",
+      "rentReminder": "Promemoria affitto",
+      "evictionNotice": "Avviso di sfratto",
+      "maintenanceRequest": "Richiesta di manutenzione",
+      "leaseRenewal": "Rinnovo contratto",
+      "custom": "Personalizzato"
+    }
+  },
+  "contracts": {
+    "title": "Contratti",
+    "status": {
+      "active": "Attivo",
+      "expiring": "In scadenza",
+      "expired": "Scaduto",
+      "terminated": "Risolto"
+    }
+  },
+  "demo": {
+    "banner": "Modalità demo – Le modifiche non vengono salvate",
+    "exitButton": "Esci dalla demo",
+    "preparing": "Preparazione ambiente demo...",
+    "title": "Demo Domora",
+    "readOnly": "Questa funzionalità è in sola lettura in modalità demo",
+    "changesNotSaved": "Modalità demo: le modifiche non vengono salvate"
+  },
+  "loading": {
+    "default": "Caricamento...",
+    "application": "Caricamento applicazione...",
+    "signingIn": "Accesso in corso...",
+    "pleaseWait": "Attendi..."
+  },
+  "rateLimit": {
+    "tooManyRequests": "Troppe richieste. Riprova tra {retryAfter} secondi."
+  },
+  "footer": {
+    "copyright": "© {year} Domora. Tutti i diritti riservati.",
+    "privacy": "Informativa sulla privacy",
+    "terms": "Termini di servizio"
+  },
+  "pageHeader": {
+    "filter": "Filtra",
+    "export": "Esporta"
+  },
+  "property": {
+    "nextAction": {
+      "addLease": "Aggiungi contratto",
+      "renewLease": "Rinnova contratto",
+      "reviewTickets": "Revisiona ticket",
+      "findTenant": "Trova inquilino",
+      "verifyAddress": "Verifica indirizzo",
+      "allGood": "Tutto in regola"
+    }
+  },
+  "taxFiling": {
+    "title": "Dichiarazione fiscale annuale",
+    "subtitle": "Calcola e registra l'imposta annuale sul reddito da locazione",
+    "newFiling": "Nuova dichiarazione",
+    "noFilings": "Nessuna dichiarazione fiscale ancora",
+    "noFilingsDescription": "Avvia una nuova dichiarazione per calcolare l'imposta annuale sul reddito da locazione",
+    "step1Title": "Anno e profilo fiscale",
+    "step1Description": "Seleziona l'anno fiscale e il tuo regime fiscale",
+    "step2Title": "Selezione immobili",
+    "step2Description": "Scegli quali immobili includere",
+    "step3Title": "Redditi e spese",
+    "step3Description": "Revisiona il reddito da locazione e le spese deducibili",
+    "step4Title": "Calcolo imposte",
+    "step4Description": "Revisiona la tua stima dell'imposta dovuta",
+    "step5Title": "Revisione e salvataggio",
+    "step5Description": "Conferma e salva la tua dichiarazione",
+    "taxYear": "Anno fiscale",
+    "country": "Paese",
+    "regime": "Regime fiscale",
+    "selectProperties": "Seleziona gli immobili da includere",
+    "selectAll": "Seleziona tutti",
+    "noPropertiesForCountry": "Nessun immobile trovato per il paese selezionato",
+    "grossIncome": "Reddito lordo da locazione",
+    "deductibleExpenses": "Spese deducibili",
+    "incomeFromReceipts": "Popolato automaticamente dalle ricevute d'affitto",
+    "expensesFromRecords": "Popolato automaticamente dalle spese deducibili",
+    "noIncomeFound": "Nessun reddito da locazione trovato per {year}",
+    "calculate": "Calcola imposta",
+    "recalculate": "Ricalcola",
+    "calculating": "Calcolo in corso...",
+    "allowableExpenses": "Spese ammissibili",
+    "taxableIncome": "Reddito imponibile",
+    "taxDue": "Imposta dovuta",
+    "effectiveRate": "Aliquota effettiva",
+    "withholdingPaid": "Ritenuta già versata",
+    "balanceDue": "Saldo dovuto",
+    "bracketBreakdown": "Ripartizione per scaglioni",
+    "bracketRange": "Scaglione",
+    "bracketRate": "Aliquota",
+    "taxableInBracket": "Imponibile nello scaglione",
+    "taxInBracket": "Imposta",
+    "pluginNotes": "Note fiscali",
+    "saveAsDraft": "Salva come bozza",
+    "markAsFinal": "Segna come definitivo",
+    "filingsSaved": "Dichiarazione fiscale salvata",
+    "filingDeleted": "Dichiarazione eliminata",
+    "deleteConfirm": "Eliminare questa dichiarazione?",
+    "deleteDescription": "Questa azione non può essere annullata. Il record della dichiarazione verrà eliminato definitivamente.",
+    "delete": "Elimina",
+    "cancel": "Annulla",
+    "statusDraft": "Bozza",
+    "statusFinal": "Definitivo",
+    "year": "Anno",
+    "taxDueLabel": "Imposta dovuta",
+    "balanceDueLabel": "Saldo dovuto",
+    "createdAt": "Creato il",
+    "regime_STANDARD_PT": "Standard (IRS — scaglioni progressivi)",
+    "regime_NHR_PT": "Residente Non Abituale (NHR — aliquota fissa 20%)",
+    "regime_IFICI_PT": "IFICI (Nuovo NHR 2024 — aliquota fissa 20%)",
+    "regime_RENDA_ACESSIVEL_PT": "Renda Acessível (aliquota fissa 10%)",
+    "regime_STANDARD_ES": "Standard (IRPF — scaglioni progressivi)",
+    "regime_NHR_ES": "Non Residente (IRNR — aliquota fissa 19%)",
+    "regime_CEDOLARE_SECCA_IT": "Cedolare Secca (aliquota fissa 21%)",
+    "regime_CEDOLARE_CONCORDATO_IT": "Cedolare Concordato (aliquota fissa 10%)",
+    "regime_STANDARD_IT": "Standard (IRPEF — scaglioni progressivi)",
+    "italy": "Italia",
+    "calcError": "Calcolo imposta fallito. Verifica i tuoi dati.",
+    "noPropertySelected": "Seleziona almeno un immobile",
+    "loadingIncome": "Caricamento dati reddito...",
+    "portugal": "Portogallo",
+    "spain": "Spagna"
+  }
+}

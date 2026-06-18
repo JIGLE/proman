@@ -1,10 +1,12 @@
 import type { FiscalPlugin } from "./plugin-interface";
 import { ptPlugin } from "./pt-plugin";
 import { esPlugin } from "./es-plugin";
+import { itPlugin } from "./it-plugin";
 
 const plugins: Map<string, FiscalPlugin> = new Map([
   ["PT", ptPlugin],
   ["ES", esPlugin],
+  ["IT", itPlugin],
 ]);
 
 /** Return the plugin for a country code, or null if unsupported. */

@@ -4,8 +4,9 @@ import { locales, defaultLocale } from "@/lib/i18n/config";
 import enMessages from "@/messages/en.json";
 import ptMessages from "@/messages/pt.json";
 import esMessages from "@/messages/es.json";
+import itMessages from "@/messages/it.json";
 
-const messages = { en: enMessages, pt: ptMessages, es: esMessages } as const;
+const messages = { en: enMessages, pt: ptMessages, es: esMessages, it: itMessages } as const;
 
 /**
  * Detects the best locale for the tenant portal by inspecting:
