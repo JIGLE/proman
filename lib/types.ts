@@ -188,6 +188,13 @@ export interface Lease {
   autoRenew: boolean;
   renewalNoticeDays: number;
   notes?: string;
+  renewalStatus?: "offered" | "accepted" | "declined" | "expired" | null;
+  renewalOfferedAt?: string | null;
+  renewalRespondedAt?: string | null;
+  renewalNotes?: string | null;
+  renewalProposedRent?: number | null;
+  renewalStartDate?: string | null;
+  renewalEndDate?: string | null;
   createdAt: string;
   updatedAt: string;
 }

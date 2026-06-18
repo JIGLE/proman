@@ -194,8 +194,10 @@
     "rentDueAlert": "{count} de {total} contratos sin pagar este mes",
     "overdueAlert": "{count} pago(s) vencido(s)",
     "maintenanceOpenAlert": "{count} problema(s) de mantenimiento abierto(s) — el más antiguo lleva {days} días",
-    "leaseExpiringAlert": "El contrato de {property} vence en {days} día(s)",
+    "leaseExpiringAlert": "El contrato de {property} vence en {days} día(s) — sin renovación ofrecida",
     "leaseExpiring90Alert": "{count} contrato(s) que vencen en los próximos 90 días",
+    "renewalAwaiting": "{count} contrato(s) por vencer — esperando respuesta del inquilino",
+    "renewalAcceptedAlert": "{count} renovación(es) aceptada(s) — cree un nuevo contrato",
     "allClear": "Todo en orden",
     "allClearDesc": "Sin rentas pendientes, pagos vencidos ni mantenimiento urgente.",
     "setupComplete": "Configuración completa"

@@ -194,8 +194,10 @@
     "rentDueAlert": "{count} de {total} contratos ainda não pagos este mês",
     "overdueAlert": "{count} pagamento(s) em atraso",
     "maintenanceOpenAlert": "{count} problema(s) de manutenção aberto(s) — mais antigo há {days} dias",
-    "leaseExpiringAlert": "Contrato de {property} expira em {days} dia(s)",
+    "leaseExpiringAlert": "Contrato de {property} expira em {days} dia(s) — sem renovação oferecida",
     "leaseExpiring90Alert": "{count} contrato(s) a expirar nos próximos 90 dias",
+    "renewalAwaiting": "{count} contrato(s) a expirar — a aguardar resposta do inquilino",
+    "renewalAcceptedAlert": "{count} renovação(ões) aceite(s) — crie um novo contrato",
     "allClear": "Tudo em ordem",
     "allClearDesc": "Sem rendas em falta, pagamentos em atraso ou manutenção urgente.",
     "setupComplete": "Configuração concluída"

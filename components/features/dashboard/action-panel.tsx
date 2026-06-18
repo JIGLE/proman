@@ -156,40 +156,70 @@ export function ActionPanel(): ReactElement {
       });
     }
 
-    // --- 4. Leases expiring within 30 days ---
+    // --- 4. Leases expiring within 30 days (renewal-aware) ---
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const soonExpiring = activeLeases.filter((l) => {
       const end = new Date(l.endDate);
       return end > now && end <= thirtyDaysFromNow;
     });
 
-    if (soonExpiring.length > 0) {
-      // Find the soonest for the label
-      const soonest = [...soonExpiring].sort(
+    // Split by renewal status for contextual messaging
+    const noOfferExpiring = soonExpiring.filter(
+      (l) => !l.renewalStatus || l.renewalStatus === "declined",
+    );
+    const awaitingResponse = soonExpiring.filter((l) => l.renewalStatus === "offered");
+    const renewalAccepted = soonExpiring.filter((l) => l.renewalStatus === "accepted");
+
+    if (noOfferExpiring.length > 0) {
+      const soonest = [...noOfferExpiring].sort(
         (a, b) => new Date(a.endDate).getTime() - new Date(b.endDate).getTime(),
       )[0];
       const daysLeft = Math.ceil(
         (new Date(soonest.endDate).getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
       );
       const propName =
-        properties.find((p) => p.id === soonest.propertyId)?.name ??
-        soonest.property?.name ??
-        "—";
+        properties.find((p) => p.id === soonest.propertyId)?.name ?? soonest.property?.name ?? "—";
       results.push({
-        id: "expiring-30d",
+        id: "expiring-30d-no-offer",
         icon: CalendarClock,
         message: t("leaseExpiringAlert", { property: propName, days: daysLeft }),
-        count: soonExpiring.length,
+        count: noOfferExpiring.length,
         href: "/leases",
         severity: "critical",
       });
     }
 
-    // --- 5. Leases expiring within 90 days (secondary warning) ---
+    if (awaitingResponse.length > 0) {
+      results.push({
+        id: "expiring-30d-awaiting",
+        icon: CalendarClock,
+        message: t("renewalAwaiting", { count: awaitingResponse.length }),
+        count: awaitingResponse.length,
+        href: "/leases",
+        severity: "warning",
+      });
+    }
+
+    if (renewalAccepted.length > 0) {
+      results.push({
+        id: "expiring-30d-accepted",
+        icon: CalendarClock,
+        message: t("renewalAcceptedAlert", { count: renewalAccepted.length }),
+        count: renewalAccepted.length,
+        href: "/leases",
+        severity: "info",
+      });
+    }
+
+    // --- 5. Leases expiring within 90 days (secondary warning, no renewal offered) ---
     const ninetyDaysFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
     const soonExpiring90 = activeLeases.filter((l) => {
       const end = new Date(l.endDate);
-      return end > thirtyDaysFromNow && end <= ninetyDaysFromNow;
+      return (
+        end > thirtyDaysFromNow &&
+        end <= ninetyDaysFromNow &&
+        (!l.renewalStatus || l.renewalStatus === "declined")
+      );
     });
 
     if (soonExpiring90.length > 0) {

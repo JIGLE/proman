@@ -194,8 +194,10 @@
     "rentDueAlert": "{count} of {total} leases not yet paid this month",
     "overdueAlert": "{count} payment(s) overdue",
     "maintenanceOpenAlert": "{count} maintenance issue(s) open — oldest {days} days",
-    "leaseExpiringAlert": "{property} lease expires in {days} day(s)",
+    "leaseExpiringAlert": "{property} lease expires in {days} day(s) — no renewal offered",
     "leaseExpiring90Alert": "{count} lease(s) expiring within 90 days",
+    "renewalAwaiting": "{count} lease(s) expiring soon — awaiting tenant response",
+    "renewalAcceptedAlert": "{count} renewal(s) accepted — create new lease",
     "allClear": "All clear",
     "allClearDesc": "No outstanding rent, overdue payments, or urgent maintenance.",
     "setupComplete": "Setup complete"
