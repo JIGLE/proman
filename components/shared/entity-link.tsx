@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, Users, FileText, Wrench, Receipt } from "lucide-react";
+import { Building2, Users, FileText, Wrench, Receipt, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Badge } from "@/components/ui/badge";
 
-type EntityType = "property" | "tenant" | "lease" | "maintenance" | "receipt";
+export type EntityType = "property" | "tenant" | "lease" | "maintenance" | "receipt";
 
 const ENTITY_CONFIG: Record<
   EntityType,
@@ -68,7 +68,8 @@ export function EntityLink({
         href={href}
         className={cn(
           "flex items-center gap-3 p-3 rounded-lg border border-[var(--color-border)]",
-          "hover:bg-[var(--color-surface-hover)] transition-colors group",
+          "transition-colors group hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-primary)]/40",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]",
           className,
         )}
       >
@@ -100,6 +101,7 @@ export function EntityLink({
             {status}
           </Badge>
         )}
+        <ChevronRight className="h-4 w-4 shrink-0 text-[var(--color-muted-foreground)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--color-foreground)]" />
       </Link>
     );
   }
@@ -110,7 +112,8 @@ export function EntityLink({
       href={href}
       className={cn(
         "block p-4 rounded-xl border border-[var(--color-border)]",
-        "hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-primary)]/30 transition-all group",
+        "transition-all group hover:bg-[var(--color-surface-hover)] hover:border-[var(--color-primary)]/40",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]",
         className,
       )}
     >
@@ -143,6 +146,7 @@ export function EntityLink({
             <p className="text-xs text-[var(--color-muted-foreground)] mt-1">{subtitle}</p>
           )}
         </div>
+        <ChevronRight className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-muted-foreground)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--color-foreground)]" />
       </div>
     </Link>
   );
