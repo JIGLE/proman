@@ -123,21 +123,33 @@ export default async function LandingPage({ params }: Props) {
             <span className="font-display text-lg font-bold tracking-tight">Domora</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="hidden sm:block">
-              <LanguageSelector />
-            </div>
+            {/* Language is reachable on every breakpoint (compact on mobile) */}
+            <LanguageSelector compact />
             <div className="hidden sm:block h-4 w-px bg-white/10" />
-            <div className="hidden sm:block">
-              <TrackedLandingLink
-                href="/auth/signin"
-                eventName="landing.signin_click"
-                eventData={{ location: "header" }}
+            <TrackedLandingLink
+              href="/auth/signin"
+              eventName="landing.signin_click"
+              eventData={{ location: "header" }}
+              className="hidden sm:block"
+            >
+              <Button variant="ghost" size="sm" className="text-zinc-300 hover:text-zinc-50">
+                {t("cta")}
+              </Button>
+            </TrackedLandingLink>
+            {/* Primary CTA — visible on mobile too, not just below the fold */}
+            <TrackedLandingLink
+              href={`/${locale}/demo?perspective=owner`}
+              eventName="landing.demo_start"
+              eventData={{ location: "header" }}
+            >
+              <Button
+                size="sm"
+                className="gap-1.5 bg-teal-600 text-white hover:bg-teal-500"
               >
-                <Button variant="ghost" size="sm" className="text-zinc-300 hover:text-zinc-50">
-                  {t("cta")}
-                </Button>
-              </TrackedLandingLink>
-            </div>
+                <Play className="h-3.5 w-3.5" />
+                {t("demoCta")}
+              </Button>
+            </TrackedLandingLink>
           </div>
         </div>
       </header>
@@ -162,7 +174,7 @@ export default async function LandingPage({ params }: Props) {
             </LandingHeroItem>
 
             <LandingHeroItem>
-              <p className="max-w-md text-[16px] leading-relaxed text-zinc-400">{t("subtitle")}</p>
+              <p className="max-w-md text-[16px] leading-relaxed text-zinc-300">{t("subtitle")}</p>
             </LandingHeroItem>
 
             <LandingHeroItem>
@@ -199,8 +211,8 @@ export default async function LandingPage({ params }: Props) {
 
             <LandingHeroItem>
               <div className="space-y-1.5">
-                <p className="text-sm text-zinc-500">{t("microcopy")}</p>
-                <p className="text-sm text-zinc-500">
+                <p className="text-sm text-zinc-400">{t("microcopy")}</p>
+                <p className="text-sm text-zinc-400">
                   {t("tenantPortalNote")}{" "}
                   <a
                     href="/tenant-portal"
@@ -212,6 +224,47 @@ export default async function LandingPage({ params }: Props) {
               </div>
             </LandingHeroItem>
           </LandingHero>
+
+          {/* â”€â”€ Compact product preview (mobile/tablet) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+          <div className="lg:hidden">
+            <div className="rounded-2xl border border-white/[0.08] bg-zinc-900/70 p-4 shadow-xl shadow-black/40">
+              <div className="mb-3 flex items-center justify-between">
+                <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-500">
+                  {t("preview.label")}
+                </span>
+                <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-400">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                  {t("preview.badge")}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="rounded-lg border border-white/[0.05] bg-zinc-950 px-3 py-3">
+                  <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-zinc-500">
+                    {t("preview.kpi.overdueLabel")}
+                  </p>
+                  <p className="mt-1 text-lg font-bold tabular-nums tracking-tight text-red-400">
+                    EUR 950
+                  </p>
+                </div>
+                <div className="rounded-lg border border-white/[0.05] bg-zinc-950 px-3 py-3">
+                  <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-zinc-500">
+                    {t("preview.kpi.collectedLabel")}
+                  </p>
+                  <p className="mt-1 text-lg font-bold tabular-nums tracking-tight text-zinc-100">
+                    EUR 3 800
+                  </p>
+                </div>
+                <div className="rounded-lg border border-white/[0.05] bg-zinc-950 px-3 py-3">
+                  <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-zinc-500">
+                    {t("preview.kpi.receiptsLabel")}
+                  </p>
+                  <p className="mt-1 text-lg font-bold tabular-nums tracking-tight text-zinc-100">
+                    4 / 5
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
 
           {/* â”€â”€ Product Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="relative hidden lg:block">
