@@ -1665,9 +1665,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         title="View details"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          router.push(
-                                            `/${locale}/portfolio?modal=${property.id}`,
-                                          );
+                                          router.push(`/${locale}/portfolio?modal=${property.id}`);
                                         }}
                                         className={cn(
                                           "shrink-0 rounded-md p-1.5 transition-colors",

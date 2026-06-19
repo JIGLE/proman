@@ -10,12 +10,14 @@ import { verifyPortalToken } from "@/lib/services/auth/tenant-portal-auth";
 import { documentService } from "@/lib/services/document-service";
 
 function sanitizeFilename(name: string): string {
-  return name
-    .replace(/[\r\n\t]/g, "")
-    .replace(/["\\]/g, "")
-    .replace(/[^a-zA-Z0-9._()\- ]/g, "_")
-    .trim()
-    .slice(0, 180) || "document";
+  return (
+    name
+      .replace(/[\r\n\t]/g, "")
+      .replace(/["\\]/g, "")
+      .replace(/[^a-zA-Z0-9._()\- ]/g, "_")
+      .trim()
+      .slice(0, 180) || "document"
+  );
 }
 
 interface RouteParams {

@@ -234,7 +234,10 @@ export function EditableCell({
     >
       <span className="truncate">{displayValue}</span>
       {showEditIcon && !disabled && (
-        <Pencil className="h-3 w-3 opacity-0 group-hover:opacity-50 flex-shrink-0 transition-opacity" aria-hidden="true" />
+        <Pencil
+          className="h-3 w-3 opacity-0 group-hover:opacity-50 flex-shrink-0 transition-opacity"
+          aria-hidden="true"
+        />
       )}
     </button>
   );

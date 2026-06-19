@@ -16,11 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  MultiStepFormContainer,
-  StepContent,
-  DraftBanner,
-} from "@/components/ui/multi-step-form";
+import { MultiStepFormContainer, StepContent, DraftBanner } from "@/components/ui/multi-step-form";
 import { useMultiStepForm } from "@/lib/hooks/use-multi-step-form";
 import { useToast } from "@/lib/contexts/toast-context";
 
@@ -133,29 +129,32 @@ export function TaxFilingWizard({ properties, onSaved, onCancel }: TaxFilingWiza
     [],
   );
 
-  const runCalculation = useCallback(async (data: Partial<TaxFilingFormData>) => {
-    setCalcError(null);
-    setCalculating(true);
-    try {
-      const res = await fetch(`/api/fiscal/${(data.country as string).toLowerCase()}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          grossIncome: data.grossIncome ?? 0,
-          expenses: data.deductibleExpenses ?? 0,
-          regime: data.regime ?? "STANDARD",
-          year: data.year ?? CURRENT_YEAR - 1,
-        }),
-      });
-      if (!res.ok) throw new Error("calc_failed");
-      const json = await res.json();
-      setCalculation(json.data as TaxCalculation);
-    } catch {
-      setCalcError(t("calcError"));
-    } finally {
-      setCalculating(false);
-    }
-  }, [t]);
+  const runCalculation = useCallback(
+    async (data: Partial<TaxFilingFormData>) => {
+      setCalcError(null);
+      setCalculating(true);
+      try {
+        const res = await fetch(`/api/fiscal/${(data.country as string).toLowerCase()}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            grossIncome: data.grossIncome ?? 0,
+            expenses: data.deductibleExpenses ?? 0,
+            regime: data.regime ?? "STANDARD",
+            year: data.year ?? CURRENT_YEAR - 1,
+          }),
+        });
+        if (!res.ok) throw new Error("calc_failed");
+        const json = await res.json();
+        setCalculation(json.data as TaxCalculation);
+      } catch {
+        setCalcError(t("calcError"));
+      } finally {
+        setCalculating(false);
+      }
+    },
+    [t],
+  );
 
   const steps = [
     {
@@ -206,15 +205,15 @@ export function TaxFilingWizard({ properties, onSaved, onCancel }: TaxFilingWiza
 
   // Restore draft
   const handleRestoreDraft = () => {};
-  const handleDiscardDraft = () => { clearDraft(); };
+  const handleDiscardDraft = () => {
+    clearDraft();
+  };
 
   // Regime options based on country
   const regimeKeys = formData.country === "ES" ? ES_REGIMES : PT_REGIMES;
 
   // Filtered properties
-  const filteredProperties = properties.filter(
-    (p) => !p.country || p.country === formData.country,
-  );
+  const filteredProperties = properties.filter((p) => !p.country || p.country === formData.country);
 
   const allSelected =
     filteredProperties.length > 0 &&
@@ -287,13 +286,14 @@ export function TaxFilingWizard({ properties, onSaved, onCancel }: TaxFilingWiza
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {Array.from({ length: CURRENT_YEAR - 2019 }, (_, i) => CURRENT_YEAR - 1 - i).map(
-                      (y) => (
-                        <SelectItem key={y} value={String(y)}>
-                          {y}
-                        </SelectItem>
-                      ),
-                    )}
+                    {Array.from(
+                      { length: CURRENT_YEAR - 2019 },
+                      (_, i) => CURRENT_YEAR - 1 - i,
+                    ).map((y) => (
+                      <SelectItem key={y} value={String(y)}>
+                        {y}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -370,10 +370,7 @@ export function TaxFilingWizard({ properties, onSaved, onCancel }: TaxFilingWiza
                           checked={(formData.propertyIds as string[]).includes(p.id)}
                           onCheckedChange={() => toggleProperty(p.id)}
                         />
-                        <Label
-                          htmlFor={`prop-${p.id}`}
-                          className="cursor-pointer space-y-0.5"
-                        >
+                        <Label htmlFor={`prop-${p.id}`} className="cursor-pointer space-y-0.5">
                           <p className="text-sm font-medium text-[var(--color-foreground)]">
                             {p.name}
                           </p>
@@ -443,9 +440,7 @@ export function TaxFilingWizard({ properties, onSaved, onCancel }: TaxFilingWiza
                 <span className="text-sm">{t("calculating")}</span>
               </div>
             )}
-            {calcError && (
-              <p className="text-sm text-destructive">{calcError}</p>
-            )}
+            {calcError && <p className="text-sm text-destructive">{calcError}</p>}
             {calculation && !calculating && (
               <div className="space-y-4">
                 <div className="grid grid-cols-3 gap-3">
@@ -677,17 +672,11 @@ export function TaxFilingWizard({ properties, onSaved, onCancel }: TaxFilingWiza
 
   return (
     <div className="space-y-4">
-      {hasDraft && (
-        <DraftBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />
-      )}
+      {hasDraft && <DraftBanner onRestore={handleRestoreDraft} onDiscard={handleDiscardDraft} />}
       <MultiStepFormContainer
         steps={form.steps}
         currentStep={form.currentStep}
-        completedSteps={
-          new Set(
-            Array.from({ length: form.currentStep }, (_, i) => i),
-          )
-        }
+        completedSteps={new Set(Array.from({ length: form.currentStep }, (_, i) => i))}
         visitedSteps={form.visitedSteps}
         progress={form.progress}
         isSubmitting={form.isSubmitting}

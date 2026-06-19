@@ -77,7 +77,10 @@ export function SwipeableListItem({
     if (e.key === "ArrowRight" && startAction) {
       e.preventDefault();
       startAction.onAction();
-    } else if ((e.key === "ArrowLeft" || e.key === "Delete" || e.key === "Backspace") && endAction) {
+    } else if (
+      (e.key === "ArrowLeft" || e.key === "Delete" || e.key === "Backspace") &&
+      endAction
+    ) {
       e.preventDefault();
       endAction.onAction();
     }

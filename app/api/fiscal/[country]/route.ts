@@ -23,7 +23,9 @@ export async function GET(
 
   if (!plugin) {
     return NextResponse.json(
-      { error: `No fiscal plugin for country "${country.toUpperCase()}". Available: ${listCountries().join(", ")}` },
+      {
+        error: `No fiscal plugin for country "${country.toUpperCase()}". Available: ${listCountries().join(", ")}`,
+      },
       { status: 404 },
     );
   }
@@ -49,7 +51,9 @@ export async function POST(
 
   if (!plugin) {
     return NextResponse.json(
-      { error: `No fiscal plugin for country "${country.toUpperCase()}". Available: ${listCountries().join(", ")}` },
+      {
+        error: `No fiscal plugin for country "${country.toUpperCase()}". Available: ${listCountries().join(", ")}`,
+      },
       { status: 404 },
     );
   }

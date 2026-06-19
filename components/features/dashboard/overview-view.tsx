@@ -464,7 +464,9 @@ export function OverviewView({
         {/* Three key numbers — compact, no decorative headers */}
         <div className="grid grid-cols-3 gap-3">
           <div className="rounded-xl border border-[var(--color-success)]/20 bg-[var(--color-success-muted)] p-4">
-            <p className="text-xs text-[var(--color-muted-foreground)]">{t("collectedThisMonth")}</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              {t("collectedThisMonth")}
+            </p>
             <p className="mt-1.5 text-xl font-semibold tracking-tight text-[var(--color-foreground)]">
               {formatCurrency(dashboardData.monthlyIncome)}
             </p>
@@ -507,10 +509,7 @@ export function OverviewView({
             </div>
             <div className="divide-y divide-[var(--color-border)]">
               {dashboardData.recentPayments.map((receipt) => (
-                <div
-                  key={receipt.id}
-                  className="flex items-center justify-between px-5 py-4"
-                >
+                <div key={receipt.id} className="flex items-center justify-between px-5 py-4">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-[var(--color-foreground)]">
                       {receipt.tenantName}

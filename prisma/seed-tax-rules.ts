@@ -115,7 +115,7 @@ const IT_CEDOLARE_SECCA_2024 = {
 };
 
 const IT_CEDOLARE_CONCORDATO_2024 = {
-  flatRate: 0.10,
+  flatRate: 0.1,
   notes: "Cedolare Secca concordato rate (canone concordato) — D.Lgs. 23/2011, Art. 3, c. 3",
 };
 
@@ -332,7 +332,8 @@ const rules: TaxRuleSeed[] = [
     year: 2024,
     effectiveDate: new Date("2024-01-01"),
     payload: JSON.stringify(IT_CEDOLARE_SECCA_2024),
-    sourceUrl: "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-03-14;23",
+    sourceUrl:
+      "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-03-14;23",
     notes: "Cedolare Secca standard rate 21% — D.Lgs. 23/2011, Art. 3, c. 2.",
   },
   {
@@ -342,7 +343,8 @@ const rules: TaxRuleSeed[] = [
     year: 2024,
     effectiveDate: new Date("2024-01-01"),
     payload: JSON.stringify(IT_CEDOLARE_CONCORDATO_2024),
-    sourceUrl: "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-03-14;23",
+    sourceUrl:
+      "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-03-14;23",
     notes: "Cedolare Secca concordato rate 10% (canone concordato) — D.Lgs. 23/2011, Art. 3, c. 3.",
   },
   {
@@ -352,7 +354,8 @@ const rules: TaxRuleSeed[] = [
     year: 2024,
     effectiveDate: new Date("2024-01-01"),
     payload: JSON.stringify(IT_IRPEF_2024_BRACKETS),
-    sourceUrl: "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:1986-12-22;917",
+    sourceUrl:
+      "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:1986-12-22;917",
     notes: "IRPEF 2024 brackets — D.L. 216/2023 riforma fiscale. 3 scaglioni: 23%/35%/43%.",
   },
 
@@ -364,7 +367,8 @@ const rules: TaxRuleSeed[] = [
     year: 2025,
     effectiveDate: new Date("2025-01-01"),
     payload: JSON.stringify(IT_CEDOLARE_SECCA_2025),
-    sourceUrl: "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-03-14;23",
+    sourceUrl:
+      "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-03-14;23",
     notes: "Cedolare Secca standard rate 21% 2025 — unchanged from 2024.",
   },
   {
@@ -374,7 +378,8 @@ const rules: TaxRuleSeed[] = [
     year: 2025,
     effectiveDate: new Date("2025-01-01"),
     payload: JSON.stringify(IT_CEDOLARE_CONCORDATO_2025),
-    sourceUrl: "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-03-14;23",
+    sourceUrl:
+      "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-03-14;23",
     notes: "Cedolare Secca concordato rate 10% 2025 — unchanged from 2024.",
   },
   {
@@ -384,7 +389,8 @@ const rules: TaxRuleSeed[] = [
     year: 2025,
     effectiveDate: new Date("2025-01-01"),
     payload: JSON.stringify(IT_IRPEF_2025_BRACKETS),
-    sourceUrl: "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:1986-12-22;917",
+    sourceUrl:
+      "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:1986-12-22;917",
     notes: "IRPEF 2025 brackets — carried forward from 2024 (no changes for 2025).",
   },
 ];

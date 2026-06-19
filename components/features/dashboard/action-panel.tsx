@@ -31,8 +31,7 @@ export interface ActionAlert {
 const severityRowStyles: Record<AlertSeverity, string> = {
   critical:
     "border-[var(--color-destructive)]/20 bg-[var(--color-destructive)]/5 hover:bg-[var(--color-destructive)]/10",
-  warning:
-    "border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10",
+  warning: "border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10",
   info: "border-sky-500/20 bg-sky-500/5 hover:bg-sky-500/10",
 };
 
@@ -59,8 +58,13 @@ function AlertRow({ alert, locale }: { alert: ActionAlert; readonly locale: stri
       )}
     >
       <div className="flex items-center gap-3 min-w-0">
-        <Icon className={cn("h-5 w-5 shrink-0", severityTextStyles[alert.severity])} aria-hidden="true" />
-        <span className={cn("text-sm font-medium leading-snug", severityTextStyles[alert.severity])}>
+        <Icon
+          className={cn("h-5 w-5 shrink-0", severityTextStyles[alert.severity])}
+          aria-hidden="true"
+        />
+        <span
+          className={cn("text-sm font-medium leading-snug", severityTextStyles[alert.severity])}
+        >
           {alert.message}
         </span>
       </div>

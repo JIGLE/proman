@@ -156,8 +156,7 @@ export function TaxFilingView() {
                         </Badge>
                       </div>
                       <p className="text-xs text-[var(--color-muted-foreground)]">
-                        {filing.regime} &middot;{" "}
-                        {new Date(filing.createdAt).toLocaleDateString()}
+                        {filing.regime} &middot; {new Date(filing.createdAt).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

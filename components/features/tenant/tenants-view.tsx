@@ -1,6 +1,13 @@
 "use client";
 
-import React, { useMemo, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
+import React, {
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 import { Mail, Plus, MoreHorizontal, Trash2, Edit, Eye, ChevronDown } from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
@@ -53,7 +60,7 @@ import { Tenant } from "@/lib/types";
 import { getActiveLease } from "@/lib/utils/lease-helpers";
 import { tenantSchema, type TenantFormData } from "@/lib/schemas/tenant.schema";
 import { useToast } from "@/lib/contexts/toast-context";
-import { useFormDialog } from "@/lib/hooks/use-form-dialog";
+import { useFormDialog, type UseFormDialogReturn } from "@/lib/hooks/use-form-dialog";
 import { useSortableData } from "@/lib/hooks/use-sortable-data";
 import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
@@ -67,8 +74,13 @@ export type TenantsViewRef = {
   openDialog: () => void;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function TenantForm({ dialog, properties }: { dialog: any; properties: Array<{ id: string; name: string }> }) {
+function TenantForm({
+  dialog,
+  properties,
+}: {
+  dialog: UseFormDialogReturn<TenantFormData, Tenant>;
+  properties: Array<{ id: string; name: string }>;
+}) {
   const [showMore, setShowMore] = useState(!dialog.editingItem ? false : true);
   const isEdit = !!dialog.editingItem;
 
@@ -147,9 +159,7 @@ function TenantForm({ dialog, properties }: { dialog: any; properties: Array<{ i
                 value={dialog.formData.propertyId ?? ""}
                 onValueChange={(value: string) => dialog.updateFormData({ propertyId: value })}
               >
-                <SelectTrigger
-                  className={dialog.formErrors.propertyId ? "border-red-500" : ""}
-                >
+                <SelectTrigger className={dialog.formErrors.propertyId ? "border-red-500" : ""}>
                   <SelectValue placeholder="Select property" />
                 </SelectTrigger>
                 <SelectContent>
@@ -224,9 +234,7 @@ function TenantForm({ dialog, properties }: { dialog: any; properties: Array<{ i
                   dialog.updateFormData({ paymentStatus: value })
                 }
               >
-                <SelectTrigger
-                  className={dialog.formErrors.paymentStatus ? "border-red-500" : ""}
-                >
+                <SelectTrigger className={dialog.formErrors.paymentStatus ? "border-red-500" : ""}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -710,133 +718,133 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             onAction: () => handleDelete(tenant),
                           }}
                         >
-                        <div
-                          className={cn(
-                            "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40 cursor-pointer",
-                          )}
-                          onClick={() => {
-                            setSelectedTenant(tenant);
-                            setIsDetailModalOpen(true);
-                          }}
-                        >
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => bulkSelection.toggleSelection(tenant.id)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="shrink-0"
-                          />
+                          <div
+                            className={cn(
+                              "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40 cursor-pointer",
+                            )}
+                            onClick={() => {
+                              setSelectedTenant(tenant);
+                              setIsDetailModalOpen(true);
+                            }}
+                          >
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => bulkSelection.toggleSelection(tenant.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="shrink-0"
+                            />
 
-                          {/* Avatar + name + email */}
-                          <div className="flex min-w-0 flex-1 items-center gap-3">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30 text-xs font-semibold text-accent-primary">
-                              {tenant.name
-                                .split(" ")
-                                .map((n: string) => n[0])
-                                .join("")
-                                .slice(0, 2)
-                                .toUpperCase()}
+                            {/* Avatar + name + email */}
+                            <div className="flex min-w-0 flex-1 items-center gap-3">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30 text-xs font-semibold text-accent-primary">
+                                {tenant.name
+                                  .split(" ")
+                                  .map((n: string) => n[0])
+                                  .join("")
+                                  .slice(0, 2)
+                                  .toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium text-zinc-100">
+                                  {tenant.name}
+                                </p>
+                                <p className="truncate text-xs text-zinc-500">{tenant.email}</p>
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium text-zinc-100">
-                                {tenant.name}
-                              </p>
-                              <p className="truncate text-xs text-zinc-500">{tenant.email}</p>
+
+                            {/* Property */}
+                            <div className="hidden w-36 shrink-0 truncate text-xs text-zinc-400 md:block">
+                              {properties.find((p) => p.id === tenant.propertyId)?.name ||
+                                tenant.propertyName ||
+                                "Unassigned"}
                             </div>
-                          </div>
 
-                          {/* Property */}
-                          <div className="hidden w-36 shrink-0 truncate text-xs text-zinc-400 md:block">
-                            {properties.find((p) => p.id === tenant.propertyId)?.name ||
-                              tenant.propertyName ||
-                              "Unassigned"}
-                          </div>
+                            {/* Lease end */}
+                            <div className="hidden w-[88px] shrink-0 flex-col items-end text-xs lg:flex">
+                              {activeLease ? (
+                                <>
+                                  <span className="text-zinc-500">Ends</span>
+                                  <span
+                                    className={cn(
+                                      "font-medium",
+                                      isExpiring ? "text-amber-300" : "text-zinc-300",
+                                    )}
+                                  >
+                                    {new Date(activeLease.endDate).toLocaleDateString("pt-PT", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                  </span>
+                                </>
+                              ) : null}
+                            </div>
 
-                          {/* Lease end */}
-                          <div className="hidden w-[88px] shrink-0 flex-col items-end text-xs lg:flex">
-                            {activeLease ? (
-                              <>
-                                <span className="text-zinc-500">Ends</span>
-                                <span
-                                  className={cn(
-                                    "font-medium",
-                                    isExpiring ? "text-amber-300" : "text-zinc-300",
-                                  )}
+                            {/* Rent */}
+                            <div className="hidden w-20 shrink-0 text-right text-sm font-semibold text-zinc-100 sm:block">
+                              {formatCurrency(Number(activeLease?.monthlyRent ?? tenant.rent))}
+                            </div>
+
+                            {/* Status badge */}
+                            <div className="shrink-0">
+                              {getPaymentStatusBadge(tenant.paymentStatus)}
+                            </div>
+
+                            {/* Actions menu */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 shrink-0"
+                                  aria-label={`${tenant.name} options`}
+                                  onClick={(e) => e.stopPropagation()}
                                 >
-                                  {new Date(activeLease.endDate).toLocaleDateString("pt-PT", {
-                                    day: "numeric",
-                                    month: "short",
-                                    year: "numeric",
-                                  })}
-                                </span>
-                              </>
-                            ) : null}
+                                  <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    dialog.openEditDialog(tenant, (t) => ({
+                                      name: t.name,
+                                      email: t.email,
+                                      phone: t.phone || "",
+                                      propertyId: t.propertyId || "",
+                                      rent: Number(t.rent),
+                                      leaseStart: t.leaseStart || "",
+                                      leaseEnd: t.leaseEnd || "",
+                                      paymentStatus: t.paymentStatus,
+                                      notes: t.notes || "",
+                                    }));
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.location.href = `mailto:${tenant.email}`;
+                                  }}
+                                >
+                                  <Mail className="h-4 w-4 mr-2" />
+                                  Send Email
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(tenant);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
-
-                          {/* Rent */}
-                          <div className="hidden w-20 shrink-0 text-right text-sm font-semibold text-zinc-100 sm:block">
-                            {formatCurrency(Number(activeLease?.monthlyRent ?? tenant.rent))}
-                          </div>
-
-                          {/* Status badge */}
-                          <div className="shrink-0">
-                            {getPaymentStatusBadge(tenant.paymentStatus)}
-                          </div>
-
-                          {/* Actions menu */}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 shrink-0"
-                                aria-label={`${tenant.name} options`}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  dialog.openEditDialog(tenant, (t) => ({
-                                    name: t.name,
-                                    email: t.email,
-                                    phone: t.phone || "",
-                                    propertyId: t.propertyId || "",
-                                    rent: Number(t.rent),
-                                    leaseStart: t.leaseStart || "",
-                                    leaseEnd: t.leaseEnd || "",
-                                    paymentStatus: t.paymentStatus,
-                                    notes: t.notes || "",
-                                  }));
-                                }}
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.location.href = `mailto:${tenant.email}`;
-                                }}
-                              >
-                                <Mail className="h-4 w-4 mr-2" />
-                                Send Email
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(tenant);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
                         </SwipeableListItem>
                       );
                     })}
