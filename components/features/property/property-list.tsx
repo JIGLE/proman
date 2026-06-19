@@ -8,8 +8,8 @@ import {
   CheckCircle,
   Wrench,
   ChevronDown,
-  ChevronRight,
   Plus,
+  ExternalLink,
   Pencil,
   Trash2,
   MoreHorizontal,
@@ -114,9 +114,11 @@ function getNextAction(
 }
 
 const nextActionStyles: Record<NextAction["urgency"], string> = {
-  urgent: "text-red-400 bg-red-500/10 border-red-500/30",
-  warning: "text-amber-300 bg-amber-500/10 border-amber-500/30",
-  info: "text-blue-300 bg-blue-500/10 border-blue-500/30",
+  urgent:
+    "text-[var(--color-destructive)] bg-[var(--color-error-muted)] border-[var(--color-destructive)]/30",
+  warning:
+    "text-[var(--color-warning)] bg-[var(--color-warning-muted)] border-[var(--color-warning)]/30",
+  info: "text-[var(--color-info)] bg-[var(--color-info-muted)] border-[var(--color-info)]/30",
   ok: "text-zinc-500 bg-transparent border-transparent",
 };
 
@@ -675,7 +677,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           placeholder="e.g. Apt 4B, Garden Flat, Unit 12"
                           value={dialog.formData.name}
                           onChange={(e) => dialog.updateFormData({ name: e.target.value })}
-                          className={dialog.formErrors.name ? "border-red-500" : ""}
+                          className={
+                            dialog.formErrors.name ? "border-[var(--color-destructive)]" : ""
+                          }
                         />
                         {dialog.formErrors.name && (
                           <p className="text-sm text-destructive">{dialog.formErrors.name}</p>
@@ -689,7 +693,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                             dialog.updateFormData({ type: value })
                           }
                         >
-                          <SelectTrigger className={dialog.formErrors.type ? "border-red-500" : ""}>
+                          <SelectTrigger
+                            className={
+                              dialog.formErrors.type ? "border-[var(--color-destructive)]" : ""
+                            }
+                          >
                             <SelectValue placeholder="Select type" />
                           </SelectTrigger>
                           <SelectContent>
@@ -714,7 +722,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           <Label htmlFor="address">Address *</Label>
                           {dialog.formData.addressVerified && (
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-green-500 flex items-center gap-1">
+                              <span className="text-xs text-[var(--color-success)] flex items-center gap-1">
                                 ✓ Verified
                               </span>
                               <button
@@ -739,7 +747,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               dialog.updateFormData({ address: e.target.value });
                               handleAddressSearch(e.target.value);
                             }}
-                            className={dialog.formErrors.address ? "border-red-500" : ""}
+                            className={
+                              dialog.formErrors.address ? "border-[var(--color-destructive)]" : ""
+                            }
                           />
                           {showSuggestions && addressSuggestions.length > 0 && (
                             <div className="absolute z-10 w-full bg-zinc-800 border border-zinc-600 rounded-md mt-1 max-h-60 overflow-y-auto">
@@ -803,7 +813,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                 }
                                 value={dialog.formData.zipCode || ""}
                                 onChange={(e) => dialog.updateFormData({ zipCode: e.target.value })}
-                                className={dialog.formErrors.zipCode ? "border-red-500" : ""}
+                                className={
+                                  dialog.formErrors.zipCode
+                                    ? "border-[var(--color-destructive)]"
+                                    : ""
+                                }
                               />
                               {dialog.formErrors.zipCode && (
                                 <p className="text-sm text-destructive">
@@ -820,7 +834,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                 id="city"
                                 value={dialog.formData.city || ""}
                                 onChange={(e) => dialog.updateFormData({ city: e.target.value })}
-                                className={dialog.formErrors.city ? "border-red-500" : ""}
+                                className={
+                                  dialog.formErrors.city ? "border-[var(--color-destructive)]" : ""
+                                }
                               />
                               {dialog.formErrors.city && (
                                 <p className="text-sm text-destructive">{dialog.formErrors.city}</p>
@@ -837,7 +853,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                     streetAddress: e.target.value,
                                   })
                                 }
-                                className={dialog.formErrors.streetAddress ? "border-red-500" : ""}
+                                className={
+                                  dialog.formErrors.streetAddress
+                                    ? "border-[var(--color-destructive)]"
+                                    : ""
+                                }
                               />
                               {dialog.formErrors.streetAddress && (
                                 <p className="text-sm text-destructive">
@@ -880,7 +900,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               rent: parseFloat(e.target.value) || 0,
                             })
                           }
-                          className={dialog.formErrors.rent ? "border-red-500" : ""}
+                          className={
+                            dialog.formErrors.rent ? "border-[var(--color-destructive)]" : ""
+                          }
                         />
                         {dialog.formErrors.rent && (
                           <p className="text-sm text-destructive">{dialog.formErrors.rent}</p>
@@ -895,7 +917,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           }
                         >
                           <SelectTrigger
-                            className={dialog.formErrors.status ? "border-red-500" : ""}
+                            className={
+                              dialog.formErrors.status ? "border-[var(--color-destructive)]" : ""
+                            }
                           >
                             <SelectValue />
                           </SelectTrigger>
@@ -951,7 +975,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                     bedrooms: parseInt(e.target.value) || 0,
                                   })
                                 }
-                                className={dialog.formErrors.bedrooms ? "border-red-500" : ""}
+                                className={
+                                  dialog.formErrors.bedrooms
+                                    ? "border-[var(--color-destructive)]"
+                                    : ""
+                                }
                               />
                               {dialog.formErrors.bedrooms && (
                                 <p className="text-sm text-destructive">
@@ -973,7 +1001,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                     bathrooms: parseFloat(e.target.value) || 0,
                                   })
                                 }
-                                className={dialog.formErrors.bathrooms ? "border-red-500" : ""}
+                                className={
+                                  dialog.formErrors.bathrooms
+                                    ? "border-[var(--color-destructive)]"
+                                    : ""
+                                }
                               />
                               {dialog.formErrors.bathrooms && (
                                 <p className="text-sm text-destructive">
@@ -991,7 +1023,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                 dialog.updateFormData({ description: e.target.value })
                               }
                               rows={3}
-                              className={dialog.formErrors.description ? "border-red-500" : ""}
+                              className={
+                                dialog.formErrors.description
+                                  ? "border-[var(--color-destructive)]"
+                                  : ""
+                              }
                             />
                             {dialog.formErrors.description && (
                               <p className="text-sm text-destructive">
@@ -1038,19 +1074,19 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     key: "needs-attention",
                     label: "Action needed",
                     count: needsAttentionPropertyIds.size,
-                    color: "text-red-300",
+                    color: "text-[var(--color-destructive)]",
                   },
                   {
                     key: "lease-renewal",
                     label: "Lease renewal",
                     count: expiringLeasePropertyIds.size,
-                    color: "text-amber-300",
+                    color: "text-[var(--color-warning)]",
                   },
                   {
                     key: "open-maintenance",
                     label: "Maintenance",
                     count: openMaintenancePropertyIds.size,
-                    color: "text-orange-300",
+                    color: "text-[var(--color-warning)]",
                   },
                 ].map((opt) => {
                   const isActive = operationalFilter === opt.key;
@@ -1372,7 +1408,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
-                                          className="text-red-400 focus:text-red-300"
+                                          className="text-[var(--color-destructive)] focus:text-[var(--color-destructive)]"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             buildingDeleteConfirm.confirm(
@@ -1440,19 +1476,19 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         hasAttention &&
                                           isExpiring &&
                                           openTickets.length > 0 &&
-                                          "border-l-amber-500/60 bg-amber-500/[0.04]",
+                                          "border-l-[var(--color-warning)]/60 bg-[var(--color-warning-muted)]",
                                         hasAttention &&
                                           isExpiring &&
                                           openTickets.length === 0 &&
-                                          "border-l-amber-400/70 bg-amber-500/[0.04]",
+                                          "border-l-[var(--color-warning)]/70 bg-[var(--color-warning-muted)]",
                                         hasAttention &&
                                           !isExpiring &&
                                           openTickets.length > 0 &&
-                                          "border-l-orange-500/60 bg-orange-500/[0.04]",
+                                          "border-l-[var(--color-warning)]/60 bg-[var(--color-warning-muted)]",
                                         hasAttention &&
                                           !isExpiring &&
                                           openTickets.length === 0 &&
-                                          "border-l-red-400/60 bg-red-500/[0.04]",
+                                          "border-l-[var(--color-destructive)]/60 bg-[var(--color-error-muted)]",
                                         isSelected && "bg-zinc-800/60",
                                       )}
                                     >
@@ -1486,8 +1522,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                             className={cn(
                                               "mt-0.5 h-2 w-2 shrink-0 rounded-full",
                                               action.urgency === "urgent"
-                                                ? "bg-red-500"
-                                                : "bg-amber-400",
+                                                ? "bg-[var(--color-destructive)]"
+                                                : "bg-[var(--color-warning)]",
                                             )}
                                           />
                                         );
@@ -1513,7 +1549,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         </span>
                                         {property.status === "vacant" &&
                                           Number(property.rent) > 0 && (
-                                            <span className="text-[10px] text-red-400/70">
+                                            <span className="text-[10px] text-[var(--color-destructive)]/70">
                                               −{formatCurrency(Number(property.rent))}/mo vacant
                                             </span>
                                           )}
@@ -1620,9 +1656,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                               );
                                               const urgencyClass =
                                                 daysLeft <= 14
-                                                  ? "text-red-400"
+                                                  ? "text-[var(--color-destructive)]"
                                                   : daysLeft <= 60
-                                                    ? "text-amber-300"
+                                                    ? "text-[var(--color-warning)]"
                                                     : "text-zinc-300";
                                               return (
                                                 <>
@@ -1658,24 +1694,26 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         {getStatusBadge(property.status)}
                                       </div>
 
-                                      {/* Navigate to detail — always visible */}
-                                      <button
-                                        type="button"
-                                        aria-label={`View details for ${property.name}`}
-                                        title="View details"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          router.push(`/${locale}/portfolio?modal=${property.id}`);
-                                        }}
-                                        className={cn(
-                                          "shrink-0 rounded-md p-1.5 transition-colors",
-                                          hasAttention
-                                            ? "text-amber-500 hover:bg-zinc-700 hover:text-amber-300"
-                                            : "text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300",
-                                        )}
-                                      >
-                                        <ChevronRight className="h-4 w-4" aria-hidden="true" />
-                                      </button>
+                                      {/* Needs-attention shortcut — navigate to detail page */}
+                                      {hasAttention && (
+                                        <button
+                                          type="button"
+                                          aria-label={`View details for ${property.name}`}
+                                          title="View details"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            router.push(
+                                              `/${locale}/portfolio?modal=${property.id}`,
+                                            );
+                                          }}
+                                          className="shrink-0 rounded-md p-1.5 text-[var(--color-warning)] transition-colors hover:bg-zinc-700 hover:text-[var(--color-warning)]"
+                                        >
+                                          <ExternalLink
+                                            className="h-3.5 w-3.5"
+                                            aria-hidden="true"
+                                          />
+                                        </button>
+                                      )}
 
                                       {/* Locate on map button */}
                                       <button
@@ -1702,8 +1740,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         className={cn(
                                           "shrink-0 rounded-md p-1.5 transition-colors",
                                           isMissingMap
-                                            ? "text-amber-600 hover:bg-zinc-700 hover:text-amber-400"
-                                            : "text-zinc-500 hover:bg-zinc-700 hover:text-blue-300",
+                                            ? "text-[var(--color-warning)] hover:bg-zinc-700 hover:text-[var(--color-warning)]"
+                                            : "text-zinc-500 hover:bg-zinc-700 hover:text-[var(--color-info)]",
                                         )}
                                       >
                                         <MapPin className="h-4 w-4" aria-hidden="true" />

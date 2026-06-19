@@ -278,8 +278,8 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
       <div className="flex flex-col gap-4 sticky top-0 z-20 bg-zinc-900/95 backdrop-blur-sm">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="p-3 lg:p-4 rounded-xl bg-blue-500/10">
-              <Building2 className="h-8 w-8 lg:h-10 lg:w-10 text-blue-500" />
+            <div className="p-3 lg:p-4 rounded-xl bg-[var(--color-info-muted)]">
+              <Building2 className="h-8 w-8 lg:h-10 lg:w-10 text-[var(--color-info)]" />
             </div>
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-[var(--color-foreground)]">
@@ -372,7 +372,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                         onChange={(e) =>
                           expenseDialog.updateFormData({ amount: parseFloat(e.target.value) || 0 })
                         }
-                        className={expenseDialog.formErrors.amount ? "border-red-500" : ""}
+                        className={
+                          expenseDialog.formErrors.amount ? "border-[var(--color-destructive)]" : ""
+                        }
                       />
                     </div>
                   </div>
@@ -441,7 +443,11 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                     >
                       <SelectTrigger
                         id="rec-tenant"
-                        className={receiptDialog.formErrors.tenantId ? "border-red-500" : ""}
+                        className={
+                          receiptDialog.formErrors.tenantId
+                            ? "border-[var(--color-destructive)]"
+                            : ""
+                        }
                       >
                         <SelectValue placeholder="Select tenant" />
                       </SelectTrigger>
@@ -461,7 +467,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                       </SelectContent>
                     </Select>
                     {receiptDialog.formErrors.tenantId && (
-                      <p className="text-xs text-red-500">{receiptDialog.formErrors.tenantId}</p>
+                      <p className="text-xs text-[var(--color-destructive)]">
+                        {receiptDialog.formErrors.tenantId}
+                      </p>
                     )}
                   </div>
                   <div className="grid grid-cols-2 gap-3">
@@ -477,7 +485,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                         onChange={(e) =>
                           receiptDialog.updateFormData({ amount: parseFloat(e.target.value) || 0 })
                         }
-                        className={receiptDialog.formErrors.amount ? "border-red-500" : ""}
+                        className={
+                          receiptDialog.formErrors.amount ? "border-[var(--color-destructive)]" : ""
+                        }
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -563,7 +573,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               <div className="text-sm text-[var(--color-muted-foreground)]">
                 {t("stats.activeLeases")}
               </div>
-              <div className="text-2xl font-bold text-green-500 mt-1">{activeLeases}</div>
+              <div className="text-2xl font-bold text-[var(--color-success)] mt-1">
+                {activeLeases}
+              </div>
             </CardContent>
           </Card>
           <Card
@@ -585,7 +597,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               <div className="text-sm text-[var(--color-muted-foreground)]">
                 {t("stats.openTickets")}
               </div>
-              <div className="text-2xl font-bold text-amber-500 mt-1">{openTickets}</div>
+              <div className="text-2xl font-bold text-[var(--color-warning)] mt-1">
+                {openTickets}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -612,7 +626,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <Wrench className="h-3.5 w-3.5" />
             {t("tabs.maintenance")}
             {openTickets > 0 && (
-              <span className="ml-1 rounded-full bg-amber-500/20 text-amber-500 px-2 py-0.5 text-xs">
+              <span className="ml-1 rounded-full bg-[var(--color-warning-muted)] text-[var(--color-warning)] px-2 py-0.5 text-xs">
                 {openTickets}
               </span>
             )}
@@ -737,9 +751,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                 className={cn(
                   "text-xs font-medium px-2 py-0.5 rounded-full",
                   Math.abs(ownershipTotal - 100) < 0.01
-                    ? "bg-green-900/40 text-green-400"
+                    ? "bg-[var(--color-success-muted)] text-[var(--color-success)]"
                     : ownershipTotal > 0
-                      ? "bg-yellow-900/40 text-yellow-400"
+                      ? "bg-[var(--color-warning-muted)] text-[var(--color-warning)]"
                       : "bg-zinc-800 text-zinc-500",
                 )}
               >
@@ -768,12 +782,14 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                           <p className="text-sm font-semibold text-zinc-200">
                             {assignment.ownershipPercentage}%
                           </p>
-                          <p className="text-xs text-green-400">{formatCurrency(ownerIncome)}</p>
+                          <p className="text-xs text-[var(--color-success)]">
+                            {formatCurrency(ownerIncome)}
+                          </p>
                         </div>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 w-7 p-0 text-zinc-500 hover:text-red-400"
+                          className="h-7 w-7 p-0 text-zinc-500 hover:text-[var(--color-destructive)]"
                           onClick={() => handleRemoveOwner(owner.id)}
                           title="Remove owner"
                         >
@@ -825,9 +841,13 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                  {ownerAssignError && <p className="text-xs text-red-400">{ownerAssignError}</p>}
+                  {ownerAssignError && (
+                    <p className="text-xs text-[var(--color-destructive)]">{ownerAssignError}</p>
+                  )}
                   {Math.abs(ownershipTotal + Number(ownerAssignPct || 0) - 100) < 0.01 && (
-                    <p className="text-xs text-green-400">Total will reach exactly 100% ✓</p>
+                    <p className="text-xs text-[var(--color-success)]">
+                      Total will reach exactly 100% ✓
+                    </p>
                   )}
                 </div>
               )}
@@ -891,14 +911,14 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                       variant="full"
                     />
                     {isExpiring && (
-                      <div className="flex items-center justify-between rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-1.5">
-                        <span className="text-xs text-amber-400">
+                      <div className="flex items-center justify-between rounded-md border border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)] px-3 py-1.5">
+                        <span className="text-xs text-[var(--color-warning)]">
                           {t("expiresIn", { days: daysUntilExpiry })}
                         </span>
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-5 px-2 text-xs text-amber-400 hover:bg-amber-500/20 hover:text-amber-200"
+                          className="h-5 px-2 text-xs text-[var(--color-warning)] hover:bg-[var(--color-warning-muted)] hover:text-[var(--color-warning)]"
                           onClick={() => router.push(`/${locale}/leases`)}
                         >
                           {t("renew")}
@@ -920,7 +940,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <div className="space-y-3">
               {openTickets > 0 && (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-amber-400">
+                  <span className="text-sm text-[var(--color-warning)]">
                     {openTickets} open ticket{openTickets !== 1 ? "s" : ""}
                   </span>
                   <Button
@@ -982,7 +1002,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                   {relatedExpenses.length > 0 && (
                     <>
                       {tFin("totalExpenses")}:{" "}
-                      <span className="font-semibold text-red-500">
+                      <span className="font-semibold text-[var(--color-destructive)]">
                         {formatCurrency(totalExpenses)}
                       </span>
                     </>
@@ -1016,7 +1036,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                           </p>
                         </div>
                         <div className="text-right">
-                          <span className="text-sm font-semibold text-red-500">
+                          <span className="text-sm font-semibold text-[var(--color-destructive)]">
                             -{formatCurrency(expense.amount)}
                           </span>
                         </div>
@@ -1035,7 +1055,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <Card className="bg-zinc-900 border-zinc-800">
               <CardContent className="p-4">
                 <div className="text-sm text-zinc-400">{t("finance.totalRevenue")}</div>
-                <div className="text-2xl font-bold text-green-500 mt-1">
+                <div className="text-2xl font-bold text-[var(--color-success)] mt-1">
                   {formatCurrency(totalRevenue)}
                 </div>
               </CardContent>
@@ -1043,7 +1063,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <Card className="bg-zinc-900 border-zinc-800">
               <CardContent className="p-4">
                 <div className="text-sm text-zinc-400">{t("finance.totalExpenses")}</div>
-                <div className="text-2xl font-bold text-red-500 mt-1">
+                <div className="text-2xl font-bold text-[var(--color-destructive)] mt-1">
                   {formatCurrency(totalExpenses)}
                 </div>
               </CardContent>
@@ -1054,7 +1074,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                 <div
                   className={cn(
                     "text-2xl font-bold mt-1",
-                    netOperatingIncome >= 0 ? "text-green-500" : "text-red-500",
+                    netOperatingIncome >= 0
+                      ? "text-[var(--color-success)]"
+                      : "text-[var(--color-destructive)]",
                   )}
                 >
                   {formatCurrency(netOperatingIncome)}
@@ -1068,10 +1090,10 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                   className={cn(
                     "text-2xl font-bold mt-1",
                     collectionMetrics.collectionRate >= 90
-                      ? "text-green-500"
+                      ? "text-[var(--color-success)]"
                       : collectionMetrics.collectionRate >= 70
-                        ? "text-yellow-500"
-                        : "text-red-500",
+                        ? "text-[var(--color-warning)]"
+                        : "text-[var(--color-destructive)]",
                   )}
                 >
                   {collectionMetrics.collectionRate.toFixed(1)}%
@@ -1111,7 +1133,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                         <span
                           className={cn(
                             "text-sm font-semibold",
-                            tx.txType === "receipt" ? "text-green-500" : "text-red-500",
+                            tx.txType === "receipt"
+                              ? "text-[var(--color-success)]"
+                              : "text-[var(--color-destructive)]",
                           )}
                         >
                           {tx.txType === "receipt" ? "+" : "-"}
