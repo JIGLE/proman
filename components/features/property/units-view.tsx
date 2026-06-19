@@ -181,7 +181,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
       case "reserved":
         return "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200";
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200";
+        return "bg-gray-100 text-gray-800 dark:bg-[var(--color-card)] dark:text-[var(--color-foreground)]";
     }
   };
 
@@ -198,7 +198,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
       {/* Add/Edit Unit Modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
+          <div className="bg-white dark:bg-[var(--color-surface)] rounded-lg shadow-xl w-full max-w-md mx-4 p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 {editingUnit ? t("editUnit") : t("addUnit")}
@@ -209,7 +209,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
             </div>
             <div className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-[var(--color-muted-foreground)] mb-1">
                   {t("unitNumber")} *
                 </label>
                 <input
@@ -222,7 +222,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-[var(--color-muted-foreground)] mb-1">
                     {t("floor")}
                   </label>
                   <input
@@ -233,7 +233,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-[var(--color-muted-foreground)] mb-1">
                     {t("size")}
                   </label>
                   <input
@@ -246,7 +246,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-[var(--color-muted-foreground)] mb-1">
                     {t("bedrooms")}
                   </label>
                   <input
@@ -257,7 +257,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-[var(--color-muted-foreground)] mb-1">
                     {t("bathrooms")}
                   </label>
                   <input
@@ -269,7 +269,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-[var(--color-muted-foreground)] mb-1">
                   {t("status")}
                 </label>
                 <select
@@ -289,7 +289,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-gray-700 dark:text-[var(--color-muted-foreground)] mb-1">
                   {t("notes")}
                 </label>
                 <textarea
@@ -303,7 +303,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
             <div className="flex justify-end gap-2 mt-5">
               <button
                 onClick={closeModal}
-                className="px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+                className="px-4 py-2 text-sm text-gray-700 dark:text-[var(--color-muted-foreground)] hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
               >
                 {tActions("cancel")}
               </button>
@@ -333,7 +333,7 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
           {filteredUnits.map((unit) => (
             <div
               key={unit.id}
-              className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:shadow-lg transition-shadow"
+              className="bg-white dark:bg-[var(--color-surface)] rounded-lg border border-gray-200 dark:border-[var(--color-border-hover)] p-5 hover:shadow-lg transition-shadow"
             >
               <div className="flex justify-between items-start mb-3">
                 <div className="flex items-center gap-2">
@@ -352,34 +352,34 @@ export default function UnitsView({ propertyId }: UnitsViewProps) {
               </div>
 
               <div className="space-y-2 mb-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
+                <p className="text-sm text-gray-600 dark:text-[var(--color-muted-foreground)]">
                   <span className="font-medium">{t("property")}:</span> {unit.property.name}
                 </p>
                 {unit.floor !== null && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-[var(--color-muted-foreground)]">
                     <span className="font-medium">{t("floor")}:</span> {unit.floor}
                   </p>
                 )}
                 {unit.sizeSqM && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-[var(--color-muted-foreground)]">
                     <span className="font-medium">{t("size")}:</span> {unit.sizeSqM} m²
                   </p>
                 )}
                 {(unit.bedrooms || unit.bathrooms) && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-[var(--color-muted-foreground)]">
                     {unit.bedrooms && `${unit.bedrooms} ${t("bedrooms")}`}
                     {unit.bedrooms && unit.bathrooms && " • "}
                     {unit.bathrooms && `${unit.bathrooms} ${t("bathrooms")}`}
                   </p>
                 )}
                 {unit.leases.length > 0 && (
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-gray-600 dark:text-[var(--color-muted-foreground)]">
                     <span className="font-medium">{t("tenant")}:</span> {unit.leases[0].tenant.name}
                   </p>
                 )}
               </div>
 
-              <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-[var(--color-border-hover)]">
                 <button
                   onClick={() => openEditModal(unit)}
                   className="flex-1 flex items-center justify-center gap-1 px-3 py-1.5 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors"

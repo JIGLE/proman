@@ -45,12 +45,12 @@ export function BarChart({
       {(title || subtitle) && (
         <div className="space-y-1">
           {title && (
-            <h3 className="text-heading-medium font-semibold text-zinc-50 flex items-center gap-2">
+            <h3 className="text-heading-medium font-semibold text-[var(--color-foreground)] flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-accent-primary" />
               {title}
             </h3>
           )}
-          {subtitle && <p className="text-body-small text-zinc-400">{subtitle}</p>}
+          {subtitle && <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>}
         </div>
       )}
 
@@ -61,10 +61,10 @@ export function BarChart({
           return (
             <div key={item.label} className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-zinc-300 font-medium">{item.label}</span>
+                <span className="text-[var(--color-muted-foreground)] font-medium">{item.label}</span>
                 <div className="flex items-center gap-2">
                   {showValues && (
-                    <span className="text-zinc-50 font-semibold">
+                    <span className="text-[var(--color-foreground)] font-semibold">
                       {typeof item.value === "number" ? item.value.toLocaleString() : item.value}
                     </span>
                   )}
@@ -136,12 +136,12 @@ export function LineChart({
       {(title || subtitle) && (
         <div className="space-y-1">
           {title && (
-            <h3 className="text-heading-medium font-semibold text-zinc-50 flex items-center gap-2">
+            <h3 className="text-heading-medium font-semibold text-[var(--color-foreground)] flex items-center gap-2">
               <Activity className="h-5 w-5 text-accent-primary" />
               {title}
             </h3>
           )}
-          {subtitle && <p className="text-body-small text-zinc-400">{subtitle}</p>}
+          {subtitle && <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>}
         </div>
       )}
 
@@ -197,7 +197,7 @@ export function LineChart({
         {/* X-Axis Labels */}
         <div className="flex justify-between mt-2 px-1">
           {data.map((item, index) => (
-            <span key={index} className="text-xs text-zinc-400 font-medium">
+            <span key={index} className="text-xs text-[var(--color-muted-foreground)] font-medium">
               {item.label}
             </span>
           ))}
@@ -220,12 +220,12 @@ export function DonutChart({ data, title, subtitle, height = 200, className }: C
       {(title || subtitle) && (
         <div className="space-y-1">
           {title && (
-            <h3 className="text-heading-medium font-semibold text-zinc-50 flex items-center gap-2">
+            <h3 className="text-heading-medium font-semibold text-[var(--color-foreground)] flex items-center gap-2">
               <PieChart className="h-5 w-5 text-accent-primary" />
               {title}
             </h3>
           )}
-          {subtitle && <p className="text-body-small text-zinc-400">{subtitle}</p>}
+          {subtitle && <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>}
         </div>
       )}
 
@@ -260,10 +260,10 @@ export function DonutChart({ data, title, subtitle, height = 200, className }: C
 
           {/* Center Content */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-display-small font-bold text-zinc-50">
+            <span className="text-display-small font-bold text-[var(--color-foreground)]">
               {total.toLocaleString()}
             </span>
-            <span className="text-caption text-zinc-400">Total</span>
+            <span className="text-caption text-[var(--color-muted-foreground)]">Total</span>
           </div>
         </div>
 
@@ -281,12 +281,12 @@ export function DonutChart({ data, title, subtitle, height = 200, className }: C
                   }}
                 />
                 <div className="flex-1 flex items-center justify-between">
-                  <span className="text-sm text-zinc-300 font-medium">{item.label}</span>
+                  <span className="text-sm text-[var(--color-muted-foreground)] font-medium">{item.label}</span>
                   <div className="text-right">
-                    <div className="text-sm font-semibold text-zinc-50">
+                    <div className="text-sm font-semibold text-[var(--color-foreground)]">
                       {item.value.toLocaleString()}
                     </div>
-                    <div className="text-xs text-zinc-400">{percentage}%</div>
+                    <div className="text-xs text-[var(--color-muted-foreground)]">{percentage}%</div>
                   </div>
                 </div>
               </div>
@@ -354,12 +354,12 @@ export function AreaChart({
       {(title || subtitle) && (
         <div className="space-y-1">
           {title && (
-            <h3 className="text-heading-medium font-semibold text-zinc-50 flex items-center gap-2">
+            <h3 className="text-heading-medium font-semibold text-[var(--color-foreground)] flex items-center gap-2">
               <Activity className="h-5 w-5 text-accent-secondary" />
               {title}
             </h3>
           )}
-          {subtitle && <p className="text-body-small text-zinc-400">{subtitle}</p>}
+          {subtitle && <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>}
         </div>
       )}
 
@@ -460,7 +460,7 @@ export function AreaChart({
         {/* X-Axis Labels */}
         <div className="flex justify-between mt-2 px-2">
           {data.map((item, index) => (
-            <span key={index} className="text-xs text-zinc-400 font-medium">
+            <span key={index} className="text-xs text-[var(--color-muted-foreground)] font-medium">
               {item.label}
             </span>
           ))}
@@ -499,8 +499,8 @@ export function MetricCard({
     >
       <div className="flex items-start justify-between mb-4">
         <div className="space-y-1">
-          <p className="text-heading-small font-medium text-zinc-400">{title}</p>
-          <p className="text-display-medium font-bold text-zinc-50" aria-live="polite">
+          <p className="text-heading-small font-medium text-[var(--color-muted-foreground)]">{title}</p>
+          <p className="text-display-medium font-bold text-[var(--color-foreground)]" aria-live="polite">
             {typeof value === "number" ? value.toLocaleString() : value}
           </p>
         </div>
@@ -514,7 +514,7 @@ export function MetricCard({
             <div
               className={cn(
                 "flex items-center gap-1 text-sm font-medium",
-                change > 0 ? "text-green-400" : change < 0 ? "text-red-400" : "text-zinc-400",
+                change > 0 ? "text-green-400" : change < 0 ? "text-red-400" : "text-[var(--color-muted-foreground)]",
               )}
             >
               {change > 0 && <TrendingUp className="h-4 w-4" aria-hidden="true" />}
@@ -522,7 +522,7 @@ export function MetricCard({
               {Math.abs(change)}%
             </div>
           )}
-          {changeLabel && <span className="text-sm text-zinc-400">{changeLabel}</span>}
+          {changeLabel && <span className="text-sm text-[var(--color-muted-foreground)]">{changeLabel}</span>}
         </div>
       )}
 

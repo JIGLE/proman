@@ -349,14 +349,14 @@ export function AnalyticsDashboard(): React.ReactElement {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <div className="flex items-center gap-2 text-sm text-zinc-400 mb-1">
+          <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)] mb-1">
             <Home className="h-4 w-4" />
             <span>Domora</span>
             <span>/</span>
-            <span className="text-zinc-200">Analytics</span>
+            <span className="text-[var(--color-foreground)]">Analytics</span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-zinc-50">Portfolio analytics</h2>
-          <p className="text-sm text-zinc-400 mt-1">
+          <h2 className="text-2xl font-bold tracking-tight text-[var(--color-foreground)]">Portfolio analytics</h2>
+          <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
             Track rent income, occupancy, and lease health across your properties.
           </p>
         </div>
@@ -509,14 +509,14 @@ export function AnalyticsDashboard(): React.ReactElement {
                     <div className="flex items-center gap-3">
                       <span className="text-lg">{activity.icon}</span>
                       <div className="space-y-1">
-                        <p className="text-sm font-medium text-zinc-300">{activity.message}</p>
-                        <div className="flex items-center gap-2 text-xs text-zinc-500">
+                        <p className="text-sm font-medium text-[var(--color-muted-foreground)]">{activity.message}</p>
+                        <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
                           <span>{activity.type}</span>
                           {activity.amount && <span>• {formatCurrency(activity.amount)}</span>}
                         </div>
                       </div>
                     </div>
-                    <span className="text-xs text-zinc-500">
+                    <span className="text-xs text-[var(--color-muted-foreground)]">
                       {new Date(activity.timestamp).toLocaleDateString()}
                     </span>
                   </div>
@@ -528,7 +528,7 @@ export function AnalyticsDashboard(): React.ReactElement {
             {/* Property Distribution */}
             <Card className="p-6">
               <CardHeader className="p-0 pb-4">
-                <CardTitle className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
+                <CardTitle className="text-lg font-semibold text-[var(--color-foreground)] flex items-center gap-2">
                   <PieChart className="h-5 w-5 text-indigo-400" />
                   Portfolio Mix
                 </CardTitle>
@@ -537,7 +537,7 @@ export function AnalyticsDashboard(): React.ReactElement {
                 {propertyTypeChartData.length > 0 ? (
                   <DonutChart data={propertyTypeChartData} height={180} />
                 ) : (
-                  <div className="flex items-center justify-center h-[180px] text-zinc-400">
+                  <div className="flex items-center justify-center h-[180px] text-[var(--color-muted-foreground)]">
                     <p className="text-sm">No property data</p>
                   </div>
                 )}

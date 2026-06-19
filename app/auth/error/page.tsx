@@ -7,9 +7,9 @@ export const dynamic = "force-dynamic";
 
 function AuthErrorContent() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
       <div className="max-w-md w-full mx-4">
-        <div className="bg-zinc-900 border border-red-500/20 rounded-lg p-6">
+        <div className="bg-[var(--color-card)] border border-red-500/20 rounded-lg p-6">
           <div className="text-center">
             <div className="w-12 h-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg
@@ -26,8 +26,8 @@ function AuthErrorContent() {
                 />
               </svg>
             </div>
-            <h1 className="text-xl font-semibold text-zinc-50 mb-2">Authentication Error</h1>
-            <p className="text-zinc-400 mb-6">
+            <h1 className="text-xl font-semibold text-[var(--color-foreground)] mb-2">Authentication Error</h1>
+            <p className="text-[var(--color-muted-foreground)] mb-6">
               There was a problem signing you in. This is usually temporary.
             </p>
 
@@ -41,17 +41,17 @@ function AuthErrorContent() {
 
               <button
                 onClick={() => (window.location.href = "/")}
-                className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-medium py-2 px-4 rounded-md transition-colors"
+                className="w-full bg-[var(--color-surface)] hover:bg-[var(--color-surface-raised)] text-[var(--color-muted-foreground)] font-medium py-2 px-4 rounded-md transition-colors"
               >
                 Go Home
               </button>
             </div>
 
             <details className="mt-6 text-left">
-              <summary className="text-sm text-zinc-500 cursor-pointer hover:text-zinc-400">
+              <summary className="text-sm text-[var(--color-muted-foreground)] cursor-pointer hover:text-[var(--color-muted-foreground)]">
                 Troubleshooting Info
               </summary>
-              <div className="mt-2 p-3 bg-zinc-800 rounded text-xs text-zinc-400 font-mono">
+              <div className="mt-2 p-3 bg-[var(--color-surface)] rounded text-xs text-[var(--color-muted-foreground)] font-mono">
                 <div>Error: OAuthAccountNotLinked</div>
                 <div className="mt-1">This usually means:</div>
                 <ul className="mt-1 ml-4 list-disc space-y-1">
@@ -73,8 +73,8 @@ export default function AuthError() {
     <ErrorBoundary>
       <Suspense
         fallback={
-          <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-            <div className="text-zinc-400">Loading...</div>
+          <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
+            <div className="text-[var(--color-muted-foreground)]">Loading...</div>
           </div>
         }
       >

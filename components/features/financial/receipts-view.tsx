@@ -235,7 +235,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
         rent: "bg-[var(--color-info-muted)] text-[var(--color-info)]",
         deposit: "bg-[var(--color-success-muted)] text-[var(--color-success)]",
         maintenance: "bg-orange-600/20 text-orange-400",
-        other: "bg-gray-600/20 text-gray-400",
+        other: "bg-gray-600/20 text-[var(--color-muted-foreground)]",
       };
       return <Badge className={colors[type]}>{type.charAt(0).toUpperCase() + type.slice(1)}</Badge>;
     };
@@ -255,7 +255,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                       Add Receipt
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+                  <DialogContent className="bg-[var(--color-card)] border-[var(--color-border)] max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle className="text-[var(--color-foreground)]">
                         {dialog.editingItem ? "Edit Receipt" : "Add New Receipt"}
@@ -417,12 +417,12 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                 />
               ) : (
                 filteredReceipts.map((receipt) => (
-                  <Card key={receipt.id} className="bg-zinc-900 border-zinc-800">
+                  <Card key={receipt.id} className="bg-[var(--color-card)] border-[var(--color-border)]">
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-zinc-800">
-                            <FileText className="h-6 w-6 text-zinc-400" />
+                          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-surface)]">
+                            <FileText className="h-6 w-6 text-[var(--color-muted-foreground)]" />
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
@@ -431,10 +431,10 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                               </h3>
                               {getTypeBadge(receipt.type)}
                             </div>
-                            <p className="text-sm text-zinc-400">
+                            <p className="text-sm text-[var(--color-muted-foreground)]">
                               {receipt.tenantName} - {receipt.propertyName}
                             </p>
-                            <div className="flex items-center gap-4 text-sm text-zinc-400 mt-1">
+                            <div className="flex items-center gap-4 text-sm text-[var(--color-muted-foreground)] mt-1">
                               <div className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
                                 <span>{new Date(receipt.date).toLocaleDateString()}</span>
@@ -486,7 +486,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                         </div>
                       </div>
                       {receipt.description && (
-                        <p className="text-sm text-zinc-400 mt-4">{receipt.description}</p>
+                        <p className="text-sm text-[var(--color-muted-foreground)] mt-4">{receipt.description}</p>
                       )}
                     </CardContent>
                   </Card>

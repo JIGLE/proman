@@ -89,16 +89,16 @@ export function DashboardWidget({
                 <Icon className="h-4 w-4 text-accent-primary" />
               </div>
             )}
-            <CardTitle className="text-heading-medium font-semibold text-zinc-50">
+            <CardTitle className="text-heading-medium font-semibold text-[var(--color-foreground)]">
               {title}
             </CardTitle>
           </div>
 
-          {subtitle && <p className="text-body-small text-zinc-400">{subtitle}</p>}
+          {subtitle && <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>}
 
           {value && (
             <div className="space-y-2">
-              <p className="text-display-medium font-bold text-zinc-50">
+              <p className="text-display-medium font-bold text-[var(--color-foreground)]">
                 {typeof value === "number" ? value.toLocaleString() : value}
               </p>
 
@@ -111,7 +111,7 @@ export function DashboardWidget({
                         ? "text-green-400"
                         : change.value < 0
                           ? "text-red-400"
-                          : "text-zinc-400",
+                          : "text-[var(--color-muted-foreground)]",
                     )}
                   >
                     {change.value > 0 && <TrendingUp className="h-3 w-3" aria-hidden="true" />}
@@ -119,7 +119,7 @@ export function DashboardWidget({
                     {Math.abs(change.value).toFixed(1)}%
                   </div>
 
-                  <span className="text-xs text-zinc-500">
+                  <span className="text-xs text-[var(--color-muted-foreground)]">
                     {change.label} {change.period && `vs ${change.period}`}
                   </span>
                 </div>
@@ -177,7 +177,7 @@ export function DashboardWidget({
             <div className="flex items-center justify-center h-32">
               <div className="text-center">
                 <p className="text-sm text-red-400 mb-2">Error loading data</p>
-                <p className="text-xs text-zinc-500">{error}</p>
+                <p className="text-xs text-[var(--color-muted-foreground)]">{error}</p>
                 {onRefresh && (
                   <Button variant="outline" size="sm" onClick={onRefresh} className="mt-2">
                     Try Again
@@ -273,7 +273,7 @@ export function ListWidget<T>({
           emptyState
         ) : (
           <div className="text-center py-8">
-            <p className="text-sm text-zinc-400">{emptyMessage}</p>
+            <p className="text-sm text-[var(--color-muted-foreground)]">{emptyMessage}</p>
           </div>
         )
       ) : (

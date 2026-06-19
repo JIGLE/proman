@@ -201,7 +201,7 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                   Add Owner
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-zinc-900 border-zinc-800 max-w-lg">
+              <DialogContent className="bg-[var(--color-card)] border-[var(--color-border)] max-w-lg">
                 <DialogHeader>
                   <DialogTitle className="text-[var(--color-foreground)]">
                     {dialog.editingItem ? "Edit Owner" : "Add New Owner"}
@@ -358,7 +358,7 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                 filteredOwners.map((owner) => (
                   <Card
                     key={owner.id}
-                    className="bg-zinc-900 border-zinc-800 cursor-pointer hover:border-[var(--color-accent-primary)]/40 hover:shadow-lg transition-all duration-200"
+                    className="bg-[var(--color-card)] border-[var(--color-border)] cursor-pointer hover:border-[var(--color-accent-primary)]/40 hover:shadow-lg transition-all duration-200"
                     onClick={() => {
                       setSelectedOwner(owner);
                       setIsDetailModalOpen(true);
@@ -377,30 +377,30 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3 mt-2">
-                        <div className="flex items-center gap-2 text-sm text-zinc-400">
+                        <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
                           <Mail className="w-4 h-4" />
                           <span>{owner.email}</span>
                         </div>
                         {owner.phone && (
-                          <div className="flex items-center gap-2 text-sm text-zinc-400">
+                          <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
                             <Phone className="w-4 h-4" />
                             <span>{owner.phone}</span>
                           </div>
                         )}
                         {owner.address && (
-                          <div className="flex items-center gap-2 text-sm text-zinc-400">
+                          <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
                             <MapPin className="w-4 h-4" />
                             <span>{owner.address}</span>
                           </div>
                         )}
 
-                        <div className="pt-2 border-t border-zinc-800 min-h-[60px]">
-                          <div className="flex items-center gap-2 text-sm font-medium text-zinc-300 mb-1">
+                        <div className="pt-2 border-t border-[var(--color-border)] min-h-[60px]">
+                          <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)] mb-1">
                             <Building2 className="w-4 h-4" />
                             <span>Properties Owned</span>
                           </div>
                           {owner.properties && owner.properties.length > 0 ? (
-                            <ul className="text-xs text-zinc-400 space-y-1">
+                            <ul className="text-xs text-[var(--color-muted-foreground)] space-y-1">
                               {owner.properties.map((p) => (
                                 <li key={p.id}>
                                   {p.property?.name ?? "Property"} &mdash; {p.ownershipPercentage}%
@@ -408,7 +408,7 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                               ))}
                             </ul>
                           ) : (
-                            <p className="text-xs text-zinc-500 italic">No properties assigned</p>
+                            <p className="text-xs text-[var(--color-muted-foreground)] italic">No properties assigned</p>
                           )}
                         </div>
 
@@ -432,15 +432,15 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                             }, 0);
                             const net = ownerIncome - ownerExpenses;
                             return (
-                              <div className="pt-2 border-t border-zinc-800 grid grid-cols-2 gap-2 text-xs">
+                              <div className="pt-2 border-t border-[var(--color-border)] grid grid-cols-2 gap-2 text-xs">
                                 <div>
-                                  <p className="text-zinc-500">Income share</p>
+                                  <p className="text-[var(--color-muted-foreground)]">Income share</p>
                                   <p className="font-semibold text-green-400">
                                     {formatCurrency(ownerIncome)}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-zinc-500">Net share</p>
+                                  <p className="text-[var(--color-muted-foreground)]">Net share</p>
                                   <p
                                     className={cn(
                                       "font-semibold",
