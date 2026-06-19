@@ -178,48 +178,91 @@ export default async function LandingPage({ params }: Props) {
             </LandingHeroItem>
 
             <LandingHeroItem>
-              <div className="flex flex-wrap gap-3">
+              {/* Three-way entry: one bounded choice set (Hick's Law). Demo is
+                  emphasized as the lowest-friction path to value; landlord and
+                  tenant are equal-weight peers so each user self-selects their door. */}
+              <div role="group" aria-label={t("entryHeading")} className="space-y-2">
+                <p className="text-xs font-medium uppercase tracking-[0.15em] text-[var(--color-muted-foreground)]">
+                  {t("entryHeading")}
+                </p>
+
                 <TrackedLandingLink
                   href={`/${locale}/demo?perspective=owner`}
                   eventName="landing.demo_start"
-                  eventData={{ location: "hero_primary", perspective: "owner" }}
+                  eventData={{ location: "hero_entry", perspective: "owner" }}
+                  className="block"
                 >
-                  <Button
-                    size="xl"
-                    className="h-11 gap-2 bg-teal-600 px-7 text-[15px] font-semibold text-white shadow-lg shadow-teal-950 hover:bg-teal-500"
-                  >
-                    <Play className="h-3.5 w-3.5" />
-                    {t("demoCta")}
-                  </Button>
+                  <div className="group flex items-center gap-3 rounded-xl border border-teal-500/30 bg-teal-500/10 px-4 py-3 transition-colors hover:bg-teal-500/15">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-500/20 text-teal-300">
+                      <Play className="h-4 w-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-[var(--color-foreground)]">
+                        {t("entryDemo")}
+                      </p>
+                      <p className="text-xs text-[var(--color-muted-foreground)]">
+                        {t("entryDemoDesc")}
+                      </p>
+                    </div>
+                    <ArrowRight className="h-4 w-4 shrink-0 text-teal-300 transition-transform group-hover:translate-x-0.5" />
+                  </div>
                 </TrackedLandingLink>
-                <TrackedLandingLink
-                  href="#workflow"
-                  eventName="landing.workflow_cta_click"
-                  eventData={{ location: "hero_secondary" }}
-                >
-                  <Button
-                    size="xl"
-                    variant="ghost"
-                    className="h-11 gap-2 px-5 text-[15px] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+
+                <div className="grid gap-2 sm:grid-cols-2">
+                  <TrackedLandingLink
+                    href="/auth/signin"
+                    eventName="landing.signin_click"
+                    eventData={{ location: "hero_entry", role: "landlord" }}
+                    className="block"
+                  >
+                    <div className="group flex h-full items-center gap-3 rounded-xl border border-white/[0.08] bg-[var(--color-card)]/60 px-4 py-3 transition-colors hover:border-white/[0.16] hover:bg-[var(--color-card)]">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-[var(--color-foreground)]">
+                        <KeyRound className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-[var(--color-foreground)]">
+                          {t("entryLandlord")}
+                        </p>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">
+                          {t("entryLandlordDesc")}
+                        </p>
+                      </div>
+                    </div>
+                  </TrackedLandingLink>
+
+                  <TrackedLandingLink
+                    href="/tenant-portal"
+                    eventName="landing.tenant_portal_click"
+                    eventData={{ location: "hero_entry", role: "tenant" }}
+                    className="block"
+                  >
+                    <div className="group flex h-full items-center gap-3 rounded-xl border border-white/[0.08] bg-[var(--color-card)]/60 px-4 py-3 transition-colors hover:border-white/[0.16] hover:bg-[var(--color-card)]">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-[var(--color-foreground)]">
+                        <Users className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-semibold text-[var(--color-foreground)]">
+                          {t("entryTenant")}
+                        </p>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">
+                          {t("entryTenantDesc")}
+                        </p>
+                      </div>
+                    </div>
+                  </TrackedLandingLink>
+                </div>
+
+                <p className="flex flex-wrap items-center gap-x-2 gap-y-1 pt-0.5 text-sm text-[var(--color-muted-foreground)]">
+                  <span>{t("microcopy")}</span>
+                  <TrackedLandingLink
+                    href="#workflow"
+                    eventName="landing.workflow_cta_click"
+                    eventData={{ location: "hero_secondary" }}
+                    className="inline-flex items-center gap-1 text-[var(--color-foreground)] underline-offset-4 transition-colors hover:underline"
                   >
                     {t("secondaryCta")}
                     <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </TrackedLandingLink>
-              </div>
-            </LandingHeroItem>
-
-            <LandingHeroItem>
-              <div className="space-y-1.5">
-                <p className="text-sm text-[var(--color-muted-foreground)]">{t("microcopy")}</p>
-                <p className="text-sm text-[var(--color-muted-foreground)]">
-                  {t("tenantPortalNote")}{" "}
-                  <a
-                    href="/tenant-portal"
-                    className="text-[var(--color-muted-foreground)] underline-offset-4 transition-colors hover:text-[var(--color-foreground)] hover:underline"
-                  >
-                    {t("tenantPortalLink")} â†’
-                  </a>
+                  </TrackedLandingLink>
                 </p>
               </div>
             </LandingHeroItem>

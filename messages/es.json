@@ -379,6 +379,13 @@
   },
   "landing": {
     "eyebrow": "Operaciones de alquiler para Portugal y España",
+    "entryHeading": "Empieza ahora",
+    "entryDemo": "Explorar la demo",
+    "entryDemoDesc": "Sin registro — app completa con datos de ejemplo",
+    "entryLandlord": "Soy propietario",
+    "entryLandlordDesc": "Inicia sesión en tu cuenta",
+    "entryTenant": "Soy inquilino",
+    "entryTenantDesc": "Accede a tu portal de alquiler",
     "hero": "Cobra alquileres. Emite recibos. Cumple la ley.",
     "subtitle": "Domora automatiza el ciclo mensual de cumplimiento para propietarios en Portugal y España — del seguimiento de pagos al recibo electrónico AT y las exportaciones fiscales IRS / IRPF.",
     "cta": "Entrar",
@@ -792,7 +799,8 @@
       "step1": "Revisa tu bandeja de correo para un mensaje de tu propietario o gestor de propiedades.",
       "step2": "Abre el correo y haz clic en el botón o enlace \"Acceder a tu portal\".",
       "step3": "Si no encuentras el correo, revisa tu carpeta de spam o correo no deseado.",
-      "contactManager": "Contacta con tu gestor de propiedades si necesitas un nuevo enlace."
+      "contactManager": "Contacta con tu gestor de propiedades si necesitas un nuevo enlace.",
+      "backHome": "Volver a Domora"
     },
     "errors": {
       "invalidLink": "Enlace de portal inválido o expirado. Por favor contacta con tu gestor de propiedades.",

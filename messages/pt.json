@@ -379,6 +379,13 @@
   },
   "landing": {
     "eyebrow": "Operações de arrendamento para Portugal e Espanha",
+    "entryHeading": "Comece agora",
+    "entryDemo": "Explorar a demo",
+    "entryDemoDesc": "Sem registo — app completa com dados de exemplo",
+    "entryLandlord": "Sou senhorio",
+    "entryLandlordDesc": "Entre na sua conta",
+    "entryTenant": "Sou inquilino",
+    "entryTenantDesc": "Aceda ao seu portal de arrendamento",
     "hero": "Receba rendas. Emita recibos. Cumpra a lei.",
     "subtitle": "O Domora automatiza o ciclo mensal de conformidade para senhorios em Portugal e Espanha — do acompanhamento de pagamento ao recibo eletrónico AT e às exportações fiscais IRS / IRPF.",
     "cta": "Entrar",
@@ -792,7 +799,8 @@
       "step1": "Verifique a sua caixa de email para uma mensagem do seu proprietário ou gestor de imóveis.",
       "step2": "Abra o email e clique no botão ou link \"Aceder ao seu portal\".",
       "step3": "Se não encontrar o email, verifique a pasta de spam ou lixo.",
-      "contactManager": "Contacte o seu gestor de imóveis se precisar de um novo link."
+      "contactManager": "Contacte o seu gestor de imóveis se precisar de um novo link.",
+      "backHome": "Voltar ao Domora"
     },
     "errors": {
       "invalidLink": "Link de portal inválido ou expirado. Por favor contacte o seu gestor de imóveis.",

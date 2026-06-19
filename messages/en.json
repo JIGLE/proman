@@ -379,6 +379,13 @@
   },
   "landing": {
     "eyebrow": "Portugal & Spain rental operations",
+    "entryHeading": "Get started",
+    "entryDemo": "Explore the demo",
+    "entryDemoDesc": "No signup — full app with sample data",
+    "entryLandlord": "I'm a landlord",
+    "entryLandlordDesc": "Sign in to your account",
+    "entryTenant": "I'm a tenant",
+    "entryTenantDesc": "Access your rental portal",
     "hero": "Collect rent. Issue receipts. Stay compliant.",
     "subtitle": "Domora automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
     "cta": "Sign in",
@@ -792,7 +799,8 @@
       "step1": "Check your email inbox for a message from your landlord or property manager.",
       "step2": "Open the email and click the \"Access your portal\" button or link.",
       "step3": "If you can't find the email, check your spam or junk folder.",
-      "contactManager": "Contact your property manager if you need a new link."
+      "contactManager": "Contact your property manager if you need a new link.",
+      "backHome": "Back to Domora"
     },
     "errors": {
       "invalidLink": "Invalid or expired portal link. Please contact your property manager.",
