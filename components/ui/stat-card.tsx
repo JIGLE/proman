@@ -1,6 +1,7 @@
 import * as React from "react";
 import type { ElementType, ReactNode } from "react";
 import Link from "next/link";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 
 export type StatTone = "default" | "success" | "warning" | "danger" | "info";
@@ -21,11 +22,21 @@ const TONE_VALUE: Record<StatTone, string> = {
   info: "text-[var(--color-info)]",
 };
 
+export interface StatTrend {
+  /** Numeric change, e.g. 8 for +8% */
+  value: number;
+  direction: "up" | "down" | "flat";
+  /** Human-readable context, e.g. "vs last month" */
+  label?: string;
+}
+
 interface StatCardProps {
   label: string;
   value: ReactNode;
   /** Optional secondary line under the value. */
   hint?: ReactNode;
+  /** Trend badge shown below the value (Revolut-style data storytelling). */
+  trend?: StatTrend;
   icon?: ElementType;
   tone?: StatTone;
   /** Tint the value text with the tone color (default keeps it neutral). */
@@ -44,10 +55,31 @@ interface StatCardProps {
  * "number" reads the same way. Tone drives both the surface tint and,
  * optionally, the value color.
  */
+function TrendBadge({ trend }: { trend: StatTrend }) {
+  const TrendIcon =
+    trend.direction === "up" ? TrendingUp : trend.direction === "down" ? TrendingDown : Minus;
+  const colorClass =
+    trend.direction === "up"
+      ? "text-[var(--color-success)]"
+      : trend.direction === "down"
+        ? "text-[var(--color-destructive)]"
+        : "text-[var(--color-muted-foreground)]";
+  const sign = trend.direction === "up" ? "+" : trend.direction === "down" ? "-" : "";
+  return (
+    <p className={cn("mt-1.5 flex items-center gap-1 text-xs", colorClass)}>
+      <TrendIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
+      <span>
+        {sign}{Math.abs(trend.value)}%{trend.label ? ` ${trend.label}` : ""}
+      </span>
+    </p>
+  );
+}
+
 export function StatCard({
   label,
   value,
   hint,
+  trend,
   icon: Icon,
   tone = "default",
   emphasizeValue = false,
@@ -79,6 +111,7 @@ export function StatCard({
       >
         {value}
       </p>
+      {trend && <TrendBadge trend={trend} />}
       {hint && <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">{hint}</p>}
     </>
   );

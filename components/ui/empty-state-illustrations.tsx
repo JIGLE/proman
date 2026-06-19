@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "./button";
 import { cn } from "@/lib/utils/utils";
+import { floatY, pulseRing } from "@/lib/motion-variants";
 
 export interface EmptyStateIllustrationProps {
   /** Which entity type this empty state is for */
@@ -266,25 +267,22 @@ export function EmptyStateIllustration({
         <div className="absolute inset-0 rounded-2xl border border-[var(--color-border)] opacity-50" />
 
         {/* Floating particles (decorative) */}
-        <motion.div
-          animate={{ y: [-4, 4, -4] }}
-          transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-        >
+        <motion.div {...floatY}>
           <Icon className={cn(config.accentColor, compact ? "h-10 w-10" : "h-14 w-14")} />
         </motion.div>
 
         {/* Small decorative dots */}
         <motion.div
-          animate={{ opacity: [0.3, 0.7, 0.3] }}
-          transition={{ duration: 2, repeat: Infinity, delay: 0.5 }}
+          {...pulseRing}
+          transition={{ ...pulseRing.transition, delay: 0.5 }}
           className={cn(
             "absolute -top-1 -right-1 h-3 w-3 rounded-full",
             config.accentColor.replace("text-", "bg-"),
           )}
         />
         <motion.div
-          animate={{ opacity: [0.5, 0.2, 0.5] }}
-          transition={{ duration: 2.5, repeat: Infinity, delay: 1 }}
+          {...pulseRing}
+          transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: 1 }}
           className={cn(
             "absolute -bottom-1 -left-1 h-2 w-2 rounded-full",
             config.accentColor.replace("text-", "bg-"),

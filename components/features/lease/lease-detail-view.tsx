@@ -48,7 +48,7 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> = 
 export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
   const { state, updateLease } = useApp();
   const { formatCurrency } = useCurrency();
-  const { success, error } = useToast();
+  const { success, error, celebrate } = useToast();
   const confirmDialog = useConfirmDialog();
   const pathname = usePathname();
   const router = useRouter();
@@ -117,7 +117,11 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
       if (!res.ok) throw new Error("Failed");
       const updated = await res.json();
       await updateLease(lease.id, updated);
-      success("Renewal offer sent");
+      if (updated.renewalStatus === "accepted") {
+        celebrate("Renewal confirmed!");
+      } else {
+        success("Renewal offer sent");
+      }
       setRenewalOpen(false);
     } catch {
       error("Failed to send renewal offer");

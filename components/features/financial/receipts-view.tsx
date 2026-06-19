@@ -66,7 +66,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
     const { state, addReceipt, updateReceipt, deleteReceipt } = useApp();
     const { isOwnerPortal } = usePortalAccess();
     const { receipts, tenants, properties, loading } = state;
-    const { success, error } = useToast();
+    const { success, error, celebrate } = useToast();
     const { formatCurrency } = useCurrency();
     const confirmDialog = useConfirmDialog();
     const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
@@ -87,10 +87,18 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
       onSubmit: async (data, isEdit) => {
         if (isEdit && dialog.editingItem) {
           await updateReceipt(dialog.editingItem.id, data);
-          success("Receipt updated successfully");
+          if (data.status === "paid" && dialog.editingItem.status !== "paid") {
+            celebrate("Payment recorded!");
+          } else {
+            success("Receipt updated successfully");
+          }
         } else {
           await addReceipt(data);
-          success("Receipt created successfully");
+          if (data.status === "paid") {
+            celebrate("Payment recorded!");
+          } else {
+            success("Receipt created successfully");
+          }
         }
       },
       onError: (errorMessage) => {

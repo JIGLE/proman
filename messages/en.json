@@ -133,6 +133,7 @@
     "overdueRentMetric": "Overdue rent",
     "tenantsFollowUp": "{count} tenants need follow-up",
     "collectedThisMonth": "Collected this month",
+    "vsLastMonth": "vs last month",
     "paidRentPosted": "Paid rent already posted this month",
     "occupancyMetric": "Occupancy",
     "propertiesTracked": "{count} properties tracked",

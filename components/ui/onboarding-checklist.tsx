@@ -22,6 +22,44 @@ import { useTranslations } from "next-intl";
 const CHECKLIST_DISMISSED_KEY = "proman.onboarding.checklist.dismissed";
 const CHECKLIST_COLLAPSED_KEY = "proman.onboarding.checklist.collapsed";
 
+const RING_R = 16;
+const RING_CIRCUMFERENCE = 2 * Math.PI * RING_R;
+
+function ProgressRing({ progress, label }: { progress: number; label: string }) {
+  const targetOffset = RING_CIRCUMFERENCE * (1 - progress / 100);
+
+  return (
+    <div className="relative h-9 w-9 shrink-0" aria-label={label} role="img">
+      <svg viewBox="0 0 40 40" className="h-full w-full -rotate-90">
+        <circle
+          cx="20"
+          cy="20"
+          r={RING_R}
+          fill="none"
+          stroke="var(--color-muted)"
+          strokeWidth="3.5"
+        />
+        <motion.circle
+          cx="20"
+          cy="20"
+          r={RING_R}
+          fill="none"
+          stroke="var(--color-success)"
+          strokeWidth="3.5"
+          strokeLinecap="round"
+          strokeDasharray={RING_CIRCUMFERENCE}
+          initial={{ strokeDashoffset: RING_CIRCUMFERENCE }}
+          animate={{ strokeDashoffset: targetOffset }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        />
+      </svg>
+      <span className="absolute inset-0 flex items-center justify-center text-[9px] font-bold text-[var(--color-foreground)]">
+        {Math.round(progress)}%
+      </span>
+    </div>
+  );
+}
+
 export interface OnboardingChecklistStep {
   id: string;
   label: string;
@@ -138,18 +176,11 @@ export function OnboardingChecklist({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* Progress indicator */}
-          <div className="hidden sm:flex items-center gap-1.5">
-            {steps.map((step) => (
-              <div
-                key={step.id}
-                className={cn(
-                  "h-1.5 w-1.5 rounded-full transition-colors",
-                  step.completed ? "bg-[var(--color-success)]" : "bg-[var(--color-muted)]",
-                )}
-              />
-            ))}
-          </div>
+          {/* Progress ring */}
+          <ProgressRing
+            progress={progress}
+            label={`${completedCount} of ${totalSteps} steps complete`}
+          />
           <Button
             variant="ghost"
             size="sm"

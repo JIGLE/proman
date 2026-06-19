@@ -133,6 +133,7 @@
     "overdueRentMetric": "Renda em atraso",
     "tenantsFollowUp": "{count} inquilinos precisam de acompanhamento",
     "collectedThisMonth": "Arrecadado este mês",
+    "vsLastMonth": "vs mês anterior",
     "paidRentPosted": "Rendas pagas já registadas este mês",
     "occupancyMetric": "Ocupação",
     "propertiesTracked": "{count} propriedades monitorizadas",

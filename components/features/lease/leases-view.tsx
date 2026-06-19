@@ -773,8 +773,12 @@ export function LeasesView(): React.ReactElement {
                           }
                           className={wizard.stepErrors.deposit ? "border-red-500" : ""}
                         />
-                        {wizard.stepErrors.deposit && (
+                        {wizard.stepErrors.deposit ? (
                           <p className="text-sm text-destructive">{wizard.stepErrors.deposit}</p>
+                        ) : (
+                          <p className="text-xs text-[var(--color-muted-foreground)]">
+                            Typically 1–2 months rent. Required by PT/ES law.
+                          </p>
                         )}
                       </div>
                     </div>
@@ -802,6 +806,9 @@ export function LeasesView(): React.ReactElement {
                             </SelectItem>
                           </SelectContent>
                         </Select>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">
+                          Affects how IRS withholding is calculated on receipts.
+                        </p>
                       </div>
 
                       <div className="space-y-2">
@@ -817,6 +824,9 @@ export function LeasesView(): React.ReactElement {
                             })
                           }
                         />
+                        <p className="text-xs text-[var(--color-muted-foreground)]">
+                          Days before lease end you'll be reminded to renew.
+                        </p>
                       </div>
                     </div>
                   </StepContent>

@@ -212,6 +212,10 @@ export function OverviewView({
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
 
+    // Previous month bounds for trend calculation
+    const prevMonthStart = startOfMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+    const prevMonthEnd = endOfMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+
     const occupiedProperties = properties.filter(
       (property) => property.status === "occupied",
     ).length;
@@ -226,6 +230,18 @@ export function OverviewView({
           receipt.type === "rent" &&
           receiptDate >= monthStart &&
           receiptDate <= monthEnd
+        );
+      })
+      .reduce((sum, receipt) => sum + receipt.amount, 0);
+
+    const prevMonthIncome = receipts
+      .filter((receipt) => {
+        const receiptDate = new Date(receipt.date);
+        return (
+          receipt.status === "paid" &&
+          receipt.type === "rent" &&
+          receiptDate >= prevMonthStart &&
+          receiptDate <= prevMonthEnd
         );
       })
       .reduce((sum, receipt) => sum + receipt.amount, 0);
@@ -290,9 +306,17 @@ export function OverviewView({
     const paidReceipts = receipts.filter((receipt) => receipt.status === "paid");
     const nextPaymentDate = getNextPaymentDate(activeLease?.startDate);
 
+    // Trend for monthly income vs previous month
+    const incomeTrendValue =
+      prevMonthIncome > 0
+        ? Math.round(((monthlyIncome - prevMonthIncome) / prevMonthIncome) * 100)
+        : null;
+
     return {
       occupancyRate,
       monthlyIncome,
+      prevMonthIncome,
+      incomeTrendValue,
       overdueRent,
       pendingReceipts,
       recentPayments,
@@ -435,6 +459,20 @@ export function OverviewView({
             tone="success"
             label={t("collectedThisMonth")}
             value={formatCurrency(dashboardData.monthlyIncome)}
+            trend={
+              dashboardData.incomeTrendValue !== null
+                ? {
+                    value: Math.abs(dashboardData.incomeTrendValue),
+                    direction:
+                      dashboardData.incomeTrendValue > 0
+                        ? "up"
+                        : dashboardData.incomeTrendValue < 0
+                          ? "down"
+                          : "flat",
+                    label: t("vsLastMonth"),
+                  }
+                : undefined
+            }
           />
           <StatCard
             size="compact"

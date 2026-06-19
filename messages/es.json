@@ -133,6 +133,7 @@
     "overdueRentMetric": "Alquiler vencido",
     "tenantsFollowUp": "{count} inquilinos necesitan seguimiento",
     "collectedThisMonth": "Recaudado este mes",
+    "vsLastMonth": "vs mes anterior",
     "paidRentPosted": "Alquileres pagados ya registrados este mes",
     "occupancyMetric": "Ocupación",
     "propertiesTracked": "{count} propiedades monitorizadas",
