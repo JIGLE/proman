@@ -3,7 +3,6 @@ import {
   BarChart2,
   Building2,
   Calculator,
-  FileBarChart,
   FileBox,
   FileText,
   HardHat,
@@ -107,19 +106,11 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
     groupLabelKey: "navigation.intelligenceGroup",
     items: [
       {
-        key: "analytics",
-        href: "/analytics",
-        label: "Analytics",
-        labelKey: "navigation.analytics",
+        key: "insights",
+        href: "/insights",
+        label: "Insights",
+        labelKey: "navigation.insights",
         icon: BarChart2,
-        roles: ["owner"],
-      },
-      {
-        key: "reports",
-        href: "/reports",
-        label: "Reports",
-        labelKey: "navigation.reports",
-        icon: FileBarChart,
         roles: ["owner"],
       },
       {
@@ -207,6 +198,9 @@ export function normalizePortalPath(pathname: string): string {
   if (normalized === "/properties") return "/portfolio";
   if (normalized === "/tenants") return "/people";
   if (normalized === "/vendors") return "/contacts";
+  // Analytics and Reports were merged into the unified Insights destination.
+  if (normalized === "/analytics") return "/insights";
+  if (normalized === "/reports") return "/insights";
   return normalized;
 }
 

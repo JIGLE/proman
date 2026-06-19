@@ -397,13 +397,13 @@ export function InsightsView(): React.ReactElement {
           icon={<BarChart3 className="h-5 w-5 text-indigo-400" />}
           title="Analytics Dashboard"
           description="Interactive charts, KPIs, occupancy gauges, and property performance tables"
-          onClick={() => router.push(`/${locale}/analytics`)}
+          onClick={() => router.push(`/${locale}/insights?tab=analytics`)}
         />
         <QuickLink
           icon={<FileText className="h-5 w-5 text-emerald-400" />}
           title="Financial Reports"
           description="Generate and export financial summaries, tax reports, and rent rolls"
-          onClick={() => router.push(`/${locale}/reports`)}
+          onClick={() => router.push(`/${locale}/insights?tab=reports`)}
         />
       </div>
     </div>

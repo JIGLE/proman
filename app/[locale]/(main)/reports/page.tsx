@@ -1,13 +1,11 @@
-import { Suspense } from "react";
-import { ReportsView } from "@/components/features/report/reports-view";
-import { GenericPageSkeleton } from "@/components/ui/page-skeletons";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default function ReportsPage() {
-  return (
-    <Suspense fallback={<GenericPageSkeleton />}>
-      <ReportsView />
-    </Suspense>
-  );
+// Reports is now a tab within the unified Insights destination.
+export default async function ReportsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect(`/${locale}/insights?tab=reports`);
 }
