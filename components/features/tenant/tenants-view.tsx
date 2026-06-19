@@ -1,7 +1,14 @@
 "use client";
 
-import { useMemo, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
-import { Mail, Plus, MoreHorizontal, Trash2, Edit, Eye } from "lucide-react";
+import React, {
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
+import { Mail, Plus, MoreHorizontal, Trash2, Edit, Eye, ChevronDown } from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
 import {
@@ -53,7 +60,7 @@ import { Tenant } from "@/lib/types";
 import { getActiveLease } from "@/lib/utils/lease-helpers";
 import { tenantSchema, type TenantFormData } from "@/lib/schemas/tenant.schema";
 import { useToast } from "@/lib/contexts/toast-context";
-import { useFormDialog } from "@/lib/hooks/use-form-dialog";
+import { useFormDialog, type UseFormDialogReturn } from "@/lib/hooks/use-form-dialog";
 import { useSortableData } from "@/lib/hooks/use-sortable-data";
 import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
@@ -66,6 +73,211 @@ export type TenantsViewProps = { density?: "comfortable" | "compact" };
 export type TenantsViewRef = {
   openDialog: () => void;
 };
+
+function TenantForm({
+  dialog,
+  properties,
+}: {
+  dialog: UseFormDialogReturn<TenantFormData, Tenant>;
+  properties: Array<{ id: string; name: string }>;
+}) {
+  const [showMore, setShowMore] = useState(!dialog.editingItem ? false : true);
+  const isEdit = !!dialog.editingItem;
+
+  return (
+    <form onSubmit={dialog.handleSubmit} className="space-y-4">
+      {/* Required fields — always visible */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Full Name</Label>
+          <Input
+            id="name"
+            value={dialog.formData.name}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              dialog.updateFormData({ name: e.target.value })
+            }
+            className={dialog.formErrors.name ? "border-red-500" : ""}
+            required
+          />
+          {dialog.formErrors.name && (
+            <p className="text-sm text-destructive">{dialog.formErrors.name}</p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={dialog.formData.email}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              dialog.updateFormData({ email: e.target.value })
+            }
+            className={dialog.formErrors.email ? "border-red-500" : ""}
+            required
+          />
+          {dialog.formErrors.email && (
+            <p className="text-sm text-destructive">{dialog.formErrors.email}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Additional details — collapsible on create, always open on edit */}
+      {!isEdit && (
+        <button
+          type="button"
+          onClick={() => setShowMore((v) => !v)}
+          className="flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors"
+        >
+          <ChevronDown
+            className={cn("h-4 w-4 transition-transform", showMore && "rotate-180")}
+            aria-hidden="true"
+          />
+          {showMore ? "Hide" : "Add"} lease & contact details
+        </button>
+      )}
+
+      {(showMore || isEdit) && (
+        <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                value={dialog.formData.phone ?? ""}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  dialog.updateFormData({ phone: e.target.value })
+                }
+                className={dialog.formErrors.phone ? "border-red-500" : ""}
+              />
+              {dialog.formErrors.phone && (
+                <p className="text-sm text-destructive">{dialog.formErrors.phone}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="property">Property</Label>
+              <Select
+                value={dialog.formData.propertyId ?? ""}
+                onValueChange={(value: string) => dialog.updateFormData({ propertyId: value })}
+              >
+                <SelectTrigger className={dialog.formErrors.propertyId ? "border-red-500" : ""}>
+                  <SelectValue placeholder="Select property" />
+                </SelectTrigger>
+                <SelectContent>
+                  {properties.map((property) => (
+                    <SelectItem key={property.id} value={property.id}>
+                      {property.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {dialog.formErrors.propertyId && (
+                <p className="text-sm text-destructive">{dialog.formErrors.propertyId}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="rent">Monthly Rent</Label>
+              <Input
+                id="rent"
+                type="number"
+                min="0"
+                value={dialog.formData.rent ?? 0}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  dialog.updateFormData({ rent: parseInt(e.target.value) || 0 })
+                }
+                className={dialog.formErrors.rent ? "border-red-500" : ""}
+              />
+              {dialog.formErrors.rent && (
+                <p className="text-sm text-destructive">{dialog.formErrors.rent}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="leaseStart">Lease Start</Label>
+              <Input
+                id="leaseStart"
+                type="date"
+                value={dialog.formData.leaseStart ?? ""}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  dialog.updateFormData({ leaseStart: e.target.value })
+                }
+                className={dialog.formErrors.leaseStart ? "border-red-500" : ""}
+              />
+              {dialog.formErrors.leaseStart && (
+                <p className="text-sm text-destructive">{dialog.formErrors.leaseStart}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="leaseEnd">Lease End</Label>
+              <Input
+                id="leaseEnd"
+                type="date"
+                value={dialog.formData.leaseEnd ?? ""}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  dialog.updateFormData({ leaseEnd: e.target.value })
+                }
+                className={dialog.formErrors.leaseEnd ? "border-red-500" : ""}
+              />
+              {dialog.formErrors.leaseEnd && (
+                <p className="text-sm text-destructive">{dialog.formErrors.leaseEnd}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="paymentStatus">Payment Status</Label>
+              <Select
+                value={dialog.formData.paymentStatus}
+                onValueChange={(value: Tenant["paymentStatus"]) =>
+                  dialog.updateFormData({ paymentStatus: value })
+                }
+              >
+                <SelectTrigger className={dialog.formErrors.paymentStatus ? "border-red-500" : ""}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="overdue">Overdue</SelectItem>
+                </SelectContent>
+              </Select>
+              {dialog.formErrors.paymentStatus && (
+                <p className="text-sm text-destructive">{dialog.formErrors.paymentStatus}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              value={dialog.formData.notes ?? ""}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                dialog.updateFormData({ notes: e.target.value })
+              }
+              rows={3}
+              className={dialog.formErrors.notes ? "border-red-500" : ""}
+            />
+            {dialog.formErrors.notes && (
+              <p className="text-sm text-destructive">{dialog.formErrors.notes}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={dialog.closeDialog}>
+          Cancel
+        </Button>
+        <Button type="submit" loading={dialog.isSubmitting}>
+          {dialog.editingItem ? "Update Tenant" : "Create Tenant"}
+        </Button>
+      </div>
+    </form>
+  );
+}
 
 export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
   function TenantsView(_props, ref): React.ReactElement {
@@ -282,173 +494,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                     {dialog.editingItem ? "Update tenant information" : "Enter tenant details"}
                   </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={dialog.handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input
-                        id="name"
-                        value={dialog.formData.name}
-                        onChange={(e) => dialog.updateFormData({ name: e.target.value })}
-                        className={dialog.formErrors.name ? "border-red-500" : ""}
-                        required
-                      />
-                      {dialog.formErrors.name && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.name}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={dialog.formData.email}
-                        onChange={(e) => dialog.updateFormData({ email: e.target.value })}
-                        className={dialog.formErrors.email ? "border-red-500" : ""}
-                        required
-                      />
-                      {dialog.formErrors.email && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.email}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone</Label>
-                      <Input
-                        id="phone"
-                        value={dialog.formData.phone}
-                        onChange={(e) => dialog.updateFormData({ phone: e.target.value })}
-                        className={dialog.formErrors.phone ? "border-red-500" : ""}
-                        required
-                      />
-                      {dialog.formErrors.phone && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.phone}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="property">Property</Label>
-                      <Select
-                        value={dialog.formData.propertyId}
-                        onValueChange={(value) => dialog.updateFormData({ propertyId: value })}
-                      >
-                        <SelectTrigger
-                          className={dialog.formErrors.propertyId ? "border-red-500" : ""}
-                        >
-                          <SelectValue placeholder="Select property" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {properties.map((property) => (
-                            <SelectItem key={property.id} value={property.id}>
-                              {property.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {dialog.formErrors.propertyId && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.propertyId}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="rent">Monthly Rent ($)</Label>
-                      <Input
-                        id="rent"
-                        type="number"
-                        min="0"
-                        value={dialog.formData.rent}
-                        onChange={(e) =>
-                          dialog.updateFormData({
-                            rent: parseInt(e.target.value) || 0,
-                          })
-                        }
-                        className={dialog.formErrors.rent ? "border-red-500" : ""}
-                        required
-                      />
-                      {dialog.formErrors.rent && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.rent}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="leaseStart">Lease Start</Label>
-                      <Input
-                        id="leaseStart"
-                        type="date"
-                        value={dialog.formData.leaseStart}
-                        onChange={(e) => dialog.updateFormData({ leaseStart: e.target.value })}
-                        className={dialog.formErrors.leaseStart ? "border-red-500" : ""}
-                        required
-                      />
-                      {dialog.formErrors.leaseStart && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.leaseStart}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="leaseEnd">Lease End</Label>
-                      <Input
-                        id="leaseEnd"
-                        type="date"
-                        value={dialog.formData.leaseEnd}
-                        onChange={(e) => dialog.updateFormData({ leaseEnd: e.target.value })}
-                        className={dialog.formErrors.leaseEnd ? "border-red-500" : ""}
-                        required
-                      />
-                      {dialog.formErrors.leaseEnd && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.leaseEnd}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentStatus">Payment Status</Label>
-                    <Select
-                      value={dialog.formData.paymentStatus}
-                      onValueChange={(value: Tenant["paymentStatus"]) =>
-                        dialog.updateFormData({ paymentStatus: value })
-                      }
-                    >
-                      <SelectTrigger
-                        className={dialog.formErrors.paymentStatus ? "border-red-500" : ""}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="paid">Paid</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="overdue">Overdue</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {dialog.formErrors.paymentStatus && (
-                      <p className="text-sm text-destructive">{dialog.formErrors.paymentStatus}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Textarea
-                      id="notes"
-                      value={dialog.formData.notes}
-                      onChange={(e) => dialog.updateFormData({ notes: e.target.value })}
-                      rows={4}
-                      className={dialog.formErrors.notes ? "border-red-500" : ""}
-                    />
-                    {dialog.formErrors.notes && (
-                      <p className="text-sm text-destructive">{dialog.formErrors.notes}</p>
-                    )}
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={dialog.closeDialog}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" loading={dialog.isSubmitting}>
-                      {dialog.editingItem ? "Update Tenant" : "Create Tenant"}
-                    </Button>
-                  </div>
-                </form>
+                <TenantForm dialog={dialog} properties={properties} />
               </DialogContent>
             </Dialog>
 
@@ -672,133 +718,133 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             onAction: () => handleDelete(tenant),
                           }}
                         >
-                        <div
-                          className={cn(
-                            "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40 cursor-pointer",
-                          )}
-                          onClick={() => {
-                            setSelectedTenant(tenant);
-                            setIsDetailModalOpen(true);
-                          }}
-                        >
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={() => bulkSelection.toggleSelection(tenant.id)}
-                            onClick={(e) => e.stopPropagation()}
-                            className="shrink-0"
-                          />
+                          <div
+                            className={cn(
+                              "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40 cursor-pointer",
+                            )}
+                            onClick={() => {
+                              setSelectedTenant(tenant);
+                              setIsDetailModalOpen(true);
+                            }}
+                          >
+                            <Checkbox
+                              checked={isSelected}
+                              onCheckedChange={() => bulkSelection.toggleSelection(tenant.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="shrink-0"
+                            />
 
-                          {/* Avatar + name + email */}
-                          <div className="flex min-w-0 flex-1 items-center gap-3">
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30 text-xs font-semibold text-accent-primary">
-                              {tenant.name
-                                .split(" ")
-                                .map((n: string) => n[0])
-                                .join("")
-                                .slice(0, 2)
-                                .toUpperCase()}
+                            {/* Avatar + name + email */}
+                            <div className="flex min-w-0 flex-1 items-center gap-3">
+                              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-accent-primary/20 ring-1 ring-accent-primary/30 text-xs font-semibold text-accent-primary">
+                                {tenant.name
+                                  .split(" ")
+                                  .map((n: string) => n[0])
+                                  .join("")
+                                  .slice(0, 2)
+                                  .toUpperCase()}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-medium text-zinc-100">
+                                  {tenant.name}
+                                </p>
+                                <p className="truncate text-xs text-zinc-500">{tenant.email}</p>
+                              </div>
                             </div>
-                            <div className="min-w-0">
-                              <p className="truncate text-sm font-medium text-zinc-100">
-                                {tenant.name}
-                              </p>
-                              <p className="truncate text-xs text-zinc-500">{tenant.email}</p>
+
+                            {/* Property */}
+                            <div className="hidden w-36 shrink-0 truncate text-xs text-zinc-400 md:block">
+                              {properties.find((p) => p.id === tenant.propertyId)?.name ||
+                                tenant.propertyName ||
+                                "Unassigned"}
                             </div>
-                          </div>
 
-                          {/* Property */}
-                          <div className="hidden w-36 shrink-0 truncate text-xs text-zinc-400 md:block">
-                            {properties.find((p) => p.id === tenant.propertyId)?.name ||
-                              tenant.propertyName ||
-                              "Unassigned"}
-                          </div>
+                            {/* Lease end */}
+                            <div className="hidden w-[88px] shrink-0 flex-col items-end text-xs lg:flex">
+                              {activeLease ? (
+                                <>
+                                  <span className="text-zinc-500">Ends</span>
+                                  <span
+                                    className={cn(
+                                      "font-medium",
+                                      isExpiring ? "text-amber-300" : "text-zinc-300",
+                                    )}
+                                  >
+                                    {new Date(activeLease.endDate).toLocaleDateString("pt-PT", {
+                                      day: "numeric",
+                                      month: "short",
+                                      year: "numeric",
+                                    })}
+                                  </span>
+                                </>
+                              ) : null}
+                            </div>
 
-                          {/* Lease end */}
-                          <div className="hidden w-[88px] shrink-0 flex-col items-end text-xs lg:flex">
-                            {activeLease ? (
-                              <>
-                                <span className="text-zinc-500">Ends</span>
-                                <span
-                                  className={cn(
-                                    "font-medium",
-                                    isExpiring ? "text-amber-300" : "text-zinc-300",
-                                  )}
+                            {/* Rent */}
+                            <div className="hidden w-20 shrink-0 text-right text-sm font-semibold text-zinc-100 sm:block">
+                              {formatCurrency(Number(activeLease?.monthlyRent ?? tenant.rent))}
+                            </div>
+
+                            {/* Status badge */}
+                            <div className="shrink-0">
+                              {getPaymentStatusBadge(tenant.paymentStatus)}
+                            </div>
+
+                            {/* Actions menu */}
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 shrink-0"
+                                  aria-label={`${tenant.name} options`}
+                                  onClick={(e) => e.stopPropagation()}
                                 >
-                                  {new Date(activeLease.endDate).toLocaleDateString("pt-PT", {
-                                    day: "numeric",
-                                    month: "short",
-                                    year: "numeric",
-                                  })}
-                                </span>
-                              </>
-                            ) : null}
+                                  <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    dialog.openEditDialog(tenant, (t) => ({
+                                      name: t.name,
+                                      email: t.email,
+                                      phone: t.phone || "",
+                                      propertyId: t.propertyId || "",
+                                      rent: Number(t.rent),
+                                      leaseStart: t.leaseStart || "",
+                                      leaseEnd: t.leaseEnd || "",
+                                      paymentStatus: t.paymentStatus,
+                                      notes: t.notes || "",
+                                    }));
+                                  }}
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    window.location.href = `mailto:${tenant.email}`;
+                                  }}
+                                >
+                                  <Mail className="h-4 w-4 mr-2" />
+                                  Send Email
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDelete(tenant);
+                                  }}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </div>
-
-                          {/* Rent */}
-                          <div className="hidden w-20 shrink-0 text-right text-sm font-semibold text-zinc-100 sm:block">
-                            {formatCurrency(Number(activeLease?.monthlyRent ?? tenant.rent))}
-                          </div>
-
-                          {/* Status badge */}
-                          <div className="shrink-0">
-                            {getPaymentStatusBadge(tenant.paymentStatus)}
-                          </div>
-
-                          {/* Actions menu */}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 shrink-0"
-                                aria-label={`${tenant.name} options`}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  dialog.openEditDialog(tenant, (t) => ({
-                                    name: t.name,
-                                    email: t.email,
-                                    phone: t.phone || "",
-                                    propertyId: t.propertyId || "",
-                                    rent: Number(t.rent),
-                                    leaseStart: t.leaseStart || "",
-                                    leaseEnd: t.leaseEnd || "",
-                                    paymentStatus: t.paymentStatus,
-                                    notes: t.notes || "",
-                                  }));
-                                }}
-                              >
-                                <Edit className="h-4 w-4 mr-2" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  window.location.href = `mailto:${tenant.email}`;
-                                }}
-                              >
-                                <Mail className="h-4 w-4 mr-2" />
-                                Send Email
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-destructive"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDelete(tenant);
-                                }}
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
                         </SwipeableListItem>
                       );
                     })}

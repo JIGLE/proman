@@ -54,7 +54,6 @@ function createBaseAuthOptions(): NextAuthOptions {
         GoogleProvider({
           clientId: googleClientId,
           clientSecret: googleClientSecret,
-          allowDangerousEmailAccountLinking: true,
         }),
       );
     } catch (err: unknown) {

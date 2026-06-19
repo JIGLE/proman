@@ -105,6 +105,36 @@ const ES_NON_RESIDENT_2025 = {
 };
 
 // ---------------------------------------------------------------------------
+// Italy — IRPEF / Cedolare Secca 2024–2025
+// Source: D.Lgs. 23/2011 (Cedolare Secca), TUIR (DPR 917/1986 as amended)
+// ---------------------------------------------------------------------------
+
+const IT_CEDOLARE_SECCA_2024 = {
+  flatRate: 0.21,
+  notes: "Cedolare Secca standard rate — D.Lgs. 23/2011, Art. 3, c. 2",
+};
+
+const IT_CEDOLARE_CONCORDATO_2024 = {
+  flatRate: 0.1,
+  notes: "Cedolare Secca concordato rate (canone concordato) — D.Lgs. 23/2011, Art. 3, c. 3",
+};
+
+const IT_IRPEF_2024_BRACKETS = {
+  brackets: [
+    { min: 0, max: 28000, rate: 0.23 },
+    { min: 28000, max: 50000, rate: 0.35 },
+    { min: 50000, max: null, rate: 0.43 },
+  ],
+  maxRentalDeductiblePct: 0.35,
+  notes: "IRPEF 2024 — D.L. 216/2023 (riforma fiscale). 3 scaglioni in vigore dal 1/1/2024.",
+};
+
+// Italy 2025 — same rates as 2024 (no changes enacted for 2025)
+const IT_CEDOLARE_SECCA_2025 = IT_CEDOLARE_SECCA_2024;
+const IT_CEDOLARE_CONCORDATO_2025 = IT_CEDOLARE_CONCORDATO_2024;
+const IT_IRPEF_2025_BRACKETS = IT_IRPEF_2024_BRACKETS;
+
+// ---------------------------------------------------------------------------
 // Seed data array
 // ---------------------------------------------------------------------------
 
@@ -292,6 +322,76 @@ const rules: TaxRuleSeed[] = [
     payload: JSON.stringify(ES_NON_RESIDENT_2025),
     sourceUrl: "https://www.boe.es/buscar/act.php?id=BOE-A-2004-4527",
     notes: "IRNR flat rates 2026 — carried forward from 2025.",
+  },
+
+  // ---- Italy 2024 ----
+  {
+    country: "IT",
+    regime: "CEDOLARE_SECCA",
+    ruleType: "FLAT_RATE",
+    year: 2024,
+    effectiveDate: new Date("2024-01-01"),
+    payload: JSON.stringify(IT_CEDOLARE_SECCA_2024),
+    sourceUrl:
+      "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-03-14;23",
+    notes: "Cedolare Secca standard rate 21% — D.Lgs. 23/2011, Art. 3, c. 2.",
+  },
+  {
+    country: "IT",
+    regime: "CEDOLARE_CONCORDATO",
+    ruleType: "FLAT_RATE",
+    year: 2024,
+    effectiveDate: new Date("2024-01-01"),
+    payload: JSON.stringify(IT_CEDOLARE_CONCORDATO_2024),
+    sourceUrl:
+      "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-03-14;23",
+    notes: "Cedolare Secca concordato rate 10% (canone concordato) — D.Lgs. 23/2011, Art. 3, c. 3.",
+  },
+  {
+    country: "IT",
+    regime: "STANDARD",
+    ruleType: "INCOME_BRACKET",
+    year: 2024,
+    effectiveDate: new Date("2024-01-01"),
+    payload: JSON.stringify(IT_IRPEF_2024_BRACKETS),
+    sourceUrl:
+      "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:1986-12-22;917",
+    notes: "IRPEF 2024 brackets — D.L. 216/2023 riforma fiscale. 3 scaglioni: 23%/35%/43%.",
+  },
+
+  // ---- Italy 2025 ----
+  {
+    country: "IT",
+    regime: "CEDOLARE_SECCA",
+    ruleType: "FLAT_RATE",
+    year: 2025,
+    effectiveDate: new Date("2025-01-01"),
+    payload: JSON.stringify(IT_CEDOLARE_SECCA_2025),
+    sourceUrl:
+      "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-03-14;23",
+    notes: "Cedolare Secca standard rate 21% 2025 — unchanged from 2024.",
+  },
+  {
+    country: "IT",
+    regime: "CEDOLARE_CONCORDATO",
+    ruleType: "FLAT_RATE",
+    year: 2025,
+    effectiveDate: new Date("2025-01-01"),
+    payload: JSON.stringify(IT_CEDOLARE_CONCORDATO_2025),
+    sourceUrl:
+      "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:2011-03-14;23",
+    notes: "Cedolare Secca concordato rate 10% 2025 — unchanged from 2024.",
+  },
+  {
+    country: "IT",
+    regime: "STANDARD",
+    ruleType: "INCOME_BRACKET",
+    year: 2025,
+    effectiveDate: new Date("2025-01-01"),
+    payload: JSON.stringify(IT_IRPEF_2025_BRACKETS),
+    sourceUrl:
+      "https://www.normattiva.it/uri-res/N2Ls?urn:nir:stato:decreto.legislativo:1986-12-22;917",
+    notes: "IRPEF 2025 brackets — carried forward from 2024 (no changes for 2025).",
   },
 ];
 

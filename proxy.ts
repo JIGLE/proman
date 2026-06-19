@@ -1,7 +1,9 @@
 /**
- * Proxy for Next.js 16+ locale routing, demo mode, and URL redirects
+ * Proxy for Next.js 16+ locale routing, auth enforcement, CSRF, demo mode, and URL redirects.
  * Handles:
- * - Locale prefix enforcement (always use /en, /pt, or /es)
+ * - Auth guard: 401 for unauthenticated protected API requests; redirect portal pages to sign-in
+ * - CSRF validation for state-changing API requests
+ * - Locale prefix enforcement (always use /en, /pt, /es, or /it)
  * - Demo mode: /demo entry redirect + route blocking for demo sessions
  * - Backward compatibility redirects from old tab-based URLs
  * - Security headers (CSP, HSTS, X-Frame-Options, etc.)
@@ -9,12 +11,55 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { locales, defaultLocale } from "./lib/i18n/config";
+import {
+  verifyCsrfToken,
+  requiresCsrfProtection,
+  getOrGenerateCsrfToken,
+  setCsrfCookie,
+} from "@/lib/middleware/csrf";
+
+// next-auth/jwt typings reference next's GetServerSidePropsContext which may not resolve
+// under moduleResolution:bundler — import at the value level only to avoid the tsc error.
+const { getToken } = require("next-auth/jwt") as {
+  getToken: (params: {
+    req: NextRequest;
+    secret?: string;
+  }) => Promise<Record<string, unknown> | null>;
+};
 
 /** Cookie name for demo mode (must match lib/demo/demo-mode.ts) */
 const DEMO_COOKIE_NAME = "proman_demo";
 
 /** Paths blocked during demo mode */
 const DEMO_BLOCKED_PATTERNS = ["/api/user", "/api/debug"];
+
+// Locales supported by the app (keep in sync with lib/i18n/config.ts)
+const SUPPORTED_LOCALES = ["pt", "en", "es", "it"] as const;
+type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
+
+function isSupportedLocale(segment: string): segment is SupportedLocale {
+  return (SUPPORTED_LOCALES as readonly string[]).includes(segment);
+}
+
+/**
+ * Public API prefixes — these routes must never require a session.
+ * /api/auth/**           — NextAuth sign-in / callback endpoints
+ * /api/health            — Liveness/readiness probe
+ * /api/tenant-portal/**  — Token-based tenant self-service API
+ * /api/csrf-token        — CSRF token endpoint (GET only, no auth needed)
+ * /api/monitoring/**     — Health/metrics probes
+ */
+function isPublicApiRoute(pathname: string): boolean {
+  return (
+    pathname.startsWith("/api/auth") ||
+    pathname === "/api/health" ||
+    pathname === "/api/ready" ||
+    pathname === "/api/info" ||
+    pathname.startsWith("/api/tenant-portal") ||
+    pathname === "/api/csrf-token" ||
+    pathname.startsWith("/api/monitoring")
+  );
+}
 
 /**
  * Generate CSP nonce (Edge-compatible version)
@@ -81,21 +126,50 @@ function applySecurityHeaders(response: NextResponse, nonce: string): void {
   headers.set("Content-Security-Policy", cspDirectives);
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   // Generate unique nonce for this request
   const nonce = generateNonce();
 
   const { pathname, searchParams } = request.nextUrl;
 
-  // API and auth routes should NOT get locale redirects, but DO get security headers
-  if (pathname.startsWith("/api/") || pathname.startsWith("/auth/")) {
+  // ── API routes ────────────────────────────────────────────────────
+  if (pathname.startsWith("/api/")) {
+    // Public routes — pass through without auth or CSRF checks
+    if (isPublicApiRoute(pathname)) {
+      const response = NextResponse.next();
+      applySecurityHeaders(response, nonce);
+      return response;
+    }
+
+    // Auth check for protected API routes
+    const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+    if (!token) {
+      const response = NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      applySecurityHeaders(response, nonce);
+      return response;
+    }
+
+    // CSRF check for state-changing requests
+    if (requiresCsrfProtection(request.method)) {
+      if (!verifyCsrfToken(request)) {
+        const response = NextResponse.json(
+          {
+            error: "Invalid CSRF token",
+            message: "CSRF token missing or invalid. Please refresh and try again.",
+          },
+          { status: 403 },
+        );
+        applySecurityHeaders(response, nonce);
+        return response;
+      }
+    }
+
     const response = NextResponse.next();
     applySecurityHeaders(response, nonce);
     return response;
   }
 
-  // ── Handle /demo entry point ────────────────────────
-  // Redirect /demo → /[defaultLocale]/demo for locale routing
+  // ── Handle /demo entry point ────────────────────────────────────────
   if (pathname === "/demo") {
     const url = request.nextUrl.clone();
     url.pathname = `/${defaultLocale}/demo`;
@@ -104,10 +178,9 @@ export function proxy(request: NextRequest) {
     return response;
   }
 
-  // ── Legacy property payment path redirects ────────────────────────
-  // Redirect old nested payment-review URLs to the canonical financials URL.
+  // ── Legacy property payment path redirects ──────────────────────────
   const legacyPropertyPaymentMatch = pathname.match(
-    /^\/(en|pt|es)\/(?:portfolio|properties)\/([^/]+)\/(?:payments?|payment-review|review-payments)(?:\/review)?\/?$/,
+    /^\/(en|pt|es|it)\/(?:portfolio|properties)\/([^/]+)\/(?:payments?|payment-review|review-payments)(?:\/review)?\/?$/,
   );
   if (legacyPropertyPaymentMatch) {
     const [, locale, propertyId] = legacyPropertyPaymentMatch;
@@ -120,19 +193,17 @@ export function proxy(request: NextRequest) {
     return response;
   }
 
-  // ── Demo mode route blocking ────────────────────────
+  // ── Demo mode route blocking ────────────────────────────────────────
   const cookieHeader = request.headers.get("cookie") || "";
   const isDemo = cookieHeader.includes(`${DEMO_COOKIE_NAME}=1`);
   if (isDemo) {
-    // Strip locale prefix to check the actual route
-    const pathWithoutLocale = pathname.replace(/^\/(pt|en|es)/, "") || "/";
+    const pathWithoutLocale = pathname.replace(/^\/(pt|en|es|it)/, "") || "/";
 
     const isBlocked = DEMO_BLOCKED_PATTERNS.some(
       (pattern) => pathWithoutLocale === pattern || pathWithoutLocale.startsWith(pattern + "/"),
     );
 
     if (isBlocked) {
-      // For API routes, return 403 JSON
       if (pathWithoutLocale.startsWith("/api/")) {
         const response = NextResponse.json(
           { error: "This feature is not available in demo mode" },
@@ -141,7 +212,6 @@ export function proxy(request: NextRequest) {
         applySecurityHeaders(response, nonce);
         return response;
       }
-      // For page routes, redirect to dashboard
       const url = request.nextUrl.clone();
       const locale = pathname.split("/")[1] || defaultLocale;
       url.pathname = `/${locale}/dashboard`;
@@ -151,8 +221,59 @@ export function proxy(request: NextRequest) {
     }
   }
 
-  const localeMatch = pathname.match(/^\/(en|pt|es)/);
+  const localeMatch = pathname.match(/^\/(en|pt|es|it)/);
   const locale = localeMatch ? localeMatch[1] : defaultLocale;
+
+  // ── Portal page auth guard ──────────────────────────────────────────
+  const segments = pathname.split("/");
+  const localeSegment = segments[1] ?? "";
+  const rest = segments.slice(2).join("/");
+
+  if (isSupportedLocale(localeSegment)) {
+    const isMainPortalPage =
+      rest.startsWith("dashboard") ||
+      rest.startsWith("properties") ||
+      rest.startsWith("portfolio") ||
+      rest.startsWith("tenants") ||
+      rest.startsWith("people") ||
+      rest.startsWith("leases") ||
+      rest.startsWith("buildings") ||
+      rest.startsWith("units") ||
+      rest.startsWith("contacts") ||
+      rest.startsWith("contracts") ||
+      rest.startsWith("correspondence") ||
+      rest.startsWith("financials") ||
+      rest.startsWith("maintenance") ||
+      rest.startsWith("reports") ||
+      rest.startsWith("analytics") ||
+      rest.startsWith("insights") ||
+      rest.startsWith("overview") ||
+      rest.startsWith("documents") ||
+      rest.startsWith("owners") ||
+      rest.startsWith("settings");
+
+    if (isMainPortalPage) {
+      const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
+      if (!token) {
+        const signInUrl = request.nextUrl.clone();
+        signInUrl.pathname = `/${localeSegment}/auth/signin`;
+        signInUrl.searchParams.set("callbackUrl", pathname);
+        const response = NextResponse.redirect(signInUrl);
+        applySecurityHeaders(response, nonce);
+        return response;
+      }
+
+      // Seed CSRF cookie for portal pages (needed by the API client)
+      const response = NextResponse.next();
+      applySecurityHeaders(response, nonce);
+      const existingCsrfToken = request.cookies.get("csrf-token")?.value;
+      if (!existingCsrfToken) {
+        const csrfToken = getOrGenerateCsrfToken(request);
+        setCsrfCookie(response, csrfToken);
+      }
+      return response;
+    }
+  }
 
   // Preserve canonical financial tab routes used by the current UI.
   const isFinancialsPath = pathname === `/${locale}/financials` || pathname === "/financials";
@@ -161,14 +282,12 @@ export function proxy(request: NextRequest) {
   // Handle old tab-based URL redirects (backward compatibility)
   const tab = searchParams.get("tab");
   if (tab) {
-    // Keep canonical financial URLs untouched (e.g. /pt/financials?tab=receipts&propertyId=...)
     if (isFinancialsPath && canonicalFinancialTabs.has(tab)) {
       const response = NextResponse.next();
       applySecurityHeaders(response, nonce);
       return response;
     }
 
-    // Map old tab names to new routes
     const tabRouteMap: Record<string, string | { path: string; financialTab?: string }> = {
       overview: "/dashboard",
       properties: "/portfolio",
@@ -192,19 +311,15 @@ export function proxy(request: NextRequest) {
 
     const mapping = tabRouteMap[tab as keyof typeof tabRouteMap];
     if (mapping) {
-      // Build new URL with locale prefix
       const url = request.nextUrl.clone();
       const path = typeof mapping === "string" ? mapping : mapping.path;
       url.pathname = `/${locale}${path}`;
-
-      // Preserve other query params (like search, status, etc.)
       url.searchParams.delete("tab");
-      url.searchParams.delete("subtab"); // Remove old subtab param too
+      url.searchParams.delete("subtab");
       if (typeof mapping !== "string" && mapping.financialTab) {
         url.searchParams.set("tab", mapping.financialTab);
       }
-
-      const response = NextResponse.redirect(url, 301); // Permanent redirect
+      const response = NextResponse.redirect(url, 301);
       applySecurityHeaders(response, nonce);
       return response;
     }
@@ -239,11 +354,9 @@ export function proxy(request: NextRequest) {
 
   let response: NextResponse;
 
-  // If path has locale, let it through
   if (pathnameHasLocale) {
     response = NextResponse.next();
   } else if (pathname === "/") {
-    // Detect preferred locale from Accept-Language header, fall back to defaultLocale
     const acceptLanguage = request.headers.get("accept-language") ?? "";
     const preferred = acceptLanguage
       .split(",")
@@ -252,25 +365,17 @@ export function proxy(request: NextRequest) {
     const detectedLocale = (preferred ?? defaultLocale) as typeof defaultLocale;
     response = NextResponse.redirect(new URL(`/${detectedLocale}`, request.url), { status: 307 });
   } else {
-    // For any other path without locale, prepend default locale
-    // This handles /path -> /en/path
     const url = request.nextUrl.clone();
     url.pathname = `/${defaultLocale}${pathname}`;
     response = NextResponse.redirect(url, { status: 307 });
   }
 
-  // Apply security headers to all responses
   applySecurityHeaders(response, nonce);
-
   return response;
 }
 
 export const config = {
-  // Match all pathnames except for:
-  // - _next (Next.js internals)
-  // - Static files (images, fonts, etc.)
-  // NOTE: API and auth routes ARE included so they get security headers
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|version\.json|sw\.js|manifest\.webmanifest|offline\.html|.*\.(?:svg|png|jpg|jpeg|gif|webp|json|webmanifest|txt|woff2?)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|version\\.json|sw\\.js|manifest\\.webmanifest|offline\\.html|.*\\.(?:svg|png|jpg|jpeg|gif|webp|json|webmanifest|txt|woff2?)$).*)",
   ],
 };

@@ -74,7 +74,14 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         labelKey: "navigation.maintenance",
         icon: Wrench,
         roles: ["owner"],
-        mobilePrimary: true,
+      },
+      {
+        key: "vendors",
+        href: "/contacts",
+        label: "Vendors",
+        labelKey: "navigation.vendors",
+        icon: HardHat,
+        roles: ["owner"],
       },
       {
         key: "vendors",

@@ -34,11 +34,7 @@ interface PTRendaAcessivel {
   maxDeductiblePct: number;
 }
 
-async function loadPayload<T>(
-  regime: string,
-  ruleType: string,
-  year: number,
-): Promise<T | null> {
+async function loadPayload<T>(regime: string, ruleType: string, year: number): Promise<T | null> {
   const prisma = getPrismaClient();
   const rule = await prisma.taxRule.findFirst({
     where: { country: COUNTRY, regime, ruleType, year },
@@ -161,11 +157,7 @@ class PTFiscalPlugin implements FiscalPlugin {
     const taxableIncome = Math.max(0, grossIncome - allowableExpenses);
     const { taxDue, breakdown } = applyBrackets(taxableIncome, bracketData.brackets);
 
-    const withholdingData = await loadPayload<PTWithholding>(
-      "STANDARD",
-      "WITHHOLDING_RATE",
-      year,
-    );
+    const withholdingData = await loadPayload<PTWithholding>("STANDARD", "WITHHOLDING_RATE", year);
     const wRate = withholdingData?.withholdingRate ?? 0.25;
     const withholdingAlreadyPaid = grossIncome * wRate;
 

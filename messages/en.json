@@ -216,6 +216,8 @@
     "docExpiryWarning": "{count} document(s) expiring within 60 days",
     "allClear": "All clear",
     "allClearDesc": "No outstanding rent, overdue payments, or urgent maintenance.",
+    "oneItemNeedsAttention": "1 item needs your attention",
+    "itemsNeedAttention": "{count} items need your attention",
     "setupComplete": "Setup complete"
   },
   "greeting": {

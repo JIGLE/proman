@@ -733,7 +733,12 @@ export function MaintenanceView(): React.ReactElement {
                         <TableCell>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Ticket options">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                aria-label="Ticket options"
+                              >
                                 <MoreVertical className="w-4 h-4" aria-hidden="true" />
                               </Button>
                             </DropdownMenuTrigger>
@@ -863,7 +868,12 @@ export function MaintenanceView(): React.ReactElement {
                           )}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Ticket options">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                aria-label="Ticket options"
+                              >
                                 <MoreVertical className="w-4 h-4" aria-hidden="true" />
                               </Button>
                             </DropdownMenuTrigger>

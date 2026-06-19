@@ -30,11 +30,7 @@ interface ESWithholding {
   withholdingRate: number;
 }
 
-async function loadPayload<T>(
-  regime: string,
-  ruleType: string,
-  year: number,
-): Promise<T | null> {
+async function loadPayload<T>(regime: string, ruleType: string, year: number): Promise<T | null> {
   const prisma = getPrismaClient();
   const rule = await prisma.taxRule.findFirst({
     where: { country: COUNTRY, regime, ruleType, year },

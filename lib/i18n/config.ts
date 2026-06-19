@@ -27,10 +27,8 @@ export const localeNames: Record<Locale, string> = {
 // Coming soon languages (for display in selector)
 export const upcomingLocales = ["fr", "de", "nl", "pl", "ru", "zh", "ja"] as const;
 export const upcomingLocaleNames: Record<string, string> = {
-  es: "Español",
   fr: "Français",
   de: "Deutsch",
-  it: "Italiano",
   nl: "Nederlands",
   pl: "Polski",
   ru: "Русский",

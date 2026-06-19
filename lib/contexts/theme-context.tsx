@@ -16,8 +16,8 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 const THEME_STORAGE_KEY = "proman-theme";
 
 export function ThemeProvider({ children }: { children: React.ReactNode }): React.ReactElement {
-  const [theme, setThemeState] = useState<Theme>("dark");
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark" | "dark-oled">("dark");
+  const [theme, setThemeState] = useState<Theme>("light");
+  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark" | "dark-oled">("light");
   const [_mounted, setMounted] = useState(false);
 
   // Get system preference
@@ -51,7 +51,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }): Reac
   // Initialize theme from storage
   useEffect(() => {
     const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
-    const initialTheme = stored || "dark";
+    const initialTheme = stored || "light";
     setThemeState(initialTheme);
     applyTheme(resolveTheme(initialTheme));
     setMounted(true);

@@ -22,11 +22,11 @@ import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 const createTenantSchema = z.object({
   name: z.string().min(1).max(200),
   email: z.string().email(),
-  phone: z.string().min(1).max(20),
+  phone: z.string().max(20).optional().default(""),
   propertyId: z.string().optional(),
-  rent: z.number().min(0),
-  leaseStart: z.string().datetime(),
-  leaseEnd: z.string().datetime(),
+  rent: z.number().min(0).optional().default(0),
+  leaseStart: z.string().optional().default(""),
+  leaseEnd: z.string().optional().default(""),
   paymentStatus: z.enum(["paid", "overdue", "pending"]).default("pending"),
   notes: z.string().max(1000).optional(),
 });

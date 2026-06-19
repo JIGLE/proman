@@ -216,6 +216,8 @@
     "docExpiryWarning": "{count} documento(s) que vencen en 60 días",
     "allClear": "Todo en orden",
     "allClearDesc": "Sin rentas pendientes, pagos vencidos ni mantenimiento urgente.",
+    "oneItemNeedsAttention": "1 elemento necesita tu atención",
+    "itemsNeedAttention": "{count} elementos necesitan tu atención",
     "setupComplete": "Configuración completa"
   },
   "greeting": {

@@ -563,8 +563,8 @@ export function SettingsView(): React.ReactElement {
                 </div>
               </div>
               <p className="text-xs text-muted-foreground">
-                Data retention: audit logs are kept for 7 years (legal obligation), email logs for
-                2 years, read notifications for 1 year. Automatic purge runs daily.
+                Data retention: audit logs are kept for 7 years (legal obligation), email logs for 2
+                years, read notifications for 1 year. Automatic purge runs daily.
               </p>
             </CardContent>
           </Card>

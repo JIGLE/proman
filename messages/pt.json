@@ -216,6 +216,8 @@
     "docExpiryWarning": "{count} documento(s) a expirar em 60 dias",
     "allClear": "Tudo em ordem",
     "allClearDesc": "Sem rendas em falta, pagamentos em atraso ou manutenção urgente.",
+    "oneItemNeedsAttention": "1 item precisa da sua atenção",
+    "itemsNeedAttention": "{count} itens precisam da sua atenção",
     "setupComplete": "Configuração concluída"
   },
   "greeting": {
