@@ -14,6 +14,7 @@ import {
 } from "./sheet";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { NotificationBell } from "@/components/shared/notification-bell";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -199,6 +200,7 @@ export function MobileBottomNav({
               </div>
               <NotificationBell />
               <LanguageSelector compact />
+              <ThemeToggle variant="button" size="sm" />
             </div>
           )}
 

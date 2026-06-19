@@ -32,12 +32,11 @@ export default function DemoPage() {
         // Persist the user's theme so we can restore it when demo exits
         const previousTheme = localStorage.getItem("proman-theme") ?? "light";
         sessionStorage.setItem("proman-pre-demo-theme", previousTheme);
-        // Force dark theme for demo — the demo data and design is dark-mode optimised
+        // Force dark theme for demo — the demo data and design is dark-mode optimised.
+        // Write localStorage then notify the ThemeProvider so React state, the DOM
+        // class, and storage stay in sync (fixes the light-on-entry desync).
         localStorage.setItem("proman-theme", "dark");
-        const root = document.documentElement;
-        root.classList.remove("light", "dark", "dark-oled");
-        root.classList.add("dark");
-        root.setAttribute("data-theme", "dark");
+        window.dispatchEvent(new Event("proman:theme-changed"));
 
         // Step 1: Set demo cookie client-side (no server dependency)
         setDemoCookieClient();

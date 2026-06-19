@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useDemoMode } from "@/lib/contexts/demo-context";
+import { useTheme } from "@/lib/contexts/theme-context";
 import {
   AlertTriangle,
   LogOut,
@@ -10,6 +11,8 @@ import {
   Timer,
   ChevronUp,
   ChevronDown,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { resetDemoStore } from "@/lib/demo/demo-local-state";
@@ -39,6 +42,7 @@ function formatTime(ms: number): string {
 
 export function DemoBanner() {
   const { isDemoMode, exitDemo, demoPerspective, switchDemoPerspective } = useDemoMode();
+  const { resolvedTheme, toggleTheme } = useTheme();
   const t = useTranslations();
   const [remaining, setRemaining] = useState(() => getTimeRemaining());
   const [collapsed, setCollapsed] = useState(false);
@@ -155,6 +159,21 @@ export function DemoBanner() {
                   +15 min
                 </button>
               )}
+
+              {/* Theme toggle — dark mode is otherwise unreachable in demo
+                  (the sidebar footer that hosts it needs a NextAuth session) */}
+              <button
+                onClick={toggleTheme}
+                className="inline-flex items-center justify-center rounded p-1 bg-black/10 hover:bg-black/20 transition-colors"
+                title={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
+                aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
+              >
+                {resolvedTheme === "dark" ? (
+                  <Sun className="h-3 w-3" />
+                ) : (
+                  <Moon className="h-3 w-3" />
+                )}
+              </button>
 
               {/* Restart Tour */}
               <button
