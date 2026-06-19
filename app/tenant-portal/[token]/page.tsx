@@ -389,9 +389,10 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
       )}
 
       {/* Main */}
-      <main className="max-w-6xl mx-auto px-4 py-6">
+      <main className="max-w-6xl mx-auto px-4 py-6 pb-24 md:pb-6">
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-6 flex-wrap h-auto gap-1">
+          {/* Top tabs on desktop; mobile uses the persistent bottom nav */}
+          <TabsList className="mb-6 hidden flex-wrap h-auto gap-1 md:flex">
             <TabsTrigger value="overview" className="flex items-center gap-2">
               <Home className="h-4 w-4" />
               {t("overview")}
@@ -412,6 +413,57 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
 
           {/* ── Overview Tab ── */}
           <TabsContent value="overview" className="space-y-6">
+            {/* Pay rent — the primary action, elevated to the top when due */}
+            {upcomingPayment && (
+              <Card
+                className={
+                  daysUntilDue && daysUntilDue < 0
+                    ? "border-red-200 bg-red-50"
+                    : daysUntilDue && daysUntilDue <= 5
+                      ? "border-yellow-200 bg-yellow-50"
+                      : "border-blue-200 bg-blue-50"
+                }
+              >
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    {daysUntilDue && daysUntilDue < 0 ? (
+                      <AlertCircle className="h-5 w-5 text-red-600" />
+                    ) : (
+                      <Clock className="h-5 w-5 text-yellow-600" />
+                    )}
+                    {daysUntilDue && daysUntilDue < 0
+                      ? t("paymentOverdue", { days: Math.abs(daysUntilDue) })
+                      : daysUntilDue === 0
+                        ? t("paymentDueToday")
+                        : t("paymentDueInDays", { days: daysUntilDue ?? 0 })}
+                  </CardTitle>
+                  <CardDescription>
+                    Invoice {upcomingPayment.number} — {formatCurrency(upcomingPayment.amount)}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    size="lg"
+                    className="w-full sm:w-auto"
+                    onClick={() => handlePayInvoice(upcomingPayment.id, upcomingPayment.amount)}
+                    disabled={processingPayment === upcomingPayment.id}
+                  >
+                    {processingPayment === upcomingPayment.id ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {t("processing")}
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-4 w-4 mr-2" />
+                        {t("payNow")}
+                      </>
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
             {!upcomingPayment && (
               <Card className="border-green-200 bg-green-50">
                 <CardHeader className="pb-2">
@@ -461,54 +513,6 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                 </CardHeader>
               </Card>
             </div>
-
-            {upcomingPayment && (
-              <Card
-                className={
-                  daysUntilDue && daysUntilDue < 0
-                    ? "border-red-200 bg-red-50"
-                    : daysUntilDue && daysUntilDue <= 5
-                      ? "border-yellow-200 bg-yellow-50"
-                      : ""
-                }
-              >
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    {daysUntilDue && daysUntilDue < 0 ? (
-                      <AlertCircle className="h-5 w-5 text-red-600" />
-                    ) : (
-                      <Clock className="h-5 w-5 text-yellow-600" />
-                    )}
-                    {daysUntilDue && daysUntilDue < 0
-                      ? t("paymentOverdue", { days: Math.abs(daysUntilDue) })
-                      : daysUntilDue === 0
-                        ? t("paymentDueToday")
-                        : t("paymentDueInDays", { days: daysUntilDue ?? 0 })}
-                  </CardTitle>
-                  <CardDescription>
-                    Invoice {upcomingPayment.number} — {formatCurrency(upcomingPayment.amount)}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    onClick={() => handlePayInvoice(upcomingPayment.id, upcomingPayment.amount)}
-                    disabled={processingPayment === upcomingPayment.id}
-                  >
-                    {processingPayment === upcomingPayment.id ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {t("processing")}
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="h-4 w-4 mr-2" />
-                        {t("payNow")}
-                      </>
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Property details */}
             {tenant.property && (
@@ -941,6 +945,38 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
           {t("needHelp")}
         </div>
       </footer>
+
+      {/* Persistent bottom navigation — mobile only */}
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-20 border-t border-gray-200 bg-white md:hidden"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        aria-label={t("tenantPortalFor", { name: tenant.name })}
+      >
+        <div className="grid grid-cols-4">
+          {[
+            { value: "overview", label: t("overview"), Icon: Home },
+            { value: "payments", label: t("payments"), Icon: CreditCard },
+            { value: "maintenance", label: t("maintenanceTab"), Icon: Wrench },
+            { value: "documents", label: t("documentsTab"), Icon: FileText },
+          ].map(({ value, label, Icon }) => {
+            const isActive = activeTab === value;
+            return (
+              <button
+                key={value}
+                type="button"
+                onClick={() => setActiveTab(value)}
+                aria-current={isActive ? "page" : undefined}
+                className={`flex flex-col items-center justify-center gap-0.5 py-2.5 text-xs font-medium transition-colors active:scale-95 ${
+                  isActive ? "text-blue-600" : "text-gray-500 hover:text-gray-800"
+                }`}
+              >
+                <Icon className="h-5 w-5" aria-hidden="true" />
+                <span className="truncate">{label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }
