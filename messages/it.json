@@ -216,6 +216,8 @@
     "docExpiryWarning": "{count} documento/i in scadenza entro 60 giorni",
     "allClear": "Tutto in regola",
     "allClearDesc": "Nessun affitto in sospeso, pagamenti scaduti o manutenzione urgente.",
+    "oneItemNeedsAttention": "1 elemento richiede la tua attenzione",
+    "itemsNeedAttention": "{count} elementi richiedono la tua attenzione",
     "setupComplete": "Configurazione completata"
   },
   "greeting": {

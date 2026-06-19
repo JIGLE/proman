@@ -91,7 +91,7 @@ export function MobileBottomNav({
                   </div>
                   <span
                     className={cn(
-                      "text-[10px] font-medium transition-colors",
+                      "text-xs font-medium transition-colors",
                       isActive ? "text-accent-primary" : "text-[var(--color-muted-foreground)]",
                     )}
                   >
@@ -106,7 +106,7 @@ export function MobileBottomNav({
               <div className="flex items-center gap-2 min-w-0">
                 <Avatar className="w-7 h-7 ring-1 ring-[var(--color-border)]">
                   <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
-                  <AvatarFallback className="bg-accent-primary text-white text-[10px] font-semibold">
+                  <AvatarFallback className="bg-accent-primary text-white text-xs font-semibold">
                     {initials}
                   </AvatarFallback>
                 </Avatar>

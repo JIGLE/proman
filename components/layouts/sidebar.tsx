@@ -197,7 +197,7 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
           <div key={group.group} role="group" className={cn("space-y-1", groupIndex > 0 && "mt-4")}>
             {!collapsed && (
               <div className="px-3 py-2">
-                <h3 className="text-[10px] font-semibold text-[var(--color-muted-foreground)] uppercase tracking-widest">
+                <h3 className="text-xs font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
                   {t(group.groupLabelKey.replace("navigation.", "") as Parameters<typeof t>[0])}
                 </h3>
               </div>
