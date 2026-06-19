@@ -145,9 +145,14 @@ Key source files referenced: `lib/portal/access.ts` (nav config),
 ### M5 — Competing empty states (🟠)
 - **Fix:** Show *one* primary empty state (the checklist); demote feature cards.
 
-### M6 — Tables don't reflow on mobile (🟠)
-- **Fix:** Below `md`, render rows as stacked cards (extend the existing
-  `SwipeableListItem` pattern from the tenants view).
+### M6 — Tables on mobile (🟠, mostly already handled)
+- **Update after deeper review:** The leases, maintenance, tenants and property
+  views already default to a card ("grid") view via the shared `DataViewToggle`
+  and persist the choice; "table" is an opt-in power-user mode. So the
+  first-run mobile experience is already card-based, not a cramped table.
+- **Remaining gap / fix:** When a user explicitly picks "table" mode, prefer the
+  card view on small viewports so the saved desktop preference doesn't produce a
+  pinched table on a phone. Low priority given the mobile-friendly default.
 
 ### M7 — No inline help (🟠)
 - **Fix:** Concise helper text under non-obvious fields (tax regime, deposit,

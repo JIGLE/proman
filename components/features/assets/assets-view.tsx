@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   Building2,
@@ -14,6 +14,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { PropertiesView, PropertiesViewRef } from "@/components/features/property/property-list";
+import { PropertyCreateWizard } from "@/components/features/property/property-create-wizard";
 import { ExportButton, ExportColumn } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 import { Button } from "@/components/ui/button";
@@ -72,10 +73,23 @@ export function AssetsView(): React.ReactElement {
   const { formatCurrency } = useCurrency();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const locale = pathname.split("/")[1] || "pt";
   const { properties, leases, receipts, tenants } = state;
   const propertiesViewRef = useRef<PropertiesViewRef>(null);
   const t = useTranslations("portfolio");
+
+  // Guided property creation wizard (first-run friendly). Also opened by the
+  // onboarding deep-link /portfolio?action=create-property.
+  const [propertyWizardOpen, setPropertyWizardOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create-property") {
+      setPropertyWizardOpen(true);
+      // Clear the param so the wizard doesn't re-open on back/refresh.
+      router.replace(`/${locale}/portfolio`, { scroll: false });
+    }
+  }, [searchParams, router, locale]);
 
   // Add-building dialog state
   const [buildingDialogOpen, setBuildingDialogOpen] = useState(false);
@@ -276,7 +290,7 @@ export function AssetsView(): React.ReactElement {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem onClick={() => propertiesViewRef.current?.openDialog()}>
+              <DropdownMenuItem onClick={() => setPropertyWizardOpen(true)}>
                 <Home className="mr-2 h-3.5 w-3.5" />
                 New property
                 <span className="ml-auto text-[11px] text-zinc-500">standalone unit</span>
@@ -298,6 +312,12 @@ export function AssetsView(): React.ReactElement {
         density="compact"
         showPageHeader={false}
         showMapToggle
+      />
+
+      {/* Guided property creation */}
+      <PropertyCreateWizard
+        open={propertyWizardOpen}
+        onOpenChange={setPropertyWizardOpen}
       />
 
       {/* Add Building dialog */}
