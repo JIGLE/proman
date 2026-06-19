@@ -46,16 +46,16 @@ export function KPICard({
 }: KPICardProps) {
   const variantStyles = {
     default: "border-zinc-700/50",
-    success: "border-green-500/30 bg-green-500/5",
-    warning: "border-yellow-500/30 bg-yellow-500/5",
-    danger: "border-red-500/30 bg-red-500/5",
+    success: "border-[var(--color-success)]/30 bg-[var(--color-success-muted)]",
+    warning: "border-[var(--color-warning)]/30 bg-[var(--color-warning-muted)]",
+    danger: "border-[var(--color-destructive)]/30 bg-[var(--color-error-muted)]",
   };
 
   const trendIcon =
     trend === "up" ? (
-      <TrendingUp className="h-4 w-4 text-green-400" />
+      <TrendingUp className="h-4 w-4 text-[var(--color-success)]" />
     ) : trend === "down" ? (
-      <TrendingDown className="h-4 w-4 text-red-400" />
+      <TrendingDown className="h-4 w-4 text-[var(--color-destructive)]" />
     ) : null;
 
   return (
@@ -91,7 +91,11 @@ export function KPICard({
                 <span
                   className={cn(
                     "text-sm font-medium",
-                    change > 0 ? "text-green-400" : change < 0 ? "text-red-400" : "text-zinc-400",
+                    change > 0
+                      ? "text-[var(--color-success)]"
+                      : change < 0
+                        ? "text-[var(--color-destructive)]"
+                        : "text-zinc-400",
                   )}
                 >
                   {change > 0 ? "+" : ""}
@@ -126,7 +130,7 @@ export function OccupancyGauge({ rate, total, occupied, vacant, className }: Occ
     <Card className={cn("p-6", className)}>
       <CardHeader className="p-0 pb-4">
         <CardTitle className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
-          <Building2 className="h-5 w-5 text-blue-400" />
+          <Building2 className="h-5 w-5 text-[var(--color-info)]" />
           Occupancy Rate
         </CardTitle>
       </CardHeader>
@@ -172,11 +176,11 @@ export function OccupancyGauge({ rate, total, occupied, vacant, className }: Occ
             <p className="text-xs text-zinc-400">Total Units</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-green-400">{occupied}</p>
+            <p className="text-2xl font-bold text-[var(--color-success)]">{occupied}</p>
             <p className="text-xs text-zinc-400">Occupied</p>
           </div>
           <div>
-            <p className="text-2xl font-bold text-red-400">{vacant}</p>
+            <p className="text-2xl font-bold text-[var(--color-destructive)]">{vacant}</p>
             <p className="text-xs text-zinc-400">Vacant</p>
           </div>
         </div>
@@ -212,29 +216,29 @@ export function LeaseExpirationTimeline({
     switch (status) {
       case "expired":
         return {
-          color: "bg-red-500",
-          textColor: "text-red-400",
+          color: "bg-[var(--color-destructive)]",
+          textColor: "text-[var(--color-destructive)]",
           label: "Expired",
           icon: AlertTriangle,
         };
       case "critical":
         return {
-          color: "bg-orange-500",
-          textColor: "text-orange-400",
+          color: "bg-[var(--color-warning)]",
+          textColor: "text-[var(--color-warning)]",
           label: "< 30 days",
           icon: Clock,
         };
       case "warning":
         return {
-          color: "bg-yellow-500",
-          textColor: "text-yellow-400",
+          color: "bg-[var(--color-warning)]",
+          textColor: "text-[var(--color-warning)]",
           label: "30-60 days",
           icon: Calendar,
         };
       default:
         return {
-          color: "bg-green-500",
-          textColor: "text-green-400",
+          color: "bg-[var(--color-success)]",
+          textColor: "text-[var(--color-success)]",
           label: "> 60 days",
           icon: CheckCircle2,
         };
@@ -322,7 +326,7 @@ export function MaintenanceStatusCard({ stats, className }: MaintenanceStatsProp
     <Card className={cn("p-6", className)}>
       <CardHeader className="p-0 pb-4">
         <CardTitle className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
-          <Wrench className="h-5 w-5 text-amber-400" />
+          <Wrench className="h-5 w-5 text-[var(--color-warning)]" />
           Maintenance Overview
         </CardTitle>
       </CardHeader>
@@ -333,9 +337,9 @@ export function MaintenanceStatusCard({ stats, className }: MaintenanceStatsProp
             <p className="text-xs text-zinc-400">Total Requests</p>
           </div>
           {stats.urgent > 0 && (
-            <div className="text-center p-3 rounded-lg bg-red-500/10 border border-red-500/30">
-              <p className="text-2xl font-bold text-red-400">{stats.urgent}</p>
-              <p className="text-xs text-red-400">Urgent</p>
+            <div className="text-center p-3 rounded-lg bg-[var(--color-error-muted)] border border-[var(--color-destructive)]/30">
+              <p className="text-2xl font-bold text-[var(--color-destructive)]">{stats.urgent}</p>
+              <p className="text-xs text-[var(--color-destructive)]">Urgent</p>
             </div>
           )}
           {stats.urgent === 0 && (
@@ -358,17 +362,26 @@ export function MaintenanceStatusCard({ stats, className }: MaintenanceStatsProp
 
         <div className="grid grid-cols-3 gap-2">
           <div className="text-center">
-            <Badge variant="outline" className="text-yellow-400 border-yellow-400/30">
+            <Badge
+              variant="outline"
+              className="text-[var(--color-warning)] border-[var(--color-warning)]/30"
+            >
               {stats.pending} Pending
             </Badge>
           </div>
           <div className="text-center">
-            <Badge variant="outline" className="text-blue-400 border-blue-400/30">
+            <Badge
+              variant="outline"
+              className="text-[var(--color-info)] border-[var(--color-info)]/30"
+            >
               {stats.inProgress} In Progress
             </Badge>
           </div>
           <div className="text-center">
-            <Badge variant="outline" className="text-green-400 border-green-400/30">
+            <Badge
+              variant="outline"
+              className="text-[var(--color-success)] border-[var(--color-success)]/30"
+            >
               {stats.completed} Done
             </Badge>
           </div>
@@ -484,7 +497,9 @@ export function PropertyPerformanceTable({
                       <p
                         className={cn(
                           "text-sm font-medium",
-                          property.netIncome >= 0 ? "text-green-400" : "text-red-400",
+                          property.netIncome >= 0
+                            ? "text-[var(--color-success)]"
+                            : "text-[var(--color-destructive)]",
                         )}
                       >
                         {formatCurrency(property.netIncome)}

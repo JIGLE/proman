@@ -13,13 +13,14 @@ import {
   FileWarning,
   Wrench,
 } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/utils";
 import { useApp } from "@/lib/contexts/app-context";
 
 type AlertSeverity = "critical" | "warning" | "info";
 
-export interface ActionAlert {
+interface ActionAlert {
   id: string;
   icon: React.ElementType;
   message: string;
@@ -28,17 +29,12 @@ export interface ActionAlert {
   severity: AlertSeverity;
 }
 
-const severityRowStyles: Record<AlertSeverity, string> = {
+const severityStyles: Record<AlertSeverity, string> = {
   critical:
-    "border-[var(--color-destructive)]/20 bg-[var(--color-destructive)]/5 hover:bg-[var(--color-destructive)]/10",
-  warning: "border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10",
-  info: "border-sky-500/20 bg-sky-500/5 hover:bg-sky-500/10",
-};
-
-const severityTextStyles: Record<AlertSeverity, string> = {
-  critical: "text-[var(--color-destructive)]",
-  warning: "text-amber-600 dark:text-amber-400",
-  info: "text-sky-600 dark:text-sky-400",
+    "border-[var(--color-destructive)]/20 bg-[var(--color-destructive)]/5 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10",
+  warning:
+    "border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)] text-[var(--color-warning)] hover:bg-[var(--color-warning)]/10",
+  info: "border-[var(--color-info)]/20 bg-[var(--color-info-muted)] text-[var(--color-info)] hover:bg-[var(--color-info)]/10",
 };
 
 const badgeVariantMap: Record<AlertSeverity, "destructive" | "secondary" | "outline"> = {
@@ -53,34 +49,30 @@ function AlertRow({ alert, locale }: { alert: ActionAlert; readonly locale: stri
     <Link
       href={`/${locale}${alert.href}`}
       className={cn(
-        "flex items-center justify-between rounded-xl border px-4 py-4 transition-colors min-h-[64px]",
-        severityRowStyles[alert.severity],
+        "flex items-center justify-between rounded-lg border p-4 transition-colors",
+        severityStyles[alert.severity],
       )}
     >
-      <div className="flex items-center gap-3 min-w-0">
-        <Icon
-          className={cn("h-5 w-5 shrink-0", severityTextStyles[alert.severity])}
-          aria-hidden="true"
-        />
-        <span
-          className={cn("text-sm font-medium leading-snug", severityTextStyles[alert.severity])}
-        >
-          {alert.message}
-        </span>
+      <div className="flex items-center gap-3">
+        <Icon className="h-4 w-4 shrink-0" />
+        <span className="text-sm font-medium">{alert.message}</span>
       </div>
-      <div className="flex items-center gap-2 shrink-0 ml-3">
+      <div className="flex items-center gap-2">
         <Badge variant={badgeVariantMap[alert.severity]} className="tabular-nums">
           {alert.count}
         </Badge>
-        <ChevronRight className="h-4 w-4 text-[var(--color-muted-foreground)]" aria-hidden="true" />
+        <ChevronRight className="h-4 w-4 opacity-50" />
       </div>
     </Link>
   );
 }
 
-export function useAlerts(): ActionAlert[] {
+export function ActionPanel(): ReactElement {
   const { state } = useApp();
+  const pathname = usePathname();
   const t = useTranslations("dashboard");
+  const locale = pathname.split("/")[1] || "pt";
+
   const { leases = [], receipts = [], maintenance = [], properties = [] } = state;
 
   const [docExpiry, setDocExpiry] = useState<{ critical: number; warning: number } | null>(null);
@@ -91,11 +83,11 @@ export function useAlerts(): ActionAlert[] {
       .catch(() => null);
   }, []);
 
-  return useMemo<ActionAlert[]>(() => {
+  const alerts = useMemo<ActionAlert[]>(() => {
     const now = new Date();
     const results: ActionAlert[] = [];
 
-    // 1. Unpaid rent this month
+    // --- 1. Unpaid rent this month ---
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
     const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
     const activeLeases = leases.filter((l) => l.status === "active");
@@ -128,7 +120,7 @@ export function useAlerts(): ActionAlert[] {
       });
     }
 
-    // 2. Overdue payments (pending > 5 days)
+    // --- 2. Overdue payments (pending receipts older than 5 days) ---
     const fiveDaysAgo = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000);
     const overdueReceipts = receipts.filter((r) => {
       const d = new Date(r.date);
@@ -146,15 +138,17 @@ export function useAlerts(): ActionAlert[] {
       });
     }
 
-    // 3. Maintenance open > 7 days
+    // --- 3. Maintenance open > 7 days ---
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const staleMaintenance = maintenance.filter(
-      (ticket) =>
+    const staleMaintenance = maintenance.filter((ticket) => {
+      return (
         (ticket.status === "open" || ticket.status === "in_progress") &&
-        new Date(ticket.createdAt) < sevenDaysAgo,
-    );
+        new Date(ticket.createdAt) < sevenDaysAgo
+      );
+    });
 
     if (staleMaintenance.length > 0) {
+      // Find oldest for the message
       const oldest = [...staleMaintenance].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       )[0];
@@ -171,13 +165,14 @@ export function useAlerts(): ActionAlert[] {
       });
     }
 
-    // 4. Leases expiring within 30 days
+    // --- 4. Leases expiring within 30 days (renewal-aware) ---
     const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
     const soonExpiring = activeLeases.filter((l) => {
       const end = new Date(l.endDate);
       return end > now && end <= thirtyDaysFromNow;
     });
 
+    // Split by renewal status for contextual messaging
     const noOfferExpiring = soonExpiring.filter(
       (l) => !l.renewalStatus || l.renewalStatus === "declined",
     );
@@ -225,7 +220,7 @@ export function useAlerts(): ActionAlert[] {
       });
     }
 
-    // 5. Leases expiring 30–90 days (no renewal)
+    // --- 5. Leases expiring within 90 days (secondary warning, no renewal offered) ---
     const ninetyDaysFromNow = new Date(now.getTime() + 90 * 24 * 60 * 60 * 1000);
     const soonExpiring90 = activeLeases.filter((l) => {
       const end = new Date(l.endDate);
@@ -247,7 +242,7 @@ export function useAlerts(): ActionAlert[] {
       });
     }
 
-    // 6. Document expiry
+    // --- 6. Document expiry ---
     if (docExpiry?.critical) {
       results.push({
         id: "doc-expiry-critical",
@@ -271,61 +266,26 @@ export function useAlerts(): ActionAlert[] {
 
     return results;
   }, [leases, receipts, maintenance, properties, t, docExpiry]);
-}
-
-export function ActionPanel(): ReactElement {
-  const alerts = useAlerts();
-  const pathname = usePathname();
-  const t = useTranslations("dashboard");
-  const locale = pathname.split("/")[1] || "pt";
-
-  const criticalCount = alerts.filter((a) => a.severity === "critical").length;
-
-  if (alerts.length === 0) {
-    return (
-      <div className="flex items-center gap-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/5 px-5 py-5">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-emerald-500/10">
-          <CheckCircle2 className="h-6 w-6 text-emerald-500" aria-hidden="true" />
-        </div>
-        <div>
-          <p className="text-base font-semibold text-emerald-700 dark:text-emerald-400">
-            {t("allClear")}
-          </p>
-          <p className="mt-0.5 text-sm text-[var(--color-muted-foreground)]">{t("allClearDesc")}</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="space-y-2">
-      <div
-        className={cn(
-          "rounded-2xl border px-5 py-4",
-          criticalCount > 0
-            ? "border-[var(--color-destructive)]/20 bg-[var(--color-destructive)]/5"
-            : "border-amber-500/20 bg-amber-500/5",
+    <Card className="border-[var(--color-border)] bg-[var(--color-card)]">
+      <CardHeader className="pb-3">
+        <CardTitle>{t("actionPanelTitle")}</CardTitle>
+        <p className="text-sm text-[var(--color-muted-foreground)]">{t("actionPanelSubtitle")}</p>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {alerts.length === 0 ? (
+          <div className="flex items-center gap-3 rounded-lg border border-[var(--color-success)]/20 bg-[var(--color-success-muted)] p-4">
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
+            <div>
+              <p className="text-sm font-medium text-[var(--color-success)]">{t("allClear")}</p>
+              <p className="text-xs text-[var(--color-muted-foreground)]">{t("allClearDesc")}</p>
+            </div>
+          </div>
+        ) : (
+          alerts.map((alert) => <AlertRow key={alert.id} alert={alert} locale={locale} />)
         )}
-      >
-        <p
-          className={cn(
-            "text-base font-semibold",
-            criticalCount > 0
-              ? "text-[var(--color-destructive)]"
-              : "text-amber-700 dark:text-amber-400",
-          )}
-        >
-          {alerts.length === 1
-            ? t("oneItemNeedsAttention")
-            : t("itemsNeedAttention", { count: alerts.length })}
-        </p>
-        <p className="mt-0.5 text-sm text-[var(--color-muted-foreground)]">
-          {t("actionPanelSubtitle")}
-        </p>
-      </div>
-      {alerts.map((alert) => (
-        <AlertRow key={alert.id} alert={alert} locale={locale} />
-      ))}
-    </div>
+      </CardContent>
+    </Card>
   );
 }

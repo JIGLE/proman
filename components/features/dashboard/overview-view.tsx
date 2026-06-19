@@ -541,10 +541,10 @@ export function OverviewView({
   const paymentStatus = tenant?.paymentStatus ?? "pending";
   const statusTone =
     paymentStatus === "paid"
-      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-100"
+      ? "border-[var(--color-success)]/20 bg-[var(--color-success-muted)] text-[var(--color-success)]"
       : paymentStatus === "overdue"
-        ? "border-red-500/20 bg-red-500/10 text-red-100"
-        : "border-amber-500/20 bg-amber-500/10 text-amber-100";
+        ? "border-[var(--color-destructive)]/20 bg-[var(--color-error-muted)] text-[var(--color-destructive)]"
+        : "border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)] text-[var(--color-warning)]";
 
   return (
     <div className="space-y-6">
