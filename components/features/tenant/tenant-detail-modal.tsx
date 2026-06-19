@@ -52,9 +52,11 @@ interface TenantDetailModalProps {
 }
 
 const PAYMENT_STATUS_STYLES: Record<string, string> = {
-  paid: "bg-green-500/10 text-green-400 border-green-500/30",
-  pending: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-  overdue: "bg-red-500/10 text-red-400 border-red-500/30",
+  paid: "bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]/30",
+  pending:
+    "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/30",
+  overdue:
+    "bg-[var(--color-error-muted)] text-[var(--color-destructive)] border-[var(--color-destructive)]/30",
 };
 
 function formatDate(dateStr?: string): string {
@@ -168,18 +170,23 @@ export function TenantDetailModal({
     issues.push({
       id: "no-lease",
       icon: AlertTriangle,
-      color: "text-amber-400",
+      color: "text-[var(--color-warning)]",
       label: "No active lease",
     });
   }
   if (!tenant.email) {
-    issues.push({ id: "no-email", icon: Mail, color: "text-amber-400", label: "No email address" });
+    issues.push({
+      id: "no-email",
+      icon: Mail,
+      color: "text-[var(--color-warning)]",
+      label: "No email address",
+    });
   }
   if (isOverdue) {
     issues.push({
       id: "overdue",
       icon: AlertTriangle,
-      color: "text-red-400",
+      color: "text-[var(--color-destructive)]",
       label: "Payment overdue",
     });
   }
@@ -284,7 +291,7 @@ export function TenantDetailModal({
                     {tenant.paymentStatus}
                   </span>
                   {isLeaseExpiringSoon && leaseExpiryDays !== null && (
-                    <span className="inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/10 px-2.5 py-0.5 text-xs font-semibold text-amber-400">
+                    <span className="inline-flex items-center rounded-full border border-[var(--color-warning)]/30 bg-[var(--color-warning-muted)] px-2.5 py-0.5 text-xs font-semibold text-[var(--color-warning)]">
                       {leaseExpiryDays}d left
                     </span>
                   )}
@@ -487,10 +494,10 @@ export function TenantDetailModal({
                               variant="outline"
                               className={
                                 leaseExpiryDays <= 30
-                                  ? "border-red-500/30 bg-red-500/10 text-red-400"
+                                  ? "border-[var(--color-destructive)]/30 bg-[var(--color-error-muted)] text-[var(--color-destructive)]"
                                   : leaseExpiryDays <= 60
-                                    ? "border-amber-500/30 bg-amber-500/10 text-amber-400"
-                                    : "border-green-500/30 bg-green-500/10 text-green-400"
+                                    ? "border-[var(--color-warning)]/30 bg-[var(--color-warning-muted)] text-[var(--color-warning)]"
+                                    : "border-[var(--color-success)]/30 bg-[var(--color-success-muted)] text-[var(--color-success)]"
                               }
                             >
                               {leaseExpiryDays > 0 ? `${leaseExpiryDays} days left` : "Expired"}
@@ -569,9 +576,9 @@ export function TenantDetailModal({
                           </div>
                           <div className="flex items-center gap-2">
                             {r.status === "paid" ? (
-                              <CheckCircle className="h-3.5 w-3.5 text-green-400" />
+                              <CheckCircle className="h-3.5 w-3.5 text-[var(--color-success)]" />
                             ) : (
-                              <AlertTriangle className="h-3.5 w-3.5 text-amber-400" />
+                              <AlertTriangle className="h-3.5 w-3.5 text-[var(--color-warning)]" />
                             )}
                             <span className="text-sm font-semibold text-[var(--color-foreground)]">
                               {formatCurrency(r.amount)}
@@ -590,7 +597,7 @@ export function TenantDetailModal({
                   variant="ghost"
                   size="sm"
                   onClick={handleDelete}
-                  className="gap-1.5 text-[var(--color-muted-foreground)] hover:text-red-400"
+                  className="gap-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)]"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   Delete

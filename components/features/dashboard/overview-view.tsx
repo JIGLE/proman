@@ -84,11 +84,11 @@ function Modelo179Alert({ locale }: { locale: string }): ReactElement | null {
   return (
     <Link
       href={`/${locale}/compliance/modelo179`}
-      className="flex items-center justify-between rounded-lg border border-amber-500/20 bg-amber-500/5 p-4 transition-colors hover:bg-amber-500/10"
+      className="flex items-center justify-between rounded-lg border border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)] p-4 transition-colors hover:bg-[var(--color-warning)]/10"
     >
       <div className="flex items-center gap-3">
-        <FileCheck2 className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
-        <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+        <FileCheck2 className="h-4 w-4 shrink-0 text-[var(--color-warning)]" />
+        <span className="text-sm font-medium text-[var(--color-warning)]">
           {missingCount} lease{missingCount !== 1 ? "s" : ""} not registered with AT for{" "}
           {targetYear} — Modelo 179 required
         </span>
@@ -159,13 +159,13 @@ function MetricCard({
   };
 
   return (
-    <Card className={cn("overflow-hidden border shadow-sm", toneClasses[tone])}>
+    <Card className={cn("overflow-hidden", toneClasses[tone])}>
       <CardContent className="p-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-sm text-[var(--color-muted-foreground)]">{title}</p>
             <p
-              className="mt-2 text-3xl font-semibold tracking-tight text-[var(--color-foreground)]"
+              className="mt-2 text-display-small text-[var(--color-foreground)]"
               aria-live="polite"
             >
               {value}
@@ -541,20 +541,20 @@ export function OverviewView({
   const paymentStatus = tenant?.paymentStatus ?? "pending";
   const statusTone =
     paymentStatus === "paid"
-      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-100"
+      ? "border-[var(--color-success)]/20 bg-[var(--color-success-muted)] text-[var(--color-success)]"
       : paymentStatus === "overdue"
-        ? "border-red-500/20 bg-red-500/10 text-red-100"
-        : "border-amber-500/20 bg-amber-500/10 text-amber-100";
+        ? "border-[var(--color-destructive)]/20 bg-[var(--color-error-muted)] text-[var(--color-destructive)]"
+        : "border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)] text-[var(--color-warning)]";
 
   return (
     <div className="space-y-6">
-      <section className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-sm">
+      <section className="overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-card)] p-6 shadow-[var(--shadow-card)]">
         <div className="mb-6 space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-3 py-1 text-sm text-[var(--color-muted-foreground)]">
             <ShieldCheck className="h-4 w-4" />
             {t("tenantWorkspaceLabel")}
           </div>
-          <h1 className="max-w-2xl text-2xl font-semibold tracking-tight text-[var(--color-foreground)]">
+          <h1 className="max-w-2xl text-heading-large text-[var(--color-foreground)]">
             {t("tenantTitle")}
           </h1>
           <p className="max-w-2xl text-sm leading-6 text-[var(--color-muted-foreground)]">
@@ -576,14 +576,12 @@ export function OverviewView({
             icon={BadgeEuro}
             tone="info"
           />
-          <Card className={cn("border shadow-sm", statusTone)}>
+          <Card className={cn(statusTone)}>
             <CardContent className="p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm opacity-80">{t("paymentStatusLabel")}</p>
-                  <p className="mt-2 text-3xl font-semibold capitalize tracking-tight">
-                    {paymentStatus}
-                  </p>
+                  <p className="mt-2 text-display-small capitalize">{paymentStatus}</p>
                 </div>
                 <div className="rounded-lg bg-black/10 p-3">
                   <AlertTriangle className="h-5 w-5" />

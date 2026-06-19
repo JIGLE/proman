@@ -48,6 +48,9 @@ function isSupportedLocale(segment: string): segment is SupportedLocale {
  * /api/tenant-portal/**  — Token-based tenant self-service API
  * /api/csrf-token        — CSRF token endpoint (GET only, no auth needed)
  * /api/monitoring/**     — Health/metrics probes
+ * /api/webhooks/**       — External provider callbacks (Stripe, SIBS, Bizum,
+ *                          SendGrid). Authenticated via provider signatures,
+ *                          not a user session, so they bypass auth/CSRF.
  */
 function isPublicApiRoute(pathname: string): boolean {
   return (
@@ -57,7 +60,8 @@ function isPublicApiRoute(pathname: string): boolean {
     pathname === "/api/info" ||
     pathname.startsWith("/api/tenant-portal") ||
     pathname === "/api/csrf-token" ||
-    pathname.startsWith("/api/monitoring")
+    pathname.startsWith("/api/monitoring") ||
+    pathname.startsWith("/api/webhooks")
   );
 }
 

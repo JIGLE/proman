@@ -219,7 +219,7 @@ export function ReportsView(): React.ReactElement {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-green-400">
+                    <div className="text-2xl font-bold text-[var(--color-success)]">
                       {formatCurrency(report.income.total)}
                     </div>
                   </CardContent>
@@ -232,7 +232,7 @@ export function ReportsView(): React.ReactElement {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-red-400">
+                    <div className="text-2xl font-bold text-[var(--color-destructive)]">
                       {formatCurrency(report.expenses.total)}
                     </div>
                   </CardContent>
@@ -246,7 +246,9 @@ export function ReportsView(): React.ReactElement {
                     <div
                       className={cn(
                         "text-2xl font-bold",
-                        report.netIncome >= 0 ? "text-green-400" : "text-red-400",
+                        report.netIncome >= 0
+                          ? "text-[var(--color-success)]"
+                          : "text-[var(--color-destructive)]",
                       )}
                     >
                       {formatCurrency(report.netIncome)}
@@ -264,7 +266,9 @@ export function ReportsView(): React.ReactElement {
                     <div
                       className={cn(
                         "text-2xl font-bold",
-                        report.profitMargin >= 0 ? "text-green-400" : "text-red-400",
+                        report.profitMargin >= 0
+                          ? "text-[var(--color-success)]"
+                          : "text-[var(--color-destructive)]",
                       )}
                     >
                       {report.profitMargin.toFixed(1)}%
@@ -301,7 +305,7 @@ export function ReportsView(): React.ReactElement {
                       </div>
                       <div className="border-t border-zinc-700 pt-3 flex justify-between items-center">
                         <span className="font-medium text-zinc-300">Total</span>
-                        <span className="font-bold text-green-400">
+                        <span className="font-bold text-[var(--color-success)]">
                           {formatCurrency(report.income.total)}
                         </span>
                       </div>
@@ -331,7 +335,7 @@ export function ReportsView(): React.ReactElement {
                       )}
                       <div className="border-t border-zinc-700 pt-3 flex justify-between items-center">
                         <span className="font-medium text-zinc-300">Total</span>
-                        <span className="font-bold text-red-400">
+                        <span className="font-bold text-[var(--color-destructive)]">
                           {formatCurrency(report.expenses.total)}
                         </span>
                       </div>
@@ -379,8 +383,8 @@ export function ReportsView(): React.ReactElement {
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-4">
-                    <div className="text-center p-4 rounded-lg bg-yellow-500/10">
-                      <div className="text-2xl font-bold text-yellow-400">
+                    <div className="text-center p-4 rounded-lg bg-[var(--color-warning-muted)]">
+                      <div className="text-2xl font-bold text-[var(--color-warning)]">
                         {report.invoices.summary.invoiceCount.pending}
                       </div>
                       <div className="text-sm text-zinc-400">Pending</div>
@@ -388,8 +392,8 @@ export function ReportsView(): React.ReactElement {
                         {formatCurrency(report.invoices.summary.totalPending)}
                       </div>
                     </div>
-                    <div className="text-center p-4 rounded-lg bg-green-500/10">
-                      <div className="text-2xl font-bold text-green-400">
+                    <div className="text-center p-4 rounded-lg bg-[var(--color-success-muted)]">
+                      <div className="text-2xl font-bold text-[var(--color-success)]">
                         {report.invoices.summary.invoiceCount.paid}
                       </div>
                       <div className="text-sm text-zinc-400">Paid</div>
@@ -397,8 +401,8 @@ export function ReportsView(): React.ReactElement {
                         {formatCurrency(report.invoices.summary.totalPaid)}
                       </div>
                     </div>
-                    <div className="text-center p-4 rounded-lg bg-red-500/10">
-                      <div className="text-2xl font-bold text-red-400">
+                    <div className="text-center p-4 rounded-lg bg-[var(--color-error-muted)]">
+                      <div className="text-2xl font-bold text-[var(--color-destructive)]">
                         {report.invoices.summary.invoiceCount.overdue}
                       </div>
                       <div className="text-sm text-zinc-400">Overdue</div>
@@ -406,8 +410,8 @@ export function ReportsView(): React.ReactElement {
                         {formatCurrency(report.invoices.summary.totalOverdue)}
                       </div>
                     </div>
-                    <div className="text-center p-4 rounded-lg bg-orange-500/10">
-                      <div className="text-2xl font-bold text-orange-400">
+                    <div className="text-center p-4 rounded-lg bg-[var(--color-warning-muted)]">
+                      <div className="text-2xl font-bold text-[var(--color-warning)]">
                         {formatCurrency(report.invoices.summary.totalLateFees)}
                       </div>
                       <div className="text-sm text-zinc-400">Late Fees</div>
@@ -456,13 +460,13 @@ export function ReportsView(): React.ReactElement {
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-3 mb-6">
                   <div className="text-center p-4 rounded-lg bg-zinc-800/50">
-                    <div className="text-2xl font-bold text-green-400">
+                    <div className="text-2xl font-bold text-[var(--color-success)]">
                       {formatCurrency(taxReport.grossIncome)}
                     </div>
                     <div className="text-sm text-zinc-400">Gross Income</div>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-zinc-800/50">
-                    <div className="text-2xl font-bold text-red-400">
+                    <div className="text-2xl font-bold text-[var(--color-destructive)]">
                       {formatCurrency(taxReport.totalExpenses)}
                     </div>
                     <div className="text-sm text-zinc-400">Deductible Expenses</div>
@@ -486,11 +490,15 @@ export function ReportsView(): React.ReactElement {
                       <div className="text-sm space-y-1">
                         <div className="flex justify-between">
                           <span className="text-zinc-500">Income</span>
-                          <span className="text-green-400">{formatCurrency(q.income)}</span>
+                          <span className="text-[var(--color-success)]">
+                            {formatCurrency(q.income)}
+                          </span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-zinc-500">Expenses</span>
-                          <span className="text-red-400">{formatCurrency(q.expenses)}</span>
+                          <span className="text-[var(--color-destructive)]">
+                            {formatCurrency(q.expenses)}
+                          </span>
                         </div>
                         <div className="flex justify-between border-t border-zinc-700 pt-1">
                           <span className="text-zinc-400">Net</span>
@@ -583,10 +591,10 @@ export function ReportsView(): React.ReactElement {
                             className={cn(
                               "text-xs",
                               prop.status === "occupied"
-                                ? "text-green-400"
+                                ? "text-[var(--color-success)]"
                                 : prop.status === "vacant"
-                                  ? "text-yellow-400"
-                                  : "text-red-400",
+                                  ? "text-[var(--color-warning)]"
+                                  : "text-[var(--color-destructive)]",
                             )}
                           >
                             {prop.status.charAt(0).toUpperCase() + prop.status.slice(1)}

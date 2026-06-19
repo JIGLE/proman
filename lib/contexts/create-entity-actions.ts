@@ -7,7 +7,7 @@
 
 import { apiFetch } from "@/lib/utils/api-client";
 
-interface EntityActions<T extends { id: string }> {
+export interface EntityActions<T extends { id: string }> {
   add: (data: Partial<T>) => Promise<T>;
   update: (id: string, data: Partial<T>) => Promise<T>;
   remove: (id: string) => Promise<void>;
