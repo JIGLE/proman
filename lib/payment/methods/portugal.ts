@@ -5,6 +5,7 @@ import { paymentService, PaymentIntentResult, CreatePaymentIntentParams } from "
 import { getPrismaClient } from "@/lib/services/database/database";
 import type { PrismaClient } from "@prisma/client";
 import { validatePortugueseNIF } from "@/lib/utils/tax-id-validation";
+import { createSibsMbwayCharge, isSibsConfigured } from "../providers/sibs-client";
 
 export interface MultibancoDetails {
   entity: string; // 5-digit entity number
@@ -108,11 +109,19 @@ export class PortugalPaymentService {
   }
 
   /**
-   * Create MB WAY payment request
-   * Note: This requires SIBS API integration (not available via Stripe)
-   * Currently returns a placeholder - full implementation requires SIBS partnership
+   * Create an MB WAY payment request via the SIBS Payment Gateway.
+   *
+   * MB WAY is not available through Stripe. When SIBS credentials are present
+   * (SIBS_API_KEY / SIBS_CLIENT_ID / SIBS_TERMINAL_ID / SIBS_ENTITY) the charge
+   * is issued against the SIBS SPG and a pending transaction is recorded; the
+   * `/api/webhooks/sibs` endpoint later confirms the final status. Without
+   * credentials it returns a typed "not configured" response.
+   *
+   * Docs: https://www.sibs.com/en/documentation/
    */
-  public async createMBWayPayment(request: MBWayRequest): Promise<MBWayResponse> {
+  public async createMBWayPayment(
+    request: MBWayRequest & { tenantId?: string; invoiceId?: string },
+  ): Promise<MBWayResponse> {
     // Validate phone number
     if (!this.validatePortuguesePhone(request.phoneNumber)) {
       return {
@@ -121,19 +130,66 @@ export class PortugalPaymentService {
       };
     }
 
-    // TODO: Implement SIBS MB WAY API integration
-    // SIBS API documentation: https://www.sibs.com/en/documentation/
-    // This requires:
-    // 1. SIBS merchant account
-    // 2. API credentials (client_id, client_secret)
-    // 3. Webhook endpoint for payment confirmation
+    if (!isSibsConfigured()) {
+      return {
+        success: false,
+        error:
+          "MB WAY integration not yet configured. Contact administrator to set up SIBS API credentials.",
+      };
+    }
 
-    console.warn("MB WAY integration requires SIBS API - returning placeholder response");
+    const prisma: PrismaClient = getPrismaClient();
+
+    // Record a pending transaction first so the webhook can reconcile it.
+    let transactionId: string | undefined;
+    if (request.tenantId) {
+      const transaction = await prisma.paymentTransaction.create({
+        data: {
+          tenantId: request.tenantId,
+          invoiceId: request.invoiceId,
+          amount: request.amount,
+          currency: "EUR",
+          status: "pending",
+          provider: "mbway",
+          description: request.description,
+        },
+      });
+      transactionId = transaction.id;
+    }
+
+    const result = await createSibsMbwayCharge({
+      phoneNumber: request.phoneNumber,
+      amount: request.amount,
+      description: request.description,
+      merchantTransactionId: transactionId,
+    });
+
+    if (!result.success) {
+      if (transactionId) {
+        await prisma.paymentTransaction.update({
+          where: { id: transactionId },
+          data: { status: "failed", failedAt: new Date(), failureMessage: result.error },
+        });
+      }
+      return { success: false, error: result.error };
+    }
+
+    // Persist the SIBS reference for webhook reconciliation.
+    if (transactionId) {
+      await prisma.paymentTransaction.update({
+        where: { id: transactionId },
+        data: {
+          providerTransactionId: result.requestId,
+          mbwayRequestId: result.requestId,
+          status: result.status ?? "requires_action",
+        },
+      });
+    }
 
     return {
-      success: false,
-      error:
-        "MB WAY integration not yet configured. Contact administrator to set up SIBS API credentials.",
+      success: true,
+      requestId: result.requestId,
+      status: result.providerStatus ?? "requires_action",
     };
   }
 

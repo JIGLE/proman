@@ -1,14 +1,6 @@
 "use client";
 
-import React, {
-  createContext,
-  useContext,
-  ReactNode,
-  useEffect,
-  useCallback,
-  useMemo,
-  useRef,
-} from "react";
+import React, { createContext, useContext, ReactNode, useMemo } from "react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import {
@@ -25,87 +17,15 @@ import {
 } from "@/lib/types";
 import { useToast } from "./toast-context";
 import { useCsrf } from "./csrf-context";
-import { apiFetch } from "@/lib/utils/api-client";
-import { createEntityActions } from "./create-entity-actions";
 import { isDemoModeClient } from "@/lib/demo/demo-mode";
-import { getDemoData } from "@/lib/demo/demo-data";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
 import { isPublicPagePath } from "@/lib/utils/public-route";
+import { appReducer, initialState, type AppAction, type AppState } from "./app-reducer";
+import { useAppData } from "./use-app-data";
+import { useEntityActions } from "./use-entity-actions";
+import { useScopedState } from "./use-scoped-state";
 
-interface AppState {
-  buildings: Building[];
-  properties: Property[];
-  tenants: Tenant[];
-  receipts: Receipt[];
-  templates: CorrespondenceTemplate[];
-  correspondence: Correspondence[];
-  owners: Owner[];
-  expenses: Expense[];
-  maintenance: MaintenanceTicket[];
-  leases: Lease[];
-  loading: boolean;
-  error: string | null;
-}
-
-type AppAction =
-  | { type: "SET_LOADING"; payload: boolean }
-  | { type: "SET_ERROR"; payload: string | null }
-  | { type: "SET_BUILDINGS"; payload: Building[] }
-  | { type: "SET_PROPERTIES"; payload: Property[] }
-  | { type: "SET_TENANTS"; payload: Tenant[] }
-  | { type: "SET_RECEIPTS"; payload: Receipt[] }
-  | { type: "SET_TEMPLATES"; payload: CorrespondenceTemplate[] }
-  | { type: "SET_CORRESPONDENCE"; payload: Correspondence[] }
-  | { type: "SET_OWNERS"; payload: Owner[] }
-  | { type: "SET_EXPENSES"; payload: Expense[] }
-  | { type: "SET_MAINTENANCE"; payload: MaintenanceTicket[] }
-  | { type: "SET_LEASES"; payload: Lease[] };
-
-const initialState: AppState = {
-  buildings: [],
-  properties: [],
-  tenants: [],
-  receipts: [],
-  templates: [],
-  correspondence: [],
-  owners: [],
-  expenses: [],
-  maintenance: [],
-  leases: [],
-  loading: false,
-  error: null,
-};
-
-function appReducer(state: AppState, action: AppAction): AppState {
-  switch (action.type) {
-    case "SET_LOADING":
-      return { ...state, loading: action.payload };
-    case "SET_ERROR":
-      return { ...state, error: action.payload };
-    case "SET_BUILDINGS":
-      return { ...state, buildings: action.payload };
-    case "SET_PROPERTIES":
-      return { ...state, properties: action.payload };
-    case "SET_TENANTS":
-      return { ...state, tenants: action.payload };
-    case "SET_RECEIPTS":
-      return { ...state, receipts: action.payload };
-    case "SET_TEMPLATES":
-      return { ...state, templates: action.payload };
-    case "SET_CORRESPONDENCE":
-      return { ...state, correspondence: action.payload };
-    case "SET_OWNERS":
-      return { ...state, owners: action.payload };
-    case "SET_EXPENSES":
-      return { ...state, expenses: action.payload };
-    case "SET_MAINTENANCE":
-      return { ...state, maintenance: action.payload };
-    case "SET_LEASES":
-      return { ...state, leases: action.payload };
-    default:
-      return state;
-  }
-}
+export type { AppState, AppAction } from "./app-reducer";
 
 // ---------------------------------------------------------------------------
 // Context type — public API (backward-compatible with all consumers)
@@ -149,7 +69,7 @@ interface AppContextValue {
 export const AppContext = createContext<AppContextValue | null>(null);
 
 // ---------------------------------------------------------------------------
-// Provider
+// Provider — thin composition layer over the entity hooks
 // ---------------------------------------------------------------------------
 
 export function AppProvider({ children }: { children: ReactNode }): React.ReactElement {
@@ -162,392 +82,30 @@ export function AppProvider({ children }: { children: ReactNode }): React.ReactE
   const userId = (session?.user as { id?: string } | undefined)?.id;
   const isDemo = isDemoModeClient();
   const isPublicPage = isPublicPagePath(pathname);
-  const loadControlRef = useRef<{ inFlight: boolean; lastKey: string | null }>({
-    inFlight: false,
-    lastKey: null,
+
+  const { refreshData } = useAppData({
+    dispatch,
+    userId,
+    csrfToken,
+    showError,
+    isPublicPage,
+    isDemo,
   });
 
-  // --- data loading ---
+  const {
+    buildingActions,
+    propertyActions,
+    tenantActions,
+    receiptActions,
+    templateActions,
+    correspondenceActions,
+    ownerActions,
+    expenseActions,
+    maintenanceActions,
+    leaseActions,
+  } = useEntityActions(state, dispatch, { csrfToken, userId, showError, showSuccess, isDemo });
 
-  const loadData = useCallback(
-    async (force = false) => {
-      const loadKey = `${isPublicPage ? "public" : "private"}|${userId ?? "anon"}|${csrfToken ?? "nocsrf"}|${isDemo ? "demo" : "live"}`;
-
-      // Prevent request storms from effect/dependency churn.
-      if (!force) {
-        if (loadControlRef.current.inFlight) {
-          return;
-        }
-        if (loadControlRef.current.lastKey === loadKey) {
-          return;
-        }
-      }
-
-      loadControlRef.current.inFlight = true;
-      loadControlRef.current.lastKey = loadKey;
-
-      // Do not preload protected dashboard data on public routes (landing/auth/demo).
-      if (isPublicPage) {
-        dispatch({ type: "SET_LOADING", payload: false });
-        loadControlRef.current.inFlight = false;
-        return;
-      }
-
-      // Demo mode: load bundled demo data — no API calls, no auth needed
-      if (isDemoModeClient()) {
-        dispatch({ type: "SET_LOADING", payload: true });
-        dispatch({ type: "SET_ERROR", payload: null });
-        dispatch({ type: "SET_PROPERTIES", payload: getDemoData<Property>("properties") });
-        dispatch({ type: "SET_BUILDINGS", payload: getDemoData<Building>("buildings") });
-        dispatch({ type: "SET_TENANTS", payload: getDemoData<Tenant>("tenants") });
-        dispatch({ type: "SET_RECEIPTS", payload: getDemoData<Receipt>("receipts") });
-        dispatch({
-          type: "SET_TEMPLATES",
-          payload: getDemoData<CorrespondenceTemplate>("templates"),
-        });
-        dispatch({
-          type: "SET_CORRESPONDENCE",
-          payload: getDemoData<Correspondence>("correspondence"),
-        });
-        dispatch({ type: "SET_OWNERS", payload: getDemoData<Owner>("owners") });
-        dispatch({ type: "SET_EXPENSES", payload: getDemoData<Expense>("expenses") });
-        dispatch({
-          type: "SET_MAINTENANCE",
-          payload: getDemoData<MaintenanceTicket>("maintenance"),
-        });
-        dispatch({ type: "SET_LEASES", payload: getDemoData<Lease>("leases") });
-        dispatch({ type: "SET_LOADING", payload: false });
-        loadControlRef.current.inFlight = false;
-        return;
-      }
-
-      // Prevent API calls if not authenticated
-      if (!userId) {
-        dispatch({ type: "SET_LOADING", payload: false });
-        loadControlRef.current.inFlight = false;
-        return;
-      }
-      try {
-        dispatch({ type: "SET_LOADING", payload: true });
-        dispatch({ type: "SET_ERROR", payload: null });
-
-        const [
-          propertiesRes,
-          buildingsRes,
-          tenantsRes,
-          receiptsRes,
-          templatesRes,
-          correspondenceRes,
-          ownersRes,
-          expensesRes,
-          maintenanceRes,
-          leasesRes,
-        ] = await Promise.all([
-          apiFetch<{ data: Property[] }>("/api/properties", csrfToken),
-          apiFetch<{ data: Building[] }>("/api/buildings", csrfToken),
-          apiFetch<{ data: Tenant[] }>("/api/tenants", csrfToken),
-          apiFetch<{ data: Receipt[] }>("/api/receipts", csrfToken),
-          apiFetch<{ data: CorrespondenceTemplate[] }>("/api/correspondence/templates", csrfToken),
-          apiFetch<{ data: Correspondence[] }>("/api/correspondence", csrfToken),
-          apiFetch<{ data: Owner[] }>("/api/owners", csrfToken),
-          apiFetch<{ data: Expense[] }>("/api/expenses", csrfToken),
-          apiFetch<{ data: MaintenanceTicket[] }>("/api/maintenance", csrfToken),
-          apiFetch<{ data: Lease[] }>("/api/leases", csrfToken),
-        ]);
-
-        dispatch({
-          type: "SET_PROPERTIES",
-          payload: (propertiesRes.data ?? propertiesRes) as Property[],
-        });
-        dispatch({
-          type: "SET_BUILDINGS",
-          payload: (buildingsRes.data ?? buildingsRes) as Building[],
-        });
-        dispatch({
-          type: "SET_TENANTS",
-          payload: (tenantsRes.data ?? tenantsRes) as Tenant[],
-        });
-        dispatch({
-          type: "SET_RECEIPTS",
-          payload: (receiptsRes.data ?? receiptsRes) as Receipt[],
-        });
-        dispatch({
-          type: "SET_TEMPLATES",
-          payload: (templatesRes.data ?? templatesRes) as CorrespondenceTemplate[],
-        });
-        dispatch({
-          type: "SET_CORRESPONDENCE",
-          payload: (correspondenceRes.data ?? correspondenceRes) as Correspondence[],
-        });
-        dispatch({
-          type: "SET_OWNERS",
-          payload: (ownersRes.data ?? ownersRes) as Owner[],
-        });
-        dispatch({
-          type: "SET_EXPENSES",
-          payload: (expensesRes.data ?? expensesRes) as Expense[],
-        });
-        dispatch({
-          type: "SET_MAINTENANCE",
-          payload: (maintenanceRes.data ?? maintenanceRes) as MaintenanceTicket[],
-        });
-        dispatch({
-          type: "SET_LEASES",
-          payload: (leasesRes.data ?? leasesRes) as Lease[],
-        });
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Failed to load data";
-
-        // Check if this is a CSRF error
-        const isCsrfError =
-          (err instanceof Error &&
-            (err.message.includes("CSRF") || err.message.includes("csrf"))) ||
-          (typeof err === "object" &&
-            err !== null &&
-            "status" in err &&
-            (err as { status?: number }).status === 403);
-
-        // For CSRF errors, suggest refresh
-        const displayMessage = isCsrfError
-          ? "Security token expired. Please refresh the page."
-          : errorMessage;
-
-        dispatch({ type: "SET_ERROR", payload: displayMessage });
-        showError(displayMessage);
-      } finally {
-        dispatch({ type: "SET_LOADING", payload: false });
-        loadControlRef.current.inFlight = false;
-      }
-    },
-    [userId, csrfToken, showError, isPublicPage, isDemo],
-  );
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  const refreshData = useCallback(() => loadData(true), [loadData]);
-
-  // --- CRUD actions via factory (replaces ~500 LOC of boilerplate) ---
-
-  const propertyActions = useMemo(
-    () =>
-      createEntityActions<Property>({
-        endpoint: "/api/properties",
-        getItems: () => state.properties,
-        setItems: (items) => dispatch({ type: "SET_PROPERTIES", payload: items }),
-        showError,
-        showSuccess,
-        csrfToken,
-        userId,
-        entityName: "property",
-        isDemo,
-      }),
-    [csrfToken, userId, showError, showSuccess, isDemo, state.properties],
-  );
-
-  const buildingActions = useMemo(
-    () =>
-      createEntityActions<Building>({
-        endpoint: "/api/buildings",
-        getItems: () => state.buildings,
-        setItems: (items) => dispatch({ type: "SET_BUILDINGS", payload: items }),
-        showError,
-        showSuccess,
-        csrfToken,
-        userId,
-        entityName: "building",
-        isDemo,
-      }),
-    [csrfToken, userId, showError, showSuccess, isDemo, state.buildings],
-  );
-
-  const tenantActions = useMemo(
-    () =>
-      createEntityActions<Tenant>({
-        endpoint: "/api/tenants",
-        getItems: () => state.tenants,
-        setItems: (items) => dispatch({ type: "SET_TENANTS", payload: items }),
-        showError,
-        showSuccess,
-        csrfToken,
-        userId,
-        entityName: "tenant",
-        isDemo,
-      }),
-    [csrfToken, userId, showError, showSuccess, isDemo, state.tenants],
-  );
-
-  const receiptActions = useMemo(
-    () =>
-      createEntityActions<Receipt>({
-        endpoint: "/api/receipts",
-        getItems: () => state.receipts,
-        setItems: (items) => dispatch({ type: "SET_RECEIPTS", payload: items }),
-        showError,
-        showSuccess,
-        csrfToken,
-        userId,
-        entityName: "receipt",
-        isDemo,
-      }),
-    [csrfToken, userId, showError, showSuccess, isDemo, state.receipts],
-  );
-
-  const templateActions = useMemo(
-    () =>
-      createEntityActions<CorrespondenceTemplate>({
-        endpoint: "/api/correspondence/templates",
-        getItems: () => state.templates,
-        setItems: (items) => dispatch({ type: "SET_TEMPLATES", payload: items }),
-        showError,
-        showSuccess,
-        csrfToken,
-        userId,
-        entityName: "template",
-        requireAuth: false,
-        isDemo,
-      }),
-    [csrfToken, userId, showError, showSuccess, isDemo, state.templates],
-  );
-
-  const correspondenceActions = useMemo(
-    () =>
-      createEntityActions<Correspondence>({
-        endpoint: "/api/correspondence",
-        getItems: () => state.correspondence,
-        setItems: (items) => dispatch({ type: "SET_CORRESPONDENCE", payload: items }),
-        showError,
-        showSuccess,
-        csrfToken,
-        userId,
-        entityName: "correspondence",
-        isDemo,
-      }),
-    [csrfToken, userId, showError, showSuccess, isDemo, state.correspondence],
-  );
-
-  const ownerActions = useMemo(
-    () =>
-      createEntityActions<Owner>({
-        endpoint: "/api/owners",
-        getItems: () => state.owners,
-        setItems: (items) => dispatch({ type: "SET_OWNERS", payload: items }),
-        showError,
-        showSuccess,
-        csrfToken,
-        userId,
-        entityName: "owner",
-        isDemo,
-      }),
-    [csrfToken, userId, showError, showSuccess, isDemo, state.owners],
-  );
-
-  const expenseActions = useMemo(
-    () =>
-      createEntityActions<Expense>({
-        endpoint: "/api/expenses",
-        getItems: () => state.expenses,
-        setItems: (items) => dispatch({ type: "SET_EXPENSES", payload: items }),
-        showError,
-        showSuccess,
-        csrfToken,
-        userId,
-        entityName: "expense",
-        prependNew: true,
-        isDemo,
-      }),
-    [csrfToken, userId, showError, showSuccess, isDemo, state.expenses],
-  );
-
-  const maintenanceActions = useMemo(
-    () =>
-      createEntityActions<MaintenanceTicket>({
-        endpoint: "/api/maintenance",
-        getItems: () => state.maintenance,
-        setItems: (items) => dispatch({ type: "SET_MAINTENANCE", payload: items }),
-        showError,
-        showSuccess,
-        csrfToken,
-        userId,
-        entityName: "ticket",
-        prependNew: true,
-        isDemo,
-      }),
-    [csrfToken, userId, showError, showSuccess, isDemo, state.maintenance],
-  );
-
-  const leaseActions = useMemo(
-    () =>
-      createEntityActions<Lease>({
-        endpoint: "/api/leases",
-        getItems: () => state.leases,
-        setItems: (items) => dispatch({ type: "SET_LEASES", payload: items }),
-        showError,
-        showSuccess,
-        csrfToken,
-        userId,
-        entityName: "lease",
-        prependNew: true,
-        isDemo,
-      }),
-    [csrfToken, userId, showError, showSuccess, isDemo, state.leases],
-  );
-
-  const scopedState = useMemo(() => {
-    if (portalRole !== "tenant") {
-      return state;
-    }
-
-    const activeTenant =
-      (selectedTenantId
-        ? state.tenants.find((tenant) => tenant.id === selectedTenantId)
-        : undefined) ??
-      (tenantEmail ? state.tenants.find((tenant) => tenant.email === tenantEmail) : undefined);
-
-    if (!activeTenant) {
-      return {
-        ...state,
-        properties: [],
-        tenants: [],
-        receipts: [],
-        templates: [],
-        correspondence: [],
-        owners: [],
-        expenses: [],
-        maintenance: [],
-        leases: [],
-      };
-    }
-
-    const tenantPropertyIds = new Set(
-      [
-        activeTenant.propertyId,
-        ...state.leases
-          .filter((lease) => lease.tenantId === activeTenant.id)
-          .map((lease) => lease.propertyId),
-      ].filter(Boolean) as string[],
-    );
-
-    return {
-      ...state,
-      properties: state.properties.filter((property) => tenantPropertyIds.has(property.id)),
-      tenants: [activeTenant],
-      receipts: state.receipts.filter((receipt) => receipt.tenantId === activeTenant.id),
-      templates: [],
-      correspondence: state.correspondence.filter(
-        (correspondence) => correspondence.tenantId === activeTenant.id,
-      ),
-      owners: [],
-      expenses: [],
-      maintenance: state.maintenance.filter(
-        (ticket) =>
-          ticket.tenantId === activeTenant.id ||
-          (ticket.propertyId ? tenantPropertyIds.has(ticket.propertyId) : false),
-      ),
-      leases: state.leases.filter((lease) => lease.tenantId === activeTenant.id),
-    };
-  }, [portalRole, selectedTenantId, state, tenantEmail]);
+  const scopedState = useScopedState(state, { portalRole, selectedTenantId, tenantEmail });
 
   // --- context value (backward-compatible shape) ---
 

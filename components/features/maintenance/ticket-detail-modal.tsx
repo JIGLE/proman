@@ -47,17 +47,19 @@ interface TicketDetailModalProps {
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
-  open: "bg-amber-500/10 text-amber-400 border-amber-500/30",
-  in_progress: "bg-blue-500/10 text-blue-400 border-blue-500/30",
-  resolved: "bg-green-500/10 text-green-400 border-green-500/30",
+  open: "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/30",
+  in_progress:
+    "bg-[var(--color-info-muted)] text-[var(--color-info)] border-[var(--color-info)]/30",
+  resolved:
+    "bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]/30",
   closed: "bg-zinc-500/10 text-zinc-400 border-zinc-500/30",
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
   low: "bg-zinc-500/10 text-zinc-400",
-  medium: "bg-amber-500/10 text-amber-400",
-  high: "bg-orange-500/10 text-orange-400",
-  urgent: "bg-red-500/10 text-red-400",
+  medium: "bg-[var(--color-warning-muted)] text-[var(--color-warning)]",
+  high: "bg-[var(--color-warning-muted)] text-[var(--color-warning)]",
+  urgent: "bg-[var(--color-error-muted)] text-[var(--color-destructive)]",
 };
 
 function formatDate(dateStr?: string): string {
@@ -221,7 +223,7 @@ export function TicketDetailModal({
     issues.push({
       id: "overdue",
       icon: AlertTriangle,
-      color: "text-red-400",
+      color: "text-[var(--color-destructive)]",
       label: `Overdue — due ${formatDate(ticket.dueDate)}`,
     });
   }
@@ -229,7 +231,7 @@ export function TicketDetailModal({
     issues.push({
       id: "no-vendor",
       icon: Wrench,
-      color: "text-amber-400",
+      color: "text-[var(--color-warning)]",
       label: "No vendor assigned",
     });
   }
@@ -237,7 +239,7 @@ export function TicketDetailModal({
     issues.push({
       id: "tenant-report",
       icon: User,
-      color: "text-blue-400",
+      color: "text-[var(--color-info)]",
       label: "Reported by tenant",
     });
   }
@@ -278,8 +280,8 @@ export function TicketDetailModal({
           <DialogHeader>
             <div className="flex items-start justify-between gap-4">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-orange-500/10">
-                  <Wrench className="h-5 w-5 text-orange-500" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[var(--color-warning-muted)]">
+                  <Wrench className="h-5 w-5 text-[var(--color-warning)]" />
                 </div>
                 <div className="min-w-0">
                   <DialogTitle className="truncate text-base font-semibold">
@@ -322,7 +324,7 @@ export function TicketDetailModal({
                   variant="ghost"
                   size="sm"
                   onClick={handleDelete}
-                  className="h-7 w-7 p-0 text-red-400 hover:text-red-300"
+                  className="h-7 w-7 p-0 text-[var(--color-destructive)] hover:text-[var(--color-destructive)]/70"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
@@ -451,13 +453,15 @@ export function TicketDetailModal({
                 {ticket.dueDate && (
                   <div className="flex items-center gap-2">
                     <Calendar
-                      className={`h-4 w-4 ${isOverdue ? "text-red-400" : "text-[var(--color-muted-foreground)]"}`}
+                      className={`h-4 w-4 ${isOverdue ? "text-[var(--color-destructive)]" : "text-[var(--color-muted-foreground)]"}`}
                     />
                     <div>
                       <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
                         Due
                       </p>
-                      <p className={`font-medium ${isOverdue ? "text-red-400" : ""}`}>
+                      <p
+                        className={`font-medium ${isOverdue ? "text-[var(--color-destructive)]" : ""}`}
+                      >
                         {formatDate(ticket.dueDate)}
                       </p>
                     </div>
@@ -487,15 +491,15 @@ export function TicketDetailModal({
                       </div>
                     )}
                     {actualCostDisplay != null && (
-                      <div className="rounded-md border border-green-500/20 bg-green-500/5 p-4">
+                      <div className="rounded-md border border-[var(--color-success)]/30 bg-[var(--color-success-muted)] p-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-green-400" />
+                            <CheckCircle className="h-4 w-4 text-[var(--color-success)]" />
                             <span className="text-sm text-[var(--color-muted-foreground)]">
                               Actual Cost
                             </span>
                           </div>
-                          <span className="text-lg font-semibold text-green-400">
+                          <span className="text-lg font-semibold text-[var(--color-success)]">
                             {formatCurrency(actualCostDisplay)}
                           </span>
                         </div>
@@ -608,8 +612,8 @@ export function TicketDetailModal({
               <div className="space-y-3">
                 {ticket.resolvedAt && (
                   <div className="flex items-start gap-3 text-sm">
-                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-500/10">
-                      <CheckCircle className="h-3.5 w-3.5 text-green-400" />
+                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-success-muted)]">
+                      <CheckCircle className="h-3.5 w-3.5 text-[var(--color-success)]" />
                     </div>
                     <div>
                       <p className="font-medium text-[var(--color-foreground)]">Resolved</p>
