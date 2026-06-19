@@ -112,7 +112,7 @@ export default async function LandingPage({ params }: Props) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#09090e] text-zinc-50">
+    <div className="min-h-screen bg-[#09090e] text-[var(--color-foreground)]">
       <LocaleSelectOverlay currentLocale={locale} />
 
       {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
@@ -132,7 +132,7 @@ export default async function LandingPage({ params }: Props) {
               eventData={{ location: "header" }}
               className="hidden sm:block"
             >
-              <Button variant="ghost" size="sm" className="text-zinc-300 hover:text-zinc-50">
+              <Button variant="ghost" size="sm" className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]">
                 {t("cta")}
               </Button>
             </TrackedLandingLink>
@@ -168,13 +168,13 @@ export default async function LandingPage({ params }: Props) {
             </LandingHeroItem>
 
             <LandingHeroItem>
-              <h1 className="font-display text-[40px] font-bold leading-[1.08] tracking-[-0.04em] text-zinc-50 sm:text-5xl">
+              <h1 className="font-display text-[40px] font-bold leading-[1.08] tracking-[-0.04em] text-[var(--color-foreground)] sm:text-5xl">
                 {t("hero")}
               </h1>
             </LandingHeroItem>
 
             <LandingHeroItem>
-              <p className="max-w-md text-[16px] leading-relaxed text-zinc-300">{t("subtitle")}</p>
+              <p className="max-w-md text-[16px] leading-relaxed text-[var(--color-muted-foreground)]">{t("subtitle")}</p>
             </LandingHeroItem>
 
             <LandingHeroItem>
@@ -200,7 +200,7 @@ export default async function LandingPage({ params }: Props) {
                   <Button
                     size="xl"
                     variant="ghost"
-                    className="h-11 gap-2 px-5 text-[15px] text-zinc-400 hover:text-zinc-100"
+                    className="h-11 gap-2 px-5 text-[15px] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
                   >
                     {t("secondaryCta")}
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -211,12 +211,12 @@ export default async function LandingPage({ params }: Props) {
 
             <LandingHeroItem>
               <div className="space-y-1.5">
-                <p className="text-sm text-zinc-400">{t("microcopy")}</p>
-                <p className="text-sm text-zinc-400">
+                <p className="text-sm text-[var(--color-muted-foreground)]">{t("microcopy")}</p>
+                <p className="text-sm text-[var(--color-muted-foreground)]">
                   {t("tenantPortalNote")}{" "}
                   <a
                     href="/tenant-portal"
-                    className="text-zinc-400 underline-offset-4 transition-colors hover:text-zinc-200 hover:underline"
+                    className="text-[var(--color-muted-foreground)] underline-offset-4 transition-colors hover:text-[var(--color-foreground)] hover:underline"
                   >
                     {t("tenantPortalLink")} â†’
                   </a>
@@ -227,9 +227,9 @@ export default async function LandingPage({ params }: Props) {
 
           {/* â”€â”€ Compact product preview (mobile/tablet) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="lg:hidden">
-            <div className="rounded-2xl border border-white/[0.08] bg-zinc-900/70 p-4 shadow-xl shadow-black/40">
+            <div className="rounded-2xl border border-white/[0.08] bg-[var(--color-card)]/70 p-4 shadow-xl shadow-black/40">
               <div className="mb-3 flex items-center justify-between">
-                <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-500">
+                <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-[var(--color-muted-foreground)]">
                   {t("preview.label")}
                 </span>
                 <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-400">
@@ -238,27 +238,27 @@ export default async function LandingPage({ params }: Props) {
                 </span>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <div className="rounded-lg border border-white/[0.05] bg-zinc-950 px-3 py-3">
-                  <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-zinc-500">
+                <div className="rounded-lg border border-white/[0.05] bg-[var(--color-background)] px-3 py-3">
+                  <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[var(--color-muted-foreground)]">
                     {t("preview.kpi.overdueLabel")}
                   </p>
                   <p className="mt-1 text-lg font-bold tabular-nums tracking-tight text-red-400">
                     EUR 950
                   </p>
                 </div>
-                <div className="rounded-lg border border-white/[0.05] bg-zinc-950 px-3 py-3">
-                  <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-zinc-500">
+                <div className="rounded-lg border border-white/[0.05] bg-[var(--color-background)] px-3 py-3">
+                  <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[var(--color-muted-foreground)]">
                     {t("preview.kpi.collectedLabel")}
                   </p>
-                  <p className="mt-1 text-lg font-bold tabular-nums tracking-tight text-zinc-100">
+                  <p className="mt-1 text-lg font-bold tabular-nums tracking-tight text-[var(--color-foreground)]">
                     EUR 3 800
                   </p>
                 </div>
-                <div className="rounded-lg border border-white/[0.05] bg-zinc-950 px-3 py-3">
-                  <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-zinc-500">
+                <div className="rounded-lg border border-white/[0.05] bg-[var(--color-background)] px-3 py-3">
+                  <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[var(--color-muted-foreground)]">
                     {t("preview.kpi.receiptsLabel")}
                   </p>
-                  <p className="mt-1 text-lg font-bold tabular-nums tracking-tight text-zinc-100">
+                  <p className="mt-1 text-lg font-bold tabular-nums tracking-tight text-[var(--color-foreground)]">
                     4 / 5
                   </p>
                 </div>
@@ -270,18 +270,18 @@ export default async function LandingPage({ params }: Props) {
           <div className="relative hidden lg:block">
             <div className="pointer-events-none absolute -inset-10 -z-10 rounded-[48px] bg-teal-600/5 blur-3xl" />
 
-            <div className="rounded-[22px] border border-white/[0.08] bg-zinc-900/80 p-3 shadow-2xl shadow-black/60 ring-1 ring-white/[0.03]">
-              <div className="overflow-hidden rounded-[16px] border border-white/[0.05] bg-zinc-950">
+            <div className="rounded-[22px] border border-white/[0.08] bg-[var(--color-card)]/80 p-3 shadow-2xl shadow-black/60 ring-1 ring-white/[0.03]">
+              <div className="overflow-hidden rounded-[16px] border border-white/[0.05] bg-[var(--color-background)]">
                 {/* Chrome bar */}
                 <div className="flex items-center justify-between border-b border-white/[0.05] px-4 py-3">
                   <div className="flex items-center gap-2.5">
                     <div className="flex gap-1.5">
-                      <div className="h-2 w-2 rounded-full bg-zinc-800" />
-                      <div className="h-2 w-2 rounded-full bg-zinc-800" />
-                      <div className="h-2 w-2 rounded-full bg-zinc-800" />
+                      <div className="h-2 w-2 rounded-full bg-[var(--color-surface)]" />
+                      <div className="h-2 w-2 rounded-full bg-[var(--color-surface)]" />
+                      <div className="h-2 w-2 rounded-full bg-[var(--color-surface)]" />
                     </div>
-                    <div className="h-3.5 w-px bg-zinc-800" />
-                    <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-600">
+                    <div className="h-3.5 w-px bg-[var(--color-surface)]" />
+                    <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-[var(--color-muted-foreground)]">
                       {t("preview.label")}
                     </span>
                   </div>
@@ -294,35 +294,35 @@ export default async function LandingPage({ params }: Props) {
                 {/* KPI strip */}
                 <div className="grid grid-cols-3 divide-x divide-white/[0.04] border-b border-white/[0.04]">
                   <div className="px-4 py-4">
-                    <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-zinc-600">
+                    <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
                       {t("preview.kpi.overdueLabel")}
                     </p>
                     <p className="mt-1.5 text-[22px] font-bold tabular-nums tracking-tight text-red-400">
                       EUR 950
                     </p>
-                    <p className="mt-0.5 text-[10px] text-zinc-600">
+                    <p className="mt-0.5 text-[10px] text-[var(--color-muted-foreground)]">
                       {t("preview.kpi.overdueHint")}
                     </p>
                   </div>
                   <div className="px-4 py-4">
-                    <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-zinc-600">
+                    <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
                       {t("preview.kpi.collectedLabel")}
                     </p>
-                    <p className="mt-1.5 text-[22px] font-bold tabular-nums tracking-tight text-zinc-100">
+                    <p className="mt-1.5 text-[22px] font-bold tabular-nums tracking-tight text-[var(--color-foreground)]">
                       EUR 3 800
                     </p>
-                    <p className="mt-0.5 text-[10px] text-zinc-600">
+                    <p className="mt-0.5 text-[10px] text-[var(--color-muted-foreground)]">
                       {t("preview.kpi.collectedHint")}
                     </p>
                   </div>
                   <div className="px-4 py-4">
-                    <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-zinc-600">
+                    <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
                       {t("preview.kpi.receiptsLabel")}
                     </p>
-                    <p className="mt-1.5 text-[22px] font-bold tabular-nums tracking-tight text-zinc-100">
+                    <p className="mt-1.5 text-[22px] font-bold tabular-nums tracking-tight text-[var(--color-foreground)]">
                       4 / 5
                     </p>
-                    <p className="mt-0.5 text-[10px] text-zinc-600">
+                    <p className="mt-0.5 text-[10px] text-[var(--color-muted-foreground)]">
                       {t("preview.kpi.receiptsHint")}
                     </p>
                   </div>
@@ -330,20 +330,20 @@ export default async function LandingPage({ params }: Props) {
 
                 {/* Active workflow steps */}
                 <div className="space-y-1.5 p-4">
-                  <p className="mb-3 text-[9px] font-medium uppercase tracking-[0.18em] text-zinc-600">
+                  <p className="mb-3 text-[9px] font-medium uppercase tracking-[0.18em] text-[var(--color-muted-foreground)]">
                     {t("preview.title")}
                   </p>
 
                   {/* Step 1 â€” active */}
-                  <div className="flex items-center gap-3 rounded-xl bg-zinc-900 px-3.5 py-3 ring-1 ring-red-500/20">
+                  <div className="flex items-center gap-3 rounded-xl bg-[var(--color-card)] px-3.5 py-3 ring-1 ring-red-500/20">
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500/15 text-[10px] font-bold text-red-400">
                       1
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-semibold leading-tight text-zinc-100">
+                      <p className="text-[12px] font-semibold leading-tight text-[var(--color-foreground)]">
                         {t("preview.steps.detect.title")}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-zinc-500">
+                      <p className="mt-0.5 text-[10px] text-[var(--color-muted-foreground)]">
                         {t("preview.steps.detect.description")}
                       </p>
                     </div>
@@ -353,15 +353,15 @@ export default async function LandingPage({ params }: Props) {
                   </div>
 
                   {/* Step 2 */}
-                  <div className="flex items-center gap-3 rounded-xl bg-zinc-900/60 px-3.5 py-3">
+                  <div className="flex items-center gap-3 rounded-xl bg-[var(--color-card)]/60 px-3.5 py-3">
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-500/10 text-[10px] font-bold text-teal-400">
                       2
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-medium leading-tight text-zinc-300">
+                      <p className="text-[12px] font-medium leading-tight text-[var(--color-muted-foreground)]">
                         {t("preview.steps.receipt.title")}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-zinc-600">
+                      <p className="mt-0.5 text-[10px] text-[var(--color-muted-foreground)]">
                         {t("preview.steps.receipt.description")}
                       </p>
                     </div>
@@ -369,15 +369,15 @@ export default async function LandingPage({ params }: Props) {
                   </div>
 
                   {/* Step 3 */}
-                  <div className="flex items-center gap-3 rounded-xl bg-zinc-900/60 px-3.5 py-3">
+                  <div className="flex items-center gap-3 rounded-xl bg-[var(--color-card)]/60 px-3.5 py-3">
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-[10px] font-bold text-emerald-400">
                       3
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-medium leading-tight text-zinc-300">
+                      <p className="text-[12px] font-medium leading-tight text-[var(--color-muted-foreground)]">
                         {t("preview.steps.compliance.title")}
                       </p>
-                      <p className="mt-0.5 text-[10px] text-zinc-600">
+                      <p className="mt-0.5 text-[10px] text-[var(--color-muted-foreground)]">
                         {t("preview.steps.compliance.description")}
                       </p>
                     </div>
@@ -386,19 +386,19 @@ export default async function LandingPage({ params }: Props) {
                 </div>
 
                 {/* Result footer */}
-                <div className="flex items-center justify-between border-t border-white/[0.04] bg-zinc-900/30 px-4 py-2.5">
-                  <div className="flex items-center gap-3 text-[10px] text-zinc-600">
+                <div className="flex items-center justify-between border-t border-white/[0.04] bg-[var(--color-card)]/30 px-4 py-2.5">
+                  <div className="flex items-center gap-3 text-[10px] text-[var(--color-muted-foreground)]">
                     <span>
                       {t("preview.result.receipt")}:{" "}
-                      <span className="text-zinc-400">{t("preview.result.done")}</span>
+                      <span className="text-[var(--color-muted-foreground)]">{t("preview.result.done")}</span>
                     </span>
-                    <span className="h-2.5 w-px bg-zinc-800" />
+                    <span className="h-2.5 w-px bg-[var(--color-surface)]" />
                     <span>
                       {t("preview.result.export")}:{" "}
-                      <span className="text-zinc-400">{t("preview.result.ready")}</span>
+                      <span className="text-[var(--color-muted-foreground)]">{t("preview.result.ready")}</span>
                     </span>
                   </div>
-                  <span className="text-[10px] font-semibold tracking-wide text-zinc-600">
+                  <span className="text-[10px] font-semibold tracking-wide text-[var(--color-muted-foreground)]">
                     PT / ES
                   </span>
                 </div>
@@ -411,8 +411,8 @@ export default async function LandingPage({ params }: Props) {
         <div className="mx-auto mt-16 max-w-6xl">
           <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
             {trustItems.map((item) => (
-              <div key={item} className="flex items-center gap-2 text-sm text-zinc-500">
-                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-zinc-700" />
+              <div key={item} className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
+                <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[var(--color-muted-foreground)]" />
                 {item}
               </div>
             ))}
@@ -422,10 +422,10 @@ export default async function LandingPage({ params }: Props) {
         {/* â”€â”€ Features â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <section className="mx-auto mt-24 max-w-6xl">
           <div className="text-center">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--color-muted-foreground)]">
               {t("features.eyebrow")}
             </p>
-            <h2 className="font-display mt-4 text-[28px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-3xl">
+            <h2 className="font-display mt-4 text-[28px] font-bold tracking-[-0.02em] text-[var(--color-foreground)] sm:text-3xl">
               {t("features.title")}
             </h2>
           </div>
@@ -442,10 +442,10 @@ export default async function LandingPage({ params }: Props) {
                 </span>
               </div>
               <div>
-                <p className="text-lg font-bold text-zinc-50">
+                <p className="text-lg font-bold text-[var(--color-foreground)]">
                   {t("features.items.rentCollection.title")}
                 </p>
-                <p className="mt-2 text-[15px] leading-relaxed text-zinc-400">
+                <p className="mt-2 text-[15px] leading-relaxed text-[var(--color-muted-foreground)]">
                   {t("features.items.rentCollection.description")}
                 </p>
               </div>
@@ -455,64 +455,64 @@ export default async function LandingPage({ params }: Props) {
             </div>
 
             {/* Instant Receipts */}
-            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5">
-              <div className="w-fit rounded-lg bg-zinc-800/70 p-2">
-                <ReceiptText className="h-4 w-4 text-zinc-300" />
+            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-[var(--color-card)]/50 p-5">
+              <div className="w-fit rounded-lg bg-[var(--color-surface)]/70 p-2">
+                <ReceiptText className="h-4 w-4 text-[var(--color-muted-foreground)]" />
               </div>
-              <p className="text-[15px] font-semibold text-zinc-100">
+              <p className="text-[15px] font-semibold text-[var(--color-foreground)]">
                 {t("features.items.receipts.title")}
               </p>
-              <p className="text-sm text-zinc-500">{t("features.items.receipts.description")}</p>
+              <p className="text-sm text-[var(--color-muted-foreground)]">{t("features.items.receipts.description")}</p>
             </div>
 
             {/* Tax Compliance */}
-            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5">
-              <div className="w-fit rounded-lg bg-zinc-800/70 p-2">
-                <ShieldCheck className="h-4 w-4 text-zinc-300" />
+            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-[var(--color-card)]/50 p-5">
+              <div className="w-fit rounded-lg bg-[var(--color-surface)]/70 p-2">
+                <ShieldCheck className="h-4 w-4 text-[var(--color-muted-foreground)]" />
               </div>
-              <p className="text-[15px] font-semibold text-zinc-100">
+              <p className="text-[15px] font-semibold text-[var(--color-foreground)]">
                 {t("features.items.taxCompliance.title")}
               </p>
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-[var(--color-muted-foreground)]">
                 {t("features.items.taxCompliance.description")}
               </p>
             </div>
 
             {/* Maintenance */}
-            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5">
-              <div className="w-fit rounded-lg bg-zinc-800/70 p-2">
-                <Wrench className="h-4 w-4 text-zinc-300" />
+            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-[var(--color-card)]/50 p-5">
+              <div className="w-fit rounded-lg bg-[var(--color-surface)]/70 p-2">
+                <Wrench className="h-4 w-4 text-[var(--color-muted-foreground)]" />
               </div>
-              <p className="text-[15px] font-semibold text-zinc-100">
+              <p className="text-[15px] font-semibold text-[var(--color-foreground)]">
                 {t("features.items.maintenance.title")}
               </p>
-              <p className="text-sm text-zinc-500">{t("features.items.maintenance.description")}</p>
+              <p className="text-sm text-[var(--color-muted-foreground)]">{t("features.items.maintenance.description")}</p>
             </div>
 
             {/* Lease Management */}
-            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5">
-              <div className="w-fit rounded-lg bg-zinc-800/70 p-2">
-                <ScrollText className="h-4 w-4 text-zinc-300" />
+            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-[var(--color-card)]/50 p-5">
+              <div className="w-fit rounded-lg bg-[var(--color-surface)]/70 p-2">
+                <ScrollText className="h-4 w-4 text-[var(--color-muted-foreground)]" />
               </div>
-              <p className="text-[15px] font-semibold text-zinc-100">
+              <p className="text-[15px] font-semibold text-[var(--color-foreground)]">
                 {t("features.items.leaseManagement.title")}
               </p>
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-[var(--color-muted-foreground)]">
                 {t("features.items.leaseManagement.description")}
               </p>
             </div>
 
             {/* Tenant Portal â€” full width */}
-            <div className="rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5 sm:col-span-2 lg:col-span-3">
+            <div className="rounded-2xl border border-white/[0.06] bg-[var(--color-card)]/50 p-5 sm:col-span-2 lg:col-span-3">
               <div className="flex items-center gap-4">
-                <div className="w-fit shrink-0 rounded-lg bg-zinc-800/70 p-2">
-                  <Users className="h-4 w-4 text-zinc-300" />
+                <div className="w-fit shrink-0 rounded-lg bg-[var(--color-surface)]/70 p-2">
+                  <Users className="h-4 w-4 text-[var(--color-muted-foreground)]" />
                 </div>
                 <div>
-                  <p className="text-[15px] font-semibold text-zinc-100">
+                  <p className="text-[15px] font-semibold text-[var(--color-foreground)]">
                     {t("features.items.tenantPortal.title")}
                   </p>
-                  <p className="mt-0.5 text-sm text-zinc-500">
+                  <p className="mt-0.5 text-sm text-[var(--color-muted-foreground)]">
                     {t("features.items.tenantPortal.description")}
                   </p>
                 </div>
@@ -531,13 +531,13 @@ export default async function LandingPage({ params }: Props) {
           }}
         >
           <div className="text-center">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--color-muted-foreground)]">
               {t("timeline.eyebrow")}
             </p>
-            <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-[28px]">
+            <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-[var(--color-foreground)] sm:text-[28px]">
               {t("timeline.title")}
             </h2>
-            <p className="mt-3 text-sm text-zinc-500">{t("timeline.subtitle")}</p>
+            <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">{t("timeline.subtitle")}</p>
           </div>
 
           {/* Desktop: horizontal */}
@@ -550,11 +550,11 @@ export default async function LandingPage({ params }: Props) {
                   key={step.title}
                   className="relative flex flex-1 flex-col items-center px-3 text-center"
                 >
-                  <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950 shadow-lg shadow-black/40">
+                  <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-background)] shadow-lg shadow-black/40">
                     <Icon className={`h-4 w-4 ${step.color}`} />
                   </div>
-                  <p className="mt-4 text-[13px] font-semibold text-zinc-200">{step.title}</p>
-                  <p className="mt-1 max-w-[110px] text-[11px] leading-snug text-zinc-600">
+                  <p className="mt-4 text-[13px] font-semibold text-[var(--color-foreground)]">{step.title}</p>
+                  <p className="mt-1 max-w-[110px] text-[11px] leading-snug text-[var(--color-muted-foreground)]">
                     {step.description}
                   </p>
                 </div>
@@ -569,16 +569,16 @@ export default async function LandingPage({ params }: Props) {
               return (
                 <div key={step.title} className="flex gap-4">
                   <div className="flex flex-col items-center">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-background)]">
                       <Icon className={`h-3.5 w-3.5 ${step.color}`} />
                     </div>
                     {i < timelineSteps.length - 1 && (
-                      <div className="my-1 min-h-[24px] w-px flex-1 bg-zinc-800/60" />
+                      <div className="my-1 min-h-[24px] w-px flex-1 bg-[var(--color-surface)]/60" />
                     )}
                   </div>
                   <div className="pb-5">
-                    <p className="text-[13px] font-semibold text-zinc-200">{step.title}</p>
-                    <p className="mt-0.5 text-[12px] text-zinc-500">{step.description}</p>
+                    <p className="text-[13px] font-semibold text-[var(--color-foreground)]">{step.title}</p>
+                    <p className="mt-0.5 text-[12px] text-[var(--color-muted-foreground)]">{step.description}</p>
                   </div>
                 </div>
               );
@@ -589,16 +589,16 @@ export default async function LandingPage({ params }: Props) {
         {/* â”€â”€ How It Works â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <section
           id="how-it-works"
-          className="mx-auto mt-6 max-w-6xl rounded-3xl border border-white/[0.05] bg-zinc-900/50 p-8 sm:p-10"
+          className="mx-auto mt-6 max-w-6xl rounded-3xl border border-white/[0.05] bg-[var(--color-card)]/50 p-8 sm:p-10"
         >
           <div className="max-w-xl">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--color-muted-foreground)]">
               {t("howItWorks.eyebrow")}
             </p>
-            <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-[28px]">
+            <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-[var(--color-foreground)] sm:text-[28px]">
               {t("howItWorks.title")}
             </h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">
+            <p className="mt-3 text-[15px] leading-relaxed text-[var(--color-muted-foreground)]">
               {t("howItWorks.subtitle")}
             </p>
           </div>
@@ -609,18 +609,18 @@ export default async function LandingPage({ params }: Props) {
               return (
                 <div
                   key={step.key}
-                  className="rounded-2xl border border-white/[0.05] bg-zinc-950/60 p-5"
+                  className="rounded-2xl border border-white/[0.05] bg-[var(--color-background)]/60 p-5"
                 >
                   <div className="flex items-center justify-between">
-                    <div className="rounded-lg bg-zinc-800/80 p-2">
-                      <Icon className="h-4 w-4 text-zinc-400" />
+                    <div className="rounded-lg bg-[var(--color-surface)]/80 p-2">
+                      <Icon className="h-4 w-4 text-[var(--color-muted-foreground)]" />
                     </div>
-                    <span className="text-[11px] font-bold tracking-[0.2em] text-zinc-700">
+                    <span className="text-[11px] font-bold tracking-[0.2em] text-[var(--color-muted-foreground)]">
                       0{index + 1}
                     </span>
                   </div>
-                  <p className="mt-4 text-[15px] font-semibold text-zinc-100">{step.title}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-zinc-500">{step.description}</p>
+                  <p className="mt-4 text-[15px] font-semibold text-[var(--color-foreground)]">{step.title}</p>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted-foreground)]">{step.description}</p>
                 </div>
               );
             })}
@@ -646,13 +646,13 @@ export default async function LandingPage({ params }: Props) {
         {/* â”€â”€ Demo Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
         <section className="mx-auto mt-16 max-w-6xl">
           <div className="mb-8 text-center">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--color-muted-foreground)]">
               {t("demo.label")}
             </p>
-            <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50">
+            <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-[var(--color-foreground)]">
               {t("demo.title")}
             </h2>
-            <p className="mt-3 text-sm text-zinc-500">{t("demo.subtitle")}</p>
+            <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">{t("demo.subtitle")}</p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -661,24 +661,24 @@ export default async function LandingPage({ params }: Props) {
               href={`/${locale}/demo?perspective=owner`}
               eventName="landing.demo_start"
               eventData={{ location: "demo_card", perspective: "owner" }}
-              className="group rounded-[22px] border border-zinc-800 bg-zinc-900/70 p-6 transition-all hover:border-zinc-700 hover:bg-zinc-900"
+              className="group rounded-[22px] border border-[var(--color-border)] bg-[var(--color-card)]/70 p-6 transition-all hover:border-[var(--color-border-hover)] hover:bg-[var(--color-card)]"
             >
               <div className="flex items-center justify-between">
-                <div className="rounded-xl border border-zinc-700/50 bg-zinc-800 p-3">
-                  <ShieldCheck className="h-5 w-5 text-zinc-300" />
+                <div className="rounded-xl border border-zinc-700/50 bg-[var(--color-surface)] p-3">
+                  <ShieldCheck className="h-5 w-5 text-[var(--color-muted-foreground)]" />
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-zinc-600 transition-colors group-hover:text-zinc-300">
+                <div className="flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] transition-colors group-hover:text-[var(--color-muted-foreground)]">
                   {t("demo.cardCta")} <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </div>
-              <h3 className="mt-5 text-lg font-bold text-zinc-50">{t("demo.ownerTitle")}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+              <h3 className="mt-5 text-lg font-bold text-[var(--color-foreground)]">{t("demo.ownerTitle")}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
                 {t("demo.ownerDescription")}
               </p>
               <div className="mt-5 space-y-2">
                 {[t("demo.owner.f1"), t("demo.owner.f2"), t("demo.owner.f3")].map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-[13px] text-zinc-500">
-                    <div className="h-1 w-1 shrink-0 rounded-full bg-zinc-600" />
+                  <div key={f} className="flex items-center gap-2 text-[13px] text-[var(--color-muted-foreground)]">
+                    <div className="h-1 w-1 shrink-0 rounded-full bg-[var(--color-muted)]" />
                     {f}
                   </div>
                 ))}
@@ -696,17 +696,17 @@ export default async function LandingPage({ params }: Props) {
                 <div className="rounded-xl border border-teal-500/25 bg-teal-500/10 p-3">
                   <KeyRound className="h-5 w-5 text-teal-400" />
                 </div>
-                <div className="flex items-center gap-1.5 text-sm text-zinc-600 transition-colors group-hover:text-teal-400">
+                <div className="flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] transition-colors group-hover:text-teal-400">
                   {t("demo.cardCta")} <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </div>
-              <h3 className="mt-5 text-lg font-bold text-zinc-50">{t("demo.tenantTitle")}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-500">
+              <h3 className="mt-5 text-lg font-bold text-[var(--color-foreground)]">{t("demo.tenantTitle")}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
                 {t("demo.tenantDescription")}
               </p>
               <div className="mt-5 space-y-2">
                 {[t("demo.tenant.f1"), t("demo.tenant.f2"), t("demo.tenant.f3")].map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-[13px] text-zinc-500">
+                  <div key={f} className="flex items-center gap-2 text-[13px] text-[var(--color-muted-foreground)]">
                     <div className="h-1 w-1 shrink-0 rounded-full bg-teal-600/50" />
                     {f}
                   </div>
@@ -723,25 +723,25 @@ export default async function LandingPage({ params }: Props) {
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal-400" />
               {t("pricing.eyebrow")}
             </div>
-            <h2 className="font-display mt-4 text-[28px] font-bold tracking-[-0.03em] text-zinc-50 sm:text-4xl">
+            <h2 className="font-display mt-4 text-[28px] font-bold tracking-[-0.03em] text-[var(--color-foreground)] sm:text-4xl">
               {t("pricing.title")}
             </h2>
-            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-zinc-500">
+            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-[var(--color-muted-foreground)]">
               {t("pricing.subtitle")}
             </p>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-3">
             {/* Free */}
-            <div className="flex flex-col rounded-2xl border border-white/[0.06] bg-zinc-900/40 p-6">
-              <p className="text-sm font-semibold text-zinc-400">{t("pricing.free.name")}</p>
+            <div className="flex flex-col rounded-2xl border border-white/[0.06] bg-[var(--color-card)]/40 p-6">
+              <p className="text-sm font-semibold text-[var(--color-muted-foreground)]">{t("pricing.free.name")}</p>
               <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-4xl font-bold tracking-tight text-zinc-50">
+                <span className="text-4xl font-bold tracking-tight text-[var(--color-foreground)]">
                   {t("pricing.free.price")}
                 </span>
-                <span className="text-sm text-zinc-600">{t("pricing.monthly")}</span>
+                <span className="text-sm text-[var(--color-muted-foreground)]">{t("pricing.monthly")}</span>
               </div>
-              <p className="mt-2 text-[13px] text-zinc-600">{t("pricing.free.description")}</p>
+              <p className="mt-2 text-[13px] text-[var(--color-muted-foreground)]">{t("pricing.free.description")}</p>
               <ul className="my-6 flex-1 space-y-3">
                 {[
                   t("pricing.free.f1"),
@@ -750,8 +750,8 @@ export default async function LandingPage({ params }: Props) {
                   t("pricing.free.f4"),
                   t("pricing.free.f5"),
                 ].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-zinc-400">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-zinc-600" />
+                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-[var(--color-muted-foreground)]">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-muted-foreground)]" />
                     {f}
                   </li>
                 ))}
@@ -763,7 +763,7 @@ export default async function LandingPage({ params }: Props) {
               >
                 <Button
                   variant="outline"
-                  className="w-full border-white/10 text-zinc-300 hover:bg-white/5 hover:text-zinc-50"
+                  className="w-full border-white/10 text-[var(--color-muted-foreground)] hover:bg-white/5 hover:text-[var(--color-foreground)]"
                 >
                   {t("pricing.free.cta")}
                 </Button>
@@ -777,12 +777,12 @@ export default async function LandingPage({ params }: Props) {
               </span>
               <p className="text-sm font-semibold text-teal-300">{t("pricing.pro.name")}</p>
               <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-4xl font-bold tracking-tight text-zinc-50">
+                <span className="text-4xl font-bold tracking-tight text-[var(--color-foreground)]">
                   {t("pricing.pro.price")}
                 </span>
-                <span className="text-sm text-zinc-500">{t("pricing.monthly")}</span>
+                <span className="text-sm text-[var(--color-muted-foreground)]">{t("pricing.monthly")}</span>
               </div>
-              <p className="mt-2 text-[13px] text-zinc-500">{t("pricing.pro.description")}</p>
+              <p className="mt-2 text-[13px] text-[var(--color-muted-foreground)]">{t("pricing.pro.description")}</p>
               <ul className="my-6 flex-1 space-y-3">
                 {[
                   t("pricing.pro.f1"),
@@ -792,7 +792,7 @@ export default async function LandingPage({ params }: Props) {
                   t("pricing.pro.f5"),
                   t("pricing.pro.f6"),
                 ].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-zinc-300">
+                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-[var(--color-muted-foreground)]">
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-400" />
                     {f}
                   </li>
@@ -810,15 +810,15 @@ export default async function LandingPage({ params }: Props) {
             </div>
 
             {/* Business */}
-            <div className="flex flex-col rounded-2xl border border-white/[0.06] bg-zinc-900/40 p-6">
-              <p className="text-sm font-semibold text-zinc-400">{t("pricing.business.name")}</p>
+            <div className="flex flex-col rounded-2xl border border-white/[0.06] bg-[var(--color-card)]/40 p-6">
+              <p className="text-sm font-semibold text-[var(--color-muted-foreground)]">{t("pricing.business.name")}</p>
               <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-4xl font-bold tracking-tight text-zinc-50">
+                <span className="text-4xl font-bold tracking-tight text-[var(--color-foreground)]">
                   {t("pricing.business.price")}
                 </span>
-                <span className="text-sm text-zinc-600">{t("pricing.monthly")}</span>
+                <span className="text-sm text-[var(--color-muted-foreground)]">{t("pricing.monthly")}</span>
               </div>
-              <p className="mt-2 text-[13px] text-zinc-600">{t("pricing.business.description")}</p>
+              <p className="mt-2 text-[13px] text-[var(--color-muted-foreground)]">{t("pricing.business.description")}</p>
               <ul className="my-6 flex-1 space-y-3">
                 {[
                   t("pricing.business.f1"),
@@ -828,8 +828,8 @@ export default async function LandingPage({ params }: Props) {
                   t("pricing.business.f5"),
                   t("pricing.business.f6"),
                 ].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-zinc-400">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-zinc-600" />
+                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-[var(--color-muted-foreground)]">
+                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-muted-foreground)]" />
                     {f}
                   </li>
                 ))}
@@ -837,7 +837,7 @@ export default async function LandingPage({ params }: Props) {
               <a href="mailto:hello@proman.app">
                 <Button
                   variant="outline"
-                  className="w-full border-white/10 text-zinc-300 hover:bg-white/5 hover:text-zinc-50"
+                  className="w-full border-white/10 text-[var(--color-muted-foreground)] hover:bg-white/5 hover:text-[var(--color-foreground)]"
                 >
                   {t("pricing.business.cta")}
                 </Button>
@@ -845,13 +845,13 @@ export default async function LandingPage({ params }: Props) {
             </div>
           </div>
 
-          <p className="mt-8 text-center text-[13px] text-zinc-600">
+          <p className="mt-8 text-center text-[13px] text-[var(--color-muted-foreground)]">
             {t("pricing.selfHostedNote")}{" "}
             <a
               href="https://github.com/JIGLE/proman"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-zinc-500 underline-offset-4 transition-colors hover:text-zinc-300 hover:underline"
+              className="text-[var(--color-muted-foreground)] underline-offset-4 transition-colors hover:text-[var(--color-muted-foreground)] hover:underline"
             >
               {t("pricing.selfHostedLink")}
             </a>
@@ -859,10 +859,10 @@ export default async function LandingPage({ params }: Props) {
         </section>
 
         <section className="mx-auto mt-28 max-w-lg px-4 text-center">
-          <h2 className="font-display text-[28px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-3xl">
+          <h2 className="font-display text-[28px] font-bold tracking-[-0.02em] text-[var(--color-foreground)] sm:text-3xl">
             {t("closingCta.title")}
           </h2>
-          <p className="mt-4 text-[15px] leading-relaxed text-zinc-500">
+          <p className="mt-4 text-[15px] leading-relaxed text-[var(--color-muted-foreground)]">
             {t("closingCta.subtitle")}
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
@@ -884,7 +884,7 @@ export default async function LandingPage({ params }: Props) {
               eventName="landing.signin_click"
               eventData={{ location: "closing_cta" }}
             >
-              <Button size="lg" variant="ghost" className="text-zinc-500 hover:text-zinc-200">
+              <Button size="lg" variant="ghost" className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]">
                 {t("closingCta.secondary")}
               </Button>
             </TrackedLandingLink>
@@ -893,14 +893,14 @@ export default async function LandingPage({ params }: Props) {
       </main>
 
       <footer className="mt-16 border-t border-white/[0.04] px-4 py-10">
-        <div className="mx-auto max-w-6xl text-center text-sm text-zinc-600">
+        <div className="mx-auto max-w-6xl text-center text-sm text-[var(--color-muted-foreground)]">
           <p>{tFooter("copyright", { year: new Date().getFullYear().toString() })}</p>
-          <div className="mt-2 flex items-center justify-center gap-4 text-xs text-zinc-700">
-            <a href={`/${locale}/privacy`} className="transition-colors hover:text-zinc-400">
+          <div className="mt-2 flex items-center justify-center gap-4 text-xs text-[var(--color-muted-foreground)]">
+            <a href={`/${locale}/privacy`} className="transition-colors hover:text-[var(--color-muted-foreground)]">
               {tFooter("privacy")}
             </a>
             <span>Â·</span>
-            <a href={`/${locale}/terms`} className="transition-colors hover:text-zinc-400">
+            <a href={`/${locale}/terms`} className="transition-colors hover:text-[var(--color-muted-foreground)]">
               {tFooter("terms")}
             </a>
           </div>

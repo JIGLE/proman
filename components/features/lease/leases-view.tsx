@@ -1033,13 +1033,13 @@ export function LeasesView(): React.ReactElement {
                                 onChange={(e) => setBulkPct(e.target.value)}
                                 className="flex-1"
                               />
-                              <span className="flex items-center text-sm text-zinc-400">%</span>
+                              <span className="flex items-center text-sm text-[var(--color-muted-foreground)]">%</span>
                             </div>
                           </div>
 
                           {/* Preview */}
                           {bulkPct && !isNaN(parseFloat(bulkPct)) && parseFloat(bulkPct) > 0 && (
-                            <div className="rounded-md bg-zinc-900 border border-zinc-800 divide-y divide-zinc-800 text-sm max-h-48 overflow-y-auto">
+                            <div className="rounded-md bg-[var(--color-card)] border border-[var(--color-border)] divide-y divide-[var(--color-border)] text-sm max-h-48 overflow-y-auto">
                               {[...selectedLeaseIds].map((id) => {
                                 const lease = leases.find((l) => l.id === id);
                                 if (!lease) return null;
@@ -1053,13 +1053,13 @@ export function LeasesView(): React.ReactElement {
                                     key={id}
                                     className="flex items-center justify-between px-3 py-2"
                                   >
-                                    <span className="text-zinc-400 truncate max-w-[180px]">
+                                    <span className="text-[var(--color-muted-foreground)] truncate max-w-[180px]">
                                       {tenant?.name ?? id}
                                     </span>
-                                    <span className="text-zinc-500 line-through mr-2">
+                                    <span className="text-[var(--color-muted-foreground)] line-through mr-2">
                                       {formatCurrency(lease.monthlyRent)}
                                     </span>
-                                    <span className="text-green-400 font-medium">
+                                    <span className="text-[var(--color-success)] font-medium">
                                       {formatCurrency(newRent)}
                                     </span>
                                   </div>
@@ -1097,7 +1097,7 @@ export function LeasesView(): React.ReactElement {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-zinc-500 hover:text-zinc-300"
+                      className="text-[var(--color-muted-foreground)] hover:text-[var(--color-muted-foreground)]"
                       onClick={() => setSelectedLeaseIds(new Set())}
                     >
                       Clear
