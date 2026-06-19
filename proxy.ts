@@ -53,6 +53,7 @@ function isPublicApiRoute(pathname: string): boolean {
   return (
     pathname.startsWith("/api/auth") ||
     pathname === "/api/health" ||
+    pathname === "/api/ready" ||
     pathname.startsWith("/api/tenant-portal") ||
     pathname === "/api/csrf-token" ||
     pathname.startsWith("/api/monitoring")
