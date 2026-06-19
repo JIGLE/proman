@@ -84,17 +84,9 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         roles: ["owner"],
       },
       {
-        key: "vendors",
-        href: "/contacts",
-        label: "Vendors",
-        labelKey: "navigation.vendors",
-        icon: HardHat,
-        roles: ["owner"],
-      },
-      {
         key: "financials",
         href: "/financials",
-        label: "Accounts",
+        label: "Money",
         labelKey: "navigation.financials",
         icon: Wallet,
         roles: ["owner", "tenant"],
