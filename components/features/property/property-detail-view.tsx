@@ -45,6 +45,7 @@ import { useApp } from "@/lib/contexts/app-context";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { EntityLink } from "@/components/shared/entity-link";
+import { RelatedEntities, type RelatedEntityItem } from "@/components/shared/related-entities";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { buildLocalizedFinancialReviewPath } from "@/lib/utils/financial-navigation";
 import {
@@ -171,6 +172,41 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   ).length;
   const activeLeasesList = relatedLeases.filter((l) => l.status === "active");
   const activeLeases = activeLeasesList.length;
+
+  // Relationship strip shown under the header: the connected tenants, active
+  // leases and open maintenance, always visible so users never lose the thread.
+  const relationshipItems: RelatedEntityItem[] = [
+    ...relatedTenants.map((tn) => ({
+      type: "tenant" as const,
+      id: tn.id,
+      title: tn.name,
+      subtitle: tn.email,
+      status: tn.paymentStatus,
+      statusVariant: (tn.paymentStatus === "paid"
+        ? "success"
+        : tn.paymentStatus === "overdue"
+          ? "destructive"
+          : "warning") as RelatedEntityItem["statusVariant"],
+    })),
+    ...activeLeasesList.map((lease) => ({
+      type: "lease" as const,
+      id: lease.id,
+      title: `Lease ${lease.id.slice(0, 8)}`,
+      subtitle: `${lease.startDate} — ${lease.endDate}`,
+      status: lease.status,
+      statusVariant: "success" as const,
+    })),
+    ...relatedMaintenance
+      .filter((m) => m.status === "open" || m.status === "in_progress")
+      .slice(0, 3)
+      .map((m) => ({
+        type: "maintenance" as const,
+        id: m.id,
+        title: m.title,
+        subtitle: m.status.replace("_", " "),
+        statusVariant: "warning" as const,
+      })),
+  ];
 
   // Ownership: derive from owners state
   const propertyOwners = useMemo(
@@ -605,6 +641,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         </div>
       </div>
 
+      {/* Relationship strip — connected entities, always visible */}
+      <RelatedEntities items={relationshipItems} />
+
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="overflow-x-auto">
@@ -650,7 +689,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Property Info */}
-            <Card className="lg:col-span-2">
+            <Card className="lg:col-span-3">
               <CardHeader>
                 <CardTitle>{t("propertyDetails")}</CardTitle>
               </CardHeader>
@@ -683,61 +722,6 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Related Entities */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
-                {t("related")}
-              </h3>
-              {relatedTenants.map((tenant) => (
-                <EntityLink
-                  key={tenant.id}
-                  type="tenant"
-                  id={tenant.id}
-                  title={tenant.name}
-                  subtitle={tenant.email}
-                  status={tenant.paymentStatus}
-                  statusVariant={
-                    tenant.paymentStatus === "paid"
-                      ? "success"
-                      : tenant.paymentStatus === "overdue"
-                        ? "destructive"
-                        : "warning"
-                  }
-                />
-              ))}
-              {relatedLeases
-                .filter((l) => l.status === "active")
-                .map((lease) => (
-                  <EntityLink
-                    key={lease.id}
-                    type="lease"
-                    id={lease.id}
-                    title={`Lease ${lease.id.slice(0, 8)}`}
-                    subtitle={`${lease.startDate} — ${lease.endDate}`}
-                    status={lease.status}
-                    statusVariant="success"
-                  />
-                ))}
-              {relatedTenants.length === 0 &&
-                relatedLeases.filter((l) => l.status === "active").length === 0 && (
-                  <div className="rounded-lg border border-dashed border-[var(--color-border)] p-4 text-center space-y-2">
-                    <p className="text-sm text-[var(--color-muted-foreground)]">
-                      {property.status === "vacant" ? t("vacantNotice") : t("noRelatedEntities")}
-                    </p>
-                    {property.status === "vacant" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => router.push(`/${locale}/leases`)}
-                      >
-                        <FileText className="h-3.5 w-3.5 mr-1.5" />
-                        {t("createLease")}
-                      </Button>
-                    )}
-                  </div>
-                )}
-            </div>
           </div>
 
           {/* Ownership & Revenue Share */}

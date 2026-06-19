@@ -31,7 +31,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useApp } from "@/lib/contexts/app-context";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
-import { EntityLink } from "@/components/shared/entity-link";
+import { RelatedEntities, type RelatedEntityItem } from "@/components/shared/related-entities";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 
 interface LeaseDetailViewProps {
@@ -229,43 +229,29 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
         </div>
       </div>
 
-      {/* Linked Entities */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {property && (
-          <EntityLink
-            type="property"
-            id={property.id}
-            title={property.name}
-            subtitle={property.address}
-            status={property.status}
-            statusVariant={
-              property.status === "occupied"
-                ? "success"
-                : property.status === "vacant"
-                  ? "warning"
-                  : "destructive"
-            }
-            variant="full"
-          />
-        )}
-        {tenant && (
-          <EntityLink
-            type="tenant"
-            id={tenant.id}
-            title={tenant.name}
-            subtitle={`${tenant.email} · ${tenant.phone}`}
-            status={tenant.paymentStatus}
-            statusVariant={
-              tenant.paymentStatus === "paid"
-                ? "success"
-                : tenant.paymentStatus === "overdue"
-                  ? "destructive"
-                  : "warning"
-            }
-            variant="full"
-          />
-        )}
-      </div>
+      {/* Relationship strip — parent property (back chip) + tenant */}
+      <RelatedEntities
+        back={property ? { type: "property", id: property.id, label: property.name } : undefined}
+        items={
+          tenant
+            ? ([
+                {
+                  type: "tenant",
+                  id: tenant.id,
+                  title: tenant.name,
+                  subtitle: `${tenant.email} · ${tenant.phone}`,
+                  status: tenant.paymentStatus,
+                  statusVariant:
+                    tenant.paymentStatus === "paid"
+                      ? "success"
+                      : tenant.paymentStatus === "overdue"
+                        ? "destructive"
+                        : "warning",
+                },
+              ] as RelatedEntityItem[])
+            : []
+        }
+      />
 
       {/* Lease Terms */}
       <Card>

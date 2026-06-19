@@ -25,6 +25,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useApp } from "@/lib/contexts/app-context";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { EntityLink } from "@/components/shared/entity-link";
+import { RelatedEntities, type RelatedEntityItem } from "@/components/shared/related-entities";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { getActiveLease as findActiveLease } from "@/lib/utils/lease-helpers";
 import { buildLocalizedFinancialReviewPath } from "@/lib/utils/financial-navigation";
@@ -178,37 +179,24 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
         </div>
       </div>
 
-      {/* Relationship Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {property && (
-          <EntityLink
-            type="property"
-            id={property.id}
-            title={property.name}
-            subtitle={property.address}
-            status={property.status}
-            statusVariant={
-              property.status === "occupied"
-                ? "success"
-                : property.status === "vacant"
-                  ? "warning"
-                  : "destructive"
-            }
-            variant="full"
-          />
-        )}
-        {activeLease && (
-          <EntityLink
-            type="lease"
-            id={activeLease.id}
-            title={`Active Lease`}
-            subtitle={`${formatCurrency(activeLease.monthlyRent)}/mo · Ends ${activeLease.endDate}`}
-            status={activeLease.status}
-            statusVariant="success"
-            variant="full"
-          />
-        )}
-      </div>
+      {/* Relationship strip — parent property (back chip) + active lease */}
+      <RelatedEntities
+        back={property ? { type: "property", id: property.id, label: property.name } : undefined}
+        items={
+          activeLease
+            ? ([
+                {
+                  type: "lease",
+                  id: activeLease.id,
+                  title: "Active Lease",
+                  subtitle: `${formatCurrency(activeLease.monthlyRent)}/mo · Ends ${activeLease.endDate}`,
+                  status: activeLease.status,
+                  statusVariant: "success",
+                },
+              ] as RelatedEntityItem[])
+            : []
+        }
+      />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
