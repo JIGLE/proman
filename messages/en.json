@@ -127,6 +127,7 @@
     "addYourFirstProperty": "Add Your First Property",
     "nameFallback": "there",
     "dailyOps": "Daily operations for {firstName}",
+    "ownerHomeTitle": "Overview",
     "ownerTitle": "Stay ahead of overdue rent, expiring leases, and receipt follow-up.",
     "ownerSubtitle": "Your owner workspace highlights what needs attention first and keeps cash flow visible.",
     "overdueRentMetric": "Overdue rent",

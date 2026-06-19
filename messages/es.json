@@ -127,6 +127,7 @@
     "addYourFirstProperty": "Añadir Primera Propiedad",
     "nameFallback": "ti",
     "dailyOps": "Operaciones diarias para {firstName}",
+    "ownerHomeTitle": "Resumen",
     "ownerTitle": "Anticípate a los alquileres vencidos, contratos por expirar y seguimiento de recibos.",
     "ownerSubtitle": "Tu espacio de propietario resalta lo que necesita atención primero y mantiene el flujo de caja visible.",
     "overdueRentMetric": "Alquiler vencido",
