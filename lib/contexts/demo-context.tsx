@@ -87,6 +87,22 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     clearDemoStore();
     sessionStorage.removeItem("proman_demo");
     sessionStorage.removeItem("proman_demo_start");
+
+    // Restore the theme that was active before entering demo
+    const preTheme = sessionStorage.getItem("proman-pre-demo-theme") ?? "light";
+    sessionStorage.removeItem("proman-pre-demo-theme");
+    localStorage.setItem("proman-theme", preTheme);
+    const resolved =
+      preTheme === "system"
+        ? window.matchMedia("(prefers-color-scheme: dark)").matches
+          ? "dark"
+          : "light"
+        : (preTheme as "light" | "dark" | "dark-oled");
+    const root = document.documentElement;
+    root.classList.remove("light", "dark", "dark-oled");
+    root.classList.add(resolved);
+    root.setAttribute("data-theme", resolved);
+
     window.dispatchEvent(new Event("proman:demo-mode-changed"));
     setIsDemoMode(false);
     setDemoPerspective("owner");

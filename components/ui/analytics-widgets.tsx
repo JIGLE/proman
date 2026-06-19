@@ -45,7 +45,7 @@ export function KPICard({
   className,
 }: KPICardProps) {
   const variantStyles = {
-    default: "border-zinc-700/50",
+    default: "border-[var(--color-border-hover)]/50",
     success: "border-[var(--color-success)]/30 bg-[var(--color-success-muted)]",
     warning: "border-[var(--color-warning)]/30 bg-[var(--color-warning-muted)]",
     danger: "border-[var(--color-destructive)]/30 bg-[var(--color-error-muted)]",
@@ -75,13 +75,13 @@ export function KPICard({
         <CardContent className="p-6">
           <div className="flex items-start justify-between">
             <div className="space-y-2">
-              <p className="text-sm font-medium text-zinc-400">{title}</p>
-              <p className="text-3xl font-bold text-zinc-50">
+              <p className="text-sm font-medium text-[var(--color-muted-foreground)]">{title}</p>
+              <p className="text-3xl font-bold text-[var(--color-foreground)]">
                 {typeof value === "number" ? value.toLocaleString() : value}
               </p>
-              {subtitle && <p className="text-xs text-zinc-500">{subtitle}</p>}
+              {subtitle && <p className="text-xs text-[var(--color-foreground)]0">{subtitle}</p>}
             </div>
-            {icon && <div className="p-3 rounded-xl bg-zinc-800/50">{icon}</div>}
+            {icon && <div className="p-3 rounded-xl bg-[var(--color-surface)]/50">{icon}</div>}
           </div>
 
           {(change !== undefined || changeLabel) && (
@@ -95,14 +95,14 @@ export function KPICard({
                       ? "text-[var(--color-success)]"
                       : change < 0
                         ? "text-[var(--color-destructive)]"
-                        : "text-zinc-400",
+                        : "text-[var(--color-muted-foreground)]",
                   )}
                 >
                   {change > 0 ? "+" : ""}
                   {change.toFixed(1)}%
                 </span>
               )}
-              {changeLabel && <span className="text-xs text-zinc-500">{changeLabel}</span>}
+              {changeLabel && <span className="text-xs text-[var(--color-foreground)]0">{changeLabel}</span>}
             </div>
           )}
         </CardContent>
@@ -129,7 +129,7 @@ export function OccupancyGauge({ rate, total, occupied, vacant, className }: Occ
   return (
     <Card className={cn("p-6", className)}>
       <CardHeader className="p-0 pb-4">
-        <CardTitle className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
+        <CardTitle className="text-lg font-semibold text-[var(--color-foreground)] flex items-center gap-2">
           <Building2 className="h-5 w-5 text-[var(--color-info)]" />
           Occupancy Rate
         </CardTitle>
@@ -164,7 +164,7 @@ export function OccupancyGauge({ rate, total, occupied, vacant, className }: Occ
             </svg>
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center">
-                <span className="text-3xl font-bold text-zinc-50">{rate.toFixed(0)}%</span>
+                <span className="text-3xl font-bold text-[var(--color-foreground)]">{rate.toFixed(0)}%</span>
               </div>
             </div>
           </div>
@@ -172,16 +172,16 @@ export function OccupancyGauge({ rate, total, occupied, vacant, className }: Occ
 
         <div className="mt-4 grid grid-cols-3 gap-4 text-center">
           <div>
-            <p className="text-2xl font-bold text-zinc-50">{total}</p>
-            <p className="text-xs text-zinc-400">Total Units</p>
+            <p className="text-2xl font-bold text-[var(--color-foreground)]">{total}</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">Total Units</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-[var(--color-success)]">{occupied}</p>
-            <p className="text-xs text-zinc-400">Occupied</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">Occupied</p>
           </div>
           <div>
             <p className="text-2xl font-bold text-[var(--color-destructive)]">{vacant}</p>
-            <p className="text-xs text-zinc-400">Vacant</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">Vacant</p>
           </div>
         </div>
       </CardContent>
@@ -248,7 +248,7 @@ export function LeaseExpirationTimeline({
   return (
     <Card className={cn("p-6", className)}>
       <CardHeader className="p-0 pb-4 flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
+        <CardTitle className="text-lg font-semibold text-[var(--color-foreground)] flex items-center gap-2">
           <Calendar className="h-5 w-5 text-purple-400" />
           Upcoming Lease Expirations
         </CardTitle>
@@ -263,7 +263,7 @@ export function LeaseExpirationTimeline({
       </CardHeader>
       <CardContent className="p-0 space-y-3">
         {leases.length === 0 ? (
-          <p className="text-sm text-zinc-500 text-center py-4">No upcoming lease expirations</p>
+          <p className="text-sm text-[var(--color-foreground)]0 text-center py-4">No upcoming lease expirations</p>
         ) : (
           leases.slice(0, 5).map((lease, index) => {
             const config = getStatusConfig(lease.status);
@@ -275,12 +275,12 @@ export function LeaseExpirationTimeline({
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="flex items-center gap-4 p-3 rounded-lg bg-zinc-800/30 hover:bg-zinc-800/50 transition-colors"
+                className="flex items-center gap-4 p-3 rounded-lg bg-[var(--color-surface)]/30 hover:bg-[var(--color-surface)]/50 transition-colors"
               >
                 <div className={cn("w-2 h-12 rounded-full", config.color)} />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-zinc-200 truncate">{lease.tenantName}</p>
-                  <p className="text-xs text-zinc-400 truncate">
+                  <p className="text-sm font-medium text-[var(--color-foreground)] truncate">{lease.tenantName}</p>
+                  <p className="text-xs text-[var(--color-muted-foreground)] truncate">
                     {lease.propertyName} - Unit {lease.unitNumber}
                   </p>
                 </div>
@@ -293,7 +293,7 @@ export function LeaseExpirationTimeline({
                         : `${lease.daysUntilExpiration} days`}
                     </span>
                   </div>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-[var(--color-foreground)]0">
                     {new Date(lease.endDate).toLocaleDateString()}
                   </p>
                 </div>
@@ -325,16 +325,16 @@ export function MaintenanceStatusCard({ stats, className }: MaintenanceStatsProp
   return (
     <Card className={cn("p-6", className)}>
       <CardHeader className="p-0 pb-4">
-        <CardTitle className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
+        <CardTitle className="text-lg font-semibold text-[var(--color-foreground)] flex items-center gap-2">
           <Wrench className="h-5 w-5 text-[var(--color-warning)]" />
           Maintenance Overview
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0 space-y-4">
         <div className="grid grid-cols-2 gap-4">
-          <div className="text-center p-3 rounded-lg bg-zinc-800/30">
-            <p className="text-2xl font-bold text-zinc-50">{stats.total}</p>
-            <p className="text-xs text-zinc-400">Total Requests</p>
+          <div className="text-center p-3 rounded-lg bg-[var(--color-surface)]/30">
+            <p className="text-2xl font-bold text-[var(--color-foreground)]">{stats.total}</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">Total Requests</p>
           </div>
           {stats.urgent > 0 && (
             <div className="text-center p-3 rounded-lg bg-[var(--color-error-muted)] border border-[var(--color-destructive)]/30">
@@ -343,19 +343,19 @@ export function MaintenanceStatusCard({ stats, className }: MaintenanceStatsProp
             </div>
           )}
           {stats.urgent === 0 && (
-            <div className="text-center p-3 rounded-lg bg-zinc-800/30">
-              <p className="text-2xl font-bold text-zinc-50">
+            <div className="text-center p-3 rounded-lg bg-[var(--color-surface)]/30">
+              <p className="text-2xl font-bold text-[var(--color-foreground)]">
                 {stats.averageResolutionDays.toFixed(1)}
               </p>
-              <p className="text-xs text-zinc-400">Avg. Days to Resolve</p>
+              <p className="text-xs text-[var(--color-muted-foreground)]">Avg. Days to Resolve</p>
             </div>
           )}
         </div>
 
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-zinc-400">Completion Rate</span>
-            <span className="text-zinc-200 font-medium">{completionRate.toFixed(0)}%</span>
+            <span className="text-[var(--color-muted-foreground)]">Completion Rate</span>
+            <span className="text-[var(--color-foreground)] font-medium">{completionRate.toFixed(0)}%</span>
           </div>
           <ProgressBar progress={completionRate} height={8} className="" />
         </div>
@@ -420,43 +420,43 @@ export function PropertyPerformanceTable({
   return (
     <Card className={cn("p-6", className)}>
       <CardHeader className="p-0 pb-4">
-        <CardTitle className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
+        <CardTitle className="text-lg font-semibold text-[var(--color-foreground)] flex items-center gap-2">
           <Home className="h-5 w-5 text-cyan-400" />
           Property Performance
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         {data.length === 0 ? (
-          <p className="text-sm text-zinc-500 text-center py-4">No properties found</p>
+          <p className="text-sm text-[var(--color-foreground)]0 text-center py-4">No properties found</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-zinc-700">
-                  <th scope="col" className="text-left py-3 px-2 text-xs font-medium text-zinc-400">
+                <tr className="border-b border-[var(--color-border-hover)]">
+                  <th scope="col" className="text-left py-3 px-2 text-xs font-medium text-[var(--color-muted-foreground)]">
                     Property
                   </th>
                   <th
                     scope="col"
-                    className="text-center py-3 px-2 text-xs font-medium text-zinc-400"
+                    className="text-center py-3 px-2 text-xs font-medium text-[var(--color-muted-foreground)]"
                   >
                     Occupancy
                   </th>
                   <th
                     scope="col"
-                    className="text-right py-3 px-2 text-xs font-medium text-zinc-400"
+                    className="text-right py-3 px-2 text-xs font-medium text-[var(--color-muted-foreground)]"
                   >
                     Revenue
                   </th>
                   <th
                     scope="col"
-                    className="text-right py-3 px-2 text-xs font-medium text-zinc-400"
+                    className="text-right py-3 px-2 text-xs font-medium text-[var(--color-muted-foreground)]"
                   >
                     Net Income
                   </th>
                   <th
                     scope="col"
-                    className="text-right py-3 px-2 text-xs font-medium text-zinc-400"
+                    className="text-right py-3 px-2 text-xs font-medium text-[var(--color-muted-foreground)]"
                   >
                     ROI
                   </th>
@@ -469,11 +469,11 @@ export function PropertyPerformanceTable({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: index * 0.1 }}
-                    className="border-b border-zinc-800 hover:bg-zinc-800/30"
+                    className="border-b border-[var(--color-border)] hover:bg-[var(--color-surface)]/30"
                   >
                     <td className="py-3 px-2">
-                      <p className="text-sm font-medium text-zinc-200">{property.propertyName}</p>
-                      <p className="text-xs text-zinc-500">{property.totalUnits} units</p>
+                      <p className="text-sm font-medium text-[var(--color-foreground)]">{property.propertyName}</p>
+                      <p className="text-xs text-[var(--color-foreground)]0">{property.totalUnits} units</p>
                     </td>
                     <td className="py-3 px-2 text-center">
                       <div className="inline-flex items-center gap-2">
@@ -482,16 +482,16 @@ export function PropertyPerformanceTable({
                           height={8}
                           className="w-16"
                         />
-                        <span className="text-sm text-zinc-300">
+                        <span className="text-sm text-[var(--color-muted-foreground)]">
                           {property.occupancyRate.toFixed(0)}%
                         </span>
                       </div>
                     </td>
                     <td className="py-3 px-2 text-right">
-                      <p className="text-sm text-zinc-200">
+                      <p className="text-sm text-[var(--color-foreground)]">
                         {formatCurrency(property.monthlyRevenue)}
                       </p>
-                      <p className="text-xs text-zinc-500">/month</p>
+                      <p className="text-xs text-[var(--color-foreground)]0">/month</p>
                     </td>
                     <td className="py-3 px-2 text-right">
                       <p
@@ -545,10 +545,10 @@ export function QuickStatsRow({ stats, className }: QuickStatsProps) {
     <div className={cn("flex items-center gap-6 flex-wrap", className)}>
       {stats.map((stat, index) => (
         <div key={index} className="flex items-center gap-2">
-          <div className={cn("p-2 rounded-lg", stat.color || "bg-zinc-800")}>{stat.icon}</div>
+          <div className={cn("p-2 rounded-lg", stat.color || "bg-[var(--color-surface)]")}>{stat.icon}</div>
           <div>
-            <p className="text-lg font-bold text-zinc-50">{stat.value}</p>
-            <p className="text-xs text-zinc-400">{stat.label}</p>
+            <p className="text-lg font-bold text-[var(--color-foreground)]">{stat.value}</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">{stat.label}</p>
           </div>
         </div>
       ))}

@@ -119,7 +119,7 @@ const nextActionStyles: Record<NextAction["urgency"], string> = {
   warning:
     "text-[var(--color-warning)] bg-[var(--color-warning-muted)] border-[var(--color-warning)]/30",
   info: "text-[var(--color-info)] bg-[var(--color-info-muted)] border-[var(--color-info)]/30",
-  ok: "text-zinc-500 bg-transparent border-transparent",
+  ok: "text-[var(--color-foreground)]0 bg-transparent border-transparent",
 };
 
 export type PropertiesViewProps = {
@@ -658,7 +658,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
             )}
             {/* Property Form Dialog */}
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
-              <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+              <DialogContent className="bg-[var(--color-card)] border-[var(--color-border)] max-w-2xl max-h-[90vh] overflow-hidden flex flex-col p-0">
                 <DialogHeader className="px-6 pt-6 pb-2 shrink-0">
                   <DialogTitle className="text-[var(--color-foreground)]">
                     {dialog.editingItem ? "Edit Property" : "Add New Property"}
@@ -728,7 +728,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               <button
                                 type="button"
                                 onClick={() => setShowManualFields((v) => !v)}
-                                className="text-xs text-zinc-400 hover:text-zinc-200 underline underline-offset-2 min-h-[32px] px-1"
+                                className="text-xs text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] underline underline-offset-2 min-h-[32px] px-1"
                               >
                                 {showManualFields ? "Hide fields" : "Edit manually"}
                               </button>
@@ -752,18 +752,18 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                             }
                           />
                           {showSuggestions && addressSuggestions.length > 0 && (
-                            <div className="absolute z-10 w-full bg-zinc-800 border border-zinc-600 rounded-md mt-1 max-h-60 overflow-y-auto">
+                            <div className="absolute z-10 w-full bg-[var(--color-surface)] border border-[var(--color-border-hover)] rounded-md mt-1 max-h-60 overflow-y-auto">
                               {addressSuggestions.map((suggestion, _index) => (
                                 <button
                                   key={suggestion.place_id}
                                   type="button"
-                                  className="w-full text-left px-3 py-2 hover:bg-zinc-700 first:rounded-t-md last:rounded-b-md"
+                                  className="w-full text-left px-3 py-2 hover:bg-[var(--color-surface-raised)] first:rounded-t-md last:rounded-b-md"
                                   onClick={() => handleAddressSelect(suggestion)}
                                 >
-                                  <div className="text-sm text-zinc-200">
+                                  <div className="text-sm text-[var(--color-foreground)]">
                                     {suggestion.display_name}
                                   </div>
-                                  <div className="text-xs text-zinc-400">
+                                  <div className="text-xs text-[var(--color-muted-foreground)]">
                                     {suggestion.address.postcode &&
                                       `${suggestion.address.postcode}, `}
                                     {suggestion.address.city || suggestion.address.municipality}
@@ -782,7 +782,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                       {(showManualFields ||
                         (!dialog.formData.addressVerified &&
                           dialog.formData.address.length > 0)) && (
-                        <div className="space-y-3 rounded-md border border-zinc-800 bg-zinc-950/50 p-3">
+                        <div className="space-y-3 rounded-md border border-[var(--color-border)] bg-[var(--color-background)]/50 p-3">
                           <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-2">
                               <Label htmlFor="country">Country</Label>
@@ -946,7 +946,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                       <button
                         type="button"
                         onClick={() => setShowDetails((v) => !v)}
-                        className="flex items-center gap-1.5 text-sm text-zinc-400 hover:text-zinc-200 transition-colors min-h-[36px]"
+                        className="flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors min-h-[36px]"
                       >
                         <ChevronDown
                           className={cn(
@@ -960,7 +960,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                       </button>
 
                       {showDetails && (
-                        <div className="mt-3 space-y-3 rounded-md border border-zinc-800 bg-zinc-950/50 p-3">
+                        <div className="mt-3 space-y-3 rounded-md border border-[var(--color-border)] bg-[var(--color-background)]/50 p-3">
                           <div className="grid grid-cols-2 gap-3">
                             <div className="space-y-2">
                               <Label htmlFor="bedrooms">Bedrooms</Label>
@@ -1040,7 +1040,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     </div>
                   </div>
                   {/* end scrollable fields */}
-                  <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 border-t border-zinc-800 px-6 py-4 shrink-0">
+                  <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 border-t border-[var(--color-border)] px-6 py-4 shrink-0">
                     <Button
                       type="button"
                       variant="outline"
@@ -1064,8 +1064,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
 
             <div className="space-y-4">
               {/* Slim operational filter strip */}
-              <div className="flex items-center gap-2 overflow-x-auto rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-2.5 scrollbar-none">
-                <span className="mr-1 hidden shrink-0 text-xs font-medium uppercase tracking-wider text-zinc-500 sm:inline">
+              <div className="flex items-center gap-2 overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]/60 px-4 py-2.5 scrollbar-none">
+                <span className="mr-1 hidden shrink-0 text-xs font-medium uppercase tracking-wider text-[var(--color-foreground)]0 sm:inline">
                   Filter
                 </span>
                 {[
@@ -1099,7 +1099,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                         "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
                         isActive
                           ? "bg-accent-primary text-white"
-                          : "border border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200",
+                          : "border border-[var(--color-border-hover)] text-[var(--color-muted-foreground)] hover:border-[var(--color-border-hover)] hover:text-[var(--color-foreground)]",
                       )}
                     >
                       <span className="hidden sm:inline">{opt.label}</span>
@@ -1114,7 +1114,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                       <span
                         className={cn(
                           "font-semibold",
-                          isActive ? "text-white" : opt.color || "text-zinc-300",
+                          isActive ? "text-white" : opt.color || "text-[var(--color-muted-foreground)]",
                         )}
                       >
                         {opt.count}
@@ -1179,7 +1179,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
 
               {dataViewMode === "map" ? (
                 /* Map View */
-                <div className="overflow-hidden rounded-lg border border-zinc-800">
+                <div className="overflow-hidden rounded-lg border border-[var(--color-border)]">
                   <PropertyMap
                     highlightedPropertyId={highlightedPropertyId}
                     onSelectProperty={handleMapPropertySelect}
@@ -1197,11 +1197,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     onAction={properties.length === 0 ? dialog.openDialog : undefined}
                   />
                 ) : (
-                  <div className="rounded-lg border border-zinc-800 bg-zinc-900">
+                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
                     <Table>
                       <TableHeader>
-                        <TableRow className="border-zinc-800 hover:bg-transparent">
-                          <TableHead className="text-zinc-400">
+                        <TableRow className="border-[var(--color-border)] hover:bg-transparent">
+                          <TableHead className="text-[var(--color-muted-foreground)]">
                             <SortableHeader
                               sortKey="name"
                               label="Name"
@@ -1209,8 +1209,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               onSort={(key) => requestSort(key as keyof Property)}
                             />
                           </TableHead>
-                          <TableHead className="text-zinc-400">Address</TableHead>
-                          <TableHead className="text-zinc-400">
+                          <TableHead className="text-[var(--color-muted-foreground)]">Address</TableHead>
+                          <TableHead className="text-[var(--color-muted-foreground)]">
                             <SortableHeader
                               sortKey="type"
                               label="Type"
@@ -1218,8 +1218,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               onSort={(key) => requestSort(key as keyof Property)}
                             />
                           </TableHead>
-                          <TableHead className="text-zinc-400">Bedrooms</TableHead>
-                          <TableHead className="text-zinc-400">
+                          <TableHead className="text-[var(--color-muted-foreground)]">Bedrooms</TableHead>
+                          <TableHead className="text-[var(--color-muted-foreground)]">
                             <SortableHeader
                               sortKey="rent"
                               label="Rent"
@@ -1227,7 +1227,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               onSort={(key) => requestSort(key as keyof Property)}
                             />
                           </TableHead>
-                          <TableHead className="text-zinc-400">
+                          <TableHead className="text-[var(--color-muted-foreground)]">
                             <SortableHeader
                               sortKey="status"
                               label="Status"
@@ -1235,7 +1235,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               onSort={(key) => requestSort(key as keyof Property)}
                             />
                           </TableHead>
-                          <TableHead className="text-zinc-400">Next Action</TableHead>
+                          <TableHead className="text-[var(--color-muted-foreground)]">Next Action</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1245,14 +1245,14 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           const headerRow = showHeader ? (
                             <TableRow
                               key={`header-${group.buildingId}`}
-                              className="border-zinc-800 hover:bg-transparent"
+                              className="border-[var(--color-border)] hover:bg-transparent"
                             >
-                              <TableCell colSpan={7} className="bg-zinc-800/40 py-2 px-4">
-                                <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                              <TableCell colSpan={7} className="bg-[var(--color-surface)]/40 py-2 px-4">
+                                <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]">
                                   {group.buildingName}
                                 </span>
                                 {group.buildingAddress && (
-                                  <span className="ml-2 text-xs text-zinc-500">
+                                  <span className="ml-2 text-xs text-[var(--color-foreground)]0">
                                     {group.buildingAddress}
                                   </span>
                                 )}
@@ -1262,26 +1262,26 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           const propertyRows = group.properties.map((property) => (
                             <TableRow
                               key={property.id}
-                              className="border-zinc-800 cursor-pointer hover:bg-zinc-800/50"
+                              className="border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-surface)]/50"
                               onClick={() => {
                                 // Open property detail via route modal query param
                                 router.push(`/${locale}/portfolio?modal=${property.id}`);
                                 onPropertySelect?.(property.id);
                               }}
                             >
-                              <TableCell className="text-sm font-medium text-zinc-100">
+                              <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
                                 {property.name}
                               </TableCell>
-                              <TableCell className="text-sm text-zinc-400">
+                              <TableCell className="text-sm text-[var(--color-muted-foreground)]">
                                 {property.address}
                               </TableCell>
-                              <TableCell className="text-sm text-zinc-400 capitalize">
+                              <TableCell className="text-sm text-[var(--color-muted-foreground)] capitalize">
                                 {property.type}
                               </TableCell>
-                              <TableCell className="text-sm text-zinc-400">
+                              <TableCell className="text-sm text-[var(--color-muted-foreground)]">
                                 {property.bedrooms}
                               </TableCell>
-                              <TableCell className="text-sm font-medium text-zinc-100">
+                              <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
                                 {formatCurrency(Number(property.rent))}
                               </TableCell>
                               <TableCell>{getStatusBadge(property.status)}</TableCell>
@@ -1342,10 +1342,10 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                         return (
                           <div
                             key={building.buildingId}
-                            className="overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/60"
+                            className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]/60"
                           >
                             {/* Building section header — collapsible */}
-                            <div className="flex w-full items-center justify-between hover:bg-zinc-800/50 transition-colors">
+                            <div className="flex w-full items-center justify-between hover:bg-[var(--color-surface)]/50 transition-colors">
                               <button
                                 type="button"
                                 onClick={() => toggleBuilding(building.buildingId)}
@@ -1353,19 +1353,19 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                 aria-label={`${isCollapsed ? "Expand" : "Collapse"} ${building.buildingName}`}
                                 className="flex flex-1 items-center gap-3 min-w-0 px-4 py-3 text-left"
                               >
-                                <Building2 className="h-4 w-4 shrink-0 text-zinc-500" />
+                                <Building2 className="h-4 w-4 shrink-0 text-[var(--color-foreground)]0" />
                                 <div className="min-w-0 text-left">
-                                  <p className="text-sm font-semibold text-zinc-100 truncate">
+                                  <p className="text-sm font-semibold text-[var(--color-foreground)] truncate">
                                     {building.buildingName}
                                   </p>
-                                  <p className="flex items-center gap-1 text-xs text-zinc-500 truncate">
+                                  <p className="flex items-center gap-1 text-xs text-[var(--color-foreground)]0 truncate">
                                     <MapPin className="h-3 w-3 shrink-0" />
                                     {building.buildingAddress}
                                   </p>
                                 </div>
                               </button>
                               <div className="flex shrink-0 items-center gap-1 px-3">
-                                <span className="text-xs text-zinc-500 mr-1">
+                                <span className="text-xs text-[var(--color-foreground)]0 mr-1">
                                   {building.properties.length} unit
                                   {building.properties.length !== 1 ? "s" : ""}
                                 </span>
@@ -1375,7 +1375,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                       type="button"
                                       onClick={(e) => e.stopPropagation()}
                                       aria-label={`${building.buildingName} options`}
-                                      className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
+                                      className="rounded p-1.5 text-[var(--color-foreground)]0 hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-foreground)] transition-colors"
                                     >
                                       <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                                     </button>
@@ -1436,7 +1436,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                   onClick={() => toggleBuilding(building.buildingId)}
                                   aria-expanded={!isCollapsed}
                                   aria-label={isCollapsed ? "Expand building" : "Collapse building"}
-                                  className="rounded p-1.5 text-zinc-500 hover:bg-zinc-700 hover:text-zinc-200 transition-colors"
+                                  className="rounded p-1.5 text-[var(--color-foreground)]0 hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-foreground)] transition-colors"
                                 >
                                   <ChevronDown
                                     aria-hidden="true"
@@ -1451,7 +1451,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
 
                             {/* Property rows */}
                             {!isCollapsed && (
-                              <div className="divide-y divide-zinc-800 border-t border-zinc-800">
+                              <div className="divide-y divide-[var(--color-border)] border-t border-[var(--color-border)]">
                                 {building.properties.map((property) => {
                                   const activeLease = leases.find(
                                     (l) => l.propertyId === property.id && l.status === "active",
@@ -1471,7 +1471,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                     <div
                                       key={property.id}
                                       className={cn(
-                                        "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40",
+                                        "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--color-surface)]/40",
                                         hasAttention && "border-l-2",
                                         hasAttention &&
                                           isExpiring &&
@@ -1489,7 +1489,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           !isExpiring &&
                                           openTickets.length === 0 &&
                                           "border-l-[var(--color-destructive)]/60 bg-[var(--color-error-muted)]",
-                                        isSelected && "bg-zinc-800/60",
+                                        isSelected && "bg-[var(--color-surface)]/60",
                                       )}
                                     >
                                       {/* Checkbox — 32px tap target for mobile */}
@@ -1541,10 +1541,10 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           onPropertySelect?.(property.id);
                                         }}
                                       >
-                                        <span className="truncate text-sm font-medium text-zinc-100">
+                                        <span className="truncate text-sm font-medium text-[var(--color-foreground)]">
                                           {property.name}
                                         </span>
-                                        <span className="truncate text-xs text-zinc-500">
+                                        <span className="truncate text-xs text-[var(--color-foreground)]0">
                                           {property.streetAddress || property.address}
                                         </span>
                                         {property.status === "vacant" &&
@@ -1577,7 +1577,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                       </div>
 
                                       {/* Type · bed · bath */}
-                                      <div className="hidden shrink-0 flex-col items-end gap-0.5 text-xs text-zinc-500 xl:flex">
+                                      <div className="hidden shrink-0 flex-col items-end gap-0.5 text-xs text-[var(--color-foreground)]0 xl:flex">
                                         <span className="capitalize">{property.type}</span>
                                         <span>
                                           {property.bedrooms}bd · {property.bathrooms}ba
@@ -1659,10 +1659,10 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                                   ? "text-[var(--color-destructive)]"
                                                   : daysLeft <= 60
                                                     ? "text-[var(--color-warning)]"
-                                                    : "text-zinc-300";
+                                                    : "text-[var(--color-muted-foreground)]";
                                               return (
                                                 <>
-                                                  <span className="text-zinc-500">
+                                                  <span className="text-[var(--color-foreground)]0">
                                                     {daysLeft <= 14
                                                       ? daysLeft <= 0
                                                         ? "Expired"
@@ -1685,7 +1685,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                       </div>
 
                                       {/* Rent */}
-                                      <div className="w-[80px] shrink-0 text-right text-sm font-semibold text-zinc-100">
+                                      <div className="w-[80px] shrink-0 text-right text-sm font-semibold text-[var(--color-foreground)]">
                                         {formatCurrency(Number(property.rent))}
                                       </div>
 
@@ -1706,7 +1706,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                               `/${locale}/portfolio?modal=${property.id}`,
                                             );
                                           }}
-                                          className="shrink-0 rounded-md p-1.5 text-[var(--color-warning)] transition-colors hover:bg-zinc-700 hover:text-[var(--color-warning)]"
+                                          className="shrink-0 rounded-md p-1.5 text-[var(--color-warning)] transition-colors hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-warning)]"
                                         >
                                           <ExternalLink
                                             className="h-3.5 w-3.5"
@@ -1740,8 +1740,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         className={cn(
                                           "shrink-0 rounded-md p-1.5 transition-colors",
                                           isMissingMap
-                                            ? "text-[var(--color-warning)] hover:bg-zinc-700 hover:text-[var(--color-warning)]"
-                                            : "text-zinc-500 hover:bg-zinc-700 hover:text-[var(--color-info)]",
+                                            ? "text-[var(--color-warning)] hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-warning)]"
+                                            : "text-[var(--color-foreground)]0 hover:bg-[var(--color-surface-raised)] hover:text-[var(--color-info)]",
                                         )}
                                       >
                                         <MapPin className="h-4 w-4" aria-hidden="true" />
@@ -1778,7 +1778,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
         {/* Property Detail Modal removed: now handled by intercepting route */}
         {/* Building edit dialog */}
         <Dialog open={!!editingBuilding} onOpenChange={(open) => !open && setEditingBuilding(null)}>
-          <DialogContent className="bg-zinc-900 border-zinc-800 max-w-md">
+          <DialogContent className="bg-[var(--color-card)] border-[var(--color-border)] max-w-md">
             <DialogHeader>
               <DialogTitle>Edit Building</DialogTitle>
               <DialogDescription>Edit building details</DialogDescription>

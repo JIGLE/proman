@@ -45,8 +45,8 @@ function SignInContent() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-        <div className="text-zinc-400">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
+        <div className="text-[var(--color-muted-foreground)]">Loading...</div>
       </div>
     );
   }
@@ -56,13 +56,13 @@ function SignInContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
       <div className="max-w-md w-full mx-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8">
+        <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-xl p-8 shadow-[var(--shadow-modal)]">
           <div className="text-center">
-            <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-[var(--color-muted)] rounded-full flex items-center justify-center mx-auto mb-6">
               <svg
-                className="w-8 h-8 text-zinc-400"
+                className="w-8 h-8 text-[var(--color-muted-foreground)]"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -76,8 +76,10 @@ function SignInContent() {
               </svg>
             </div>
 
-            <h1 className="text-2xl font-bold text-zinc-50 mb-2">Welcome to Domora</h1>
-            <p className="text-zinc-400 mb-8">
+            <h1 className="text-2xl font-bold text-[var(--color-foreground)] mb-2">
+              Welcome to Domora
+            </h1>
+            <p className="text-[var(--color-muted-foreground)] mb-8">
               Sign in to access your property management dashboard
             </p>
 
@@ -100,27 +102,25 @@ function SignInContent() {
                   <input
                     name="email"
                     type="email"
-                    className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none"
+                    className="w-full bg-[var(--color-input)] text-sm text-[var(--color-foreground)] p-3 rounded-md border border-[var(--color-border)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-focus)] outline-none transition-colors placeholder:text-[var(--color-muted-foreground)]"
                     placeholder="Email"
                     defaultValue=""
                   />
                   <input
                     name="password"
                     type="password"
-                    className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none"
+                    className="w-full bg-[var(--color-input)] text-sm text-[var(--color-foreground)] p-3 rounded-md border border-[var(--color-border)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-focus)] outline-none transition-colors placeholder:text-[var(--color-muted-foreground)]"
                     placeholder="Password"
                     defaultValue=""
                   />
-                  <Button
-                    type="submit"
-                    className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white"
-                  >
+                  <Button type="submit" className="w-full h-10">
                     Sign In
                   </Button>
                 </form>
                 <Button
                   type="button"
-                  className="w-full h-10 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  variant="success"
+                  className="w-full h-10 mt-2"
                   onClick={() => {
                     router.push(`/${detectLocale()}/demo`);
                   }}
@@ -132,10 +132,12 @@ function SignInContent() {
 
             <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-zinc-800" />
+                <div className="w-full border-t border-[var(--color-border)]" />
               </div>
               <div className="relative flex justify-center text-xs">
-                <span className="bg-zinc-900 px-2 text-zinc-500">or</span>
+                <span className="bg-[var(--color-card)] px-2 text-[var(--color-muted-foreground)]">
+                  or
+                </span>
               </div>
             </div>
 
@@ -147,7 +149,7 @@ function SignInContent() {
                 signIn("google", { callbackUrl: `/${locale}/dashboard` });
               }}
               variant="outline"
-              className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700 font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-3"
+              className="w-full font-medium py-3 px-4 flex items-center justify-center gap-3"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -172,7 +174,9 @@ function SignInContent() {
 
             {isDemoEnabled && process.env.NODE_ENV !== "production" && (
               <div className="mt-6 text-center">
-                <p className="text-xs text-zinc-500">Demo mode active — enter any credentials</p>
+                <p className="text-xs text-[var(--color-muted-foreground)]">
+                  Demo mode active — enter any credentials
+                </p>
               </div>
             )}
           </div>
@@ -187,8 +191,8 @@ export default function SignIn() {
     <ErrorBoundary>
       <Suspense
         fallback={
-          <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-            <div className="text-zinc-400">Loading...</div>
+          <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
+            <div className="text-[var(--color-muted-foreground)]">Loading...</div>
           </div>
         }
       >
