@@ -108,25 +108,29 @@ function toFormData(property: Property): PropertyFormData {
 
 const STATUS_STYLES: Record<Property["status"], string> = {
   occupied: "bg-success/20 text-success border-success/30",
-  vacant: "bg-amber-600/20 text-amber-400 border-amber-600/30",
-  maintenance: "bg-orange-600/20 text-orange-400 border-orange-600/30",
+  vacant:
+    "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/30",
+  maintenance:
+    "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/30",
 };
 
 const ISSUE_STYLES: Record<IssueSeverity, { row: string; icon: string; badge: string }> = {
   urgent: {
-    row: "border-red-500/30 bg-red-500/[0.06]",
-    icon: "text-red-400",
-    badge: "bg-red-500/15 text-red-300 border-red-500/30",
+    row: "border-[var(--color-destructive)]/30 bg-[var(--color-error-muted)]",
+    icon: "text-[var(--color-destructive)]",
+    badge:
+      "bg-[var(--color-error-muted)] text-[var(--color-destructive)] border-[var(--color-destructive)]/30",
   },
   warning: {
-    row: "border-amber-500/30 bg-amber-500/[0.06]",
-    icon: "text-amber-400",
-    badge: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+    row: "border-[var(--color-warning)]/30 bg-[var(--color-warning-muted)]",
+    icon: "text-[var(--color-warning)]",
+    badge:
+      "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/30",
   },
   info: {
-    row: "border-blue-500/30 bg-blue-500/[0.06]",
-    icon: "text-blue-400",
-    badge: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+    row: "border-[var(--color-info)]/30 bg-[var(--color-info-muted)]",
+    icon: "text-[var(--color-info)]",
+    badge: "bg-[var(--color-info-muted)] text-[var(--color-info)] border-[var(--color-info)]/30",
   },
 };
 
@@ -529,8 +533,8 @@ function ViewContent({
                 issues.length === 0
                   ? "border-success/30 bg-success/10 text-success"
                   : hasUrgent
-                    ? "border-red-500/30 bg-red-500/10 text-red-300"
-                    : "border-amber-500/30 bg-amber-500/10 text-amber-300",
+                    ? "border-[var(--color-destructive)]/30 bg-[var(--color-error-muted)] text-[var(--color-destructive)]"
+                    : "border-[var(--color-warning)]/30 bg-[var(--color-warning-muted)] text-[var(--color-warning)]",
               )}
             >
               {issues.length === 0 ? (
@@ -557,7 +561,10 @@ function ViewContent({
                     Edit property
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-red-400 focus:text-red-300" onClick={onDelete}>
+                  <DropdownMenuItem
+                    className="text-[var(--color-destructive)] focus:text-[var(--color-destructive)]/70"
+                    onClick={onDelete}
+                  >
                     <Trash2 className="mr-2 h-3.5 w-3.5" />
                     Delete property
                   </DropdownMenuItem>
@@ -674,7 +681,7 @@ function ViewContent({
               <KpiCell
                 label="Open tickets"
                 value={String(openTickets)}
-                valueClass={openTickets > 0 ? "text-amber-300" : undefined}
+                valueClass={openTickets > 0 ? "text-[var(--color-warning)]" : undefined}
                 onClick={() => navigateTo(`/maintenance?propertyId=${property.id}`)}
                 muted={openTickets === 0}
               />
@@ -705,7 +712,7 @@ function ViewContent({
                         <p
                           className={cn(
                             "text-xs capitalize",
-                            r.status === "paid" ? "text-success" : "text-amber-400",
+                            r.status === "paid" ? "text-success" : "text-[var(--color-warning)]",
                           )}
                         >
                           {r.status}
@@ -792,7 +799,7 @@ function ViewContent({
                       <p
                         className={cn(
                           "text-xs capitalize",
-                          r.status === "paid" ? "text-success" : "text-amber-400",
+                          r.status === "paid" ? "text-success" : "text-[var(--color-warning)]",
                         )}
                       >
                         {r.status}
