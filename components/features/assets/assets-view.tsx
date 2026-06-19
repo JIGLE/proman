@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import { PropertiesView, PropertiesViewRef } from "@/components/features/property/property-list";
 import { PropertyCreateWizard } from "@/components/features/property/property-create-wizard";
+import { PageContainer } from "@/components/shared/page-container";
 import { ExportButton, ExportColumn } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 import { Button } from "@/components/ui/button";
@@ -245,42 +246,39 @@ export function AssetsView(): React.ReactElement {
 
   // ── Owner portal view ──────────────────────────────────────────────────────────
   return (
-    <div className="space-y-5">
-      {/* Compact page header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-[var(--color-foreground)]">
-            {t("title")}
-          </h1>
-          <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-            {properties.length} {t("stats.trackedUnits").toLowerCase()}
-            {properties.length > 0 && (
-              <>
-                {" · "}
-                {occupiedCount} occupied ({occupancyRate}%)
-                {" · "}
-                <span className="font-medium text-[var(--color-foreground)]">
-                  {formatCurrency(monthlyRunRate)}/mo
-                </span>
-                {lastMonthTotal > 0 &&
-                  (() => {
-                    const delta = monthlyRunRate - lastMonthTotal;
-                    const isPositive = delta >= 0;
-                    return (
-                      <span
-                        className={`text-xs ${isPositive ? "text-emerald-400" : "text-red-400"}`}
-                      >
-                        {" "}
-                        ({isPositive ? "+" : ""}
-                        {formatCurrency(delta)} vs last mo)
-                      </span>
-                    );
-                  })()}
-              </>
-            )}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+    <PageContainer
+      title={t("title")}
+      summary={
+        <>
+          {properties.length} {t("stats.trackedUnits").toLowerCase()}
+          {properties.length > 0 && (
+            <>
+              {" · "}
+              {occupiedCount} occupied ({occupancyRate}%)
+              {" · "}
+              <span className="font-medium text-[var(--color-foreground)]">
+                {formatCurrency(monthlyRunRate)}/mo
+              </span>
+              {lastMonthTotal > 0 &&
+                (() => {
+                  const delta = monthlyRunRate - lastMonthTotal;
+                  const isPositive = delta >= 0;
+                  return (
+                    <span
+                      className={`text-xs ${isPositive ? "text-emerald-400" : "text-red-400"}`}
+                    >
+                      {" "}
+                      ({isPositive ? "+" : ""}
+                      {formatCurrency(delta)} vs last mo)
+                    </span>
+                  );
+                })()}
+            </>
+          )}
+        </>
+      }
+      actions={
+        <>
           <ExportButton data={properties} filename="properties-export" columns={propertyColumns} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -303,9 +301,9 @@ export function AssetsView(): React.ReactElement {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       {/* Properties list — handles list, table and map view internally */}
       <PropertiesView
         ref={propertiesViewRef}
@@ -393,7 +391,7 @@ export function AssetsView(): React.ReactElement {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }
 

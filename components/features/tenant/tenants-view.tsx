@@ -477,7 +477,25 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
           <LoadingState variant="cards" count={6} />
         ) : (
           <div className="space-y-6">
-            <PageHeader title="Tenants" description="Manage your tenants and their information" />
+            <PageHeader
+              title="Tenants"
+              summary={
+                <>
+                  {tenants.length} {tenants.length === 1 ? "tenant" : "tenants"}
+                  {(() => {
+                    const overdue = tenants.filter((t) => t.paymentStatus === "overdue").length;
+                    return overdue > 0 ? (
+                      <>
+                        {" · "}
+                        <span className="font-medium text-[var(--color-destructive)]">
+                          {overdue} overdue
+                        </span>
+                      </>
+                    ) : null;
+                  })()}
+                </>
+              }
+            />
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogTrigger asChild>
                 <Button onClick={dialog.openDialog} className="hidden">
