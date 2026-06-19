@@ -8,8 +8,8 @@ import {
   CheckCircle,
   Wrench,
   ChevronDown,
+  ChevronRight,
   Plus,
-  ExternalLink,
   Pencil,
   Trash2,
   MoreHorizontal,
@@ -1658,23 +1658,26 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         {getStatusBadge(property.status)}
                                       </div>
 
-                                      {/* Needs-attention shortcut — navigate to detail page */}
-                                      {hasAttention && (
-                                        <button
-                                          type="button"
-                                          aria-label={`View details for ${property.name}`}
-                                          title="View details"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            router.push(
-                                              `/${locale}/portfolio?modal=${property.id}`,
-                                            );
-                                          }}
-                                          className="shrink-0 rounded-md p-1.5 text-amber-500 transition-colors hover:bg-zinc-700 hover:text-amber-300"
-                                        >
-                                          <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
-                                        </button>
-                                      )}
+                                      {/* Navigate to detail — always visible */}
+                                      <button
+                                        type="button"
+                                        aria-label={`View details for ${property.name}`}
+                                        title="View details"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          router.push(
+                                            `/${locale}/portfolio?modal=${property.id}`,
+                                          );
+                                        }}
+                                        className={cn(
+                                          "shrink-0 rounded-md p-1.5 transition-colors",
+                                          hasAttention
+                                            ? "text-amber-500 hover:bg-zinc-700 hover:text-amber-300"
+                                            : "text-zinc-500 hover:bg-zinc-700 hover:text-zinc-300",
+                                        )}
+                                      >
+                                        <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                                      </button>
 
                                       {/* Locate on map button */}
                                       <button

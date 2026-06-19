@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
-import { Mail, Plus, MoreHorizontal, Trash2, Edit, Eye } from "lucide-react";
+import React, { useMemo, useState, useEffect, useCallback, forwardRef, useImperativeHandle } from "react";
+import { Mail, Plus, MoreHorizontal, Trash2, Edit, Eye, ChevronDown } from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
 import {
@@ -66,6 +66,210 @@ export type TenantsViewProps = { density?: "comfortable" | "compact" };
 export type TenantsViewRef = {
   openDialog: () => void;
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function TenantForm({ dialog, properties }: { dialog: any; properties: Array<{ id: string; name: string }> }) {
+  const [showMore, setShowMore] = useState(!dialog.editingItem ? false : true);
+  const isEdit = !!dialog.editingItem;
+
+  return (
+    <form onSubmit={dialog.handleSubmit} className="space-y-4">
+      {/* Required fields — always visible */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="name">Full Name</Label>
+          <Input
+            id="name"
+            value={dialog.formData.name}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              dialog.updateFormData({ name: e.target.value })
+            }
+            className={dialog.formErrors.name ? "border-red-500" : ""}
+            required
+          />
+          {dialog.formErrors.name && (
+            <p className="text-sm text-destructive">{dialog.formErrors.name}</p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="email">Email</Label>
+          <Input
+            id="email"
+            type="email"
+            value={dialog.formData.email}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+              dialog.updateFormData({ email: e.target.value })
+            }
+            className={dialog.formErrors.email ? "border-red-500" : ""}
+            required
+          />
+          {dialog.formErrors.email && (
+            <p className="text-sm text-destructive">{dialog.formErrors.email}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Additional details — collapsible on create, always open on edit */}
+      {!isEdit && (
+        <button
+          type="button"
+          onClick={() => setShowMore((v) => !v)}
+          className="flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors"
+        >
+          <ChevronDown
+            className={cn("h-4 w-4 transition-transform", showMore && "rotate-180")}
+            aria-hidden="true"
+          />
+          {showMore ? "Hide" : "Add"} lease & contact details
+        </button>
+      )}
+
+      {(showMore || isEdit) && (
+        <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone</Label>
+              <Input
+                id="phone"
+                value={dialog.formData.phone ?? ""}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  dialog.updateFormData({ phone: e.target.value })
+                }
+                className={dialog.formErrors.phone ? "border-red-500" : ""}
+              />
+              {dialog.formErrors.phone && (
+                <p className="text-sm text-destructive">{dialog.formErrors.phone}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="property">Property</Label>
+              <Select
+                value={dialog.formData.propertyId ?? ""}
+                onValueChange={(value: string) => dialog.updateFormData({ propertyId: value })}
+              >
+                <SelectTrigger
+                  className={dialog.formErrors.propertyId ? "border-red-500" : ""}
+                >
+                  <SelectValue placeholder="Select property" />
+                </SelectTrigger>
+                <SelectContent>
+                  {properties.map((property) => (
+                    <SelectItem key={property.id} value={property.id}>
+                      {property.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {dialog.formErrors.propertyId && (
+                <p className="text-sm text-destructive">{dialog.formErrors.propertyId}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="rent">Monthly Rent</Label>
+              <Input
+                id="rent"
+                type="number"
+                min="0"
+                value={dialog.formData.rent ?? 0}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  dialog.updateFormData({ rent: parseInt(e.target.value) || 0 })
+                }
+                className={dialog.formErrors.rent ? "border-red-500" : ""}
+              />
+              {dialog.formErrors.rent && (
+                <p className="text-sm text-destructive">{dialog.formErrors.rent}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="leaseStart">Lease Start</Label>
+              <Input
+                id="leaseStart"
+                type="date"
+                value={dialog.formData.leaseStart ?? ""}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  dialog.updateFormData({ leaseStart: e.target.value })
+                }
+                className={dialog.formErrors.leaseStart ? "border-red-500" : ""}
+              />
+              {dialog.formErrors.leaseStart && (
+                <p className="text-sm text-destructive">{dialog.formErrors.leaseStart}</p>
+              )}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="leaseEnd">Lease End</Label>
+              <Input
+                id="leaseEnd"
+                type="date"
+                value={dialog.formData.leaseEnd ?? ""}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                  dialog.updateFormData({ leaseEnd: e.target.value })
+                }
+                className={dialog.formErrors.leaseEnd ? "border-red-500" : ""}
+              />
+              {dialog.formErrors.leaseEnd && (
+                <p className="text-sm text-destructive">{dialog.formErrors.leaseEnd}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="paymentStatus">Payment Status</Label>
+              <Select
+                value={dialog.formData.paymentStatus}
+                onValueChange={(value: Tenant["paymentStatus"]) =>
+                  dialog.updateFormData({ paymentStatus: value })
+                }
+              >
+                <SelectTrigger
+                  className={dialog.formErrors.paymentStatus ? "border-red-500" : ""}
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="paid">Paid</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="overdue">Overdue</SelectItem>
+                </SelectContent>
+              </Select>
+              {dialog.formErrors.paymentStatus && (
+                <p className="text-sm text-destructive">{dialog.formErrors.paymentStatus}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notes">Notes</Label>
+            <Textarea
+              id="notes"
+              value={dialog.formData.notes ?? ""}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) =>
+                dialog.updateFormData({ notes: e.target.value })
+              }
+              rows={3}
+              className={dialog.formErrors.notes ? "border-red-500" : ""}
+            />
+            {dialog.formErrors.notes && (
+              <p className="text-sm text-destructive">{dialog.formErrors.notes}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div className="flex justify-end gap-2">
+        <Button type="button" variant="outline" onClick={dialog.closeDialog}>
+          Cancel
+        </Button>
+        <Button type="submit" loading={dialog.isSubmitting}>
+          {dialog.editingItem ? "Update Tenant" : "Create Tenant"}
+        </Button>
+      </div>
+    </form>
+  );
+}
 
 export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
   function TenantsView(_props, ref): React.ReactElement {
@@ -282,173 +486,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                     {dialog.editingItem ? "Update tenant information" : "Enter tenant details"}
                   </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={dialog.handleSubmit} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input
-                        id="name"
-                        value={dialog.formData.name}
-                        onChange={(e) => dialog.updateFormData({ name: e.target.value })}
-                        className={dialog.formErrors.name ? "border-red-500" : ""}
-                        required
-                      />
-                      {dialog.formErrors.name && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.name}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={dialog.formData.email}
-                        onChange={(e) => dialog.updateFormData({ email: e.target.value })}
-                        className={dialog.formErrors.email ? "border-red-500" : ""}
-                        required
-                      />
-                      {dialog.formErrors.email && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.email}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone</Label>
-                      <Input
-                        id="phone"
-                        value={dialog.formData.phone}
-                        onChange={(e) => dialog.updateFormData({ phone: e.target.value })}
-                        className={dialog.formErrors.phone ? "border-red-500" : ""}
-                        required
-                      />
-                      {dialog.formErrors.phone && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.phone}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="property">Property</Label>
-                      <Select
-                        value={dialog.formData.propertyId}
-                        onValueChange={(value) => dialog.updateFormData({ propertyId: value })}
-                      >
-                        <SelectTrigger
-                          className={dialog.formErrors.propertyId ? "border-red-500" : ""}
-                        >
-                          <SelectValue placeholder="Select property" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {properties.map((property) => (
-                            <SelectItem key={property.id} value={property.id}>
-                              {property.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {dialog.formErrors.propertyId && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.propertyId}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="rent">Monthly Rent ($)</Label>
-                      <Input
-                        id="rent"
-                        type="number"
-                        min="0"
-                        value={dialog.formData.rent}
-                        onChange={(e) =>
-                          dialog.updateFormData({
-                            rent: parseInt(e.target.value) || 0,
-                          })
-                        }
-                        className={dialog.formErrors.rent ? "border-red-500" : ""}
-                        required
-                      />
-                      {dialog.formErrors.rent && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.rent}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="leaseStart">Lease Start</Label>
-                      <Input
-                        id="leaseStart"
-                        type="date"
-                        value={dialog.formData.leaseStart}
-                        onChange={(e) => dialog.updateFormData({ leaseStart: e.target.value })}
-                        className={dialog.formErrors.leaseStart ? "border-red-500" : ""}
-                        required
-                      />
-                      {dialog.formErrors.leaseStart && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.leaseStart}</p>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="leaseEnd">Lease End</Label>
-                      <Input
-                        id="leaseEnd"
-                        type="date"
-                        value={dialog.formData.leaseEnd}
-                        onChange={(e) => dialog.updateFormData({ leaseEnd: e.target.value })}
-                        className={dialog.formErrors.leaseEnd ? "border-red-500" : ""}
-                        required
-                      />
-                      {dialog.formErrors.leaseEnd && (
-                        <p className="text-sm text-destructive">{dialog.formErrors.leaseEnd}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="paymentStatus">Payment Status</Label>
-                    <Select
-                      value={dialog.formData.paymentStatus}
-                      onValueChange={(value: Tenant["paymentStatus"]) =>
-                        dialog.updateFormData({ paymentStatus: value })
-                      }
-                    >
-                      <SelectTrigger
-                        className={dialog.formErrors.paymentStatus ? "border-red-500" : ""}
-                      >
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="paid">Paid</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="overdue">Overdue</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    {dialog.formErrors.paymentStatus && (
-                      <p className="text-sm text-destructive">{dialog.formErrors.paymentStatus}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
-                    <Textarea
-                      id="notes"
-                      value={dialog.formData.notes}
-                      onChange={(e) => dialog.updateFormData({ notes: e.target.value })}
-                      rows={4}
-                      className={dialog.formErrors.notes ? "border-red-500" : ""}
-                    />
-                    {dialog.formErrors.notes && (
-                      <p className="text-sm text-destructive">{dialog.formErrors.notes}</p>
-                    )}
-                  </div>
-
-                  <div className="flex justify-end gap-2">
-                    <Button type="button" variant="outline" onClick={dialog.closeDialog}>
-                      Cancel
-                    </Button>
-                    <Button type="submit" loading={dialog.isSubmitting}>
-                      {dialog.editingItem ? "Update Tenant" : "Create Tenant"}
-                    </Button>
-                  </div>
-                </form>
+                <TenantForm dialog={dialog} properties={properties} />
               </DialogContent>
             </Dialog>
 
