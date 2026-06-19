@@ -11,6 +11,7 @@ import type {
   TransactionStatus,
   PaymentMethodType,
 } from "@prisma/client";
+import type { NormalizedProviderEvent } from "./providers/sibs-client";
 
 // Initialize Stripe client lazily to avoid build-time errors
 let stripeInstance: Stripe | null = null;
@@ -464,6 +465,59 @@ export class PaymentService {
       transactionId: transaction.id,
       newStatus: isFullRefund ? "refunded" : "partially_refunded",
     };
+  }
+
+  /**
+   * Reconcile a non-Stripe provider event (MB WAY via SIBS, Bizum) against a
+   * pending transaction. The transaction is located by the provider's own
+   * reference first, then by our merchant transaction id (its primary key).
+   */
+  public async processProviderWebhook(
+    event: NormalizedProviderEvent,
+  ): Promise<ProcessWebhookResult> {
+    const prisma: PrismaClient = getPrismaClient();
+
+    try {
+      const transaction =
+        (event.providerTransactionId
+          ? await prisma.paymentTransaction.findFirst({
+              where: { providerTransactionId: event.providerTransactionId },
+            })
+          : null) ??
+        (event.merchantTransactionId
+          ? await prisma.paymentTransaction.findUnique({
+              where: { id: event.merchantTransactionId },
+            })
+          : null);
+
+      if (!transaction) {
+        return { success: false, error: "Transaction not found" };
+      }
+
+      await prisma.paymentTransaction.update({
+        where: { id: transaction.id },
+        data: {
+          status: event.status,
+          providerTransactionId: event.providerTransactionId ?? transaction.providerTransactionId,
+          ...(event.status === "succeeded" ? { processedAt: new Date() } : {}),
+          ...(event.status === "failed" ? { failedAt: new Date() } : {}),
+        },
+      });
+
+      // Mark the linked invoice paid on success.
+      if (event.status === "succeeded" && transaction.invoiceId) {
+        await prisma.invoice.update({
+          where: { id: transaction.invoiceId },
+          data: { status: "paid", paidDate: new Date() },
+        });
+      }
+
+      return { success: true, transactionId: transaction.id, newStatus: event.status };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Webhook processing failed";
+      console.error("Provider webhook processing error:", error);
+      return { success: false, error: message };
+    }
   }
 
   /**
