@@ -94,7 +94,8 @@
     "vendors": "Proveedores",
     "contracts": "Contratos",
     "compliance": "Cumplimiento",
-    "taxFiling": "Declaración Fiscal"
+    "taxFiling": "Declaración Fiscal",
+    "more": "Más"
   },
   "dashboard": {
     "welcome": "Bienvenido a tu panel de gestión inmobiliaria",
@@ -236,7 +237,17 @@
     "addTenant": "Añade un inquilino",
     "addTenantDesc": "Añade los datos del inquilino y asígnalo a un inmueble.",
     "recordPayment": "Registra un pago",
-    "recordPaymentDesc": "Registra tu primer pago de alquiler para desbloquear análisis de ingresos."
+    "recordPaymentDesc": "Registra tu primer pago de alquiler para desbloquear análisis de ingresos.",
+    "loadSample": "Cargar cartera de ejemplo",
+    "loadSampleDesc": "Explora Domora con una cartera lista — y bórrala cuando quieras.",
+    "loadingSample": "Cargando ejemplo…",
+    "sampleLoaded": "Cartera de ejemplo cargada — explora libremente.",
+    "sampleError": "No se pudo cargar la cartera de ejemplo. Inténtalo de nuevo.",
+    "sampleBanner": "Estás explorando con datos de ejemplo.",
+    "clearSample": "Borrar datos de ejemplo",
+    "clearingSample": "Borrando…",
+    "sampleCleared": "Datos de ejemplo borrados.",
+    "clearSampleConfirm": "¿Eliminar todos los datos de ejemplo? Esta acción no se puede deshacer."
   },
   "emptyState": {
     "properties": {

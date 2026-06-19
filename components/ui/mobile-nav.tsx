@@ -1,11 +1,19 @@
 "use client";
 
 import * as React from "react";
-import { LogOut, Building2, Menu, X, Settings } from "lucide-react";
+import { LogOut, Building2, Menu, X, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
+import {
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "./sheet";
 import { LanguageSelector } from "@/components/shared/language-selector";
+import { NotificationBell } from "@/components/shared/notification-bell";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -22,8 +30,9 @@ export function MobileBottomNav({
 }: MobileNavProps): React.ReactElement {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const { mobilePrimaryNavigation, isOwnerPortal } = usePortalAccess();
+  const { mobilePrimaryNavigation, mobileSecondaryNavigation } = usePortalAccess();
   const tNav = useTranslations("navigation");
+  const [moreOpen, setMoreOpen] = React.useState(false);
   const user = session?.user;
   const initials =
     user?.name
@@ -34,9 +43,19 @@ export function MobileBottomNav({
 
   // Extract locale from pathname
   const currentLocale = pathname.split("/")[1] || "pt";
+  const navLabel = (labelKey: string) =>
+    tNav(labelKey.replace("navigation.", "") as Parameters<typeof tNav>[0]);
+
   const primaryNavItems = mobilePrimaryNavigation.map((item) => ({
     id: item.key,
-    label: tNav(item.labelKey.replace("navigation.", "") as Parameters<typeof tNav>[0]),
+    label: navLabel(item.labelKey),
+    icon: item.icon,
+    href: item.href,
+  }));
+
+  const secondaryNavItems = mobileSecondaryNavigation.map((item) => ({
+    id: item.key,
+    label: navLabel(item.labelKey),
     icon: item.icon,
     href: item.href,
   }));
@@ -46,6 +65,12 @@ export function MobileBottomNav({
     const fullPath = `/${currentLocale}${href}`;
     return pathname === fullPath || pathname.startsWith(`${fullPath}/`);
   };
+
+  // Highlight the "More" tab when the active route lives behind it.
+  const isMoreActive = secondaryNavItems.some((item) => isItemActive(item.href));
+  // Grid holds the primary items plus the "More" trigger (when extras exist).
+  const showMore = secondaryNavItems.length > 0;
+  const columnCount = primaryNavItems.length + (showMore ? 1 : 0);
 
   return (
     <>
@@ -59,7 +84,7 @@ export function MobileBottomNav({
         <div className="bg-[var(--color-background)]/95 backdrop-blur-sm border-t border-[var(--color-border)]">
           <div
             className="grid h-16 items-center px-2"
-            style={{ gridTemplateColumns: `repeat(${primaryNavItems.length}, minmax(0, 1fr))` }}
+            style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
           >
             {primaryNavItems.map((item) => {
               const Icon = item.icon;
@@ -100,41 +125,44 @@ export function MobileBottomNav({
                 </Link>
               );
             })}
-          </div>
-          {session && (
-            <div className="border-t border-[var(--color-border)] px-3 py-2 flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
-                <Avatar className="w-7 h-7 ring-1 ring-[var(--color-border)]">
-                  <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
-                  <AvatarFallback className="bg-accent-primary text-white text-xs font-semibold">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="truncate text-xs text-[var(--color-muted-foreground)]">
-                  {user?.name}
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <LanguageSelector compact />
-                {isOwnerPortal && (
-                  <Link
-                    href={`/${currentLocale}/settings`}
-                    className="inline-flex items-center justify-center h-8 w-8 rounded-md text-[var(--color-muted-foreground)] hover:bg-[var(--color-hover)] hover:text-[var(--color-foreground)]"
-                    aria-label="Settings"
-                  >
-                    <Settings className="h-4 w-4" />
-                  </Link>
+
+            {showMore && (
+              <button
+                type="button"
+                onClick={() => setMoreOpen(true)}
+                className={cn(
+                  "flex flex-col items-center justify-center gap-0.5 h-full px-1 py-1 rounded-lg transition-all duration-200",
+                  "active:scale-95 touch-manipulation",
+                  "focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-1",
+                  isMoreActive
+                    ? "bg-accent-primary/15 text-accent-primary"
+                    : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
                 )}
-                <button
-                  onClick={() => signOut({ callbackUrl: `/${currentLocale}` })}
-                  className="inline-flex items-center justify-center h-8 w-8 rounded-md text-[var(--color-error)] hover:bg-[var(--color-error)]/10"
-                  aria-label="Sign Out"
+                aria-label={tNav("more")}
+                aria-haspopup="dialog"
+                aria-expanded={moreOpen}
+              >
+                <div
+                  className={cn(
+                    "p-1.5 rounded-lg transition-colors",
+                    isMoreActive && "bg-accent-primary/20",
+                  )}
                 >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          )}
+                  <MoreHorizontal className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <span
+                  className={cn(
+                    "text-xs font-medium transition-colors",
+                    isMoreActive
+                      ? "text-accent-primary"
+                      : "text-[var(--color-muted-foreground)]",
+                  )}
+                >
+                  {tNav("more")}
+                </span>
+              </button>
+            )}
+          </div>
           {/* iOS safe area padding */}
           <div
             className="bg-[var(--color-background)]"
@@ -142,6 +170,78 @@ export function MobileBottomNav({
           />
         </div>
       </nav>
+
+      {/* "More" sheet — surfaces every remaining destination + account actions */}
+      <Sheet open={moreOpen} onOpenChange={setMoreOpen}>
+        <SheetContent
+          side="bottom"
+          className="md:hidden max-h-[85vh] overflow-y-auto rounded-t-2xl"
+        >
+          <SheetHeader className="text-left">
+            <SheetTitle>{tNav("more")}</SheetTitle>
+          </SheetHeader>
+
+          {session && (
+            <div className="mt-2 flex items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] px-3 py-2.5">
+              <Avatar className="w-9 h-9 ring-1 ring-[var(--color-border)]">
+                <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+                <AvatarFallback className="bg-accent-primary text-white text-sm font-semibold">
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-[var(--color-foreground)]">
+                  {user?.name}
+                </p>
+                <p className="truncate text-xs text-[var(--color-muted-foreground)]">
+                  {user?.email}
+                </p>
+              </div>
+              <NotificationBell />
+              <LanguageSelector compact />
+            </div>
+          )}
+
+          <nav className="mt-3 grid grid-cols-2 gap-2" aria-label={tNav("more")}>
+            {secondaryNavItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = isItemActive(item.href);
+              return (
+                <SheetClose asChild key={item.id}>
+                  <Link
+                    href={`/${currentLocale}${item.href}`}
+                    onClick={() => onTabChange?.(item.id)}
+                    className={cn(
+                      "flex items-center gap-3 rounded-xl border px-3 py-3 transition-colors",
+                      "active:scale-[0.98] touch-manipulation",
+                      "focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]",
+                      isActive
+                        ? "border-accent-primary/40 bg-accent-primary/10 text-accent-primary"
+                        : "border-[var(--color-border)] text-[var(--color-foreground)] hover:bg-[var(--color-hover)]",
+                    )}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                    <span className="truncate text-sm font-medium">{item.label}</span>
+                  </Link>
+                </SheetClose>
+              );
+            })}
+          </nav>
+
+          {session && (
+            <button
+              type="button"
+              onClick={() => signOut({ callbackUrl: `/${currentLocale}` })}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--color-error)]/30 px-3 py-3 text-sm font-medium text-[var(--color-error)] hover:bg-[var(--color-error)]/10 active:scale-[0.98] touch-manipulation"
+              aria-label="Sign Out"
+            >
+              <LogOut className="h-4 w-4" aria-hidden="true" />
+              Sign Out
+            </button>
+          )}
+        </SheetContent>
+      </Sheet>
     </>
   );
 }

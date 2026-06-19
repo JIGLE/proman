@@ -9,11 +9,15 @@ import {
   MaintenancePriority,
 } from "@prisma/client";
 
-export async function seedDemoData(userId: string): Promise<void> {
+/**
+ * Remove every owner-scoped record for a user. Used both to reset the sandbox
+ * before re-seeding and to back the user-facing "Clear sample data" action.
+ * Defensive: some developer DBs may be missing migrations/tables, so each
+ * delete is isolated and never crashes the caller.
+ */
+export async function clearUserData(userId: string): Promise<void> {
   const prisma = getPrismaClient();
 
-  // 1. Clean existing records for the sandbox user
-  // Defensive: some developer DBs may be missing migrations/tables. Don't crash the API.
   const safeDelete = async (action: () => Promise<unknown>, name: string) => {
     try {
       await action();
@@ -38,7 +42,14 @@ export async function seedDemoData(userId: string): Promise<void> {
   await safeDelete(() => prisma.property.deleteMany({ where: { userId } }), "properties");
   await safeDelete(() => prisma.owner.deleteMany({ where: { userId } }), "owners");
 
-  console.log(`[seeder] Cleared available demo data for user: ${userId}`);
+  console.log(`[seeder] Cleared workspace data for user: ${userId}`);
+}
+
+export async function seedDemoData(userId: string): Promise<void> {
+  const prisma = getPrismaClient();
+
+  // 1. Clean existing records for the sandbox user
+  await clearUserData(userId);
 
   // 2. Create Owners
   const owner = await prisma.owner.create({

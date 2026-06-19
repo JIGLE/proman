@@ -94,7 +94,8 @@
     "vendors": "Vendors",
     "contracts": "Contracts",
     "compliance": "Compliance",
-    "taxFiling": "Tax Filing"
+    "taxFiling": "Tax Filing",
+    "more": "More"
   },
   "dashboard": {
     "welcome": "Welcome to your property management dashboard",
@@ -236,7 +237,17 @@
     "addTenant": "Add a tenant",
     "addTenantDesc": "Add tenant details and assign them to a property.",
     "recordPayment": "Record a payment",
-    "recordPaymentDesc": "Log your first rent payment to unlock revenue analytics."
+    "recordPaymentDesc": "Log your first rent payment to unlock revenue analytics.",
+    "loadSample": "Load sample portfolio",
+    "loadSampleDesc": "Explore Domora with a ready-made portfolio — then clear it anytime.",
+    "loadingSample": "Loading sample…",
+    "sampleLoaded": "Sample portfolio loaded — explore away.",
+    "sampleError": "Couldn't load the sample portfolio. Please try again.",
+    "sampleBanner": "You're exploring with sample data.",
+    "clearSample": "Clear sample data",
+    "clearingSample": "Clearing…",
+    "sampleCleared": "Sample data cleared.",
+    "clearSampleConfirm": "Remove all sample data? This cannot be undone."
   },
   "emptyState": {
     "properties": {

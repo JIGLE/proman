@@ -29,6 +29,10 @@ import {
 } from "@/components/ui/onboarding-checklist";
 import { cn } from "@/lib/utils/utils";
 import { ActionPanel } from "@/components/features/dashboard/action-panel";
+import {
+  SampleDataLoadButton,
+  SampleDataBanner,
+} from "@/components/features/dashboard/sample-data";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
@@ -431,6 +435,7 @@ export function OverviewView({
     return (
       <div className="space-y-6">
         <OnboardingChecklist steps={richSteps} />
+        <SampleDataLoadButton />
         <div className="grid gap-4 sm:grid-cols-3">
           <FeatureHighlightCard
             icon={Building2}
@@ -455,6 +460,9 @@ export function OverviewView({
   if (isOwnerPortal) {
     return (
       <div className="space-y-5">
+        {/* Reminder that the populated workspace is seeded sample data */}
+        <SampleDataBanner />
+
         {/* Onboarding: top priority when setup is incomplete */}
         {showChecklist && <OnboardingChecklist steps={onboardingSteps} />}
 

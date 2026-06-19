@@ -94,7 +94,8 @@
     "vendors": "Fornecedores",
     "contracts": "Contratos",
     "compliance": "Conformidade",
-    "taxFiling": "Declaração Fiscal"
+    "taxFiling": "Declaração Fiscal",
+    "more": "Mais"
   },
   "dashboard": {
     "welcome": "Bem-vindo ao seu painel de gestão de imóveis",
@@ -236,7 +237,17 @@
     "addTenant": "Adicione um inquilino",
     "addTenantDesc": "Adicione os dados do inquilino e associe-o a um imóvel.",
     "recordPayment": "Registre um pagamento",
-    "recordPaymentDesc": "Registe o seu primeiro pagamento de renda para desbloquear análises de receita."
+    "recordPaymentDesc": "Registe o seu primeiro pagamento de renda para desbloquear análises de receita.",
+    "loadSample": "Carregar portefólio de exemplo",
+    "loadSampleDesc": "Explore a Domora com um portefólio pronto — e limpe-o quando quiser.",
+    "loadingSample": "A carregar exemplo…",
+    "sampleLoaded": "Portefólio de exemplo carregado — explore à vontade.",
+    "sampleError": "Não foi possível carregar o portefólio de exemplo. Tente novamente.",
+    "sampleBanner": "Está a explorar com dados de exemplo.",
+    "clearSample": "Limpar dados de exemplo",
+    "clearingSample": "A limpar…",
+    "sampleCleared": "Dados de exemplo removidos.",
+    "clearSampleConfirm": "Remover todos os dados de exemplo? Esta ação é irreversível."
   },
   "emptyState": {
     "properties": {
