@@ -407,7 +407,14 @@ export function PropertyDetailModal({
       <Sheet
         open={isOpen}
         onOpenChange={(open) => {
-          if (!open) onClose();
+          if (!open) {
+            // Reset transient state so reopening the same property starts clean.
+            setIsEditing(false);
+            setShowUnits(false);
+            setDetailsTab("overview");
+            if (property) setFormData(toFormData(property));
+            onClose();
+          }
         }}
       >
         <SheetContent

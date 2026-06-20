@@ -87,19 +87,19 @@ export function PeopleView(): React.ReactElement {
 
         {/* People Statistics */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Total Tenants</div>
             <div className="text-2xl font-bold text-[var(--color-foreground)]">
               {tenants.length}
             </div>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Active Tenants</div>
             <div className="text-2xl font-bold text-green-500">
               {tenants.filter((t) => new Date(t.leaseEnd) > new Date()).length}
             </div>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+          <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-lg p-4">
             <div className="text-sm text-muted-foreground mb-1">Total Owners</div>
             <div className="text-2xl font-bold text-[var(--color-foreground)]">{owners.length}</div>
           </div>

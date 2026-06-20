@@ -707,7 +707,7 @@ export default async function LandingPage({ params }: Props) {
               className="group rounded-[22px] border border-[var(--color-border)] bg-[var(--color-card)]/70 p-6 transition-all hover:border-[var(--color-border-hover)] hover:bg-[var(--color-card)]"
             >
               <div className="flex items-center justify-between">
-                <div className="rounded-xl border border-zinc-700/50 bg-[var(--color-surface)] p-3">
+                <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-3">
                   <ShieldCheck className="h-5 w-5 text-[var(--color-muted-foreground)]" />
                 </div>
                 <div className="flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] transition-colors group-hover:text-[var(--color-muted-foreground)]">

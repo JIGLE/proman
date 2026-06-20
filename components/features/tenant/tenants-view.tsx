@@ -699,7 +699,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                     compact={compact}
                   />
                 ) : (
-                  <div className="space-y-1 overflow-hidden rounded-lg border border-[var(--color-border)] bg-zinc-900/60">
+                  <div className="space-y-1 overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]/60">
                     {sortedTenants.map((tenant) => {
                       const isSelected = bulkSelection.isSelected(tenant.id);
                       const activeLease = getActiveLease(tenant.id, leases);
@@ -718,7 +718,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                           className={cn(
                             "border-b border-[var(--color-border)] last:border-b-0",
                             isOverdue && "border-l-2 border-l-red-500/60",
-                            isSelected && "bg-zinc-800/60",
+                            isSelected && "bg-[var(--color-surface)]/60",
                           )}
                           startAction={{
                             icon: <Eye className="h-5 w-5" />,

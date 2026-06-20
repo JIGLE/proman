@@ -157,7 +157,7 @@ const emptyStateConfig: Record<
     description: "Get started by adding your first item.",
     actionLabel: "Add New",
     gradient: "from-zinc-500/20 to-zinc-400/20",
-    accentColor: "text-zinc-400",
+    accentColor: "text-[var(--color-muted-foreground)]",
   },
   owners: {
     icon: Briefcase,

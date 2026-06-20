@@ -79,22 +79,22 @@ function DefaultErrorFallback({
   resetError: () => void;
 }): React.ReactElement {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
-      <Card className="w-full max-w-md bg-zinc-900 border-zinc-800">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)] p-4">
+      <Card className="w-full max-w-md bg-[var(--color-card)] border-[var(--color-border)]">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 w-12 h-12 bg-red-600/20 rounded-full flex items-center justify-center">
             <AlertTriangle className="w-6 h-6 text-red-400" />
           </div>
-          <CardTitle className="text-zinc-50">Something went wrong</CardTitle>
-          <CardDescription className="text-zinc-400">
+          <CardTitle className="text-[var(--color-foreground)]">Something went wrong</CardTitle>
+          <CardDescription className="text-[var(--color-muted-foreground)]">
             An unexpected error occurred. Please try refreshing the page.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {error && (
-            <div className="bg-zinc-800 rounded-lg p-3 space-y-2">
-              <p className="text-sm text-zinc-300 font-mono break-all">{error.message}</p>
-              {errorId && <p className="text-xs text-zinc-500">Error ID: {errorId}</p>}
+            <div className="bg-[var(--color-surface)] rounded-lg p-3 space-y-2">
+              <p className="text-sm text-[var(--color-muted-foreground)] font-mono break-all">{error.message}</p>
+              {errorId && <p className="text-xs text-[var(--color-muted-foreground)]">Error ID: {errorId}</p>}
             </div>
           )}
           <div className="flex gap-2">

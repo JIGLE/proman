@@ -200,7 +200,7 @@ export function MobileBottomNav({
               </div>
               <NotificationBell />
               <LanguageSelector compact />
-              <ThemeToggle variant="button" size="sm" />
+              <ThemeToggle variant="button" size="sm" className="h-10 w-10" />
             </div>
           )}
 

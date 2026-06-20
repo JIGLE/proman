@@ -273,15 +273,27 @@ export function LeasesView(): React.ReactElement {
       // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         error("File size must be less than 5MB");
+        event.target.value = ""; // clear so the same file can be re-picked
         return;
       }
       // Validate file type
       if (file.type !== "application/pdf") {
         error("Only PDF files are allowed");
+        event.target.value = "";
         return;
       }
       setContractFile(file);
     }
+  };
+
+  // Open the wizard for a brand-new lease. Reset everything first so a prior
+  // edit (or abandoned draft) can never bleed its form data or contract file
+  // into the new record.
+  const handleAddNew = () => {
+    setEditingLease(null);
+    setContractFile(null);
+    wizard.resetForm();
+    setWizardOpen(true);
   };
 
   const handleEdit = (lease: Lease) => {
@@ -537,7 +549,7 @@ export function LeasesView(): React.ReactElement {
             }}
           >
             <DialogTrigger asChild>
-              <Button onClick={() => setWizardOpen(true)} className="flex items-center gap-2">
+              <Button onClick={handleAddNew} className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 Add Lease
               </Button>
@@ -994,8 +1006,8 @@ export function LeasesView(): React.ReactElement {
             <>
               {/* Bulk actions bar */}
               {selectedLeaseIds.size > 0 && (
-                <div className="flex items-center gap-3 px-4 py-2.5 bg-indigo-950/60 border border-indigo-800/50 rounded-lg">
-                  <span className="text-sm font-medium text-indigo-300">
+                <div className="flex items-center gap-3 px-4 py-2.5 bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/30 rounded-lg">
+                  <span className="text-sm font-medium text-[var(--color-primary)]">
                     {selectedLeaseIds.size} lease{selectedLeaseIds.size !== 1 ? "s" : ""} selected
                   </span>
                   <div className="ml-auto flex items-center gap-2">
@@ -1004,7 +1016,7 @@ export function LeasesView(): React.ReactElement {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-indigo-700 text-indigo-300 hover:text-indigo-100"
+                          className="border-[var(--color-primary)]/40 text-[var(--color-primary)] hover:text-[var(--color-foreground)]"
                         >
                           <TrendingUp className="h-4 w-4 mr-1.5" />
                           Increase Rent
@@ -1160,7 +1172,7 @@ export function LeasesView(): React.ReactElement {
                         key={lease.id}
                         className={cn(
                           "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]",
-                          selectedLeaseIds.has(lease.id) && "bg-indigo-950/30",
+                          selectedLeaseIds.has(lease.id) && "bg-[var(--color-primary)]/5",
                         )}
                       >
                         <TableCell className="pl-4 w-10">

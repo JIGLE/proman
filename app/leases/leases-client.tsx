@@ -11,7 +11,7 @@ export default function LeasesClient() {
     <CsrfProvider>
       <ToastProvider>
         <AppProvider>
-          <div className="flex h-screen overflow-hidden bg-zinc-950">
+          <div className="flex h-screen overflow-hidden bg-[var(--color-background)]">
             <Sidebar activeTab={"leases"} onTabChange={() => {}} />
             <main className="flex-1 overflow-y-auto relative flex flex-col">
               <div className="flex-1 container mx-auto p-6 md:p-8 lg:p-10">

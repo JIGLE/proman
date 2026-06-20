@@ -245,7 +245,7 @@ export function BuildingsView(): React.ReactElement {
                 (p) => p.buildingId === building.id,
               ).length;
               return (
-                <Card key={building.id} className="hover:bg-zinc-800/30 transition-colors">
+                <Card key={building.id} className="hover:bg-[var(--color-surface)]/30 transition-colors">
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2 min-w-0">

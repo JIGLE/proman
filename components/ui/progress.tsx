@@ -39,7 +39,7 @@ export function ProgressBar({
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          <span className="text-xs text-zinc-400">{Math.round(progress)}%</span>
+          <span className="text-xs text-[var(--color-muted-foreground)]">{Math.round(progress)}%</span>
         </motion.div>
       )}
     </div>

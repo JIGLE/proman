@@ -87,7 +87,7 @@ export default function LeaseManagement(): React.ReactElement {
       <h1 className="text-2xl font-bold">{t("leases.title") || "Leases"}</h1>
 
       {tenants.length === 0 && (
-        <Card className="bg-zinc-900 border-zinc-800">
+        <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
           <CardContent>No leases found</CardContent>
         </Card>
       )}
@@ -102,13 +102,13 @@ export default function LeaseManagement(): React.ReactElement {
             typeof tnt.rent === "number" ? formatCurrency(tnt.rent, currency) : "-";
 
           return (
-            <Card key={tnt.id} className="bg-zinc-900 border-zinc-800">
+            <Card key={tnt.id} className="bg-[var(--color-card)] border-[var(--color-border)]">
               <CardContent>
                 <div className="flex items-start justify-between">
                   <div>
-                    <div className="font-semibold text-zinc-50">{tnt.name}</div>
-                    <div className="text-xs text-zinc-400">{tnt.email}</div>
-                    <div className="text-sm text-zinc-400 mt-1">
+                    <div className="font-semibold text-[var(--color-foreground)]">{tnt.name}</div>
+                    <div className="text-xs text-[var(--color-muted-foreground)]">{tnt.email}</div>
+                    <div className="text-sm text-[var(--color-muted-foreground)] mt-1">
                       {prop?.name || tnt.propertyName} • {rentDisplay}
                     </div>
                   </div>
@@ -125,8 +125,8 @@ export default function LeaseManagement(): React.ReactElement {
                 </div>
 
                 {tnt.leaseDocuments && tnt.leaseDocuments.length > 0 && (
-                  <div className="mt-4 text-sm text-zinc-300">
-                    <div className="font-medium text-zinc-200">
+                  <div className="mt-4 text-sm text-[var(--color-muted-foreground)]">
+                    <div className="font-medium text-[var(--color-foreground)]">
                       {t("leases.documents") || "Documents"}
                     </div>
                     <ul className="mt-1 space-y-1">

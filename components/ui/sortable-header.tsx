@@ -19,7 +19,7 @@ export function SortableHeader({ label, sortKey, currentSort, onSort }: Sortable
       onClick={() => onSort(sortKey)}
       aria-sort={ariaSort}
       aria-label={`Sort by ${label}${currentSort === "asc" ? ", sorted ascending" : currentSort === "desc" ? ", sorted descending" : ""}`}
-      className="flex items-center gap-1 text-xs font-medium text-zinc-400 hover:text-zinc-300 transition-colors"
+      className="flex items-center gap-1 text-xs font-medium text-[var(--color-muted-foreground)] hover:text-[var(--color-muted-foreground)] transition-colors"
     >
       {label}
       {currentSort === "asc" && <ArrowUp className="w-3 h-3" aria-hidden="true" />}

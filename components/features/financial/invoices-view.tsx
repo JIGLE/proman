@@ -513,7 +513,7 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
               {filteredInvoices.map((invoice) => (
                 <div
                   key={invoice.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-[var(--color-surface)]/50 border border-zinc-700/50 hover:border-zinc-600 transition-colors"
+                  className="flex items-center justify-between p-4 rounded-lg bg-[var(--color-surface)]/50 border border-[var(--color-border)]/50 hover:border-[var(--color-border-hover)] transition-colors"
                 >
                   <div className="flex items-center gap-4">
                     <div className="h-10 w-10 rounded-lg bg-[var(--color-surface-raised)]/50 flex items-center justify-center">

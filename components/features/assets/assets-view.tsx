@@ -291,13 +291,13 @@ export function AssetsView(): React.ReactElement {
               <DropdownMenuItem onClick={() => setPropertyWizardOpen(true)}>
                 <Home className="mr-2 h-3.5 w-3.5" />
                 New property
-                <span className="ml-auto text-[11px] text-zinc-500">standalone unit</span>
+                <span className="ml-auto text-[11px] text-[var(--color-muted-foreground)]">standalone unit</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setBuildingDialogOpen(true)}>
                 <Building2 className="mr-2 h-3.5 w-3.5" />
                 New building
-                <span className="ml-auto text-[11px] text-zinc-500">group of units</span>
+                <span className="ml-auto text-[11px] text-[var(--color-muted-foreground)]">group of units</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

@@ -591,7 +591,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card
-            className="cursor-pointer transition-colors hover:border-zinc-600"
+            className="cursor-pointer transition-colors hover:border-[var(--color-border-hover)]"
             onClick={() => setActiveTab("tenants")}
           >
             <CardContent className="p-4">
@@ -602,7 +602,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardContent>
           </Card>
           <Card
-            className="cursor-pointer transition-colors hover:border-zinc-600"
+            className="cursor-pointer transition-colors hover:border-[var(--color-border-hover)]"
             onClick={() => setActiveTab("leases")}
           >
             <CardContent className="p-4">
@@ -615,7 +615,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardContent>
           </Card>
           <Card
-            className="cursor-pointer transition-colors hover:border-zinc-600"
+            className="cursor-pointer transition-colors hover:border-[var(--color-border-hover)]"
             onClick={() => setActiveTab("finance")}
           >
             <CardContent className="p-4">
@@ -626,7 +626,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardContent>
           </Card>
           <Card
-            className="cursor-pointer transition-colors hover:border-zinc-600"
+            className="cursor-pointer transition-colors hover:border-[var(--color-border-hover)]"
             onClick={() => setActiveTab("maintenance")}
           >
             <CardContent className="p-4">

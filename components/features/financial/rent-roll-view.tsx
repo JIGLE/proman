@@ -176,7 +176,7 @@ export function RentRollView() {
                     <TableCell>{statusBadge(row.status)}</TableCell>
                   </TableRow>
                 ))}
-                <TableRow className="border-[var(--color-border)] bg-zinc-800/30 font-semibold">
+                <TableRow className="border-[var(--color-border)] bg-[var(--color-surface)]/30 font-semibold">
                   <TableCell className="text-sm text-[var(--color-foreground)]" colSpan={2}>
                     Totals
                   </TableCell>
