@@ -57,6 +57,29 @@ export function ThemeProvider({ children }: { children: React.ReactNode }): Reac
     setMounted(true);
   }, [applyTheme, resolveTheme]);
 
+  // Self-heal when the theme is changed outside this provider (e.g. demo mode
+  // entry/exit writing localStorage directly, or another tab). Listening for
+  // both the cross-tab `storage` event and a same-tab custom event keeps React
+  // state, the DOM class, and localStorage in sync — the single source of truth.
+  useEffect(() => {
+    const sync = () => {
+      const stored = (localStorage.getItem(THEME_STORAGE_KEY) as Theme | null) || "light";
+      setThemeState(stored);
+      applyTheme(resolveTheme(stored));
+    };
+
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === THEME_STORAGE_KEY) sync();
+    };
+
+    window.addEventListener("storage", handleStorage);
+    window.addEventListener("proman:theme-changed", sync);
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      window.removeEventListener("proman:theme-changed", sync);
+    };
+  }, [applyTheme, resolveTheme]);
+
   // Listen for system theme changes
   useEffect(() => {
     if (theme !== "system") return;

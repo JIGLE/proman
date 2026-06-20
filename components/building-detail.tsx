@@ -52,7 +52,7 @@ export default function BuildingDetail({ id }: { id: string }) {
   return (
     <div className="space-y-4 p-6">
       <h1 className="text-2xl font-bold">{property.name}</h1>
-      <p className="text-sm text-zinc-400">{property.address}</p>
+      <p className="text-sm text-[var(--color-muted-foreground)]">{property.address}</p>
 
       <section className="pt-4">
         <h2 className="text-lg font-semibold">{t("leases.title") || "Leases"}</h2>
@@ -60,12 +60,12 @@ export default function BuildingDetail({ id }: { id: string }) {
           {property.tenants && property.tenants.length > 0 ? (
             <div className="space-y-4">
               {property.tenants.map((tnt) => (
-                <div key={tnt.id} className="rounded-lg border border-zinc-800 bg-zinc-900/70 p-4">
+                <div key={tnt.id} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]/70 p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <div className="font-semibold">{tnt.name}</div>
-                      <div className="text-xs text-zinc-400">{tnt.email}</div>
-                      <div className="text-xs text-zinc-400">
+                      <div className="text-xs text-[var(--color-muted-foreground)]">{tnt.email}</div>
+                      <div className="text-xs text-[var(--color-muted-foreground)]">
                         {t("leases.documents") || "Documents"}: {tnt.leaseDocuments?.length ?? 0}
                       </div>
                     </div>
@@ -80,8 +80,8 @@ export default function BuildingDetail({ id }: { id: string }) {
                   </div>
 
                   {tnt.leaseDocuments && tnt.leaseDocuments.length > 0 && (
-                    <div className="mt-4 rounded-lg bg-zinc-950/70 p-3">
-                      <div className="text-xs uppercase tracking-[0.2em] text-zinc-500 mb-2">
+                    <div className="mt-4 rounded-lg bg-[var(--color-background)]/70 p-3">
+                      <div className="text-xs uppercase tracking-[0.2em] text-[var(--color-muted-foreground)] mb-2">
                         {t("leases.documents") || "Documents"}
                       </div>
                       <ul className="space-y-2 text-sm">
@@ -102,7 +102,7 @@ export default function BuildingDetail({ id }: { id: string }) {
               ))}
             </div>
           ) : (
-            <div className="text-zinc-400">No tenants</div>
+            <div className="text-[var(--color-muted-foreground)]">No tenants</div>
           )}
         </div>
       </section>

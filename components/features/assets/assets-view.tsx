@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   Building2,
@@ -14,6 +14,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { PropertiesView, PropertiesViewRef } from "@/components/features/property/property-list";
+import { PropertyCreateWizard } from "@/components/features/property/property-create-wizard";
+import { PageContainer } from "@/components/shared/page-container";
 import { ExportButton, ExportColumn } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 import { Button } from "@/components/ui/button";
@@ -72,10 +74,23 @@ export function AssetsView(): React.ReactElement {
   const { formatCurrency } = useCurrency();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const locale = pathname.split("/")[1] || "pt";
   const { properties, leases, receipts, tenants } = state;
   const propertiesViewRef = useRef<PropertiesViewRef>(null);
   const t = useTranslations("portfolio");
+
+  // Guided property creation wizard (first-run friendly). Also opened by the
+  // onboarding deep-link /portfolio?action=create-property.
+  const [propertyWizardOpen, setPropertyWizardOpen] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get("action") === "create-property") {
+      setPropertyWizardOpen(true);
+      // Clear the param so the wizard doesn't re-open on back/refresh.
+      router.replace(`/${locale}/portfolio`, { scroll: false });
+    }
+  }, [searchParams, router, locale]);
 
   // Add-building dialog state
   const [buildingDialogOpen, setBuildingDialogOpen] = useState(false);
@@ -231,42 +246,39 @@ export function AssetsView(): React.ReactElement {
 
   // ── Owner portal view ──────────────────────────────────────────────────────────
   return (
-    <div className="space-y-5">
-      {/* Compact page header */}
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-[var(--color-foreground)]">
-            {t("title")}
-          </h1>
-          <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">
-            {properties.length} {t("stats.trackedUnits").toLowerCase()}
-            {properties.length > 0 && (
-              <>
-                {" · "}
-                {occupiedCount} occupied ({occupancyRate}%)
-                {" · "}
-                <span className="font-medium text-[var(--color-foreground)]">
-                  {formatCurrency(monthlyRunRate)}/mo
-                </span>
-                {lastMonthTotal > 0 &&
-                  (() => {
-                    const delta = monthlyRunRate - lastMonthTotal;
-                    const isPositive = delta >= 0;
-                    return (
-                      <span
-                        className={`text-xs ${isPositive ? "text-emerald-400" : "text-red-400"}`}
-                      >
-                        {" "}
-                        ({isPositive ? "+" : ""}
-                        {formatCurrency(delta)} vs last mo)
-                      </span>
-                    );
-                  })()}
-              </>
-            )}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+    <PageContainer
+      title={t("title")}
+      summary={
+        <>
+          {properties.length} {t("stats.trackedUnits").toLowerCase()}
+          {properties.length > 0 && (
+            <>
+              {" · "}
+              {occupiedCount} occupied ({occupancyRate}%)
+              {" · "}
+              <span className="font-medium text-[var(--color-foreground)]">
+                {formatCurrency(monthlyRunRate)}/mo
+              </span>
+              {lastMonthTotal > 0 &&
+                (() => {
+                  const delta = monthlyRunRate - lastMonthTotal;
+                  const isPositive = delta >= 0;
+                  return (
+                    <span
+                      className={`text-xs ${isPositive ? "text-emerald-400" : "text-red-400"}`}
+                    >
+                      {" "}
+                      ({isPositive ? "+" : ""}
+                      {formatCurrency(delta)} vs last mo)
+                    </span>
+                  );
+                })()}
+            </>
+          )}
+        </>
+      }
+      actions={
+        <>
           <ExportButton data={properties} filename="properties-export" columns={propertyColumns} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -276,28 +288,34 @@ export function AssetsView(): React.ReactElement {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">
-              <DropdownMenuItem onClick={() => propertiesViewRef.current?.openDialog()}>
+              <DropdownMenuItem onClick={() => setPropertyWizardOpen(true)}>
                 <Home className="mr-2 h-3.5 w-3.5" />
                 New property
-                <span className="ml-auto text-[11px] text-zinc-500">standalone unit</span>
+                <span className="ml-auto text-[11px] text-[var(--color-muted-foreground)]">standalone unit</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setBuildingDialogOpen(true)}>
                 <Building2 className="mr-2 h-3.5 w-3.5" />
                 New building
-                <span className="ml-auto text-[11px] text-zinc-500">group of units</span>
+                <span className="ml-auto text-[11px] text-[var(--color-muted-foreground)]">group of units</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      </div>
-
+        </>
+      }
+    >
       {/* Properties list — handles list, table and map view internally */}
       <PropertiesView
         ref={propertiesViewRef}
         density="compact"
         showPageHeader={false}
         showMapToggle
+      />
+
+      {/* Guided property creation */}
+      <PropertyCreateWizard
+        open={propertyWizardOpen}
+        onOpenChange={setPropertyWizardOpen}
       />
 
       {/* Add Building dialog */}
@@ -373,7 +391,7 @@ export function AssetsView(): React.ReactElement {
           </form>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageContainer>
   );
 }
 

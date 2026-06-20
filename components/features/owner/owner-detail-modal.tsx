@@ -114,7 +114,7 @@ export function OwnerDetailModal({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="bg-[var(--color-card)] border-[var(--color-border)] max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <div className="flex items-start justify-between">
               <div className="flex-1 flex items-start gap-3">
@@ -161,9 +161,9 @@ export function OwnerDetailModal({
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <Card className="bg-zinc-800 border-zinc-700">
+                <Card className="bg-[var(--color-surface)] border-[var(--color-border-hover)]">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Owner Info</CardTitle>
+                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Owner Info</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -186,9 +186,9 @@ export function OwnerDetailModal({
                   </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-800 border-zinc-700">
+                <Card className="bg-[var(--color-surface)] border-[var(--color-border-hover)]">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Address</CardTitle>
+                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Address</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -204,9 +204,9 @@ export function OwnerDetailModal({
               </div>
 
               <div className="space-y-2">
-                <Card className="bg-zinc-800 border-zinc-700">
+                <Card className="bg-[var(--color-surface)] border-[var(--color-border-hover)]">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Notes</CardTitle>
+                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Notes</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Textarea
@@ -229,13 +229,13 @@ export function OwnerDetailModal({
           ) : (
             <div className="space-y-4">
               {owner.address && (
-                <Card className="bg-zinc-800 border-zinc-700">
+                <Card className="bg-[var(--color-surface)] border-[var(--color-border-hover)]">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Address</CardTitle>
+                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Address</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-start gap-2">
-                      <MapPin className="h-4 w-4 text-zinc-500 mt-1" />
+                      <MapPin className="h-4 w-4 text-[var(--color-muted-foreground)] mt-1" />
                       <div className="text-sm">
                         <p className="text-[var(--color-foreground)]">{owner.address}</p>
                       </div>
@@ -246,9 +246,9 @@ export function OwnerDetailModal({
 
               {/* Properties Owned */}
               {owner.properties && owner.properties.length > 0 && (
-                <Card className="bg-zinc-800 border-zinc-700">
+                <Card className="bg-[var(--color-surface)] border-[var(--color-border-hover)]">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400 flex items-center gap-2">
+                    <CardTitle className="text-sm text-[var(--color-muted-foreground)] flex items-center gap-2">
                       <Building2 className="h-4 w-4" />
                       Properties Owned ({owner.properties.length})
                     </CardTitle>
@@ -258,12 +258,12 @@ export function OwnerDetailModal({
                       {owner.properties.map((po) => (
                         <div
                           key={po.id}
-                          className="flex items-center justify-between p-2 bg-zinc-900 rounded"
+                          className="flex items-center justify-between p-2 bg-[var(--color-card)] rounded"
                         >
                           <span className="text-sm text-[var(--color-foreground)]">
                             {po.property?.name || "Unknown Property"}
                           </span>
-                          <span className="text-xs text-zinc-400">
+                          <span className="text-xs text-[var(--color-muted-foreground)]">
                             {po.ownershipPercentage}% ownership
                           </span>
                         </div>
@@ -275,9 +275,9 @@ export function OwnerDetailModal({
 
               {/* Notes */}
               {owner.notes && (
-                <Card className="bg-zinc-800 border-zinc-700">
+                <Card className="bg-[var(--color-surface)] border-[var(--color-border-hover)]">
                   <CardHeader>
-                    <CardTitle className="text-sm text-zinc-400">Notes</CardTitle>
+                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Notes</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-[var(--color-foreground)]">{owner.notes}</p>
@@ -286,7 +286,7 @@ export function OwnerDetailModal({
               )}
 
               {/* Action Buttons */}
-              <div className="flex justify-between gap-2 pt-4 border-t border-zinc-800">
+              <div className="flex justify-between gap-2 pt-4 border-t border-[var(--color-border)]">
                 <Button
                   variant="destructive"
                   onClick={handleDelete}

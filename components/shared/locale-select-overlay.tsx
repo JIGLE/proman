@@ -66,7 +66,7 @@ export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }
           animate={{ opacity: 1 }}
           exit={{ opacity: 0, transition: { duration: 0.35 } }}
           transition={{ duration: 0.3 }}
-          className="fixed inset-0 z-[99999] flex items-center justify-center bg-zinc-950/90 backdrop-blur-md"
+          className="fixed inset-0 z-[99999] flex items-center justify-center bg-[var(--color-background)]/90 backdrop-blur-md"
         >
           <motion.div
             initial={{ scale: 0.92, opacity: 0, y: 24 }}
@@ -77,9 +77,9 @@ export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }
           >
             {/* Logo / brand mark */}
             <div className="text-center">
-              <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Domora</p>
-              <h1 className="mt-2 text-2xl font-semibold text-zinc-50">Choose your language</h1>
-              <p className="mt-1.5 text-sm text-zinc-400">
+              <p className="text-xs uppercase tracking-[0.3em] text-[var(--color-muted-foreground)]">Domora</p>
+              <h1 className="mt-2 text-2xl font-semibold text-[var(--color-foreground)]">Choose your language</h1>
+              <p className="mt-1.5 text-sm text-[var(--color-muted-foreground)]">
                 Select a language to continue. You can change it later.
               </p>
             </div>
@@ -94,7 +94,7 @@ export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }
                   transition={{ delay: 0.15 + i * 0.07, duration: 0.35, ease: "easeOut" }}
                   onClick={() => handleSelect(locale.code)}
                   disabled={!!selecting}
-                  className="group flex flex-col items-center gap-2.5 rounded-xl border border-zinc-700/60 bg-zinc-900/70 px-3 py-5 text-center transition-all duration-200 hover:border-blue-500/60 hover:bg-zinc-800/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-wait"
+                  className="group flex flex-col items-center gap-2.5 rounded-xl border border-[var(--color-border)]/60 bg-[var(--color-card)]/70 px-3 py-5 text-center transition-all duration-200 hover:border-blue-500/60 hover:bg-[var(--color-surface)]/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-wait"
                   style={{
                     ...(selecting === locale.code
                       ? { borderColor: "rgb(59 130 246 / 0.8)", background: "rgb(30 58 138 / 0.3)" }
@@ -102,8 +102,8 @@ export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }
                   }}
                 >
                   <span className="text-3xl leading-none">{locale.flag}</span>
-                  <span className="text-xs font-semibold text-zinc-50">{locale.name}</span>
-                  <span className="text-[10px] text-zinc-400 group-hover:text-zinc-300">
+                  <span className="text-xs font-semibold text-[var(--color-foreground)]">{locale.name}</span>
+                  <span className="text-[10px] text-[var(--color-muted-foreground)] group-hover:text-[var(--color-muted-foreground)]">
                     {locale.greeting}
                   </span>
                 </motion.button>

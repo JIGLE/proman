@@ -257,7 +257,7 @@ export function ContractsView(): React.ReactElement {
                 sortedLeases.map((lease) => (
                   <TableRow
                     key={lease.id}
-                    className="cursor-pointer hover:bg-zinc-800/50 transition-colors"
+                    className="cursor-pointer hover:bg-[var(--color-surface)]/50 transition-colors"
                     onClick={() => handleViewDetails(lease)}
                   >
                     <TableCell>

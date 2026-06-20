@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { LanguageSelector } from "@/components/shared/language-selector";
+import { NotificationBell } from "@/components/shared/notification-bell";
 import { useDemoMode } from "@/lib/contexts/demo-context";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
 
@@ -69,6 +70,7 @@ function SidebarFooter({
           </div>
         </div>
         <div className="flex items-center justify-between gap-1 px-1">
+          <NotificationBell />
           <LanguageSelector compact />
           <ThemeToggle variant="button" size="sm" className="h-8 w-8" />
           <Button

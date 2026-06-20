@@ -45,6 +45,7 @@ import { useApp } from "@/lib/contexts/app-context";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { EntityLink } from "@/components/shared/entity-link";
+import { RelatedEntities, type RelatedEntityItem } from "@/components/shared/related-entities";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { buildLocalizedFinancialReviewPath } from "@/lib/utils/financial-navigation";
 import {
@@ -172,6 +173,41 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   const activeLeasesList = relatedLeases.filter((l) => l.status === "active");
   const activeLeases = activeLeasesList.length;
 
+  // Relationship strip shown under the header: the connected tenants, active
+  // leases and open maintenance, always visible so users never lose the thread.
+  const relationshipItems: RelatedEntityItem[] = [
+    ...relatedTenants.map((tn) => ({
+      type: "tenant" as const,
+      id: tn.id,
+      title: tn.name,
+      subtitle: tn.email,
+      status: tn.paymentStatus,
+      statusVariant: (tn.paymentStatus === "paid"
+        ? "success"
+        : tn.paymentStatus === "overdue"
+          ? "destructive"
+          : "warning") as RelatedEntityItem["statusVariant"],
+    })),
+    ...activeLeasesList.map((lease) => ({
+      type: "lease" as const,
+      id: lease.id,
+      title: `Lease ${lease.id.slice(0, 8)}`,
+      subtitle: `${lease.startDate} — ${lease.endDate}`,
+      status: lease.status,
+      statusVariant: "success" as const,
+    })),
+    ...relatedMaintenance
+      .filter((m) => m.status === "open" || m.status === "in_progress")
+      .slice(0, 3)
+      .map((m) => ({
+        type: "maintenance" as const,
+        id: m.id,
+        title: m.title,
+        subtitle: m.status.replace("_", " "),
+        statusVariant: "warning" as const,
+      })),
+  ];
+
   // Ownership: derive from owners state
   const propertyOwners = useMemo(
     () =>
@@ -275,7 +311,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sticky top-0 z-20 bg-zinc-900/95 backdrop-blur-sm">
+      <div className="flex flex-col gap-4 sticky top-0 z-20 bg-[var(--color-card)]/95 backdrop-blur-sm">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex items-start gap-4">
             <div className="p-3 lg:p-4 rounded-xl bg-[var(--color-info-muted)]">
@@ -555,7 +591,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card
-            className="cursor-pointer transition-colors hover:border-zinc-600"
+            className="cursor-pointer transition-colors hover:border-[var(--color-border-hover)]"
             onClick={() => setActiveTab("tenants")}
           >
             <CardContent className="p-4">
@@ -566,7 +602,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardContent>
           </Card>
           <Card
-            className="cursor-pointer transition-colors hover:border-zinc-600"
+            className="cursor-pointer transition-colors hover:border-[var(--color-border-hover)]"
             onClick={() => setActiveTab("leases")}
           >
             <CardContent className="p-4">
@@ -579,7 +615,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardContent>
           </Card>
           <Card
-            className="cursor-pointer transition-colors hover:border-zinc-600"
+            className="cursor-pointer transition-colors hover:border-[var(--color-border-hover)]"
             onClick={() => setActiveTab("finance")}
           >
             <CardContent className="p-4">
@@ -590,7 +626,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardContent>
           </Card>
           <Card
-            className="cursor-pointer transition-colors hover:border-zinc-600"
+            className="cursor-pointer transition-colors hover:border-[var(--color-border-hover)]"
             onClick={() => setActiveTab("maintenance")}
           >
             <CardContent className="p-4">
@@ -604,6 +640,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
           </Card>
         </div>
       </div>
+
+      {/* Relationship strip — connected entities, always visible */}
+      <RelatedEntities items={relationshipItems} />
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -650,7 +689,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Property Info */}
-            <Card className="lg:col-span-2">
+            <Card className="lg:col-span-3">
               <CardHeader>
                 <CardTitle>{t("propertyDetails")}</CardTitle>
               </CardHeader>
@@ -683,61 +722,6 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Related Entities */}
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
-                {t("related")}
-              </h3>
-              {relatedTenants.map((tenant) => (
-                <EntityLink
-                  key={tenant.id}
-                  type="tenant"
-                  id={tenant.id}
-                  title={tenant.name}
-                  subtitle={tenant.email}
-                  status={tenant.paymentStatus}
-                  statusVariant={
-                    tenant.paymentStatus === "paid"
-                      ? "success"
-                      : tenant.paymentStatus === "overdue"
-                        ? "destructive"
-                        : "warning"
-                  }
-                />
-              ))}
-              {relatedLeases
-                .filter((l) => l.status === "active")
-                .map((lease) => (
-                  <EntityLink
-                    key={lease.id}
-                    type="lease"
-                    id={lease.id}
-                    title={`Lease ${lease.id.slice(0, 8)}`}
-                    subtitle={`${lease.startDate} — ${lease.endDate}`}
-                    status={lease.status}
-                    statusVariant="success"
-                  />
-                ))}
-              {relatedTenants.length === 0 &&
-                relatedLeases.filter((l) => l.status === "active").length === 0 && (
-                  <div className="rounded-lg border border-dashed border-[var(--color-border)] p-4 text-center space-y-2">
-                    <p className="text-sm text-[var(--color-muted-foreground)]">
-                      {property.status === "vacant" ? t("vacantNotice") : t("noRelatedEntities")}
-                    </p>
-                    {property.status === "vacant" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => router.push(`/${locale}/leases`)}
-                      >
-                        <FileText className="h-3.5 w-3.5 mr-1.5" />
-                        {t("createLease")}
-                      </Button>
-                    )}
-                  </div>
-                )}
-            </div>
           </div>
 
           {/* Ownership & Revenue Share */}
@@ -754,7 +738,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                     ? "bg-[var(--color-success-muted)] text-[var(--color-success)]"
                     : ownershipTotal > 0
                       ? "bg-[var(--color-warning-muted)] text-[var(--color-warning)]"
-                      : "bg-zinc-800 text-zinc-500",
+                      : "bg-[var(--color-surface)] text-[var(--color-muted-foreground)]",
                 )}
               >
                 {ownershipTotal.toFixed(1)}% assigned
@@ -762,7 +746,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               {propertyOwners.length === 0 ? (
-                <p className="text-sm text-zinc-500 italic">No owners assigned yet.</p>
+                <p className="text-sm text-[var(--color-muted-foreground)] italic">No owners assigned yet.</p>
               ) : (
                 <div className="space-y-2">
                   {propertyOwners.map(({ owner, assignment }) => {
@@ -772,14 +756,14 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                     return (
                       <div
                         key={owner.id}
-                        className="flex items-center gap-3 p-2 rounded-lg bg-zinc-900 border border-zinc-800"
+                        className="flex items-center gap-3 p-2 rounded-lg bg-[var(--color-card)] border border-[var(--color-border)]"
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-zinc-200 truncate">{owner.name}</p>
-                          <p className="text-xs text-zinc-500">{owner.email}</p>
+                          <p className="text-sm font-medium text-[var(--color-foreground)] truncate">{owner.name}</p>
+                          <p className="text-xs text-[var(--color-muted-foreground)]">{owner.email}</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-sm font-semibold text-zinc-200">
+                          <p className="text-sm font-semibold text-[var(--color-foreground)]">
                             {assignment.ownershipPercentage}%
                           </p>
                           <p className="text-xs text-[var(--color-success)]">
@@ -789,7 +773,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 w-7 p-0 text-zinc-500 hover:text-[var(--color-destructive)]"
+                          className="h-7 w-7 p-0 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)]"
                           onClick={() => handleRemoveOwner(owner.id)}
                           title="Remove owner"
                         >
@@ -803,8 +787,8 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
 
               {/* Add owner form */}
               {unassignedOwners.length > 0 && ownershipTotal < 99.999 && (
-                <div className="space-y-2 pt-2 border-t border-zinc-800">
-                  <p className="text-xs text-zinc-500 font-medium uppercase tracking-wide">
+                <div className="space-y-2 pt-2 border-t border-[var(--color-border)]">
+                  <p className="text-xs text-[var(--color-muted-foreground)] font-medium uppercase tracking-wide">
                     Assign owner
                   </p>
                   <div className="flex gap-2">
@@ -1052,25 +1036,25 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         <TabsContent value="finance" className="space-y-6">
           {/* P&L Metric Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
               <CardContent className="p-4">
-                <div className="text-sm text-zinc-400">{t("finance.totalRevenue")}</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">{t("finance.totalRevenue")}</div>
                 <div className="text-2xl font-bold text-[var(--color-success)] mt-1">
                   {formatCurrency(totalRevenue)}
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
               <CardContent className="p-4">
-                <div className="text-sm text-zinc-400">{t("finance.totalExpenses")}</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">{t("finance.totalExpenses")}</div>
                 <div className="text-2xl font-bold text-[var(--color-destructive)] mt-1">
                   {formatCurrency(totalExpenses)}
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
               <CardContent className="p-4">
-                <div className="text-sm text-zinc-400">{t("finance.netOperatingIncome")}</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">{t("finance.netOperatingIncome")}</div>
                 <div
                   className={cn(
                     "text-2xl font-bold mt-1",
@@ -1083,9 +1067,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
               <CardContent className="p-4">
-                <div className="text-sm text-zinc-400">{t("finance.collectionRate")}</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">{t("finance.collectionRate")}</div>
                 <div
                   className={cn(
                     "text-2xl font-bold mt-1",

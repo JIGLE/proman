@@ -61,7 +61,7 @@ export function LanguageSelector({ compact = false, className }: LanguageSelecto
           variant="ghost"
           size="sm"
           className={cn(
-            "gap-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/5",
+            "gap-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-white/5",
             compact ? "h-9 w-9 p-0" : "h-9 px-2.5",
             className,
           )}

@@ -80,12 +80,12 @@ const notificationColors: Record<NotificationType, string> = {
   lease_expired: "text-red-400 bg-red-400/10",
   tenant_added: "text-purple-400 bg-purple-400/10",
   document_uploaded: "text-blue-400 bg-blue-400/10",
-  system: "text-zinc-400 bg-zinc-400/10",
+  system: "text-[var(--color-muted-foreground)] bg-zinc-400/10",
 };
 
 // Priority badge colors
 const priorityColors: Record<NotificationPriority, string> = {
-  low: "bg-zinc-500/20 text-zinc-400",
+  low: "bg-zinc-500/20 text-[var(--color-muted-foreground)]",
   medium: "bg-blue-500/20 text-blue-400",
   high: "bg-orange-500/20 text-orange-400",
   urgent: "bg-red-500/20 text-red-400",

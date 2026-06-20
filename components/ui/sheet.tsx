@@ -38,7 +38,7 @@ const sheetVariants: Record<SheetSide, string> = {
     "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
   // Center variant: full-screen on mobile, centered floating modal on large screens
   center:
-    "inset-0 h-full w-full md:inset-auto md:left-1/2 md:top-16 md:translate-x-[-50%] md:transform md:w-[75vw] md:max-w-5xl md:h-[calc(100vh-6.5rem)] md:rounded-xl md:border md:border-zinc-800 md:shadow-2xl md:ring-1 md:ring-zinc-900/20 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+    "inset-0 h-full w-full md:inset-auto md:left-1/2 md:top-16 md:translate-x-[-50%] md:transform md:w-[75vw] md:max-w-5xl md:h-[calc(100vh-6.5rem)] md:rounded-xl md:border md:border-[var(--color-border)] md:shadow-2xl md:ring-1 md:ring-black/10 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
 };
 
 interface SheetContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
@@ -55,7 +55,7 @@ const SheetContent = React.forwardRef<
       ref={ref}
       className={cn(
         "fixed z-50 flex flex-col gap-0",
-        "bg-zinc-900 border-zinc-800 shadow-2xl",
+        "bg-[var(--color-card)] border-[var(--color-border)] shadow-2xl",
         "transition ease-in-out",
         "data-[state=open]:animate-in data-[state=closed]:animate-out",
         "data-[state=closed]:duration-200 data-[state=open]:duration-300",
@@ -67,7 +67,7 @@ const SheetContent = React.forwardRef<
       {children}
       <DialogPrimitive.Close
         aria-label="Close"
-        className="absolute right-4 top-4 z-50 rounded-md p-1.5 text-zinc-400 opacity-70 ring-offset-zinc-900 transition-opacity hover:opacity-100 hover:text-zinc-100 focus:outline-none focus:ring-2 focus:ring-zinc-600 focus:ring-offset-2 disabled:pointer-events-none"
+        className="absolute right-4 top-4 z-50 rounded-md p-1.5 text-[var(--color-muted-foreground)] opacity-70 ring-offset-[var(--color-card)] transition-opacity hover:opacity-100 hover:text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-focus)] focus:ring-offset-2 disabled:pointer-events-none"
       >
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
@@ -79,7 +79,7 @@ SheetContent.displayName = "SheetContent";
 
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex flex-col gap-1.5 border-b border-zinc-800 px-6 py-5", className)}
+    className={cn("flex flex-col gap-1.5 border-b border-[var(--color-border)] px-6 py-5", className)}
     {...props}
   />
 );
@@ -91,7 +91,7 @@ const SheetTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-base font-semibold text-zinc-50", className)}
+    className={cn("text-base font-semibold text-[var(--color-foreground)]", className)}
     {...props}
   />
 ));
@@ -103,7 +103,7 @@ const SheetDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-sm text-zinc-500", className)}
+    className={cn("text-sm text-[var(--color-muted-foreground)]", className)}
     {...props}
   />
 ));

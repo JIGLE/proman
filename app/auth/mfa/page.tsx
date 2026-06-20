@@ -87,26 +87,26 @@ export default function MFAPage() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-        <div className="text-zinc-400">Loading…</div>
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
+        <div className="text-[var(--color-muted-foreground)]">Loading…</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
       <div className="max-w-sm w-full mx-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 shadow-xl space-y-6">
+        <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded-2xl p-8 shadow-xl space-y-6">
           <div className="flex flex-col items-center gap-3 text-center">
-            <div className="w-12 h-12 rounded-full bg-zinc-800 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-[var(--color-surface)] flex items-center justify-center">
               {useBackup ? (
-                <KeyRound className="w-6 h-6 text-zinc-300" />
+                <KeyRound className="w-6 h-6 text-[var(--color-muted-foreground)]" />
               ) : (
-                <ShieldCheck className="w-6 h-6 text-zinc-300" />
+                <ShieldCheck className="w-6 h-6 text-[var(--color-muted-foreground)]" />
               )}
             </div>
-            <h1 className="text-xl font-semibold text-zinc-100">Two-factor authentication</h1>
-            <p className="text-sm text-zinc-400">
+            <h1 className="text-xl font-semibold text-[var(--color-foreground)]">Two-factor authentication</h1>
+            <p className="text-sm text-[var(--color-muted-foreground)]">
               {useBackup
                 ? "Enter one of your backup codes"
                 : "Enter the 6-digit code from your authenticator app"}
@@ -115,7 +115,7 @@ export default function MFAPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="code" className="text-zinc-300 text-sm">
+              <Label htmlFor="code" className="text-[var(--color-muted-foreground)] text-sm">
                 {useBackup ? "Backup code" : "Authentication code"}
               </Label>
               <Input
@@ -128,7 +128,7 @@ export default function MFAPage() {
                 maxLength={useBackup ? 8 : 6}
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\s/g, ""))}
-                className="bg-zinc-800 border-zinc-700 text-zinc-100 text-center text-lg tracking-widest placeholder:text-zinc-600"
+                className="bg-[var(--color-surface)] border-[var(--color-border-hover)] text-[var(--color-foreground)] text-center text-lg tracking-widest placeholder:text-[var(--color-muted-foreground)]"
               />
             </div>
 
@@ -151,7 +151,7 @@ export default function MFAPage() {
                 setCode("");
                 setError("");
               }}
-              className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+              className="text-xs text-[var(--color-muted-foreground)] hover:text-[var(--color-muted-foreground)] transition-colors"
             >
               {useBackup ? "Use authenticator app instead" : "Use a backup code instead"}
             </button>

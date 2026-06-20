@@ -285,7 +285,7 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
           </Badge>
         );
       case "cancelled":
-        return <Badge className="bg-zinc-500/20 text-zinc-400 border-zinc-500/30">Cancelled</Badge>;
+        return <Badge className="bg-zinc-500/20 text-[var(--color-muted-foreground)] border-zinc-500/30">Cancelled</Badge>;
       default:
         return <Badge>{status}</Badge>;
     }
@@ -296,8 +296,8 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-zinc-50">Invoices</h2>
-          <p className="text-zinc-400">Manage billing and track payments</p>
+          <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">Invoices</h2>
+          <p className="text-[var(--color-muted-foreground)]">Manage billing and track payments</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -453,51 +453,51 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="bg-zinc-900/50 border-zinc-800">
+        <Card className="bg-[var(--color-card)]/50 border-[var(--color-border)]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">Pending</CardTitle>
+            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">Pending</CardTitle>
             <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">
+            <div className="text-2xl font-bold text-[var(--color-foreground)]">
               {formatCurrency(summary.totalPending)}
             </div>
-            <p className="text-xs text-zinc-500">{summary.countPending} invoices</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">{summary.countPending} invoices</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-zinc-900/50 border-zinc-800">
+        <Card className="bg-[var(--color-card)]/50 border-[var(--color-border)]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">Paid</CardTitle>
+            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">Paid</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-zinc-50">
+            <div className="text-2xl font-bold text-[var(--color-foreground)]">
               {formatCurrency(summary.totalPaid)}
             </div>
-            <p className="text-xs text-zinc-500">{summary.countPaid} invoices</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">{summary.countPaid} invoices</p>
           </CardContent>
         </Card>
 
-        <Card className="bg-zinc-900/50 border-zinc-800">
+        <Card className="bg-[var(--color-card)]/50 border-[var(--color-border)]">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium text-zinc-400">Overdue</CardTitle>
+            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">Overdue</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-400">
               {formatCurrency(summary.totalOverdue)}
             </div>
-            <p className="text-xs text-zinc-500">{summary.countOverdue} invoices</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">{summary.countOverdue} invoices</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Invoice List */}
-      <Card className="bg-zinc-900/50 border-zinc-800">
+      <Card className="bg-[var(--color-card)]/50 border-[var(--color-border)]">
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle className="text-zinc-50">Invoice List</CardTitle>
+            <CardTitle className="text-[var(--color-foreground)]">Invoice List</CardTitle>
             <Button variant="ghost" size="sm" onClick={fetchInvoices}>
               <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
             </Button>
@@ -513,18 +513,18 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
               {filteredInvoices.map((invoice) => (
                 <div
                   key={invoice.id}
-                  className="flex items-center justify-between p-4 rounded-lg bg-zinc-800/50 border border-zinc-700/50 hover:border-zinc-600 transition-colors"
+                  className="flex items-center justify-between p-4 rounded-lg bg-[var(--color-surface)]/50 border border-[var(--color-border)]/50 hover:border-[var(--color-border-hover)] transition-colors"
                 >
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-lg bg-zinc-700/50 flex items-center justify-center">
-                      <FileText className="h-5 w-5 text-zinc-400" />
+                    <div className="h-10 w-10 rounded-lg bg-[var(--color-surface-raised)]/50 flex items-center justify-center">
+                      <FileText className="h-5 w-5 text-[var(--color-muted-foreground)]" />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="font-medium text-zinc-50">{invoice.number}</span>
+                        <span className="font-medium text-[var(--color-foreground)]">{invoice.number}</span>
                         {getStatusBadge(invoice.status)}
                       </div>
-                      <div className="text-sm text-zinc-400">
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
                         {invoice.tenantName || invoice.propertyName || "No details"}
                         {invoice.description && ` • ${invoice.description}`}
                       </div>
@@ -533,10 +533,10 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
 
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <div className="font-semibold text-zinc-50">
+                      <div className="font-semibold text-[var(--color-foreground)]">
                         {formatCurrency(invoice.amount)}
                       </div>
-                      <div className="text-xs text-zinc-500">
+                      <div className="text-xs text-[var(--color-muted-foreground)]">
                         Due: {new Date(invoice.dueDate).toLocaleDateString()}
                       </div>
                     </div>
@@ -632,7 +632,7 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
                   }))
                 }
               />
-              <p className="text-xs text-zinc-500">Days after due date before late fee applies</p>
+              <p className="text-xs text-[var(--color-muted-foreground)]">Days after due date before late fee applies</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
@@ -669,12 +669,12 @@ export function InvoicesView({ tenants, properties }: InvoicesViewProps): React.
               </div>
             </div>
 
-            <div className="rounded-lg bg-zinc-800/50 p-3 text-sm">
-              <p className="text-zinc-400">
+            <div className="rounded-lg bg-[var(--color-surface)]/50 p-3 text-sm">
+              <p className="text-[var(--color-muted-foreground)]">
                 This will apply a{" "}
-                <span className="text-zinc-50">{lateFeeConfig.percentageRate}%</span> late fee to
+                <span className="text-[var(--color-foreground)]">{lateFeeConfig.percentageRate}%</span> late fee to
                 all pending invoices that are more than{" "}
-                <span className="text-zinc-50">{lateFeeConfig.gracePeriodDays} days</span> overdue.
+                <span className="text-[var(--color-foreground)]">{lateFeeConfig.gracePeriodDays} days</span> overdue.
               </p>
             </div>
 

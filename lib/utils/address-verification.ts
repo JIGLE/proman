@@ -74,7 +74,7 @@ export class AddressVerificationService {
 
       const response = await fetch(`${NOMINATIM_BASE_URL}/search?${params}`, {
         headers: {
-          "User-Agent": "ProMan Property Management/1.0",
+          "User-Agent": "Domora Property Management/1.0",
         },
       });
 

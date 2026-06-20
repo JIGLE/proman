@@ -56,12 +56,12 @@ function AuthErrorContent(): React.ReactElement {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-zinc-950">
+    <div className="flex h-screen items-center justify-center bg-[var(--color-background)]">
       <div className="text-center max-w-xl mx-auto p-6">
         <h1 className="text-2xl font-bold text-red-400 mb-4">Authentication Error</h1>
-        <p className="text-zinc-300 mb-4">{getErrorMessage(error)}</p>
+        <p className="text-[var(--color-muted-foreground)] mb-4">{getErrorMessage(error)}</p>
 
-        <div className="text-sm text-zinc-400 mb-4 space-y-2 text-left">
+        <div className="text-sm text-[var(--color-muted-foreground)] mb-4 space-y-2 text-left">
           <p>
             <strong>Quick checks:</strong>
           </p>
@@ -106,7 +106,7 @@ function AuthErrorContent(): React.ReactElement {
           </Button>
 
           {showDetails && (
-            <div className="bg-zinc-900 border border-zinc-800 rounded p-3 text-sm text-zinc-200">
+            <div className="bg-[var(--color-card)] border border-[var(--color-border)] rounded p-3 text-sm text-[var(--color-foreground)]">
               <p className="mb-2">
                 Error type: <strong>{error || "Unknown"}</strong>
               </p>
@@ -130,11 +130,11 @@ function AuthErrorContent(): React.ReactElement {
 
               <div className="mt-3">
                 <p className="font-medium">DB debug</p>
-                {loadingDebug && <p className="text-zinc-400">Loading…</p>}
+                {loadingDebug && <p className="text-[var(--color-muted-foreground)]">Loading…</p>}
                 {debugError && <p className="text-rose-400">{debugError}</p>}
                 {showDebug && (
                   <>
-                    <pre className="max-h-48 overflow-auto text-xs bg-zinc-950 p-2 border border-zinc-800 rounded mt-2">
+                    <pre className="max-h-48 overflow-auto text-xs bg-[var(--color-background)] p-2 border border-[var(--color-border)] rounded mt-2">
                       {JSON.stringify(debugInfo, null, 2)}
                     </pre>
                     <div className="flex gap-2 mt-2">
@@ -149,11 +149,11 @@ function AuthErrorContent(): React.ReactElement {
                 )}
 
                 {!loadingDebug && !debugInfo && !debugError && (
-                  <p className="text-zinc-400 text-xs mt-2">No debug information fetched yet.</p>
+                  <p className="text-[var(--color-muted-foreground)] text-xs mt-2">No debug information fetched yet.</p>
                 )}
               </div>
 
-              <div className="mt-3 text-xs text-zinc-400">
+              <div className="mt-3 text-xs text-[var(--color-muted-foreground)]">
                 <p>
                   If you need to temporarily allow sign-ins while diagnosing DB issues, set{" "}
                   <code>NEXTAUTH_ALLOW_DB_FAILURE=true</code> and restart the app (development
@@ -172,9 +172,9 @@ export default function AuthError(): React.ReactElement {
   return (
     <Suspense
       fallback={
-        <div className="flex h-screen items-center justify-center bg-zinc-950">
+        <div className="flex h-screen items-center justify-center bg-[var(--color-background)]">
           <div className="text-center">
-            <p className="text-zinc-400">Loading...</p>
+            <p className="text-[var(--color-muted-foreground)]">Loading...</p>
           </div>
         </div>
       }

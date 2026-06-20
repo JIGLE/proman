@@ -87,6 +87,15 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     clearDemoStore();
     sessionStorage.removeItem("proman_demo");
     sessionStorage.removeItem("proman_demo_start");
+
+    // Restore the theme that was active before entering demo. Write storage
+    // then let the ThemeProvider re-apply it (single source of truth) instead
+    // of editing the DOM here.
+    const preTheme = sessionStorage.getItem("proman-pre-demo-theme") ?? "light";
+    sessionStorage.removeItem("proman-pre-demo-theme");
+    localStorage.setItem("proman-theme", preTheme);
+    window.dispatchEvent(new Event("proman:theme-changed"));
+
     window.dispatchEvent(new Event("proman:demo-mode-changed"));
     setIsDemoMode(false);
     setDemoPerspective("owner");

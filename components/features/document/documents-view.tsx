@@ -304,7 +304,7 @@ export function DocumentsView() {
                       return (
                         <div
                           key={doc.id}
-                          className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:bg-zinc-800/60"
+                          className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]/40 p-4 transition-colors hover:bg-[var(--color-surface)]/60"
                         >
                           <div className="flex items-center gap-4">
                             <div className="rounded-lg bg-muted p-2">

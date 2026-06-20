@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import {
   Settings,
@@ -20,6 +20,9 @@ import {
   Lock,
   CheckCircle2,
   Copy,
+  Loader2,
+  RefreshCw,
+  ChevronDown,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +39,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/lib/contexts/toast-context";
+import { useTheme } from "@/lib/contexts/theme-context";
+import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
+import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 
 interface UserSettings {
   theme: "light" | "dark" | "system";
@@ -105,12 +111,16 @@ const fiscalResidencyOptions = [
 export function SettingsView(): React.ReactElement {
   const { data: session } = useSession();
   const { success, error: showError } = useToast();
+  const { setTheme } = useTheme();
+  const confirmDialog = useConfirmDialog();
   const router = useRouter();
   const pathname = usePathname();
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [appVersion, setAppVersion] = useState<string>("");
   const [systemInfo, setSystemInfo] = useState<{
     status: string;
@@ -174,6 +184,7 @@ export function SettingsView(): React.ReactElement {
       setLoading(false);
       return;
     }
+    setLoadError(false);
     try {
       const response = await fetch("/api/settings");
       if (response.ok) {
@@ -181,9 +192,12 @@ export function SettingsView(): React.ReactElement {
         if (data.data) {
           setSettings({ ...defaultSettings, ...data.data });
         }
+      } else {
+        setLoadError(true);
       }
     } catch (err) {
       console.error("Failed to load settings:", err);
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
@@ -276,9 +290,45 @@ export function SettingsView(): React.ReactElement {
     }
   };
 
+  // Low-risk preferences auto-save on change with an inline "Saved" confirmation
+  // (closure / Zeigarnik) — no more appearing/disappearing "Save Changes" button.
+  const persistSettings = useCallback(
+    async (next: UserSettings) => {
+      setSaving(true);
+      try {
+        const response = await fetch("/api/settings", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(next),
+        });
+        if (!response.ok) {
+          showError("Failed to save settings");
+          return;
+        }
+        setJustSaved(true);
+        if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+        savedTimerRef.current = setTimeout(() => setJustSaved(false), 2000);
+      } catch {
+        showError("Failed to save settings");
+      } finally {
+        setSaving(false);
+      }
+    },
+    [showError],
+  );
+
   const updateSetting = <K extends keyof UserSettings>(key: K, value: UserSettings[K]) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
-    setHasChanges(true);
+    setSettings((prev) => {
+      const next = { ...prev, [key]: value };
+      void persistSettings(next);
+      return next;
+    });
+
+    // Appearance applies immediately through the ThemeProvider (single source of
+    // truth) so this control stays in sync with the rest of the app.
+    if (key === "theme") {
+      setTheme(value as "light" | "dark" | "system");
+    }
 
     // If language changed, navigate to new locale immediately
     if (key === "language" && value !== currentLocale) {
@@ -311,29 +361,6 @@ export function SettingsView(): React.ReactElement {
     setFiscalHasChanges(true);
   };
 
-  const saveSettings = async () => {
-    setSaving(true);
-    try {
-      const response = await fetch("/api/settings", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
-      });
-
-      if (response.ok) {
-        success("Settings saved successfully");
-        setHasChanges(false);
-        applyTheme(settings.theme);
-      } else {
-        showError("Failed to save settings");
-      }
-    } catch {
-      showError("Failed to save settings");
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const saveFiscalProfile = async () => {
     setFiscalSaving(true);
     try {
@@ -357,16 +384,6 @@ export function SettingsView(): React.ReactElement {
     }
   };
 
-  const applyTheme = (theme: "light" | "dark" | "system") => {
-    const root = document.documentElement;
-    if (theme === "system") {
-      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      root.classList.toggle("dark", isDark);
-    } else {
-      root.classList.toggle("dark", theme === "dark");
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -375,7 +392,30 @@ export function SettingsView(): React.ReactElement {
     );
   }
 
+  if (loadError) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 h-64 text-center">
+        <p className="text-sm text-[var(--color-muted-foreground)]">
+          We couldn&apos;t load your settings.
+        </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            setLoading(true);
+            loadSettings();
+          }}
+        >
+          <RefreshCw className="h-4 w-4 mr-2" />
+          Try again
+        </Button>
+      </div>
+    );
+  }
+
   const isPortugal = fiscalProfile.fiscalResidency === "PT";
+  // Goal-gradient: surface how close the account is to fully configured.
+  const optionalStepsLeft = [!fiscalProfile.fiscalResidency, !totpEnabled].filter(Boolean).length;
 
   return (
     <div className="space-y-6">
@@ -386,20 +426,34 @@ export function SettingsView(): React.ReactElement {
             <Settings className="h-6 w-6" />
             Settings
           </h1>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            Manage your preferences and account settings
+          <p className="text-sm text-[var(--color-muted-foreground)] flex items-center gap-1.5">
+            <CheckCircle2 className="h-3.5 w-3.5 text-[var(--color-success)]" />
+            {optionalStepsLeft === 0
+              ? "Account fully set up"
+              : `Account ready · ${optionalStepsLeft} optional step${optionalStepsLeft > 1 ? "s" : ""} left`}
           </p>
         </div>
-        {hasChanges && (
-          <Button onClick={saveSettings} disabled={saving}>
-            <Save className="h-4 w-4 mr-2" />
-            {saving ? "Saving..." : "Save Changes"}
-          </Button>
-        )}
+        {/* Auto-save status — preferences persist on change, no manual button */}
+        <div
+          className="flex h-5 items-center gap-1.5 text-sm text-[var(--color-muted-foreground)]"
+          aria-live="polite"
+        >
+          {saving ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              <span>Saving…</span>
+            </>
+          ) : justSaved ? (
+            <>
+              <CheckCircle2 className="h-3.5 w-3.5 text-[var(--color-success)]" />
+              <span>Saved</span>
+            </>
+          ) : null}
+        </div>
       </div>
 
       <Tabs defaultValue="account">
-        <TabsList className="w-full sm:w-auto">
+        <TabsList className="flex w-full justify-start overflow-x-auto sm:w-auto">
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="organization">Organization</TabsTrigger>
           <TabsTrigger value="tax">Tax &amp; Fiscal</TabsTrigger>
@@ -542,21 +596,26 @@ export function SettingsView(): React.ReactElement {
                   <Button
                     variant="destructive"
                     size="sm"
-                    onClick={async () => {
-                      if (
-                        !window.confirm(
-                          "This will permanently delete your account and all data. Are you sure?",
-                        )
+                    onClick={() =>
+                      confirmDialog.confirm(
+                        {
+                          title: "Delete your account?",
+                          description:
+                            "This will permanently delete your account and all associated data — properties, tenants, leases, and history. This action cannot be undone.",
+                          confirmLabel: "Delete account",
+                          variant: "destructive",
+                        },
+                        async () => {
+                          try {
+                            const res = await fetch("/api/user/delete-data", { method: "POST" });
+                            if (!res.ok) throw new Error("Delete failed");
+                            window.location.href = "/auth/signin";
+                          } catch {
+                            showError("Deletion failed. Please try again.");
+                          }
+                        },
                       )
-                        return;
-                      try {
-                        const res = await fetch("/api/user/delete-data", { method: "POST" });
-                        if (!res.ok) throw new Error("Delete failed");
-                        window.location.href = "/auth/signin";
-                      } catch {
-                        showError("Deletion failed. Please try again.");
-                      }
-                    }}
+                    }
                   >
                     Delete my account
                   </Button>
@@ -671,12 +730,26 @@ export function SettingsView(): React.ReactElement {
                     </p>
                   </div>
 
-                  {/* NHR Status — Portugal only */}
+                  {/* Special regimes — Portugal only, disclosed progressively to
+                      keep the common case (just residency) low-load. */}
                   {isPortugal && (
-                    <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-1 flex-1">
-                          <Label htmlFor="nhr-status">Non-Habitual Resident (NHR) status</Label>
+                    <details className="group rounded-lg border border-[var(--color-border)]">
+                      <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium text-[var(--color-foreground)]">
+                        <span className="flex items-center gap-2">
+                          <ChevronDown className="h-4 w-4 text-[var(--color-muted-foreground)] transition-transform group-open:rotate-180" />
+                          Special tax regimes (NHR / IFICI)
+                        </span>
+                        <span className="text-xs font-normal text-[var(--color-muted-foreground)]">
+                          Optional
+                        </span>
+                      </summary>
+                      <div className="space-y-4 px-4 pb-4">
+                        <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-1 flex-1">
+                              <Label htmlFor="nhr-status">
+                                Non-Habitual Resident (NHR) status
+                              </Label>
                           <p className="text-xs text-[var(--color-muted-foreground)]">
                             NHR grants a flat 20% tax rate on Portuguese-source income for 10 years.
                             Only valid if granted before Jan 2024.
@@ -713,12 +786,8 @@ export function SettingsView(): React.ReactElement {
                           exclusive.
                         </p>
                       )}
-                    </div>
-                  )}
-
-                  {/* IFICI Status — Portugal only */}
-                  {isPortugal && (
-                    <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
+                        </div>
+                        <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
                       <div className="flex items-start justify-between gap-4">
                         <div className="space-y-1 flex-1">
                           <Label htmlFor="ifici-status">IFICI regime (new NHR from 2024)</Label>
@@ -758,7 +827,9 @@ export function SettingsView(): React.ReactElement {
                           exclusive.
                         </p>
                       )}
-                    </div>
+                        </div>
+                      </div>
+                    </details>
                   )}
 
                   <Button
@@ -988,6 +1059,9 @@ export function SettingsView(): React.ReactElement {
                 </div>
               ) : totpSetupStep === "qr" ? (
                 <div className="space-y-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-primary)]">
+                    Step 1 of 2 · Scan &amp; verify
+                  </p>
                   <p className="text-sm text-muted-foreground">
                     Scan this QR code with your authenticator app (Google Authenticator, Authy,
                     etc.), then enter the 6-digit code to confirm.
@@ -1038,6 +1112,9 @@ export function SettingsView(): React.ReactElement {
                 </div>
               ) : totpSetupStep === "backup" ? (
                 <div className="space-y-4">
+                  <p className="text-xs font-medium uppercase tracking-wide text-[var(--color-primary)]">
+                    Step 2 of 2 · Save backup codes
+                  </p>
                   <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
                     <CheckCircle2 className="h-4 w-4" />
                     <span>Two-factor authentication has been enabled!</span>
@@ -1092,6 +1169,8 @@ export function SettingsView(): React.ReactElement {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ConfirmationDialog dialog={confirmDialog} />
     </div>
   );
 }

@@ -170,7 +170,7 @@ export function LeaseCalendar({
     <Card className={cn("p-6", className)}>
       <CardHeader className="p-0 pb-4">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
+          <CardTitle className="text-lg font-semibold text-[var(--color-foreground)] flex items-center gap-2">
             <Calendar className="h-5 w-5 text-purple-400" />
             Lease Calendar
           </CardTitle>
@@ -181,7 +181,7 @@ export function LeaseCalendar({
             <Button variant="ghost" size="icon" onClick={goToPrevMonth}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <span className="text-sm font-medium text-zinc-200 min-w-[120px] text-center">
+            <span className="text-sm font-medium text-[var(--color-foreground)] min-w-[120px] text-center">
               {monthNames[month]} {year}
             </span>
             <Button variant="ghost" size="icon" onClick={goToNextMonth}>
@@ -195,7 +195,7 @@ export function LeaseCalendar({
         <div className="grid grid-cols-7 gap-1">
           {/* Week day headers */}
           {weekDays.map((day) => (
-            <div key={day} className="text-center text-xs font-medium text-zinc-500 py-2">
+            <div key={day} className="text-center text-xs font-medium text-[var(--color-muted-foreground)] py-2">
               {day}
             </div>
           ))}
@@ -214,8 +214,8 @@ export function LeaseCalendar({
               className={cn(
                 "relative aspect-square p-1 rounded-lg transition-colors text-sm",
                 dayInfo.isCurrentMonth
-                  ? "hover:bg-zinc-800 cursor-pointer"
-                  : "text-zinc-600 cursor-default",
+                  ? "hover:bg-[var(--color-surface)] cursor-pointer"
+                  : "text-[var(--color-muted-foreground)] cursor-default",
                 dayInfo.isToday && "bg-accent-primary/20 text-accent-primary font-bold",
                 selectedDate &&
                   dayInfo.isCurrentMonth &&
@@ -236,7 +236,7 @@ export function LeaseCalendar({
                     />
                   ))}
                   {dayInfo.events.length > 3 && (
-                    <span className="text-[8px] text-zinc-400">+{dayInfo.events.length - 3}</span>
+                    <span className="text-[8px] text-[var(--color-muted-foreground)]">+{dayInfo.events.length - 3}</span>
                   )}
                 </div>
               )}
@@ -245,20 +245,20 @@ export function LeaseCalendar({
         </div>
 
         {/* Legend */}
-        <div className="mt-4 pt-4 border-t border-zinc-800 flex items-center gap-4 flex-wrap">
-          <div className="flex items-center gap-2 text-xs text-zinc-400">
+        <div className="mt-4 pt-4 border-t border-[var(--color-border)] flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
             <div className="w-2 h-2 rounded-full bg-red-500" />
             <span>Expired</span>
           </div>
-          <div className="flex items-center gap-2 text-xs text-zinc-400">
+          <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
             <div className="w-2 h-2 rounded-full bg-orange-500" />
             <span>Critical (&lt;30d)</span>
           </div>
-          <div className="flex items-center gap-2 text-xs text-zinc-400">
+          <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
             <div className="w-2 h-2 rounded-full bg-yellow-500" />
             <span>Warning (30-60d)</span>
           </div>
-          <div className="flex items-center gap-2 text-xs text-zinc-400">
+          <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
             <div className="w-2 h-2 rounded-full bg-green-500" />
             <span>Healthy (&gt;60d)</span>
           </div>
@@ -271,9 +271,9 @@ export function LeaseCalendar({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-4 pt-4 border-t border-zinc-800"
+              className="mt-4 pt-4 border-t border-[var(--color-border)]"
             >
-              <h4 className="text-sm font-medium text-zinc-300 mb-3">
+              <h4 className="text-sm font-medium text-[var(--color-muted-foreground)] mb-3">
                 Events on {selectedDate.toLocaleDateString()}
               </h4>
               <div className="space-y-2">
@@ -293,7 +293,7 @@ export function LeaseCalendar({
                       transition={{ delay: index * 0.1 }}
                       onClick={() => onEventClick?.(event)}
                       className={cn(
-                        "flex items-center gap-3 p-3 rounded-lg bg-zinc-800/50 cursor-pointer hover:bg-zinc-800 transition-colors",
+                        "flex items-center gap-3 p-3 rounded-lg bg-[var(--color-surface)]/50 cursor-pointer hover:bg-[var(--color-surface)] transition-colors",
                         onEventClick && "cursor-pointer",
                       )}
                     >
@@ -311,8 +311,8 @@ export function LeaseCalendar({
                         )}
                       />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-zinc-200">{event.tenantName}</p>
-                        <p className="text-xs text-zinc-400">
+                        <p className="text-sm font-medium text-[var(--color-foreground)]">{event.tenantName}</p>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">
                           {event.propertyName} - Unit {event.unitNumber}
                         </p>
                       </div>
@@ -365,7 +365,7 @@ export function MiniLeaseCalendar({ events, className }: MiniCalendarProps) {
   return (
     <Card className={cn("p-4", className)}>
       <div className="flex items-center justify-between mb-4">
-        <h4 className="text-sm font-semibold text-zinc-50 flex items-center gap-2">
+        <h4 className="text-sm font-semibold text-[var(--color-foreground)] flex items-center gap-2">
           <Calendar className="h-4 w-4 text-purple-400" />
           Lease Status
         </h4>
@@ -395,7 +395,7 @@ export function MiniLeaseCalendar({ events, className }: MiniCalendarProps) {
       {/* Upcoming events list */}
       <div className="space-y-2">
         {upcomingEvents.length === 0 ? (
-          <p className="text-xs text-zinc-500">No upcoming lease expirations</p>
+          <p className="text-xs text-[var(--color-muted-foreground)]">No upcoming lease expirations</p>
         ) : (
           upcomingEvents.map((event) => (
             <div key={event.id} className="flex items-center gap-2 text-xs">
@@ -409,8 +409,8 @@ export function MiniLeaseCalendar({ events, className }: MiniCalendarProps) {
                       : "bg-green-500",
                 )}
               />
-              <span className="text-zinc-400 truncate flex-1">{event.tenantName}</span>
-              <span className="text-zinc-500">
+              <span className="text-[var(--color-muted-foreground)] truncate flex-1">{event.tenantName}</span>
+              <span className="text-[var(--color-muted-foreground)]">
                 {new Date(event.date).toLocaleDateString(undefined, {
                   month: "short",
                   day: "numeric",

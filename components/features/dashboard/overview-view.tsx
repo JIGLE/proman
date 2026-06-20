@@ -27,8 +27,13 @@ import {
   OnboardingChecklist,
   type OnboardingChecklistStep,
 } from "@/components/ui/onboarding-checklist";
-import { cn } from "@/lib/utils/utils";
+import { PageContainer } from "@/components/shared/page-container";
+import { StatCard, StatGrid } from "@/components/ui/stat-card";
 import { ActionPanel } from "@/components/features/dashboard/action-panel";
+import {
+  SampleDataLoadButton,
+  SampleDataBanner,
+} from "@/components/features/dashboard/sample-data";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
@@ -138,49 +143,6 @@ function getNextPaymentDate(leaseStartDate?: string): Date | null {
   return candidate;
 }
 
-function MetricCard({
-  title,
-  value,
-  subtitle,
-  icon: Icon,
-  tone = "default",
-}: {
-  title: string;
-  value: string;
-  subtitle: string;
-  icon: ElementType;
-  tone?: "default" | "danger" | "success" | "info";
-}) {
-  const toneClasses = {
-    default: "border-[var(--color-border)] bg-[var(--color-card)]",
-    danger: "border-[var(--color-destructive)]/20 bg-[var(--color-error-muted)]",
-    success: "border-[var(--color-success)]/20 bg-[var(--color-success-muted)]",
-    info: "border-[var(--color-info)]/20 bg-[var(--color-info-muted)]",
-  };
-
-  return (
-    <Card className={cn("overflow-hidden", toneClasses[tone])}>
-      <CardContent className="p-5">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm text-[var(--color-muted-foreground)]">{title}</p>
-            <p
-              className="mt-2 text-display-small text-[var(--color-foreground)]"
-              aria-live="polite"
-            >
-              {value}
-            </p>
-          </div>
-          <div className="rounded-lg bg-[var(--color-surface-hover)] p-3">
-            <Icon className="h-5 w-5 text-[var(--color-foreground)]" />
-          </div>
-        </div>
-        <p className="mt-3 text-xs text-[var(--color-muted-foreground)]">{subtitle}</p>
-      </CardContent>
-    </Card>
-  );
-}
-
 function FeatureHighlightCard({
   icon: Icon,
   title,
@@ -250,6 +212,10 @@ export function OverviewView({
     const monthStart = startOfMonth(currentMonth);
     const monthEnd = endOfMonth(currentMonth);
 
+    // Previous month bounds for trend calculation
+    const prevMonthStart = startOfMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+    const prevMonthEnd = endOfMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+
     const occupiedProperties = properties.filter(
       (property) => property.status === "occupied",
     ).length;
@@ -264,6 +230,18 @@ export function OverviewView({
           receipt.type === "rent" &&
           receiptDate >= monthStart &&
           receiptDate <= monthEnd
+        );
+      })
+      .reduce((sum, receipt) => sum + receipt.amount, 0);
+
+    const prevMonthIncome = receipts
+      .filter((receipt) => {
+        const receiptDate = new Date(receipt.date);
+        return (
+          receipt.status === "paid" &&
+          receipt.type === "rent" &&
+          receiptDate >= prevMonthStart &&
+          receiptDate <= prevMonthEnd
         );
       })
       .reduce((sum, receipt) => sum + receipt.amount, 0);
@@ -328,9 +306,17 @@ export function OverviewView({
     const paidReceipts = receipts.filter((receipt) => receipt.status === "paid");
     const nextPaymentDate = getNextPaymentDate(activeLease?.startDate);
 
+    // Trend for monthly income vs previous month
+    const incomeTrendValue =
+      prevMonthIncome > 0
+        ? Math.round(((monthlyIncome - prevMonthIncome) / prevMonthIncome) * 100)
+        : null;
+
     return {
       occupancyRate,
       monthlyIncome,
+      prevMonthIncome,
+      incomeTrendValue,
       overdueRent,
       pendingReceipts,
       recentPayments,
@@ -431,6 +417,7 @@ export function OverviewView({
     return (
       <div className="space-y-6">
         <OnboardingChecklist steps={richSteps} />
+        <SampleDataLoadButton />
         <div className="grid gap-4 sm:grid-cols-3">
           <FeatureHighlightCard
             icon={Building2}
@@ -453,45 +440,53 @@ export function OverviewView({
   }
 
   if (isOwnerPortal) {
+    const ownerSummary = `${formatCurrency(dashboardData.monthlyIncome)} ${t("collectedThisMonth").toLowerCase()} · ${formatCurrency(dashboardData.overdueRent)} ${t("overdueRentMetric").toLowerCase()} · ${dashboardData.occupancyRate.toFixed(0)}% ${t("occupancyMetric").toLowerCase()}`;
     return (
-      <div className="space-y-5">
+      <PageContainer title={t("ownerHomeTitle")} summary={ownerSummary}>
+        {/* Reminder that the populated workspace is seeded sample data */}
+        <SampleDataBanner />
+
         {/* Onboarding: top priority when setup is incomplete */}
         {showChecklist && <OnboardingChecklist steps={onboardingSteps} />}
 
         {/* Status hero — the first thing a landlord sees */}
         <ActionPanel />
 
-        {/* Three key numbers — compact, no decorative headers */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-xl border border-[var(--color-success)]/20 bg-[var(--color-success-muted)] p-4">
-            <p className="text-xs text-[var(--color-muted-foreground)]">
-              {t("collectedThisMonth")}
-            </p>
-            <p className="mt-1.5 text-xl font-semibold tracking-tight text-[var(--color-foreground)]">
-              {formatCurrency(dashboardData.monthlyIncome)}
-            </p>
-          </div>
-          <div
-            className={
-              dashboardData.overdueRent > 0
-                ? "rounded-xl border border-[var(--color-destructive)]/20 bg-[var(--color-error-muted)] p-4"
-                : "rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4"
+        {/* Three key numbers */}
+        <StatGrid cols={3}>
+          <StatCard
+            size="compact"
+            tone="success"
+            label={t("collectedThisMonth")}
+            value={formatCurrency(dashboardData.monthlyIncome)}
+            trend={
+              dashboardData.incomeTrendValue !== null
+                ? {
+                    value: Math.abs(dashboardData.incomeTrendValue),
+                    direction:
+                      dashboardData.incomeTrendValue > 0
+                        ? "up"
+                        : dashboardData.incomeTrendValue < 0
+                          ? "down"
+                          : "flat",
+                    label: t("vsLastMonth"),
+                  }
+                : undefined
             }
-          >
-            <p className="text-xs text-[var(--color-muted-foreground)]">{t("overdueRentMetric")}</p>
-            <p
-              className={`mt-1.5 text-xl font-semibold tracking-tight ${dashboardData.overdueRent > 0 ? "text-[var(--color-destructive)]" : "text-[var(--color-foreground)]"}`}
-            >
-              {formatCurrency(dashboardData.overdueRent)}
-            </p>
-          </div>
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-            <p className="text-xs text-[var(--color-muted-foreground)]">{t("occupancyMetric")}</p>
-            <p className="mt-1.5 text-xl font-semibold tracking-tight text-[var(--color-foreground)]">
-              {dashboardData.occupancyRate.toFixed(0)}%
-            </p>
-          </div>
-        </div>
+          />
+          <StatCard
+            size="compact"
+            tone={dashboardData.overdueRent > 0 ? "danger" : "default"}
+            emphasizeValue={dashboardData.overdueRent > 0}
+            label={t("overdueRentMetric")}
+            value={formatCurrency(dashboardData.overdueRent)}
+          />
+          <StatCard
+            size="compact"
+            label={t("occupancyMetric")}
+            value={`${dashboardData.occupancyRate.toFixed(0)}%`}
+          />
+        </StatGrid>
 
         {/* Recent payments — compact list */}
         {dashboardData.recentPayments.length > 0 && (
@@ -529,7 +524,7 @@ export function OverviewView({
 
         {/* Compliance alert — seasonal, Jan–Mar only */}
         <Modelo179Alert locale={locale} />
-      </div>
+      </PageContainer>
     );
   }
 
@@ -539,12 +534,8 @@ export function OverviewView({
   const paidReceipts = dashboardData.paidReceipts;
   const nextRent = activeLease?.monthlyRent ?? tenant?.rent ?? 0;
   const paymentStatus = tenant?.paymentStatus ?? "pending";
-  const statusTone =
-    paymentStatus === "paid"
-      ? "border-[var(--color-success)]/20 bg-[var(--color-success-muted)] text-[var(--color-success)]"
-      : paymentStatus === "overdue"
-        ? "border-[var(--color-destructive)]/20 bg-[var(--color-error-muted)] text-[var(--color-destructive)]"
-        : "border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)] text-[var(--color-warning)]";
+  const paymentTone: "success" | "danger" | "warning" =
+    paymentStatus === "paid" ? "success" : paymentStatus === "overdue" ? "danger" : "warning";
 
   return (
     <div className="space-y-6">
@@ -562,47 +553,41 @@ export function OverviewView({
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          <MetricCard
-            title={t("nextRent")}
+        <StatGrid cols={3}>
+          <StatCard
+            tone="info"
+            icon={BadgeEuro}
+            label={t("nextRent")}
             value={formatCurrency(nextRent)}
-            subtitle={
+            hint={
               dashboardData.nextPaymentDate
                 ? t("dueDateLabel", {
                     date: formatDate(dashboardData.nextPaymentDate.toISOString()),
                   })
                 : t("noActiveLease")
             }
-            icon={BadgeEuro}
-            tone="info"
           />
-          <Card className={cn(statusTone)}>
-            <CardContent className="p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-sm opacity-80">{t("paymentStatusLabel")}</p>
-                  <p className="mt-2 text-display-small capitalize">{paymentStatus}</p>
-                </div>
-                <div className="rounded-lg bg-black/10 p-3">
-                  <AlertTriangle className="h-5 w-5" />
-                </div>
-              </div>
-              <p className="mt-3 text-xs opacity-80">
-                {paymentStatus === "paid"
-                  ? t("paymentStatusPaid")
-                  : paymentStatus === "overdue"
-                    ? t("paymentStatusOverdue")
-                    : t("paymentStatusPending")}
-              </p>
-            </CardContent>
-          </Card>
-          <MetricCard
-            title={t("leaseEnds")}
-            value={activeLease ? formatDate(activeLease.endDate) : "—"}
-            subtitle={t("leaseEndsSubtitle")}
+          <StatCard
+            tone={paymentTone}
+            emphasizeValue
+            icon={AlertTriangle}
+            label={t("paymentStatusLabel")}
+            value={<span className="capitalize">{paymentStatus}</span>}
+            hint={
+              paymentStatus === "paid"
+                ? t("paymentStatusPaid")
+                : paymentStatus === "overdue"
+                  ? t("paymentStatusOverdue")
+                  : t("paymentStatusPending")
+            }
+          />
+          <StatCard
             icon={CalendarClock}
+            label={t("leaseEnds")}
+            value={activeLease ? formatDate(activeLease.endDate) : "—"}
+            hint={t("leaseEndsSubtitle")}
           />
-        </div>
+        </StatGrid>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">

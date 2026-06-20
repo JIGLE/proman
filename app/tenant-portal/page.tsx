@@ -1,12 +1,23 @@
-import { Building2, Mail } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, Building2, Mail } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 
 export default async function TenantPortalLandingPage(): Promise<React.ReactElement> {
   const t = await getTranslations("tenantPortal.landing");
 
   return (
-    <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[var(--color-background)] flex items-center justify-center px-4 py-10">
       <div className="max-w-md w-full text-center space-y-6">
+        <div className="text-left">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] underline-offset-4 transition-colors hover:text-[var(--color-foreground)] hover:underline"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t("backHome")}
+          </Link>
+        </div>
+
         <div className="flex justify-center">
           <div className="rounded-full bg-[var(--color-info-muted)] p-4">
             <Building2 className="h-10 w-10 text-[var(--color-primary)]" />

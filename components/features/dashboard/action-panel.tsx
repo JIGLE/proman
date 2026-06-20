@@ -267,6 +267,14 @@ export function ActionPanel(): ReactElement {
     return results;
   }, [leases, receipts, maintenance, properties, t, docExpiry]);
 
+  // Hick's Law: cap at 3 items — prioritise critical > warning > info
+  const prioritised = [...alerts].sort((a, b) => {
+    const order: Record<AlertSeverity, number> = { critical: 0, warning: 1, info: 2 };
+    return order[a.severity] - order[b.severity];
+  });
+  const visible = prioritised.slice(0, 3);
+  const hiddenCount = Math.max(0, alerts.length - 3);
+
   return (
     <Card className="border-[var(--color-border)] bg-[var(--color-card)]">
       <CardHeader className="pb-3">
@@ -283,7 +291,18 @@ export function ActionPanel(): ReactElement {
             </div>
           </div>
         ) : (
-          alerts.map((alert) => <AlertRow key={alert.id} alert={alert} locale={locale} />)
+          <>
+            {visible.map((alert) => <AlertRow key={alert.id} alert={alert} locale={locale} />)}
+            {hiddenCount > 0 && (
+              <Link
+                href={`/${locale}/financials`}
+                className="flex items-center justify-center gap-1.5 rounded-lg border border-[var(--color-border)] py-2.5 text-xs text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-foreground)]"
+              >
+                <ChevronRight className="h-3.5 w-3.5" />
+                {hiddenCount} more item{hiddenCount !== 1 ? "s" : ""} need attention
+              </Link>
+            )}
+          </>
         )}
       </CardContent>
     </Card>

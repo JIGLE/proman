@@ -273,15 +273,27 @@ export function LeasesView(): React.ReactElement {
       // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
         error("File size must be less than 5MB");
+        event.target.value = ""; // clear so the same file can be re-picked
         return;
       }
       // Validate file type
       if (file.type !== "application/pdf") {
         error("Only PDF files are allowed");
+        event.target.value = "";
         return;
       }
       setContractFile(file);
     }
+  };
+
+  // Open the wizard for a brand-new lease. Reset everything first so a prior
+  // edit (or abandoned draft) can never bleed its form data or contract file
+  // into the new record.
+  const handleAddNew = () => {
+    setEditingLease(null);
+    setContractFile(null);
+    wizard.resetForm();
+    setWizardOpen(true);
   };
 
   const handleEdit = (lease: Lease) => {
@@ -537,7 +549,7 @@ export function LeasesView(): React.ReactElement {
             }}
           >
             <DialogTrigger asChild>
-              <Button onClick={() => setWizardOpen(true)} className="flex items-center gap-2">
+              <Button onClick={handleAddNew} className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
                 Add Lease
               </Button>
@@ -773,8 +785,12 @@ export function LeasesView(): React.ReactElement {
                           }
                           className={wizard.stepErrors.deposit ? "border-red-500" : ""}
                         />
-                        {wizard.stepErrors.deposit && (
+                        {wizard.stepErrors.deposit ? (
                           <p className="text-sm text-destructive">{wizard.stepErrors.deposit}</p>
+                        ) : (
+                          <p className="text-xs text-[var(--color-muted-foreground)]">
+                            Typically 1–2 months rent. Required by PT/ES law.
+                          </p>
                         )}
                       </div>
                     </div>
@@ -802,6 +818,9 @@ export function LeasesView(): React.ReactElement {
                             </SelectItem>
                           </SelectContent>
                         </Select>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">
+                          Affects how IRS withholding is calculated on receipts.
+                        </p>
                       </div>
 
                       <div className="space-y-2">
@@ -817,6 +836,9 @@ export function LeasesView(): React.ReactElement {
                             })
                           }
                         />
+                        <p className="text-xs text-[var(--color-muted-foreground)]">
+                          Days before lease end you'll be reminded to renew.
+                        </p>
                       </div>
                     </div>
                   </StepContent>
@@ -984,8 +1006,8 @@ export function LeasesView(): React.ReactElement {
             <>
               {/* Bulk actions bar */}
               {selectedLeaseIds.size > 0 && (
-                <div className="flex items-center gap-3 px-4 py-2.5 bg-indigo-950/60 border border-indigo-800/50 rounded-lg">
-                  <span className="text-sm font-medium text-indigo-300">
+                <div className="flex items-center gap-3 px-4 py-2.5 bg-[var(--color-primary)]/10 border border-[var(--color-primary)]/30 rounded-lg">
+                  <span className="text-sm font-medium text-[var(--color-primary)]">
                     {selectedLeaseIds.size} lease{selectedLeaseIds.size !== 1 ? "s" : ""} selected
                   </span>
                   <div className="ml-auto flex items-center gap-2">
@@ -994,7 +1016,7 @@ export function LeasesView(): React.ReactElement {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="border-indigo-700 text-indigo-300 hover:text-indigo-100"
+                          className="border-[var(--color-primary)]/40 text-[var(--color-primary)] hover:text-[var(--color-foreground)]"
                         >
                           <TrendingUp className="h-4 w-4 mr-1.5" />
                           Increase Rent
@@ -1023,13 +1045,13 @@ export function LeasesView(): React.ReactElement {
                                 onChange={(e) => setBulkPct(e.target.value)}
                                 className="flex-1"
                               />
-                              <span className="flex items-center text-sm text-zinc-400">%</span>
+                              <span className="flex items-center text-sm text-[var(--color-muted-foreground)]">%</span>
                             </div>
                           </div>
 
                           {/* Preview */}
                           {bulkPct && !isNaN(parseFloat(bulkPct)) && parseFloat(bulkPct) > 0 && (
-                            <div className="rounded-md bg-zinc-900 border border-zinc-800 divide-y divide-zinc-800 text-sm max-h-48 overflow-y-auto">
+                            <div className="rounded-md bg-[var(--color-card)] border border-[var(--color-border)] divide-y divide-[var(--color-border)] text-sm max-h-48 overflow-y-auto">
                               {[...selectedLeaseIds].map((id) => {
                                 const lease = leases.find((l) => l.id === id);
                                 if (!lease) return null;
@@ -1043,13 +1065,13 @@ export function LeasesView(): React.ReactElement {
                                     key={id}
                                     className="flex items-center justify-between px-3 py-2"
                                   >
-                                    <span className="text-zinc-400 truncate max-w-[180px]">
+                                    <span className="text-[var(--color-muted-foreground)] truncate max-w-[180px]">
                                       {tenant?.name ?? id}
                                     </span>
-                                    <span className="text-zinc-500 line-through mr-2">
+                                    <span className="text-[var(--color-muted-foreground)] line-through mr-2">
                                       {formatCurrency(lease.monthlyRent)}
                                     </span>
-                                    <span className="text-green-400 font-medium">
+                                    <span className="text-[var(--color-success)] font-medium">
                                       {formatCurrency(newRent)}
                                     </span>
                                   </div>
@@ -1087,7 +1109,7 @@ export function LeasesView(): React.ReactElement {
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="text-zinc-500 hover:text-zinc-300"
+                      className="text-[var(--color-muted-foreground)] hover:text-[var(--color-muted-foreground)]"
                       onClick={() => setSelectedLeaseIds(new Set())}
                     >
                       Clear
@@ -1150,7 +1172,7 @@ export function LeasesView(): React.ReactElement {
                         key={lease.id}
                         className={cn(
                           "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]",
-                          selectedLeaseIds.has(lease.id) && "bg-indigo-950/30",
+                          selectedLeaseIds.has(lease.id) && "bg-[var(--color-primary)]/5",
                         )}
                       >
                         <TableCell className="pl-4 w-10">

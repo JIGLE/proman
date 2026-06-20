@@ -52,11 +52,11 @@ const STATUS_COLORS: Record<string, string> = {
     "bg-[var(--color-info-muted)] text-[var(--color-info)] border-[var(--color-info)]/30",
   resolved:
     "bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]/30",
-  closed: "bg-zinc-500/10 text-zinc-400 border-zinc-500/30",
+  closed: "bg-zinc-500/10 text-[var(--color-muted-foreground)] border-zinc-500/30",
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  low: "bg-zinc-500/10 text-zinc-400",
+  low: "bg-zinc-500/10 text-[var(--color-muted-foreground)]",
   medium: "bg-[var(--color-warning-muted)] text-[var(--color-warning)]",
   high: "bg-[var(--color-warning-muted)] text-[var(--color-warning)]",
   urgent: "bg-[var(--color-error-muted)] text-[var(--color-destructive)]",
@@ -626,7 +626,7 @@ export function TicketDetailModal({
                 {ticket.status === "closed" && (
                   <div className="flex items-start gap-3 text-sm">
                     <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-500/10">
-                      <XCircle className="h-3.5 w-3.5 text-zinc-400" />
+                      <XCircle className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" />
                     </div>
                     <div>
                       <p className="font-medium text-[var(--color-foreground)]">Closed</p>
@@ -638,7 +638,7 @@ export function TicketDetailModal({
                 )}
                 <div className="flex items-start gap-3 text-sm">
                   <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-500/10">
-                    <Wrench className="h-3.5 w-3.5 text-zinc-400" />
+                    <Wrench className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" />
                   </div>
                   <div>
                     <p className="font-medium text-[var(--color-foreground)]">Created</p>

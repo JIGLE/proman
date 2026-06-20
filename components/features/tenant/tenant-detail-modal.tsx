@@ -256,7 +256,18 @@ export function TenantDetailModal({
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            // Reset transient state so reopening starts clean (read mode,
+            // overview tab, no stale edits) — fixes "stuck in edit mode".
+            handleCancel();
+            setActiveTab("overview");
+            onClose();
+          }
+        }}
+      >
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           {/* ── Zone 1: Header + Status ─────────────────────────────────── */}
           <DialogHeader>

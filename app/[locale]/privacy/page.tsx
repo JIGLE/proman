@@ -22,13 +22,13 @@ export default async function PrivacyPage({ params }: Props) {
   const t = await getTranslations("footer");
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-300">
+    <div className="min-h-screen bg-[var(--color-background)] text-[var(--color-muted-foreground)]">
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b border-white/[0.04] bg-zinc-950/80 backdrop-blur-md">
+      <header className="sticky top-0 z-50 border-b border-white/[0.04] bg-[var(--color-background)]/80 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-4">
           <Link
             href={`/${locale}`}
-            className="text-sm font-semibold tracking-tight text-zinc-50 transition-opacity hover:opacity-80"
+            className="text-sm font-semibold tracking-tight text-[var(--color-foreground)] transition-opacity hover:opacity-80"
           >
             Domora
           </Link>
@@ -41,17 +41,17 @@ export default async function PrivacyPage({ params }: Props) {
           <p className="mb-3 text-xs font-medium uppercase tracking-widest text-indigo-400">
             Legal
           </p>
-          <h1 className="font-display text-3xl font-bold tracking-tight text-zinc-50 sm:text-4xl">
+          <h1 className="font-display text-3xl font-bold tracking-tight text-[var(--color-foreground)] sm:text-4xl">
             {t("privacy")}
           </h1>
-          <p className="mt-3 text-sm text-zinc-500">
+          <p className="mt-3 text-sm text-[var(--color-foreground)]0">
             Last updated: January 2025 &mdash; Subject to legal review.
           </p>
         </div>
 
         <div className="space-y-10 text-[15px] leading-7">
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-zinc-100">1. Introduction</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">1. Introduction</h2>
             <p>
               Domora (&ldquo;we&rdquo;, &ldquo;our&rdquo;, &ldquo;the platform&rdquo;) is committed
               to protecting your personal data in accordance with the General Data Protection
@@ -65,30 +65,30 @@ export default async function PrivacyPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-zinc-100">2. Data We Collect</h2>
-            <ul className="ml-4 list-disc space-y-2 text-zinc-400">
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">2. Data We Collect</h2>
+            <ul className="ml-4 list-disc space-y-2 text-[var(--color-muted-foreground)]">
               <li>
-                <strong className="text-zinc-300">Account data:</strong> name, email address, hashed
+                <strong className="text-[var(--color-muted-foreground)]">Account data:</strong> name, email address, hashed
                 password.
               </li>
               <li>
-                <strong className="text-zinc-300">Property and tenant data:</strong> addresses,
+                <strong className="text-[var(--color-muted-foreground)]">Property and tenant data:</strong> addresses,
                 lease terms, rent amounts, and related documents you upload.
               </li>
               <li>
-                <strong className="text-zinc-300">Usage data:</strong> pages visited, feature
+                <strong className="text-[var(--color-muted-foreground)]">Usage data:</strong> pages visited, feature
                 interactions, browser/device type, and IP address (anonymised after 90 days).
               </li>
               <li>
-                <strong className="text-zinc-300">Payment data:</strong> billing information is
+                <strong className="text-[var(--color-muted-foreground)]">Payment data:</strong> billing information is
                 processed by Stripe; we do not store card numbers.
               </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-zinc-100">3. How We Use Your Data</h2>
-            <ul className="ml-4 list-disc space-y-2 text-zinc-400">
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">3. How We Use Your Data</h2>
+            <ul className="ml-4 list-disc space-y-2 text-[var(--color-muted-foreground)]">
               <li>To provide, maintain, and improve the Domora service.</li>
               <li>
                 To generate tax-compliance documents (AT receipts, IRS / IRPF exports) on your
@@ -104,8 +104,8 @@ export default async function PrivacyPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-zinc-100">4. Data Retention</h2>
-            <p className="text-zinc-400">
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">4. Data Retention</h2>
+            <p className="text-[var(--color-muted-foreground)]">
               Account data is retained for the lifetime of your account plus 30 days after deletion.
               Financial records (receipts, lease documents) are retained for 10 years to comply with
               fiscal obligations under Portuguese and Spanish law. Usage logs are purged after 12
@@ -114,9 +114,9 @@ export default async function PrivacyPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-zinc-100">5. Your Rights (GDPR)</h2>
-            <p className="mb-3 text-zinc-400">Under the GDPR you have the right to:</p>
-            <ul className="ml-4 list-disc space-y-2 text-zinc-400">
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">5. Your Rights (GDPR)</h2>
+            <p className="mb-3 text-[var(--color-muted-foreground)]">Under the GDPR you have the right to:</p>
+            <ul className="ml-4 list-disc space-y-2 text-[var(--color-muted-foreground)]">
               <li>Access a copy of the personal data we hold about you.</li>
               <li>Correct inaccurate data.</li>
               <li>
@@ -130,29 +130,29 @@ export default async function PrivacyPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-zinc-100">6. Cookies</h2>
-            <p className="text-zinc-400">
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">6. Cookies</h2>
+            <p className="text-[var(--color-muted-foreground)]">
               Domora uses strictly necessary session cookies for authentication and CSRF protection.
               No third-party advertising or tracking cookies are used.
             </p>
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-zinc-100">7. Third-Party Processors</h2>
-            <ul className="ml-4 list-disc space-y-2 text-zinc-400">
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">7. Third-Party Processors</h2>
+            <ul className="ml-4 list-disc space-y-2 text-[var(--color-muted-foreground)]">
               <li>
-                <strong className="text-zinc-300">Stripe</strong> — payment processing (EU data
+                <strong className="text-[var(--color-muted-foreground)]">Stripe</strong> — payment processing (EU data
                 centre).
               </li>
               <li>
-                <strong className="text-zinc-300">SendGrid</strong> — transactional email delivery.
+                <strong className="text-[var(--color-muted-foreground)]">SendGrid</strong> — transactional email delivery.
               </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-zinc-100">8. Contact</h2>
-            <p className="text-zinc-400">
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">8. Contact</h2>
+            <p className="text-[var(--color-muted-foreground)]">
               For data protection enquiries or to exercise your rights, contact us at{" "}
               <a
                 href="mailto:privacy@proman.app"
@@ -166,7 +166,7 @@ export default async function PrivacyPage({ params }: Props) {
         </div>
 
         <div className="mt-16 border-t border-white/[0.06] pt-8">
-          <Button variant="ghost" asChild className="text-zinc-500 hover:text-zinc-300">
+          <Button variant="ghost" asChild className="text-[var(--color-foreground)]0 hover:text-[var(--color-muted-foreground)]">
             <Link href={`/${locale}`}>&larr; Back to Domora</Link>
           </Button>
         </div>

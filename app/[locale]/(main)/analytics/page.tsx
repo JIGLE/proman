@@ -1,13 +1,11 @@
-import { Suspense } from "react";
-import { AnalyticsDashboard } from "@/components/features/dashboard/analytics-dashboard";
-import { GenericPageSkeleton } from "@/components/ui/page-skeletons";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default function AnalyticsPage() {
-  return (
-    <Suspense fallback={<GenericPageSkeleton />}>
-      <AnalyticsDashboard />
-    </Suspense>
-  );
+// Analytics is now a tab within the unified Insights destination.
+export default async function AnalyticsPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  redirect(`/${locale}/insights?tab=analytics`);
 }

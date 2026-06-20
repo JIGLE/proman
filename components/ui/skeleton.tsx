@@ -10,7 +10,7 @@ interface SkeletonProps {
 
 export function Skeleton({ className = "", variant = "text", width, height }: SkeletonProps) {
   const baseClasses =
-    "bg-zinc-700 animate-shimmer bg-gradient-to-r from-zinc-700 via-zinc-600 to-zinc-700";
+    "bg-[var(--color-surface)] animate-shimmer bg-gradient-to-r from-[var(--color-surface)] via-[var(--color-surface-raised)] to-[var(--color-surface)]";
 
   const variantClasses = {
     text: "h-4 rounded",
@@ -34,7 +34,7 @@ interface SkeletonCardProps {
 export function SkeletonCard({ lines = 3, showAvatar = false, className = "" }: SkeletonCardProps) {
   return (
     <motion.div
-      className={`p-4 border border-zinc-800 rounded-lg bg-zinc-900 ${className}`}
+      className={`p-4 border border-[var(--color-border)] rounded-lg bg-[var(--color-card)] ${className}`}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
@@ -73,7 +73,7 @@ export function TableSkeleton({ rows = 5, columns = 4, className = "" }: TableSk
       transition={{ duration: 0.3 }}
     >
       {/* Header */}
-      <div className="flex gap-4 pb-2 border-b border-zinc-800">
+      <div className="flex gap-4 pb-2 border-b border-[var(--color-border)]">
         {Array.from({ length: columns }).map((_, i) => (
           <Skeleton key={i} variant="text" className="h-4 flex-1" />
         ))}

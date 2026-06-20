@@ -23,12 +23,12 @@ export function DataViewToggle({
     <div
       role="group"
       aria-label="View mode"
-      className={cn("flex items-center gap-1 rounded-md border border-zinc-800 p-0.5", className)}
+      className={cn("flex items-center gap-1 rounded-md border border-[var(--color-border)] p-0.5", className)}
     >
       <Button
         variant="ghost"
         size="sm"
-        className={cn("h-7 w-7 p-0", mode === "grid" && "bg-zinc-800 text-zinc-100")}
+        className={cn("h-7 w-7 p-0", mode === "grid" && "bg-[var(--color-surface)] text-[var(--color-foreground)]")}
         onClick={() => onChange("grid")}
         aria-label="Card view"
         aria-pressed={mode === "grid"}
@@ -39,7 +39,7 @@ export function DataViewToggle({
       <Button
         variant="ghost"
         size="sm"
-        className={cn("h-7 w-7 p-0", mode === "table" && "bg-zinc-800 text-zinc-100")}
+        className={cn("h-7 w-7 p-0", mode === "table" && "bg-[var(--color-surface)] text-[var(--color-foreground)]")}
         onClick={() => onChange("table")}
         aria-label="Table view"
         aria-pressed={mode === "table"}
@@ -51,7 +51,7 @@ export function DataViewToggle({
         <Button
           variant="ghost"
           size="sm"
-          className={cn("h-7 w-7 p-0", mode === "map" && "bg-zinc-800 text-zinc-100")}
+          className={cn("h-7 w-7 p-0", mode === "map" && "bg-[var(--color-surface)] text-[var(--color-foreground)]")}
           onClick={() => onChange("map")}
           aria-label="Map view"
           aria-pressed={mode === "map"}

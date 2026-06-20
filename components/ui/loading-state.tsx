@@ -18,7 +18,7 @@ export function LoadingState({
   if (variant === "spinner") {
     return (
       <div className={cn("flex items-center justify-center py-12", className)}>
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-zinc-50" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--color-foreground)]" />
       </div>
     );
   }
@@ -78,9 +78,9 @@ export function EmptyState({
 }: EmptyStateProps): React.ReactElement {
   return (
     <div className={cn("flex flex-col items-center justify-center py-12 text-center", className)}>
-      {icon && <div className="mb-4 text-zinc-500">{icon}</div>}
-      <h3 className="text-lg font-semibold text-zinc-50 mb-2">{title}</h3>
-      {description && <p className="text-sm text-zinc-400 mb-6 max-w-md">{description}</p>}
+      {icon && <div className="mb-4 text-[var(--color-muted-foreground)]">{icon}</div>}
+      <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">{title}</h3>
+      {description && <p className="text-sm text-[var(--color-muted-foreground)] mb-6 max-w-md">{description}</p>}
       {action && <div>{action}</div>}
     </div>
   );

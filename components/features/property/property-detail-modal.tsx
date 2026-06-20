@@ -407,7 +407,14 @@ export function PropertyDetailModal({
       <Sheet
         open={isOpen}
         onOpenChange={(open) => {
-          if (!open) onClose();
+          if (!open) {
+            // Reset transient state so reopening the same property starts clean.
+            setIsEditing(false);
+            setShowUnits(false);
+            setDetailsTab("overview");
+            if (property) setFormData(toFormData(property));
+            onClose();
+          }
         }}
       >
         <SheetContent
@@ -510,16 +517,16 @@ function ViewContent({
   return (
     <div className="flex flex-col">
       {/* Header */}
-      <div className="border-b border-zinc-800 px-5 py-4 pr-12">
+      <div className="border-b border-[var(--color-border)] px-5 py-4 pr-12">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-semibold text-zinc-50 leading-tight">{property.name}</h2>
+              <h2 className="text-lg font-semibold text-[var(--color-foreground)] leading-tight">{property.name}</h2>
               <Badge className={cn("shrink-0 capitalize", STATUS_STYLES[property.status])}>
                 {property.status}
               </Badge>
             </div>
-            <p className="mt-0.5 text-sm text-zinc-500 truncate">
+            <p className="mt-0.5 text-sm text-[var(--color-foreground)]0 truncate">
               <MapPin className="inline h-3 w-3 mr-1 align-[-1px]" />
               {property.streetAddress || property.address}
               {property.city ? `, ${property.city}` : ""}
@@ -550,7 +557,7 @@ function ViewContent({
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className="rounded-md p-1.5 text-zinc-400 transition-colors hover:bg-zinc-800 hover:text-zinc-200"
+                    className="rounded-md p-1.5 text-[var(--color-muted-foreground)] transition-colors hover:bg-[var(--color-surface)] hover:text-[var(--color-foreground)]"
                   >
                     <MoreHorizontal className="h-4 w-4" />
                   </button>
@@ -579,7 +586,7 @@ function ViewContent({
       <div className="flex-1 overflow-y-auto">
         {/* ── Zone 2: Primary Action ───────────────────────────────────────── */}
         {(primaryAction || isOwnerPortal) && (
-          <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-3">
+          <div className="flex items-center gap-2 border-b border-[var(--color-border)] px-5 py-3">
             {primaryAction && (
               <Button
                 onClick={primaryAction.onClick}
@@ -605,8 +612,8 @@ function ViewContent({
 
         {/* ── Zone 3: Issues Panel ─────────────────────────────────────────── */}
         {issues.length > 0 && (
-          <div className="border-b border-zinc-800 px-5 py-3 space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+          <div className="border-b border-[var(--color-border)] px-5 py-3 space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-foreground)]0">
               Needs attention
             </p>
             {issues.map((issue) => {
@@ -618,8 +625,8 @@ function ViewContent({
                 >
                   <AlertTriangle className={cn("mt-0.5 h-4 w-4 shrink-0", s.icon)} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-zinc-100">{issue.label}</p>
-                    <p className="text-xs text-zinc-400 mt-0.5">{issue.detail}</p>
+                    <p className="text-sm font-medium text-[var(--color-foreground)]">{issue.label}</p>
+                    <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">{issue.detail}</p>
                   </div>
                   <Button
                     size="sm"
@@ -689,24 +696,24 @@ function ViewContent({
 
             {/* Recent payments */}
             <div>
-              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+              <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-foreground)]0">
                 Recent payments
               </p>
               {recentPayments.length === 0 ? (
-                <p className="text-sm text-zinc-500">No payment records yet.</p>
+                <p className="text-sm text-[var(--color-foreground)]0">No payment records yet.</p>
               ) : (
                 <div className="space-y-1.5">
                   {recentPayments.map((r) => (
                     <div
                       key={r.id}
-                      className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-800/60 px-3 py-2"
+                      className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/60 px-3 py-2"
                     >
                       <div>
-                        <p className="text-sm font-medium text-zinc-100">{r.tenantName ?? "—"}</p>
-                        <p className="text-xs text-zinc-500">{r.date}</p>
+                        <p className="text-sm font-medium text-[var(--color-foreground)]">{r.tenantName ?? "—"}</p>
+                        <p className="text-xs text-[var(--color-foreground)]0">{r.date}</p>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-semibold text-zinc-100">
+                        <p className="text-sm font-semibold text-[var(--color-foreground)]">
                           {formatCurrency(r.amount)}
                         </p>
                         <p
@@ -754,22 +761,22 @@ function ViewContent({
           {/* FINANCIALS TAB */}
           <TabsContent value="financials" className="mt-0 space-y-3">
             <div className="grid grid-cols-2 gap-2">
-              <div className="rounded-lg border border-zinc-800 bg-zinc-800/60 px-3 py-2.5">
-                <p className="text-xs text-zinc-500">Monthly rent</p>
-                <p className="mt-0.5 text-lg font-semibold text-zinc-100">
+              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/60 px-3 py-2.5">
+                <p className="text-xs text-[var(--color-foreground)]0">Monthly rent</p>
+                <p className="mt-0.5 text-lg font-semibold text-[var(--color-foreground)]">
                   {formatCurrency(property.rent)}
                 </p>
               </div>
-              <div className="rounded-lg border border-zinc-800 bg-zinc-800/60 px-3 py-2.5">
-                <p className="text-xs text-zinc-500">Total paid (all time)</p>
-                <p className="mt-0.5 text-lg font-semibold text-zinc-100">
+              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/60 px-3 py-2.5">
+                <p className="text-xs text-[var(--color-foreground)]0">Total paid (all time)</p>
+                <p className="mt-0.5 text-lg font-semibold text-[var(--color-foreground)]">
                   {formatCurrency(paidTotal)}
                 </p>
               </div>
             </div>
 
             {recentPayments.length === 0 ? (
-              <p className="text-sm text-zinc-500">No receipts recorded for this property.</p>
+              <p className="text-sm text-[var(--color-foreground)]0">No receipts recorded for this property.</p>
             ) : (
               <div className="space-y-1.5">
                 {(
@@ -784,16 +791,16 @@ function ViewContent({
                 ).map((r) => (
                   <div
                     key={r.id}
-                    className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-800/60 px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/60 px-3 py-2"
                   >
                     <div>
-                      <p className="text-sm font-medium text-zinc-100">
+                      <p className="text-sm font-medium text-[var(--color-foreground)]">
                         {r.description ?? r.tenantName ?? "—"}
                       </p>
-                      <p className="text-xs text-zinc-500">{r.date}</p>
+                      <p className="text-xs text-[var(--color-foreground)]0">{r.date}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-sm font-semibold text-zinc-100">
+                      <p className="text-sm font-semibold text-[var(--color-foreground)]">
                         {formatCurrency(r.amount)}
                       </p>
                       <p
@@ -824,7 +831,7 @@ function ViewContent({
           {/* DETAILS TAB */}
           <TabsContent value="details" className="mt-0 space-y-3">
             {/* Property specs */}
-            <div className="divide-y divide-zinc-800 rounded-lg border border-zinc-800 overflow-hidden">
+            <div className="divide-y divide-[var(--color-border)] rounded-lg border border-[var(--color-border)] overflow-hidden">
               <DetailRow label="Type" value={property.type} capitalize />
               {property.type !== "commercial" && (
                 <>
@@ -882,34 +889,34 @@ function ViewContent({
             </div>
 
             {property.description && (
-              <div className="rounded-lg border border-zinc-800 bg-zinc-800/40 px-3 py-2.5">
-                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-zinc-500">
+              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/40 px-3 py-2.5">
+                <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-foreground)]0">
                   Description
                 </p>
-                <p className="text-sm text-zinc-300">{property.description}</p>
+                <p className="text-sm text-[var(--color-muted-foreground)]">{property.description}</p>
               </div>
             )}
 
             {/* Building units (progressive disclosure) */}
             {property.buildingId && (
-              <div className="rounded-lg border border-zinc-800 overflow-hidden">
+              <div className="rounded-lg border border-[var(--color-border)] overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setShowUnits(!showUnits)}
-                  className="flex w-full items-center justify-between px-3 py-2.5 text-sm font-medium text-zinc-300 hover:bg-zinc-800/50 transition-colors"
+                  className="flex w-full items-center justify-between px-3 py-2.5 text-sm font-medium text-[var(--color-muted-foreground)] hover:bg-[var(--color-surface)]/50 transition-colors"
                 >
                   <span className="flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-zinc-500" />
+                    <Building2 className="h-4 w-4 text-[var(--color-foreground)]0" />
                     Building units ({property.buildingName ?? "this building"})
                   </span>
                   {showUnits ? (
-                    <ChevronDown className="h-4 w-4 text-zinc-500" />
+                    <ChevronDown className="h-4 w-4 text-[var(--color-foreground)]0" />
                   ) : (
-                    <ChevronRight className="h-4 w-4 text-zinc-500" />
+                    <ChevronRight className="h-4 w-4 text-[var(--color-foreground)]0" />
                   )}
                 </button>
                 {showUnits && (
-                  <div className="border-t border-zinc-800 p-3">
+                  <div className="border-t border-[var(--color-border)] p-3">
                     <UnitsView propertyId={property.id} />
                   </div>
                 )}
@@ -920,20 +927,20 @@ function ViewContent({
           {/* MAINTENANCE TAB */}
           <TabsContent value="maintenance" className="mt-0 space-y-3">
             {recentOpenTickets.length === 0 ? (
-              <div className="rounded-lg border border-zinc-800 px-3 py-6 text-center">
-                <Wrench className="mx-auto h-6 w-6 text-zinc-600 mb-2" />
-                <p className="text-sm text-zinc-500">No open maintenance tickets.</p>
+              <div className="rounded-lg border border-[var(--color-border)] px-3 py-6 text-center">
+                <Wrench className="mx-auto h-6 w-6 text-[var(--color-muted-foreground)] mb-2" />
+                <p className="text-sm text-[var(--color-foreground)]0">No open maintenance tickets.</p>
               </div>
             ) : (
               <div className="space-y-2">
                 {recentOpenTickets.map((ticket) => (
                   <div
                     key={ticket.id}
-                    className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-800/60 px-3 py-2"
+                    className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/60 px-3 py-2"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-zinc-200">{ticket.title}</p>
-                      <p className="text-xs text-zinc-500 capitalize">
+                      <p className="truncate text-sm font-medium text-[var(--color-foreground)]">{ticket.title}</p>
+                      <p className="text-xs text-[var(--color-foreground)]0 capitalize">
                         {ticket.status.replace("_", " ")}
                         {ticket.vendorName ? ` · ${ticket.vendorName}` : ""}
                       </p>
@@ -948,7 +955,7 @@ function ViewContent({
             <Button
               variant="ghost"
               size="sm"
-              className="w-full gap-1 text-zinc-400 hover:text-zinc-200"
+              className="w-full gap-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
               onClick={() => navigateTo(`/maintenance?property=${property.id}`)}
             >
               View all tickets
@@ -960,7 +967,7 @@ function ViewContent({
 
       {/* ── Sticky footer — single primary action only ───────────────────────── */}
       {isOwnerPortal && primaryAction && (
-        <div className="flex items-center justify-end border-t border-zinc-800 px-5 py-3">
+        <div className="flex items-center justify-end border-t border-[var(--color-border)] px-5 py-3">
           <Button
             onClick={primaryAction.onClick}
             variant={primaryAction.urgency === "urgent" ? "destructive" : "default"}
@@ -993,15 +1000,15 @@ function EditView({
 }) {
   return (
     <div className="flex flex-col overflow-hidden">
-      <div className="border-b border-zinc-800 px-5 py-4">
+      <div className="border-b border-[var(--color-border)] px-5 py-4">
         <h2 className="text-base font-semibold text-[var(--color-foreground)]">Edit Property</h2>
-        <p className="text-sm text-zinc-500">Update property information</p>
+        <p className="text-sm text-[var(--color-foreground)]0">Update property information</p>
       </div>
       <div className="flex-1 overflow-y-auto px-5 py-4 space-y-4">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <Card className="border-zinc-700 bg-zinc-800">
+          <Card className="border-[var(--color-border-hover)] bg-[var(--color-surface)]">
             <CardHeader>
-              <CardTitle className="text-sm text-zinc-400">Basic Info</CardTitle>
+              <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Basic Info</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
@@ -1024,9 +1031,9 @@ function EditView({
             </CardContent>
           </Card>
 
-          <Card className="border-zinc-700 bg-zinc-800">
+          <Card className="border-[var(--color-border-hover)] bg-[var(--color-surface)]">
             <CardHeader>
-              <CardTitle className="text-sm text-zinc-400">Financial</CardTitle>
+              <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Financial</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
@@ -1065,9 +1072,9 @@ function EditView({
         </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <Card className="border-zinc-700 bg-zinc-800">
+          <Card className="border-[var(--color-border-hover)] bg-[var(--color-surface)]">
             <CardHeader>
-              <CardTitle className="text-sm text-zinc-400">Address</CardTitle>
+              <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Address</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
@@ -1124,9 +1131,9 @@ function EditView({
             </CardContent>
           </Card>
 
-          <Card className="border-zinc-700 bg-zinc-800">
+          <Card className="border-[var(--color-border-hover)] bg-[var(--color-surface)]">
             <CardHeader>
-              <CardTitle className="text-sm text-zinc-400">Physical Details</CardTitle>
+              <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Physical Details</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
@@ -1179,7 +1186,7 @@ function EditView({
         </div>
       </div>
 
-      <div className="flex justify-end gap-2 border-t border-zinc-800 px-5 py-3">
+      <div className="flex justify-end gap-2 border-t border-[var(--color-border)] px-5 py-3">
         <Button variant="outline" size="sm" onClick={onCancel}>
           Cancel
         </Button>
@@ -1214,18 +1221,18 @@ function KpiCell({
     <button
       type="button"
       onClick={onClick}
-      className="group rounded-lg border border-zinc-800 bg-zinc-800/50 px-3 py-2 text-left transition-colors hover:border-zinc-700 hover:bg-zinc-800"
+      className="group rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/50 px-3 py-2 text-left transition-colors hover:border-[var(--color-border-hover)] hover:bg-[var(--color-surface)]"
     >
-      <p className="text-[11px] text-zinc-500">{label}</p>
+      <p className="text-[11px] text-[var(--color-foreground)]0">{label}</p>
       <p
         className={cn(
           "mt-0.5 truncate text-sm font-semibold",
-          muted ? "text-zinc-500" : (valueClass ?? "text-zinc-100"),
+          muted ? "text-[var(--color-foreground)]0" : (valueClass ?? "text-[var(--color-foreground)]"),
         )}
       >
         {value}
       </p>
-      {sub && <p className="text-[10px] text-zinc-500 mt-0.5">{sub}</p>}
+      {sub && <p className="text-[10px] text-[var(--color-foreground)]0 mt-0.5">{sub}</p>}
     </button>
   );
 }
@@ -1243,7 +1250,7 @@ function QuickLink({
     <button
       type="button"
       onClick={onClick}
-      className="flex items-center gap-1.5 rounded-md border border-zinc-700 bg-zinc-800/60 px-2.5 py-1.5 text-xs text-zinc-400 transition-colors hover:border-zinc-600 hover:text-zinc-200"
+      className="flex items-center gap-1.5 rounded-md border border-[var(--color-border-hover)] bg-[var(--color-surface)]/60 px-2.5 py-1.5 text-xs text-[var(--color-muted-foreground)] transition-colors hover:border-[var(--color-border-hover)] hover:text-[var(--color-foreground)]"
     >
       <Icon className="h-3.5 w-3.5" />
       {label}
@@ -1264,12 +1271,12 @@ function DetailRow({
 }) {
   return (
     <div className="flex items-center justify-between px-3 py-2 text-sm">
-      <span className="text-zinc-500">{label}</span>
+      <span className="text-[var(--color-foreground)]0">{label}</span>
       <span
         className={cn(
           "text-right ml-4",
           capitalize && "capitalize",
-          valueMuted ? "text-zinc-500" : "text-zinc-200",
+          valueMuted ? "text-[var(--color-foreground)]0" : "text-[var(--color-foreground)]",
         )}
       >
         {value}
