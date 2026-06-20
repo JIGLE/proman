@@ -1114,7 +1114,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                       <span
                         className={cn(
                           "font-semibold",
-                          isActive ? "text-white" : opt.color || "text-[var(--color-muted-foreground)]",
+                          isActive
+                            ? "text-white"
+                            : opt.color || "text-[var(--color-muted-foreground)]",
                         )}
                       >
                         {opt.count}
@@ -1209,7 +1211,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               onSort={(key) => requestSort(key as keyof Property)}
                             />
                           </TableHead>
-                          <TableHead className="text-[var(--color-muted-foreground)]">Address</TableHead>
+                          <TableHead className="text-[var(--color-muted-foreground)]">
+                            Address
+                          </TableHead>
                           <TableHead className="text-[var(--color-muted-foreground)]">
                             <SortableHeader
                               sortKey="type"
@@ -1218,7 +1222,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               onSort={(key) => requestSort(key as keyof Property)}
                             />
                           </TableHead>
-                          <TableHead className="text-[var(--color-muted-foreground)]">Bedrooms</TableHead>
+                          <TableHead className="text-[var(--color-muted-foreground)]">
+                            Bedrooms
+                          </TableHead>
                           <TableHead className="text-[var(--color-muted-foreground)]">
                             <SortableHeader
                               sortKey="rent"
@@ -1235,7 +1241,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               onSort={(key) => requestSort(key as keyof Property)}
                             />
                           </TableHead>
-                          <TableHead className="text-[var(--color-muted-foreground)]">Next Action</TableHead>
+                          <TableHead className="text-[var(--color-muted-foreground)]">
+                            Next Action
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1247,7 +1255,10 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               key={`header-${group.buildingId}`}
                               className="border-[var(--color-border)] hover:bg-transparent"
                             >
-                              <TableCell colSpan={7} className="bg-[var(--color-surface)]/40 py-2 px-4">
+                              <TableCell
+                                colSpan={7}
+                                className="bg-[var(--color-surface)]/40 py-2 px-4"
+                              >
                                 <span className="text-xs font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]">
                                   {group.buildingName}
                                 </span>

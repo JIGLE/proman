@@ -746,7 +746,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               {propertyOwners.length === 0 ? (
-                <p className="text-sm text-[var(--color-muted-foreground)] italic">No owners assigned yet.</p>
+                <p className="text-sm text-[var(--color-muted-foreground)] italic">
+                  No owners assigned yet.
+                </p>
               ) : (
                 <div className="space-y-2">
                   {propertyOwners.map(({ owner, assignment }) => {
@@ -759,8 +761,12 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                         className="flex items-center gap-3 p-2 rounded-lg bg-[var(--color-card)] border border-[var(--color-border)]"
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-[var(--color-foreground)] truncate">{owner.name}</p>
-                          <p className="text-xs text-[var(--color-muted-foreground)]">{owner.email}</p>
+                          <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
+                            {owner.name}
+                          </p>
+                          <p className="text-xs text-[var(--color-muted-foreground)]">
+                            {owner.email}
+                          </p>
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-sm font-semibold text-[var(--color-foreground)]">
@@ -1038,7 +1044,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
               <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">{t("finance.totalRevenue")}</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("finance.totalRevenue")}
+                </div>
                 <div className="text-2xl font-bold text-[var(--color-success)] mt-1">
                   {formatCurrency(totalRevenue)}
                 </div>
@@ -1046,7 +1054,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </Card>
             <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
               <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">{t("finance.totalExpenses")}</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("finance.totalExpenses")}
+                </div>
                 <div className="text-2xl font-bold text-[var(--color-destructive)] mt-1">
                   {formatCurrency(totalExpenses)}
                 </div>
@@ -1054,7 +1064,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </Card>
             <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
               <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">{t("finance.netOperatingIncome")}</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("finance.netOperatingIncome")}
+                </div>
                 <div
                   className={cn(
                     "text-2xl font-bold mt-1",
@@ -1069,7 +1081,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </Card>
             <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
               <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">{t("finance.collectionRate")}</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("finance.collectionRate")}
+                </div>
                 <div
                   className={cn(
                     "text-2xl font-bold mt-1",

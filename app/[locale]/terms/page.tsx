@@ -51,7 +51,9 @@ export default async function TermsPage({ params }: Props) {
 
         <div className="space-y-10 text-[15px] leading-7">
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">1. Acceptance of Terms</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              1. Acceptance of Terms
+            </h2>
             <p>
               By creating an account or using the Domora platform you agree to be bound by these
               Terms of Service. If you do not agree, you must not use the platform.
@@ -63,7 +65,9 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">2. Service Description</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              2. Service Description
+            </h2>
             <p className="text-[var(--color-muted-foreground)]">
               Domora is a property management platform designed to help landlords and property
               managers in Portugal and Spain manage properties, tenants, leases, receipts, and
@@ -73,7 +77,9 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">3. User Accounts</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              3. User Accounts
+            </h2>
             <ul className="ml-4 list-disc space-y-2 text-[var(--color-muted-foreground)]">
               <li>You must provide accurate and complete registration information.</li>
               <li>You are responsible for maintaining the confidentiality of your credentials.</li>
@@ -83,7 +89,9 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">4. Acceptable Use</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              4. Acceptable Use
+            </h2>
             <p className="mb-3 text-[var(--color-muted-foreground)]">You must not use Domora to:</p>
             <ul className="ml-4 list-disc space-y-2 text-[var(--color-muted-foreground)]">
               <li>Violate any applicable law or regulation.</li>
@@ -95,7 +103,9 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">5. Payment Terms</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              5. Payment Terms
+            </h2>
             <ul className="ml-4 list-disc space-y-2 text-[var(--color-muted-foreground)]">
               <li>
                 Paid plans are billed monthly in advance. Prices are displayed inclusive of
@@ -114,7 +124,9 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">6. Limitation of Liability</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              6. Limitation of Liability
+            </h2>
             <p className="text-[var(--color-muted-foreground)]">
               To the maximum extent permitted by law, Domora&apos;s aggregate liability for any
               claim arising from or related to the service is limited to the fees you paid in the
@@ -124,7 +136,9 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">7. Intellectual Property</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              7. Intellectual Property
+            </h2>
             <p className="text-[var(--color-muted-foreground)]">
               The Domora platform and its source code (excluding third-party dependencies) are
               released under the MIT licence. Your data remains yours; you grant us a limited
@@ -133,7 +147,9 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">8. Termination</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              8. Termination
+            </h2>
             <p className="text-[var(--color-muted-foreground)]">
               You may delete your account at any time from account settings. We may suspend or
               terminate accounts that violate these terms with or without notice.
@@ -141,7 +157,9 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">9. Governing Law</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              9. Governing Law
+            </h2>
             <p className="text-[var(--color-muted-foreground)]">
               These terms are governed by the laws of Portugal. Any disputes shall be subject to the
               exclusive jurisdiction of the courts of Lisbon, unless mandatory consumer protection
@@ -150,7 +168,9 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">10. Contact</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              10. Contact
+            </h2>
             <p className="text-[var(--color-muted-foreground)]">
               For any questions about these terms, contact us at{" "}
               <a
@@ -165,7 +185,11 @@ export default async function TermsPage({ params }: Props) {
         </div>
 
         <div className="mt-16 border-t border-white/[0.06] pt-8">
-          <Button variant="ghost" asChild className="text-[var(--color-foreground)]0 hover:text-[var(--color-muted-foreground)]">
+          <Button
+            variant="ghost"
+            asChild
+            className="text-[var(--color-foreground)]0 hover:text-[var(--color-muted-foreground)]"
+          >
             <Link href={`/${locale}`}>&larr; Back to Domora</Link>
           </Button>
         </div>

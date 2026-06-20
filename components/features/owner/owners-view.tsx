@@ -408,7 +408,9 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                               ))}
                             </ul>
                           ) : (
-                            <p className="text-xs text-[var(--color-muted-foreground)] italic">No properties assigned</p>
+                            <p className="text-xs text-[var(--color-muted-foreground)] italic">
+                              No properties assigned
+                            </p>
                           )}
                         </div>
 
@@ -434,7 +436,9 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                             return (
                               <div className="pt-2 border-t border-[var(--color-border)] grid grid-cols-2 gap-2 text-xs">
                                 <div>
-                                  <p className="text-[var(--color-muted-foreground)]">Income share</p>
+                                  <p className="text-[var(--color-muted-foreground)]">
+                                    Income share
+                                  </p>
                                   <p className="font-semibold text-green-400">
                                     {formatCurrency(ownerIncome)}
                                   </p>

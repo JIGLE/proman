@@ -3,12 +3,7 @@
 import * as React from "react";
 import { Home, Building2, BadgeEuro } from "lucide-react";
 import { useTranslations } from "next-intl";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,10 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  MultiStepFormContainer,
-  type MultiStepFormStep,
-} from "@/components/ui/multi-step-form";
+import { MultiStepFormContainer, type MultiStepFormStep } from "@/components/ui/multi-step-form";
 import { useMultiStepForm } from "@/lib/hooks/use-multi-step-form";
 import { propertySchema, type PropertyFormData } from "@/lib/schemas/property.schema";
 import { useApp } from "@/lib/contexts/app-context";

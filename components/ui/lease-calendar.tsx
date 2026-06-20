@@ -195,7 +195,10 @@ export function LeaseCalendar({
         <div className="grid grid-cols-7 gap-1">
           {/* Week day headers */}
           {weekDays.map((day) => (
-            <div key={day} className="text-center text-xs font-medium text-[var(--color-muted-foreground)] py-2">
+            <div
+              key={day}
+              className="text-center text-xs font-medium text-[var(--color-muted-foreground)] py-2"
+            >
               {day}
             </div>
           ))}
@@ -236,7 +239,9 @@ export function LeaseCalendar({
                     />
                   ))}
                   {dayInfo.events.length > 3 && (
-                    <span className="text-[8px] text-[var(--color-muted-foreground)]">+{dayInfo.events.length - 3}</span>
+                    <span className="text-[8px] text-[var(--color-muted-foreground)]">
+                      +{dayInfo.events.length - 3}
+                    </span>
                   )}
                 </div>
               )}
@@ -311,7 +316,9 @@ export function LeaseCalendar({
                         )}
                       />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-[var(--color-foreground)]">{event.tenantName}</p>
+                        <p className="text-sm font-medium text-[var(--color-foreground)]">
+                          {event.tenantName}
+                        </p>
                         <p className="text-xs text-[var(--color-muted-foreground)]">
                           {event.propertyName} - Unit {event.unitNumber}
                         </p>
@@ -395,7 +402,9 @@ export function MiniLeaseCalendar({ events, className }: MiniCalendarProps) {
       {/* Upcoming events list */}
       <div className="space-y-2">
         {upcomingEvents.length === 0 ? (
-          <p className="text-xs text-[var(--color-muted-foreground)]">No upcoming lease expirations</p>
+          <p className="text-xs text-[var(--color-muted-foreground)]">
+            No upcoming lease expirations
+          </p>
         ) : (
           upcomingEvents.map((event) => (
             <div key={event.id} className="flex items-center gap-2 text-xs">
@@ -409,7 +418,9 @@ export function MiniLeaseCalendar({ events, className }: MiniCalendarProps) {
                       : "bg-green-500",
                 )}
               />
-              <span className="text-[var(--color-muted-foreground)] truncate flex-1">{event.tenantName}</span>
+              <span className="text-[var(--color-muted-foreground)] truncate flex-1">
+                {event.tenantName}
+              </span>
               <span className="text-[var(--color-muted-foreground)]">
                 {new Date(event.date).toLocaleDateString(undefined, {
                   month: "short",

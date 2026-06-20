@@ -60,11 +60,16 @@ export default function BuildingDetail({ id }: { id: string }) {
           {property.tenants && property.tenants.length > 0 ? (
             <div className="space-y-4">
               {property.tenants.map((tnt) => (
-                <div key={tnt.id} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]/70 p-4">
+                <div
+                  key={tnt.id}
+                  className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]/70 p-4"
+                >
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <div className="font-semibold">{tnt.name}</div>
-                      <div className="text-xs text-[var(--color-muted-foreground)]">{tnt.email}</div>
+                      <div className="text-xs text-[var(--color-muted-foreground)]">
+                        {tnt.email}
+                      </div>
                       <div className="text-xs text-[var(--color-muted-foreground)]">
                         {t("leases.documents") || "Documents"}: {tnt.leaseDocuments?.length ?? 0}
                       </div>

@@ -521,7 +521,9 @@ function ViewContent({
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-lg font-semibold text-[var(--color-foreground)] leading-tight">{property.name}</h2>
+              <h2 className="text-lg font-semibold text-[var(--color-foreground)] leading-tight">
+                {property.name}
+              </h2>
               <Badge className={cn("shrink-0 capitalize", STATUS_STYLES[property.status])}>
                 {property.status}
               </Badge>
@@ -625,8 +627,12 @@ function ViewContent({
                 >
                   <AlertTriangle className={cn("mt-0.5 h-4 w-4 shrink-0", s.icon)} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-[var(--color-foreground)]">{issue.label}</p>
-                    <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">{issue.detail}</p>
+                    <p className="text-sm font-medium text-[var(--color-foreground)]">
+                      {issue.label}
+                    </p>
+                    <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
+                      {issue.detail}
+                    </p>
                   </div>
                   <Button
                     size="sm"
@@ -709,7 +715,9 @@ function ViewContent({
                       className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/60 px-3 py-2"
                     >
                       <div>
-                        <p className="text-sm font-medium text-[var(--color-foreground)]">{r.tenantName ?? "—"}</p>
+                        <p className="text-sm font-medium text-[var(--color-foreground)]">
+                          {r.tenantName ?? "—"}
+                        </p>
                         <p className="text-xs text-[var(--color-foreground)]0">{r.date}</p>
                       </div>
                       <div className="text-right">
@@ -776,7 +784,9 @@ function ViewContent({
             </div>
 
             {recentPayments.length === 0 ? (
-              <p className="text-sm text-[var(--color-foreground)]0">No receipts recorded for this property.</p>
+              <p className="text-sm text-[var(--color-foreground)]0">
+                No receipts recorded for this property.
+              </p>
             ) : (
               <div className="space-y-1.5">
                 {(
@@ -893,7 +903,9 @@ function ViewContent({
                 <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-[var(--color-foreground)]0">
                   Description
                 </p>
-                <p className="text-sm text-[var(--color-muted-foreground)]">{property.description}</p>
+                <p className="text-sm text-[var(--color-muted-foreground)]">
+                  {property.description}
+                </p>
               </div>
             )}
 
@@ -929,7 +941,9 @@ function ViewContent({
             {recentOpenTickets.length === 0 ? (
               <div className="rounded-lg border border-[var(--color-border)] px-3 py-6 text-center">
                 <Wrench className="mx-auto h-6 w-6 text-[var(--color-muted-foreground)] mb-2" />
-                <p className="text-sm text-[var(--color-foreground)]0">No open maintenance tickets.</p>
+                <p className="text-sm text-[var(--color-foreground)]0">
+                  No open maintenance tickets.
+                </p>
               </div>
             ) : (
               <div className="space-y-2">
@@ -939,7 +953,9 @@ function ViewContent({
                     className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)]/60 px-3 py-2"
                   >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-[var(--color-foreground)]">{ticket.title}</p>
+                      <p className="truncate text-sm font-medium text-[var(--color-foreground)]">
+                        {ticket.title}
+                      </p>
                       <p className="text-xs text-[var(--color-foreground)]0 capitalize">
                         {ticket.status.replace("_", " ")}
                         {ticket.vendorName ? ` · ${ticket.vendorName}` : ""}
@@ -1008,7 +1024,9 @@ function EditView({
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card className="border-[var(--color-border-hover)] bg-[var(--color-surface)]">
             <CardHeader>
-              <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Basic Info</CardTitle>
+              <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                Basic Info
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
@@ -1033,7 +1051,9 @@ function EditView({
 
           <Card className="border-[var(--color-border-hover)] bg-[var(--color-surface)]">
             <CardHeader>
-              <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Financial</CardTitle>
+              <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                Financial
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
@@ -1074,7 +1094,9 @@ function EditView({
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Card className="border-[var(--color-border-hover)] bg-[var(--color-surface)]">
             <CardHeader>
-              <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Address</CardTitle>
+              <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                Address
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
@@ -1133,7 +1155,9 @@ function EditView({
 
           <Card className="border-[var(--color-border-hover)] bg-[var(--color-surface)]">
             <CardHeader>
-              <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Physical Details</CardTitle>
+              <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                Physical Details
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="space-y-2">
@@ -1227,7 +1251,9 @@ function KpiCell({
       <p
         className={cn(
           "mt-0.5 truncate text-sm font-semibold",
-          muted ? "text-[var(--color-foreground)]0" : (valueClass ?? "text-[var(--color-foreground)]"),
+          muted
+            ? "text-[var(--color-foreground)]0"
+            : (valueClass ?? "text-[var(--color-foreground)]"),
         )}
       >
         {value}

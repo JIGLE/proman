@@ -149,7 +149,9 @@ function AuthErrorContent(): React.ReactElement {
                 )}
 
                 {!loadingDebug && !debugInfo && !debugError && (
-                  <p className="text-[var(--color-muted-foreground)] text-xs mt-2">No debug information fetched yet.</p>
+                  <p className="text-[var(--color-muted-foreground)] text-xs mt-2">
+                    No debug information fetched yet.
+                  </p>
                 )}
               </div>
 

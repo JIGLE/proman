@@ -213,8 +213,12 @@ export function OverviewView({
     const monthEnd = endOfMonth(currentMonth);
 
     // Previous month bounds for trend calculation
-    const prevMonthStart = startOfMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
-    const prevMonthEnd = endOfMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1));
+    const prevMonthStart = startOfMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1),
+    );
+    const prevMonthEnd = endOfMonth(
+      new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1),
+    );
 
     const occupiedProperties = properties.filter(
       (property) => property.status === "occupied",

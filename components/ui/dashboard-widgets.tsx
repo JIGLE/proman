@@ -94,7 +94,9 @@ export function DashboardWidget({
             </CardTitle>
           </div>
 
-          {subtitle && <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>
+          )}
 
           {value && (
             <div className="space-y-2">

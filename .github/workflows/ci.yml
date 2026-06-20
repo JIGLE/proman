@@ -227,7 +227,7 @@ jobs:
         run: npx wait-on http://localhost:3000 --timeout 120000
 
       - name: Run Playwright smoke tests
-        run: npx playwright test e2e/smoke.spec.ts --project=chromium
+        run: npx playwright test e2e/smoke.spec.ts e2e/theme.spec.ts --project=chromium
         env:
           DATABASE_URL: file:./e2e-smoke.db
           NEXTAUTH_URL: http://localhost:3000

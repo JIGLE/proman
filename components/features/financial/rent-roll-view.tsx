@@ -107,7 +107,8 @@ export function RentRollView() {
   const statusBadge = (status: "paid" | "partial" | "unpaid") => {
     const styles = {
       paid: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-      partial: "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20",
+      partial:
+        "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20",
       unpaid: "bg-red-500/10 text-red-400 border-red-500/20",
     };
     const labels = { paid: "Paid", partial: "Partial", unpaid: "Unpaid" };
@@ -140,7 +141,9 @@ export function RentRollView() {
       </CardHeader>
       <CardContent>
         {rentRoll.length === 0 ? (
-          <p className="text-center text-[var(--color-muted-foreground)] py-8">No active leases for this period.</p>
+          <p className="text-center text-[var(--color-muted-foreground)] py-8">
+            No active leases for this period.
+          </p>
         ) : (
           <div className="rounded-lg border border-[var(--color-border)]">
             <Table>
@@ -148,9 +151,15 @@ export function RentRollView() {
                 <TableRow className="border-[var(--color-border)] hover:bg-transparent">
                   <TableHead className="text-[var(--color-muted-foreground)]">Property</TableHead>
                   <TableHead className="text-[var(--color-muted-foreground)]">Tenant</TableHead>
-                  <TableHead className="text-[var(--color-muted-foreground)] text-right">Expected</TableHead>
-                  <TableHead className="text-[var(--color-muted-foreground)] text-right">Received</TableHead>
-                  <TableHead className="text-[var(--color-muted-foreground)] text-right">Delta</TableHead>
+                  <TableHead className="text-[var(--color-muted-foreground)] text-right">
+                    Expected
+                  </TableHead>
+                  <TableHead className="text-[var(--color-muted-foreground)] text-right">
+                    Received
+                  </TableHead>
+                  <TableHead className="text-[var(--color-muted-foreground)] text-right">
+                    Delta
+                  </TableHead>
                   <TableHead className="text-[var(--color-muted-foreground)]">Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -160,7 +169,9 @@ export function RentRollView() {
                     <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
                       {row.propertyName}
                     </TableCell>
-                    <TableCell className="text-sm text-[var(--color-muted-foreground)]">{row.tenantName}</TableCell>
+                    <TableCell className="text-sm text-[var(--color-muted-foreground)]">
+                      {row.tenantName}
+                    </TableCell>
                     <TableCell className="text-sm text-[var(--color-muted-foreground)] text-right">
                       {formatCurrency(row.expected)}
                     </TableCell>

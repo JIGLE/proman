@@ -163,7 +163,9 @@ export function OwnerDetailModal({
               <div className="grid grid-cols-2 gap-4">
                 <Card className="bg-[var(--color-surface)] border-[var(--color-border-hover)]">
                   <CardHeader>
-                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Owner Info</CardTitle>
+                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                      Owner Info
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -188,7 +190,9 @@ export function OwnerDetailModal({
 
                 <Card className="bg-[var(--color-surface)] border-[var(--color-border-hover)]">
                   <CardHeader>
-                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Address</CardTitle>
+                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                      Address
+                    </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
                     <div className="space-y-2">
@@ -206,7 +210,9 @@ export function OwnerDetailModal({
               <div className="space-y-2">
                 <Card className="bg-[var(--color-surface)] border-[var(--color-border-hover)]">
                   <CardHeader>
-                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Notes</CardTitle>
+                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                      Notes
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <Textarea
@@ -231,7 +237,9 @@ export function OwnerDetailModal({
               {owner.address && (
                 <Card className="bg-[var(--color-surface)] border-[var(--color-border-hover)]">
                   <CardHeader>
-                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Address</CardTitle>
+                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                      Address
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="flex items-start gap-2">
@@ -277,7 +285,9 @@ export function OwnerDetailModal({
               {owner.notes && (
                 <Card className="bg-[var(--color-surface)] border-[var(--color-border-hover)]">
                   <CardHeader>
-                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">Notes</CardTitle>
+                    <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                      Notes
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <p className="text-sm text-[var(--color-foreground)]">{owner.notes}</p>

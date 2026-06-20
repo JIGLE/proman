@@ -64,11 +64,7 @@ export function SampleDataLoadButton(): React.ReactElement {
         disabled={loading}
         className="shrink-0"
       >
-        {loading ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : (
-          <Sparkles className="h-4 w-4" />
-        )}
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
         {loading ? t("loadingSample") : t("loadSample")}
       </Button>
     </div>

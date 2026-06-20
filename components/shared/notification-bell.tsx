@@ -143,9 +143,7 @@ export function NotificationBell({ className }: { className?: string }): React.R
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]",
           className,
         )}
-        aria-label={
-          unread > 0 ? `Notifications, ${unread} unread` : "Notifications"
-        }
+        aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
       >
         <Bell className="h-4 w-4" aria-hidden="true" />
         {unread > 0 && (
@@ -158,11 +156,7 @@ export function NotificationBell({ className }: { className?: string }): React.R
         )}
       </Popover.Trigger>
 
-      <Popover.Content
-        align="end"
-        sideOffset={8}
-        className="w-80 p-0 overflow-hidden"
-      >
+      <Popover.Content align="end" sideOffset={8} className="w-80 p-0 overflow-hidden">
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-3">
           <p className="text-sm font-semibold text-[var(--color-foreground)]">Notifications</p>
           {unread > 0 && (

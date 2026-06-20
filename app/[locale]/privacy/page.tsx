@@ -51,7 +51,9 @@ export default async function PrivacyPage({ params }: Props) {
 
         <div className="space-y-10 text-[15px] leading-7">
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">1. Introduction</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              1. Introduction
+            </h2>
             <p>
               Domora (&ldquo;we&rdquo;, &ldquo;our&rdquo;, &ldquo;the platform&rdquo;) is committed
               to protecting your personal data in accordance with the General Data Protection
@@ -65,29 +67,36 @@ export default async function PrivacyPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">2. Data We Collect</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              2. Data We Collect
+            </h2>
             <ul className="ml-4 list-disc space-y-2 text-[var(--color-muted-foreground)]">
               <li>
-                <strong className="text-[var(--color-muted-foreground)]">Account data:</strong> name, email address, hashed
-                password.
+                <strong className="text-[var(--color-muted-foreground)]">Account data:</strong>{" "}
+                name, email address, hashed password.
               </li>
               <li>
-                <strong className="text-[var(--color-muted-foreground)]">Property and tenant data:</strong> addresses,
-                lease terms, rent amounts, and related documents you upload.
+                <strong className="text-[var(--color-muted-foreground)]">
+                  Property and tenant data:
+                </strong>{" "}
+                addresses, lease terms, rent amounts, and related documents you upload.
               </li>
               <li>
-                <strong className="text-[var(--color-muted-foreground)]">Usage data:</strong> pages visited, feature
-                interactions, browser/device type, and IP address (anonymised after 90 days).
+                <strong className="text-[var(--color-muted-foreground)]">Usage data:</strong> pages
+                visited, feature interactions, browser/device type, and IP address (anonymised after
+                90 days).
               </li>
               <li>
-                <strong className="text-[var(--color-muted-foreground)]">Payment data:</strong> billing information is
-                processed by Stripe; we do not store card numbers.
+                <strong className="text-[var(--color-muted-foreground)]">Payment data:</strong>{" "}
+                billing information is processed by Stripe; we do not store card numbers.
               </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">3. How We Use Your Data</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              3. How We Use Your Data
+            </h2>
             <ul className="ml-4 list-disc space-y-2 text-[var(--color-muted-foreground)]">
               <li>To provide, maintain, and improve the Domora service.</li>
               <li>
@@ -104,7 +113,9 @@ export default async function PrivacyPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">4. Data Retention</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              4. Data Retention
+            </h2>
             <p className="text-[var(--color-muted-foreground)]">
               Account data is retained for the lifetime of your account plus 30 days after deletion.
               Financial records (receipts, lease documents) are retained for 10 years to comply with
@@ -114,8 +125,12 @@ export default async function PrivacyPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">5. Your Rights (GDPR)</h2>
-            <p className="mb-3 text-[var(--color-muted-foreground)]">Under the GDPR you have the right to:</p>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              5. Your Rights (GDPR)
+            </h2>
+            <p className="mb-3 text-[var(--color-muted-foreground)]">
+              Under the GDPR you have the right to:
+            </p>
             <ul className="ml-4 list-disc space-y-2 text-[var(--color-muted-foreground)]">
               <li>Access a copy of the personal data we hold about you.</li>
               <li>Correct inaccurate data.</li>
@@ -130,7 +145,9 @@ export default async function PrivacyPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">6. Cookies</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              6. Cookies
+            </h2>
             <p className="text-[var(--color-muted-foreground)]">
               Domora uses strictly necessary session cookies for authentication and CSRF protection.
               No third-party advertising or tracking cookies are used.
@@ -138,20 +155,25 @@ export default async function PrivacyPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">7. Third-Party Processors</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              7. Third-Party Processors
+            </h2>
             <ul className="ml-4 list-disc space-y-2 text-[var(--color-muted-foreground)]">
               <li>
-                <strong className="text-[var(--color-muted-foreground)]">Stripe</strong> — payment processing (EU data
-                centre).
+                <strong className="text-[var(--color-muted-foreground)]">Stripe</strong> — payment
+                processing (EU data centre).
               </li>
               <li>
-                <strong className="text-[var(--color-muted-foreground)]">SendGrid</strong> — transactional email delivery.
+                <strong className="text-[var(--color-muted-foreground)]">SendGrid</strong> —
+                transactional email delivery.
               </li>
             </ul>
           </section>
 
           <section>
-            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">8. Contact</h2>
+            <h2 className="mb-3 text-lg font-semibold text-[var(--color-foreground)]">
+              8. Contact
+            </h2>
             <p className="text-[var(--color-muted-foreground)]">
               For data protection enquiries or to exercise your rights, contact us at{" "}
               <a
@@ -166,7 +188,11 @@ export default async function PrivacyPage({ params }: Props) {
         </div>
 
         <div className="mt-16 border-t border-white/[0.06] pt-8">
-          <Button variant="ghost" asChild className="text-[var(--color-foreground)]0 hover:text-[var(--color-muted-foreground)]">
+          <Button
+            variant="ghost"
+            asChild
+            className="text-[var(--color-foreground)]0 hover:text-[var(--color-muted-foreground)]"
+          >
             <Link href={`/${locale}`}>&larr; Back to Domora</Link>
           </Button>
         </div>

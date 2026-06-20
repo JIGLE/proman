@@ -5,13 +5,7 @@ import { LogOut, Building2, Menu, X, MoreHorizontal } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "./sheet";
+import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from "./sheet";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { NotificationBell } from "@/components/shared/notification-bell";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -154,9 +148,7 @@ export function MobileBottomNav({
                 <span
                   className={cn(
                     "text-xs font-medium transition-colors",
-                    isMoreActive
-                      ? "text-accent-primary"
-                      : "text-[var(--color-muted-foreground)]",
+                    isMoreActive ? "text-accent-primary" : "text-[var(--color-muted-foreground)]",
                   )}
                 >
                   {tNav("more")}

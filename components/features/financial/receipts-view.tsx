@@ -417,7 +417,10 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                 />
               ) : (
                 filteredReceipts.map((receipt) => (
-                  <Card key={receipt.id} className="bg-[var(--color-card)] border-[var(--color-border)]">
+                  <Card
+                    key={receipt.id}
+                    className="bg-[var(--color-card)] border-[var(--color-border)]"
+                  >
                     <CardContent className="p-6">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-4">
@@ -486,7 +489,9 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                         </div>
                       </div>
                       {receipt.description && (
-                        <p className="text-sm text-[var(--color-muted-foreground)] mt-4">{receipt.description}</p>
+                        <p className="text-sm text-[var(--color-muted-foreground)] mt-4">
+                          {receipt.description}
+                        </p>
                       )}
                     </CardContent>
                   </Card>

@@ -116,17 +116,23 @@ export default function PropertyMap({
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-[var(--color-border-hover)] dark:bg-[var(--color-surface)]">
-          <div className="text-sm text-gray-500 dark:text-[var(--color-muted-foreground)]">Mapped properties</div>
+          <div className="text-sm text-gray-500 dark:text-[var(--color-muted-foreground)]">
+            Mapped properties
+          </div>
           <div className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
             {properties.length}
           </div>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-[var(--color-border-hover)] dark:bg-[var(--color-surface)]">
-          <div className="text-sm text-gray-500 dark:text-[var(--color-muted-foreground)]">Missing coordinates</div>
+          <div className="text-sm text-gray-500 dark:text-[var(--color-muted-foreground)]">
+            Missing coordinates
+          </div>
           <div className="mt-1 text-2xl font-bold text-amber-500">{missingCoordinates}</div>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-[var(--color-border-hover)] dark:bg-[var(--color-surface)]">
-          <div className="text-sm text-gray-500 dark:text-[var(--color-muted-foreground)]">Map source</div>
+          <div className="text-sm text-gray-500 dark:text-[var(--color-muted-foreground)]">
+            Map source
+          </div>
           <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
             OpenStreetMap
           </div>

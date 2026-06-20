@@ -137,7 +137,8 @@ const CelebrationToast = ({ t, message }: { t: Toast; message: string }) => (
       transition={spring}
       className="relative overflow-hidden rounded-xl border shadow-lg backdrop-blur-sm"
       style={{
-        background: "linear-gradient(135deg, color-mix(in srgb, var(--color-success) 10%, transparent), color-mix(in srgb, var(--color-primary) 6%, transparent))",
+        background:
+          "linear-gradient(135deg, color-mix(in srgb, var(--color-success) 10%, transparent), color-mix(in srgb, var(--color-primary) 6%, transparent))",
         borderColor: "color-mix(in srgb, var(--color-success) 25%, transparent)",
         minWidth: "320px",
       }}
@@ -221,13 +222,10 @@ export function ToastProvider({ children }: { children: ReactNode }): React.Reac
     [],
   );
 
-  const celebrate = useCallback(
-    (message: string) => {
-      toast.custom((t) => <CelebrationToast t={t} message={message} />, { duration: 4000 });
-      fireConfetti();
-    },
-    [],
-  );
+  const celebrate = useCallback((message: string) => {
+    toast.custom((t) => <CelebrationToast t={t} message={message} />, { duration: 4000 });
+    fireConfetti();
+  }, []);
 
   const value = useMemo(
     () => ({ success, error, info, warning, celebrate }),

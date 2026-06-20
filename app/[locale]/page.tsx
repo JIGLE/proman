@@ -132,7 +132,11 @@ export default async function LandingPage({ params }: Props) {
               eventData={{ location: "header" }}
               className="hidden sm:block"
             >
-              <Button variant="ghost" size="sm" className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+              >
                 {t("cta")}
               </Button>
             </TrackedLandingLink>
@@ -142,10 +146,7 @@ export default async function LandingPage({ params }: Props) {
               eventName="landing.demo_start"
               eventData={{ location: "header" }}
             >
-              <Button
-                size="sm"
-                className="gap-1.5 bg-teal-600 text-white hover:bg-teal-500"
-              >
+              <Button size="sm" className="gap-1.5 bg-teal-600 text-white hover:bg-teal-500">
                 <Play className="h-3.5 w-3.5" />
                 {t("demoCta")}
               </Button>
@@ -174,7 +175,9 @@ export default async function LandingPage({ params }: Props) {
             </LandingHeroItem>
 
             <LandingHeroItem>
-              <p className="max-w-md text-[16px] leading-relaxed text-[var(--color-muted-foreground)]">{t("subtitle")}</p>
+              <p className="max-w-md text-[16px] leading-relaxed text-[var(--color-muted-foreground)]">
+                {t("subtitle")}
+              </p>
             </LandingHeroItem>
 
             <LandingHeroItem>
@@ -433,12 +436,16 @@ export default async function LandingPage({ params }: Props) {
                   <div className="flex items-center gap-3 text-[10px] text-[var(--color-muted-foreground)]">
                     <span>
                       {t("preview.result.receipt")}:{" "}
-                      <span className="text-[var(--color-muted-foreground)]">{t("preview.result.done")}</span>
+                      <span className="text-[var(--color-muted-foreground)]">
+                        {t("preview.result.done")}
+                      </span>
                     </span>
                     <span className="h-2.5 w-px bg-[var(--color-surface)]" />
                     <span>
                       {t("preview.result.export")}:{" "}
-                      <span className="text-[var(--color-muted-foreground)]">{t("preview.result.ready")}</span>
+                      <span className="text-[var(--color-muted-foreground)]">
+                        {t("preview.result.ready")}
+                      </span>
                     </span>
                   </div>
                   <span className="text-[10px] font-semibold tracking-wide text-[var(--color-muted-foreground)]">
@@ -454,7 +461,10 @@ export default async function LandingPage({ params }: Props) {
         <div className="mx-auto mt-16 max-w-6xl">
           <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-3">
             {trustItems.map((item) => (
-              <div key={item} className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
+              <div
+                key={item}
+                className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]"
+              >
                 <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[var(--color-muted-foreground)]" />
                 {item}
               </div>
@@ -505,7 +515,9 @@ export default async function LandingPage({ params }: Props) {
               <p className="text-[15px] font-semibold text-[var(--color-foreground)]">
                 {t("features.items.receipts.title")}
               </p>
-              <p className="text-sm text-[var(--color-muted-foreground)]">{t("features.items.receipts.description")}</p>
+              <p className="text-sm text-[var(--color-muted-foreground)]">
+                {t("features.items.receipts.description")}
+              </p>
             </div>
 
             {/* Tax Compliance */}
@@ -529,7 +541,9 @@ export default async function LandingPage({ params }: Props) {
               <p className="text-[15px] font-semibold text-[var(--color-foreground)]">
                 {t("features.items.maintenance.title")}
               </p>
-              <p className="text-sm text-[var(--color-muted-foreground)]">{t("features.items.maintenance.description")}</p>
+              <p className="text-sm text-[var(--color-muted-foreground)]">
+                {t("features.items.maintenance.description")}
+              </p>
             </div>
 
             {/* Lease Management */}
@@ -580,7 +594,9 @@ export default async function LandingPage({ params }: Props) {
             <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-[var(--color-foreground)] sm:text-[28px]">
               {t("timeline.title")}
             </h2>
-            <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">{t("timeline.subtitle")}</p>
+            <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">
+              {t("timeline.subtitle")}
+            </p>
           </div>
 
           {/* Desktop: horizontal */}
@@ -596,7 +612,9 @@ export default async function LandingPage({ params }: Props) {
                   <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-background)] shadow-lg shadow-black/40">
                     <Icon className={`h-4 w-4 ${step.color}`} />
                   </div>
-                  <p className="mt-4 text-[13px] font-semibold text-[var(--color-foreground)]">{step.title}</p>
+                  <p className="mt-4 text-[13px] font-semibold text-[var(--color-foreground)]">
+                    {step.title}
+                  </p>
                   <p className="mt-1 max-w-[110px] text-[11px] leading-snug text-[var(--color-muted-foreground)]">
                     {step.description}
                   </p>
@@ -620,8 +638,12 @@ export default async function LandingPage({ params }: Props) {
                     )}
                   </div>
                   <div className="pb-5">
-                    <p className="text-[13px] font-semibold text-[var(--color-foreground)]">{step.title}</p>
-                    <p className="mt-0.5 text-[12px] text-[var(--color-muted-foreground)]">{step.description}</p>
+                    <p className="text-[13px] font-semibold text-[var(--color-foreground)]">
+                      {step.title}
+                    </p>
+                    <p className="mt-0.5 text-[12px] text-[var(--color-muted-foreground)]">
+                      {step.description}
+                    </p>
                   </div>
                 </div>
               );
@@ -662,8 +684,12 @@ export default async function LandingPage({ params }: Props) {
                       0{index + 1}
                     </span>
                   </div>
-                  <p className="mt-4 text-[15px] font-semibold text-[var(--color-foreground)]">{step.title}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted-foreground)]">{step.description}</p>
+                  <p className="mt-4 text-[15px] font-semibold text-[var(--color-foreground)]">
+                    {step.title}
+                  </p>
+                  <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
+                    {step.description}
+                  </p>
                 </div>
               );
             })}
@@ -695,7 +721,9 @@ export default async function LandingPage({ params }: Props) {
             <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-[var(--color-foreground)]">
               {t("demo.title")}
             </h2>
-            <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">{t("demo.subtitle")}</p>
+            <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">
+              {t("demo.subtitle")}
+            </p>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -714,13 +742,18 @@ export default async function LandingPage({ params }: Props) {
                   {t("demo.cardCta")} <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </div>
-              <h3 className="mt-5 text-lg font-bold text-[var(--color-foreground)]">{t("demo.ownerTitle")}</h3>
+              <h3 className="mt-5 text-lg font-bold text-[var(--color-foreground)]">
+                {t("demo.ownerTitle")}
+              </h3>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
                 {t("demo.ownerDescription")}
               </p>
               <div className="mt-5 space-y-2">
                 {[t("demo.owner.f1"), t("demo.owner.f2"), t("demo.owner.f3")].map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-[13px] text-[var(--color-muted-foreground)]">
+                  <div
+                    key={f}
+                    className="flex items-center gap-2 text-[13px] text-[var(--color-muted-foreground)]"
+                  >
                     <div className="h-1 w-1 shrink-0 rounded-full bg-[var(--color-muted)]" />
                     {f}
                   </div>
@@ -743,13 +776,18 @@ export default async function LandingPage({ params }: Props) {
                   {t("demo.cardCta")} <ArrowRight className="h-3.5 w-3.5" />
                 </div>
               </div>
-              <h3 className="mt-5 text-lg font-bold text-[var(--color-foreground)]">{t("demo.tenantTitle")}</h3>
+              <h3 className="mt-5 text-lg font-bold text-[var(--color-foreground)]">
+                {t("demo.tenantTitle")}
+              </h3>
               <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
                 {t("demo.tenantDescription")}
               </p>
               <div className="mt-5 space-y-2">
                 {[t("demo.tenant.f1"), t("demo.tenant.f2"), t("demo.tenant.f3")].map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-[13px] text-[var(--color-muted-foreground)]">
+                  <div
+                    key={f}
+                    className="flex items-center gap-2 text-[13px] text-[var(--color-muted-foreground)]"
+                  >
                     <div className="h-1 w-1 shrink-0 rounded-full bg-teal-600/50" />
                     {f}
                   </div>
@@ -777,14 +815,20 @@ export default async function LandingPage({ params }: Props) {
           <div className="grid gap-6 sm:grid-cols-3">
             {/* Free */}
             <div className="flex flex-col rounded-2xl border border-white/[0.06] bg-[var(--color-card)]/40 p-6">
-              <p className="text-sm font-semibold text-[var(--color-muted-foreground)]">{t("pricing.free.name")}</p>
+              <p className="text-sm font-semibold text-[var(--color-muted-foreground)]">
+                {t("pricing.free.name")}
+              </p>
               <div className="mt-3 flex items-baseline gap-1">
                 <span className="text-4xl font-bold tracking-tight text-[var(--color-foreground)]">
                   {t("pricing.free.price")}
                 </span>
-                <span className="text-sm text-[var(--color-muted-foreground)]">{t("pricing.monthly")}</span>
+                <span className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("pricing.monthly")}
+                </span>
               </div>
-              <p className="mt-2 text-[13px] text-[var(--color-muted-foreground)]">{t("pricing.free.description")}</p>
+              <p className="mt-2 text-[13px] text-[var(--color-muted-foreground)]">
+                {t("pricing.free.description")}
+              </p>
               <ul className="my-6 flex-1 space-y-3">
                 {[
                   t("pricing.free.f1"),
@@ -793,7 +837,10 @@ export default async function LandingPage({ params }: Props) {
                   t("pricing.free.f4"),
                   t("pricing.free.f5"),
                 ].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-[var(--color-muted-foreground)]">
+                  <li
+                    key={f}
+                    className="flex items-start gap-2.5 text-[13px] text-[var(--color-muted-foreground)]"
+                  >
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-muted-foreground)]" />
                     {f}
                   </li>
@@ -823,9 +870,13 @@ export default async function LandingPage({ params }: Props) {
                 <span className="text-4xl font-bold tracking-tight text-[var(--color-foreground)]">
                   {t("pricing.pro.price")}
                 </span>
-                <span className="text-sm text-[var(--color-muted-foreground)]">{t("pricing.monthly")}</span>
+                <span className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("pricing.monthly")}
+                </span>
               </div>
-              <p className="mt-2 text-[13px] text-[var(--color-muted-foreground)]">{t("pricing.pro.description")}</p>
+              <p className="mt-2 text-[13px] text-[var(--color-muted-foreground)]">
+                {t("pricing.pro.description")}
+              </p>
               <ul className="my-6 flex-1 space-y-3">
                 {[
                   t("pricing.pro.f1"),
@@ -835,7 +886,10 @@ export default async function LandingPage({ params }: Props) {
                   t("pricing.pro.f5"),
                   t("pricing.pro.f6"),
                 ].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-[var(--color-muted-foreground)]">
+                  <li
+                    key={f}
+                    className="flex items-start gap-2.5 text-[13px] text-[var(--color-muted-foreground)]"
+                  >
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-400" />
                     {f}
                   </li>
@@ -854,14 +908,20 @@ export default async function LandingPage({ params }: Props) {
 
             {/* Business */}
             <div className="flex flex-col rounded-2xl border border-white/[0.06] bg-[var(--color-card)]/40 p-6">
-              <p className="text-sm font-semibold text-[var(--color-muted-foreground)]">{t("pricing.business.name")}</p>
+              <p className="text-sm font-semibold text-[var(--color-muted-foreground)]">
+                {t("pricing.business.name")}
+              </p>
               <div className="mt-3 flex items-baseline gap-1">
                 <span className="text-4xl font-bold tracking-tight text-[var(--color-foreground)]">
                   {t("pricing.business.price")}
                 </span>
-                <span className="text-sm text-[var(--color-muted-foreground)]">{t("pricing.monthly")}</span>
+                <span className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("pricing.monthly")}
+                </span>
               </div>
-              <p className="mt-2 text-[13px] text-[var(--color-muted-foreground)]">{t("pricing.business.description")}</p>
+              <p className="mt-2 text-[13px] text-[var(--color-muted-foreground)]">
+                {t("pricing.business.description")}
+              </p>
               <ul className="my-6 flex-1 space-y-3">
                 {[
                   t("pricing.business.f1"),
@@ -871,7 +931,10 @@ export default async function LandingPage({ params }: Props) {
                   t("pricing.business.f5"),
                   t("pricing.business.f6"),
                 ].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-[var(--color-muted-foreground)]">
+                  <li
+                    key={f}
+                    className="flex items-start gap-2.5 text-[13px] text-[var(--color-muted-foreground)]"
+                  >
                     <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-muted-foreground)]" />
                     {f}
                   </li>
@@ -927,7 +990,11 @@ export default async function LandingPage({ params }: Props) {
               eventName="landing.signin_click"
               eventData={{ location: "closing_cta" }}
             >
-              <Button size="lg" variant="ghost" className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]">
+              <Button
+                size="lg"
+                variant="ghost"
+                className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+              >
                 {t("closingCta.secondary")}
               </Button>
             </TrackedLandingLink>
@@ -939,11 +1006,17 @@ export default async function LandingPage({ params }: Props) {
         <div className="mx-auto max-w-6xl text-center text-sm text-[var(--color-muted-foreground)]">
           <p>{tFooter("copyright", { year: new Date().getFullYear().toString() })}</p>
           <div className="mt-2 flex items-center justify-center gap-4 text-xs text-[var(--color-muted-foreground)]">
-            <a href={`/${locale}/privacy`} className="transition-colors hover:text-[var(--color-muted-foreground)]">
+            <a
+              href={`/${locale}/privacy`}
+              className="transition-colors hover:text-[var(--color-muted-foreground)]"
+            >
               {tFooter("privacy")}
             </a>
             <span>Â·</span>
-            <a href={`/${locale}/terms`} className="transition-colors hover:text-[var(--color-muted-foreground)]">
+            <a
+              href={`/${locale}/terms`}
+              className="transition-colors hover:text-[var(--color-muted-foreground)]"
+            >
               {tFooter("terms")}
             </a>
           </div>

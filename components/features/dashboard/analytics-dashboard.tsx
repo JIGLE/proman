@@ -355,7 +355,9 @@ export function AnalyticsDashboard(): React.ReactElement {
             <span>/</span>
             <span className="text-[var(--color-foreground)]">Analytics</span>
           </div>
-          <h2 className="text-2xl font-bold tracking-tight text-[var(--color-foreground)]">Portfolio analytics</h2>
+          <h2 className="text-2xl font-bold tracking-tight text-[var(--color-foreground)]">
+            Portfolio analytics
+          </h2>
           <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
             Track rent income, occupancy, and lease health across your properties.
           </p>
@@ -509,7 +511,9 @@ export function AnalyticsDashboard(): React.ReactElement {
                     <div className="flex items-center gap-3">
                       <span className="text-lg">{activity.icon}</span>
                       <div className="space-y-1">
-                        <p className="text-sm font-medium text-[var(--color-muted-foreground)]">{activity.message}</p>
+                        <p className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                          {activity.message}
+                        </p>
                         <div className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
                           <span>{activity.type}</span>
                           {activity.amount && <span>• {formatCurrency(activity.amount)}</span>}

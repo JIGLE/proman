@@ -537,7 +537,9 @@ export function FinancialsView(): React.ReactElement {
           <div className="grid gap-4 md:grid-cols-3">
             <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">Total Income</CardTitle>
+                <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                  Total Income
+                </CardTitle>
                 <TrendingUp className="h-4 w-4 text-green-500" aria-hidden="true" />
               </CardHeader>
               <CardContent>
@@ -551,7 +553,9 @@ export function FinancialsView(): React.ReactElement {
             </Card>
             <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">Total Expenses</CardTitle>
+                <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                  Total Expenses
+                </CardTitle>
                 <TrendingDown className="h-4 w-4 text-red-500" />
               </CardHeader>
               <CardContent>
@@ -565,7 +569,9 @@ export function FinancialsView(): React.ReactElement {
             </Card>
             <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">Net Income</CardTitle>
+                <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                  Net Income
+                </CardTitle>
                 <DollarSign
                   className={cn(
                     "h-4 w-4",
@@ -616,19 +622,25 @@ export function FinancialsView(): React.ReactElement {
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-3">
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-[var(--color-muted-foreground)]">Gross Income</Label>
+                    <Label className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                      Gross Income
+                    </Label>
                     <div className="text-lg font-semibold text-[var(--color-foreground)]">
                       {formatCurrency(taxCalculation.grossIncome)}
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-[var(--color-muted-foreground)]">Taxable Income</Label>
+                    <Label className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                      Taxable Income
+                    </Label>
                     <div className="text-lg font-semibold text-[var(--color-foreground)]">
                       {formatCurrency(taxCalculation.taxableIncome)}
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-[var(--color-muted-foreground)]">Tax Amount</Label>
+                    <Label className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                      Tax Amount
+                    </Label>
                     <div className="text-lg font-semibold text-red-400">
                       {formatCurrency(taxCalculation.taxAmount)}
                     </div>
@@ -640,13 +652,17 @@ export function FinancialsView(): React.ReactElement {
 
                 <div className="mt-4 grid gap-4 md:grid-cols-2">
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-[var(--color-muted-foreground)]">Quarterly Payment</Label>
+                    <Label className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                      Quarterly Payment
+                    </Label>
                     <div className="text-base font-semibold text-yellow-400">
                       {formatCurrency(taxCalculation.quarterlyPayment)}
                     </div>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-sm font-medium text-[var(--color-muted-foreground)]">Annual Settlement</Label>
+                    <Label className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                      Annual Settlement
+                    </Label>
                     <div className="text-base font-semibold text-orange-400">
                       {formatCurrency(taxCalculation.annualSettlement)}
                     </div>
@@ -654,14 +670,18 @@ export function FinancialsView(): React.ReactElement {
                 </div>
 
                 <div className="mt-4">
-                  <Label className="text-sm font-medium text-[var(--color-muted-foreground)]">Deductions Applied</Label>
+                  <Label className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                    Deductions Applied
+                  </Label>
                   <div className="mt-2 space-y-1">
                     {Object.entries(taxCalculation.deductions.breakdown).map(([key, value]) => (
                       <div key={key} className="flex justify-between text-sm">
                         <span className="text-[var(--color-muted-foreground)] capitalize">
                           {key.replace(/([A-Z])/g, " $1").toLowerCase()}
                         </span>
-                        <span className="text-[var(--color-foreground)]">{formatCurrency(value)}</span>
+                        <span className="text-[var(--color-foreground)]">
+                          {formatCurrency(value)}
+                        </span>
                       </div>
                     ))}
                     <div className="border-t border-[var(--color-border-hover)] pt-1 mt-2 flex justify-between font-medium">
@@ -709,12 +729,16 @@ export function FinancialsView(): React.ReactElement {
               </CardHeader>
               <CardContent>
                 {groupedReceipts.length === 0 ? (
-                  <p className="text-sm text-[var(--color-foreground)]0 text-center py-4">No income records found</p>
+                  <p className="text-sm text-[var(--color-foreground)]0 text-center py-4">
+                    No income records found
+                  </p>
                 ) : (
                   groupedReceipts.map(({ key, monthLabel, monthTotal, receipts: monthRecs }) => (
                     <div key={key} className="mb-5">
                       <div className="flex items-center justify-between mb-2 pb-1 border-b border-[var(--color-border-hover)]">
-                        <h4 className="text-sm font-semibold text-[var(--color-muted-foreground)]">{monthLabel}</h4>
+                        <h4 className="text-sm font-semibold text-[var(--color-muted-foreground)]">
+                          {monthLabel}
+                        </h4>
                         <span className="text-sm font-semibold text-green-400">
                           {formatCurrency(monthTotal)}
                         </span>
@@ -729,7 +753,9 @@ export function FinancialsView(): React.ReactElement {
                               {receipt.number ?? receipt.id.slice(0, 8)}
                             </span>
                             <div className="flex-1 min-w-0">
-                              <p className="text-[var(--color-foreground)] truncate">{receipt.tenantName}</p>
+                              <p className="text-[var(--color-foreground)] truncate">
+                                {receipt.tenantName}
+                              </p>
                               <p className="text-[var(--color-foreground)]0 text-xs truncate">
                                 {receipt.propertyName}
                               </p>

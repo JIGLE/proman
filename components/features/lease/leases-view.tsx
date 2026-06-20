@@ -1045,7 +1045,9 @@ export function LeasesView(): React.ReactElement {
                                 onChange={(e) => setBulkPct(e.target.value)}
                                 className="flex-1"
                               />
-                              <span className="flex items-center text-sm text-[var(--color-muted-foreground)]">%</span>
+                              <span className="flex items-center text-sm text-[var(--color-muted-foreground)]">
+                                %
+                              </span>
                             </div>
                           </div>
 

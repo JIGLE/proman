@@ -747,86 +747,84 @@ export function SettingsView(): React.ReactElement {
                         <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
                           <div className="flex items-start justify-between gap-4">
                             <div className="space-y-1 flex-1">
-                              <Label htmlFor="nhr-status">
-                                Non-Habitual Resident (NHR) status
-                              </Label>
-                          <p className="text-xs text-[var(--color-muted-foreground)]">
-                            NHR grants a flat 20% tax rate on Portuguese-source income for 10 years.
-                            Only valid if granted before Jan 2024.
-                          </p>
-                        </div>
-                        <Switch
-                          id="nhr-status"
-                          checked={fiscalProfile.nhrStatus}
-                          onCheckedChange={(v) => updateFiscalProfile("nhrStatus", v)}
-                          disabled={fiscalProfile.ificiStatus}
-                        />
-                      </div>
-                      {fiscalProfile.nhrStatus && (
-                        <div className="space-y-1.5">
-                          <Label htmlFor="nhr-year">Year granted</Label>
-                          <Input
-                            id="nhr-year"
-                            type="number"
-                            min={2009}
-                            max={2024}
-                            placeholder="e.g. 2022"
-                            className="max-w-xs"
-                            value={fiscalProfile.nhrYear ?? ""}
-                            onChange={(e) => {
-                              const v = e.target.value ? parseInt(e.target.value, 10) : null;
-                              updateFiscalProfile("nhrYear", v);
-                            }}
-                          />
-                        </div>
-                      )}
-                      {fiscalProfile.ificiStatus && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400">
-                          NHR is disabled because IFICI is active. NHR and IFICI are mutually
-                          exclusive.
-                        </p>
-                      )}
+                              <Label htmlFor="nhr-status">Non-Habitual Resident (NHR) status</Label>
+                              <p className="text-xs text-[var(--color-muted-foreground)]">
+                                NHR grants a flat 20% tax rate on Portuguese-source income for 10
+                                years. Only valid if granted before Jan 2024.
+                              </p>
+                            </div>
+                            <Switch
+                              id="nhr-status"
+                              checked={fiscalProfile.nhrStatus}
+                              onCheckedChange={(v) => updateFiscalProfile("nhrStatus", v)}
+                              disabled={fiscalProfile.ificiStatus}
+                            />
+                          </div>
+                          {fiscalProfile.nhrStatus && (
+                            <div className="space-y-1.5">
+                              <Label htmlFor="nhr-year">Year granted</Label>
+                              <Input
+                                id="nhr-year"
+                                type="number"
+                                min={2009}
+                                max={2024}
+                                placeholder="e.g. 2022"
+                                className="max-w-xs"
+                                value={fiscalProfile.nhrYear ?? ""}
+                                onChange={(e) => {
+                                  const v = e.target.value ? parseInt(e.target.value, 10) : null;
+                                  updateFiscalProfile("nhrYear", v);
+                                }}
+                              />
+                            </div>
+                          )}
+                          {fiscalProfile.ificiStatus && (
+                            <p className="text-xs text-amber-600 dark:text-amber-400">
+                              NHR is disabled because IFICI is active. NHR and IFICI are mutually
+                              exclusive.
+                            </p>
+                          )}
                         </div>
                         <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="space-y-1 flex-1">
-                          <Label htmlFor="ifici-status">IFICI regime (new NHR from 2024)</Label>
-                          <p className="text-xs text-[var(--color-muted-foreground)]">
-                            IFICI (Incentivo Fiscal à Investigação Científica e Inovação) replaced
-                            NHR for new applicants from 2024. Flat 20% rate.
-                          </p>
-                        </div>
-                        <Switch
-                          id="ifici-status"
-                          checked={fiscalProfile.ificiStatus}
-                          onCheckedChange={(v) => updateFiscalProfile("ificiStatus", v)}
-                          disabled={fiscalProfile.nhrStatus}
-                        />
-                      </div>
-                      {fiscalProfile.ificiStatus && (
-                        <div className="space-y-1.5">
-                          <Label htmlFor="ifici-year">Year granted</Label>
-                          <Input
-                            id="ifici-year"
-                            type="number"
-                            min={2024}
-                            max={2030}
-                            placeholder="e.g. 2024"
-                            className="max-w-xs"
-                            value={fiscalProfile.ificiYear ?? ""}
-                            onChange={(e) => {
-                              const v = e.target.value ? parseInt(e.target.value, 10) : null;
-                              updateFiscalProfile("ificiYear", v);
-                            }}
-                          />
-                        </div>
-                      )}
-                      {fiscalProfile.nhrStatus && (
-                        <p className="text-xs text-amber-600 dark:text-amber-400">
-                          IFICI is disabled because NHR is active. NHR and IFICI are mutually
-                          exclusive.
-                        </p>
-                      )}
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="space-y-1 flex-1">
+                              <Label htmlFor="ifici-status">IFICI regime (new NHR from 2024)</Label>
+                              <p className="text-xs text-[var(--color-muted-foreground)]">
+                                IFICI (Incentivo Fiscal à Investigação Científica e Inovação)
+                                replaced NHR for new applicants from 2024. Flat 20% rate.
+                              </p>
+                            </div>
+                            <Switch
+                              id="ifici-status"
+                              checked={fiscalProfile.ificiStatus}
+                              onCheckedChange={(v) => updateFiscalProfile("ificiStatus", v)}
+                              disabled={fiscalProfile.nhrStatus}
+                            />
+                          </div>
+                          {fiscalProfile.ificiStatus && (
+                            <div className="space-y-1.5">
+                              <Label htmlFor="ifici-year">Year granted</Label>
+                              <Input
+                                id="ifici-year"
+                                type="number"
+                                min={2024}
+                                max={2030}
+                                placeholder="e.g. 2024"
+                                className="max-w-xs"
+                                value={fiscalProfile.ificiYear ?? ""}
+                                onChange={(e) => {
+                                  const v = e.target.value ? parseInt(e.target.value, 10) : null;
+                                  updateFiscalProfile("ificiYear", v);
+                                }}
+                              />
+                            </div>
+                          )}
+                          {fiscalProfile.nhrStatus && (
+                            <p className="text-xs text-amber-600 dark:text-amber-400">
+                              IFICI is disabled because NHR is active. NHR and IFICI are mutually
+                              exclusive.
+                            </p>
+                          )}
                         </div>
                       </div>
                     </details>

@@ -580,9 +580,15 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             onSort={(key) => requestSort(key as keyof Tenant)}
                           />
                         </TableHead>
-                        <TableHead className="text-[var(--color-muted-foreground)]">Email</TableHead>
-                        <TableHead className="text-[var(--color-muted-foreground)]">Phone</TableHead>
-                        <TableHead className="text-[var(--color-muted-foreground)]">Property</TableHead>
+                        <TableHead className="text-[var(--color-muted-foreground)]">
+                          Email
+                        </TableHead>
+                        <TableHead className="text-[var(--color-muted-foreground)]">
+                          Phone
+                        </TableHead>
+                        <TableHead className="text-[var(--color-muted-foreground)]">
+                          Property
+                        </TableHead>
                         <TableHead className="text-[var(--color-muted-foreground)]">
                           <SortableHeader
                             sortKey="rent"
@@ -615,8 +621,12 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                           <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
                             {tenant.name}
                           </TableCell>
-                          <TableCell className="text-sm text-[var(--color-muted-foreground)]">{tenant.email}</TableCell>
-                          <TableCell className="text-sm text-[var(--color-muted-foreground)]">{tenant.phone}</TableCell>
+                          <TableCell className="text-sm text-[var(--color-muted-foreground)]">
+                            {tenant.email}
+                          </TableCell>
+                          <TableCell className="text-sm text-[var(--color-muted-foreground)]">
+                            {tenant.phone}
+                          </TableCell>
                           <TableCell className="text-sm text-[var(--color-muted-foreground)]">
                             {properties.find((p) => p.id === tenant.propertyId)?.name ||
                               tenant.propertyName ||
@@ -766,7 +776,9 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                                 <p className="truncate text-sm font-medium text-[var(--color-foreground)]">
                                   {tenant.name}
                                 </p>
-                                <p className="truncate text-xs text-[var(--color-muted-foreground)]">{tenant.email}</p>
+                                <p className="truncate text-xs text-[var(--color-muted-foreground)]">
+                                  {tenant.email}
+                                </p>
                               </div>
                             </div>
 
@@ -785,7 +797,9 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                                   <span
                                     className={cn(
                                       "font-medium",
-                                      isExpiring ? "text-amber-300" : "text-[var(--color-muted-foreground)]",
+                                      isExpiring
+                                        ? "text-amber-300"
+                                        : "text-[var(--color-muted-foreground)]",
                                     )}
                                   >
                                     {new Date(activeLease.endDate).toLocaleDateString("pt-PT", {

@@ -295,7 +295,9 @@ export function CorrespondenceView(): React.ReactElement {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">Correspondence</h2>
+              <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
+                Correspondence
+              </h2>
               <p className="text-[var(--color-muted-foreground)]">
                 Write notices, rent reminders, and lease renewals for your tenants.
               </p>
@@ -445,15 +447,22 @@ export function CorrespondenceView(): React.ReactElement {
               />
             ) : (
               templates.map((template) => (
-                <Card key={template.id} className="bg-[var(--color-card)] border-[var(--color-border)]">
+                <Card
+                  key={template.id}
+                  className="bg-[var(--color-card)] border-[var(--color-border)]"
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-[var(--color-foreground)]">{template.name}</h3>
+                          <h3 className="text-lg font-semibold text-[var(--color-foreground)]">
+                            {template.name}
+                          </h3>
                           {getTypeBadge(template.type)}
                         </div>
-                        <p className="text-sm font-medium text-[var(--color-foreground)] mb-1">{template.subject}</p>
+                        <p className="text-sm font-medium text-[var(--color-foreground)] mb-1">
+                          {template.subject}
+                        </p>
                         <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-2 mb-2">
                           {template.content.length > 150
                             ? `${template.content.substring(0, 150)}...`
@@ -518,7 +527,9 @@ export function CorrespondenceView(): React.ReactElement {
           <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
             <DialogContent className="bg-[var(--color-card)] border-[var(--color-border)] max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-[var(--color-foreground)]">Send Correspondence</DialogTitle>
+                <DialogTitle className="text-[var(--color-foreground)]">
+                  Send Correspondence
+                </DialogTitle>
                 <DialogDescription>
                   Compose and send a message using the selected template
                 </DialogDescription>
@@ -591,7 +602,9 @@ export function CorrespondenceView(): React.ReactElement {
           <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
             <DialogContent className="bg-[var(--color-card)] border-[var(--color-border)] max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-[var(--color-foreground)]">Batch Generate PDF</DialogTitle>
+                <DialogTitle className="text-[var(--color-foreground)]">
+                  Batch Generate PDF
+                </DialogTitle>
                 <DialogDescription>
                   Select recipients to generate letters for: {selectedTemplate?.name}
                 </DialogDescription>
@@ -628,12 +641,16 @@ export function CorrespondenceView(): React.ReactElement {
                           >
                             {tenant.name}
                           </Label>
-                          <p className="text-xs text-[var(--color-muted-foreground)]">{tenant.propertyName}</p>
+                          <p className="text-xs text-[var(--color-muted-foreground)]">
+                            {tenant.propertyName}
+                          </p>
                         </div>
                       </div>
                     ))}
                     {tenants.length === 0 && (
-                      <p className="text-sm text-[var(--color-muted-foreground)] text-center">No tenants found.</p>
+                      <p className="text-sm text-[var(--color-muted-foreground)] text-center">
+                        No tenants found.
+                      </p>
                     )}
                   </div>
                 </div>

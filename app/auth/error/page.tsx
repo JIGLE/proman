@@ -26,7 +26,9 @@ function AuthErrorContent() {
                 />
               </svg>
             </div>
-            <h1 className="text-xl font-semibold text-[var(--color-foreground)] mb-2">Authentication Error</h1>
+            <h1 className="text-xl font-semibold text-[var(--color-foreground)] mb-2">
+              Authentication Error
+            </h1>
             <p className="text-[var(--color-muted-foreground)] mb-6">
               There was a problem signing you in. This is usually temporary.
             </p>

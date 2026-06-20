@@ -93,8 +93,12 @@ function DefaultErrorFallback({
         <CardContent className="space-y-4">
           {error && (
             <div className="bg-[var(--color-surface)] rounded-lg p-3 space-y-2">
-              <p className="text-sm text-[var(--color-muted-foreground)] font-mono break-all">{error.message}</p>
-              {errorId && <p className="text-xs text-[var(--color-muted-foreground)]">Error ID: {errorId}</p>}
+              <p className="text-sm text-[var(--color-muted-foreground)] font-mono break-all">
+                {error.message}
+              </p>
+              {errorId && (
+                <p className="text-xs text-[var(--color-muted-foreground)]">Error ID: {errorId}</p>
+              )}
             </div>
           )}
           <div className="flex gap-2">

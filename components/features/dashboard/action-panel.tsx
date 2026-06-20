@@ -292,7 +292,9 @@ export function ActionPanel(): ReactElement {
           </div>
         ) : (
           <>
-            {visible.map((alert) => <AlertRow key={alert.id} alert={alert} locale={locale} />)}
+            {visible.map((alert) => (
+              <AlertRow key={alert.id} alert={alert} locale={locale} />
+            ))}
             {hiddenCount > 0 && (
               <Link
                 href={`/${locale}/financials`}

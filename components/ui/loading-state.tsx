@@ -80,7 +80,9 @@ export function EmptyState({
     <div className={cn("flex flex-col items-center justify-center py-12 text-center", className)}>
       {icon && <div className="mb-4 text-[var(--color-muted-foreground)]">{icon}</div>}
       <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">{title}</h3>
-      {description && <p className="text-sm text-[var(--color-muted-foreground)] mb-6 max-w-md">{description}</p>}
+      {description && (
+        <p className="text-sm text-[var(--color-muted-foreground)] mb-6 max-w-md">{description}</p>
+      )}
       {action && <div>{action}</div>}
     </div>
   );

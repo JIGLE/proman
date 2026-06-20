@@ -30,7 +30,10 @@ interface RelatedEntitiesProps {
   className?: string;
 }
 
-const BACK_CONFIG: Record<EntityType, { icon: React.ComponentType<{ className?: string }>; basePath: string }> = {
+const BACK_CONFIG: Record<
+  EntityType,
+  { icon: React.ComponentType<{ className?: string }>; basePath: string }
+> = {
   property: { icon: Building2, basePath: "/portfolio" },
   tenant: { icon: Users, basePath: "/people" },
   lease: { icon: FileText, basePath: "/leases" },

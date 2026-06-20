@@ -50,7 +50,9 @@ export function BarChart({
               {title}
             </h3>
           )}
-          {subtitle && <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>
+          )}
         </div>
       )}
 
@@ -61,7 +63,9 @@ export function BarChart({
           return (
             <div key={item.label} className="space-y-2">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-[var(--color-muted-foreground)] font-medium">{item.label}</span>
+                <span className="text-[var(--color-muted-foreground)] font-medium">
+                  {item.label}
+                </span>
                 <div className="flex items-center gap-2">
                   {showValues && (
                     <span className="text-[var(--color-foreground)] font-semibold">
@@ -141,7 +145,9 @@ export function LineChart({
               {title}
             </h3>
           )}
-          {subtitle && <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>
+          )}
         </div>
       )}
 
@@ -225,7 +231,9 @@ export function DonutChart({ data, title, subtitle, height = 200, className }: C
               {title}
             </h3>
           )}
-          {subtitle && <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>
+          )}
         </div>
       )}
 
@@ -281,12 +289,16 @@ export function DonutChart({ data, title, subtitle, height = 200, className }: C
                   }}
                 />
                 <div className="flex-1 flex items-center justify-between">
-                  <span className="text-sm text-[var(--color-muted-foreground)] font-medium">{item.label}</span>
+                  <span className="text-sm text-[var(--color-muted-foreground)] font-medium">
+                    {item.label}
+                  </span>
                   <div className="text-right">
                     <div className="text-sm font-semibold text-[var(--color-foreground)]">
                       {item.value.toLocaleString()}
                     </div>
-                    <div className="text-xs text-[var(--color-muted-foreground)]">{percentage}%</div>
+                    <div className="text-xs text-[var(--color-muted-foreground)]">
+                      {percentage}%
+                    </div>
                   </div>
                 </div>
               </div>
@@ -359,7 +371,9 @@ export function AreaChart({
               {title}
             </h3>
           )}
-          {subtitle && <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>}
+          {subtitle && (
+            <p className="text-body-small text-[var(--color-muted-foreground)]">{subtitle}</p>
+          )}
         </div>
       )}
 
@@ -499,8 +513,13 @@ export function MetricCard({
     >
       <div className="flex items-start justify-between mb-4">
         <div className="space-y-1">
-          <p className="text-heading-small font-medium text-[var(--color-muted-foreground)]">{title}</p>
-          <p className="text-display-medium font-bold text-[var(--color-foreground)]" aria-live="polite">
+          <p className="text-heading-small font-medium text-[var(--color-muted-foreground)]">
+            {title}
+          </p>
+          <p
+            className="text-display-medium font-bold text-[var(--color-foreground)]"
+            aria-live="polite"
+          >
             {typeof value === "number" ? value.toLocaleString() : value}
           </p>
         </div>
@@ -514,7 +533,11 @@ export function MetricCard({
             <div
               className={cn(
                 "flex items-center gap-1 text-sm font-medium",
-                change > 0 ? "text-green-400" : change < 0 ? "text-red-400" : "text-[var(--color-muted-foreground)]",
+                change > 0
+                  ? "text-green-400"
+                  : change < 0
+                    ? "text-red-400"
+                    : "text-[var(--color-muted-foreground)]",
               )}
             >
               {change > 0 && <TrendingUp className="h-4 w-4" aria-hidden="true" />}
@@ -522,7 +545,9 @@ export function MetricCard({
               {Math.abs(change)}%
             </div>
           )}
-          {changeLabel && <span className="text-sm text-[var(--color-muted-foreground)]">{changeLabel}</span>}
+          {changeLabel && (
+            <span className="text-sm text-[var(--color-muted-foreground)]">{changeLabel}</span>
+          )}
         </div>
       )}
 

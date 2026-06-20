@@ -69,7 +69,8 @@ function TrendBadge({ trend }: { trend: StatTrend }) {
     <p className={cn("mt-1.5 flex items-center gap-1 text-xs", colorClass)}>
       <TrendIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
       <span>
-        {sign}{Math.abs(trend.value)}%{trend.label ? ` ${trend.label}` : ""}
+        {sign}
+        {Math.abs(trend.value)}%{trend.label ? ` ${trend.label}` : ""}
       </span>
     </p>
   );

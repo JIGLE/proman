@@ -568,7 +568,9 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center gap-4">
-                  <span className="text-[var(--color-muted-foreground)] shrink-0">{t("editPhone")}</span>
+                  <span className="text-[var(--color-muted-foreground)] shrink-0">
+                    {t("editPhone")}
+                  </span>
                   {editingPhone ? (
                     <div className="flex items-center gap-2 flex-1 justify-end">
                       <Input
@@ -623,7 +625,9 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                       >
                         <div>
                           <p className="font-medium">{req.title}</p>
-                          <p className="text-sm text-[var(--color-muted-foreground)]">{formatDate(req.createdAt)}</p>
+                          <p className="text-sm text-[var(--color-muted-foreground)]">
+                            {formatDate(req.createdAt)}
+                          </p>
                         </div>
                         <Badge className={getStatusColor(req.status)}>
                           {req.status.replace("_", " ")}
@@ -842,7 +846,9 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                 ) : tickets.length === 0 ? (
                   <div className="text-center py-12">
                     <Wrench className="h-10 w-10 mx-auto text-[var(--color-muted-foreground)] mb-3 opacity-40" />
-                    <p className="text-[var(--color-muted-foreground)]">{t("noMaintenanceRequests")}</p>
+                    <p className="text-[var(--color-muted-foreground)]">
+                      {t("noMaintenanceRequests")}
+                    </p>
                     <Button
                       variant="outline"
                       className="mt-4"
@@ -875,7 +881,9 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                         <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-2">
                           {ticket.description}
                         </p>
-                        <p className="text-xs text-[var(--color-muted-foreground)]">{formatDate(ticket.createdAt)}</p>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">
+                          {formatDate(ticket.createdAt)}
+                        </p>
                       </div>
                     ))}
                   </div>

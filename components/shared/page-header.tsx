@@ -22,9 +22,7 @@ export function PageHeader({ title, description, summary, children }: PageHeader
         {description && (
           <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">{description}</p>
         )}
-        {summary && (
-          <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">{summary}</p>
-        )}
+        {summary && <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">{summary}</p>}
       </div>
       {children && <div className="flex flex-wrap items-center gap-2">{children}</div>}
     </div>

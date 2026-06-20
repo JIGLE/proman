@@ -32,7 +32,12 @@ export function AchievementBadge({
   };
 
   const getColors = () => {
-    if (!earned) return { bg: "bg-[var(--color-surface)]", border: "border-[var(--color-border)]", text: "text-[var(--color-muted-foreground)]" };
+    if (!earned)
+      return {
+        bg: "bg-[var(--color-surface)]",
+        border: "border-[var(--color-border)]",
+        text: "text-[var(--color-muted-foreground)]",
+      };
 
     switch (type) {
       case "occupancy":
@@ -48,7 +53,11 @@ export function AchievementBadge({
           text: "text-accent-primary",
         };
       default:
-        return { bg: "bg-[var(--color-surface)]", border: "border-[var(--color-border)]", text: "text-[var(--color-muted-foreground)]" };
+        return {
+          bg: "bg-[var(--color-surface)]",
+          border: "border-[var(--color-border)]",
+          text: "text-[var(--color-muted-foreground)]",
+        };
     }
   };
 

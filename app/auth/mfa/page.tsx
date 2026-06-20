@@ -105,7 +105,9 @@ export default function MFAPage() {
                 <ShieldCheck className="w-6 h-6 text-[var(--color-muted-foreground)]" />
               )}
             </div>
-            <h1 className="text-xl font-semibold text-[var(--color-foreground)]">Two-factor authentication</h1>
+            <h1 className="text-xl font-semibold text-[var(--color-foreground)]">
+              Two-factor authentication
+            </h1>
             <p className="text-sm text-[var(--color-muted-foreground)]">
               {useBackup
                 ? "Enter one of your backup codes"

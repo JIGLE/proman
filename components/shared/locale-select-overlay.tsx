@@ -77,8 +77,12 @@ export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }
           >
             {/* Logo / brand mark */}
             <div className="text-center">
-              <p className="text-xs uppercase tracking-[0.3em] text-[var(--color-muted-foreground)]">Domora</p>
-              <h1 className="mt-2 text-2xl font-semibold text-[var(--color-foreground)]">Choose your language</h1>
+              <p className="text-xs uppercase tracking-[0.3em] text-[var(--color-muted-foreground)]">
+                Domora
+              </p>
+              <h1 className="mt-2 text-2xl font-semibold text-[var(--color-foreground)]">
+                Choose your language
+              </h1>
               <p className="mt-1.5 text-sm text-[var(--color-muted-foreground)]">
                 Select a language to continue. You can change it later.
               </p>
@@ -102,7 +106,9 @@ export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }
                   }}
                 >
                   <span className="text-3xl leading-none">{locale.flag}</span>
-                  <span className="text-xs font-semibold text-[var(--color-foreground)]">{locale.name}</span>
+                  <span className="text-xs font-semibold text-[var(--color-foreground)]">
+                    {locale.name}
+                  </span>
                   <span className="text-[10px] text-[var(--color-muted-foreground)] group-hover:text-[var(--color-muted-foreground)]">
                     {locale.greeting}
                   </span>
