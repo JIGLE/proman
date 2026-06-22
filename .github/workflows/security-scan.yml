@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -80,7 +80,7 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -137,7 +137,7 @@ jobs:
         language: ["javascript"]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
@@ -160,7 +160,7 @@ jobs:
     continue-on-error: true # Requires GitHub Advanced Security (unavailable on free private repos)
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Dependency Review
         uses: actions/dependency-review-action@v5
@@ -174,12 +174,12 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: TruffleHog Secret Scan
-        uses: trufflesecurity/trufflehog@v3.95.4
+        uses: trufflesecurity/trufflehog@v3.95.6
         with:
           path: ./
           base: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
@@ -194,13 +194,13 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: TruffleHog Unverified Scan
         id: trufflehog-unverified
-        uses: trufflesecurity/trufflehog@v3.95.4
+        uses: trufflesecurity/trufflehog@v3.95.6
         with:
           path: ./
           base: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
