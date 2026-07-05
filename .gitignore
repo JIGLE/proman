@@ -133,3 +133,6 @@ final-test.txt
 .eslintrc.cjs
 .eslintrc.json
 eslint.config.cjs
+
+# Design-award capture output (local evidence, not source)
+.design-award/
