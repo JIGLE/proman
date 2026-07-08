@@ -75,6 +75,15 @@ Re-drive the changed screen in the running app in **all three themes**;
 (`--max-warnings=0`); `npm test`; `npm run i18n:check` if strings changed.
 Re-capture (`--tag after`) and compare.
 
+**If the change touches `app/globals.css`, any `docs/*.md`, or anything else
+Tailwind's content scanner reads:** also run `npm run build` (or load the app
+in a running dev server) and confirm no PostCSS/Tailwind parse error. Tailwind
+v4 scans `.md` files for candidate classes too — a stray bracket-class string
+in prose (e.g. writing out `text-[var(--color-a|b)]` as a single token) can
+generate invalid CSS and break the *entire app's* stylesheet, silently, since
+`tsc`/`eslint`/`vitest` never compile CSS and won't catch it. This has already
+happened once in this repo's docs — see the git history on this file.
+
 ## Domora anti-patterns (a screen matching one is wrong)
 - A **neutral literal** (`bg-zinc-900`, `text-zinc-400`) anywhere in `components/`
   or `app/` — it won't remap and breaks light/OLED. Use `var(--color-*)` tokens
@@ -104,7 +113,9 @@ Mirrors the already-clean `overview-view.tsx`. Applied by
 | `border-zinc-600/700/800` | `border-[var(--color-border)]` |
 | `hover:border-zinc-500/700` | `hover:border-[var(--color-border-hover)]` |
 | `divide-zinc-800` | `divide-[var(--color-border)]` |
-| `text-green-*` / `text-red-*` / `text-yellow-*` | `text-[var(--color-success|destructive|warning)]` |
+| `text-green-*` | the `--color-success` token |
+| `text-red-*` | the `--color-destructive` token |
+| `text-yellow-*` | the `--color-warning` token |
 
 ## Repo facts (that cost real time)
 - **Themes are three classes** (`light`, `dark`, `dark-oled`) + `data-theme` on

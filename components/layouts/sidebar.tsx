@@ -75,7 +75,7 @@ function SidebarFooter({
             variant="ghost"
             size="sm"
             onClick={() => signOut({ callbackUrl: `/${locale}` })}
-            className="h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-500"
+            className="h-8 w-8 p-0 hover:bg-[var(--color-error-muted)] hover:text-[var(--color-destructive)]"
             title="Sign Out"
             aria-label="Sign Out"
           >
