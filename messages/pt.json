@@ -764,7 +764,14 @@
       "step1": "Verifique a sua caixa de email para uma mensagem do seu proprietário ou gestor de imóveis.",
       "step2": "Abra o email e clique no botão ou link \"Aceder ao seu portal\".",
       "step3": "Se não encontrar o email, verifique a pasta de spam ou lixo.",
-      "contactManager": "Contacte o seu gestor de imóveis se precisar de um novo link."
+      "contactManager": "Contacte o seu gestor de imóveis se precisar de um novo link.",
+      "orRequestNew": "Ou peça um novo link",
+      "emailLabel": "O seu endereço de email",
+      "emailPlaceholder": "voce@exemplo.com",
+      "sendLink": "Enviar-me um novo link",
+      "sending": "A enviar...",
+      "resendSuccess": "Se esse email corresponder a uma conta de inquilino ativa, um novo link do portal está a caminho.",
+      "resendError": "Algo correu mal. Por favor tente novamente mais tarde."
     },
     "errors": {
       "invalidLink": "Link de portal inválido ou expirado. Por favor contacte o seu gestor de imóveis.",
@@ -782,6 +789,9 @@
       "payments": "Pagamentos",
       "receipts": "Recibos",
       "invoices": "Faturas",
+      "invoiceLabel": "Fatura",
+      "paymentInitiated": "Pagamento iniciado. Referência: {ref}",
+      "paymentFailed": "Falha no pagamento. Por favor tente novamente.",
       "allCaughtUp": "Está tudo em dia",
       "noDuePayments": "Sem pagamentos em dívida agora. A sua próxima renda está agendada normalmente.",
       "monthlyRent": "Renda Mensal",

@@ -33,6 +33,7 @@ export function getCurrencyLocale(currency: Currency, userLocale?: string): stri
     const localeMap: Record<string, string> = {
       pt: "pt-PT",
       es: "es-ES",
+      it: "it-IT",
       en: "en-IE", // Irish English for EUR formatting
     };
     return localeMap[userLocale] ?? CURRENCY_LOCALES[currency];

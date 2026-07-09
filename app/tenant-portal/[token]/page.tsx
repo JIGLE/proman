@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { getCurrencyLocale, type Currency } from "@/lib/utils/currency";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/ui/card";
 import { Button } from "@/ui/button";
 import { Badge } from "@/ui/badge";
@@ -66,6 +67,7 @@ interface TenantPortalData {
       id: string;
       name: string;
       address: string;
+      currency?: Currency;
     };
   };
   invoices: Array<{
@@ -102,12 +104,16 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
   const router = useRouter();
   const t = useTranslations("tenantPortal.main");
   const tErrors = useTranslations("tenantPortal.errors");
+  const locale = useLocale();
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<TenantPortalData | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+  const [paymentMsg, setPaymentMsg] = useState<{ type: "success" | "error"; text: string } | null>(
+    null,
+  );
 
   // Maintenance state
   const [tickets, setTickets] = useState<TicketItem[]>([]);
@@ -244,11 +250,17 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
     }
   };
 
+  const currency: Currency = data?.tenant.property?.currency ?? "EUR";
+  const dateLocale = getCurrencyLocale(currency, locale);
+
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR" }).format(amount);
+    new Intl.NumberFormat(getCurrencyLocale(currency, locale), {
+      style: "currency",
+      currency,
+    }).format(amount);
 
   const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("pt-PT", {
+    new Date(dateString).toLocaleDateString(dateLocale, {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -265,24 +277,25 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
       case "paid":
       case "succeeded":
       case "resolved":
-        return "bg-green-100 text-green-800";
+        return "bg-[var(--color-success-muted)] text-[var(--color-success)]";
       case "pending":
       case "processing":
       case "open":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-[var(--color-warning-muted)] text-[var(--color-warning)]";
       case "overdue":
       case "failed":
-        return "bg-red-100 text-red-800";
+        return "bg-[var(--color-error-muted)] text-[var(--color-destructive)]";
       case "in_progress":
-        return "bg-blue-100 text-blue-800";
+        return "bg-[var(--color-info-muted)] text-[var(--color-info)]";
       default:
-        return "bg-gray-100 text-gray-800";
+        return "bg-[var(--color-muted)] text-[var(--color-foreground)]";
     }
   };
 
   const handlePayInvoice = async (invoiceId: string, amount: number) => {
     if (!token || processingPayment) return;
     setProcessingPayment(invoiceId);
+    setPaymentMsg(null);
     try {
       const response = await fetch(`/api/tenant-portal/${token}/pay`, {
         method: "POST",
@@ -291,11 +304,14 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
       });
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error || "Payment failed");
+        throw new Error(err.error || t("paymentFailed"));
       }
       const result = await response.json();
       if (result.data?.clientSecret) {
-        alert(`Payment initiated. Reference: ${result.data.paymentIntentId}`);
+        setPaymentMsg({
+          type: "success",
+          text: t("paymentInitiated", { ref: result.data.paymentIntentId }),
+        });
       }
       const dataResponse = await fetch(`/api/tenant-portal/${token}`);
       if (dataResponse.ok) {
@@ -303,7 +319,10 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
         setData(refreshed.data);
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Payment failed");
+      setPaymentMsg({
+        type: "error",
+        text: err instanceof Error ? err.message : t("paymentFailed"),
+      });
     } finally {
       setProcessingPayment(null);
     }
@@ -311,10 +330,10 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
-          <p className="mt-2 text-gray-600">{t("loading")}</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto text-[var(--color-info)]" />
+          <p className="mt-2 text-[var(--color-muted-foreground)]">{t("loading")}</p>
         </div>
       </div>
     );
@@ -322,16 +341,16 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
         <Card className="max-w-md">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-red-600">
+            <CardTitle className="flex items-center gap-2 text-[var(--color-destructive)]">
               <AlertCircle className="h-5 w-5" />
               {t("accessError")}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-gray-600">{error}</p>
+            <p className="text-[var(--color-muted-foreground)]">{error}</p>
           </CardContent>
           <CardFooter>
             <Button variant="outline" onClick={() => router.push("/")}>
@@ -353,18 +372,18 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
     : null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[var(--color-background)]">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-10">
+      <header className="bg-[var(--color-card-solid)] border-b border-[var(--color-border)] sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Building2 className="h-6 w-6 text-blue-600" />
+              <Building2 className="h-6 w-6 text-[var(--color-info)]" />
               <div>
                 <h1 className="text-lg font-semibold">
                   {tenant.property ? tenant.property.name : t("yourRentalHome")}
                 </h1>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-[var(--color-muted-foreground)]">
                   {t("tenantPortalFor", { name: tenant.name })}
                 </p>
               </div>
@@ -380,8 +399,8 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
 
       {/* Address banner */}
       {tenant.property?.address && (
-        <div className="bg-blue-50 border-b border-blue-100">
-          <div className="max-w-6xl mx-auto px-4 py-2 flex items-center gap-2 text-sm text-blue-700">
+        <div className="bg-[var(--color-info-muted)] border-b border-[var(--color-info)]/20">
+          <div className="max-w-6xl mx-auto px-4 py-2 flex items-center gap-2 text-sm text-[var(--color-info)]">
             <Building2 className="h-4 w-4 shrink-0" />
             <span>{tenant.property.address}</span>
           </div>
@@ -413,13 +432,13 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
           {/* ── Overview Tab ── */}
           <TabsContent value="overview" className="space-y-6">
             {!upcomingPayment && (
-              <Card className="border-green-200 bg-green-50">
+              <Card className="border-[var(--color-success)]/20 bg-[var(--color-success-muted)]">
                 <CardHeader className="pb-2">
-                  <CardTitle className="text-base flex items-center gap-2 text-green-800">
-                    <CheckCircle2 className="h-5 w-5 text-green-600" />
+                  <CardTitle className="text-base flex items-center gap-2 text-[var(--color-success)]">
+                    <CheckCircle2 className="h-5 w-5 text-[var(--color-success)]" />
                     {t("allCaughtUp")}
                   </CardTitle>
-                  <CardDescription className="text-green-700">{t("noDuePayments")}</CardDescription>
+                  <CardDescription className="text-[var(--color-success)]">{t("noDuePayments")}</CardDescription>
                 </CardHeader>
               </Card>
             )}
@@ -455,7 +474,7 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                 <CardHeader className="pb-2">
                   <CardDescription>{t("leaseEnds")}</CardDescription>
                   <CardTitle className="text-lg flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
+                    <Calendar className="h-4 w-4 text-[var(--color-muted-foreground)]" />
                     {formatDate(tenant.leaseEnd)}
                   </CardTitle>
                 </CardHeader>
@@ -466,18 +485,18 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
               <Card
                 className={
                   daysUntilDue && daysUntilDue < 0
-                    ? "border-red-200 bg-red-50"
+                    ? "border-[var(--color-destructive)]/20 bg-[var(--color-error-muted)]"
                     : daysUntilDue && daysUntilDue <= 5
-                      ? "border-yellow-200 bg-yellow-50"
+                      ? "border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)]"
                       : ""
                 }
               >
                 <CardHeader>
                   <CardTitle className="text-lg flex items-center gap-2">
                     {daysUntilDue && daysUntilDue < 0 ? (
-                      <AlertCircle className="h-5 w-5 text-red-600" />
+                      <AlertCircle className="h-5 w-5 text-[var(--color-destructive)]" />
                     ) : (
-                      <Clock className="h-5 w-5 text-yellow-600" />
+                      <Clock className="h-5 w-5 text-[var(--color-warning)]" />
                     )}
                     {daysUntilDue && daysUntilDue < 0
                       ? t("paymentOverdue", { days: Math.abs(daysUntilDue) })
@@ -486,7 +505,8 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                         : t("paymentDueInDays", { days: daysUntilDue ?? 0 })}
                   </CardTitle>
                   <CardDescription>
-                    Invoice {upcomingPayment.number} — {formatCurrency(upcomingPayment.amount)}
+                    {t("invoiceLabel")} {upcomingPayment.number} —{" "}
+                    {formatCurrency(upcomingPayment.amount)}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -506,6 +526,13 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                       </>
                     )}
                   </Button>
+                  {paymentMsg && (
+                    <p
+                      className={`mt-2 text-sm ${paymentMsg.type === "success" ? "text-[var(--color-success)]" : "text-[var(--color-destructive)]"}`}
+                    >
+                      {paymentMsg.text}
+                    </p>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -518,17 +545,17 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-gray-500">{t("property")}</span>
+                    <span className="text-[var(--color-muted-foreground)]">{t("property")}</span>
                     <span className="font-medium">{tenant.property.name}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between">
-                    <span className="text-gray-500">{t("address")}</span>
+                    <span className="text-[var(--color-muted-foreground)]">{t("address")}</span>
                     <span className="font-medium">{tenant.property.address}</span>
                   </div>
                   <Separator />
                   <div className="flex justify-between">
-                    <span className="text-gray-500">{t("leasePeriod")}</span>
+                    <span className="text-[var(--color-muted-foreground)]">{t("leasePeriod")}</span>
                     <span className="font-medium">
                       {formatDate(tenant.leaseStart)} – {formatDate(tenant.leaseEnd)}
                     </span>
@@ -557,12 +584,12 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
               </CardHeader>
               <CardContent className="space-y-3">
                 <div className="flex justify-between items-center">
-                  <span className="text-gray-500">Email</span>
+                  <span className="text-[var(--color-muted-foreground)]">Email</span>
                   <span className="font-medium">{tenant.email}</span>
                 </div>
                 <Separator />
                 <div className="flex justify-between items-center gap-4">
-                  <span className="text-gray-500 shrink-0">{t("editPhone")}</span>
+                  <span className="text-[var(--color-muted-foreground)] shrink-0">{t("editPhone")}</span>
                   {editingPhone ? (
                     <div className="flex items-center gap-2 flex-1 justify-end">
                       <Input
@@ -591,7 +618,7 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                 </div>
                 {phoneMsg && (
                   <p
-                    className={`text-sm ${phoneMsg.type === "success" ? "text-green-600" : "text-red-600"}`}
+                    className={`text-sm ${phoneMsg.type === "success" ? "text-[var(--color-success)]" : "text-[var(--color-destructive)]"}`}
                   >
                     {phoneMsg.text}
                   </p>
@@ -613,11 +640,11 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                     {maintenanceRequests.slice(0, 3).map((req) => (
                       <div
                         key={req.id}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-[var(--color-background)] rounded-lg"
                       >
                         <div>
                           <p className="font-medium">{req.title}</p>
-                          <p className="text-sm text-gray-500">{formatDate(req.createdAt)}</p>
+                          <p className="text-sm text-[var(--color-muted-foreground)]">{formatDate(req.createdAt)}</p>
                         </div>
                         <Badge className={getStatusColor(req.status)}>
                           {req.status.replace("_", " ")}
@@ -729,6 +756,13 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                     ))}
                   </div>
                 )}
+                {paymentMsg && (
+                  <p
+                    className={`mt-3 text-sm ${paymentMsg.type === "success" ? "text-[var(--color-success)]" : "text-[var(--color-destructive)]"}`}
+                  >
+                    {paymentMsg.text}
+                  </p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -799,7 +833,7 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                   </div>
                   {submitMsg && (
                     <p
-                      className={`text-sm ${submitMsg.type === "success" ? "text-green-600" : "text-red-600"}`}
+                      className={`text-sm ${submitMsg.type === "success" ? "text-[var(--color-success)]" : "text-[var(--color-destructive)]"}`}
                     >
                       {submitMsg.text}
                     </p>
@@ -831,12 +865,12 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
               <CardContent className="pt-6">
                 {ticketsLoading ? (
                   <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                    <Loader2 className="h-6 w-6 animate-spin text-[var(--color-muted-foreground)]" />
                   </div>
                 ) : tickets.length === 0 ? (
                   <div className="text-center py-12">
-                    <Wrench className="h-10 w-10 mx-auto text-gray-300 mb-3" />
-                    <p className="text-gray-500">{t("noMaintenanceRequests")}</p>
+                    <Wrench className="h-10 w-10 mx-auto text-[var(--color-muted-foreground)] mb-3" />
+                    <p className="text-[var(--color-muted-foreground)]">{t("noMaintenanceRequests")}</p>
                     <Button
                       variant="outline"
                       className="mt-4"
@@ -869,7 +903,7 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                         <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-2">
                           {ticket.description}
                         </p>
-                        <p className="text-xs text-gray-400">{formatDate(ticket.createdAt)}</p>
+                        <p className="text-xs text-[var(--color-muted-foreground)]">{formatDate(ticket.createdAt)}</p>
                       </div>
                     ))}
                   </div>
@@ -885,12 +919,12 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
               <CardContent className="pt-6">
                 {docsLoading ? (
                   <div className="flex justify-center py-8">
-                    <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
+                    <Loader2 className="h-6 w-6 animate-spin text-[var(--color-muted-foreground)]" />
                   </div>
                 ) : documents.length === 0 ? (
                   <div className="text-center py-12">
-                    <FileText className="h-10 w-10 mx-auto text-gray-300 mb-3" />
-                    <p className="text-gray-500">{t("noDocuments")}</p>
+                    <FileText className="h-10 w-10 mx-auto text-[var(--color-muted-foreground)] mb-3" />
+                    <p className="text-[var(--color-muted-foreground)]">{t("noDocuments")}</p>
                   </div>
                 ) : (
                   <div className="space-y-3">
@@ -900,7 +934,7 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                         className="flex items-center justify-between p-4 border border-[var(--color-border)] rounded-lg bg-[var(--color-card)]"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <FileText className="h-8 w-8 text-gray-400 shrink-0" />
+                          <FileText className="h-8 w-8 text-[var(--color-muted-foreground)] shrink-0" />
                           <div className="min-w-0">
                             <p className="font-medium text-[var(--color-foreground)] truncate">
                               {doc.name}
@@ -910,7 +944,7 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                               {formatDate(doc.createdAt)}
                             </p>
                             {doc.expiresAt && (
-                              <p className="text-xs text-amber-600">
+                              <p className="text-xs text-[var(--color-warning)]">
                                 Expires {formatDate(doc.expiresAt)}
                               </p>
                             )}
@@ -936,8 +970,8 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
         </Tabs>
       </main>
 
-      <footer className="border-t bg-white mt-auto">
-        <div className="max-w-6xl mx-auto px-4 py-4 text-center text-sm text-gray-500">
+      <footer className="border-t border-[var(--color-border)] bg-[var(--color-card-solid)] mt-auto">
+        <div className="max-w-6xl mx-auto px-4 py-4 text-center text-sm text-[var(--color-muted-foreground)]">
           {t("needHelp")}
         </div>
       </footer>

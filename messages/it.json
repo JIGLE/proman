@@ -764,7 +764,14 @@
       "step1": "Controlla la tua casella di posta per un messaggio dal tuo proprietario o gestore.",
       "step2": "Apri l'email e clicca sul pulsante o link \"Accedi al tuo portale\".",
       "step3": "Se non riesci a trovare l'email, controlla la cartella spam o posta indesiderata.",
-      "contactManager": "Contatta il tuo gestore se hai bisogno di un nuovo link."
+      "contactManager": "Contatta il tuo gestore se hai bisogno di un nuovo link.",
+      "orRequestNew": "Oppure richiedi un nuovo link",
+      "emailLabel": "Il tuo indirizzo email",
+      "emailPlaceholder": "tu@esempio.com",
+      "sendLink": "Inviami un nuovo link",
+      "sending": "Invio in corso...",
+      "resendSuccess": "Se questa email corrisponde a un account inquilino attivo, un nuovo link del portale è in arrivo.",
+      "resendError": "Qualcosa è andato storto. Riprova più tardi."
     },
     "errors": {
       "invalidLink": "Link non valido o scaduto. Contatta il tuo gestore.",
@@ -782,6 +789,9 @@
       "payments": "Pagamenti",
       "receipts": "Ricevute",
       "invoices": "Fatture",
+      "invoiceLabel": "Fattura",
+      "paymentInitiated": "Pagamento avviato. Riferimento: {ref}",
+      "paymentFailed": "Pagamento fallito. Riprova.",
       "allCaughtUp": "Sei in regola",
       "noDuePayments": "Nessun pagamento dovuto al momento. Il tuo prossimo affitto è pianificato come di consueto.",
       "monthlyRent": "Canone mensile",

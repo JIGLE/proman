@@ -120,7 +120,7 @@ three of Milestone 1's items are now done.
 **Goal:** turn the reward loop into something worth protecting and bring the viral surface
 up to the brand.
 
-### 2.1 Tenant-portal parity
+### 2.1 Tenant-portal parity — **Done**
 
 - **Why:** the most viral surface is the least polished (audit §5 "growth & virality").
 - **Acceptance:** migrate `app/tenant-portal/[token]/page.tsx` off hardcoded gray/blue
@@ -129,6 +129,36 @@ up to the brand.
   `alert()` (298, 306) with real in-app UI feedback; add a durable/recoverable access path
   (not email-token-only). Note: copy is already i18n'd — do **not** redo that.
 - **Files:** `app/tenant-portal/[token]/page.tsx`, `app/tenant-portal/layout.tsx`.
+- **Shipped as:**
+  - Design tokens: replaced all 55 hardcoded gray/blue/green/red/yellow/amber Tailwind
+    literals in `app/tenant-portal/[token]/page.tsx` (plus two `bg-white` header/footer
+    literals) with the existing `var(--color-*)` semantic tokens, matching the convention
+    from the earlier design-polish pass. Zero raw color literals remain (verified by grep).
+  - Locale-aware formatting: `app/api/tenant-portal/[token]/route.ts` now selects
+    `property.currency`; the client's `TenantPortalData` interface carries it through;
+    `formatCurrency`/`formatDate` use `useLocale()` (next-intl) plus
+    `getCurrencyLocale()` from `lib/utils/currency.ts` instead of the hardcoded
+    `pt-PT`/`EUR` literals (added an `it` entry to that helper's locale map, since it was
+    missing but "it" is a supported catalog). Currency falls back to `EUR` when a tenant
+    has no linked property.
+  - Real UI feedback: added a `paymentMsg` state (mirrors the existing `submitMsg`/
+    `phoneMsg` pattern already in this file) and render it inline next to both "Pay Now"
+    entry points (dashboard card and the invoices list); the two `alert()` calls in
+    `handlePayInvoice` are gone.
+  - Durable/recoverable access: new unauthenticated `POST /api/tenant-portal/resend`
+    (`app/api/tenant-portal/resend/route.ts`, rate-limited, always returns a generic
+    `{ sent: true }` regardless of match so it can't be used to enumerate tenant emails)
+    calls the existing `tenantPortalService.sendInvitation`; the landing page
+    (`app/tenant-portal/page.tsx`) gained a small client form (`resend-link-form.tsx`)
+    so a tenant who lost their link can self-serve a new one by email instead of only
+    being told to "ask your manager."
+  - New finding (out of scope to fix here): `handlePayInvoice`'s "Invoice {number}"
+    label was fixed to go through `t("invoiceLabel")`, but the Documents tab's
+    `Expires {formatDate(...)}` string (line ~948) is still raw English — left for 2.3,
+    which already owns the i18n-the-behavioral-surfaces sweep. Also noted:
+    `tenantPortalService.sendInvitation`'s emailed HTML is hardcoded English and its
+    "This link will expire in 30 days" copy doesn't match the actual 7-day
+    `TOKEN_EXPIRATION` — pre-existing, not touched.
 
 ### 2.2 Activate-or-delete engagement code; convert rewards to streaks
 

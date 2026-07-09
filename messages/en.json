@@ -764,7 +764,14 @@
       "step1": "Check your email inbox for a message from your landlord or property manager.",
       "step2": "Open the email and click the \"Access your portal\" button or link.",
       "step3": "If you can't find the email, check your spam or junk folder.",
-      "contactManager": "Contact your property manager if you need a new link."
+      "contactManager": "Contact your property manager if you need a new link.",
+      "orRequestNew": "Or request a new link",
+      "emailLabel": "Your email address",
+      "emailPlaceholder": "you@example.com",
+      "sendLink": "Send me a new link",
+      "sending": "Sending...",
+      "resendSuccess": "If that email matches an active tenant account, a new portal link is on its way.",
+      "resendError": "Something went wrong. Please try again later."
     },
     "errors": {
       "invalidLink": "Invalid or expired portal link. Please contact your property manager.",
@@ -782,6 +789,9 @@
       "payments": "Payments",
       "receipts": "Receipts",
       "invoices": "Invoices",
+      "invoiceLabel": "Invoice",
+      "paymentInitiated": "Payment initiated. Reference: {ref}",
+      "paymentFailed": "Payment failed. Please try again.",
       "allCaughtUp": "You're all caught up",
       "noDuePayments": "No payments due right now. Your next rent is scheduled as usual.",
       "monthlyRent": "Monthly Rent",
