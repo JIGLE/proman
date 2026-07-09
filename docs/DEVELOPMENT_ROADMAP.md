@@ -160,7 +160,7 @@ up to the brand.
     "This link will expire in 30 days" copy doesn't match the actual 7-day
     `TOKEN_EXPIRATION` — pre-existing, not touched.
 
-### 2.2 Activate-or-delete engagement code; convert rewards to streaks
+### 2.2 Activate-or-delete engagement code; convert rewards to streaks — **Done**
 
 - **Why:** achievements are dead code; one-time badges don't build habit (audit §3).
 - **Acceptance:** either render `AchievementGrid` in a real surface **and** reframe the
@@ -169,6 +169,27 @@ up to the brand.
   duplication (keep one); decide whether demo auto-play scenarios are surfaced or removed.
 - **Files:** `components/ui/achievements.tsx`, `components/ui/quick-actions.tsx`,
   `lib/demo/demo-scenarios.ts`, dashboard surface.
+- **Shipped as:**
+  - Deleted `components/ui/achievements.tsx` (`AchievementGrid`/`AchievementBadge`) and
+    `components/ui/quick-actions.tsx` (`QuickActions` *and* `AttentionNeeded`) — verified
+    zero imports of any of the four exports anywhere outside their own files before
+    removing them, plus their now-orphaned `achievements`/`achievementsDescription`
+    message keys in all four locale catalogs. `AttentionNeeded` was the dead duplicate
+    of `ActionPanel` (already live, tokenized, i18n'd, tested); `ActionPanel` is the one
+    kept.
+  - Rather than resurrect the deleted badge grid, built the real streak mechanic the
+    audit recommended in its place: `getComplianceStreak()`
+    (`lib/services/analytics/activation-summary.ts`) derives "N consecutive months with
+    every active lease's rent collected on time" from existing `Lease`/`Receipt` rows
+    (same retroactive-by-construction approach as M1.3's activation summary — no new
+    event needed). Exposed via the existing `GET /api/activation` (now also returns
+    `complianceStreak`). `ActionPanel` (`components/features/dashboard/action-panel.tsx`)
+    fetches it and shows a streak pill next to the "all clear" state — the reward now
+    appears at the exact moment the Hook-loop reward should land, instead of a
+    disconnected badge shelf nobody saw.
+  - Demo auto-play scenarios: already surfaced (`components/shared/scenario-runner.tsx`
+    is mounted in `app/[locale]/(main)/layout.tsx`) — no action needed, acceptance
+    criterion already met.
 
 ### 2.3 i18n the behavioral surfaces
 

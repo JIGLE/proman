@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { getActivationSummary, getCoreLoopMetrics } from "./activation-summary";
+import { getActivationSummary, getCoreLoopMetrics, getComplianceStreak } from "./activation-summary";
 
 type Prisma = Parameters<typeof getActivationSummary>[0];
 
@@ -96,5 +96,71 @@ describe("getCoreLoopMetrics", () => {
 
     expect(metrics.activeLandlords).toBe(1);
     expect(metrics.activatedLandlords).toBe(0);
+  });
+});
+
+describe("getComplianceStreak", () => {
+  const referenceDate = new Date("2026-04-15T00:00:00.000Z");
+
+  it("reports no history when the user has no leases", async () => {
+    const receiptFindMany = vi.fn();
+    const prisma = makePrisma({
+      lease: { findMany: vi.fn().mockResolvedValue([]) },
+      receipt: { findMany: receiptFindMany },
+    });
+
+    const streak = await getComplianceStreak(prisma, "user-1", referenceDate);
+
+    expect(streak).toEqual({ streakMonths: 0, hasHistory: false });
+    expect(receiptFindMany).not.toHaveBeenCalled();
+  });
+
+  it("counts consecutive clean months back to the start of the lease", async () => {
+    const prisma = makePrisma({
+      lease: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: "lease-1",
+            startDate: new Date("2026-01-01"),
+            endDate: new Date("2026-12-31"),
+          },
+        ]),
+      },
+      receipt: {
+        findMany: vi.fn().mockResolvedValue([
+          { leaseId: "lease-1", date: new Date("2026-01-10") },
+          { leaseId: "lease-1", date: new Date("2026-02-10") },
+          { leaseId: "lease-1", date: new Date("2026-03-10") },
+        ]),
+      },
+    });
+
+    const streak = await getComplianceStreak(prisma, "user-1", referenceDate);
+
+    expect(streak).toEqual({ streakMonths: 3, hasHistory: true });
+  });
+
+  it("stops the streak at the most recent month missing a paid rent receipt", async () => {
+    const prisma = makePrisma({
+      lease: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: "lease-1",
+            startDate: new Date("2026-01-01"),
+            endDate: new Date("2026-12-31"),
+          },
+        ]),
+      },
+      receipt: {
+        findMany: vi.fn().mockResolvedValue([
+          // February is missing — only March is paid.
+          { leaseId: "lease-1", date: new Date("2026-03-05") },
+        ]),
+      },
+    });
+
+    const streak = await getComplianceStreak(prisma, "user-1", referenceDate);
+
+    expect(streak).toEqual({ streakMonths: 1, hasHistory: true });
   });
 });

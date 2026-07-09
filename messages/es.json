@@ -111,8 +111,6 @@
     "portfolioOverview": "Resumen de Propiedades",
     "recentProperties": "Propiedades Recientes",
     "viewAll": "Ver todo",
-    "achievements": "Logros",
-    "achievementsDescription": "Hitos y reconocimientos por tu éxito en gestión de propiedades",
     "latestTenantPayments": "Últimos pagos de inquilinos",
     "currentPropertyConditions": "Estado actual de las propiedades",
     "paid": "Pagado",
@@ -216,6 +214,7 @@
     "docExpiryWarning": "{count} documento(s) que vencen en 60 días",
     "allClear": "Todo en orden",
     "allClearDesc": "Sin rentas pendientes, pagos vencidos ni mantenimiento urgente.",
+    "streakMonths": "{count} meses seguidos con el alquiler totalmente cobrado",
     "oneItemNeedsAttention": "1 elemento necesita tu atención",
     "itemsNeedAttention": "{count} elementos necesitan tu atención",
     "setupComplete": "Configuración completa"

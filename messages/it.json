@@ -111,8 +111,6 @@
     "portfolioOverview": "Panoramica immobili",
     "recentProperties": "Immobili recenti",
     "viewAll": "Vedi tutti",
-    "achievements": "Traguardi",
-    "achievementsDescription": "Risultati raggiunti nella gestione del tuo portafoglio immobiliare",
     "latestTenantPayments": "Ultimi pagamenti degli inquilini",
     "currentPropertyConditions": "Condizioni attuali degli immobili",
     "paid": "Pagato",
@@ -216,6 +214,7 @@
     "docExpiryWarning": "{count} documento/i in scadenza entro 60 giorni",
     "allClear": "Tutto in regola",
     "allClearDesc": "Nessun affitto in sospeso, pagamenti scaduti o manutenzione urgente.",
+    "streakMonths": "{count} mesi consecutivi con il canone interamente riscosso",
     "oneItemNeedsAttention": "1 elemento richiede la tua attenzione",
     "itemsNeedAttention": "{count} elementi richiedono la tua attenzione",
     "setupComplete": "Configurazione completata"

@@ -1,7 +1,10 @@
 import { NextRequest } from "next/server";
 import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
-import { getActivationSummary } from "@/lib/services/analytics/activation-summary";
+import {
+  getActivationSummary,
+  getComplianceStreak,
+} from "@/lib/services/analytics/activation-summary";
 import { createSuccessResponse, withErrorHandler } from "@/lib/utils/error-handling";
 import { withRateLimit } from "@/lib/utils/rate-limit";
 
@@ -14,9 +17,12 @@ async function handleGet(request: NextRequest): Promise<Response> {
   const { userId } = authResult;
 
   const prisma = getPrismaClient();
-  const summary = await getActivationSummary(prisma, userId);
+  const [summary, complianceStreak] = await Promise.all([
+    getActivationSummary(prisma, userId),
+    getComplianceStreak(prisma, userId),
+  ]);
 
-  return createSuccessResponse(summary);
+  return createSuccessResponse({ ...summary, complianceStreak });
 }
 
 export const GET = withErrorHandler(withRateLimit(handleGet));

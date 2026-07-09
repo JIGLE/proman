@@ -11,6 +11,7 @@ import {
   ChevronRight,
   Clock,
   FileWarning,
+  Flame,
   Wrench,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -80,6 +81,14 @@ export function ActionPanel(): ReactElement {
     fetch("/api/documents/expiring")
       .then((r) => r.json())
       .then((d) => setDocExpiry(d.data ?? d))
+      .catch(() => null);
+  }, []);
+
+  const [streakMonths, setStreakMonths] = useState(0);
+  useEffect(() => {
+    fetch("/api/activation")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setStreakMonths(d?.data?.complianceStreak?.streakMonths ?? 0))
       .catch(() => null);
   }, []);
 
@@ -281,6 +290,12 @@ export function ActionPanel(): ReactElement {
               <p className="text-sm font-medium text-[var(--color-success)]">{t("allClear")}</p>
               <p className="text-xs text-[var(--color-muted-foreground)]">{t("allClearDesc")}</p>
             </div>
+            {streakMonths > 0 && (
+              <div className="ml-auto flex items-center gap-1.5 rounded-full border border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)] px-3 py-1 text-xs font-medium text-[var(--color-warning)]">
+                <Flame className="h-3.5 w-3.5" />
+                {t("streakMonths", { count: streakMonths })}
+              </div>
+            )}
           </div>
         ) : (
           alerts.map((alert) => <AlertRow key={alert.id} alert={alert} locale={locale} />)
