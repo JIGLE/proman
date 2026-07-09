@@ -235,80 +235,96 @@
     "addTenant": "Aggiungi un inquilino",
     "addTenantDesc": "Inserisci i dati dell'inquilino e assegnalo a un immobile.",
     "recordPayment": "Registra un pagamento",
-    "recordPaymentDesc": "Registra il tuo primo pagamento del canone per sbloccare le analisi sui ricavi."
+    "recordPaymentDesc": "Registra il tuo primo pagamento del canone per sbloccare le analisi sui ricavi.",
+    "dismissTooltip": "Ignora",
+    "dismissAriaLabel": "Ignora la lista di configurazione",
+    "allSetHeadline": "Tutto pronto!",
+    "whatsNext": "Cosa fare adesso?",
+    "nextStepLease": "Configura un contratto di locazione per il tuo inquilino",
+    "nextStepCorrespondence": "Crea modelli di corrispondenza per le email comuni",
+    "nextStepInsights": "Esplora il pannello per ricavi e occupazione",
+    "startAction": "Inizia"
   },
   "emptyState": {
     "properties": {
       "title": "Nessun immobile ancora",
-      "description": "Aggiungi il tuo primo immobile per iniziare a gestire il portafoglio."
+      "description": "Aggiungi il tuo primo immobile per iniziare a gestire il tuo portafoglio. Monitora occupazione, ricavi e manutenzione in un unico posto.",
+      "action": "Aggiungi Immobile"
     },
     "tenants": {
       "title": "Nessun inquilino ancora",
-      "description": "Una volta aggiunti gli immobili, inserisci gli inquilini per monitorare contratti e pagamenti."
+      "description": "Dopo aver configurato gli immobili, aggiungi inquilini per monitorare contratti, pagamenti e comunicazioni.",
+      "action": "Aggiungi Inquilino"
     },
     "payments": {
       "title": "Nessun pagamento registrato",
-      "description": "Inizia a registrare i pagamenti del canone per monitorare i ricavi."
+      "description": "Inizia a registrare i pagamenti dell'affitto per monitorare i tuoi ricavi e generare report finanziari automaticamente. Vai a un contratto per registrare il primo pagamento.",
+      "action": "Registra Pagamento"
     },
     "generic": {
-      "title": "Niente qui ancora",
-      "description": "Inizia aggiungendo il tuo primo elemento."
+      "title": "Ancora niente qui",
+      "description": "Inizia aggiungendo il tuo primo elemento.",
+      "action": "Aggiungi Nuovo"
     },
     "leases": {
-      "title": "Nessun contratto ancora",
-      "description": "Crea contratti di locazione per formalizzare i rapporti con gli inquilini.",
-      "action": "Aggiungi primo contratto"
+      "title": "Nessun contratto creato",
+      "description": "Crea contratti di locazione per formalizzare i rapporti con gli inquilini e automatizzare i promemoria di rinnovo. Inizia aggiungendo un immobile e un inquilino.",
+      "action": "Crea Contratto"
     },
     "maintenance": {
-      "title": "Nessun ticket di manutenzione",
-      "description": "Crea un nuovo ticket per monitorare le richieste di manutenzione.",
-      "action": "Crea ticket"
+      "title": "Nessuna richiesta di manutenzione",
+      "description": "Quando gli inquilini segnalano problemi, appariranno qui. Puoi anche creare richieste in modo proattivo.",
+      "action": "Crea Richiesta"
     },
     "correspondence": {
-      "title": "Nessun modello ancora",
-      "description": "Crea modelli di corrispondenza per semplificare le comunicazioni.",
-      "action": "Crea modello"
+      "title": "Nessuna corrispondenza ancora",
+      "description": "Invia avvisi, promemoria e aggiornamenti ai tuoi inquilini. Tutta la cronologia delle comunicazioni viene registrata qui.",
+      "action": "Invia Messaggio"
     },
     "reports": {
       "title": "Nessun report disponibile",
-      "description": "I report vengono generati dai dati sugli immobili e finanziari."
+      "description": "I report vengono generati dai tuoi dati su immobili e finanze. Aggiungi immobili e registra pagamenti per sbloccare informazioni utili.",
+      "action": "Inizia"
     },
     "owners": {
       "title": "Nessun proprietario ancora",
-      "description": "Aggiungi proprietari per monitorare la comproprietà degli immobili.",
-      "action": "Aggiungi primo proprietario"
+      "description": "Aggiungi proprietari per iniziare a monitorare la proprietà condivisa e la ripartizione dei ricavi.",
+      "action": "Aggiungi Proprietario"
     },
     "receipts": {
       "title": "Nessuna ricevuta ancora",
-      "description": "Crea ricevute di pagamento per tenere traccia dei pagamenti ricevuti.",
-      "action": "Crea prima ricevuta"
+      "description": "Crea ricevute di pagamento per tenere traccia degli affitti e degli altri pagamenti ricevuti. Registra un pagamento per generare ricevute automaticamente.",
+      "action": "Crea Ricevuta"
     },
     "expenses": {
       "title": "Nessuna spesa registrata",
-      "description": "Registra le spese degli immobili per monitorare i costi."
+      "description": "Monitora le spese degli immobili per tenere sotto controllo i costi e generare report finanziari accurati.",
+      "action": "Aggiungi Spesa"
     },
     "invoices": {
       "title": "Nessuna fattura ancora",
-      "description": "Crea fatture per gli inquilini per formalizzare gli obblighi di pagamento.",
-      "action": "Crea fattura"
+      "description": "Crea fatture per gli inquilini per formalizzare gli obblighi di pagamento e monitorare la fatturazione.",
+      "action": "Crea Fattura"
     },
     "contracts": {
       "title": "Nessun contratto trovato",
-      "description": "I contratti vengono creati dai contratti di locazione."
+      "description": "I contratti rappresentano accordi formali. Crea contratti di locazione per vedere qui i contratti associati.",
+      "action": "Vedi Contratti"
     },
     "documents": {
       "title": "Nessun documento ancora",
-      "description": "Carica documenti per tenere in ordine i tuoi archivi.",
-      "action": "Carica documento"
+      "description": "Carica documenti per tenere organizzati i registri di immobili, contratti e corrispondenza.",
+      "action": "Carica Documento"
     },
     "contacts": {
       "title": "Nessun contatto trovato",
-      "description": "I contatti vengono popolati dai tuoi inquilini e proprietari."
+      "description": "I contatti vengono popolati a partire dai tuoi inquilini, proprietari e fornitori di servizi.",
+      "action": "Aggiungi Contatto"
     },
     "units": {
       "title": "Nessuna unità ancora",
-      "description": "Aggiungi unità a questo immobile per monitorare i singoli spazi.",
-      "action": "Aggiungi prima unità"
+      "description": "Aggiungi unità a questo immobile per monitorare spazi singoli, inquilini e contratti.",
+      "action": "Aggiungi Unità"
     },
     "noResults": {
       "title": "Nessun risultato trovato",
@@ -1134,7 +1150,38 @@
       "danger": "Critico",
       "warning": "Attenzione",
       "info": "Informazione"
-    }
+    },
+    "subtitle": "Riepilogo esecutivo delle prestazioni del tuo portafoglio",
+    "refresh": "Aggiorna",
+    "kpiMonthlyRevenue": "Ricavi Mensili",
+    "kpiOccupancy": "Occupazione",
+    "kpiActiveTenants": "Inquilini Attivi",
+    "kpiAvgRent": "Canone Medio",
+    "ofTotal": "su {total} totali",
+    "vsLastMonth": "{value}% rispetto al mese scorso",
+    "actionItems": "Attività",
+    "allClear": "Tutto in regola",
+    "noActionItems": "Nessuna attività in sospeso al momento",
+    "overduePayments": "{count, plural, one {# pagamento scaduto} other {# pagamenti scaduti}}",
+    "leasesExpiringSoon": "{count, plural, one {# contratto in scadenza} other {# contratti in scadenza}}",
+    "within60Days": "Entro 60 giorni",
+    "vacantProperties": "{count, plural, one {# immobile sfitto} other {# immobili sfitti}}",
+    "occupiedPercent": "{percent}% occupato",
+    "revenueTrend": "Andamento Ricavi",
+    "last6Months": "Ultimi 6 mesi",
+    "noRevenueData": "Ancora nessun dato sui ricavi — registra pagamenti per vedere le tendenze",
+    "portfolioMix": "Composizione del Portafoglio",
+    "addPropertiesToSeeBreakdown": "Aggiungi immobili per vedere la ripartizione",
+    "upcomingLeaseExpirations": "Contratti in Scadenza",
+    "viewAll": "Vedi tutti",
+    "unknownTenant": "Inquilino sconosciuto",
+    "unknownProperty": "Immobile sconosciuto",
+    "expired": "Scaduto",
+    "daysLeft": "mancano {count}g",
+    "analyticsDashboard": "Pannello di Analisi",
+    "analyticsDashboardDesc": "Grafici interattivi, KPI, indicatori di occupazione e tabelle sulle prestazioni degli immobili",
+    "financialReports": "Report Finanziari",
+    "financialReportsDesc": "Genera ed esporta riepiloghi finanziari, report fiscali ed elenchi canoni"
   },
   "reports": {
     "title": "Report",
@@ -1273,5 +1320,67 @@
     "loadingIncome": "Caricamento dati reddito...",
     "portugal": "Portogallo",
     "spain": "Spagna"
+  },
+  "paymentMatrix": {
+    "title": "Matrice di Monitoraggio Pagamenti",
+    "subtitle": "Panoramica mensile dello stato dei pagamenti di tutti gli inquilini",
+    "detailed": "Dettagliato",
+    "heatmap": "Mappa di Calore",
+    "allStatus": "Tutti gli Stati",
+    "paid": "Pagato",
+    "pending": "In Attesa",
+    "overdue": "Scaduto",
+    "export": "Esporta",
+    "totalExpected": "Totale Previsto",
+    "forYear": "Per il {year}",
+    "totalReceived": "Totale Ricevuto",
+    "paidAmounts": "Importi pagati",
+    "outstanding": "Da Incassare",
+    "pendingPayments": "Pagamenti in sospeso",
+    "collectionRate": "Tasso di Riscossione",
+    "paymentSuccessRate": "Tasso di successo pagamenti",
+    "matrixTitle": "Matrice Pagamenti - {year}",
+    "legend": "Verde: Pagato • Giallo: In attesa • Rosso: Scaduto • Grigio: Nessun pagamento dovuto",
+    "tenant": "Inquilino",
+    "total": "Totale",
+    "perMonth": "/mese",
+    "ofExpected": "su {amount}",
+    "cellTooltip": "{status} il {date} — {amount}",
+    "overdueTooltip": "Pagamento scaduto",
+    "noPaymentTooltip": "Nessun pagamento",
+    "noPaymentDue": "Nessun pagamento dovuto",
+    "noTenantsYet": "Ancora Nessun Inquilino",
+    "addTenantsToTrack": "Aggiungi inquilini per iniziare a monitorare i pagamenti"
+  },
+  "notificationCenter": {
+    "title": "Notifiche",
+    "bellAriaLabel": "Notifiche",
+    "bellAriaLabelUnread": "Notifiche ({count} non lette)",
+    "newBadge": "{count} nuove",
+    "markAllRead": "Segna tutte come lette",
+    "markAllAsReadLabel": "Segna tutte come lette",
+    "closeLabel": "Chiudi notifiche",
+    "all": "Tutte ({count})",
+    "unread": "Non lette ({count})",
+    "noUnreadNotifications": "Nessuna notifica non letta",
+    "noNotifications": "Nessuna notifica",
+    "allCaughtUp": "Sei in regola!",
+    "notificationsWillAppear": "Le notifiche appariranno qui",
+    "clearAll": "Cancella tutto",
+    "clearAllLabel": "Cancella tutte le notifiche",
+    "settings": "Impostazioni",
+    "settingsLabel": "Impostazioni notifiche",
+    "markAsReadLabel": "Segna come letta",
+    "deleteLabel": "Elimina",
+    "justNow": "Proprio ora",
+    "minutesAgo": "{count}m fa",
+    "hoursAgo": "{count}h fa",
+    "daysAgo": "{count}g fa",
+    "priority": {
+      "low": "Bassa",
+      "medium": "Media",
+      "high": "Alta",
+      "urgent": "Urgente"
+    }
   }
 }

@@ -26,7 +26,7 @@ import { LineChart, DonutChart } from "@/components/ui/charts";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { useRouter } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/utils";
 import { getPropertyTypeColor } from "@/lib/design-tokens";
 
@@ -42,6 +42,8 @@ export function InsightsView(): React.ReactElement {
   const { formatCurrency } = useCurrency();
   const router = useRouter();
   const locale = useLocale();
+  const t = useTranslations("insights");
+  const tMonths = useTranslations("calendar.months");
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleRefresh = useCallback(() => setRefreshKey((k) => k + 1), []);
@@ -93,19 +95,19 @@ export function InsightsView(): React.ReactElement {
 
     // Revenue last 6 months for sparkline
     const revenueTrend: { label: string; value: number }[] = [];
-    const MONTHS = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+    const MONTH_KEYS = [
+      "jan",
+      "feb",
+      "mar",
+      "apr",
+      "may",
+      "jun",
+      "jul",
+      "aug",
+      "sep",
+      "oct",
+      "nov",
+      "dec",
     ];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -113,7 +115,7 @@ export function InsightsView(): React.ReactElement {
       const rev = receipts
         .filter((r) => r.status === "paid" && new Date(r.date) >= d && new Date(r.date) <= end)
         .reduce((s, r) => s + r.amount, 0);
-      revenueTrend.push({ label: MONTHS[d.getMonth()], value: rev });
+      revenueTrend.push({ label: tMonths(MONTH_KEYS[d.getMonth()]), value: rev });
     }
 
     // Month-over-month change
@@ -151,7 +153,7 @@ export function InsightsView(): React.ReactElement {
       typeChart,
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [properties, tenants, receipts, leases, refreshKey]);
+  }, [properties, tenants, receipts, leases, refreshKey, tMonths]);
 
   // ── Alerts ───────────────────────────────────────────────────────
   const alerts = useMemo(() => {
@@ -166,7 +168,7 @@ export function InsightsView(): React.ReactElement {
     if (metrics.overdueReceipts.length > 0) {
       items.push({
         icon: <AlertTriangle className="h-4 w-4" />,
-        label: `${metrics.overdueReceipts.length} overdue payment${metrics.overdueReceipts.length > 1 ? "s" : ""}`,
+        label: t("overduePayments", { count: metrics.overdueReceipts.length }),
         detail: formatCurrency(metrics.overdueAmount),
         severity: "danger",
         href: `/${locale}/financials`,
@@ -176,8 +178,8 @@ export function InsightsView(): React.ReactElement {
     if (metrics.expiringLeases.length > 0) {
       items.push({
         icon: <CalendarClock className="h-4 w-4" />,
-        label: `${metrics.expiringLeases.length} lease${metrics.expiringLeases.length > 1 ? "s" : ""} expiring soon`,
-        detail: "Within 60 days",
+        label: t("leasesExpiringSoon", { count: metrics.expiringLeases.length }),
+        detail: t("within60Days"),
         severity: "warning",
         href: `/${locale}/leases`,
       });
@@ -186,8 +188,8 @@ export function InsightsView(): React.ReactElement {
     if (metrics.vacantCount > 0) {
       items.push({
         icon: <Building2 className="h-4 w-4" />,
-        label: `${metrics.vacantCount} vacant propert${metrics.vacantCount > 1 ? "ies" : "y"}`,
-        detail: `${metrics.occupancyRate.toFixed(0)}% occupied`,
+        label: t("vacantProperties", { count: metrics.vacantCount }),
+        detail: t("occupiedPercent", { percent: metrics.occupancyRate.toFixed(0) }),
         severity: metrics.vacantCount > 2 ? "warning" : "info",
         href: `/${locale}/portfolio`,
       });
@@ -196,15 +198,15 @@ export function InsightsView(): React.ReactElement {
     if (items.length === 0) {
       items.push({
         icon: <CheckCircle2 className="h-4 w-4" />,
-        label: "All clear",
-        detail: "No action items right now",
+        label: t("allClear"),
+        detail: t("noActionItems"),
         severity: "info",
         href: "#",
       });
     }
 
     return items;
-  }, [metrics, formatCurrency, locale]);
+  }, [metrics, formatCurrency, locale, t]);
 
   const severityColors: Record<string, string> = {
     danger:
@@ -222,40 +224,38 @@ export function InsightsView(): React.ReactElement {
         <div>
           <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
             <Lightbulb className="h-7 w-7 text-amber-400" />
-            Insights
+            {t("title")}
           </h1>
-          <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-            Executive summary of your portfolio performance
-          </p>
+          <p className="text-sm text-[var(--color-muted-foreground)] mt-1">{t("subtitle")}</p>
         </div>
         <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2 self-start">
           <RefreshCw className="h-4 w-4" />
-          Refresh
+          {t("refresh")}
         </Button>
       </div>
 
       {/* ── KPI Row ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <KPITile
-          label="Monthly Revenue"
+          label={t("kpiMonthlyRevenue")}
           value={formatCurrency(metrics.monthlyRevenue)}
           change={metrics.momChange}
           icon={<DollarSign className="h-5 w-5 text-emerald-400" />}
         />
         <KPITile
-          label="Occupancy"
+          label={t("kpiOccupancy")}
           value={`${metrics.occupancyRate.toFixed(0)}%`}
           sub={`${metrics.occupiedCount} / ${metrics.totalProperties}`}
           icon={<Percent className="h-5 w-5 text-blue-400" />}
         />
         <KPITile
-          label="Active Tenants"
+          label={t("kpiActiveTenants")}
           value={metrics.activeTenants}
-          sub={`of ${metrics.totalTenants} total`}
+          sub={t("ofTotal", { total: metrics.totalTenants })}
           icon={<Users className="h-5 w-5 text-violet-400" />}
         />
         <KPITile
-          label="Avg. Rent"
+          label={t("kpiAvgRent")}
           value={formatCurrency(metrics.avgRent)}
           icon={<TrendingUp className="h-5 w-5 text-cyan-400" />}
         />
@@ -266,7 +266,7 @@ export function InsightsView(): React.ReactElement {
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold flex items-center gap-2">
             <AlertTriangle className="h-4 w-4 text-amber-400" />
-            Action Items
+            {t("actionItems")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
@@ -295,9 +295,9 @@ export function InsightsView(): React.ReactElement {
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <BarChart3 className="h-4 w-4 text-emerald-400" />
-              Revenue Trend
+              {t("revenueTrend")}
               <span className="text-xs font-normal text-[var(--color-muted-foreground)] ml-auto">
-                Last 6 months
+                {t("last6Months")}
               </span>
             </CardTitle>
           </CardHeader>
@@ -306,7 +306,7 @@ export function InsightsView(): React.ReactElement {
               <LineChart data={metrics.revenueTrend} height={220} showValues={false} />
             ) : (
               <div className="flex items-center justify-center h-[220px] text-[var(--color-muted-foreground)] text-sm">
-                No revenue data yet — record payments to see trends
+                {t("noRevenueData")}
               </div>
             )}
           </CardContent>
@@ -317,7 +317,7 @@ export function InsightsView(): React.ReactElement {
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
               <Building2 className="h-4 w-4 text-blue-400" />
-              Portfolio Mix
+              {t("portfolioMix")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -325,7 +325,7 @@ export function InsightsView(): React.ReactElement {
               <DonutChart data={metrics.typeChart} height={220} />
             ) : (
               <div className="flex items-center justify-center h-[220px] text-[var(--color-muted-foreground)] text-sm">
-                Add properties to see breakdown
+                {t("addPropertiesToSeeBreakdown")}
               </div>
             )}
           </CardContent>
@@ -339,7 +339,7 @@ export function InsightsView(): React.ReactElement {
             <div className="flex items-center justify-between">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <Clock className="h-4 w-4 text-amber-400" />
-                Upcoming Lease Expirations
+                {t("upcomingLeaseExpirations")}
               </CardTitle>
               <Button
                 variant="ghost"
@@ -347,7 +347,7 @@ export function InsightsView(): React.ReactElement {
                 className="gap-1 text-xs"
                 onClick={() => router.push(`/${locale}/leases`)}
               >
-                View all <ArrowRight className="h-3 w-3" />
+                {t("viewAll")} <ArrowRight className="h-3 w-3" />
               </Button>
             </div>
           </CardHeader>
@@ -366,9 +366,9 @@ export function InsightsView(): React.ReactElement {
                     className="flex items-center justify-between py-3 first:pt-0 last:pb-0"
                   >
                     <div className="space-y-0.5">
-                      <p className="text-sm font-medium">{tenant?.name || "Unknown tenant"}</p>
+                      <p className="text-sm font-medium">{tenant?.name || t("unknownTenant")}</p>
                       <p className="text-xs text-[var(--color-muted-foreground)]">
-                        {property?.name || "Unknown property"}
+                        {property?.name || t("unknownProperty")}
                       </p>
                     </div>
                     <Badge
@@ -381,7 +381,7 @@ export function InsightsView(): React.ReactElement {
                             : "bg-blue-500/15 text-blue-400",
                       )}
                     >
-                      {daysLeft <= 0 ? "Expired" : `${daysLeft}d left`}
+                      {daysLeft <= 0 ? t("expired") : t("daysLeft", { count: daysLeft })}
                     </Badge>
                   </div>
                 );
@@ -395,14 +395,14 @@ export function InsightsView(): React.ReactElement {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <QuickLink
           icon={<BarChart3 className="h-5 w-5 text-indigo-400" />}
-          title="Analytics Dashboard"
-          description="Interactive charts, KPIs, occupancy gauges, and property performance tables"
+          title={t("analyticsDashboard")}
+          description={t("analyticsDashboardDesc")}
           onClick={() => router.push(`/${locale}/analytics`)}
         />
         <QuickLink
           icon={<FileText className="h-5 w-5 text-emerald-400" />}
-          title="Financial Reports"
-          description="Generate and export financial summaries, tax reports, and rent rolls"
+          title={t("financialReports")}
+          description={t("financialReportsDesc")}
           onClick={() => router.push(`/${locale}/reports`)}
         />
       </div>
@@ -425,6 +425,7 @@ function KPITile({
   sub?: string;
   icon: React.ReactNode;
 }) {
+  const t = useTranslations("insights");
   return (
     <Card className="relative overflow-hidden">
       <CardContent className="p-4">
@@ -447,7 +448,7 @@ function KPITile({
             ) : (
               <TrendingDown className="h-3 w-3" />
             )}
-            {Math.abs(change).toFixed(1)}% vs last month
+            {t("vsLastMonth", { value: Math.abs(change).toFixed(1) })}
           </div>
         )}
         {sub && <p className="text-xs text-[var(--color-muted-foreground)] mt-1">{sub}</p>}

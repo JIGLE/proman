@@ -235,80 +235,96 @@
     "addTenant": "Add a tenant",
     "addTenantDesc": "Add tenant details and assign them to a property.",
     "recordPayment": "Record a payment",
-    "recordPaymentDesc": "Log your first rent payment to unlock revenue analytics."
+    "recordPaymentDesc": "Log your first rent payment to unlock revenue analytics.",
+    "dismissTooltip": "Dismiss",
+    "dismissAriaLabel": "Dismiss setup checklist",
+    "allSetHeadline": "You're all set!",
+    "whatsNext": "What's next?",
+    "nextStepLease": "Set up a lease agreement for your tenant",
+    "nextStepCorrespondence": "Create correspondence templates for common emails",
+    "nextStepInsights": "Explore the dashboard for revenue and occupancy insights",
+    "startAction": "Start"
   },
   "emptyState": {
     "properties": {
       "title": "No properties yet",
-      "description": "Add your first property to start managing your portfolio."
+      "description": "Add your first property to start managing your portfolio. Track occupancy, revenue, and maintenance all in one place.",
+      "action": "Add Property"
     },
     "tenants": {
       "title": "No tenants yet",
-      "description": "Once you have properties, add tenants to track leases and payments."
+      "description": "Once you have properties set up, add tenants to track leases, payments, and communications.",
+      "action": "Add Tenant"
     },
     "payments": {
       "title": "No payments recorded",
-      "description": "Start recording rent payments to track revenue."
+      "description": "Start recording rent payments to track your revenue and generate financial reports automatically. Go to a lease to record the first payment.",
+      "action": "Record Payment"
     },
     "generic": {
       "title": "Nothing here yet",
-      "description": "Get started by adding your first item."
+      "description": "Get started by adding your first item.",
+      "action": "Add New"
     },
     "leases": {
-      "title": "No leases yet",
-      "description": "Create lease agreements to formalize tenant relationships.",
-      "action": "Add First Lease"
+      "title": "No leases created",
+      "description": "Create lease agreements to formalise tenant relationships and automate renewal reminders. Start by adding a property and a tenant first.",
+      "action": "Create Lease"
     },
     "maintenance": {
-      "title": "No maintenance tickets",
-      "description": "Create a new ticket to track maintenance requests.",
+      "title": "No maintenance requests",
+      "description": "When tenants report issues, they'll appear here. You can also create tickets proactively.",
       "action": "Create Ticket"
     },
     "correspondence": {
-      "title": "No templates yet",
-      "description": "Create correspondence templates to streamline communications.",
-      "action": "Create Template"
+      "title": "No correspondence yet",
+      "description": "Send notices, reminders, and updates to your tenants. All communication history is tracked here.",
+      "action": "Send Message"
     },
     "reports": {
       "title": "No reports available",
-      "description": "Reports are generated from your property and financial data."
+      "description": "Reports are generated from your property and financial data. Add properties and record payments to unlock insights.",
+      "action": "Get Started"
     },
     "owners": {
       "title": "No owners yet",
-      "description": "Add owners to start tracking shared property ownership.",
-      "action": "Add First Owner"
+      "description": "Add owners to start tracking shared property ownership and revenue splits.",
+      "action": "Add Owner"
     },
     "receipts": {
       "title": "No receipts yet",
-      "description": "Create payment receipts to keep a record of payments received.",
-      "action": "Create First Receipt"
+      "description": "Create payment receipts to keep a record of rent and other payments received. Record a payment to generate receipts automatically.",
+      "action": "Create Receipt"
     },
     "expenses": {
       "title": "No expenses recorded",
-      "description": "Track property expenses to monitor costs."
+      "description": "Track property expenses to monitor costs and generate accurate financial reports.",
+      "action": "Add Expense"
     },
     "invoices": {
       "title": "No invoices yet",
-      "description": "Create invoices for tenants to formalize payment obligations.",
+      "description": "Create invoices for tenants to formalize payment obligations and track billing.",
       "action": "Create Invoice"
     },
     "contracts": {
       "title": "No contracts found",
-      "description": "Contracts are created from lease agreements."
+      "description": "Contracts represent formal agreements. Create leases to see associated contracts here.",
+      "action": "View Leases"
     },
     "documents": {
       "title": "No documents yet",
-      "description": "Upload documents to keep records organized.",
+      "description": "Upload documents to keep property records, contracts, and correspondence organized.",
       "action": "Upload Document"
     },
     "contacts": {
       "title": "No contacts found",
-      "description": "Contacts are populated from your tenants and owners."
+      "description": "Contacts are populated from your tenants, owners, and service providers.",
+      "action": "Add Contact"
     },
     "units": {
       "title": "No units yet",
-      "description": "Add units to this property to track individual spaces.",
-      "action": "Add First Unit"
+      "description": "Add units to this property to track individual spaces, tenants, and leases.",
+      "action": "Add Unit"
     },
     "noResults": {
       "title": "No results found",
@@ -1134,7 +1150,38 @@
       "danger": "Critical",
       "warning": "Warning",
       "info": "Info"
-    }
+    },
+    "subtitle": "Executive summary of your portfolio performance",
+    "refresh": "Refresh",
+    "kpiMonthlyRevenue": "Monthly Revenue",
+    "kpiOccupancy": "Occupancy",
+    "kpiActiveTenants": "Active Tenants",
+    "kpiAvgRent": "Avg. Rent",
+    "ofTotal": "of {total} total",
+    "vsLastMonth": "{value}% vs last month",
+    "actionItems": "Action Items",
+    "allClear": "All clear",
+    "noActionItems": "No action items right now",
+    "overduePayments": "{count, plural, one {# overdue payment} other {# overdue payments}}",
+    "leasesExpiringSoon": "{count, plural, one {# lease expiring soon} other {# leases expiring soon}}",
+    "within60Days": "Within 60 days",
+    "vacantProperties": "{count, plural, one {# vacant property} other {# vacant properties}}",
+    "occupiedPercent": "{percent}% occupied",
+    "revenueTrend": "Revenue Trend",
+    "last6Months": "Last 6 months",
+    "noRevenueData": "No revenue data yet — record payments to see trends",
+    "portfolioMix": "Portfolio Mix",
+    "addPropertiesToSeeBreakdown": "Add properties to see breakdown",
+    "upcomingLeaseExpirations": "Upcoming Lease Expirations",
+    "viewAll": "View all",
+    "unknownTenant": "Unknown tenant",
+    "unknownProperty": "Unknown property",
+    "expired": "Expired",
+    "daysLeft": "{count}d left",
+    "analyticsDashboard": "Analytics Dashboard",
+    "analyticsDashboardDesc": "Interactive charts, KPIs, occupancy gauges, and property performance tables",
+    "financialReports": "Financial Reports",
+    "financialReportsDesc": "Generate and export financial summaries, tax reports, and rent rolls"
   },
   "reports": {
     "title": "Reports",
@@ -1273,5 +1320,67 @@
     "loadingIncome": "Loading income data...",
     "portugal": "Portugal",
     "spain": "Spain"
+  },
+  "paymentMatrix": {
+    "title": "Payment Tracking Matrix",
+    "subtitle": "Monthly payment status overview for all tenants",
+    "detailed": "Detailed",
+    "heatmap": "Heatmap",
+    "allStatus": "All Status",
+    "paid": "Paid",
+    "pending": "Pending",
+    "overdue": "Overdue",
+    "export": "Export",
+    "totalExpected": "Total Expected",
+    "forYear": "For {year}",
+    "totalReceived": "Total Received",
+    "paidAmounts": "Paid amounts",
+    "outstanding": "Outstanding",
+    "pendingPayments": "Pending payments",
+    "collectionRate": "Collection Rate",
+    "paymentSuccessRate": "Payment success rate",
+    "matrixTitle": "Payment Matrix - {year}",
+    "legend": "Green: Paid • Yellow: Pending • Red: Overdue • Gray: No payment due",
+    "tenant": "Tenant",
+    "total": "Total",
+    "perMonth": "/mo",
+    "ofExpected": "of {amount}",
+    "cellTooltip": "{status} on {date} — {amount}",
+    "overdueTooltip": "Overdue payment",
+    "noPaymentTooltip": "No payment",
+    "noPaymentDue": "No payment due",
+    "noTenantsYet": "No Tenants Yet",
+    "addTenantsToTrack": "Add tenants to start tracking payments"
+  },
+  "notificationCenter": {
+    "title": "Notifications",
+    "bellAriaLabel": "Notifications",
+    "bellAriaLabelUnread": "Notifications ({count} unread)",
+    "newBadge": "{count} new",
+    "markAllRead": "Mark all read",
+    "markAllAsReadLabel": "Mark all as read",
+    "closeLabel": "Close notifications",
+    "all": "All ({count})",
+    "unread": "Unread ({count})",
+    "noUnreadNotifications": "No unread notifications",
+    "noNotifications": "No notifications",
+    "allCaughtUp": "You're all caught up!",
+    "notificationsWillAppear": "Notifications will appear here",
+    "clearAll": "Clear all",
+    "clearAllLabel": "Clear all notifications",
+    "settings": "Settings",
+    "settingsLabel": "Notification settings",
+    "markAsReadLabel": "Mark as read",
+    "deleteLabel": "Delete",
+    "justNow": "Just now",
+    "minutesAgo": "{count}m ago",
+    "hoursAgo": "{count}h ago",
+    "daysAgo": "{count}d ago",
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    }
   }
 }

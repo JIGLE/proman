@@ -191,7 +191,7 @@ up to the brand.
     is mounted in `app/[locale]/(main)/layout.tsx`) — no action needed, acceptance
     criterion already met.
 
-### 2.3 i18n the behavioral surfaces
+### 2.3 i18n the behavioral surfaces — **Done**
 
 - **Why:** hardcoded English on behavioral surfaces in a PT/ES market is a trust/retention
   issue (audit §5 "i18n completeness").
@@ -199,6 +199,39 @@ up to the brand.
   `notification-center.tsx`, the `onboarding-checklist.tsx` completion copy, and
   `empty-state-illustrations.tsx` all go through `useTranslations`; keys added to all four
   catalogs; `npm run i18n:check` passes.
+- **Shipped as:**
+  - `insights-view.tsx`: fully wired to a new `insights` namespace (subtitle, KPI labels,
+    action-item copy with real ICU plurals for overdue/expiring/vacant counts, chart
+    labels, quick-link copy). Month abbreviations for the revenue sparkline now come from
+    the existing `calendar.months` namespace instead of a hardcoded `["Jan","Feb",...]`
+    array — the same fix applied to `payment-matrix-view.tsx`'s table header months.
+  - `payment-matrix-view.tsx`: new `paymentMatrix` namespace covers the toolbar, summary
+    cards, table headers, per-cell tooltips (built from the existing `paid`/`pending`/
+    `overdue` labels plus a locale-aware `toLocaleDateString`), and the color legend.
+    Also fixed one stray hardcoded `bg-gray-200` found while in the file.
+  - `notification-center.tsx`: new `notificationCenter` namespace — header, filter tabs,
+    empty states, footer, per-item tooltips, and relative-time formatting (`formatRelativeTime`
+    now takes the translator so "Just now/Xm ago/Xh ago/Xd ago" and the priority badge
+    text are localized instead of raw English/enum values).
+  - `onboarding-checklist.tsx`: the completion panel's "You're all set!" / "What's next?"
+    suggestions and the "Dismiss" tooltip now use the existing `onboarding` namespace
+    (extended with a few keys). Also deleted the dead `getDefaultOnboardingSteps` factory
+    — grep confirmed it had zero callers (the live dashboard builds its own already-i18n'd
+    `richSteps`/`onboardingSteps` instead), so translating unreachable code would have
+    been wasted, dead-but-now-translated cruft.
+  - `empty-state-illustrations.tsx`: discovered the repo already had a complete-looking
+    `emptyState` i18n namespace that **no component actually consumed** — same orphaned-
+    keys pattern as `achievements`/`insights` before this milestone. Rather than add a
+    third, separate set of strings, extended `emptyState` to match this component's
+    richer per-type copy (title/description/action for all 16 entity types) and rewired
+    the component's icon/gradient table (`emptyStateMeta`) to pull its text from
+    `useTranslations("emptyState")` by type, so the namespace is finally live.
+  - Fixed 3 pre-existing tests (`tenants-view.test.tsx`, `receipts-view.test.tsx`,
+    `properties-view.test.tsx`) that asserted on the old hardcoded English empty-state
+    copy — the repo's global `next-intl` test mock echoes translation keys verbatim
+    (`useTranslations: () => (key) => key`), so their assertions now match the
+    `<type>.title` key output instead of literal English, consistent with how other
+    i18n'd components are already tested in this suite.
 
 ### 2.4 Collapse duplicate attention surfaces into one loop
 

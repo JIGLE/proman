@@ -235,80 +235,96 @@
     "addTenant": "Añade un inquilino",
     "addTenantDesc": "Añade los datos del inquilino y asígnalo a un inmueble.",
     "recordPayment": "Registra un pago",
-    "recordPaymentDesc": "Registra tu primer pago de alquiler para desbloquear análisis de ingresos."
+    "recordPaymentDesc": "Registra tu primer pago de alquiler para desbloquear análisis de ingresos.",
+    "dismissTooltip": "Descartar",
+    "dismissAriaLabel": "Descartar lista de configuración",
+    "allSetHeadline": "¡Todo listo!",
+    "whatsNext": "¿Qué sigue?",
+    "nextStepLease": "Configura un contrato de arrendamiento para tu inquilino",
+    "nextStepCorrespondence": "Crea plantillas de correspondencia para correos habituales",
+    "nextStepInsights": "Explora el panel para ver ingresos y ocupación",
+    "startAction": "Empezar"
   },
   "emptyState": {
     "properties": {
-      "title": "Sin inmuebles aún",
-      "description": "Añade tu primer inmueble para empezar a gestionar tu cartera."
+      "title": "Aún no hay propiedades",
+      "description": "Añade tu primera propiedad para empezar a gestionar tu cartera. Controla ocupación, ingresos y mantenimiento en un solo lugar.",
+      "action": "Añadir Propiedad"
     },
     "tenants": {
-      "title": "Sin inquilinos aún",
-      "description": "Una vez tengas inmuebles, añade inquilinos para gestionar contratos y pagos."
+      "title": "Aún no hay inquilinos",
+      "description": "Una vez configuradas las propiedades, añade inquilinos para hacer seguimiento de contratos, pagos y comunicaciones.",
+      "action": "Añadir Inquilino"
     },
     "payments": {
-      "title": "Sin pagos registrados",
-      "description": "Empieza a registrar pagos de alquiler para seguir los ingresos."
+      "title": "Ningún pago registrado",
+      "description": "Empieza a registrar pagos de alquiler para hacer seguimiento de tus ingresos y generar informes financieros automáticamente. Ve a un contrato para registrar el primer pago.",
+      "action": "Registrar Pago"
     },
     "generic": {
-      "title": "Nada aquí aún",
-      "description": "Empieza añadiendo tu primer elemento."
+      "title": "Aún no hay nada aquí",
+      "description": "Empieza añadiendo tu primer elemento.",
+      "action": "Añadir Nuevo"
     },
     "leases": {
-      "title": "Sin contratos aún",
-      "description": "Crea contratos de arrendamiento para formalizar las relaciones con los inquilinos.",
-      "action": "Añadir Primer Contrato"
+      "title": "Ningún contrato creado",
+      "description": "Crea contratos de arrendamiento para formalizar las relaciones con los inquilinos y automatizar los recordatorios de renovación. Empieza añadiendo una propiedad y un inquilino.",
+      "action": "Crear Contrato"
     },
     "maintenance": {
-      "title": "Sin solicitudes de mantenimiento",
-      "description": "Crea una nueva solicitud para gestionar las peticiones de mantenimiento.",
+      "title": "Ninguna solicitud de mantenimiento",
+      "description": "Cuando los inquilinos reporten problemas, aparecerán aquí. También puedes crear solicitudes de forma proactiva.",
       "action": "Crear Solicitud"
     },
     "correspondence": {
-      "title": "Sin plantillas aún",
-      "description": "Crea plantillas de correspondencia para agilizar las comunicaciones.",
-      "action": "Crear Plantilla"
+      "title": "Aún no hay correspondencia",
+      "description": "Envía avisos, recordatorios y actualizaciones a tus inquilinos. Todo el historial de comunicación se registra aquí.",
+      "action": "Enviar Mensaje"
     },
     "reports": {
-      "title": "Sin informes disponibles",
-      "description": "Los informes se generan a partir de los datos de inmuebles y finanzas."
+      "title": "Ningún informe disponible",
+      "description": "Los informes se generan a partir de tus datos de propiedades y finanzas. Añade propiedades y registra pagos para desbloquear información.",
+      "action": "Empezar"
     },
     "owners": {
-      "title": "Sin propietarios aún",
-      "description": "Añade propietarios para gestionar la copropiedad.",
-      "action": "Añadir Primer Propietario"
+      "title": "Aún no hay propietarios",
+      "description": "Añade propietarios para empezar a hacer seguimiento de la propiedad compartida y el reparto de ingresos.",
+      "action": "Añadir Propietario"
     },
     "receipts": {
-      "title": "Sin recibos aún",
-      "description": "Crea recibos de pago para registrar los pagos recibidos.",
-      "action": "Crear Primer Recibo"
+      "title": "Aún no hay recibos",
+      "description": "Crea recibos de pago para llevar un registro de los alquileres y otros pagos recibidos. Registra un pago para generar recibos automáticamente.",
+      "action": "Crear Recibo"
     },
     "expenses": {
-      "title": "Sin gastos registrados",
-      "description": "Registra los gastos de los inmuebles para controlar los costes."
+      "title": "Ningún gasto registrado",
+      "description": "Haz seguimiento de los gastos de las propiedades para controlar costes y generar informes financieros precisos.",
+      "action": "Añadir Gasto"
     },
     "invoices": {
-      "title": "Sin facturas aún",
-      "description": "Crea facturas para los inquilinos para formalizar las obligaciones de pago.",
+      "title": "Aún no hay facturas",
+      "description": "Crea facturas para los inquilinos para formalizar obligaciones de pago y hacer seguimiento de la facturación.",
       "action": "Crear Factura"
     },
     "contracts": {
-      "title": "Sin contratos encontrados",
-      "description": "Los contratos se crean a partir de los contratos de arrendamiento."
+      "title": "Ningún contrato encontrado",
+      "description": "Los contratos representan acuerdos formales. Crea arrendamientos para ver aquí los contratos asociados.",
+      "action": "Ver Contratos"
     },
     "documents": {
-      "title": "Sin documentos aún",
-      "description": "Sube documentos para mantener los registros organizados.",
+      "title": "Aún no hay documentos",
+      "description": "Sube documentos para mantener organizados los registros de propiedades, contratos y correspondencia.",
       "action": "Subir Documento"
     },
     "contacts": {
-      "title": "Sin contactos encontrados",
-      "description": "Los contactos se generan a partir de los inquilinos y propietarios."
+      "title": "Ningún contacto encontrado",
+      "description": "Los contactos se completan a partir de tus inquilinos, propietarios y proveedores de servicios.",
+      "action": "Añadir Contacto"
     },
     "units": {
-      "title": "Sin unidades aún",
-      "description": "Añade unidades a este inmueble para gestionar los espacios individuales.",
-      "action": "Añadir Primera Unidad"
+      "title": "Aún no hay unidades",
+      "description": "Añade unidades a esta propiedad para hacer seguimiento de espacios individuales, inquilinos y contratos.",
+      "action": "Añadir Unidad"
     },
     "noResults": {
       "title": "Sin resultados",
@@ -1134,7 +1150,38 @@
       "danger": "Crítico",
       "warning": "Advertencia",
       "info": "Información"
-    }
+    },
+    "subtitle": "Resumen ejecutivo del rendimiento de tu cartera",
+    "refresh": "Actualizar",
+    "kpiMonthlyRevenue": "Ingresos Mensuales",
+    "kpiOccupancy": "Ocupación",
+    "kpiActiveTenants": "Inquilinos Activos",
+    "kpiAvgRent": "Alquiler Medio",
+    "ofTotal": "de {total} en total",
+    "vsLastMonth": "{value}% respecto al mes anterior",
+    "actionItems": "Tareas",
+    "allClear": "Todo en orden",
+    "noActionItems": "Sin tareas pendientes por ahora",
+    "overduePayments": "{count, plural, one {# pago vencido} other {# pagos vencidos}}",
+    "leasesExpiringSoon": "{count, plural, one {# contrato por vencer pronto} other {# contratos por vencer pronto}}",
+    "within60Days": "En los próximos 60 días",
+    "vacantProperties": "{count, plural, one {# propiedad vacía} other {# propiedades vacías}}",
+    "occupiedPercent": "{percent}% ocupado",
+    "revenueTrend": "Tendencia de Ingresos",
+    "last6Months": "Últimos 6 meses",
+    "noRevenueData": "Aún sin datos de ingresos — registra pagos para ver tendencias",
+    "portfolioMix": "Composición de la Cartera",
+    "addPropertiesToSeeBreakdown": "Añade propiedades para ver el desglose",
+    "upcomingLeaseExpirations": "Contratos por Vencer Pronto",
+    "viewAll": "Ver todo",
+    "unknownTenant": "Inquilino desconocido",
+    "unknownProperty": "Propiedad desconocida",
+    "expired": "Vencido",
+    "daysLeft": "quedan {count}d",
+    "analyticsDashboard": "Panel de Análisis",
+    "analyticsDashboardDesc": "Gráficos interactivos, KPIs, indicadores de ocupación y tablas de rendimiento de propiedades",
+    "financialReports": "Informes Financieros",
+    "financialReportsDesc": "Genera y exporta resúmenes financieros, informes fiscales y listados de rentas"
   },
   "reports": {
     "title": "Informes",
@@ -1273,5 +1320,67 @@
     "loadingIncome": "Cargando datos de ingresos...",
     "portugal": "Portugal",
     "spain": "España"
+  },
+  "paymentMatrix": {
+    "title": "Matriz de Seguimiento de Pagos",
+    "subtitle": "Resumen mensual del estado de pago de todos los inquilinos",
+    "detailed": "Detallado",
+    "heatmap": "Mapa de Calor",
+    "allStatus": "Todos los Estados",
+    "paid": "Pagado",
+    "pending": "Pendiente",
+    "overdue": "Vencido",
+    "export": "Exportar",
+    "totalExpected": "Total Esperado",
+    "forYear": "Para {year}",
+    "totalReceived": "Total Recibido",
+    "paidAmounts": "Importes pagados",
+    "outstanding": "Pendiente de Cobro",
+    "pendingPayments": "Pagos pendientes",
+    "collectionRate": "Tasa de Cobro",
+    "paymentSuccessRate": "Tasa de éxito de pago",
+    "matrixTitle": "Matriz de Pagos - {year}",
+    "legend": "Verde: Pagado • Amarillo: Pendiente • Rojo: Vencido • Gris: Sin pago debido",
+    "tenant": "Inquilino",
+    "total": "Total",
+    "perMonth": "/mes",
+    "ofExpected": "de {amount}",
+    "cellTooltip": "{status} el {date} — {amount}",
+    "overdueTooltip": "Pago vencido",
+    "noPaymentTooltip": "Sin pago",
+    "noPaymentDue": "Sin pago debido",
+    "noTenantsYet": "Aún No Hay Inquilinos",
+    "addTenantsToTrack": "Añade inquilinos para empezar a seguir los pagos"
+  },
+  "notificationCenter": {
+    "title": "Notificaciones",
+    "bellAriaLabel": "Notificaciones",
+    "bellAriaLabelUnread": "Notificaciones ({count} sin leer)",
+    "newBadge": "{count} nuevas",
+    "markAllRead": "Marcar todo como leído",
+    "markAllAsReadLabel": "Marcar todo como leído",
+    "closeLabel": "Cerrar notificaciones",
+    "all": "Todas ({count})",
+    "unread": "Sin leer ({count})",
+    "noUnreadNotifications": "Sin notificaciones sin leer",
+    "noNotifications": "Sin notificaciones",
+    "allCaughtUp": "¡Todo al día!",
+    "notificationsWillAppear": "Las notificaciones aparecerán aquí",
+    "clearAll": "Borrar todo",
+    "clearAllLabel": "Borrar todas las notificaciones",
+    "settings": "Ajustes",
+    "settingsLabel": "Ajustes de notificaciones",
+    "markAsReadLabel": "Marcar como leída",
+    "deleteLabel": "Eliminar",
+    "justNow": "Ahora mismo",
+    "minutesAgo": "hace {count}m",
+    "hoursAgo": "hace {count}h",
+    "daysAgo": "hace {count}d",
+    "priority": {
+      "low": "Baja",
+      "medium": "Media",
+      "high": "Alta",
+      "urgent": "Urgente"
+    }
   }
 }
