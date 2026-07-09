@@ -270,14 +270,14 @@ loop is a streak; no behavioral surface renders raw English; one triage loop, no
 
 | #   | Item                                                                                                             | Why                                                                                 | Files                                                              |
 | --- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| 3.1 | Consolidate duplicated entity-detail UIs and duplicate routes (`/portfolio`↔`/properties`, `/people`↔`/tenants`) | ~2,400 LOC divergence risk; two names per thing (audit §4)                          | `components/features/{property,tenant}/*`, `app/[locale]/(main)/*` |
+| 3.1 | Consolidate duplicated entity-detail UIs and duplicate routes (`/portfolio`↔`/properties`, `/people`↔`/tenants`) — **Done** | ~2,400 LOC divergence risk; two names per thing (audit §4)                          | `components/features/{property,tenant}/*`, `app/[locale]/(main)/*` |
 | 3.2 | Decide the identity model: stay single-account, or plan Org/Team — **Done**                                       | Determines the agency/"Business" ceiling; global-unique emails block multi-org (§4) | `prisma/schema.prisma` + queries                                   |
 | 3.3 | Adopt one IA and delete the other two visions — **Done**                                                          | Three conflicting IA docs today (audit §6)                                          | the three IA docs; sidebar/nav                                     |
 | 3.4 | Validate & wire monetization, or commit to open-source-first — **Done**                                          | Pricing tiers are unbacked copy; no Stripe subscription wiring (audit §2)           | Stripe subscription layer; plan gating                             |
 | 3.5 | Plan the storage path (SQLite BLOBs → external/Postgres) if scale is a goal — **Done** | `Lease.contractFile` BLOBs + load-everything context cap large portfolios (§4)      | `lib/contexts/use-app-data.ts`, storage layer                      |
 
 **Exit criteria:** one implementation per entity/route; a decided identity + monetization
-posture; a stated scale plan.
+posture; a stated scale plan. **Met** — all five of Milestone 3's items are now done.
 
 ### 3.2 — Shipped as: stay single-account, no Org/Team model now
 
@@ -418,6 +418,39 @@ mechanism" — the gap was implementation, not product intent.
   sellable but not enforced. 3.2 decided not to build multi-user sharing now (see below)
   and softened the landing-page copy to "Team access (coming soon)" instead, so nothing
   false is being sold.
+
+### 3.1 — Shipped as: deleted the one genuinely dead duplicate; kept the rest
+
+Investigated what "~2,400 LOC divergence risk" actually referred to before touching
+anything — it turned out to be two separate findings, only one of which needed code
+changes.
+
+- **The routes (`/portfolio`↔`/properties`, `/people`↔`/tenants`) are not duplicated
+  UIs — `/properties` and `/tenants` (and their `[id]` sub-routes) are pure
+  `redirect()` stubs to `/portfolio`/`/people`, nothing else. Harmless, standard
+  backward-compatibility for old bookmarks/links. Left as-is.
+- **The real duplication was `components/features/property/property-detail-modal.tsx`**
+  (1,279 lines) — a full read+edit implementation of the property detail 4-zone modal
+  pattern that **had zero imports anywhere in the app** (not the barrel `index.ts`, not
+  a test file, nothing). The live property-detail flow is
+  `property-detail-route-client.tsx` → `property-detail-sheet-client.tsx` →
+  `PropertyDetailView` (`property-detail-view.tsx`, 1,154 lines, rendered in a `Sheet`
+  from `/portfolio?modal=<id>`) — entirely unrelated code path. Deleted the dead file.
+- **Tenant's apparent pair is not a duplication** — `TenantDetailModal`
+  (`tenant-detail-modal.tsx`) is the shared add/edit **form**, correctly reused by both
+  the tenants list and `TenantDetailView`'s "Edit" button (`tenant-detail-view.tsx:451`
+  renders it directly). `TenantDetailView` is the read-only detail page. Different
+  concerns, not divergent implementations of the same one — left both as-is.
+- **Corrected `CLAUDE.md`'s "4-zone modal pattern" line**, which claimed Property and
+  Building detail modals as examples — Property's was the dead file just removed, and
+  no `BuildingDetailModal` exists at all. The pattern is real and live for Tenant's edit
+  modal and `ticket-detail-modal.tsx` only; updated the doc to say so.
+
+**Milestone 3 exit criteria met:** one implementation per entity/route (confirmed — the
+remaining "duplicates" were either harmless redirects or intentionally different
+concerns, not drift); identity model decided (3.2: single-account); monetization
+validated and wired (3.4); a stated scale plan (3.5); one IA (3.3). All five items of
+Milestone 3 are now done.
 
 ---
 
