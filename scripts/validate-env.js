@@ -69,6 +69,18 @@ if (isProd) {
   warnVar("CSRF_SECRET", "CSRF protection secret; falls back to NEXTAUTH_SECRET");
 }
 
+// PII field encryption (IBANs, NIFs, phone numbers) — see lib/utils/pii-encryption.ts.
+// Without a key, encryptPII() silently no-ops and PII is stored in plaintext.
+if (isProd) {
+  warnVar(
+    "PII_ENCRYPTION_KEY",
+    "PII (IBAN/NIF/phone) will be stored in PLAINTEXT without this. " +
+      "Generate: openssl rand -hex 32. Run scripts/backfill-pii-encryption.js after setting it.",
+  );
+} else if (process.env.PII_ENCRYPTION_KEY && process.env.PII_ENCRYPTION_KEY.length < 64) {
+  warnings.push("  ⚠ PII_ENCRYPTION_KEY — must be 64 hex characters (32 bytes); shorter values are ignored");
+}
+
 // ── output ───────────────────────────────────────────────────────────────
 console.log("");
 console.log("🔍 ProMan Environment Validation");

@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { logger } from "@/lib/utils/logger";
+import { piiEncryptionExtension } from "./pii-extension";
 
 declare global {
   var prisma: PrismaClient | undefined;
@@ -42,7 +43,13 @@ function getPrismaClient(): PrismaClient {
       // Prisma 7 requires a driver adapter to provide the database connection
       try {
         const adapter = new PrismaBetterSqlite3({ url: dbUrl });
-        globalForPrisma.prisma = new PrismaClient({ adapter });
+        const rawClient = new PrismaClient({ adapter });
+        // Transparent PII field encryption/decryption — see pii-extension.ts.
+        // The extension only transforms field VALUES at runtime; it doesn't
+        // change the client's query/return shapes, so this cast is safe.
+        globalForPrisma.prisma = rawClient.$extends(
+          piiEncryptionExtension,
+        ) as unknown as PrismaClient;
         logger.debug("PrismaClient constructed successfully");
 
         // Validate connection with a quick query
