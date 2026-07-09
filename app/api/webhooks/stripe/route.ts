@@ -1,9 +1,19 @@
-// Stripe Webhook Handler - Process payment events
+// Stripe Webhook Handler - Process payment and subscription-billing events
 import { NextRequest, NextResponse } from "next/server";
 import { paymentService } from "@/lib/payment/payment-service";
+import { processSubscriptionWebhook } from "@/lib/billing/subscription-service";
 import { getSecret, isEnabled } from "@/lib/utils/env";
 import { rateLimit, RateLimits } from "@/lib/middleware/rate-limit";
 import Stripe from "stripe";
+
+// Event types owned by the app's own subscription billing (lib/billing/), as
+// opposed to tenant-to-landlord rent collection (lib/payment/).
+const SUBSCRIPTION_EVENT_TYPES = new Set<string>([
+  "checkout.session.completed",
+  "customer.subscription.created",
+  "customer.subscription.updated",
+  "customer.subscription.deleted",
+]);
 
 // Lazy initialization of Stripe
 function getStripe(): Stripe {
@@ -65,8 +75,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     console.debug(`[Stripe webhook] Received event: ${event.type}`, { id: event.id });
 
-    // Process the event
-    const result = await paymentService.processStripeWebhook(event);
+    // Process the event — subscription-billing events go to lib/billing/,
+    // everything else (payment intents, charges) stays with lib/payment/.
+    const result = SUBSCRIPTION_EVENT_TYPES.has(event.type)
+      ? await processSubscriptionWebhook(event)
+      : await paymentService.processStripeWebhook(event);
 
     if (!result.success) {
       console.error(`[Stripe webhook] Processing failed for ${event.type}:`, result.error);

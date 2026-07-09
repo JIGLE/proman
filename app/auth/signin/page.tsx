@@ -2,10 +2,16 @@
 
 import { Suspense } from "react";
 import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { Button } from "@/components/ui/button";
+
+/** Only allow same-site relative paths, to rule out an open redirect via `callbackUrl`. */
+function safeCallbackUrl(raw: string | null): string | null {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
 
 export const dynamic = "force-dynamic";
 
@@ -36,12 +42,14 @@ const isDemoEnabled =
 function SignInContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"));
 
   useEffect(() => {
     if (status === "authenticated") {
-      router.push(`/${detectLocale()}/dashboard`);
+      router.push(callbackUrl ?? `/${detectLocale()}/dashboard`);
     }
-  }, [status, router]);
+  }, [status, router, callbackUrl]);
 
   if (status === "loading") {
     return (
@@ -92,7 +100,7 @@ function SignInContent() {
                     signIn("credentials", {
                       email: formData.get("email"),
                       password: formData.get("password"),
-                      callbackUrl: `/${detectLocale()}/dashboard`,
+                      callbackUrl: callbackUrl ?? `/${detectLocale()}/dashboard`,
                     });
                   }}
                   className="space-y-3"
@@ -144,7 +152,7 @@ function SignInContent() {
                 const browserLang =
                   typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "pt";
                 const locale = ["pt", "en", "es"].includes(browserLang) ? browserLang : "pt";
-                signIn("google", { callbackUrl: `/${locale}/dashboard` });
+                signIn("google", { callbackUrl: callbackUrl ?? `/${locale}/dashboard` });
               }}
               variant="outline"
               className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700 font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-3"

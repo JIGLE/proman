@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { screen, waitFor } from "@testing-library/react";
 import { renderWithProviders as render } from "@/tests/helpers/render-with-providers";
 import { SettingsView } from "./settings-view";
 
@@ -14,6 +15,7 @@ vi.mock("next/navigation", () => ({
     push: vi.fn(),
   }),
   usePathname: () => "/en/settings",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // Mock next-auth
@@ -68,5 +70,47 @@ describe("SettingsView", () => {
   it("is a React component that accepts no props", () => {
     const component = SettingsView as any;
     expect(typeof component).toBe("function");
+  });
+
+  it("fetches subscription info on mount and renders the Billing tab trigger", async () => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url === "/api/billing/subscription") {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            data: {
+              plan: "pro",
+              status: "active",
+              currentPeriodEnd: null,
+              cancelAtPeriodEnd: false,
+              maxProperties: 10,
+              propertyCount: 3,
+            },
+          }),
+        });
+      }
+      if (url === "/api/health") {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            status: "ok",
+            uptime: 0,
+            environment: "test",
+            checks: {
+              database: { status: "healthy", latency_ms: 1 },
+              email: { status: "healthy" },
+            },
+          }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+
+    render(<SettingsView />);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/billing/subscription");
+    });
+    expect(screen.getByRole("tab", { name: "Billing" })).toBeDefined();
   });
 });

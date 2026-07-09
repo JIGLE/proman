@@ -18,6 +18,7 @@ import {
 import {
   LandingAnalyticsObserver,
   TrackedLandingLink,
+  TrackedExternalLink,
 } from "@/components/shared/landing-analytics";
 import { DomoraMark } from "@/components/shared/brand-logo";
 import { LanguageSelector } from "@/components/shared/language-selector";
@@ -745,15 +746,15 @@ export default async function LandingPage({ params }: Props) {
                   </li>
                 ))}
               </ul>
-              <TrackedLandingLink
-                href={`/${locale}/demo?perspective=owner`}
+              <TrackedExternalLink
+                href="/api/billing/checkout?plan=pro"
                 eventName="landing.pricing_cta"
                 eventData={{ plan: "pro" }}
               >
                 <Button className="w-full bg-teal-600 font-semibold text-white hover:bg-teal-500">
                   {t("pricing.pro.cta")}
                 </Button>
-              </TrackedLandingLink>
+              </TrackedExternalLink>
             </div>
 
             {/* Business */}
@@ -781,14 +782,18 @@ export default async function LandingPage({ params }: Props) {
                   </li>
                 ))}
               </ul>
-              <a href="mailto:hello@proman.app">
+              <TrackedExternalLink
+                href="/api/billing/checkout?plan=business"
+                eventName="landing.pricing_cta"
+                eventData={{ plan: "business" }}
+              >
                 <Button
                   variant="outline"
                   className="w-full border-white/10 text-zinc-300 hover:bg-white/5 hover:text-zinc-50"
                 >
                   {t("pricing.business.cta")}
                 </Button>
-              </a>
+              </TrackedExternalLink>
             </div>
           </div>
 

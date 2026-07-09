@@ -59,6 +59,7 @@ model User {
   modelo179Submissions Modelo179Submission[]
   taxFilings     TaxFiling[]
   productEvents  ProductEvent[]
+  subscription   Subscription?
 }
 
 model EmailLog {
@@ -1063,6 +1064,45 @@ model ProductEvent {
   @@index([userId, name])
   @@index([createdAt])
   @@map("product_events")
+}
+
+/// SaaS subscription state for the app itself (distinct from the
+/// tenant-facing Stripe rent-collection flow in PaymentMethod/PaymentTransaction).
+/// No row for a user means Free — a row is only created once a Checkout
+/// Session completes (docs/PRODUCT_AUDIT_2026.md §2: pricing tiers were
+/// previously unbacked marketing copy).
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  plan                 SubscriptionPlan   @default(free)
+  status               SubscriptionStatus @default(active)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+  @@map("subscriptions")
+}
+
+enum SubscriptionPlan {
+  free
+  pro
+  business
+}
+
+enum SubscriptionStatus {
+  active
+  trialing
+  past_due
+  canceled
+  incomplete
 }
 
 // ========================================

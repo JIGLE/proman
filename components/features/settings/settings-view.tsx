@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   Settings,
   Moon,
@@ -20,6 +20,8 @@ import {
   Lock,
   CheckCircle2,
   Copy,
+  CreditCard,
+  ExternalLink,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -107,6 +109,7 @@ export function SettingsView(): React.ReactElement {
   const { success, error: showError } = useToast();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [settings, setSettings] = useState<UserSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -139,6 +142,17 @@ export function SettingsView(): React.ReactElement {
   const [totpBackupCodes, setTotpBackupCodes] = useState<string[]>([]);
   const [totpWorking, setTotpWorking] = useState(false);
 
+  // Billing / subscription state
+  const [billing, setBilling] = useState<{
+    plan: "free" | "pro" | "business";
+    status: string;
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+    maxProperties: number | null;
+    propertyCount: number;
+  } | null>(null);
+  const [billingLoading, setBillingLoading] = useState(true);
+
   // Extract current locale from pathname
   const currentLocale = pathname.split("/")[1] || "en";
 
@@ -161,6 +175,7 @@ export function SettingsView(): React.ReactElement {
     loadSettings();
     loadFiscalProfile();
     loadTotpStatus();
+    loadBilling();
     fetchSystemInfo();
     fetch("/version.json")
       .then((r) => r.json())
@@ -168,6 +183,30 @@ export function SettingsView(): React.ReactElement {
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const checkout = searchParams.get("checkout");
+    if (checkout === "success") {
+      success("Subscription updated — thank you!");
+    } else if (checkout === "canceled") {
+      showError("Checkout was canceled");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const loadBilling = async () => {
+    try {
+      const response = await fetch("/api/billing/subscription");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data) setBilling(data.data);
+      }
+    } catch (err) {
+      console.error("Failed to load billing info:", err);
+    } finally {
+      setBillingLoading(false);
+    }
+  };
 
   const loadSettings = async () => {
     if (!session?.user) {
@@ -398,11 +437,11 @@ export function SettingsView(): React.ReactElement {
         )}
       </div>
 
-      <Tabs defaultValue="account">
+      <Tabs defaultValue={searchParams.get("tab") ?? "account"}>
         <TabsList className="w-full sm:w-auto">
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="organization">Organization</TabsTrigger>
-          <TabsTrigger value="tax">Tax &amp; Fiscal</TabsTrigger>
+          <TabsTrigger value="tax">Tax & Fiscal</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
@@ -1079,15 +1118,77 @@ export function SettingsView(): React.ReactElement {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Info className="h-5 w-5" />
-                Subscription &amp; Billing
+                <CreditCard className="h-5 w-5" />
+                Subscription & Billing
               </CardTitle>
-              <CardDescription>Manage your plan and payment details</CardDescription>
+              <CardDescription>Manage your plan, usage, and payment details</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">
-                Subscription management is coming soon. Contact support for billing questions.
-              </p>
+            <CardContent className="space-y-6">
+              {billingLoading ? (
+                <p className="text-sm text-muted-foreground">Loading...</p>
+              ) : billing ? (
+                <>
+                  <div className="flex items-center justify-between rounded-lg border p-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Current plan</p>
+                      <p className="text-lg font-semibold capitalize">{billing.plan}</p>
+                      {billing.plan !== "free" && billing.status !== "active" && (
+                        <p className="mt-1 text-xs capitalize text-amber-500">
+                          Status: {billing.status.replace("_", " ")}
+                        </p>
+                      )}
+                      {billing.cancelAtPeriodEnd && billing.currentPeriodEnd && (
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          Moves to Free on{" "}
+                          {new Date(billing.currentPeriodEnd).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-muted-foreground">Properties</p>
+                      <p className="text-lg font-semibold">
+                        {billing.propertyCount}
+                        {billing.maxProperties !== null ? ` / ${billing.maxProperties}` : ""}
+                      </p>
+                    </div>
+                  </div>
+
+                  {billing.maxProperties !== null && (
+                    <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full rounded-full bg-primary"
+                        style={{
+                          width: `${Math.min(100, (billing.propertyCount / billing.maxProperties) * 100)}%`,
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap gap-3">
+                    {billing.plan !== "pro" && billing.plan !== "business" && (
+                      <Button asChild>
+                        <a href="/api/billing/checkout?plan=pro">Upgrade to Pro</a>
+                      </Button>
+                    )}
+                    {billing.plan !== "business" && (
+                      <Button asChild variant="outline">
+                        <a href="/api/billing/checkout?plan=business">Upgrade to Business</a>
+                      </Button>
+                    )}
+                    {billing.plan !== "free" && (
+                      <Button asChild variant="ghost" className="gap-1.5">
+                        <a href="/api/billing/portal">
+                          Manage billing <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </Button>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Failed to load billing information.
+                </p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

@@ -88,3 +88,8 @@ Copy `.env.example` to `.env` before first run. Required vars:
 - `NEXTAUTH_URL` — base URL (e.g. `http://localhost:3000`)
 
 Optional: `SENDGRID_API_KEY`, `STRIPE_SECRET_KEY`, `REDIS_URL`, `PII_ENCRYPTION_KEY`
+
+Optional (app subscription billing — Free/Pro/Business landing-page tiers, distinct from
+tenant rent collection): `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_BUSINESS`,
+`STRIPE_TRIAL_DAYS_PRO`, `ENABLE_BILLING` (plan-limit enforcement; off by default, so
+self-hosted instances are always unlimited).

@@ -273,11 +273,60 @@ loop is a streak; no behavioral surface renders raw English; one triage loop, no
 | 3.1 | Consolidate duplicated entity-detail UIs and duplicate routes (`/portfolio`↔`/properties`, `/people`↔`/tenants`) | ~2,400 LOC divergence risk; two names per thing (audit §4)                          | `components/features/{property,tenant}/*`, `app/[locale]/(main)/*` |
 | 3.2 | Decide the identity model: stay single-account, or plan Org/Team                                                 | Determines the agency/"Business" ceiling; global-unique emails block multi-org (§4) | `prisma/schema.prisma` + queries                                   |
 | 3.3 | Adopt one IA (task-oriented) and delete the other two visions                                                    | Three conflicting IA docs today (audit §6)                                          | the three IA docs; sidebar/nav                                     |
-| 3.4 | Validate & wire monetization, or commit to open-source-first                                                     | Pricing tiers are unbacked copy; no Stripe subscription wiring (audit §2)           | Stripe subscription layer; plan gating                             |
+| 3.4 | Validate & wire monetization, or commit to open-source-first — **Done**                                          | Pricing tiers are unbacked copy; no Stripe subscription wiring (audit §2)           | Stripe subscription layer; plan gating                             |
 | 3.5 | Plan the storage path (SQLite BLOBs → external/Postgres) if scale is a goal                                      | `Lease.contractFile` BLOBs + load-everything context cap large portfolios (§4)      | `lib/contexts/use-app-data.ts`, storage layer                      |
 
 **Exit criteria:** one implementation per entity/route; a decided identity + monetization
 posture; a stated scale plan.
+
+### 3.4 — Shipped as: real Stripe subscription billing (chose "validate & wire")
+
+Went with wiring real billing rather than committing to open-source-only, since the
+landing page already sells three tiers and the audit's own framing was "no monetization
+mechanism" — the gap was implementation, not product intent.
+
+- **Schema:** new `Subscription` model (1:1 with `User`, same shape as `UserSettings`) —
+  `plan`/`status`/`stripeCustomerId`/`stripeSubscriptionId`/`stripePriceId`/
+  `currentPeriodEnd`/`cancelAtPeriodEnd`. No row for a user means Free; a row is created
+  lazily on first Checkout. Hand-written migration
+  `prisma/migrations/20260709130000_add_subscriptions/`, verified against
+  `prisma migrate diff --from-empty` and a clean `db push` on a temp SQLite file.
+- **`lib/billing/`** (new, parallel to `lib/payment/` which stays untouched — that's
+  tenant-to-landlord rent collection, a separate concern): `plan-limits.ts` encodes the
+  landing page's own numbers (Free = 1 property, Pro = 10, Business = unlimited; seat
+  limits are recorded but **not enforced** — there's no Org/Team model yet, see 3.2).
+  `subscription-service.ts` reuses `paymentService.getStripeClient()` (no duplicate
+  Stripe client init), creates Checkout Sessions offering **card + SEPA Direct Debit**
+  with **Stripe Tax** turned on (EU VAT per customer country), Billing Portal sessions
+  for self-service upgrade/downgrade/cancel, and syncs plan/status from
+  `checkout.session.completed` / `customer.subscription.*` webhooks.
+- **Routes:** `GET /api/billing/{checkout,portal,subscription}`; extended
+  `app/api/webhooks/stripe/route.ts` to dispatch subscription-lifecycle events to the
+  new service (payment-intent/charge events keep going to `paymentService`, unchanged).
+  Fixed a latent bug in that route's own test mock (`vi.fn(() => ({...}))` isn't a valid
+  `new`-constructor) surfaced while adding real dispatch-assertion tests.
+- **Gating:** new `PlanLimitError` (`lib/utils/error-handling.ts`, → HTTP 402), checked in
+  `app/api/properties/route.ts` right before creation. Gated behind a new
+  `ENABLE_BILLING` flag, **off by default** — self-hosted instances are never limited,
+  matching the landing page's own "self-hosted is always free" disclaimer.
+- **UI:** filled in the Settings page's already-stubbed "Billing" tab
+  (`components/features/settings/settings-view.tsx` — it said "coming soon") with real
+  plan/status/usage display and upgrade/manage-billing buttons; rewired the landing
+  page's Pro ("Start free trial" → was linking to `/demo`) and Business ("Contact sales"
+  → was a `mailto:`, recopied to "Get started") CTAs to the new checkout route, all
+  three tiers self-serve per product decision. Pro Checkout Sessions get a
+  `STRIPE_TRIAL_DAYS_PRO`-configurable 14-day trial so "Start free trial" is literally
+  true; Business does not claim one.
+- **Auth flow:** `/auth/signin` didn't support a post-login redirect target before this —
+  added a `callbackUrl` query param (validated to same-site relative paths only, to rule
+  out an open redirect) so an unauthenticated landing-page click lands back on Checkout
+  after sign-in instead of always going to `/dashboard`.
+- **Env:** `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_BUSINESS`, `STRIPE_TRIAL_DAYS_PRO`,
+  `ENABLE_BILLING` documented in `.env.example` and `CLAUDE.md`; `scripts/validate-env.js`
+  now requires the two Price IDs when `ENABLE_BILLING=true`.
+- **Known gap, by design:** Business's "Team access (up to 5 users)" line item is sellable
+  but not enforced — there's no multi-user/Org model to enforce it against. Revisit once
+  3.2 is decided.
 
 ---
 
