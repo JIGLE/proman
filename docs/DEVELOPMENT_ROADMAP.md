@@ -64,18 +64,22 @@ outside the app_. The single biggest step toward "essential."
 - **Files:** `lib/utils/pii-encryption.ts` (source of `PII_FIELDS`) → the entity service
   layer; a one-off backfill script; `prisma/schema.prisma` if column sizing needs it.
 
-### 1.2 Route automated reminders to email (and lay groundwork for push)
+### 1.2 Route automated reminders to email — **Done** (2026-07-09)
 
+- **Shipped as:** `lib/services/notifications/reminder-email.ts`, called alongside each
+  `notification.create()` in `notification-automation.ts` (inherits that call's existing
+  per-entity dedup — no new "already sent" tracking needed). Gated on the **existing**
+  `UserSettings.emailNotifications`/`.taxReminderNotifications` fields (already modeled
+  and editable in Settings, just never wired to a send) — no new `NotificationPreference`
+  model needed, which was the original guess in this row before implementation. New
+  `notifications.email.*` i18n keys in all four catalogs, formatted via a small
+  dependency-free formatter (`lib/utils/format-message.ts`) since `next-intl`'s
+  `createTranslator` isn't exported from this version's top-level package types. Push
+  notifications remain a follow-up (not started).
 - **Why:** the #1 habit gap — reminders only `prisma.notification.create`, never leave
   the app (audit §3, verified §7-A).
-- **Acceptance:** each reminder path (rent D-5, overdue D+1/D+7, renewal D-60, recibo
-  5-day) also dispatches a localized email via the existing SendGrid layer, respecting a
-  per-user notification preference and unsubscribe; idempotent (no duplicate sends);
-  metrics counter increments. Push is a follow-up, but the dispatch is abstracted so push
-  slots in.
-- **Files:** `lib/services/notifications/notification-automation.ts`,
-  `lib/services/email/*`, `app/api/cron/notifications/route.ts`; a `NotificationPreference`
-  addition; new i18n keys in all four catalogs.
+- **Files:** `lib/services/notifications/{notification-automation,reminder-email}.ts`,
+  `lib/utils/format-message.ts`, `messages/{en,pt,es,it}.json`.
 
 ### 1.3 Core-loop product analytics + server-side activation
 
