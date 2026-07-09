@@ -390,7 +390,12 @@ export function NotificationCenter({
                 <Trash2 className="h-3.5 w-3.5 mr-1" />
                 {t("clearAll")}
               </Button>
-              <Button variant="ghost" size="sm" className="h-7 text-xs" aria-label={t("settingsLabel")}>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs"
+                aria-label={t("settingsLabel")}
+              >
                 <Settings className="h-3.5 w-3.5 mr-1" />
                 {t("settings")}
               </Button>

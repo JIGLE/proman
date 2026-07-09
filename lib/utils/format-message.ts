@@ -28,12 +28,18 @@ const PLURAL_RE = /\{(\w+),\s*plural,\s*one\s*\{([^}]*)\}\s*other\s*\{([^}]*)\}\
 const VAR_RE = /\{(\w+)\}/g;
 
 /** Interpolates `{var}` and `{var, plural, one {...} other {...}}` placeholders. */
-export function formatMessage(template: string, values: Record<string, string | number> = {}): string {
-  let result = template.replace(PLURAL_RE, (_match, key: string, onePart: string, otherPart: string) => {
-    const n = Number(values[key]);
-    const chosen = n === 1 ? onePart : otherPart;
-    return chosen.replace(/#/g, String(n));
-  });
+export function formatMessage(
+  template: string,
+  values: Record<string, string | number> = {},
+): string {
+  let result = template.replace(
+    PLURAL_RE,
+    (_match, key: string, onePart: string, otherPart: string) => {
+      const n = Number(values[key]);
+      const chosen = n === 1 ? onePart : otherPart;
+      return chosen.replace(/#/g, String(n));
+    },
+  );
   result = result.replace(VAR_RE, (match, key: string) =>
     key in values ? String(values[key]) : match,
   );
@@ -41,6 +47,10 @@ export function formatMessage(template: string, values: Record<string, string | 
 }
 
 /** Looks up `path` in `messages` and interpolates it in one call. */
-export function t(messages: Messages, path: string, values?: Record<string, string | number>): string {
+export function t(
+  messages: Messages,
+  path: string,
+  values?: Record<string, string | number>,
+): string {
   return formatMessage(getMessage(messages, path), values);
 }

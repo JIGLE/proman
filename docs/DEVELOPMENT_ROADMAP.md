@@ -171,7 +171,7 @@ up to the brand.
   `lib/demo/demo-scenarios.ts`, dashboard surface.
 - **Shipped as:**
   - Deleted `components/ui/achievements.tsx` (`AchievementGrid`/`AchievementBadge`) and
-    `components/ui/quick-actions.tsx` (`QuickActions` *and* `AttentionNeeded`) — verified
+    `components/ui/quick-actions.tsx` (`QuickActions` _and_ `AttentionNeeded`) — verified
     zero imports of any of the four exports anywhere outside their own files before
     removing them, plus their now-orphaned `achievements`/`achievementsDescription`
     message keys in all four locale catalogs. `AttentionNeeded` was the dead duplicate
@@ -247,7 +247,7 @@ up to the brand.
   and renders on the dashboard, with its own separate severity styling and no i18n. Rather
   than reconcile two computations of the same alerts, Insights now commits fully to being
   the **analytical** view the acceptance criteria call for: KPI row, revenue trend, portfolio
-  mix, an upcoming-lease-expirations *list* (informational, not an actionable alert card),
+  mix, an upcoming-lease-expirations _list_ (informational, not an actionable alert card),
   and quick links — updated the file's header doc-comment to say so explicitly. Removed the
   now-dead `overdueReceipts`/`overdueAmount`/`vacantCount` fields from the `metrics` memo and
   the now-unused `AlertTriangle`/`CheckCircle2`/`CalendarClock` icon imports, and pruned the
@@ -268,13 +268,13 @@ loop is a streak; no behavioral surface renders raw English; one triage loop, no
 
 **Goal:** remove structural risk and decide the ceiling.
 
-| #   | Item                                                                                                             | Why                                                                                 | Files                                                              |
-| --- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| #   | Item                                                                                                                        | Why                                                                                 | Files                                                              |
+| --- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | 3.1 | Consolidate duplicated entity-detail UIs and duplicate routes (`/portfolio`↔`/properties`, `/people`↔`/tenants`) — **Done** | ~2,400 LOC divergence risk; two names per thing (audit §4)                          | `components/features/{property,tenant}/*`, `app/[locale]/(main)/*` |
-| 3.2 | Decide the identity model: stay single-account, or plan Org/Team — **Done**                                       | Determines the agency/"Business" ceiling; global-unique emails block multi-org (§4) | `prisma/schema.prisma` + queries                                   |
-| 3.3 | Adopt one IA and delete the other two visions — **Done**                                                          | Three conflicting IA docs today (audit §6)                                          | the three IA docs; sidebar/nav                                     |
-| 3.4 | Validate & wire monetization, or commit to open-source-first — **Done**                                          | Pricing tiers are unbacked copy; no Stripe subscription wiring (audit §2)           | Stripe subscription layer; plan gating                             |
-| 3.5 | Plan the storage path (SQLite BLOBs → external/Postgres) if scale is a goal — **Done** | `Lease.contractFile` BLOBs + load-everything context cap large portfolios (§4)      | `lib/contexts/use-app-data.ts`, storage layer                      |
+| 3.2 | Decide the identity model: stay single-account, or plan Org/Team — **Done**                                                 | Determines the agency/"Business" ceiling; global-unique emails block multi-org (§4) | `prisma/schema.prisma` + queries                                   |
+| 3.3 | Adopt one IA and delete the other two visions — **Done**                                                                    | Three conflicting IA docs today (audit §6)                                          | the three IA docs; sidebar/nav                                     |
+| 3.4 | Validate & wire monetization, or commit to open-source-first — **Done**                                                     | Pricing tiers are unbacked copy; no Stripe subscription wiring (audit §2)           | Stripe subscription layer; plan gating                             |
+| 3.5 | Plan the storage path (SQLite BLOBs → external/Postgres) if scale is a goal — **Done**                                      | `Lease.contractFile` BLOBs + load-everything context cap large portfolios (§4)      | `lib/contexts/use-app-data.ts`, storage layer                      |
 
 **Exit criteria:** one implementation per entity/route; a decided identity + monetization
 posture; a stated scale plan. **Met** — all five of Milestone 3's items are now done.
@@ -345,7 +345,7 @@ doc — same reuse-over-duplication call made for the `emptyState`/`insights` i1
 namespaces in milestone 2.3.
 
 - Confirmed and quantified the audit's two named risks by reading the actual code:
-  `Lease.contractFile` is the *only* `Bytes` field in the schema (`Document` already
+  `Lease.contractFile` is the _only_ `Bytes` field in the schema (`Document` already
   does file storage correctly via `storagePath`), and `lib/contexts/use-app-data.ts`
   fires 10 unpaginated fetches in parallel on every mount — a client/API-shape problem
   that would persist under PostgreSQL too, not a database-engine problem.
@@ -425,7 +425,7 @@ Investigated what "~2,400 LOC divergence risk" actually referred to before touch
 anything — it turned out to be two separate findings, only one of which needed code
 changes.
 
-- **The routes (`/portfolio`↔`/properties`, `/people`↔`/tenants`) are not duplicated
+- \*\*The routes (`/portfolio`↔`/properties`, `/people`↔`/tenants`) are not duplicated
   UIs — `/properties` and `/tenants` (and their `[id]` sub-routes) are pure
   `redirect()` stubs to `/portfolio`/`/people`, nothing else. Harmless, standard
   backward-compatibility for old bookmarks/links. Left as-is.

@@ -58,14 +58,24 @@ describe("t", () => {
     const es = (await import("@/messages/es.json")).default;
     const it_ = (await import("@/messages/it.json")).default;
 
-    expect(t(pt, "notifications.email.overdueNotice.body", { days: 1, amount: "€950", tenant: "Maria", property: "Sunset Apt. 2A" })).toContain(
-      "1 dia",
-    );
-    expect(t(es, "notifications.email.overdueNotice.body", { days: 7, amount: "€950", tenant: "Maria", property: "Sunset Apt. 2A" })).toContain(
-      "7 días",
-    );
-    expect(t(it_, "notifications.email.leaseRenewal.subject", { property: "Loft Alfama" })).toContain(
-      "Loft Alfama",
-    );
+    expect(
+      t(pt, "notifications.email.overdueNotice.body", {
+        days: 1,
+        amount: "€950",
+        tenant: "Maria",
+        property: "Sunset Apt. 2A",
+      }),
+    ).toContain("1 dia");
+    expect(
+      t(es, "notifications.email.overdueNotice.body", {
+        days: 7,
+        amount: "€950",
+        tenant: "Maria",
+        property: "Sunset Apt. 2A",
+      }),
+    ).toContain("7 días");
+    expect(
+      t(it_, "notifications.email.leaseRenewal.subject", { property: "Loft Alfama" }),
+    ).toContain("Loft Alfama");
   });
 });

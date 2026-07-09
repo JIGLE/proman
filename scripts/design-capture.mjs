@@ -57,7 +57,13 @@ if (!secret) {
 }
 const sessionToken = await encode({
   secret,
-  token: { name: "Demo User", email: "demo@proman.local", sub: "demo-user", role: "ADMIN", id: "demo-user" },
+  token: {
+    name: "Demo User",
+    email: "demo@proman.local",
+    sub: "demo-user",
+    role: "ADMIN",
+    id: "demo-user",
+  },
   maxAge: 60 * 60,
 });
 await context.addCookies([

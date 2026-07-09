@@ -235,9 +235,7 @@ export async function processSubscriptionWebhook(
 
         const stripe = paymentService.getStripeClient();
         const subscriptionId =
-          typeof session.subscription === "string"
-            ? session.subscription
-            : session.subscription.id;
+          typeof session.subscription === "string" ? session.subscription : session.subscription.id;
         const stripeSubscription = await stripe.subscriptions.retrieve(subscriptionId);
         await syncSubscriptionFromStripe(prisma, userId, stripeSubscription);
         return { success: true };
@@ -269,7 +267,8 @@ export async function processSubscriptionWebhook(
         return { success: true };
     }
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Subscription webhook processing failed";
+    const message =
+      error instanceof Error ? error.message : "Subscription webhook processing failed";
     console.error("Subscription webhook error:", error);
     return { success: false, error: message };
   }

@@ -1,5 +1,9 @@
 import { describe, it, expect, vi } from "vitest";
-import { getActivationSummary, getCoreLoopMetrics, getComplianceStreak } from "./activation-summary";
+import {
+  getActivationSummary,
+  getCoreLoopMetrics,
+  getComplianceStreak,
+} from "./activation-summary";
 
 type Prisma = Parameters<typeof getActivationSummary>[0];
 

@@ -91,7 +91,9 @@ if (isProd) {
       "Generate: openssl rand -hex 32. Run scripts/backfill-pii-encryption.js after setting it.",
   );
 } else if (process.env.PII_ENCRYPTION_KEY && process.env.PII_ENCRYPTION_KEY.length < 64) {
-  warnings.push("  ⚠ PII_ENCRYPTION_KEY — must be 64 hex characters (32 bytes); shorter values are ignored");
+  warnings.push(
+    "  ⚠ PII_ENCRYPTION_KEY — must be 64 hex characters (32 bytes); shorter values are ignored",
+  );
 }
 
 // ── output ───────────────────────────────────────────────────────────────

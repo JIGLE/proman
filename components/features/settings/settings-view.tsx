@@ -1139,8 +1139,7 @@ export function SettingsView(): React.ReactElement {
                       )}
                       {billing.cancelAtPeriodEnd && billing.currentPeriodEnd && (
                         <p className="mt-1 text-xs text-muted-foreground">
-                          Moves to Free on{" "}
-                          {new Date(billing.currentPeriodEnd).toLocaleDateString()}
+                          Moves to Free on {new Date(billing.currentPeriodEnd).toLocaleDateString()}
                         </p>
                       )}
                     </div>
@@ -1185,9 +1184,7 @@ export function SettingsView(): React.ReactElement {
                   </div>
                 </>
               ) : (
-                <p className="text-sm text-muted-foreground">
-                  Failed to load billing information.
-                </p>
+                <p className="text-sm text-muted-foreground">Failed to load billing information.</p>
               )}
             </CardContent>
           </Card>

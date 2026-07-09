@@ -27,7 +27,9 @@ function detectLocale(request: NextRequest): string {
 export async function GET(request: NextRequest): Promise<Response> {
   if (isDemoRequest(request)) {
     const referer = request.headers.get("referer");
-    return NextResponse.redirect(referer && referer.startsWith(getBaseUrl(request)) ? referer : "/");
+    return NextResponse.redirect(
+      referer && referer.startsWith(getBaseUrl(request)) ? referer : "/",
+    );
   }
 
   const authResult = await requireAuth(request);
@@ -38,7 +40,10 @@ export async function GET(request: NextRequest): Promise<Response> {
   const locale = detectLocale(request);
 
   try {
-    const url = await createBillingPortalSession(userId, `${baseUrl}/${locale}/settings?tab=billing`);
+    const url = await createBillingPortalSession(
+      userId,
+      `${baseUrl}/${locale}/settings?tab=billing`,
+    );
     return NextResponse.redirect(url);
   } catch (error) {
     console.error("Billing portal error:", error);

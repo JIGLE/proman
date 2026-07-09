@@ -488,7 +488,9 @@ export function PaymentMatrixView(): React.ReactElement {
                               {formatCurrency(getTotalPaid(tenant.id))}
                             </div>
                             <div className="text-sm text-[var(--color-muted-foreground)]">
-                              {t("ofExpected", { amount: formatCurrency(getTotalExpected(tenant)) })}
+                              {t("ofExpected", {
+                                amount: formatCurrency(getTotalExpected(tenant)),
+                              })}
                             </div>
                           </motion.div>
                         </td>

@@ -57,11 +57,12 @@ describe("/api/settings — onboardingDismissedAt", () => {
   });
 
   it("POST passes onboardingDismissedAt through to the upsert", async () => {
-    upsertMock.mockResolvedValue({ userId: "user-123", onboardingDismissedAt: "2026-07-09T00:00:00.000Z" });
+    upsertMock.mockResolvedValue({
+      userId: "user-123",
+      onboardingDismissedAt: "2026-07-09T00:00:00.000Z",
+    });
 
-    const response = await POST(
-      postRequest({ onboardingDismissedAt: "2026-07-09T00:00:00.000Z" }),
-    );
+    const response = await POST(postRequest({ onboardingDismissedAt: "2026-07-09T00:00:00.000Z" }));
 
     expect(response.status).toBe(200);
     expect(upsertMock).toHaveBeenCalledWith(

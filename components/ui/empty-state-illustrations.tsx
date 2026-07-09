@@ -87,7 +87,11 @@ const emptyStateMeta: Record<
     accentColor: string;
   }
 > = {
-  properties: { icon: Building2, gradient: "from-blue-500/20 to-indigo-500/20", accentColor: "text-blue-400" },
+  properties: {
+    icon: Building2,
+    gradient: "from-blue-500/20 to-indigo-500/20",
+    accentColor: "text-blue-400",
+  },
   tenants: {
     icon: Users,
     gradient: "from-emerald-500/20 to-teal-500/20",

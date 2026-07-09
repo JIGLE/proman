@@ -79,7 +79,10 @@ SheetContent.displayName = "SheetContent";
 
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div
-    className={cn("flex flex-col gap-1.5 border-b border-[var(--color-border)] px-6 py-5", className)}
+    className={cn(
+      "flex flex-col gap-1.5 border-b border-[var(--color-border)] px-6 py-5",
+      className,
+    )}
     {...props}
   />
 );

@@ -10,7 +10,11 @@
 
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { createSuccessResponse, createErrorResponse, withErrorHandler } from "@/lib/utils/error-handling";
+import {
+  createSuccessResponse,
+  createErrorResponse,
+  withErrorHandler,
+} from "@/lib/utils/error-handling";
 import { withRateLimit } from "@/lib/utils/rate-limit";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { tenantPortalService } from "@/lib/services/auth/tenant-portal-auth";

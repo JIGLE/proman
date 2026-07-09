@@ -41,12 +41,17 @@ function detectLocale(request: NextRequest): string {
 export async function GET(request: NextRequest): Promise<Response> {
   const plan = request.nextUrl.searchParams.get("plan");
   if (!plan || !UPGRADABLE_PLANS.has(plan)) {
-    return NextResponse.json({ error: "A valid plan (pro or business) is required" }, { status: 400 });
+    return NextResponse.json(
+      { error: "A valid plan (pro or business) is required" },
+      { status: 400 },
+    );
   }
 
   if (isDemoRequest(request)) {
     const referer = request.headers.get("referer");
-    return NextResponse.redirect(referer && referer.startsWith(getBaseUrl(request)) ? referer : "/");
+    return NextResponse.redirect(
+      referer && referer.startsWith(getBaseUrl(request)) ? referer : "/",
+    );
   }
 
   const authResult = await requireAuth(request);

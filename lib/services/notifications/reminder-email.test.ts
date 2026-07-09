@@ -54,7 +54,12 @@ describe("sendReminderEmail", () => {
       settings: { language: "en", emailNotifications: false, taxReminderNotifications: true },
     });
 
-    await sendReminderEmail(prisma, "user-1", "rentReminder", { tenant: "T", property: "P", amount: "€1", date: "d" });
+    await sendReminderEmail(prisma, "user-1", "rentReminder", {
+      tenant: "T",
+      property: "P",
+      amount: "€1",
+      date: "d",
+    });
 
     expect(sendEmailMock).not.toHaveBeenCalled();
   });
@@ -63,7 +68,12 @@ describe("sendReminderEmail", () => {
     sendEmailMock.mockResolvedValue({ success: true });
     const prisma = makePrisma({ email: "owner@example.com", settings: null });
 
-    await sendReminderEmail(prisma, "user-1", "rentReminder", { tenant: "T", property: "P", amount: "€1", date: "d" });
+    await sendReminderEmail(prisma, "user-1", "rentReminder", {
+      tenant: "T",
+      property: "P",
+      amount: "€1",
+      date: "d",
+    });
 
     expect(sendEmailMock).toHaveBeenCalledTimes(1);
   });
@@ -93,7 +103,12 @@ describe("sendReminderEmail", () => {
       settings: { language: "en", emailNotifications: true, taxReminderNotifications: false },
     });
 
-    await sendReminderEmail(prisma, "user-1", "rentReminder", { tenant: "T", property: "P", amount: "€1", date: "d" });
+    await sendReminderEmail(prisma, "user-1", "rentReminder", {
+      tenant: "T",
+      property: "P",
+      amount: "€1",
+      date: "d",
+    });
 
     expect(sendEmailMock).toHaveBeenCalledTimes(1);
   });
@@ -105,7 +120,11 @@ describe("sendReminderEmail", () => {
       settings: { language: "pt", emailNotifications: true, taxReminderNotifications: true },
     });
 
-    await sendReminderEmail(prisma, "user-1", "leaseRenewal", { tenant: "Maria", property: "Sunset", date: "31/12/2026" });
+    await sendReminderEmail(prisma, "user-1", "leaseRenewal", {
+      tenant: "Maria",
+      property: "Sunset",
+      date: "31/12/2026",
+    });
 
     const [emailData] = sendEmailMock.mock.calls[0];
     expect(emailData.subject).toBe("Contrato expira em 60 dias — Sunset");
@@ -114,7 +133,12 @@ describe("sendReminderEmail", () => {
   it("does nothing (no throw) when the user no longer exists", async () => {
     const prisma = makePrisma(null);
     await expect(
-      sendReminderEmail(prisma, "gone", "rentReminder", { tenant: "T", property: "P", amount: "€1", date: "d" }),
+      sendReminderEmail(prisma, "gone", "rentReminder", {
+        tenant: "T",
+        property: "P",
+        amount: "€1",
+        date: "d",
+      }),
     ).resolves.toBeUndefined();
     expect(sendEmailMock).not.toHaveBeenCalled();
   });
@@ -127,7 +151,12 @@ describe("sendReminderEmail", () => {
     });
 
     await expect(
-      sendReminderEmail(prisma, "user-1", "rentReminder", { tenant: "T", property: "P", amount: "€1", date: "d" }),
+      sendReminderEmail(prisma, "user-1", "rentReminder", {
+        tenant: "T",
+        property: "P",
+        amount: "€1",
+        date: "d",
+      }),
     ).resolves.toBeUndefined();
     expect(incrementEmailFailedMock).toHaveBeenCalledTimes(1);
     expect(incrementEmailSentMock).not.toHaveBeenCalled();
@@ -141,7 +170,12 @@ describe("sendReminderEmail", () => {
     });
 
     await expect(
-      sendReminderEmail(prisma, "user-1", "rentReminder", { tenant: "T", property: "P", amount: "€1", date: "d" }),
+      sendReminderEmail(prisma, "user-1", "rentReminder", {
+        tenant: "T",
+        property: "P",
+        amount: "€1",
+        date: "d",
+      }),
     ).resolves.toBeUndefined();
     expect(incrementEmailFailedMock).toHaveBeenCalledTimes(1);
   });
@@ -153,8 +187,18 @@ describe("sendReminderEmail", () => {
       settings: { language: "en", emailNotifications: true, taxReminderNotifications: true },
     });
 
-    await sendReminderEmail(prisma, "user-1", "rentReminder", { tenant: "A", property: "P", amount: "€1", date: "d" });
-    await sendReminderEmail(prisma, "user-1", "overdueNotice", { tenant: "B", property: "P", amount: "€1", days: 1 });
+    await sendReminderEmail(prisma, "user-1", "rentReminder", {
+      tenant: "A",
+      property: "P",
+      amount: "€1",
+      date: "d",
+    });
+    await sendReminderEmail(prisma, "user-1", "overdueNotice", {
+      tenant: "B",
+      property: "P",
+      amount: "€1",
+      days: 1,
+    });
 
     expect(prisma.user.findUnique).toHaveBeenCalledTimes(1);
     expect(sendEmailMock).toHaveBeenCalledTimes(2);

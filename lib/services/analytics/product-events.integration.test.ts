@@ -36,9 +36,8 @@ describe("ProductEvent + UserSettings.onboardingDismissedAt — real Prisma clie
   });
 
   it("creates and reads back a ProductEvent row", async () => {
-    const { getPrismaClient, resetPrismaClientForTests } = await import(
-      "@/lib/services/database/database"
-    );
+    const { getPrismaClient, resetPrismaClientForTests } =
+      await import("@/lib/services/database/database");
     resetPrismaClientForTests();
     const prisma = getPrismaClient();
 
