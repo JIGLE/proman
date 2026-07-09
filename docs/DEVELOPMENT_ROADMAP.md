@@ -81,18 +81,37 @@ outside the app_. The single biggest step toward "essential."
 - **Files:** `lib/services/notifications/{notification-automation,reminder-email}.ts`,
   `lib/utils/format-message.ts`, `messages/{en,pt,es,it}.json`.
 
-### 1.3 Core-loop product analytics + server-side activation
+### 1.3 Core-loop product analytics + server-side activation — **Done** (2026-07-09)
 
+- **Shipped as:** two complementary pieces, not one events table for everything.
+  `lib/services/analytics/activation-summary.ts` derives the activation timeline
+  (first property/tenant/lease/paid-receipt) and aggregate metrics **directly from
+  existing tables** (no new events needed — works retroactively for every existing
+  user), exposed via `GET /api/activation` (self-serve) and
+  `GET /api/admin/core-loop-metrics` (admin aggregate — the "minimal internal
+  dashboard or query"). `lib/services/analytics/product-events.ts` is a generic
+  sink reserved for signals with no other home — wired to exactly `reminder_clicked`
+  in `notification-center.tsx` via `POST /api/events`. Onboarding dismissal moved
+  from two `localStorage` keys to `UserSettings.onboardingDismissedAt` via the
+  **existing** `/api/settings` endpoints (no new route needed); collapse state
+  stays client-only (pure UI density, not a business signal).
+- **New finding (out of scope to fix here):** running the full existing migration
+  history via `prisma migrate deploy` against a from-scratch SQLite database fails
+  partway through — `20260308000000_iberian_compliance` contains Postgres-only
+  syntax (`DOUBLE PRECISION`, `ADD CONSTRAINT IF NOT EXISTS`) invalid on SQLite.
+  Pre-existing, unrelated to this milestone. The project's real schema-application
+  path is `prisma db push` against the live `schema.prisma`, which is unaffected.
+  Worth a dedicated M0-style cleanup pass if `migrate deploy` is ever relied on for
+  a from-scratch production bootstrap.
 - **Why:** you can't measure the North-Star or re-drive activation today (audit §9).
-- **Acceptance:** a lightweight events sink records the core-loop events (activation
-  steps, rent-marked-paid, receipt-issued, reminder-clicked); onboarding activation state
-  moves from `localStorage` to a server record so it survives browsers and is queryable.
-- **Files:** new events table + write path; `components/ui/onboarding-checklist.tsx`
-  (replace the `localStorage` dismissal); a minimal internal dashboard or query.
+- **Files:** `lib/services/analytics/{activation-summary,product-events}.ts`,
+  `app/api/{activation,events,admin/core-loop-metrics}/route.ts`,
+  `prisma/schema.prisma` (+ migration), `components/ui/{onboarding-checklist,
+notification-center}.tsx`, `app/api/settings/route.ts`.
 
 **Exit criteria:** PII at rest is encrypted; a landlord gets an email when rent is overdue
-or a receipt is due; the team can chart activation and on-time-receipt rate.
-**Parallel-safe:** 1.1, 1.2, 1.3 have no hard interdependencies — can run concurrently.
+or a receipt is due; the team can chart activation and on-time-receipt rate. **Met** — all
+three of Milestone 1's items are now done.
 
 ---
 
