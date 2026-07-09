@@ -714,7 +714,27 @@
     "documentUploaded": "Document Uploaded",
     "rentReceiptDue": "Rent Receipt Due",
     "nruaRegistration": "NRUA Registration Required",
-    "markAllRead": "Mark All as Read"
+    "markAllRead": "Mark All as Read",
+    "email": {
+      "rentReminder": {
+        "subject": "Rent payment due in 5 days — {property}",
+        "body": "Payment of {amount} from {tenant} for {property} is due on {date}."
+      },
+      "overdueNotice": {
+        "subject": "Payment overdue by {days, plural, one {# day} other {# days}} — {property}",
+        "body": "Payment of {amount} from {tenant} for {property} is overdue by {days, plural, one {# day} other {# days}}."
+      },
+      "leaseRenewal": {
+        "subject": "Lease expiring in 60 days — {property}",
+        "body": "The lease for {tenant} at {property} expires on {date}. Consider renewal or sending notice."
+      },
+      "receiptDeadline": {
+        "subject": "Recibo de renda deadline tomorrow — {property}",
+        "body": "A rent receipt for {tenant} at {property} (payment of {amount}) must be issued by tomorrow to meet the 5-day legal deadline."
+      },
+      "footer": "You're receiving this because email notifications are enabled in your Domora settings.",
+      "viewInApp": "View in Domora"
+    }
   },
   "owners": {
     "title": "Property Owners",

@@ -714,7 +714,27 @@
     "documentUploaded": "Documento caricato",
     "rentReceiptDue": "Ricevuta affitto in scadenza",
     "nruaRegistration": "Registrazione NRUA richiesta",
-    "markAllRead": "Segna tutto come letto"
+    "markAllRead": "Segna tutto come letto",
+    "email": {
+      "rentReminder": {
+        "subject": "Pagamento affitto in scadenza tra 5 giorni — {property}",
+        "body": "Il pagamento di {amount} da {tenant} per {property} scade il {date}."
+      },
+      "overdueNotice": {
+        "subject": "Pagamento in ritardo di {days, plural, one {# giorno} other {# giorni}} — {property}",
+        "body": "Il pagamento di {amount} da {tenant} per {property} è in ritardo di {days, plural, one {# giorno} other {# giorni}}."
+      },
+      "leaseRenewal": {
+        "subject": "Contratto in scadenza tra 60 giorni — {property}",
+        "body": "Il contratto di {tenant} presso {property} scade il {date}. Valuta il rinnovo o l'invio di un preavviso."
+      },
+      "receiptDeadline": {
+        "subject": "Scadenza ricevuta affitto domani — {property}",
+        "body": "È necessario emettere una ricevuta d'affitto per {tenant} presso {property} (pagamento di {amount}) entro domani per rispettare il termine legale di 5 giorni."
+      },
+      "footer": "Ricevi questa email perché le notifiche via email sono attivate nelle tue impostazioni Domora.",
+      "viewInApp": "Vedi in Domora"
+    }
   },
   "owners": {
     "title": "Proprietari",

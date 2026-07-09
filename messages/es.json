@@ -714,7 +714,27 @@
     "documentUploaded": "Documento Subido",
     "rentReceiptDue": "Recibo de Alquiler Pendiente",
     "nruaRegistration": "Registro NRUA Necesario",
-    "markAllRead": "Marcar Todo como Leído"
+    "markAllRead": "Marcar Todo como Leído",
+    "email": {
+      "rentReminder": {
+        "subject": "El pago del alquiler vence en 5 días — {property}",
+        "body": "El pago de {amount} de {tenant} para {property} vence el {date}."
+      },
+      "overdueNotice": {
+        "subject": "Pago atrasado {days, plural, one {# día} other {# días}} — {property}",
+        "body": "El pago de {amount} de {tenant} para {property} está atrasado {days, plural, one {# día} other {# días}}."
+      },
+      "leaseRenewal": {
+        "subject": "Contrato vence en 60 días — {property}",
+        "body": "El contrato de {tenant} en {property} vence el {date}. Considere renovarlo o enviar un aviso."
+      },
+      "receiptDeadline": {
+        "subject": "Plazo del recibo de alquiler vence mañana — {property}",
+        "body": "Debe emitirse un recibo de alquiler para {tenant} en {property} (pago de {amount}) antes de mañana para cumplir con el plazo legal de 5 días."
+      },
+      "footer": "Recibe este correo porque las notificaciones por correo están activadas en su configuración de Domora.",
+      "viewInApp": "Ver en Domora"
+    }
   },
   "owners": {
     "title": "Propietarios",
