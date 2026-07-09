@@ -272,7 +272,7 @@ loop is a streak; no behavioral surface renders raw English; one triage loop, no
 | --- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | 3.1 | Consolidate duplicated entity-detail UIs and duplicate routes (`/portfolio`↔`/properties`, `/people`↔`/tenants`) | ~2,400 LOC divergence risk; two names per thing (audit §4)                          | `components/features/{property,tenant}/*`, `app/[locale]/(main)/*` |
 | 3.2 | Decide the identity model: stay single-account, or plan Org/Team — **Done**                                       | Determines the agency/"Business" ceiling; global-unique emails block multi-org (§4) | `prisma/schema.prisma` + queries                                   |
-| 3.3 | Adopt one IA (task-oriented) and delete the other two visions                                                    | Three conflicting IA docs today (audit §6)                                          | the three IA docs; sidebar/nav                                     |
+| 3.3 | Adopt one IA and delete the other two visions — **Done**                                                          | Three conflicting IA docs today (audit §6)                                          | the three IA docs; sidebar/nav                                     |
 | 3.4 | Validate & wire monetization, or commit to open-source-first — **Done**                                          | Pricing tiers are unbacked copy; no Stripe subscription wiring (audit §2)           | Stripe subscription layer; plan gating                             |
 | 3.5 | Plan the storage path (SQLite BLOBs → external/Postgres) if scale is a goal — **Done** | `Lease.contractFile` BLOBs + load-everything context cap large portfolios (§4)      | `lib/contexts/use-app-data.ts`, storage layer                      |
 
@@ -306,6 +306,34 @@ item posed. Full reasoning and trigger conditions for revisiting are in
   comment pointing at the Decisions Log entry.
 - **No code changes to `prisma/schema.prisma` or auth middleware** — this item stayed
   scoped to the decision + the one honesty fix it required.
+
+### 3.3 — Shipped as: adopted the IA that's actually live, not "task-oriented"
+
+This item's original framing (written into this roadmap during the initial audit) said
+"adopt one IA (task-oriented)." Investigating before executing that literally turned up
+something the roadmap's author (an earlier pass of this same work) hadn't checked: one
+of the three competing visions was **already shipped**, not merely proposed.
+
+- `docs/UX_AUDIT_2026.md`'s own M0.1 status reconciliation (§C2, done earlier this
+  engagement) already confirmed its Operations/Intelligence(Reports)/System sidebar
+  proposal is live in `lib/portal/access.ts` — the actual code was checked, not assumed.
+  `docs/UX_IMPROVEMENT_PLAN.md`'s "task-oriented" nav (§3.1) is explicitly self-flagged
+  as **XL/multi-sprint effort requiring a design sprint and real user validation** before
+  engineering — neither happened. Overwriting a nav that already reflects several real,
+  reasoned, shipped decisions (see `ROADMAP.md`'s Decisions Log: "Maintenance promoted to
+  first-class nav item," "Analytics, Insights, Reports added to nav in Phase 1") with an
+  unvalidated redesign would have been a regression dressed up as roadmap completion.
+- **Decision: adopt `docs/UX_AUDIT_2026.md`'s IA as canonical** (it's what's live);
+  mark `docs/UI_CONSISTENCY_GUIDE.md`'s "Assets/People/Finance" proposal and
+  `docs/UX_IMPROVEMENT_PLAN.md` §3.1's task-oriented proposal as **not adopted** with
+  status notes in both docs explaining why and pointing at the canonical source — rather
+  than deleting either file, since both contain substantial unrelated content (general
+  UI rules; the rest of a multi-phase improvement plan) still worth keeping.
+- **No sidebar/nav code changes** — `lib/portal/access.ts` already matches the adopted
+  vision (with a few small, already-justified evolutions since the original diagram:
+  Vendors added, Correspondence stayed separate from Documents, Compliance/Tax Filing
+  became their own System items). Documented those deltas directly in
+  `docs/UX_AUDIT_2026.md` rather than redrawing the diagram.
 
 ### 3.5 — Shipped as: storage/scale strategy doc (chose "plan," not "migrate")
 

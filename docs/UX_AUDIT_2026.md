@@ -122,6 +122,16 @@ Sidebar (12 items, 3 groups)
 
 ### Proposed Navigation Architecture (AFTER)
 
+> **Status (2026-07-09, roadmap 3.3): adopted — this is the canonical IA.** Confirmed
+> shipped in `lib/portal/access.ts` (see §C2 status note above). The two competing
+> proposals in `docs/UI_CONSISTENCY_GUIDE.md` and `docs/UX_IMPROVEMENT_PLAN.md` §3.1
+> were marked not-adopted in favor of this one. Implementation evolved a few item
+> placements since this diagram was drawn (e.g. Vendors added to Operations;
+> Correspondence stayed separate rather than merging into Documents; Compliance/Tax
+> Filing became their own System items rather than folding into Reports) — treat
+> `lib/portal/access.ts` as the source of truth for exact current item placement, this
+> diagram for the overall three-group shape.
+
 ```
 Sidebar (8 primary items, 2 conceptual sections)
 │
