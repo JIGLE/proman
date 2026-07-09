@@ -35,6 +35,23 @@ export type NotificationType =
 
 export type NotificationPriority = "low" | "medium" | "high" | "urgent";
 
+/**
+ * Fire-and-forget product-analytics event — see lib/services/analytics/product-events.ts.
+ * Records that a notification (often an automated reminder — see
+ * lib/services/notifications/notification-automation.ts) was clicked, as
+ * opposed to merely marked read via a bulk action.
+ */
+function trackReminderClicked(notification: Notification): void {
+  fetch("/api/events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: "reminder_clicked",
+      metadata: { type: notification.type },
+    }),
+  }).catch(() => {});
+}
+
 export interface Notification {
   id: string;
   type: NotificationType;
@@ -135,6 +152,7 @@ function NotificationItem({
       onClick={() => {
         if (!notification.read) {
           onMarkAsRead(notification.id);
+          trackReminderClicked(notification);
         }
         onClick?.(notification);
       }}

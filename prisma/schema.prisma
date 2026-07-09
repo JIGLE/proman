@@ -58,6 +58,7 @@ model User {
   governmentVerifications GovernmentVerification[]
   modelo179Submissions Modelo179Submission[]
   taxFilings     TaxFiling[]
+  productEvents  ProductEvent[]
 }
 
 model EmailLog {
@@ -1030,12 +1031,38 @@ model UserSettings {
   emailNotifications       Boolean  @default(true)
   taxReminderNotifications Boolean  @default(true)
   distributionNotifications Boolean @default(true)
+  // Server-side onboarding-checklist dismissal — was localStorage-only, so it
+  // didn't survive across browsers/devices and couldn't be measured. Null
+  // means "not dismissed" (or dismissed pre-migration, on an old client).
+  onboardingDismissedAt    DateTime?
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_settings")
+}
+
+/// Lightweight product-analytics event sink (docs/PRODUCT_AUDIT_2026.md §9: the
+/// app had landing-page funnel tracking but no in-app product analytics).
+/// Deliberately generic (name + JSON metadata) rather than a table per event
+/// type — most core-loop facts (first property/tenant/lease/receipt, rent
+/// marked paid, rent receipt issued) are already derivable retroactively from
+/// existing tables' createdAt/status columns, so this sink is reserved for
+/// signals that have no other home, e.g. "a reminder notification was clicked"
+/// (as opposed to "a notification was marked read" via a bulk action).
+model ProductEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  metadata  String?  // JSON
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, name])
+  @@index([createdAt])
+  @@map("product_events")
 }
 
 // ========================================

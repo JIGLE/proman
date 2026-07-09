@@ -19,7 +19,7 @@ import { Button } from "./button";
 import { cn } from "@/lib/utils/utils";
 import { useTranslations } from "next-intl";
 
-const CHECKLIST_DISMISSED_KEY = "proman.onboarding.checklist.dismissed";
+// Collapse state is a pure UI-density preference — fine to keep client-only.
 const CHECKLIST_COLLAPSED_KEY = "proman.onboarding.checklist.collapsed";
 
 export interface OnboardingChecklistStep {
@@ -54,11 +54,28 @@ export function OnboardingChecklist({
 
   useEffect(() => {
     try {
-      setDismissed(localStorage.getItem(CHECKLIST_DISMISSED_KEY) === "true");
       setCollapsed(localStorage.getItem(CHECKLIST_COLLAPSED_KEY) === "true");
     } catch {
       // Ignore
     }
+
+    // Dismissal is a server-side UserSettings field (was localStorage-only,
+    // so it didn't survive across browsers/devices and couldn't be measured
+    // — see docs/PRODUCT_AUDIT_2026.md §3).
+    let cancelled = false;
+    fetch("/api/settings")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (cancelled) return;
+        if (json?.data?.onboardingDismissedAt) setDismissed(true);
+      })
+      .catch(() => {
+        // Default to not-dismissed on failure — showing the checklist again
+        // is the safe direction to fail in, not hiding it permanently.
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const completedCount = useMemo(() => steps.filter((s) => s.completed).length, [steps]);
@@ -68,11 +85,15 @@ export function OnboardingChecklist({
 
   const handleDismiss = useCallback(() => {
     setDismissed(true);
-    try {
-      localStorage.setItem(CHECKLIST_DISMISSED_KEY, "true");
-    } catch {
-      // Ignore
-    }
+    fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ onboardingDismissedAt: new Date().toISOString() }),
+    }).catch(() => {
+      // Fire-and-forget: the optimistic local dismiss already happened, and
+      // /api/settings will be retried next time the user (or a settings
+      // change) triggers a save. Worst case the checklist reappears once.
+    });
     onDismiss?.();
   }, [onDismiss]);
 
