@@ -274,10 +274,44 @@ loop is a streak; no behavioral surface renders raw English; one triage loop, no
 | 3.2 | Decide the identity model: stay single-account, or plan Org/Team                                                 | Determines the agency/"Business" ceiling; global-unique emails block multi-org (§4) | `prisma/schema.prisma` + queries                                   |
 | 3.3 | Adopt one IA (task-oriented) and delete the other two visions                                                    | Three conflicting IA docs today (audit §6)                                          | the three IA docs; sidebar/nav                                     |
 | 3.4 | Validate & wire monetization, or commit to open-source-first — **Done**                                          | Pricing tiers are unbacked copy; no Stripe subscription wiring (audit §2)           | Stripe subscription layer; plan gating                             |
-| 3.5 | Plan the storage path (SQLite BLOBs → external/Postgres) if scale is a goal                                      | `Lease.contractFile` BLOBs + load-everything context cap large portfolios (§4)      | `lib/contexts/use-app-data.ts`, storage layer                      |
+| 3.5 | Plan the storage path (SQLite BLOBs → external/Postgres) if scale is a goal — **Done** | `Lease.contractFile` BLOBs + load-everything context cap large portfolios (§4)      | `lib/contexts/use-app-data.ts`, storage layer                      |
 
 **Exit criteria:** one implementation per entity/route; a decided identity + monetization
 posture; a stated scale plan.
+
+### 3.5 — Shipped as: storage/scale strategy doc (chose "plan," not "migrate")
+
+Scoped deliberately as a plan, not a migration: self-hosted-on-SQLite is a core, load-bearing
+part of ProMan's positioning (zero external dependencies), so an unconditional move to
+PostgreSQL would work against the product rather than for it. Extended the existing (and
+previously stale) `docs/DATABASE_STRATEGY.md` rather than creating a second, parallel
+doc — same reuse-over-duplication call made for the `emptyState`/`insights` i18n
+namespaces in milestone 2.3.
+
+- Confirmed and quantified the audit's two named risks by reading the actual code:
+  `Lease.contractFile` is the *only* `Bytes` field in the schema (`Document` already
+  does file storage correctly via `storagePath`), and `lib/contexts/use-app-data.ts`
+  fires 10 unpaginated fetches in parallel on every mount — a client/API-shape problem
+  that would persist under PostgreSQL too, not a database-engine problem.
+- Documented concrete trigger thresholds for when PostgreSQL actually becomes
+  necessary (a hosted/managed offering; SQLite file crossing ~5–10 GB; no-downtime
+  node-failure requirements) — with the explicit recommendation not to migrate
+  speculatively ahead of any of those.
+- Wrote the concrete migration path for when triggered: provider-aware Prisma client
+  construction (branch on `DATABASE_URL` scheme, not a schema fork), an
+  application-level Prisma-to-Prisma data copy tool (not a raw SQL dump, so the
+  PII-encryption extension and BLOB fields transform correctly on both sides), and
+  PostgreSQL as strictly additive — self-hosted SQLite stays the supported default.
+- Surfaced a previously undocumented finding while researching: the migration history
+  contains a leftover from a prior, apparently-abandoned PostgreSQL era —
+  `prisma/migrations/20260308000000_iberian_compliance/` has Postgres-only SQL
+  (`pg_enum`/`DO $$` blocks, `DOUBLE PRECISION`) that breaks `prisma migrate deploy`
+  replayed from empty on SQLite. This was already known from milestone 1.3's
+  investigation; this pass connects it explicitly to the future migration path (fresh
+  per-engine baseline migrations, not replaying the mixed-syntax history) rather than
+  leaving it as an isolated, unexplained bug note. Left unfixed per this item's scope
+  (doc only) — a real fix is future work if/when PostgreSQL is actually adopted.
+- No code changes in this item — see `docs/DATABASE_STRATEGY.md` for the full plan.
 
 ### 3.4 — Shipped as: real Stripe subscription billing (chose "validate & wire")
 
