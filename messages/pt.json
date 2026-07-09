@@ -1145,12 +1145,6 @@
   "insights": {
     "title": "Análises",
     "description": "Desempenho e análise do portfólio",
-    "occupancyRate": "Taxa de Ocupação",
-    "severity": {
-      "danger": "Crítico",
-      "warning": "Aviso",
-      "info": "Informação"
-    },
     "subtitle": "Resumo executivo do desempenho do seu portefólio",
     "refresh": "Atualizar",
     "kpiMonthlyRevenue": "Receita Mensal",
@@ -1159,14 +1153,6 @@
     "kpiAvgRent": "Renda Média",
     "ofTotal": "de {total} no total",
     "vsLastMonth": "{value}% face ao mês anterior",
-    "actionItems": "Tarefas",
-    "allClear": "Tudo em ordem",
-    "noActionItems": "Sem tarefas pendentes de momento",
-    "overduePayments": "{count, plural, one {# pagamento em atraso} other {# pagamentos em atraso}}",
-    "leasesExpiringSoon": "{count, plural, one {# contrato a terminar em breve} other {# contratos a terminar em breve}}",
-    "within60Days": "Nos próximos 60 dias",
-    "vacantProperties": "{count, plural, one {# imóvel vago} other {# imóveis vagos}}",
-    "occupiedPercent": "{percent}% ocupado",
     "revenueTrend": "Tendência de Receita",
     "last6Months": "Últimos 6 meses",
     "noRevenueData": "Ainda sem dados de receita — registe pagamentos para ver tendências",

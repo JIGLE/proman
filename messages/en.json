@@ -1145,12 +1145,6 @@
   "insights": {
     "title": "Insights",
     "description": "Portfolio performance and analytics",
-    "occupancyRate": "Occupancy Rate",
-    "severity": {
-      "danger": "Critical",
-      "warning": "Warning",
-      "info": "Info"
-    },
     "subtitle": "Executive summary of your portfolio performance",
     "refresh": "Refresh",
     "kpiMonthlyRevenue": "Monthly Revenue",
@@ -1159,14 +1153,6 @@
     "kpiAvgRent": "Avg. Rent",
     "ofTotal": "of {total} total",
     "vsLastMonth": "{value}% vs last month",
-    "actionItems": "Action Items",
-    "allClear": "All clear",
-    "noActionItems": "No action items right now",
-    "overduePayments": "{count, plural, one {# overdue payment} other {# overdue payments}}",
-    "leasesExpiringSoon": "{count, plural, one {# lease expiring soon} other {# leases expiring soon}}",
-    "within60Days": "Within 60 days",
-    "vacantProperties": "{count, plural, one {# vacant property} other {# vacant properties}}",
-    "occupiedPercent": "{percent}% occupied",
     "revenueTrend": "Revenue Trend",
     "last6Months": "Last 6 months",
     "noRevenueData": "No revenue data yet — record payments to see trends",

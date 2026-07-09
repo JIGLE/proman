@@ -8,16 +8,13 @@ import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  AlertTriangle,
   Clock,
-  CheckCircle2,
   ArrowRight,
   RefreshCw,
   Lightbulb,
   FileText,
   BarChart3,
   Percent,
-  CalendarClock,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,10 +28,12 @@ import { cn } from "@/lib/utils/utils";
 import { getPropertyTypeColor } from "@/lib/design-tokens";
 
 /**
- * Insights View — Executive summary dashboard
+ * Insights View — analytical (not triage) portfolio dashboard.
  *
- * Shows at-a-glance KPIs, actionable alerts, revenue trend, portfolio
- * breakdown, and quick-links to the Analytics & Reports pages.
+ * Shows at-a-glance KPIs, revenue trend, portfolio breakdown, upcoming
+ * lease expirations, and quick-links to the Analytics & Reports pages.
+ * Deliberately does not duplicate the dashboard's ActionPanel, which is
+ * the single authoritative overdue/expiring/vacant triage surface.
  */
 export function InsightsView(): React.ReactElement {
   const { state } = useApp();
@@ -56,7 +55,6 @@ export function InsightsView(): React.ReactElement {
 
     const totalProperties = properties.length;
     const occupiedCount = properties.filter((p) => p.status === "occupied").length;
-    const vacantCount = totalProperties - occupiedCount;
     const occupancyRate = totalProperties > 0 ? (occupiedCount / totalProperties) * 100 : 0;
 
     const totalTenants = tenants.length;
@@ -71,13 +69,6 @@ export function InsightsView(): React.ReactElement {
       (r) => r.status === "paid" && new Date(r.date) >= startOfYear,
     );
     const yearlyRevenue = paidThisYear.reduce((s, r) => s + r.amount, 0);
-
-    const thirtyDaysAgo = new Date(now);
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-    const overdueReceipts = receipts.filter(
-      (r) => r.status === "pending" && new Date(r.date) < thirtyDaysAgo,
-    );
-    const overdueAmount = overdueReceipts.reduce((s, r) => s + r.amount, 0);
 
     const activeLeases = leases?.filter((l) => l.status === "active") || [];
     const avgRent =
@@ -138,14 +129,11 @@ export function InsightsView(): React.ReactElement {
     return {
       totalProperties,
       occupiedCount,
-      vacantCount,
       occupancyRate,
       totalTenants,
       activeTenants,
       monthlyRevenue,
       yearlyRevenue,
-      overdueReceipts,
-      overdueAmount,
       avgRent,
       expiringLeases,
       revenueTrend,
@@ -154,67 +142,6 @@ export function InsightsView(): React.ReactElement {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [properties, tenants, receipts, leases, refreshKey, tMonths]);
-
-  // ── Alerts ───────────────────────────────────────────────────────
-  const alerts = useMemo(() => {
-    const items: {
-      icon: React.ReactNode;
-      label: string;
-      detail: string;
-      severity: "danger" | "warning" | "info";
-      href: string;
-    }[] = [];
-
-    if (metrics.overdueReceipts.length > 0) {
-      items.push({
-        icon: <AlertTriangle className="h-4 w-4" />,
-        label: t("overduePayments", { count: metrics.overdueReceipts.length }),
-        detail: formatCurrency(metrics.overdueAmount),
-        severity: "danger",
-        href: `/${locale}/financials`,
-      });
-    }
-
-    if (metrics.expiringLeases.length > 0) {
-      items.push({
-        icon: <CalendarClock className="h-4 w-4" />,
-        label: t("leasesExpiringSoon", { count: metrics.expiringLeases.length }),
-        detail: t("within60Days"),
-        severity: "warning",
-        href: `/${locale}/leases`,
-      });
-    }
-
-    if (metrics.vacantCount > 0) {
-      items.push({
-        icon: <Building2 className="h-4 w-4" />,
-        label: t("vacantProperties", { count: metrics.vacantCount }),
-        detail: t("occupiedPercent", { percent: metrics.occupancyRate.toFixed(0) }),
-        severity: metrics.vacantCount > 2 ? "warning" : "info",
-        href: `/${locale}/portfolio`,
-      });
-    }
-
-    if (items.length === 0) {
-      items.push({
-        icon: <CheckCircle2 className="h-4 w-4" />,
-        label: t("allClear"),
-        detail: t("noActionItems"),
-        severity: "info",
-        href: "#",
-      });
-    }
-
-    return items;
-  }, [metrics, formatCurrency, locale, t]);
-
-  const severityColors: Record<string, string> = {
-    danger:
-      "bg-[var(--color-error-muted)] text-[var(--color-error)] border-[var(--color-error)]/20",
-    warning:
-      "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20",
-    info: "bg-[var(--color-info-muted)] text-[var(--color-info)] border-[var(--color-info)]/20",
-  };
 
   // ── Render ───────────────────────────────────────────────────────
   return (
@@ -260,33 +187,6 @@ export function InsightsView(): React.ReactElement {
           icon={<TrendingUp className="h-5 w-5 text-cyan-400" />}
         />
       </div>
-
-      {/* ── Alerts ──────────────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-amber-400" />
-            {t("actionItems")}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {alerts.map((a, i) => (
-            <button
-              key={i}
-              onClick={() => a.href !== "#" && router.push(a.href)}
-              className={cn(
-                "w-full flex items-center gap-3 px-4 py-3 rounded-lg border text-left transition-colors hover:opacity-80",
-                severityColors[a.severity],
-              )}
-            >
-              {a.icon}
-              <span className="flex-1 text-sm font-medium">{a.label}</span>
-              <span className="text-xs opacity-70">{a.detail}</span>
-              {a.href !== "#" && <ArrowRight className="h-3.5 w-3.5 opacity-50" />}
-            </button>
-          ))}
-        </CardContent>
-      </Card>
 
       {/* ── Charts Row ──────────────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

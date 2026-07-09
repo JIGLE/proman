@@ -1145,12 +1145,6 @@
   "insights": {
     "title": "Insight",
     "description": "Prestazioni e analisi del portafoglio",
-    "occupancyRate": "Tasso di occupazione",
-    "severity": {
-      "danger": "Critico",
-      "warning": "Attenzione",
-      "info": "Informazione"
-    },
     "subtitle": "Riepilogo esecutivo delle prestazioni del tuo portafoglio",
     "refresh": "Aggiorna",
     "kpiMonthlyRevenue": "Ricavi Mensili",
@@ -1159,14 +1153,6 @@
     "kpiAvgRent": "Canone Medio",
     "ofTotal": "su {total} totali",
     "vsLastMonth": "{value}% rispetto al mese scorso",
-    "actionItems": "Attività",
-    "allClear": "Tutto in regola",
-    "noActionItems": "Nessuna attività in sospeso al momento",
-    "overduePayments": "{count, plural, one {# pagamento scaduto} other {# pagamenti scaduti}}",
-    "leasesExpiringSoon": "{count, plural, one {# contratto in scadenza} other {# contratti in scadenza}}",
-    "within60Days": "Entro 60 giorni",
-    "vacantProperties": "{count, plural, one {# immobile sfitto} other {# immobili sfitti}}",
-    "occupiedPercent": "{percent}% occupato",
     "revenueTrend": "Andamento Ricavi",
     "last6Months": "Ultimi 6 mesi",
     "noRevenueData": "Ancora nessun dato sui ricavi — registra pagamenti per vedere le tendenze",

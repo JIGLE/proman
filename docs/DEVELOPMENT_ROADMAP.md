@@ -233,7 +233,7 @@ up to the brand.
     `<type>.title` key output instead of literal English, consistent with how other
     i18n'd components are already tested in this suite.
 
-### 2.4 Collapse duplicate attention surfaces into one loop
+### 2.4 Collapse duplicate attention surfaces into one loop — **Done**
 
 - **Why:** `Insights` recomputes the dashboard's overdue/expiring/vacant alerts, diluting
   the single daily loop (audit §5, §3).
@@ -241,9 +241,26 @@ up to the brand.
   drops its redundant "Action Items" or becomes a distinct analytical (not triage) view.
 - **Files:** `components/features/insights/insights-view.tsx`,
   `components/features/dashboard/overview-view.tsx`.
+- **Shipped as:** deleted `insights-view.tsx`'s "Action Items" card and its backing
+  `alerts` useMemo entirely — it re-derived the same overdue/expiring-lease/vacant-unit
+  triage `ActionPanel` (`components/features/dashboard/action-panel.tsx`) already computes
+  and renders on the dashboard, with its own separate severity styling and no i18n. Rather
+  than reconcile two computations of the same alerts, Insights now commits fully to being
+  the **analytical** view the acceptance criteria call for: KPI row, revenue trend, portfolio
+  mix, an upcoming-lease-expirations *list* (informational, not an actionable alert card),
+  and quick links — updated the file's header doc-comment to say so explicitly. Removed the
+  now-dead `overdueReceipts`/`overdueAmount`/`vacantCount` fields from the `metrics` memo and
+  the now-unused `AlertTriangle`/`CheckCircle2`/`CalendarClock` icon imports, and pruned the
+  9 `insights.*` i18n keys (`actionItems`, `allClear`, `noActionItems`, `overduePayments`,
+  `leasesExpiringSoon`, `within60Days`, `vacantProperties`, `occupiedPercent`, `severity.*`)
+  that existed only to back the deleted card — including the pre-existing orphaned
+  `occupancyRate`/`severity` keys nobody had wired up even before this milestone.
+  `overview-view.tsx` needed no changes: it already renders `ActionPanel` as the one
+  dashboard triage surface.
 
 **Exit criteria:** a tenant sees a branded, themeable, locale-correct portal; the reward
-loop is a streak; no behavioral surface renders raw English; one triage loop, not two.
+loop is a streak; no behavioral surface renders raw English; one triage loop, not two. **Met**
+— all four of Milestone 2's items are now done.
 
 ---
 

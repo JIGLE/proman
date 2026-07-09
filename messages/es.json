@@ -1145,12 +1145,6 @@
   "insights": {
     "title": "Análisis",
     "description": "Rendimiento y análisis del portafolio",
-    "occupancyRate": "Tasa de Ocupación",
-    "severity": {
-      "danger": "Crítico",
-      "warning": "Advertencia",
-      "info": "Información"
-    },
     "subtitle": "Resumen ejecutivo del rendimiento de tu cartera",
     "refresh": "Actualizar",
     "kpiMonthlyRevenue": "Ingresos Mensuales",
@@ -1159,14 +1153,6 @@
     "kpiAvgRent": "Alquiler Medio",
     "ofTotal": "de {total} en total",
     "vsLastMonth": "{value}% respecto al mes anterior",
-    "actionItems": "Tareas",
-    "allClear": "Todo en orden",
-    "noActionItems": "Sin tareas pendientes por ahora",
-    "overduePayments": "{count, plural, one {# pago vencido} other {# pagos vencidos}}",
-    "leasesExpiringSoon": "{count, plural, one {# contrato por vencer pronto} other {# contratos por vencer pronto}}",
-    "within60Days": "En los próximos 60 días",
-    "vacantProperties": "{count, plural, one {# propiedad vacía} other {# propiedades vacías}}",
-    "occupiedPercent": "{percent}% ocupado",
     "revenueTrend": "Tendencia de Ingresos",
     "last6Months": "Últimos 6 meses",
     "noRevenueData": "Aún sin datos de ingresos — registra pagos para ver tendencias",
