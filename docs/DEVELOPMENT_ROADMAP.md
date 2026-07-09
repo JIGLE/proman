@@ -271,13 +271,41 @@ loop is a streak; no behavioral surface renders raw English; one triage loop, no
 | #   | Item                                                                                                             | Why                                                                                 | Files                                                              |
 | --- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------ |
 | 3.1 | Consolidate duplicated entity-detail UIs and duplicate routes (`/portfolio`↔`/properties`, `/people`↔`/tenants`) | ~2,400 LOC divergence risk; two names per thing (audit §4)                          | `components/features/{property,tenant}/*`, `app/[locale]/(main)/*` |
-| 3.2 | Decide the identity model: stay single-account, or plan Org/Team                                                 | Determines the agency/"Business" ceiling; global-unique emails block multi-org (§4) | `prisma/schema.prisma` + queries                                   |
+| 3.2 | Decide the identity model: stay single-account, or plan Org/Team — **Done**                                       | Determines the agency/"Business" ceiling; global-unique emails block multi-org (§4) | `prisma/schema.prisma` + queries                                   |
 | 3.3 | Adopt one IA (task-oriented) and delete the other two visions                                                    | Three conflicting IA docs today (audit §6)                                          | the three IA docs; sidebar/nav                                     |
 | 3.4 | Validate & wire monetization, or commit to open-source-first — **Done**                                          | Pricing tiers are unbacked copy; no Stripe subscription wiring (audit §2)           | Stripe subscription layer; plan gating                             |
 | 3.5 | Plan the storage path (SQLite BLOBs → external/Postgres) if scale is a goal — **Done** | `Lease.contractFile` BLOBs + load-everything context cap large portfolios (§4)      | `lib/contexts/use-app-data.ts`, storage layer                      |
 
 **Exit criteria:** one implementation per entity/route; a decided identity + monetization
 posture; a stated scale plan.
+
+### 3.2 — Shipped as: stay single-account, no Org/Team model now
+
+Investigated before deciding, rather than guessing between the two options the roadmap
+item posed. Full reasoning and trigger conditions for revisiting are in
+`ROADMAP.md`'s Decisions Log (2026-07-09 entry) — summary:
+
+- **Confirmed the true cost of each option** by reading the code, not assuming: 24
+  Prisma models are scoped directly by `userId`; `Tenant.email` and `Owner.email` are
+  both globally unique across every account (the specific blocker the audit named).
+  A lighter-weight "share data via an effective-owner resolution in auth" alternative
+  looked cheaper at first, but only ~5 routes (`properties`/`tenants`/`leases`/
+  `receipts`/`documents`) go through the `getAccessContext` helper that centralizes
+  scope resolution — the other ~60 routes (expenses, maintenance, invoices,
+  notifications, tax filings, GDPR export/delete, admin) call `requireAuth` directly.
+  Consistent sharing would mean changing what `userId` means across nearly the whole
+  API surface, including GDPR/admin-sensitive routes. Same order of magnitude as full
+  Org/Team, just shaped differently — not actually "minimal."
+- **Decision: stay single-account.** No `Organization`/`TeamMember` model, no auth
+  rescoping, right now.
+- **Closed the resulting truth gap immediately:** the Business tier's "Team access (up
+  to 5 users)" landing-page claim became a real, sold Stripe line item as of 3.4 — worse
+  to leave unbacked now than before. Reworded to "Team access (coming soon)" in all four
+  locale catalogs (`messages/*.json`). `lib/billing/plan-limits.ts`'s `maxSeats` field is
+  kept (unused/unenforced) as a placeholder for when this is actually built, with a
+  comment pointing at the Decisions Log entry.
+- **No code changes to `prisma/schema.prisma` or auth middleware** — this item stayed
+  scoped to the decision + the one honesty fix it required.
 
 ### 3.5 — Shipped as: storage/scale strategy doc (chose "plan," not "migrate")
 
@@ -358,9 +386,10 @@ mechanism" — the gap was implementation, not product intent.
 - **Env:** `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_BUSINESS`, `STRIPE_TRIAL_DAYS_PRO`,
   `ENABLE_BILLING` documented in `.env.example` and `CLAUDE.md`; `scripts/validate-env.js`
   now requires the two Price IDs when `ENABLE_BILLING=true`.
-- **Known gap, by design:** Business's "Team access (up to 5 users)" line item is sellable
-  but not enforced — there's no multi-user/Org model to enforce it against. Revisit once
-  3.2 is decided.
+- **Known gap, resolved by 3.2:** Business's "Team access (up to 5 users)" line item was
+  sellable but not enforced. 3.2 decided not to build multi-user sharing now (see below)
+  and softened the landing-page copy to "Team access (coming soon)" instead, so nothing
+  false is being sold.
 
 ---
 

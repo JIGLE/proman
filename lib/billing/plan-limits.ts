@@ -8,10 +8,14 @@ export interface PlanLimits {
   /** Maximum properties a user on this plan may create. `null` = unlimited. */
   maxProperties: number | null;
   /**
-   * Team seats included with this plan, per the marketing copy. Not
-   * enforced today — there is no Org/Team model yet (roadmap 3.2), so every
-   * plan is still single-account. Kept here so the number stays in one
-   * place once seats are wired up.
+   * Planned team-seat allowance, NOT sold or enforced today. Roadmap 3.2
+   * decided against building multi-user sharing for now — consistent
+   * enforcement would mean resolving data scope across ~60 API routes,
+   * several of them GDPR/admin-sensitive, disproportionate to current
+   * demand. See ROADMAP.md's Decisions Log (2026-07-09 entry) for the full
+   * decision and the conditions for revisiting it. The landing page's
+   * Business tier says "Team access (coming soon)", not a concrete seat
+   * count, until this is actually built.
    */
   maxSeats: number;
 }
