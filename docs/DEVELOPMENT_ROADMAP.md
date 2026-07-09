@@ -33,7 +33,11 @@ docs can't be trusted to say what's done (§6, §5 "doc integrity").
 | 0.3 | Fix `CLAUDE.md` inaccuracies                                                       | Correct encryption path, env var (`PII_ENCRYPTION_KEY`), add `it`, context path | `CLAUDE.md`                                            |
 | 0.4 | Remove dead `next-i18next.config.js` (conflicts with live next-intl config)        | File deleted; build green                                                       | `next-i18next.config.js`                               |
 
-**Exit criteria:** every subsequent milestone can cite an accurate status source.
+**Status: Done** (2026-07-09) — all four items shipped; see the M0 commits on this
+branch. Bonus fix found while verifying 0.1: a literal duplicate "Vendors" nav item in
+`lib/portal/access.ts` was also removed.
+
+**Exit criteria:** every subsequent milestone can cite an accurate status source. **Met.**
 
 ---
 
@@ -42,8 +46,15 @@ docs can't be trusted to say what's done (§6, §5 "doc integrity").
 **Goal:** make the compliance promise _true_ and make the core loop _reach the user
 outside the app_. The single biggest step toward "essential."
 
-### 1.1 Wire PII field encryption (trust-critical)
+### 1.1 Wire PII field encryption (trust-critical) — **Done** (2026-07-09)
 
+- **Shipped as:** a Prisma Client Extension (`lib/services/database/pii-extension.ts`)
+  wired into the shared `getPrismaClient()` singleton — encrypts on every create/
+  createMany/update/updateMany/upsert, decrypts on every result, for all `PII_FIELDS`
+  models. Plus `scripts/backfill-pii-encryption.js` (idempotent), a production warning
+  in `scripts/validate-env.js` + `.env.example`, a unit test suite for the transform
+  logic, and a real end-to-end test against a live Prisma+SQLite file confirming
+  ciphertext at rest. See the "feat(security): wire PII field encryption" commit.
 - **Why:** `PII_FIELDS` is defined but `encryptPII` is only used by the TOTP routes —
   NIFs/IBANs/phones are plaintext today (audit §5, verified §7-A).
 - **Acceptance:** Owner/Tenant/PaymentMethod/RentReceipt/NRUA services encrypt on write
