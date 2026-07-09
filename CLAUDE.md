@@ -4,7 +4,7 @@
 
 ProMan is a self-hosted property management SaaS for landlords and property managers in **Portugal and Spain**. It handles properties, units, tenants, leases, receipts, expenses, maintenance, correspondence, and fiscal compliance.
 
-**Current version**: 1.14.1 | **Stage**: Production-ready (all Q3 sprints complete through Phase 7)
+**Current version**: 1.15.0 | **Stage**: Production-ready (all Q3 sprints complete through Phase 7)
 
 ## Tech Stack
 
@@ -17,7 +17,7 @@ ProMan is a self-hosted property management SaaS for landlords and property mana
 | Validation | Zod v4                                          |
 | Email      | SendGrid                                        |
 | Testing    | Vitest (unit/integration) + Playwright (E2E)    |
-| i18n       | next-intl (EN / PT / ES)                        |
+| i18n       | next-intl (PT / EN / ES / IT)                   |
 | Payments   | Stripe (card + SEPA Direct Debit)               |
 | Deploy     | Docker / Kubernetes / Helm / TrueNAS SCALE      |
 
@@ -42,17 +42,17 @@ npx prisma studio      # Browse database in browser
 
 ```
 app/
-  api/              # Next.js API route handlers (one folder per domain)
-  (portal)/         # Owner-facing app pages
-  tenant-portal/    # Tenant self-service pages
+  api/                    # Next.js API route handlers (one folder per domain)
+  [locale]/(main)/        # Owner-facing app pages (locale-prefixed)
+  tenant-portal/          # Tenant self-service pages (token-based access)
 components/         # Shared React components
 lib/
-  types.ts          # Canonical TypeScript types for all entities
-  app-context.tsx   # Global AppState + AppContext (React context)
-  prisma.ts         # Prisma client singleton
+  types.ts            # Canonical TypeScript types for all entities
+  contexts/app-context.tsx  # Global AppState + AppContext (React context)
+  prisma.ts            # Prisma client singleton
 prisma/
   schema.prisma     # Database schema — source of truth
-messages/           # i18n translation files (en.json, pt.json, es.json)
+messages/           # i18n translation files (en.json, pt.json, es.json, it.json)
 tests/              # Vitest unit/integration tests
 e2e/                # Playwright E2E tests
 ```
@@ -60,10 +60,10 @@ e2e/                # Playwright E2E tests
 ### Key Patterns
 
 - **4-zone modal pattern**: Status+Health / Primary Action / Issues Panel / Tabbed info — used by Property, Tenant, Ticket, Building detail modals.
-- **AppContext**: All entities (properties, tenants, leases, receipts, expenses, tickets, buildings…) live in `AppState` via `lib/app-context.tsx`. Mutations go through typed actions (`addProperty`, `updateTenant`, etc.).
+- **AppContext**: All entities (properties, tenants, leases, receipts, expenses, tickets, buildings…) live in `AppState` via `lib/contexts/app-context.tsx` (composed from `use-app-data.ts` + `use-entity-actions.ts` + `create-entity-actions.ts`). Mutations go through typed actions (`addProperty`, `updateTenant`, etc.).
 - **API routes**: Each domain has its own folder under `app/api/`. Use `GET`/`POST`/`PUT`/`DELETE` handlers with Zod validation and NextAuth session checks.
 - **Compliance**: PT (`/api/compliance/rent-receipts`) and ES (`/api/compliance/nrua`) endpoints generate fiscal payloads. Tax logic lives in `app/api/tax/`.
-- **PII encryption**: AES-256-GCM on IBAN, NIF, phone fields via `lib/encryption.ts`.
+- **PII encryption**: AES-256-GCM on IBAN, NIF, phone fields via `lib/utils/pii-encryption.ts` (`encryptPII`/`decryptPII`, keyed off `PII_ENCRYPTION_KEY`). `PII_FIELDS` declares which model fields are covered — see `docs/PRODUCT_AUDIT_2026.md` §5 for wiring status.
 
 ## CI Gates
 
@@ -87,4 +87,4 @@ Copy `.env.example` to `.env` before first run. Required vars:
 - `NEXTAUTH_SECRET` — random secret for session signing
 - `NEXTAUTH_URL` — base URL (e.g. `http://localhost:3000`)
 
-Optional: `SENDGRID_API_KEY`, `STRIPE_SECRET_KEY`, `REDIS_URL`, `ENCRYPTION_KEY`
+Optional: `SENDGRID_API_KEY`, `STRIPE_SECRET_KEY`, `REDIS_URL`, `PII_ENCRYPTION_KEY`
