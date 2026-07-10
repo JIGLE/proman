@@ -117,19 +117,19 @@
     "@vitest/coverage-v8": "^4.1.9",
     "artillery": "^2.0.31",
     "eslint": "^9",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "16.2.10",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-security": "^4.0.1",
     "husky": "^9.1.7",
     "js-yaml": "^4.2.0",
     "jsdom": "^27.4.0",
-    "prettier": "^3.8.4",
+    "prettier": "^3.9.4",
     "prisma": "^7.8.0",
     "react-i18next": "^13.0.0",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^8",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.10"
   },
   "overrides": {
     "@opentelemetry/api": "1.4.1",
