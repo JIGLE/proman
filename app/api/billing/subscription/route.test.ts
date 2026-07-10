@@ -11,6 +11,10 @@ vi.mock("@/lib/services/auth/auth-middleware", () => ({
   requireAuth: requireAuthMock,
 }));
 
+vi.mock("@/lib/services/database/database", () => ({
+  getPrismaClient: vi.fn(() => ({})),
+}));
+
 vi.mock("@/lib/demo/demo-mode", () => ({
   isDemoRequest: isDemoRequestMock,
 }));

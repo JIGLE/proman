@@ -11,6 +11,10 @@ vi.mock("@/lib/services/auth/auth-middleware", () => ({
   handleOptions: vi.fn(),
 }));
 
+vi.mock("@/lib/services/database/database", () => ({
+  getPrismaClient: vi.fn(() => ({})),
+}));
+
 vi.mock("@/lib/services/analytics/activation-summary", () => ({
   getCoreLoopMetrics: getCoreLoopMetricsMock,
 }));
