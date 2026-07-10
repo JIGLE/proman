@@ -6,6 +6,7 @@ import {
   Bell,
   Building2,
   CheckCircle2,
+  ChevronDown,
   Globe2,
   KeyRound,
   Play,
@@ -23,6 +24,7 @@ import {
 import { DomoraMark } from "@/components/shared/brand-logo";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { LandingHero, LandingHeroItem } from "@/components/shared/landing-hero";
+import { LandingStickyCta } from "@/components/shared/landing-sticky-cta";
 import { LocaleSelectOverlay } from "@/components/shared/locale-select-overlay";
 import { Button } from "@/components/ui/button";
 import { getTranslations } from "next-intl/server";
@@ -142,11 +144,13 @@ export default async function LandingPage({ params }: Props) {
         </div>
       </header>
 
-      <main className="px-4 pb-24 pt-28">
+      <main className="px-4 pb-24 pt-24 sm:pt-28">
         <LandingAnalyticsObserver locale={locale} demoEnabled={true} />
 
         {/* â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <section className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.88fr_1.12fr] lg:items-start">
+        {/* On mobile the hero fills the first screen (app-like, no scroll to see
+            the value prop + CTA); from sm/lg up it returns to the normal grid. */}
+        <section className="relative mx-auto grid min-h-[calc(100svh-8rem)] max-w-6xl content-center gap-10 sm:min-h-0 sm:content-start sm:gap-12 lg:grid-cols-[0.88fr_1.12fr] lg:items-start">
           <LandingHero>
             <LandingHeroItem>
               <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/25 bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-300">
@@ -185,7 +189,7 @@ export default async function LandingPage({ params }: Props) {
                   href="#workflow"
                   eventName="landing.workflow_cta_click"
                   eventData={{ location: "hero_secondary" }}
-                  className="w-full sm:w-auto"
+                  className="hidden w-full sm:block sm:w-auto"
                 >
                   <Button
                     size="xl"
@@ -214,6 +218,15 @@ export default async function LandingPage({ params }: Props) {
               </div>
             </LandingHeroItem>
           </LandingHero>
+
+          {/* Scroll affordance — signals there's more without forcing it (mobile) */}
+          <a
+            href="#workflow"
+            aria-label={t("secondaryCta")}
+            className="pointer-events-auto absolute inset-x-0 bottom-4 mx-auto flex w-fit items-center justify-center text-zinc-600 transition-colors hover:text-zinc-300 lg:hidden"
+          >
+            <ChevronDown className="h-5 w-5 motion-safe:animate-bounce" />
+          </a>
 
           {/* â”€â”€ Product Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
           <div className="relative hidden lg:block">
@@ -854,20 +867,8 @@ export default async function LandingPage({ params }: Props) {
         </section>
       </main>
 
-      {/* â”€â”€ Mobile sticky CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-white/[0.06] bg-[#09090e]/90 px-4 pt-3 pb-[max(env(safe-area-inset-bottom),0.75rem)] backdrop-blur-md sm:hidden">
-        <TrackedLandingLink
-          href={`/${locale}/demo?perspective=owner`}
-          eventName="landing.demo_start"
-          eventData={{ location: "mobile_sticky", perspective: "owner" }}
-          className="block"
-        >
-          <Button className="h-12 w-full gap-2 bg-teal-600 text-[15px] font-semibold text-white hover:bg-teal-500">
-            <Play className="h-3.5 w-3.5" />
-            {t("demoCta")}
-          </Button>
-        </TrackedLandingLink>
-      </div>
+      {/* â”€â”€ Mobile sticky CTA (slides in after the hero) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+      <LandingStickyCta href={`/${locale}/demo?perspective=owner`} label={t("demoCta")} />
 
       <footer className="mt-16 border-t border-white/[0.04] px-4 pt-10 pb-32 sm:py-10">
         <div className="mx-auto max-w-6xl text-center text-sm text-zinc-600">
