@@ -318,9 +318,7 @@ export const WithApiData: Story = {
         rest.get("/api/properties", (req, res, ctx) => {
           return res(
             ctx.json({
-              data: [
-                /* mock data */
-              ],
+              data: [/* mock data */],
             }),
           );
         }),

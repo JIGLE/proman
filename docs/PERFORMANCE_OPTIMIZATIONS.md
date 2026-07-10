@@ -86,9 +86,7 @@ This document details the performance optimizations implemented in Week 1 of the
 
 ```typescript
 for (let i = 5; i >= 0; i--) {
-  const receipts = await prisma.receipt.findMany({
-    /* filter by month */
-  });
+  const receipts = await prisma.receipt.findMany({/* filter by month */});
   // Process receipts...
 }
 ```
@@ -157,9 +155,7 @@ GET /api/receipts
 
 ```json
 {
-  "data": [
-    /* array of items */
-  ],
+  "data": [/* array of items */],
   "pagination": {
     "page": 1,
     "limit": 50,
