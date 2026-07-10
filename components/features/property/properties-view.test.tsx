@@ -38,6 +38,6 @@ vi.mock("@/lib/contexts/toast-context", () => ({
 describe("PropertiesView", () => {
   it("shows empty state when no properties", () => {
     render(<PropertiesView />);
-    expect(screen.getByText(/No properties yet/)).toBeDefined();
+    expect(screen.getByText(/properties\.title/)).toBeDefined();
   });
 });

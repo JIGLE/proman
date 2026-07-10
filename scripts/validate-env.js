@@ -38,6 +38,7 @@ function requireVarIf(condition, name, message) {
 // ── validation rules ─────────────────────────────────────────────────────
 const isProd = process.env.NODE_ENV === "production";
 const oauthEnabled = process.env.ENABLE_OAUTH === "true";
+const billingEnabled = process.env.ENABLE_BILLING === "true";
 
 // Always required
 requireVar("NEXTAUTH_URL", "Full URL where the app is hosted (e.g. https://your.domain.com)");
@@ -60,6 +61,18 @@ if (process.env.NEXTAUTH_SECRET && process.env.NEXTAUTH_SECRET.length < 32) {
 requireVarIf(oauthEnabled, "GOOGLE_CLIENT_ID", "Required when ENABLE_OAUTH=true");
 requireVarIf(oauthEnabled, "GOOGLE_CLIENT_SECRET", "Required when ENABLE_OAUTH=true");
 
+// Subscription billing — plan-limit enforcement needs real Stripe Prices to sell.
+requireVarIf(
+  billingEnabled,
+  "STRIPE_PRICE_ID_PRO",
+  "Required when ENABLE_BILLING=true (create a Price in Stripe Dashboard)",
+);
+requireVarIf(
+  billingEnabled,
+  "STRIPE_PRICE_ID_BUSINESS",
+  "Required when ENABLE_BILLING=true (create a Price in Stripe Dashboard)",
+);
+
 // Non-critical services
 warnVar("SENDGRID_API_KEY", "Email sending will be disabled");
 warnVar("FROM_EMAIL", "Defaults to noreply@proman.app");
@@ -67,6 +80,20 @@ warnVar("FROM_EMAIL", "Defaults to noreply@proman.app");
 // CSRF secret recommended in production
 if (isProd) {
   warnVar("CSRF_SECRET", "CSRF protection secret; falls back to NEXTAUTH_SECRET");
+}
+
+// PII field encryption (IBANs, NIFs, phone numbers) — see lib/utils/pii-encryption.ts.
+// Without a key, encryptPII() silently no-ops and PII is stored in plaintext.
+if (isProd) {
+  warnVar(
+    "PII_ENCRYPTION_KEY",
+    "PII (IBAN/NIF/phone) will be stored in PLAINTEXT without this. " +
+      "Generate: openssl rand -hex 32. Run scripts/backfill-pii-encryption.js after setting it.",
+  );
+} else if (process.env.PII_ENCRYPTION_KEY && process.env.PII_ENCRYPTION_KEY.length < 64) {
+  warnings.push(
+    "  ⚠ PII_ENCRYPTION_KEY — must be 64 hex characters (32 bytes); shorter values are ignored",
+  );
 }
 
 // ── output ───────────────────────────────────────────────────────────────

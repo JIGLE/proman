@@ -3,6 +3,7 @@
 import * as React from "react";
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import {
   Bell,
   X,
@@ -34,6 +35,23 @@ export type NotificationType =
   | "system";
 
 export type NotificationPriority = "low" | "medium" | "high" | "urgent";
+
+/**
+ * Fire-and-forget product-analytics event — see lib/services/analytics/product-events.ts.
+ * Records that a notification (often an automated reminder — see
+ * lib/services/notifications/notification-automation.ts) was clicked, as
+ * opposed to merely marked read via a bulk action.
+ */
+function trackReminderClicked(notification: Notification): void {
+  fetch("/api/events", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: "reminder_clicked",
+      metadata: { type: notification.type },
+    }),
+  }).catch(() => {});
+}
 
 export interface Notification {
   id: string;
@@ -92,17 +110,17 @@ const priorityColors: Record<NotificationPriority, string> = {
 };
 
 // Format relative time
-function formatRelativeTime(date: Date): string {
+function formatRelativeTime(date: Date, t: ReturnType<typeof useTranslations>): string {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMins = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
   const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMins < 1) return "Just now";
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffHours < 24) return `${diffHours}h ago`;
-  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffMins < 1) return t("justNow");
+  if (diffMins < 60) return t("minutesAgo", { count: diffMins });
+  if (diffHours < 24) return t("hoursAgo", { count: diffHours });
+  if (diffDays < 7) return t("daysAgo", { count: diffDays });
   return date.toLocaleDateString();
 }
 
@@ -118,6 +136,7 @@ function NotificationItem({
   onDelete: (id: string) => void;
   onClick?: (notification: Notification) => void;
 }): React.ReactElement {
+  const t = useTranslations("notificationCenter");
   const Icon = notificationIcons[notification.type];
   const colorClass = notificationColors[notification.type];
 
@@ -135,6 +154,7 @@ function NotificationItem({
       onClick={() => {
         if (!notification.read) {
           onMarkAsRead(notification.id);
+          trackReminderClicked(notification);
         }
         onClick?.(notification);
       }}
@@ -164,7 +184,7 @@ function NotificationItem({
           </p>
           {notification.priority !== "low" && (
             <Badge className={cn("text-[10px] px-1.5 py-0", priorityColors[notification.priority])}>
-              {notification.priority}
+              {t(`priority.${notification.priority}`)}
             </Badge>
           )}
         </div>
@@ -172,7 +192,7 @@ function NotificationItem({
           {notification.message}
         </p>
         <p className="text-[10px] text-[var(--color-muted-foreground)]">
-          {formatRelativeTime(notification.timestamp)}
+          {formatRelativeTime(notification.timestamp, t)}
         </p>
       </div>
 
@@ -187,7 +207,7 @@ function NotificationItem({
               e.stopPropagation();
               onMarkAsRead(notification.id);
             }}
-            title="Mark as read"
+            title={t("markAsReadLabel")}
           >
             <Check className="h-3.5 w-3.5" />
           </Button>
@@ -200,7 +220,7 @@ function NotificationItem({
             e.stopPropagation();
             onDelete(notification.id);
           }}
-          title="Delete"
+          title={t("deleteLabel")}
         >
           <Trash2 className="h-3.5 w-3.5" />
         </Button>
@@ -219,6 +239,7 @@ export function NotificationCenter({
   onNotificationClick,
   className: _className,
 }: NotificationCenterProps): React.ReactElement {
+  const t = useTranslations("notificationCenter");
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
@@ -249,7 +270,9 @@ export function NotificationCenter({
           variant="ghost"
           size="sm"
           className="relative h-9 w-9 p-0"
-          aria-label={`Notifications${unreadCount > 0 ? ` (${unreadCount} unread)` : ""}`}
+          aria-label={
+            unreadCount > 0 ? t("bellAriaLabelUnread", { count: unreadCount }) : t("bellAriaLabel")
+          }
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
@@ -270,10 +293,10 @@ export function NotificationCenter({
           {/* Header */}
           <div className="flex items-center justify-between p-3 border-b border-[var(--color-border)] flex-none">
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold text-[var(--color-foreground)]">Notifications</h3>
+              <h3 className="font-semibold text-[var(--color-foreground)]">{t("title")}</h3>
               {unreadCount > 0 && (
                 <Badge variant="secondary" className="text-xs">
-                  {unreadCount} new
+                  {t("newBadge", { count: unreadCount })}
                 </Badge>
               )}
             </div>
@@ -284,10 +307,10 @@ export function NotificationCenter({
                   size="sm"
                   className="h-7 text-xs"
                   onClick={onMarkAllAsRead}
-                  aria-label="Mark all as read"
+                  aria-label={t("markAllAsReadLabel")}
                 >
                   <CheckCheck className="h-3.5 w-3.5 mr-1" />
-                  Mark all read
+                  {t("markAllRead")}
                 </Button>
               )}
               <Popover.Close asChild>
@@ -295,7 +318,7 @@ export function NotificationCenter({
                   variant="ghost"
                   size="sm"
                   className="h-7 w-7 p-0"
-                  aria-label="Close notifications"
+                  aria-label={t("closeLabel")}
                 >
                   <X className="h-4 w-4" />
                 </Button>
@@ -311,7 +334,7 @@ export function NotificationCenter({
               className="h-7 text-xs"
               onClick={() => setFilter("all")}
             >
-              All ({notifications.length})
+              {t("all", { count: notifications.length })}
             </Button>
             <Button
               variant={filter === "unread" ? "secondary" : "ghost"}
@@ -319,7 +342,7 @@ export function NotificationCenter({
               className="h-7 text-xs"
               onClick={() => setFilter("unread")}
             >
-              Unread ({unreadCount})
+              {t("unread", { count: unreadCount })}
             </Button>
           </div>
 
@@ -330,12 +353,10 @@ export function NotificationCenter({
                 <div className="flex flex-col items-center justify-center py-8 text-center">
                   <Bell className="h-10 w-10 text-[var(--color-muted-foreground)] mb-3" />
                   <p className="text-sm font-medium text-[var(--color-foreground)]">
-                    {filter === "unread" ? "No unread notifications" : "No notifications"}
+                    {filter === "unread" ? t("noUnreadNotifications") : t("noNotifications")}
                   </p>
                   <p className="text-xs text-[var(--color-muted-foreground)]">
-                    {filter === "unread"
-                      ? "You're all caught up!"
-                      : "Notifications will appear here"}
+                    {filter === "unread" ? t("allCaughtUp") : t("notificationsWillAppear")}
                   </p>
                 </div>
               ) : (
@@ -364,19 +385,19 @@ export function NotificationCenter({
                 size="sm"
                 className="h-7 text-xs text-destructive hover:text-destructive"
                 onClick={onClearAll}
-                aria-label="Clear all notifications"
+                aria-label={t("clearAllLabel")}
               >
                 <Trash2 className="h-3.5 w-3.5 mr-1" />
-                Clear all
+                {t("clearAll")}
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-7 text-xs"
-                aria-label="Notification settings"
+                aria-label={t("settingsLabel")}
               >
                 <Settings className="h-3.5 w-3.5 mr-1" />
-                Settings
+                {t("settings")}
               </Button>
             </div>
           )}

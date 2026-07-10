@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Tenant } from "@/lib/types";
@@ -27,26 +28,30 @@ export function PaymentMatrixView(): React.ReactElement {
   const { state } = useApp();
   const { tenants, receipts, properties: _properties } = state;
   const { formatCurrency } = useCurrency();
+  const t = useTranslations("paymentMatrix");
+  const tMonths = useTranslations("calendar.months");
+  const locale = useLocale();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [viewMode, setViewMode] = useState<"detailed" | "heatmap">("detailed");
   const [expandedProperties, setExpandedProperties] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "pending" | "overdue">("all");
 
   // Generate months array
-  const months = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
+  const monthKeys = [
+    "jan",
+    "feb",
+    "mar",
+    "apr",
+    "may",
+    "jun",
+    "jul",
+    "aug",
+    "sep",
+    "oct",
+    "nov",
+    "dec",
   ];
+  const months = monthKeys.map((key) => tMonths(key));
 
   // Get unique years from receipts
   const availableYears = useMemo(() => {
@@ -118,7 +123,7 @@ export function PaymentMatrixView(): React.ReactElement {
       case "overdue":
         return <XCircle className="h-4 w-4 text-red-500" />;
       default:
-        return <div className="h-4 w-4 rounded-full bg-gray-200" />;
+        return <div className="h-4 w-4 rounded-full bg-[var(--color-muted)]" />;
     }
   };
 
@@ -188,11 +193,9 @@ export function PaymentMatrixView(): React.ReactElement {
         <div className="text-center">
           <DollarSign className="h-12 w-12 text-[var(--color-muted-foreground)] mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
-            No Tenants Yet
+            {t("noTenantsYet")}
           </h3>
-          <p className="text-[var(--color-muted-foreground)]">
-            Add tenants to start tracking payments
-          </p>
+          <p className="text-[var(--color-muted-foreground)]">{t("addTenantsToTrack")}</p>
         </div>
       </div>
     );
@@ -203,11 +206,9 @@ export function PaymentMatrixView(): React.ReactElement {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
-            Payment Tracking Matrix
+            {t("title")}
           </h2>
-          <p className="text-[var(--color-muted-foreground)]">
-            Monthly payment status overview for all tenants
-          </p>
+          <p className="text-[var(--color-muted-foreground)]">{t("subtitle")}</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           {/* View Mode Toggle */}
@@ -218,7 +219,7 @@ export function PaymentMatrixView(): React.ReactElement {
               onClick={() => setViewMode("detailed")}
               className="h-7 px-3"
             >
-              Detailed
+              {t("detailed")}
             </Button>
             <Button
               variant={viewMode === "heatmap" ? "secondary" : "ghost"}
@@ -226,7 +227,7 @@ export function PaymentMatrixView(): React.ReactElement {
               onClick={() => setViewMode("heatmap")}
               className="h-7 px-3"
             >
-              Heatmap
+              {t("heatmap")}
             </Button>
           </div>
 
@@ -240,10 +241,10 @@ export function PaymentMatrixView(): React.ReactElement {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="paid">Paid</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="overdue">Overdue</SelectItem>
+              <SelectItem value="all">{t("allStatus")}</SelectItem>
+              <SelectItem value="paid">{t("paid")}</SelectItem>
+              <SelectItem value="pending">{t("pending")}</SelectItem>
+              <SelectItem value="overdue">{t("overdue")}</SelectItem>
             </SelectContent>
           </Select>
 
@@ -267,7 +268,7 @@ export function PaymentMatrixView(): React.ReactElement {
           {/* Export Button */}
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
-            Export
+            {t("export")}
           </Button>
         </div>
       </div>
@@ -277,7 +278,7 @@ export function PaymentMatrixView(): React.ReactElement {
         <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-              Total Expected
+              {t("totalExpected")}
             </CardTitle>
             <DollarSign className="h-4 w-4 text-[var(--color-muted-foreground)]" />
           </CardHeader>
@@ -287,14 +288,16 @@ export function PaymentMatrixView(): React.ReactElement {
                 tenants.reduce((total, tenant) => total + getTotalExpected(tenant), 0),
               )}
             </div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">For {selectedYear}</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              {t("forYear", { year: selectedYear })}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-              Total Received
+              {t("totalReceived")}
             </CardTitle>
             <CheckCircle className="h-4 w-4 text-[var(--color-success)]" />
           </CardHeader>
@@ -304,14 +307,14 @@ export function PaymentMatrixView(): React.ReactElement {
                 tenants.reduce((total, tenant) => total + getTotalPaid(tenant.id), 0),
               )}
             </div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">Paid amounts</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">{t("paidAmounts")}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-              Outstanding
+              {t("outstanding")}
             </CardTitle>
             <Clock className="h-4 w-4 text-[var(--color-warning)]" />
           </CardHeader>
@@ -322,14 +325,14 @@ export function PaymentMatrixView(): React.ReactElement {
                   tenants.reduce((total, tenant) => total + getTotalPaid(tenant.id), 0),
               )}
             </div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">Pending payments</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">{t("pendingPayments")}</p>
           </CardContent>
         </Card>
 
         <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-              Collection Rate
+              {t("collectionRate")}
             </CardTitle>
             <Calendar className="h-4 w-4 text-[var(--color-muted-foreground)]" />
           </CardHeader>
@@ -344,7 +347,9 @@ export function PaymentMatrixView(): React.ReactElement {
                 : 0}
               %
             </div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">Payment success rate</p>
+            <p className="text-xs text-[var(--color-muted-foreground)]">
+              {t("paymentSuccessRate")}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -358,11 +363,9 @@ export function PaymentMatrixView(): React.ReactElement {
         <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
           <CardHeader>
             <CardTitle className="text-[var(--color-foreground)]">
-              Payment Matrix - {selectedYear}
+              {t("matrixTitle", { year: selectedYear })}
             </CardTitle>
-            <CardDescription>
-              Green: Paid • Yellow: Pending • Red: Overdue • Gray: No payment due
-            </CardDescription>
+            <CardDescription>{t("legend")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -383,7 +386,7 @@ export function PaymentMatrixView(): React.ReactElement {
                       scope="col"
                       className="sticky left-0 z-10 bg-[var(--color-card)] text-left py-3 px-4 font-medium text-[var(--color-muted-foreground)]"
                     >
-                      Tenant
+                      {t("tenant")}
                     </th>
                     {months.map((month, index) => (
                       <motion.th
@@ -401,7 +404,7 @@ export function PaymentMatrixView(): React.ReactElement {
                       scope="col"
                       className="text-right py-3 px-4 font-medium text-[var(--color-muted-foreground)]"
                     >
-                      Total
+                      {t("total")}
                     </th>
                   </motion.tr>
                 </thead>
@@ -429,7 +432,8 @@ export function PaymentMatrixView(): React.ReactElement {
                               {tenant.name}
                             </div>
                             <div className="text-sm text-[var(--color-muted-foreground)]">
-                              {formatCurrency(tenant.rent)}/mo
+                              {formatCurrency(tenant.rent)}
+                              {t("perMonth")}
                             </div>
                           </motion.div>
                         </td>
@@ -451,10 +455,14 @@ export function PaymentMatrixView(): React.ReactElement {
                                 whileTap={{ scale: 0.95 }}
                                 title={
                                   cell.date
-                                    ? `${cell.status} on ${new Date(cell.date).toLocaleDateString()} - ${formatCurrency(cell.amount || 0)}`
+                                    ? t("cellTooltip", {
+                                        status: t(cell.status),
+                                        date: new Date(cell.date).toLocaleDateString(locale),
+                                        amount: formatCurrency(cell.amount || 0),
+                                      })
                                     : cell.status === "overdue"
-                                      ? "Overdue payment"
-                                      : "No payment"
+                                      ? t("overdueTooltip")
+                                      : t("noPaymentTooltip")
                                 }
                               >
                                 <motion.div
@@ -480,7 +488,9 @@ export function PaymentMatrixView(): React.ReactElement {
                               {formatCurrency(getTotalPaid(tenant.id))}
                             </div>
                             <div className="text-sm text-[var(--color-muted-foreground)]">
-                              of {formatCurrency(getTotalExpected(tenant))}
+                              {t("ofExpected", {
+                                amount: formatCurrency(getTotalExpected(tenant)),
+                              })}
                             </div>
                           </motion.div>
                         </td>
@@ -500,19 +510,21 @@ export function PaymentMatrixView(): React.ReactElement {
           <div className="flex flex-wrap gap-6">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-[var(--color-success)]" />
-              <span className="text-sm text-[var(--color-muted-foreground)]">Paid</span>
+              <span className="text-sm text-[var(--color-muted-foreground)]">{t("paid")}</span>
             </div>
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 text-[var(--color-warning)]" />
-              <span className="text-sm text-[var(--color-muted-foreground)]">Pending</span>
+              <span className="text-sm text-[var(--color-muted-foreground)]">{t("pending")}</span>
             </div>
             <div className="flex items-center gap-2">
               <XCircle className="h-4 w-4 text-[var(--color-error)]" />
-              <span className="text-sm text-[var(--color-muted-foreground)]">Overdue</span>
+              <span className="text-sm text-[var(--color-muted-foreground)]">{t("overdue")}</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-4 h-4 rounded-full bg-[var(--color-muted)]" />
-              <span className="text-sm text-[var(--color-muted-foreground)]">No payment due</span>
+              <span className="text-sm text-[var(--color-muted-foreground)]">
+                {t("noPaymentDue")}
+              </span>
             </div>
           </div>
         </CardContent>

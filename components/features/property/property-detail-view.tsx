@@ -275,7 +275,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col gap-4 sticky top-0 z-20 bg-zinc-900/95 backdrop-blur-sm">
+      <div className="flex flex-col gap-4 sticky top-0 z-20 bg-[var(--color-card-solid)]/95 backdrop-blur-sm">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex items-start gap-4">
             <div className="p-3 lg:p-4 rounded-xl bg-[var(--color-info-muted)]">
@@ -555,7 +555,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card
-            className="cursor-pointer transition-colors hover:border-zinc-600"
+            className="cursor-pointer transition-colors hover:border-[var(--color-border)]"
             onClick={() => setActiveTab("tenants")}
           >
             <CardContent className="p-4">
@@ -566,7 +566,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardContent>
           </Card>
           <Card
-            className="cursor-pointer transition-colors hover:border-zinc-600"
+            className="cursor-pointer transition-colors hover:border-[var(--color-border)]"
             onClick={() => setActiveTab("leases")}
           >
             <CardContent className="p-4">
@@ -579,7 +579,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardContent>
           </Card>
           <Card
-            className="cursor-pointer transition-colors hover:border-zinc-600"
+            className="cursor-pointer transition-colors hover:border-[var(--color-border)]"
             onClick={() => setActiveTab("finance")}
           >
             <CardContent className="p-4">
@@ -590,7 +590,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardContent>
           </Card>
           <Card
-            className="cursor-pointer transition-colors hover:border-zinc-600"
+            className="cursor-pointer transition-colors hover:border-[var(--color-border)]"
             onClick={() => setActiveTab("maintenance")}
           >
             <CardContent className="p-4">
@@ -754,7 +754,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                     ? "bg-[var(--color-success-muted)] text-[var(--color-success)]"
                     : ownershipTotal > 0
                       ? "bg-[var(--color-warning-muted)] text-[var(--color-warning)]"
-                      : "bg-zinc-800 text-zinc-500",
+                      : "bg-[var(--color-popover)] text-[var(--color-muted-foreground)]",
                 )}
               >
                 {ownershipTotal.toFixed(1)}% assigned
@@ -762,7 +762,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardHeader>
             <CardContent className="space-y-4">
               {propertyOwners.length === 0 ? (
-                <p className="text-sm text-zinc-500 italic">No owners assigned yet.</p>
+                <p className="text-sm text-[var(--color-muted-foreground)] italic">
+                  No owners assigned yet.
+                </p>
               ) : (
                 <div className="space-y-2">
                   {propertyOwners.map(({ owner, assignment }) => {
@@ -772,14 +774,18 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                     return (
                       <div
                         key={owner.id}
-                        className="flex items-center gap-3 p-2 rounded-lg bg-zinc-900 border border-zinc-800"
+                        className="flex items-center gap-3 p-2 rounded-lg bg-[var(--color-card-solid)] border border-[var(--color-border)]"
                       >
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-zinc-200 truncate">{owner.name}</p>
-                          <p className="text-xs text-zinc-500">{owner.email}</p>
+                          <p className="text-sm font-medium text-[var(--color-foreground)] truncate">
+                            {owner.name}
+                          </p>
+                          <p className="text-xs text-[var(--color-muted-foreground)]">
+                            {owner.email}
+                          </p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-sm font-semibold text-zinc-200">
+                          <p className="text-sm font-semibold text-[var(--color-foreground)]">
                             {assignment.ownershipPercentage}%
                           </p>
                           <p className="text-xs text-[var(--color-success)]">
@@ -789,7 +795,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-7 w-7 p-0 text-zinc-500 hover:text-[var(--color-destructive)]"
+                          className="h-7 w-7 p-0 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)]"
                           onClick={() => handleRemoveOwner(owner.id)}
                           title="Remove owner"
                         >
@@ -803,8 +809,8 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
 
               {/* Add owner form */}
               {unassignedOwners.length > 0 && ownershipTotal < 99.999 && (
-                <div className="space-y-2 pt-2 border-t border-zinc-800">
-                  <p className="text-xs text-zinc-500 font-medium uppercase tracking-wide">
+                <div className="space-y-2 pt-2 border-t border-[var(--color-border)]">
+                  <p className="text-xs text-[var(--color-muted-foreground)] font-medium uppercase tracking-wide">
                     Assign owner
                   </p>
                   <div className="flex gap-2">
@@ -1052,25 +1058,31 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         <TabsContent value="finance" className="space-y-6">
           {/* P&L Metric Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-[var(--color-card-solid)] border-[var(--color-border)]">
               <CardContent className="p-4">
-                <div className="text-sm text-zinc-400">{t("finance.totalRevenue")}</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("finance.totalRevenue")}
+                </div>
                 <div className="text-2xl font-bold text-[var(--color-success)] mt-1">
                   {formatCurrency(totalRevenue)}
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-[var(--color-card-solid)] border-[var(--color-border)]">
               <CardContent className="p-4">
-                <div className="text-sm text-zinc-400">{t("finance.totalExpenses")}</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("finance.totalExpenses")}
+                </div>
                 <div className="text-2xl font-bold text-[var(--color-destructive)] mt-1">
                   {formatCurrency(totalExpenses)}
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-[var(--color-card-solid)] border-[var(--color-border)]">
               <CardContent className="p-4">
-                <div className="text-sm text-zinc-400">{t("finance.netOperatingIncome")}</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("finance.netOperatingIncome")}
+                </div>
                 <div
                   className={cn(
                     "text-2xl font-bold mt-1",
@@ -1083,9 +1095,11 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-zinc-900 border-zinc-800">
+            <Card className="bg-[var(--color-card-solid)] border-[var(--color-border)]">
               <CardContent className="p-4">
-                <div className="text-sm text-zinc-400">{t("finance.collectionRate")}</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("finance.collectionRate")}
+                </div>
                 <div
                   className={cn(
                     "text-2xl font-bold mt-1",

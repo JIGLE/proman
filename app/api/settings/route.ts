@@ -17,6 +17,7 @@ export async function GET(request: NextRequest) {
           emailNotifications: true,
           taxReminderNotifications: true,
           distributionNotifications: true,
+          onboardingDismissedAt: null,
         },
       });
     }
@@ -38,6 +39,7 @@ export async function GET(request: NextRequest) {
           emailNotifications: true,
           taxReminderNotifications: true,
           distributionNotifications: true,
+          onboardingDismissedAt: null,
         },
       });
     }
@@ -68,6 +70,7 @@ export async function POST(request: NextRequest) {
           emailNotifications: data.emailNotifications ?? true,
           taxReminderNotifications: data.taxReminderNotifications ?? true,
           distributionNotifications: data.distributionNotifications ?? true,
+          onboardingDismissedAt: data.onboardingDismissedAt ?? null,
         },
       });
     }
@@ -91,6 +94,7 @@ export async function POST(request: NextRequest) {
           emailNotifications: data.emailNotifications ?? true,
           taxReminderNotifications: data.taxReminderNotifications ?? true,
           distributionNotifications: data.distributionNotifications ?? true,
+          onboardingDismissedAt: data.onboardingDismissedAt ?? null,
         },
       });
     }
@@ -106,6 +110,7 @@ export async function POST(request: NextRequest) {
         emailNotifications: data.emailNotifications,
         taxReminderNotifications: data.taxReminderNotifications,
         distributionNotifications: data.distributionNotifications,
+        onboardingDismissedAt: data.onboardingDismissedAt,
       },
       create: {
         userId,
@@ -116,6 +121,7 @@ export async function POST(request: NextRequest) {
         emailNotifications: data.emailNotifications,
         taxReminderNotifications: data.taxReminderNotifications,
         distributionNotifications: data.distributionNotifications,
+        onboardingDismissedAt: data.onboardingDismissedAt,
       },
     });
 

@@ -4,9 +4,6 @@ import * as React from "react";
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Building2,
-  Users,
-  DollarSign,
   CheckCircle2,
   Circle,
   ChevronDown,
@@ -19,7 +16,7 @@ import { Button } from "./button";
 import { cn } from "@/lib/utils/utils";
 import { useTranslations } from "next-intl";
 
-const CHECKLIST_DISMISSED_KEY = "proman.onboarding.checklist.dismissed";
+// Collapse state is a pure UI-density preference — fine to keep client-only.
 const CHECKLIST_COLLAPSED_KEY = "proman.onboarding.checklist.collapsed";
 
 export interface OnboardingChecklistStep {
@@ -54,11 +51,28 @@ export function OnboardingChecklist({
 
   useEffect(() => {
     try {
-      setDismissed(localStorage.getItem(CHECKLIST_DISMISSED_KEY) === "true");
       setCollapsed(localStorage.getItem(CHECKLIST_COLLAPSED_KEY) === "true");
     } catch {
       // Ignore
     }
+
+    // Dismissal is a server-side UserSettings field (was localStorage-only,
+    // so it didn't survive across browsers/devices and couldn't be measured
+    // — see docs/PRODUCT_AUDIT_2026.md §3).
+    let cancelled = false;
+    fetch("/api/settings")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((json) => {
+        if (cancelled) return;
+        if (json?.data?.onboardingDismissedAt) setDismissed(true);
+      })
+      .catch(() => {
+        // Default to not-dismissed on failure — showing the checklist again
+        // is the safe direction to fail in, not hiding it permanently.
+      });
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const completedCount = useMemo(() => steps.filter((s) => s.completed).length, [steps]);
@@ -68,11 +82,15 @@ export function OnboardingChecklist({
 
   const handleDismiss = useCallback(() => {
     setDismissed(true);
-    try {
-      localStorage.setItem(CHECKLIST_DISMISSED_KEY, "true");
-    } catch {
-      // Ignore
-    }
+    fetch("/api/settings", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ onboardingDismissedAt: new Date().toISOString() }),
+    }).catch(() => {
+      // Fire-and-forget: the optimistic local dismiss already happened, and
+      // /api/settings will be retried next time the user (or a settings
+      // change) triggers a save. Worst case the checklist reappears once.
+    });
     onDismiss?.();
   }, [onDismiss]);
 
@@ -158,8 +176,8 @@ export function OnboardingChecklist({
               e.stopPropagation();
               handleDismiss();
             }}
-            title="Dismiss"
-            aria-label="Dismiss setup checklist"
+            title={t("dismissTooltip")}
+            aria-label={t("dismissAriaLabel")}
           >
             <X className="h-3.5 w-3.5" />
           </Button>
@@ -213,7 +231,7 @@ export function OnboardingChecklist({
                     transition={{ delay: 0.3 }}
                     className="text-sm text-[var(--color-foreground)] font-medium"
                   >
-                    You&apos;re all set!
+                    {t("allSetHeadline")}
                   </motion.p>
                 </div>
 
@@ -225,20 +243,20 @@ export function OnboardingChecklist({
                   className="border-t border-[var(--color-border)] pt-3 mt-1"
                 >
                   <p className="text-xs font-semibold text-[var(--color-foreground)] mb-2">
-                    What&apos;s next?
+                    {t("whatsNext")}
                   </p>
                   <ul className="space-y-1.5">
                     <li className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
                       <ArrowRight className="h-3 w-3 text-[var(--color-primary)] shrink-0" />
-                      <span>Set up a lease agreement for your tenant</span>
+                      <span>{t("nextStepLease")}</span>
                     </li>
                     <li className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
                       <ArrowRight className="h-3 w-3 text-[var(--color-primary)] shrink-0" />
-                      <span>Create correspondence templates for common emails</span>
+                      <span>{t("nextStepCorrespondence")}</span>
                     </li>
                     <li className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
                       <ArrowRight className="h-3 w-3 text-[var(--color-primary)] shrink-0" />
-                      <span>Explore the dashboard for revenue and occupancy insights</span>
+                      <span>{t("nextStepInsights")}</span>
                     </li>
                   </ul>
                 </motion.div>
@@ -312,7 +330,7 @@ export function OnboardingChecklist({
                           onClick={step.action}
                           className="gap-1.5 text-xs shrink-0"
                         >
-                          {step.actionLabel || "Start"}
+                          {step.actionLabel || t("startAction")}
                           <ArrowRight className="h-3 w-3" />
                         </Button>
                       )}
@@ -326,44 +344,4 @@ export function OnboardingChecklist({
       </AnimatePresence>
     </motion.div>
   );
-}
-
-/** Default onboarding steps factory */
-export function getDefaultOnboardingSteps(config: {
-  hasProperties: boolean;
-  hasTenants: boolean;
-  hasPayments: boolean;
-  onAddProperty?: () => void;
-  onAddTenant?: () => void;
-  onRecordPayment?: () => void;
-}): OnboardingChecklistStep[] {
-  return [
-    {
-      id: "property",
-      label: "Add your first property",
-      description: "Start by adding a property — apartment, house, or commercial building.",
-      completed: config.hasProperties,
-      icon: Building2,
-      action: config.onAddProperty,
-      actionLabel: "Add Property",
-    },
-    {
-      id: "tenant",
-      label: "Add a tenant",
-      description: "Add tenant details and assign them to a property.",
-      completed: config.hasTenants,
-      icon: Users,
-      action: config.onAddTenant,
-      actionLabel: "Add Tenant",
-    },
-    {
-      id: "payment",
-      label: "Record a payment",
-      description: "Log your first rent payment to unlock revenue analytics.",
-      completed: config.hasPayments,
-      icon: DollarSign,
-      action: config.onRecordPayment,
-      actionLabel: "Record Payment",
-    },
-  ];
 }

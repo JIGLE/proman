@@ -26,6 +26,9 @@ const envSchema = z.object({
   ENABLE_SENDGRID: z.string().optional(),
   ENABLE_OAUTH: z.string().optional(),
   ENABLE_DEMO_LOGIN: z.string().optional(),
+  // Enforce subscription plan limits (e.g. property count). Off by default so
+  // self-hosted instances are never limited — see docs/PRODUCT_AUDIT_2026.md §2.
+  ENABLE_BILLING: z.string().optional(),
 
   // PII encryption key (AES-256-GCM, 32-byte hex)
   PII_ENCRYPTION_KEY: z.string().min(64).optional(),
