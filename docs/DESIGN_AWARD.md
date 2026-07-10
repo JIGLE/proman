@@ -85,10 +85,13 @@ Re-capture (`--tag after`) and compare.
 Tailwind's content scanner reads:** also run `npm run build` (or load the app
 in a running dev server) and confirm no PostCSS/Tailwind parse error. Tailwind
 v4 scans `.md` files for candidate classes too — a stray bracket-class string
-in prose (e.g. writing out `text-[var(--color-a|b)]` as a single token) can
-generate invalid CSS and break the _entire app's_ stylesheet, silently, since
-`tsc`/`eslint`/`vitest` never compile CSS and won't catch it. This has already
-happened once in this repo's docs — see the git history on this file.
+in prose (e.g. an arbitrary-value class like `text-[ var(--color-…) ]` written
+as one contiguous token, with an invalid CSS character such as a raw pipe inside
+the brackets) can generate invalid CSS and break the _entire app's_ stylesheet,
+silently, since `tsc`/`eslint`/`vitest` never compile CSS and won't catch it.
+Note the spaces added inside the brackets above: they are deliberate, so this
+warning does not itself become the landmine it describes. This has already
+happened twice in this repo's docs — see the git history on this file.
 
 ## Domora anti-patterns (a screen matching one is wrong)
 
