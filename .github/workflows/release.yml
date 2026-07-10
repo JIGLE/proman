@@ -50,6 +50,14 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
+          # RELEASE_TOKEN is a PAT (or GitHub App token) with contents + pull-requests
+          # write AND branch-protection bypass on main. It lets this workflow push the
+          # release branch, admin-merge the release PR, and push the tag through
+          # protected main — none of which GITHUB_TOKEN can do. Persisting it here means
+          # every later `git push` (release branch + tag) uses it too. Falls back to
+          # GITHUB_TOKEN when unset, in which case the "Merge release PR" step will fail
+          # (as it does today) until the secret is configured.
+          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -194,7 +202,7 @@ jobs:
         # TODO: pin to SHA — see https://github.com/cli/cli pinning guidance
         # Current: gh CLI bundled in ubuntu-latest runner
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           PR_URL=$(gh pr create \
             --base main \
@@ -212,13 +220,16 @@ jobs:
 
       - name: Merge release PR
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           # Squash-merge the release branch into main for a clean history entry.
-          # If branch protection requires status checks, this step will fail until
-          # a PAT or GitHub App with bypass rights is configured for the release workflow.
+          # --admin bypasses branch protection (unmet required checks, etc.); it only
+          # works when GH_TOKEN belongs to a repo admin or an actor on the branch's
+          # bypass allowlist — i.e. RELEASE_TOKEN. With the GITHUB_TOKEN fallback this
+          # step fails, which is the current behaviour until RELEASE_TOKEN is set.
           gh pr merge ${{ steps.open-pr.outputs.pr_number }} \
             --squash \
+            --admin \
             --subject "chore(release): v${{ steps.version.outputs.new_version }}" \
             --delete-branch
 
@@ -245,6 +256,7 @@ jobs:
           body_path: release_notes.md
           draft: false
           prerelease: ${{ github.event.inputs.prerelease }}
+          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           generate_release_notes: true
           files: release-charts/*.tgz
         env:
