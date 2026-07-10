@@ -22,7 +22,7 @@ function getStripe(): Stripe {
     throw new Error("STRIPE_SECRET_KEY not configured");
   }
   return new Stripe(key, {
-    apiVersion: "2025-02-24.acacia",
+    apiVersion: "2026-06-24.dahlia",
   });
 }
 

@@ -185,7 +185,10 @@ async function syncSubscriptionFromStripe(
   userId: string,
   sub: Stripe.Subscription,
 ): Promise<void> {
-  const priceId = sub.items.data[0]?.price?.id;
+  // As of Stripe's 2025 "basil" API, billing-period fields live on the
+  // subscription item, not the subscription itself.
+  const item = sub.items.data[0];
+  const priceId = item?.price?.id;
   const status = mapStripeStatus(sub.status);
   const plan = status === "canceled" ? "free" : resolvePlanFromPriceId(priceId);
   const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
@@ -196,7 +199,7 @@ async function syncSubscriptionFromStripe(
     stripeCustomerId: customerId,
     stripeSubscriptionId: sub.id,
     stripePriceId: priceId ?? null,
-    currentPeriodEnd: new Date(sub.current_period_end * 1000),
+    currentPeriodEnd: item?.current_period_end ? new Date(item.current_period_end * 1000) : null,
     cancelAtPeriodEnd: sub.cancel_at_period_end,
   };
 
