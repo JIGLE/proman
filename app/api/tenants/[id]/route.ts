@@ -65,9 +65,7 @@ async function handlePut(
   try {
     // Resolve id from context params
     const maybeParams = context?.params as
-      | Record<string, string>
-      | Promise<Record<string, string>>
-      | undefined;
+      Record<string, string> | Promise<Record<string, string>> | undefined;
     const resolvedParams = maybeParams instanceof Promise ? await maybeParams : maybeParams;
     const id = resolvedParams?.id;
     if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);

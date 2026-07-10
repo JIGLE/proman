@@ -37,10 +37,7 @@ function resolveLocale(language: string | null | undefined): SupportedLocale {
 }
 
 export type ReminderEmailKind =
-  | "rentReminder"
-  | "overdueNotice"
-  | "leaseRenewal"
-  | "receiptDeadline";
+  "rentReminder" | "overdueNotice" | "leaseRenewal" | "receiptDeadline";
 
 interface UserEmailContext {
   email: string;

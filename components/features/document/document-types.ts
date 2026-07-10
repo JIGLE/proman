@@ -3,13 +3,7 @@
 import { File, FileText, Image, FileImage } from "lucide-react";
 
 export type DocumentType =
-  | "contract"
-  | "invoice"
-  | "receipt"
-  | "photo"
-  | "floor_plan"
-  | "certificate"
-  | "other";
+  "contract" | "invoice" | "receipt" | "photo" | "floor_plan" | "certificate" | "other";
 
 export interface Document {
   id: string;

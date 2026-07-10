@@ -52,24 +52,22 @@ export function ContactsView(): React.ReactElement {
       const json = await apiFetch<Record<string, unknown>[]>("/api/contacts");
       // Transform API response to match component interface
       const rawItems = Array.isArray(json) ? json : [];
-      const data = rawItems.map(
-        (c): MaintenanceContact => ({
-          id: String(c.id),
-          name: String(c.contactPerson || c.name || "Unknown"),
-          company: c.company ? String(c.company) : null,
-          type: (c.type as MaintenanceContact["type"]) || "contractor",
-          specialties:
-            typeof c.specialties === "string"
-              ? JSON.parse(c.specialties)
-              : (c.specialties as string[]) || [],
-          email: c.email ? String(c.email) : null,
-          phone: c.phone ? String(c.phone) : null,
-          hourlyRate: c.hourlyRate != null ? Number(c.hourlyRate) : null,
-          currency: String(c.currency || "EUR"),
-          rating: c.rating != null ? Number(c.rating) : null,
-          notes: c.notes ? String(c.notes) : null,
-        }),
-      );
+      const data = rawItems.map((c): MaintenanceContact => ({
+        id: String(c.id),
+        name: String(c.contactPerson || c.name || "Unknown"),
+        company: c.company ? String(c.company) : null,
+        type: (c.type as MaintenanceContact["type"]) || "contractor",
+        specialties:
+          typeof c.specialties === "string"
+            ? JSON.parse(c.specialties)
+            : (c.specialties as string[]) || [],
+        email: c.email ? String(c.email) : null,
+        phone: c.phone ? String(c.phone) : null,
+        hourlyRate: c.hourlyRate != null ? Number(c.hourlyRate) : null,
+        currency: String(c.currency || "EUR"),
+        rating: c.rating != null ? Number(c.rating) : null,
+        notes: c.notes ? String(c.notes) : null,
+      }));
       setContacts(data);
     } catch (err) {
       console.error("Failed to fetch contacts:", err);
