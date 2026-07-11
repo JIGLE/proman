@@ -3,9 +3,10 @@ import * as React from "react";
 import { cn } from "@/lib/utils/utils";
 
 /**
- * Lares brand logomark — an arched doorway/threshold with a keystone dot,
- * evoking the Roman Lares (household guardians of the home's threshold),
- * filled with the teal → terracotta brand gradient ("home at golden hour").
+ * Lares brand logomark — a symmetric Roman semicircular arch with a floating
+ * keystone, cut from a solid teal → terracotta tile. The arch is the household
+ * threshold the Roman Lares guarded; the keystone and classical proportions give
+ * it an official, European read while the Mediterranean terracotta keeps it warm.
  *
  * Hook-free so it renders in both Server and Client Components. Multiple marks
  * on a page reuse the same gradient def id; duplicate ids resolve to the first
@@ -28,27 +29,19 @@ export function LaresMark({
     >
       <defs>
         <linearGradient id={GRADIENT_ID} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#0d9488" />
-          <stop offset="100%" stopColor="#e8825a" />
+          <stop offset="0%" stopColor="#14b8a6" />
+          <stop offset="100%" stopColor="#d97a53" />
         </linearGradient>
       </defs>
-      <rect width="128" height="128" rx="28" fill="#0b0e14" />
+      <rect width="128" height="128" rx="28" fill={`url(#${GRADIENT_ID})`} />
       <path
-        d="M40 100V58a24 24 0 0 1 48 0v42"
+        d="M42 96V60a22 22 0 0 1 44 0v36"
         fill="none"
-        stroke={`url(#${GRADIENT_ID})`}
-        strokeWidth="12"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M33 100h62"
-        fill="none"
-        stroke={`url(#${GRADIENT_ID})`}
-        strokeWidth="12"
+        stroke="#0b0e14"
+        strokeWidth="11"
         strokeLinecap="round"
       />
-      <circle cx="64" cy="61" r="7" fill={`url(#${GRADIENT_ID})`} />
+      <rect x="58" y="30" width="12" height="16" rx="3" fill="#0b0e14" />
     </svg>
   );
 }

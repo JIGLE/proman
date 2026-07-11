@@ -1,16 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 96" role="img" aria-label="Lares">
   <defs>
     <linearGradient id="laresLogo" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#0d9488" />
-      <stop offset="100%" stop-color="#e8825a" />
+      <stop offset="0%" stop-color="#14b8a6" />
+      <stop offset="100%" stop-color="#d97a53" />
     </linearGradient>
   </defs>
-  <!-- Mark -->
+  <!-- Mark: Roman arch + keystone on a solid tile -->
   <g transform="translate(8 8)">
-    <rect width="80" height="80" rx="18" fill="#0b0e14" />
-    <path d="M25 63V36a15 15 0 0 1 30 0v27" fill="none" stroke="url(#laresLogo)" stroke-width="7.5" stroke-linecap="round" stroke-linejoin="round" />
-    <path d="M21 63h38" fill="none" stroke="url(#laresLogo)" stroke-width="7.5" stroke-linecap="round" />
-    <circle cx="40" cy="38" r="4.4" fill="url(#laresLogo)" />
+    <rect width="80" height="80" rx="18" fill="url(#laresLogo)" />
+    <path d="M26.25 60V37.5a13.75 13.75 0 0 1 27.5 0v22.5" fill="none" stroke="#0b0e14" stroke-width="6.9" stroke-linecap="round" />
+    <rect x="36.25" y="18.75" width="7.5" height="10" rx="1.9" fill="#0b0e14" />
   </g>
   <!-- Wordmark -->
   <text x="104" y="62" font-family="Syne, system-ui, sans-serif" font-size="44" font-weight="700" letter-spacing="-1" fill="#e2e8f0">Lares</text>

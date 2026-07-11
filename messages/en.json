@@ -1,4 +1,16 @@
 {
+  "people": {
+    "title": "People",
+    "subtitle": "Manage tenants, property owners, and service providers.",
+    "totalTenants": "Total tenants",
+    "activeTenants": "Active tenants",
+    "totalOwners": "Total owners",
+    "tenants": "Tenants",
+    "owners": "Owners",
+    "serviceProviders": "Service providers",
+    "addTenant": "Add tenant",
+    "addOwner": "Add owner"
+  },
   "portfolio": {
     "badge": "Properties workspace",
     "title": "Properties",
@@ -94,7 +106,9 @@
     "vendors": "Vendors",
     "contracts": "Contracts",
     "compliance": "Compliance",
-    "taxFiling": "Tax Filing"
+    "taxFiling": "Tax Filing",
+    "account": "Account",
+    "signOut": "Sign out"
   },
   "dashboard": {
     "welcome": "Welcome to your property management dashboard",

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Users, Briefcase, Plus, Wrench } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ export function PeopleView(): React.ReactElement {
   const { tenants, owners } = state;
   const tenantsViewRef = useRef<TenantsViewRef>(null);
   const ownersViewRef = useRef<OwnersViewRef>(null);
+  const t = useTranslations("people");
 
   useEffect(() => {
     const view = searchParams.get("view");
@@ -66,17 +68,17 @@ export function PeopleView(): React.ReactElement {
     <div className="space-y-6">
       {/* Enhanced Page Header */}
       <div className="flex flex-col gap-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
+        <div className="flex flex-row items-center justify-between gap-4">
+          {/* The bottom nav already labels this screen — hide the repeated
+              title/subtitle on mobile so content starts higher. */}
+          <div className="hidden sm:block">
             <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-2">
               <Users className="h-8 w-8" />
-              People
+              {t("title")}
             </h1>
-            <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-              Manage tenants, property owners, and service providers.
-            </p>
+            <p className="text-sm text-[var(--color-muted-foreground)] mt-1">{t("subtitle")}</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex items-center gap-2">
             <ExportButton
               data={exportConfig.data}
               filename={`${activeTab}-export`}
@@ -85,23 +87,31 @@ export function PeopleView(): React.ReactElement {
           </div>
         </div>
 
-        {/* People Statistics */}
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">Total Tenants</div>
-            <div className="text-2xl font-bold text-[var(--color-foreground)]">
+        {/* People Statistics — 3-up on every width so the grid stays symmetric */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-solid)] p-3 sm:p-4">
+            <div className="text-xs sm:text-sm text-[var(--color-muted-foreground)] mb-1">
+              {t("totalTenants")}
+            </div>
+            <div className="text-xl sm:text-2xl font-bold tabular-nums text-[var(--color-foreground)]">
               {tenants.length}
             </div>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">Active Tenants</div>
-            <div className="text-2xl font-bold text-green-500">
-              {tenants.filter((t) => new Date(t.leaseEnd) > new Date()).length}
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-solid)] p-3 sm:p-4">
+            <div className="text-xs sm:text-sm text-[var(--color-muted-foreground)] mb-1">
+              {t("activeTenants")}
+            </div>
+            <div className="text-xl sm:text-2xl font-bold tabular-nums text-[var(--color-success)]">
+              {tenants.filter((tenant) => new Date(tenant.leaseEnd) > new Date()).length}
             </div>
           </div>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-            <div className="text-sm text-muted-foreground mb-1">Total Owners</div>
-            <div className="text-2xl font-bold text-[var(--color-foreground)]">{owners.length}</div>
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-solid)] p-3 sm:p-4">
+            <div className="text-xs sm:text-sm text-[var(--color-muted-foreground)] mb-1">
+              {t("totalOwners")}
+            </div>
+            <div className="text-xl sm:text-2xl font-bold tabular-nums text-[var(--color-foreground)]">
+              {owners.length}
+            </div>
           </div>
         </div>
       </div>
@@ -109,42 +119,48 @@ export function PeopleView(): React.ReactElement {
       {/* Tab Navigation - Tenants and Owners */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center gap-2">
-          <TabsList className="grid w-full max-w-lg grid-cols-3">
-            <TabsTrigger value="tenants" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span>Tenants</span>
-              <span className="ml-1 rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs">
+          {/* Scrollable on narrow screens so no tab label ever clips. */}
+          <TabsList className="flex w-full max-w-lg justify-start overflow-x-auto sm:grid sm:grid-cols-3">
+            <TabsTrigger value="tenants" className="flex shrink-0 items-center gap-2">
+              <Users className="h-4 w-4 shrink-0" />
+              <span>{t("tenants")}</span>
+              <span className="ml-1 rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs tabular-nums">
                 {tenants.length}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="owners" className="flex items-center gap-2">
-              <Briefcase className="h-4 w-4" />
-              <span>Owners</span>
-              <span className="ml-1 rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs">
+            <TabsTrigger value="owners" className="flex shrink-0 items-center gap-2">
+              <Briefcase className="h-4 w-4 shrink-0" />
+              <span>{t("owners")}</span>
+              <span className="ml-1 rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs tabular-nums">
                 {owners.length}
               </span>
             </TabsTrigger>
-            <TabsTrigger value="contacts" className="flex items-center gap-2">
-              <Wrench className="h-4 w-4" />
-              <span>Service Providers</span>
+            <TabsTrigger
+              value="contacts"
+              className="flex shrink-0 items-center gap-2 whitespace-nowrap"
+            >
+              <Wrench className="h-4 w-4 shrink-0" />
+              <span>{t("serviceProviders")}</span>
             </TabsTrigger>
           </TabsList>
           {activeTab === "tenants" && (
             <Button
               onClick={() => tenantsViewRef.current?.openDialog()}
-              className="flex items-center gap-2"
+              className="flex shrink-0 items-center gap-2"
+              aria-label={t("addTenant")}
             >
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Add Tenant</span>
+              <span className="hidden sm:inline">{t("addTenant")}</span>
             </Button>
           )}
           {activeTab === "owners" && (
             <Button
               onClick={() => ownersViewRef.current?.openDialog()}
-              className="flex items-center gap-2"
+              className="flex shrink-0 items-center gap-2"
+              aria-label={t("addOwner")}
             >
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Add Owner</span>
+              <span className="hidden sm:inline">{t("addOwner")}</span>
             </Button>
           )}
         </div>
