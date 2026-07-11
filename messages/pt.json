@@ -1,4 +1,16 @@
 {
+  "people": {
+    "title": "Pessoas",
+    "subtitle": "Gerir inquilinos, proprietários e prestadores de serviços.",
+    "totalTenants": "Total de inquilinos",
+    "activeTenants": "Inquilinos ativos",
+    "totalOwners": "Total de proprietários",
+    "tenants": "Inquilinos",
+    "owners": "Proprietários",
+    "serviceProviders": "Prestadores",
+    "addTenant": "Adicionar inquilino",
+    "addOwner": "Adicionar proprietário"
+  },
   "portfolio": {
     "badge": "Área do portfólio",
     "title": "Portfólio",
@@ -94,7 +106,9 @@
     "vendors": "Fornecedores",
     "contracts": "Contratos",
     "compliance": "Conformidade",
-    "taxFiling": "Declaração Fiscal"
+    "taxFiling": "Declaração Fiscal",
+    "account": "Conta",
+    "signOut": "Terminar sessão"
   },
   "dashboard": {
     "welcome": "Bem-vindo ao seu painel de gestão de imóveis",

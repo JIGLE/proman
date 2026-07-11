@@ -1,4 +1,16 @@
 {
+  "people": {
+    "title": "Personas",
+    "subtitle": "Gestiona inquilinos, propietarios y proveedores de servicios.",
+    "totalTenants": "Total de inquilinos",
+    "activeTenants": "Inquilinos activos",
+    "totalOwners": "Total de propietarios",
+    "tenants": "Inquilinos",
+    "owners": "Propietarios",
+    "serviceProviders": "Proveedores",
+    "addTenant": "Añadir inquilino",
+    "addOwner": "Añadir propietario"
+  },
   "portfolio": {
     "badge": "Área del portafolio",
     "title": "Portafolio",
@@ -94,7 +106,9 @@
     "vendors": "Proveedores",
     "contracts": "Contratos",
     "compliance": "Cumplimiento",
-    "taxFiling": "Declaración Fiscal"
+    "taxFiling": "Declaración Fiscal",
+    "account": "Cuenta",
+    "signOut": "Cerrar sesión"
   },
   "dashboard": {
     "welcome": "Bienvenido a tu panel de gestión inmobiliaria",

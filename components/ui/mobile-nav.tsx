@@ -1,10 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { LogOut, Building2, Menu, X, Settings } from "lucide-react";
+import { LogOut, Building2, Menu, X, Settings, Globe } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./sheet";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -15,6 +16,14 @@ interface MobileNavProps {
   activeTab?: string;
   onTabChange?: (tab: string) => void;
 }
+
+/** Endonyms — the same in every catalog, so not routed through i18n. */
+const LOCALE_LABELS: Record<string, string> = {
+  pt: "Português",
+  en: "English",
+  es: "Español",
+  it: "Italiano",
+};
 
 export function MobileBottomNav({
   activeTab: _activeTab,
@@ -47,102 +56,126 @@ export function MobileBottomNav({
     return pathname === fullPath || pathname.startsWith(`${fullPath}/`);
   };
 
-  return (
-    <>
-      {/* Bottom Navigation Bar */}
-      <nav
-        className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
-        role="navigation"
-        aria-label="Mobile navigation"
-      >
-        {/* Safe area spacer for notched devices */}
-        <div className="bg-[var(--color-background)]/95 backdrop-blur-sm border-t border-[var(--color-border)]">
-          <div
-            className="grid h-16 items-center px-2"
-            style={{ gridTemplateColumns: `repeat(${primaryNavItems.length}, minmax(0, 1fr))` }}
-          >
-            {primaryNavItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = isItemActive(item.href);
+  const tabItemClass = (isActive: boolean) =>
+    cn(
+      "flex flex-col items-center justify-center gap-0.5 h-full px-1 py-1 rounded-lg transition-all duration-200",
+      "active:scale-95 touch-manipulation",
+      "focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-1",
+      isActive
+        ? "bg-accent-primary/15 text-accent-primary"
+        : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
+    );
 
-              return (
-                <Link
-                  key={item.id}
-                  href={`/${currentLocale}${item.href}`}
-                  onClick={() => onTabChange?.(item.id)}
+  // A single bottom bar: the primary tabs plus one "Account" tab that opens a
+  // bottom sheet with profile utilities (language, settings, sign-out) — so the
+  // most valuable strip on the phone isn't split across two rows.
+  const columnCount = primaryNavItems.length + (session ? 1 : 0);
+
+  return (
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden"
+      role="navigation"
+      aria-label="Mobile navigation"
+    >
+      <div className="bg-[var(--color-background)]/95 backdrop-blur-sm border-t border-[var(--color-border)]">
+        <div
+          className="grid h-16 items-center px-2"
+          style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
+        >
+          {primaryNavItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = isItemActive(item.href);
+            return (
+              <Link
+                key={item.id}
+                href={`/${currentLocale}${item.href}`}
+                onClick={() => onTabChange?.(item.id)}
+                className={tabItemClass(isActive)}
+                aria-label={item.label}
+                aria-current={isActive ? "page" : undefined}
+              >
+                <div
                   className={cn(
-                    "flex flex-col items-center justify-center gap-0.5 h-full px-1 py-1 rounded-lg transition-all duration-200",
-                    "active:scale-95 touch-manipulation",
-                    "focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-1",
-                    isActive
-                      ? "bg-accent-primary/15 text-accent-primary"
-                      : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
+                    "p-1.5 rounded-lg transition-colors",
+                    isActive && "bg-accent-primary/20",
                   )}
-                  aria-label={item.label}
-                  aria-current={isActive ? "page" : undefined}
                 >
-                  <div
-                    className={cn(
-                      "p-1.5 rounded-lg transition-colors",
-                      isActive && "bg-accent-primary/20",
-                    )}
-                  >
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                  <span
-                    className={cn(
-                      "text-xs font-medium transition-colors",
-                      isActive ? "text-accent-primary" : "text-[var(--color-muted-foreground)]",
-                    )}
-                  >
-                    {item.label}
-                  </span>
-                </Link>
-              );
-            })}
-          </div>
+                  <Icon className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <span className="text-xs font-medium">{item.label}</span>
+              </Link>
+            );
+          })}
+
           {session && (
-            <div className="border-t border-[var(--color-border)] px-3 py-2 flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
-                <Avatar className="w-7 h-7 ring-1 ring-[var(--color-border)]">
-                  <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
-                  <AvatarFallback className="bg-accent-primary text-white text-xs font-semibold">
-                    {initials}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="truncate text-xs text-[var(--color-muted-foreground)]">
-                  {user?.name}
-                </span>
-              </div>
-              <div className="flex items-center gap-1">
-                <LanguageSelector compact />
-                {isOwnerPortal && (
-                  <Link
-                    href={`/${currentLocale}/settings`}
-                    className="inline-flex items-center justify-center h-8 w-8 rounded-md text-[var(--color-muted-foreground)] hover:bg-[var(--color-hover)] hover:text-[var(--color-foreground)]"
-                    aria-label="Settings"
+            <Sheet>
+              <SheetTrigger className={tabItemClass(false)} aria-label={tNav("account")}>
+                <div className="p-0.5">
+                  <Avatar className="h-7 w-7 ring-1 ring-[var(--color-border)]">
+                    <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+                    <AvatarFallback className="bg-accent-primary text-white text-[10px] font-semibold">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                </div>
+                <span className="text-xs font-medium">{tNav("account")}</span>
+              </SheetTrigger>
+              <SheetContent
+                side="bottom"
+                className="rounded-t-2xl px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-5"
+              >
+                <SheetTitle className="sr-only">{tNav("account")}</SheetTitle>
+                <div className="mb-4 flex items-center gap-3">
+                  <Avatar className="h-11 w-11 ring-1 ring-[var(--color-border)]">
+                    <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+                    <AvatarFallback className="bg-accent-primary text-white text-sm font-semibold">
+                      {initials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-[var(--color-foreground)]">
+                      {user?.name}
+                    </p>
+                    <p className="truncate text-xs text-[var(--color-muted-foreground)]">
+                      {user?.email}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-col divide-y divide-[var(--color-border)]">
+                  <div className="flex items-center justify-between py-3">
+                    <span className="flex items-center gap-3 text-sm text-[var(--color-foreground)]">
+                      <Globe className="h-4 w-4 text-[var(--color-muted-foreground)]" />
+                      {LOCALE_LABELS[currentLocale] ?? currentLocale.toUpperCase()}
+                    </span>
+                    <LanguageSelector compact />
+                  </div>
+                  {isOwnerPortal && (
+                    <Link
+                      href={`/${currentLocale}/settings`}
+                      className="flex items-center gap-3 py-3 text-sm text-[var(--color-foreground)]"
+                    >
+                      <Settings className="h-4 w-4 text-[var(--color-muted-foreground)]" />
+                      {tNav("settings")}
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => signOut({ callbackUrl: `/${currentLocale}` })}
+                    className="flex items-center gap-3 py-3 text-sm text-[var(--color-error)]"
                   >
-                    <Settings className="h-4 w-4" />
-                  </Link>
-                )}
-                <button
-                  onClick={() => signOut({ callbackUrl: `/${currentLocale}` })}
-                  className="inline-flex items-center justify-center h-8 w-8 rounded-md text-[var(--color-error)] hover:bg-[var(--color-error)]/10"
-                  aria-label="Sign Out"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
+                    <LogOut className="h-4 w-4" />
+                    {tNav("signOut")}
+                  </button>
+                </div>
+              </SheetContent>
+            </Sheet>
           )}
-          {/* iOS safe area padding */}
-          <div
-            className="bg-[var(--color-background)]"
-            style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-          />
         </div>
-      </nav>
-    </>
+        <div
+          className="bg-[var(--color-background)]"
+          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        />
+      </div>
+    </nav>
   );
 }
 

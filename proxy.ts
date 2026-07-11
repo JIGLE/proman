@@ -263,7 +263,9 @@ export async function proxy(request: NextRequest) {
 
     if (isMainPortalPage) {
       const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
-      if (!token) {
+      // A valid demo cookie stands in for a session on portal pages — otherwise
+      // "Try Demo Mode" bounces straight back to sign-in.
+      if (!token && !isDemo) {
         // Sign-in lives at app/auth/signin (outside the [locale] segment).
         const signInUrl = request.nextUrl.clone();
         signInUrl.pathname = `/auth/signin`;
