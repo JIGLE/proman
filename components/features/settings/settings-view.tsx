@@ -38,6 +38,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/lib/contexts/toast-context";
+import { useCsrf } from "@/lib/contexts/csrf-context";
+import { useTheme } from "@/lib/contexts/theme-context";
 
 interface UserSettings {
   theme: "light" | "dark" | "system";
@@ -107,6 +109,8 @@ const fiscalResidencyOptions = [
 export function SettingsView(): React.ReactElement {
   const { data: session } = useSession();
   const { success, error: showError } = useToast();
+  const { token: csrfToken } = useCsrf();
+  const { setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -280,7 +284,7 @@ export function SettingsView(): React.ReactElement {
     try {
       const res = await fetch("/api/auth/totp/enable", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken || "" },
         body: JSON.stringify({ code: totpCode }),
       });
       if (!res.ok) {
@@ -303,7 +307,10 @@ export function SettingsView(): React.ReactElement {
   const disableTotp = async () => {
     setTotpWorking(true);
     try {
-      const res = await fetch("/api/auth/totp/disable", { method: "DELETE" });
+      const res = await fetch("/api/auth/totp/disable", {
+        method: "DELETE",
+        headers: { "X-CSRF-Token": csrfToken || "" },
+      });
       if (!res.ok) throw new Error("Disable failed");
       setTotpEnabled(false);
       setTotpSetupStep("idle");
@@ -355,14 +362,14 @@ export function SettingsView(): React.ReactElement {
     try {
       const response = await fetch("/api/settings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken || "" },
         body: JSON.stringify(settings),
       });
 
       if (response.ok) {
         success("Settings saved successfully");
         setHasChanges(false);
-        applyTheme(settings.theme);
+        setTheme(settings.theme);
       } else {
         showError("Failed to save settings");
       }
@@ -378,7 +385,7 @@ export function SettingsView(): React.ReactElement {
     try {
       const response = await fetch("/api/user/fiscal-profile", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken || "" },
         body: JSON.stringify(fiscalProfile),
       });
 
@@ -393,16 +400,6 @@ export function SettingsView(): React.ReactElement {
       showError("Failed to save tax profile");
     } finally {
       setFiscalSaving(false);
-    }
-  };
-
-  const applyTheme = (theme: "light" | "dark" | "system") => {
-    const root = document.documentElement;
-    if (theme === "system") {
-      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      root.classList.toggle("dark", isDark);
-    } else {
-      root.classList.toggle("dark", theme === "dark");
     }
   };
 
@@ -501,7 +498,14 @@ export function SettingsView(): React.ReactElement {
                       key={option.value}
                       variant={settings.theme === option.value ? "default" : "outline"}
                       size="sm"
-                      onClick={() => updateSetting("theme", option.value as UserSettings["theme"])}
+                      onClick={() => {
+                        const value = option.value as UserSettings["theme"];
+                        updateSetting("theme", value);
+                        // Apply immediately through the global theme context so the
+                        // change is visible at once and persists across reloads —
+                        // independent of the server save below.
+                        setTheme(value);
+                      }}
                       className="flex-1"
                     >
                       <option.icon className="h-4 w-4 mr-1" />
@@ -556,7 +560,10 @@ export function SettingsView(): React.ReactElement {
                     size="sm"
                     onClick={async () => {
                       try {
-                        const res = await fetch("/api/user/export-data", { method: "POST" });
+                        const res = await fetch("/api/user/export-data", {
+                          method: "POST",
+                          headers: { "X-CSRF-Token": csrfToken || "" },
+                        });
                         if (!res.ok) throw new Error("Export failed");
                         const blob = await res.blob();
                         const url = URL.createObjectURL(blob);
@@ -589,7 +596,10 @@ export function SettingsView(): React.ReactElement {
                       )
                         return;
                       try {
-                        const res = await fetch("/api/user/delete-data", { method: "POST" });
+                        const res = await fetch("/api/user/delete-data", {
+                          method: "POST",
+                          headers: { "X-CSRF-Token": csrfToken || "" },
+                        });
                         if (!res.ok) throw new Error("Delete failed");
                         window.location.href = "/auth/signin";
                       } catch {
