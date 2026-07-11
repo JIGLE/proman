@@ -16,21 +16,20 @@ const path = require("path");
 const sharp = require("sharp");
 
 const PUBLIC = path.resolve(__dirname, "..", "public");
-const BG = "#0b0e14";
-const TEAL = "#0d9488";
-const TERRACOTTA = "#e8825a";
+const MARK = "#0b0e14";
+const TEAL = "#14b8a6";
+const TERRACOTTA = "#d97a53";
 
-/** The arched-doorway mark, scaled/positioned within a `size` viewBox. */
-function doorway(size, inset) {
+/** The Roman arch + keystone, in charcoal, scaled into a `size` viewBox. */
+function arch(size, inset) {
   // Map the canonical 128-unit artwork into [inset, size-inset].
   const s = (size - inset * 2) / 128;
   const t = (n) => inset + n * s;
-  const sw = 12 * s;
+  const sw = 11 * s;
   return `
-    <path d="M${t(40)} ${t(100)}V${t(58)}a${24 * s} ${24 * s} 0 0 1 ${48 * s} 0v${42 * s}"
-      fill="none" stroke="url(#g)" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M${t(33)} ${t(100)}h${62 * s}" fill="none" stroke="url(#g)" stroke-width="${sw}" stroke-linecap="round"/>
-    <circle cx="${t(64)}" cy="${t(61)}" r="${7 * s}" fill="url(#g)"/>`;
+    <path d="M${t(42)} ${t(96)}V${t(60)}a${22 * s} ${22 * s} 0 0 1 ${44 * s} 0v${36 * s}"
+      fill="none" stroke="${MARK}" stroke-width="${sw}" stroke-linecap="round"/>
+    <rect x="${t(58)}" y="${t(30)}" width="${12 * s}" height="${16 * s}" rx="${3 * s}" fill="${MARK}"/>`;
 }
 
 function svg({ size, rounded, inset }) {
@@ -42,8 +41,8 @@ function svg({ size, rounded, inset }) {
       <stop offset="100%" stop-color="${TERRACOTTA}"/>
     </linearGradient>
   </defs>
-  <rect width="${size}" height="${size}" rx="${radius}" fill="${BG}"/>
-  ${doorway(size, inset)}
+  <rect width="${size}" height="${size}" rx="${radius}" fill="url(#g)"/>
+  ${arch(size, inset)}
 </svg>`;
 }
 

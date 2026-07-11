@@ -45,20 +45,23 @@ export default function OgImage() {
 
       {/* Brand mark */}
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        <div
-          style={{
-            width: 52,
-            height: 52,
-            borderRadius: 12,
-            background: "rgba(13,148,136,0.15)",
-            border: "1.5px solid rgba(13,148,136,0.45)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <span style={{ color: "#2dd4bf", fontSize: 26, fontWeight: 700, lineHeight: 1 }}>D</span>
-        </div>
+        <svg width="52" height="52" viewBox="0 0 128 128">
+          <defs>
+            <linearGradient id="og-lares" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#14b8a6" />
+              <stop offset="100%" stopColor="#d97a53" />
+            </linearGradient>
+          </defs>
+          <rect width="128" height="128" rx="28" fill="url(#og-lares)" />
+          <path
+            d="M42 96V60a22 22 0 0 1 44 0v36"
+            fill="none"
+            stroke="#0b0e14"
+            strokeWidth="11"
+            strokeLinecap="round"
+          />
+          <rect x="58" y="30" width="12" height="16" rx="3" fill="#0b0e14" />
+        </svg>
         <span
           style={{
             color: "#e4e4e7",
