@@ -36,6 +36,20 @@ vi.mock("@/lib/contexts/toast-context", () => ({
   }),
 }));
 
+// Mock CSRF + theme contexts (settings-view reads the real hooks)
+vi.mock("@/lib/contexts/csrf-context", () => ({
+  useCsrf: () => ({ token: "test-csrf", isLoading: false, error: null, refreshToken: vi.fn() }),
+}));
+
+vi.mock("@/lib/contexts/theme-context", () => ({
+  useTheme: () => ({
+    theme: "light",
+    resolvedTheme: "light",
+    setTheme: vi.fn(),
+    toggleTheme: vi.fn(),
+  }),
+}));
+
 describe("SettingsView", () => {
   let fetchMock: ReturnType<typeof vi.fn>;
 
@@ -72,7 +86,7 @@ describe("SettingsView", () => {
     expect(typeof component).toBe("function");
   });
 
-  it("fetches subscription info on mount and renders the Billing tab trigger", async () => {
+  const mockBilling = (billingEnabled: boolean) => {
     fetchMock.mockImplementation((url: string) => {
       if (url === "/api/billing/subscription") {
         return Promise.resolve({
@@ -85,6 +99,7 @@ describe("SettingsView", () => {
               cancelAtPeriodEnd: false,
               maxProperties: 10,
               propertyCount: 3,
+              billingEnabled,
             },
           }),
         });
@@ -105,12 +120,27 @@ describe("SettingsView", () => {
       }
       return Promise.resolve({ ok: true, json: async () => ({}) });
     });
+  };
 
+  it("renders the Billing tab when billing is enabled", async () => {
+    mockBilling(true);
     render(<SettingsView />);
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith("/api/billing/subscription");
     });
-    expect(screen.getByRole("tab", { name: "Billing" })).toBeDefined();
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: "Billing" })).toBeDefined();
+    });
+  });
+
+  it("hides the Billing tab on self-hosted instances (billing disabled)", async () => {
+    mockBilling(false);
+    render(<SettingsView />);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/billing/subscription");
+    });
+    expect(screen.queryByRole("tab", { name: "Billing" })).toBeNull();
   });
 });

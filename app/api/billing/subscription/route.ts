@@ -9,8 +9,15 @@ import { createSuccessResponse, withErrorHandler } from "@/lib/utils/error-handl
 import { withRateLimit } from "@/lib/utils/rate-limit";
 import { isDemoRequest } from "@/lib/demo/demo-mode";
 import { getCurrentPlanInfo } from "@/lib/billing/subscription-service";
+import { isEnabled } from "@/lib/utils/env";
 
 async function handleGet(request: NextRequest): Promise<Response> {
+  // Self-hosted instances don't enforce or sell subscriptions unless the
+  // operator opts in with ENABLE_BILLING. Surface that so the client can hide
+  // all subscription framing (Billing tab, plan badges, upgrade prompts) when
+  // it's off — the account is effectively unlimited.
+  const billingEnabled = isEnabled("ENABLE_BILLING");
+
   if (isDemoRequest(request)) {
     return createSuccessResponse({
       plan: "free",
@@ -19,6 +26,7 @@ async function handleGet(request: NextRequest): Promise<Response> {
       cancelAtPeriodEnd: false,
       maxProperties: 1,
       propertyCount: 1,
+      billingEnabled,
     });
   }
 
@@ -29,7 +37,7 @@ async function handleGet(request: NextRequest): Promise<Response> {
   const prisma = getPrismaClient();
   const info = await getCurrentPlanInfo(prisma, userId);
 
-  return createSuccessResponse(info);
+  return createSuccessResponse({ ...info, billingEnabled });
 }
 
 export const GET = withErrorHandler(withRateLimit(handleGet));

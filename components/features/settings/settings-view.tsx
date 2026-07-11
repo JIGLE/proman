@@ -154,8 +154,12 @@ export function SettingsView(): React.ReactElement {
     cancelAtPeriodEnd: boolean;
     maxProperties: number | null;
     propertyCount: number;
+    billingEnabled?: boolean;
   } | null>(null);
   const [billingLoading, setBillingLoading] = useState(true);
+  // Whether to surface any subscription UI at all. Off on self-hosted instances
+  // (ENABLE_BILLING unset) so the account never sees subscription framing.
+  const showBilling = billing?.billingEnabled === true;
 
   // Extract current locale from pathname
   const currentLocale = pathname.split("/")[1] || "en";
@@ -442,7 +446,7 @@ export function SettingsView(): React.ReactElement {
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
+          {showBilling && <TabsTrigger value="billing">Billing</TabsTrigger>}
         </TabsList>
 
         {/* Account tab */}
@@ -1123,8 +1127,8 @@ export function SettingsView(): React.ReactElement {
           </Card>
         </TabsContent>
 
-        {/* Billing tab */}
-        <TabsContent value="billing" className="mt-6">
+        {/* Billing tab — only rendered when billing is enabled (never on self-hosted). */}
+        <TabsContent value="billing" className="mt-6" hidden={!showBilling}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
