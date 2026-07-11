@@ -51,6 +51,10 @@ function isSupportedLocale(segment: string): segment is SupportedLocale {
  * /api/webhooks/**       — External provider callbacks (Stripe, SIBS, Bizum,
  *                          SendGrid). Authenticated via provider signatures,
  *                          not a user session, so they bypass auth/CSRF.
+ * /api/billing/checkout  — Browser-navigable pricing CTA (GET). Self-guards:
+ *                          redirects unauthenticated visitors to sign-in and
+ *                          requires a session to create a Checkout Session, so
+ *                          it must not be 401'd by the proxy first.
  */
 function isPublicApiRoute(pathname: string): boolean {
   return (
@@ -61,7 +65,8 @@ function isPublicApiRoute(pathname: string): boolean {
     pathname.startsWith("/api/tenant-portal") ||
     pathname === "/api/csrf-token" ||
     pathname.startsWith("/api/monitoring") ||
-    pathname.startsWith("/api/webhooks")
+    pathname.startsWith("/api/webhooks") ||
+    pathname === "/api/billing/checkout"
   );
 }
 
@@ -259,8 +264,9 @@ export async function proxy(request: NextRequest) {
     if (isMainPortalPage) {
       const token = await getToken({ req: request, secret: process.env.NEXTAUTH_SECRET });
       if (!token) {
+        // Sign-in lives at app/auth/signin (outside the [locale] segment).
         const signInUrl = request.nextUrl.clone();
-        signInUrl.pathname = `/${localeSegment}/auth/signin`;
+        signInUrl.pathname = `/auth/signin`;
         signInUrl.searchParams.set("callbackUrl", pathname);
         const response = NextResponse.redirect(signInUrl);
         applySecurityHeaders(response, nonce);
@@ -356,9 +362,18 @@ export async function proxy(request: NextRequest) {
     (locale) => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
   );
 
+  // Routes that intentionally live outside the [locale] segment — prepending a
+  // locale would 404 them: the auth pages (app/auth/**) and the token-based
+  // tenant portal (app/tenant-portal/**).
+  const isLocaleExemptPath =
+    pathname === "/auth" ||
+    pathname.startsWith("/auth/") ||
+    pathname === "/tenant-portal" ||
+    pathname.startsWith("/tenant-portal/");
+
   let response: NextResponse;
 
-  if (pathnameHasLocale) {
+  if (pathnameHasLocale || isLocaleExemptPath) {
     response = NextResponse.next();
   } else if (pathname === "/") {
     const acceptLanguage = request.headers.get("accept-language") ?? "";
