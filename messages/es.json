@@ -347,7 +347,7 @@
   "landing": {
     "eyebrow": "Operaciones de alquiler para Portugal y España",
     "hero": "Cobra alquileres. Emite recibos. Cumple la ley.",
-    "subtitle": "Domora automatiza el ciclo mensual de cumplimiento para propietarios en Portugal y España — del seguimiento de pagos al recibo electrónico AT y las exportaciones fiscales IRS / IRPF.",
+    "subtitle": "Lares automatiza el ciclo mensual de cumplimiento para propietarios en Portugal y España — del seguimiento de pagos al recibo electrónico AT y las exportaciones fiscales IRS / IRPF.",
     "cta": "Entrar",
     "headerCta": "Empezar",
     "navHowItWorks": "Cómo funciona",
@@ -747,8 +747,8 @@
         "subject": "Plazo del recibo de alquiler vence mañana — {property}",
         "body": "Debe emitirse un recibo de alquiler para {tenant} en {property} (pago de {amount}) antes de mañana para cumplir con el plazo legal de 5 días."
       },
-      "footer": "Recibe este correo porque las notificaciones por correo están activadas en su configuración de Domora.",
-      "viewInApp": "Ver en Domora"
+      "footer": "Recibe este correo porque las notificaciones por correo están activadas en su configuración de Lares.",
+      "viewInApp": "Ver en Lares"
     }
   },
   "owners": {
@@ -1203,7 +1203,7 @@
     "banner": "Modo Demo – Los cambios no se guardan",
     "exitButton": "Salir del Demo",
     "preparing": "Preparando el entorno de demostración...",
-    "title": "Domora Demo",
+    "title": "Lares Demo",
     "readOnly": "Esta funcionalidad es solo de lectura en modo demo",
     "changesNotSaved": "Modo demo: los cambios no se guardan"
   },
@@ -1217,7 +1217,7 @@
     "tooManyRequests": "Demasiadas solicitudes. Por favor intente de nuevo en {retryAfter} segundos."
   },
   "footer": {
-    "copyright": "© {year} Domora. Todos los derechos reservados.",
+    "copyright": "© {year} Lares. Todos los derechos reservados.",
     "privacy": "Política de Privacidad",
     "terms": "Términos de Servicio"
   },

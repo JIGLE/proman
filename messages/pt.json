@@ -347,7 +347,7 @@
   "landing": {
     "eyebrow": "Operações de arrendamento para Portugal e Espanha",
     "hero": "Receba rendas. Emita recibos. Cumpra a lei.",
-    "subtitle": "O Domora automatiza o ciclo mensal de conformidade para senhorios em Portugal e Espanha — do acompanhamento de pagamento ao recibo eletrónico AT e às exportações fiscais IRS / IRPF.",
+    "subtitle": "O Lares automatiza o ciclo mensal de conformidade para senhorios em Portugal e Espanha — do acompanhamento de pagamento ao recibo eletrónico AT e às exportações fiscais IRS / IRPF.",
     "cta": "Entrar",
     "headerCta": "Começar",
     "navHowItWorks": "Como funciona",
@@ -747,8 +747,8 @@
         "subject": "Prazo do recibo de renda termina amanhã — {property}",
         "body": "É necessário emitir um recibo de renda para {tenant} em {property} (pagamento de {amount}) até amanhã, para cumprir o prazo legal de 5 dias."
       },
-      "footer": "Está a receber este email porque as notificações por email estão ativadas nas suas definições da Domora.",
-      "viewInApp": "Ver na Domora"
+      "footer": "Está a receber este email porque as notificações por email estão ativadas nas suas definições da Lares.",
+      "viewInApp": "Ver na Lares"
     }
   },
   "owners": {
@@ -1203,7 +1203,7 @@
     "banner": "Modo Demo – As alterações não são guardadas",
     "exitButton": "Sair do Demo",
     "preparing": "A preparar o ambiente de demonstração...",
-    "title": "Domora Demo",
+    "title": "Lares Demo",
     "readOnly": "Esta funcionalidade é apenas de leitura no modo demo",
     "changesNotSaved": "Modo demo: as alterações não são guardadas"
   },
@@ -1217,7 +1217,7 @@
     "tooManyRequests": "Demasiados pedidos. Por favor tente novamente em {retryAfter} segundos."
   },
   "footer": {
-    "copyright": "© {year} Domora. Todos os direitos reservados.",
+    "copyright": "© {year} Lares. Todos os direitos reservados.",
     "privacy": "Política de Privacidade",
     "terms": "Termos de Serviço"
   },

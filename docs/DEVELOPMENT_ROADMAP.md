@@ -1,4 +1,4 @@
-# Domora — Development Roadmap (post-2026 audit)
+# Lares — Development Roadmap (post-2026 audit)
 
 **Purpose.** A forward, actionable development plan derived from
 `docs/PRODUCT_AUDIT_2026.md`. Where `ROADMAP.md` is the _historical_ task log (phases
@@ -124,7 +124,7 @@ up to the brand.
 
 - **Why:** the most viral surface is the least polished (audit §5 "growth & virality").
 - **Acceptance:** migrate `app/tenant-portal/[token]/page.tsx` off hardcoded gray/blue
-  Tailwind onto the Domora design tokens (themes/dark-mode work); replace the hardcoded
+  Tailwind onto the Lares design tokens (themes/dark-mode work); replace the hardcoded
   `pt-PT`/EUR `Intl` formatting (lines 248, 251) with locale-aware formatting; replace
   `alert()` (298, 306) with real in-app UI feedback; add a durable/recoverable access path
   (not email-token-only). Note: copy is already i18n'd — do **not** redo that.

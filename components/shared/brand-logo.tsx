@@ -3,18 +3,19 @@ import * as React from "react";
 import { cn } from "@/lib/utils/utils";
 
 /**
- * Domora brand logomark — an arched doorway ("domus"/threshold) that also
- * reads as a "D", filled with the teal → terracotta brand gradient.
+ * Lares brand logomark — an arched doorway/threshold with a keystone dot,
+ * evoking the Roman Lares (household guardians of the home's threshold),
+ * filled with the teal → terracotta brand gradient ("home at golden hour").
  *
  * Hook-free so it renders in both Server and Client Components. Multiple marks
  * on a page reuse the same gradient def id; duplicate ids resolve to the first
  * (identical) definition, which is visually correct.
  */
-const GRADIENT_ID = "domora-brand-gradient";
+const GRADIENT_ID = "lares-brand-gradient";
 
-export function DomoraMark({
+export function LaresMark({
   className,
-  title = "Domora",
+  title = "Lares",
   ...props
 }: React.SVGProps<SVGSVGElement> & { title?: string }): React.ReactElement {
   return (
@@ -52,8 +53,8 @@ export function DomoraMark({
   );
 }
 
-/** Full lockup: mark + "Domora" wordmark in the display typeface. */
-export function DomoraLogo({
+/** Full lockup: mark + "Lares" wordmark in the display typeface. */
+export function LaresLogo({
   className,
   markClassName,
 }: {
@@ -62,9 +63,9 @@ export function DomoraLogo({
 }): React.ReactElement {
   return (
     <span className={cn("flex items-center gap-2", className)}>
-      <DomoraMark className={cn("h-6 w-6 shrink-0", markClassName)} />
+      <LaresMark className={cn("h-6 w-6 shrink-0", markClassName)} />
       <span className="font-display text-lg font-bold tracking-tight text-[var(--color-foreground)]">
-        Domora
+        Lares
       </span>
     </span>
   );

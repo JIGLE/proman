@@ -48,13 +48,49 @@ export function ThemeProvider({ children }: { children: React.ReactNode }): Reac
     setResolvedTheme(resolved);
   }, []);
 
-  // Initialize theme from storage
+  // Initialize theme: a local choice (localStorage) wins for an instant,
+  // flash-free apply on repeat visits. On a fresh browser with no local choice,
+  // fall back to the OS preference immediately, then adopt the account's saved
+  // theme from the server once it loads — so a signed-in user's theme follows
+  // them across devices instead of always starting light.
   useEffect(() => {
     const stored = localStorage.getItem(THEME_STORAGE_KEY) as Theme | null;
-    const initialTheme = stored || "light";
-    setThemeState(initialTheme);
-    applyTheme(resolveTheme(initialTheme));
+    if (stored) {
+      setThemeState(stored);
+      applyTheme(resolveTheme(stored));
+      setMounted(true);
+      return;
+    }
+
+    setThemeState("system");
+    applyTheme(resolveTheme("system"));
     setMounted(true);
+
+    let cancelled = false;
+    fetch("/api/settings", { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => {
+        const serverTheme = body?.data?.theme as Theme | undefined;
+        // Only adopt a concrete saved theme, and only if the visitor hasn't
+        // picked one in the meantime.
+        if (
+          cancelled ||
+          !serverTheme ||
+          serverTheme === "system" ||
+          localStorage.getItem(THEME_STORAGE_KEY)
+        ) {
+          return;
+        }
+        setThemeState(serverTheme);
+        localStorage.setItem(THEME_STORAGE_KEY, serverTheme);
+        applyTheme(resolveTheme(serverTheme));
+      })
+      .catch(() => {
+        /* not signed in / offline — keep the system default */
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [applyTheme, resolveTheme]);
 
   // Listen for system theme changes

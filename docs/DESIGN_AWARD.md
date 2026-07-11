@@ -1,7 +1,7 @@
-# Design Award — Domora's audit-and-elevate loop
+# Design Award — Lares's audit-and-elevate loop
 
-A repeatable loop for driving Domora's UI to an award-level bar, adapted from the
-Katei `design-award` skill. It does **not** restyle: Domora already has a
+A repeatable loop for driving Lares's UI to an award-level bar, adapted from the
+Katei `design-award` skill. It does **not** restyle: Lares already has a
 deliberate identity (Pine Teal + Terracotta, Plus Jakarta Sans + Syne, the token
 system in `app/globals.css`, the 4-zone modal). This loop raises _execution_ until
 that identity reads as inevitable — in **all three themes** (dark, light, OLED)
@@ -10,7 +10,7 @@ and **all four languages** (pt/en/es/it).
 > Provenance: method ported from Anthropic's `design-award` skill (Katei repo).
 > The scorecard rows and the five taste tests transfer almost verbatim; the
 > staging data, capture walk, signature moments, and anti-patterns are re-seeded
-> from Domora's own screens.
+> from Lares's own screens.
 
 ## The rule
 
@@ -22,7 +22,7 @@ override a defensible alternative get one line of _why_ in the commit body.
 
 ### 1. Stage — a realistic portfolio, never empty
 
-Domora ships **demo mode** (`lib/demo/`), the analog of Katei's `seed.mjs`: a
+Lares ships **demo mode** (`lib/demo/`), the analog of Katei's `seed.mjs`: a
 12-property portfolio across Lisbon/Porto/Barcelona with real tenants, leases,
 receipts, expenses, tickets, and both owner + tenant perspectives. It is
 auth-free at the app layer but the portal guard in `proxy.ts` still needs a
@@ -93,7 +93,7 @@ Note the spaces added inside the brackets above: they are deliberate, so this
 warning does not itself become the landmine it describes. This has already
 happened twice in this repo's docs — see the git history on this file.
 
-## Domora anti-patterns (a screen matching one is wrong)
+## Lares anti-patterns (a screen matching one is wrong)
 
 - A **neutral literal** (`bg-zinc-900`, `text-zinc-400`) anywhere in `components/`
   or `app/` — it won't remap and breaks light/OLED. Use `var(--color-*)` tokens
@@ -106,7 +106,7 @@ happened twice in this repo's docs — see the git history on this file.
 - Inventing a new accent hue instead of reusing success/warning/info/destructive
   - the Pine-Teal primary / Terracotta secondary.
 
-## Token mapping reference (neutral → Domora token)
+## Token mapping reference (neutral → Lares token)
 
 Mirrors the already-clean `overview-view.tsx`. Applied by
 `scripts/migrate-neutral-tokens.mjs` (review each diff — the mapping is contextual).

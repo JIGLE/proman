@@ -4,8 +4,10 @@ import { Suspense } from "react";
 import { signIn, useSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import { ShieldCheck } from "lucide-react";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { Button } from "@/components/ui/button";
+import { LaresMark } from "@/components/shared/brand-logo";
 
 /** Only allow same-site relative paths, to rule out an open redirect via `callbackUrl`. */
 function safeCallbackUrl(raw: string | null): string | null {
@@ -39,6 +41,23 @@ function detectLocale(): string {
 const isDemoEnabled =
   process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true" || process.env.NODE_ENV !== "production";
 
+/** Full-bleed brand backdrop: brand background plus a soft teal→terracotta glow. */
+function AuthShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[var(--color-background)] px-4 py-10">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -top-40 left-1/2 h-[32rem] w-[32rem] -translate-x-1/2 rounded-full opacity-25 blur-[120px]"
+        style={{
+          background:
+            "radial-gradient(circle at 50% 50%, var(--color-primary), var(--color-accent-secondary) 60%, transparent 75%)",
+        }}
+      />
+      {children}
+    </div>
+  );
+}
+
 function SignInContent() {
   const { data: session, status } = useSession();
   const router = useRouter();
@@ -53,9 +72,12 @@ function SignInContent() {
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-        <div className="text-zinc-400">Loading...</div>
-      </div>
+      <AuthShell>
+        <div className="flex items-center gap-3 text-[var(--color-muted-foreground)]">
+          <LaresMark className="h-6 w-6" />
+          <span className="text-sm">Loading…</span>
+        </div>
+      </AuthShell>
     );
   }
 
@@ -64,89 +86,21 @@ function SignInContent() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-      <div className="max-w-md w-full mx-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8">
-          <div className="text-center">
-            <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6">
-              <svg
-                className="w-8 h-8 text-zinc-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                />
-              </svg>
-            </div>
-
-            <h1 className="text-2xl font-bold text-zinc-50 mb-2">Welcome to Domora</h1>
-            <p className="text-zinc-400 mb-8">
-              Sign in to access your property management dashboard
+    <AuthShell>
+      <div className="relative w-full max-w-md">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-solid)] p-8 shadow-2xl shadow-black/30 sm:p-10">
+          <div className="flex flex-col items-center text-center">
+            <LaresMark className="h-14 w-14" />
+            <h1 className="mt-5 font-display text-2xl font-bold tracking-tight text-[var(--color-foreground)]">
+              Welcome to Lares
+            </h1>
+            <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
+              Sign in to run your rental compliance — rent, receipts, and fiscal filings for
+              Portugal &amp; Spain.
             </p>
+          </div>
 
-            {/* Credentials login — only shown when demo login is enabled */}
-            {isDemoEnabled && (
-              <>
-                <form
-                  id="demo-login-form"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const formData = new FormData(e.currentTarget);
-                    signIn("credentials", {
-                      email: formData.get("email"),
-                      password: formData.get("password"),
-                      callbackUrl: callbackUrl ?? `/${detectLocale()}/dashboard`,
-                    });
-                  }}
-                  className="space-y-3"
-                >
-                  <input
-                    name="email"
-                    type="email"
-                    className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none"
-                    placeholder="Email"
-                    defaultValue=""
-                  />
-                  <input
-                    name="password"
-                    type="password"
-                    className="w-full bg-zinc-800 text-sm text-zinc-200 p-3 rounded-md border border-zinc-700 focus:border-blue-500 outline-none"
-                    placeholder="Password"
-                    defaultValue=""
-                  />
-                  <Button
-                    type="submit"
-                    className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Sign In
-                  </Button>
-                </form>
-                <Button
-                  type="button"
-                  className="w-full h-10 mt-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-                  onClick={() => {
-                    router.push(`/${detectLocale()}/demo`);
-                  }}
-                >
-                  Try Demo Mode
-                </Button>
-              </>
-            )}
-
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-zinc-800" />
-              </div>
-              <div className="relative flex justify-center text-xs">
-                <span className="bg-zinc-900 px-2 text-zinc-500">or</span>
-              </div>
-            </div>
-
+          <div className="mt-8">
             <Button
               onClick={() => {
                 const browserLang =
@@ -155,9 +109,9 @@ function SignInContent() {
                 signIn("google", { callbackUrl: callbackUrl ?? `/${locale}/dashboard` });
               }}
               variant="outline"
-              className="w-full bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border-zinc-700 font-medium py-3 px-4 rounded-md transition-colors flex items-center justify-center gap-3"
+              className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border-[var(--color-border-hover)] bg-[var(--color-background)] text-[15px] font-medium text-[var(--color-foreground)] transition-colors hover:bg-[var(--color-muted)]"
             >
-              <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
                 <path
                   fill="#4285F4"
                   d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
@@ -178,15 +132,83 @@ function SignInContent() {
               Sign in with Google
             </Button>
 
-            {isDemoEnabled && process.env.NODE_ENV !== "production" && (
-              <div className="mt-6 text-center">
-                <p className="text-xs text-zinc-500">Demo mode active — enter any credentials</p>
-              </div>
+            {/* Credentials login — only shown when demo login is enabled */}
+            {isDemoEnabled && (
+              <>
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-[var(--color-border)]" />
+                  </div>
+                  <div className="relative flex justify-center text-xs">
+                    <span className="bg-[var(--color-card-solid)] px-3 uppercase tracking-wide text-[var(--color-muted-foreground)]">
+                      or
+                    </span>
+                  </div>
+                </div>
+
+                <form
+                  id="demo-login-form"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.currentTarget);
+                    signIn("credentials", {
+                      email: formData.get("email"),
+                      password: formData.get("password"),
+                      callbackUrl: callbackUrl ?? `/${detectLocale()}/dashboard`,
+                    });
+                  }}
+                  className="space-y-3"
+                >
+                  <input
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm text-[var(--color-foreground)] outline-none transition-colors placeholder:text-[var(--color-muted-foreground)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-ring)]"
+                    placeholder="Email"
+                    defaultValue=""
+                  />
+                  <input
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    className="w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm text-[var(--color-foreground)] outline-none transition-colors placeholder:text-[var(--color-muted-foreground)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-ring)]"
+                    placeholder="Password"
+                    defaultValue=""
+                  />
+                  <Button
+                    type="submit"
+                    className="h-11 w-full rounded-xl bg-[var(--color-primary)] font-semibold text-[var(--color-primary-foreground)] hover:opacity-90"
+                  >
+                    Sign in
+                  </Button>
+                </form>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="mt-2 h-11 w-full rounded-xl text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
+                  onClick={() => {
+                    router.push(`/${detectLocale()}/demo`);
+                  }}
+                >
+                  Explore the demo instead
+                </Button>
+              </>
             )}
           </div>
+
+          <div className="mt-8 flex items-center justify-center gap-2 text-xs text-[var(--color-muted-foreground)]">
+            <ShieldCheck className="h-3.5 w-3.5 text-[var(--color-primary)]" />
+            <span>Self-hosted &amp; GDPR-aligned · Portugal &amp; Spain</span>
+          </div>
+
+          {isDemoEnabled && process.env.NODE_ENV !== "production" && (
+            <p className="mt-4 text-center text-xs text-[var(--color-muted-foreground)]">
+              Demo mode active — enter any credentials
+            </p>
+          )}
         </div>
       </div>
-    </div>
+    </AuthShell>
   );
 }
 
@@ -195,9 +217,12 @@ export default function SignIn() {
     <ErrorBoundary>
       <Suspense
         fallback={
-          <div className="min-h-screen flex items-center justify-center bg-zinc-950">
-            <div className="text-zinc-400">Loading...</div>
-          </div>
+          <AuthShell>
+            <div className="flex items-center gap-3 text-[var(--color-muted-foreground)]">
+              <LaresMark className="h-6 w-6" />
+              <span className="text-sm">Loading…</span>
+            </div>
+          </AuthShell>
         }
       >
         <SignInContent />

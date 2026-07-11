@@ -38,6 +38,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/lib/contexts/toast-context";
+import { useCsrf } from "@/lib/contexts/csrf-context";
+import { useTheme } from "@/lib/contexts/theme-context";
 
 interface UserSettings {
   theme: "light" | "dark" | "system";
@@ -107,6 +109,8 @@ const fiscalResidencyOptions = [
 export function SettingsView(): React.ReactElement {
   const { data: session } = useSession();
   const { success, error: showError } = useToast();
+  const { token: csrfToken } = useCsrf();
+  const { setTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -150,8 +154,12 @@ export function SettingsView(): React.ReactElement {
     cancelAtPeriodEnd: boolean;
     maxProperties: number | null;
     propertyCount: number;
+    billingEnabled?: boolean;
   } | null>(null);
   const [billingLoading, setBillingLoading] = useState(true);
+  // Whether to surface any subscription UI at all. Off on self-hosted instances
+  // (ENABLE_BILLING unset) so the account never sees subscription framing.
+  const showBilling = billing?.billingEnabled === true;
 
   // Extract current locale from pathname
   const currentLocale = pathname.split("/")[1] || "en";
@@ -280,7 +288,7 @@ export function SettingsView(): React.ReactElement {
     try {
       const res = await fetch("/api/auth/totp/enable", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken || "" },
         body: JSON.stringify({ code: totpCode }),
       });
       if (!res.ok) {
@@ -303,7 +311,10 @@ export function SettingsView(): React.ReactElement {
   const disableTotp = async () => {
     setTotpWorking(true);
     try {
-      const res = await fetch("/api/auth/totp/disable", { method: "DELETE" });
+      const res = await fetch("/api/auth/totp/disable", {
+        method: "DELETE",
+        headers: { "X-CSRF-Token": csrfToken || "" },
+      });
       if (!res.ok) throw new Error("Disable failed");
       setTotpEnabled(false);
       setTotpSetupStep("idle");
@@ -355,14 +366,14 @@ export function SettingsView(): React.ReactElement {
     try {
       const response = await fetch("/api/settings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken || "" },
         body: JSON.stringify(settings),
       });
 
       if (response.ok) {
         success("Settings saved successfully");
         setHasChanges(false);
-        applyTheme(settings.theme);
+        setTheme(settings.theme);
       } else {
         showError("Failed to save settings");
       }
@@ -378,7 +389,7 @@ export function SettingsView(): React.ReactElement {
     try {
       const response = await fetch("/api/user/fiscal-profile", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", "X-CSRF-Token": csrfToken || "" },
         body: JSON.stringify(fiscalProfile),
       });
 
@@ -393,16 +404,6 @@ export function SettingsView(): React.ReactElement {
       showError("Failed to save tax profile");
     } finally {
       setFiscalSaving(false);
-    }
-  };
-
-  const applyTheme = (theme: "light" | "dark" | "system") => {
-    const root = document.documentElement;
-    if (theme === "system") {
-      const isDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-      root.classList.toggle("dark", isDark);
-    } else {
-      root.classList.toggle("dark", theme === "dark");
     }
   };
 
@@ -445,7 +446,7 @@ export function SettingsView(): React.ReactElement {
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="system">System</TabsTrigger>
-          <TabsTrigger value="billing">Billing</TabsTrigger>
+          {showBilling && <TabsTrigger value="billing">Billing</TabsTrigger>}
         </TabsList>
 
         {/* Account tab */}
@@ -473,7 +474,7 @@ export function SettingsView(): React.ReactElement {
                 <div className="pt-4 border-t border-border">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Info className="h-3.5 w-3.5" />
-                    <span>Domora v{appVersion}</span>
+                    <span>Lares v{appVersion}</span>
                   </div>
                 </div>
               )}
@@ -501,7 +502,14 @@ export function SettingsView(): React.ReactElement {
                       key={option.value}
                       variant={settings.theme === option.value ? "default" : "outline"}
                       size="sm"
-                      onClick={() => updateSetting("theme", option.value as UserSettings["theme"])}
+                      onClick={() => {
+                        const value = option.value as UserSettings["theme"];
+                        updateSetting("theme", value);
+                        // Apply immediately through the global theme context so the
+                        // change is visible at once and persists across reloads —
+                        // independent of the server save below.
+                        setTheme(value);
+                      }}
                       className="flex-1"
                     >
                       <option.icon className="h-4 w-4 mr-1" />
@@ -556,13 +564,16 @@ export function SettingsView(): React.ReactElement {
                     size="sm"
                     onClick={async () => {
                       try {
-                        const res = await fetch("/api/user/export-data", { method: "POST" });
+                        const res = await fetch("/api/user/export-data", {
+                          method: "POST",
+                          headers: { "X-CSRF-Token": csrfToken || "" },
+                        });
                         if (!res.ok) throw new Error("Export failed");
                         const blob = await res.blob();
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
                         a.href = url;
-                        a.download = "domora-data.json";
+                        a.download = "lares-data.json";
                         a.click();
                         URL.revokeObjectURL(url);
                       } catch {
@@ -589,7 +600,10 @@ export function SettingsView(): React.ReactElement {
                       )
                         return;
                       try {
-                        const res = await fetch("/api/user/delete-data", { method: "POST" });
+                        const res = await fetch("/api/user/delete-data", {
+                          method: "POST",
+                          headers: { "X-CSRF-Token": csrfToken || "" },
+                        });
                         if (!res.ok) throw new Error("Delete failed");
                         window.location.href = "/auth/signin";
                       } catch {
@@ -1113,8 +1127,8 @@ export function SettingsView(): React.ReactElement {
           </Card>
         </TabsContent>
 
-        {/* Billing tab */}
-        <TabsContent value="billing" className="mt-6">
+        {/* Billing tab — only rendered when billing is enabled (never on self-hosted). */}
+        <TabsContent value="billing" className="mt-6" hidden={!showBilling}>
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

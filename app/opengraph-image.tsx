@@ -67,7 +67,7 @@ export default function OgImage() {
             letterSpacing: -0.5,
           }}
         >
-          Domora
+          Lares
         </span>
       </div>
 
