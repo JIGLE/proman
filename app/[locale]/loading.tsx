@@ -1,7 +1,7 @@
-import { DomoraMark } from "@/components/shared/brand-logo";
+import { LaresMark } from "@/components/shared/brand-logo";
 
 /**
- * Brand loading screen. Calm, single focal moment: the Domora mark sits inside a
+ * Brand loading screen. Calm, single focal moment: the Lares mark sits inside a
  * softly pulsing halo over the brand background, with the wordmark beneath and a
  * slim indeterminate progress rail. Motion is gated behind `motion-safe` so it
  * honors `prefers-reduced-motion`. i18n isn't available inside a loading
@@ -20,12 +20,12 @@ export default function Loading() {
           aria-hidden
           className="absolute h-24 w-24 rounded-full bg-[var(--color-primary)] opacity-20 blur-2xl motion-safe:animate-pulse"
         />
-        <DomoraMark className="relative h-14 w-14" />
+        <LaresMark className="relative h-14 w-14" />
       </div>
 
       <div className="flex flex-col items-center gap-3">
         <span className="font-display text-xl font-bold tracking-tight text-[var(--color-foreground)]">
-          Domora
+          Lares
         </span>
         {/* Slim indeterminate rail — reads as "official", not a busy spinner */}
         <span
@@ -36,7 +36,7 @@ export default function Loading() {
         </span>
       </div>
 
-      <span className="sr-only">Loading Domora…</span>
+      <span className="sr-only">Loading Lares…</span>
     </div>
   );
 }

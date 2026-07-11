@@ -347,7 +347,7 @@
   "landing": {
     "eyebrow": "Portugal & Spain rental operations",
     "hero": "Collect rent. Issue receipts. Stay compliant.",
-    "subtitle": "Domora automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+    "subtitle": "Lares automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
     "cta": "Sign in",
     "headerCta": "Get started",
     "navHowItWorks": "How it works",
@@ -747,8 +747,8 @@
         "subject": "Recibo de renda deadline tomorrow — {property}",
         "body": "A rent receipt for {tenant} at {property} (payment of {amount}) must be issued by tomorrow to meet the 5-day legal deadline."
       },
-      "footer": "You're receiving this because email notifications are enabled in your Domora settings.",
-      "viewInApp": "View in Domora"
+      "footer": "You're receiving this because email notifications are enabled in your Lares settings.",
+      "viewInApp": "View in Lares"
     }
   },
   "owners": {
@@ -1203,7 +1203,7 @@
     "banner": "Demo Mode – Changes are not saved",
     "exitButton": "Exit Demo",
     "preparing": "Preparing demo environment...",
-    "title": "Domora Demo",
+    "title": "Lares Demo",
     "readOnly": "This feature is read-only in demo mode",
     "changesNotSaved": "Demo mode: changes are not saved"
   },
@@ -1217,7 +1217,7 @@
     "tooManyRequests": "Too many requests. Please try again in {retryAfter} seconds."
   },
   "footer": {
-    "copyright": "© {year} Domora. All rights reserved.",
+    "copyright": "© {year} Lares. All rights reserved.",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
   },

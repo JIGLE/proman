@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Assistive migration of hardcoded neutral Tailwind literals (zinc/…) to Domora
+ * Assistive migration of hardcoded neutral Tailwind literals (zinc/…) to Lares
  * design tokens, for driving down the `check-color-tokens.js` ratchet. Neutral
  * literals don't remap per theme, so they break the light & OLED themes; this
  * maps them to the semantic `var(--color-*)` tokens defined in app/globals.css.

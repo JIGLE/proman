@@ -1,14 +1,14 @@
 import type { MetadataRoute } from "next";
 
 /**
- * Web App Manifest — makes Domora installable as a standalone app
+ * Web App Manifest — makes Lares installable as a standalone app
  * (Android/Chrome "Add to Home screen", desktop PWA install).
  * Served at /manifest.webmanifest.
  */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Domora — Property Management",
-    short_name: "Domora",
+    name: "Lares — Property Management",
+    short_name: "Lares",
     description:
       "Property management for European landlords — leases, receipts, expenses and tax compliance in one calm, private workspace.",
     id: "/",

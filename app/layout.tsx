@@ -23,23 +23,23 @@ const syne = Syne({
   weight: ["600", "700", "800"],
 });
 
-const BRAND_TAGLINE = "Domora — Property management for European landlords";
+const BRAND_TAGLINE = "Lares — Property management for European landlords";
 const BRAND_DESCRIPTION =
-  "Domora brings your properties, leases, receipts, expenses and tax compliance into one calm, private workspace — with rent-receipt and registry automation built for Portugal and Spain, and more of Europe to come.";
+  "Lares brings your properties, leases, receipts, expenses and tax compliance into one calm, private workspace — with rent-receipt and registry automation built for Portugal and Spain, and more of Europe to come.";
 
 export const metadata: Metadata = {
   title: {
     default: BRAND_TAGLINE,
-    template: "%s · Domora",
+    template: "%s · Lares",
   },
-  applicationName: "Domora",
+  applicationName: "Lares",
   description: BRAND_DESCRIPTION,
   openGraph: {
     title: BRAND_TAGLINE,
     description: BRAND_DESCRIPTION,
     type: "website",
     locale: "en_US",
-    siteName: "Domora",
+    siteName: "Lares",
   },
   twitter: {
     card: "summary_large_image",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   // Installable PWA / iOS home-screen support.
   appleWebApp: {
     capable: true,
-    title: "Domora",
+    title: "Lares",
     statusBarStyle: "black-translucent",
   },
   icons: {

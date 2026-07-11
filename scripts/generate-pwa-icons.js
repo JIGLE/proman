@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generates the Domora PWA raster icons from the brand logomark.
+ * Generates the Lares PWA raster icons from the brand logomark.
  *
  *   public/icon-192.png            — standard 192×192 (rounded)
  *   public/icon-512.png            — standard 512×512 (rounded)
@@ -55,7 +55,7 @@ async function render(name, options) {
 
 async function main() {
   if (!fs.existsSync(PUBLIC)) throw new Error(`public/ not found at ${PUBLIC}`);
-  console.log("Generating Domora PWA icons…");
+  console.log("Generating Lares PWA icons…");
   // Standard icons: rounded panel, logo fills most of the tile.
   await render("icon-192.png", { size: 192, rounded: true, inset: 18 });
   await render("icon-512.png", { size: 512, rounded: true, inset: 48 });

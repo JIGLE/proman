@@ -1,8 +1,8 @@
-# Domora — Product, Architecture & Behavioral Audit (2026)
+# Lares — Product, Architecture & Behavioral Audit (2026)
 
 **Status:** Strategy layer above the existing UX/engineering docs. **Scope:** full-app
 audit across architecture, purpose, user psychology, and adjacent dimensions, with one
-north star — _make Domora as essential (habit-forming, hard to leave) as possible for
+north star — _make Lares as essential (habit-forming, hard to leave) as possible for
 the end user._ **No code changes**; this document is analysis + a prioritized roadmap.
 
 > **How this relates to existing docs.** `docs/UX_AUDIT_2026.md`,
@@ -16,15 +16,15 @@ the end user._ **No code changes**; this document is analysis + a prioritized ro
 
 ## 1. Executive summary — the thesis
 
-Domora's positioning is unusually sharp and correct: **"Collect rent. Issue receipts.
+Lares's positioning is unusually sharp and correct: **"Collect rent. Issue receipts.
 Stay compliant."** (`messages/en.json` landing block; `app/[locale]/page.tsx`). The
 product already owns a genuine moat — the **deadline-driven compliance + rent-collection
 loop** for PT/ES landlords. That loop is both a real utility (missing a _recibo de renda_
 has legal consequences) and a real switching cost (a landlord who runs fiscal compliance
-through Domora can't casually leave). The engineering foundation under it is sound.
+through Lares can't casually leave). The engineering foundation under it is sound.
 
 **The gap between "useful" and "indispensable" is mostly wiring, not invention.** Four
-things separate today's Domora from a product a landlord _cannot_ operate without:
+things separate today's Lares from a product a landlord _cannot_ operate without:
 
 1. **The loop's triggers never leave the app.** Every automated reminder writes an
    in-app notification only — no email, no push. The product can reward a user who is
@@ -66,7 +66,7 @@ whether it's becoming essential.** (§8 proposes a North-Star; §9 the metric ga
 
 ## 3. User psychology — the habit model
 
-Mapping Domora onto a standard hook loop (**Trigger → Action → Variable reward →
+Mapping Lares onto a standard hook loop (**Trigger → Action → Variable reward →
 Investment**) locates every behavioral strength and gap precisely.
 
 **Trigger — the broken link.** The external trigger is _missing_. Reminder automation
@@ -127,7 +127,7 @@ to query paths, a rich `Lease`/`Receipt`/fiscal object graph.
 
 ## 5. Additional audit dimensions
 
-Beyond the three core lenses, the dimensions below materially affect whether Domora
+Beyond the three core lenses, the dimensions below materially affect whether Lares
 becomes essential. Ordered by leverage.
 
 **Security, privacy & compliance integrity — highest concern.** `lib/utils/pii-encryption.ts`
@@ -148,7 +148,7 @@ provider (`ROADMAP.md`), and `alert()` dialogs on the tenant payment path all qu
 erode the "you can trust us with your compliance" promise. Trust debt compounds faster
 than feature debt here.
 
-**Localization / i18n completeness.** Domora runs 4 locales (pt default, en, es, it).
+**Localization / i18n completeness.** Lares runs 4 locales (pt default, en, es, it).
 But several **behavioral** surfaces are hardcoded English in a PT/ES market:
 `insights-view.tsx`, `payment-matrix-view.tsx` (month abbreviations), `notification-center.tsx`
 ("Mark all read", "Just now", "You're all caught up!"), the `onboarding-checklist.tsx`
@@ -160,7 +160,7 @@ notes, it _does_ use `useTranslations` for its copy (`app/tenant-portal/[token]/
 
 **Growth & virality.** The tenant portal is the only surface that touches non-customers
 — every rent-paying tenant is a branded impression and a potential future landlord. Yet
-it uses a hardcoded gray/blue Tailwind palette (not the Domora design tokens, so it won't
+it uses a hardcoded gray/blue Tailwind palette (not the Lares design tokens, so it won't
 theme/dark-mode), `alert()` for payment feedback, and token-only access with no recovery
 (lose the email, lose access). Bringing it to parity converts the biggest untapped
 acquisition channel; leaving it undercuts the brand at its most public point.
@@ -225,7 +225,7 @@ status; this audit assumes those items are still open.
 
 ## 8. Proposed North-Star & guardrails
 
-Domora has no North-Star metric. Proposed:
+Lares has no North-Star metric. Proposed:
 
 > **North-Star: on-time compliant rent cycles closed per active landlord per month** —
 > the count of (rent collected **and** receipt issued **and**, where required, filed) on
@@ -244,7 +244,7 @@ success rate.
 
 You cannot currently measure any of §8. There is landing-funnel tracking
 (`landing-analytics.tsx`) but **no authenticated-app product analytics** and no
-server-side activation state. Making Domora essential requires being able to _see_ the
+server-side activation state. Making Lares essential requires being able to _see_ the
 habit forming. Minimum: an events table / lightweight analytics for the core loop
 (activation steps, rent-marked-paid, receipt-issued, reminder-clicked) and a server-side
 activation record (replacing the `localStorage`-only onboarding dismissal).
@@ -287,9 +287,9 @@ existing UX_AUDIT_2026 Critical items' real status is confirmed (§6).**
 
 ## 11. Bottom line
 
-Domora is a technically strong product sitting on a correct, defensible thesis. It is
+Lares is a technically strong product sitting on a correct, defensible thesis. It is
 **one loop-completion away** from essential: make the compliance/rent reminders _leave
 the app_, make the reward a _streak_ worth protecting, make the tenant surface _worthy of
 the brand_, and make the compliance promise _true_ (encrypt the PII). Do those four, in
-that order, and Domora becomes the tool a PT/ES landlord opens every month because the
+that order, and Lares becomes the tool a PT/ES landlord opens every month because the
 cost of not opening it is a missed legal deadline — the definition of essential.

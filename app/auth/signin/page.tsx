@@ -7,7 +7,7 @@ import { useEffect } from "react";
 import { ShieldCheck } from "lucide-react";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { Button } from "@/components/ui/button";
-import { DomoraMark } from "@/components/shared/brand-logo";
+import { LaresMark } from "@/components/shared/brand-logo";
 
 /** Only allow same-site relative paths, to rule out an open redirect via `callbackUrl`. */
 function safeCallbackUrl(raw: string | null): string | null {
@@ -74,7 +74,7 @@ function SignInContent() {
     return (
       <AuthShell>
         <div className="flex items-center gap-3 text-[var(--color-muted-foreground)]">
-          <DomoraMark className="h-6 w-6" />
+          <LaresMark className="h-6 w-6" />
           <span className="text-sm">Loading…</span>
         </div>
       </AuthShell>
@@ -90,9 +90,9 @@ function SignInContent() {
       <div className="relative w-full max-w-md">
         <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-card-solid)] p-8 shadow-2xl shadow-black/30 sm:p-10">
           <div className="flex flex-col items-center text-center">
-            <DomoraMark className="h-14 w-14" />
+            <LaresMark className="h-14 w-14" />
             <h1 className="mt-5 font-display text-2xl font-bold tracking-tight text-[var(--color-foreground)]">
-              Welcome to Domora
+              Welcome to Lares
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
               Sign in to run your rental compliance — rent, receipts, and fiscal filings for
@@ -219,7 +219,7 @@ export default function SignIn() {
         fallback={
           <AuthShell>
             <div className="flex items-center gap-3 text-[var(--color-muted-foreground)]">
-              <DomoraMark className="h-6 w-6" />
+              <LaresMark className="h-6 w-6" />
               <span className="text-sm">Loading…</span>
             </div>
           </AuthShell>

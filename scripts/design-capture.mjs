@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 /**
- * Design-award capture walk (Domora).
+ * Design-award capture walk (Lares).
  *
  * Boots against a running dev server, enters demo mode (auth-free, realistic
  * fixtures), and screenshots each flagship screen in every theme at mobile and
- * desktop widths — the Domora analog of Katei's `capture.mjs`. Read every image,
+ * desktop widths — the Lares analog of Katei's `capture.mjs`. Read every image,
  * then grade against docs/DESIGN_AWARD.md.
  *
  *   node scripts/design-capture.mjs [--tag before|after] [--base http://localhost:3000]
