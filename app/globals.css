@@ -508,6 +508,16 @@ body {
   }
 }
 
+/* Indeterminate loading rail: a short bar sweeps left→right across the track. */
+@keyframes loadingSlide {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
