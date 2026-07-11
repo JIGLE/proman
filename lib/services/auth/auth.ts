@@ -153,10 +153,11 @@ function createBaseAuthOptions(): NextAuthOptions {
       async jwt({
         token,
         user,
+        account,
       }: {
         token: JWT;
         user?: NextAuthUser | null;
-        account?: unknown;
+        account?: { provider?: string } | null;
       }): Promise<JWT> {
         // If no user yet and dev auth is enabled, inject dev session
         if (
@@ -195,19 +196,54 @@ function createBaseAuthOptions(): NextAuthOptions {
             role?: string;
             mfaPending?: boolean;
           };
-          t.id = user.id;
-          t.sub = user.id;
+          // Resolve the id that owned records (properties, tenants, settings…)
+          // foreign-key against. The credentials provider already returns a real
+          // DB User.id. OAuth (Google) has no PrismaAdapter under the JWT
+          // strategy, so NextAuth never creates a User row on sign-in — provision
+          // one here and use its DB id, otherwise every owned-entity create fails
+          // with "Foreign key constraint violated".
+          let resolvedId = user.id;
+          if (
+            !isMockMode &&
+            user.email &&
+            account?.provider &&
+            account.provider !== "credentials"
+          ) {
+            try {
+              const prisma = getPrismaClient();
+              const dbUser = await prisma.user.upsert({
+                where: { email: user.email },
+                update: {},
+                create: {
+                  email: user.email,
+                  name: user.name ?? undefined,
+                  image: user.image ?? undefined,
+                  role: "ADMIN",
+                  imageConsent: true,
+                },
+                select: { id: true },
+              });
+              resolvedId = dbUser.id;
+            } catch (err) {
+              logger.warn("Failed to provision OAuth user row", {
+                error: err instanceof Error ? err.message : String(err),
+              });
+            }
+          }
+
+          t.id = resolvedId;
+          t.sub = resolvedId;
           t.email = user.email ?? undefined;
           t.name = user.name ?? undefined;
           t.picture = user.image ?? undefined;
           t.role = (user as NextAuthUser & { role?: string }).role ?? t.role ?? "ADMIN";
 
           // Check TOTP enrollment for non-mock users
-          if (!isMockMode && user.id && user.id !== "demo-user") {
+          if (!isMockMode && resolvedId && resolvedId !== "demo-user") {
             try {
               const prisma = getPrismaClient();
               const dbUser = await prisma.user.findUnique({
-                where: { id: user.id },
+                where: { id: resolvedId },
                 select: { totpEnabled: true },
               });
               if (dbUser?.totpEnabled) {
