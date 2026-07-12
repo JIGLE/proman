@@ -439,14 +439,30 @@ export function SettingsView(): React.ReactElement {
       </div>
 
       <Tabs defaultValue={searchParams.get("tab") ?? "account"}>
-        <TabsList className="w-full sm:w-auto">
-          <TabsTrigger value="account">Account</TabsTrigger>
-          <TabsTrigger value="organization">Organization</TabsTrigger>
-          <TabsTrigger value="tax">Tax & Fiscal</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="system">System</TabsTrigger>
-          {showBilling && <TabsTrigger value="billing">Billing</TabsTrigger>}
+        {/* Scrollable on narrow screens so no tab label ever clips (was fixed-width
+            and clipped past ~5 tabs on a phone). Organization merged into Tax & Region
+            to stay under the ≤6-tab cap. */}
+        <TabsList className="flex w-full justify-start overflow-x-auto sm:w-auto">
+          <TabsTrigger value="account" className="shrink-0">
+            Account
+          </TabsTrigger>
+          <TabsTrigger value="tax" className="shrink-0">
+            Tax &amp; Region
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="shrink-0">
+            Notifications
+          </TabsTrigger>
+          <TabsTrigger value="security" className="shrink-0">
+            Security
+          </TabsTrigger>
+          <TabsTrigger value="system" className="shrink-0">
+            System
+          </TabsTrigger>
+          {showBilling && (
+            <TabsTrigger value="billing" className="shrink-0">
+              Billing
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* Account tab */}
@@ -623,8 +639,9 @@ export function SettingsView(): React.ReactElement {
           </Card>
         </TabsContent>
 
-        {/* Organization tab */}
-        <TabsContent value="organization" className="mt-6">
+        {/* Tax & Region tab — regional defaults (currency, tax country) merged in from
+            the former Organization tab, alongside the personal fiscal profile. */}
+        <TabsContent value="tax" className="mt-6 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -678,10 +695,7 @@ export function SettingsView(): React.ReactElement {
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
 
-        {/* Tax & Fiscal Profile tab */}
-        <TabsContent value="tax" className="mt-6 space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

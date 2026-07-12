@@ -1,11 +1,11 @@
 "use client";
 
 import * as React from "react";
-import { LogOut, Building2, Menu, X, Settings, Globe } from "lucide-react";
+import { LogOut, Building2, Menu, X, Globe } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./sheet";
+import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "./sheet";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -31,7 +31,7 @@ export function MobileBottomNav({
 }: MobileNavProps): React.ReactElement {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const { mobilePrimaryNavigation, isOwnerPortal } = usePortalAccess();
+  const { mobilePrimaryNavigation, mobileSecondaryNavigation } = usePortalAccess();
   const tNav = useTranslations("navigation");
   const user = session?.user;
   const initials =
@@ -44,6 +44,16 @@ export function MobileBottomNav({
   // Extract locale from pathname
   const currentLocale = pathname.split("/")[1] || "pt";
   const primaryNavItems = mobilePrimaryNavigation.map((item) => ({
+    id: item.key,
+    label: tNav(item.labelKey.replace("navigation.", "") as Parameters<typeof tNav>[0]),
+    icon: item.icon,
+    href: item.href,
+  }));
+  // Everything not on the bottom bar (Maintenance, Leases, Analytics, Reports,
+  // Documents, Messages, Compliance, Settings…) has no other home on a phone — the
+  // desktop sidebar is hidden below `md`. Surface it inside the "More" sheet so the
+  // whole app stays reachable from mobile chrome, not just the 4 primary tabs.
+  const secondaryNavItems = mobileSecondaryNavigation.map((item) => ({
     id: item.key,
     label: tNav(item.labelKey.replace("navigation.", "") as Parameters<typeof tNav>[0]),
     icon: item.icon,
@@ -109,7 +119,7 @@ export function MobileBottomNav({
 
           {session && (
             <Sheet>
-              <SheetTrigger className={tabItemClass(false)} aria-label={tNav("account")}>
+              <SheetTrigger className={tabItemClass(false)} aria-label={tNav("more")}>
                 <div className="p-0.5">
                   <Avatar className="h-7 w-7 ring-1 ring-[var(--color-border)]">
                     <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
@@ -118,13 +128,13 @@ export function MobileBottomNav({
                     </AvatarFallback>
                   </Avatar>
                 </div>
-                <span className="text-xs font-medium">{tNav("account")}</span>
+                <span className="text-xs font-medium">{tNav("more")}</span>
               </SheetTrigger>
               <SheetContent
                 side="bottom"
-                className="rounded-t-2xl px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-5"
+                className="max-h-[85vh] overflow-y-auto rounded-t-2xl px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-5"
               >
-                <SheetTitle className="sr-only">{tNav("account")}</SheetTitle>
+                <SheetTitle className="sr-only">{tNav("more")}</SheetTitle>
                 <div className="mb-4 flex items-center gap-3">
                   <Avatar className="h-11 w-11 ring-1 ring-[var(--color-border)]">
                     <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
@@ -141,7 +151,40 @@ export function MobileBottomNav({
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-col divide-y divide-[var(--color-border)]">
+
+                {/* Navigate — the rest of the app that isn't on the bottom bar. */}
+                {secondaryNavItems.length > 0 && (
+                  <div className="mb-2 grid grid-cols-2 gap-1.5">
+                    {secondaryNavItems.map((item) => {
+                      const Icon = item.icon;
+                      const isActive = isItemActive(item.href);
+                      return (
+                        <SheetClose asChild key={item.id}>
+                          <Link
+                            href={`/${currentLocale}${item.href}`}
+                            aria-current={isActive ? "page" : undefined}
+                            className={cn(
+                              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                              isActive
+                                ? "bg-accent-primary/15 text-accent-primary"
+                                : "text-[var(--color-foreground)] hover:bg-[var(--color-hover)]",
+                            )}
+                          >
+                            <Icon
+                              className={cn(
+                                "h-4 w-4 shrink-0",
+                                !isActive && "text-[var(--color-muted-foreground)]",
+                              )}
+                            />
+                            <span className="truncate">{item.label}</span>
+                          </Link>
+                        </SheetClose>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="flex flex-col divide-y divide-[var(--color-border)] border-t border-[var(--color-border)]">
                   <div className="flex items-center justify-between py-3">
                     <span className="flex items-center gap-3 text-sm text-[var(--color-foreground)]">
                       <Globe className="h-4 w-4 text-[var(--color-muted-foreground)]" />
@@ -149,15 +192,6 @@ export function MobileBottomNav({
                     </span>
                     <LanguageSelector compact />
                   </div>
-                  {isOwnerPortal && (
-                    <Link
-                      href={`/${currentLocale}/settings`}
-                      className="flex items-center gap-3 py-3 text-sm text-[var(--color-foreground)]"
-                    >
-                      <Settings className="h-4 w-4 text-[var(--color-muted-foreground)]" />
-                      {tNav("settings")}
-                    </Link>
-                  )}
                   <button
                     onClick={() => signOut({ callbackUrl: `/${currentLocale}` })}
                     className="flex items-center gap-3 py-3 text-sm text-[var(--color-error)]"

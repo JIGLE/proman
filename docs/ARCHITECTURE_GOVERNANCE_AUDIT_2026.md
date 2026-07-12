@@ -62,6 +62,26 @@ Neither change touches routing — `/contacts` and both `/compliance/*` routes k
 (direct links + `normalizePortalPath`, `access.ts:200-211`). Both are one-line reverts
 (`hidden: true` → removed) if a landlord misses the top-level rows.
 
+## 1b. Mobile navigation — the secondary items had no home (fixed this pass)
+
+On a phone the desktop sidebar is `hidden md:flex` (`app/[locale]/(main)/layout.tsx:26`), so
+the only persistent chrome is the bottom bar (`components/ui/mobile-nav.tsx`), which renders
+the **4 primary items** (Dashboard, Properties, Tenants, Accounts) plus one avatar sheet.
+Everything else — **Maintenance, Leases, Analytics, Reports, Documents, Messages,
+Compliance, Settings** — had **no home in mobile chrome at all**; it was reachable only by
+deep link or the ⌘K palette (which needs a keyboard). That's the larger half of the app
+invisible on the device most landlords actually carry.
+
+`getSecondaryMobileNavigation` (`access.ts:193`) already computed exactly this list and
+nothing consumed it. Fixed by rendering it as a **"Navigate" grid inside the bottom sheet**,
+and relabeling the sheet's tab from "Account" to **"More"** (new `navigation.more` key, all
+four catalogs) so the affordance honestly signals "the rest of the app," not just profile.
+Each link is wrapped in `SheetClose` so tapping navigates and dismisses. The two folds from
+Finding 1 compose correctly here — `hidden` items are excluded from the secondary list too,
+so Vendors/Tax Filing don't reappear in the sheet. (Note: the sheet is still gated on a
+real session, so demo-mode mobile still shows only the 4 primary links — acceptable, and
+unchanged by this pass.)
+
 ## 2. Label ≠ key ≠ route — a naming-drift maintenance tax
 
 The same nav config uses **three different names for one concept** on several items
@@ -110,19 +130,20 @@ Measured against the caps in `UI_CONSISTENCY_GUIDE.md` (detail views **≤6 tabs
 views **≤5 filters**, no dashboard table **>10 rows**). Tab counts are `<TabsTrigger`
 occurrences in each view this session.
 
-| Screen / view                                    | Tabs  | Verdict vs cap                                                                                                                                                                                                                                            |
-| ------------------------------------------------ | ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Settings** (`settings-view.tsx`)               | **7** | **Over ≤6.** account, organization, tax, notifications, security, system, billing. Billing hides when `ENABLE_BILLING` is off → 6 on self-hosted, but the config still defines 7. Consider merging `organization`+`account` or `system`+`security`.       |
-| **Property detail** (`property-detail-view.tsx`) | **6** | **At the cap.** overview, tenants, leases, maintenance, expenses, finance. `expenses`+`finance` overlap and are the obvious merge if a 7th is ever added.                                                                                                 |
-| **Tenant detail** (`tenant-detail-view.tsx`)     | 5     | OK.                                                                                                                                                                                                                                                       |
-| **Contracts** (`contracts-view.tsx`)             | 4     | OK.                                                                                                                                                                                                                                                       |
-| **Vendors/Contacts** (`contacts-view.tsx`)       | 4     | OK (but see Finding 1 — the whole screen is a fold candidate).                                                                                                                                                                                            |
-| **People** (`people-view.tsx`)                   | 3     | OK. tenants / owners / service-providers.                                                                                                                                                                                                                 |
-| **Reports** (`reports-view.tsx`)                 | 3     | OK.                                                                                                                                                                                                                                                       |
-| **Financials** (`financials-view.tsx`)           | 0     | No tabs, but **data-dense**: a `timeRange` filter driving ~27 `SelectItem` options and a grouped monthly receipts table. Density lives in the table, not chrome — keep an eye on the >10-row dashboard-table rule if it's ever surfaced on the dashboard. |
-| **Dashboard** (`overview-view.tsx`)              | 0     | ~21 card/grid/stat blocks. This is the triage hub, so density is _earned_ — `MOBILE_UX_AUDIT.md` already owns making the ActionPanel the mobile hero. Not re-opened here.                                                                                 |
+| Screen / view                                    | Tabs        | Verdict vs cap                                                                                                                                                                                                                                                 |
+| ------------------------------------------------ | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Settings** (`settings-view.tsx`)               | ~~7~~ **6** | **Fixed this pass.** The tiny `organization` tab (currency + tax country) merged into `tax` → **"Tax & Region"**, so the config now defines **6** (5 on self-hosted, billing hidden). `TabsList` also made horizontally scrollable so no tab clips on a phone. |
+| **Property detail** (`property-detail-view.tsx`) | **6**       | **At the cap.** overview, tenants, leases, maintenance, expenses, finance. `expenses`+`finance` overlap and are the obvious merge if a 7th is ever added.                                                                                                      |
+| **Tenant detail** (`tenant-detail-view.tsx`)     | 5           | OK.                                                                                                                                                                                                                                                            |
+| **Contracts** (`contracts-view.tsx`)             | 4           | OK.                                                                                                                                                                                                                                                            |
+| **Vendors/Contacts** (`contacts-view.tsx`)       | 4           | OK (but see Finding 1 — the whole screen is a fold candidate).                                                                                                                                                                                                 |
+| **People** (`people-view.tsx`)                   | 3           | OK. tenants / owners / service-providers.                                                                                                                                                                                                                      |
+| **Reports** (`reports-view.tsx`)                 | 3           | OK.                                                                                                                                                                                                                                                            |
+| **Financials** (`financials-view.tsx`)           | 0           | No tabs, but **data-dense**: a `timeRange` filter driving ~27 `SelectItem` options and a grouped monthly receipts table. Density lives in the table, not chrome — keep an eye on the >10-row dashboard-table rule if it's ever surfaced on the dashboard.      |
+| **Dashboard** (`overview-view.tsx`)              | 0           | ~21 card/grid/stat blocks. This is the triage hub, so density is _earned_ — `MOBILE_UX_AUDIT.md` already owns making the ActionPanel the mobile hero. Not re-opened here.                                                                                      |
 
-**Reading:** only **Settings** breaches a hard cap; **Property detail** is at it. Nothing
+**Reading:** with Settings fixed, no screen now breaches a hard cap; **Property detail**
+(6) is the only one at it. Nothing
 else is tab-overloaded. The app's cognitive load is a **navigation-breadth** problem
 (Finding 1) far more than a per-screen-tab problem — which is why the nav trim is the
 higher-leverage fix.
@@ -148,17 +169,18 @@ and `UX_AUDIT_2026.md` own the detail. Listed only so the map is complete:
 
 ## 6. Prioritized quick-wins
 
-| P     | Change                                                                     | Files                                                                     | Effort |
-| ----- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------ |
-| P0    | Version → 1.16.2; fix dev-branch pointer                                   | `CLAUDE.md`, `ROADMAP.md` header                                          | XS     |
-| P0    | Reconcile the stale IA recommendation                                      | `PRODUCT_AUDIT_2026.md §6`                                                | XS     |
-| P0    | Refresh the docs index                                                     | `docs/README.md`                                                          | XS     |
-| P0    | Log this audit + the nav trim                                              | `ROADMAP.md` Decisions Log                                                | XS     |
-| ✅ P1 | **Done** — Group the two Compliance items into one hub (System 3→2)        | `lib/portal/access.ts`, `compliance-sub-nav.tsx`, `compliance/*/page.tsx` | S      |
-| ✅ P1 | **Done** — Fold Vendors out of Operations (owner 14→12)                    | `lib/portal/access.ts`                                                    | S      |
-| P1    | Converge internal key/href with the visible label (user labels already OK) | `lib/portal/access.ts`                                                    | S      |
-| P2    | Merge Settings `organization`+`account` (7→6 tabs)                         | `components/features/settings/settings-view.tsx`                          | M      |
-| P2    | Deduplicate property/tenant modal-vs-view code paths                       | property/tenant detail modal + view                                       | L      |
+| P     | Change                                                                                         | Files                                                                     | Effort |
+| ----- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ------ |
+| P0    | Version → 1.16.2; fix dev-branch pointer                                                       | `CLAUDE.md`, `ROADMAP.md` header                                          | XS     |
+| P0    | Reconcile the stale IA recommendation                                                          | `PRODUCT_AUDIT_2026.md §6`                                                | XS     |
+| P0    | Refresh the docs index                                                                         | `docs/README.md`                                                          | XS     |
+| P0    | Log this audit + the nav trim                                                                  | `ROADMAP.md` Decisions Log                                                | XS     |
+| ✅ P1 | **Done** — Group the two Compliance items into one hub (System 3→2)                            | `lib/portal/access.ts`, `compliance-sub-nav.tsx`, `compliance/*/page.tsx` | S      |
+| ✅ P1 | **Done** — Fold Vendors out of Operations (owner 14→12)                                        | `lib/portal/access.ts`                                                    | S      |
+| ✅ P1 | **Done** — Mobile: surface secondary nav in the "More" sheet (§1b)                             | `components/ui/mobile-nav.tsx`, `messages/*.json`                         | S      |
+| ✅ P1 | **Done** — Merge Settings `organization`→`tax` "Tax & Region" (7→6 tabs); scrollable tab strip | `components/features/settings/settings-view.tsx`                          | S      |
+| P1    | Converge internal key/href with the visible label (user labels already OK)                     | `lib/portal/access.ts`                                                    | S      |
+| P2    | Deduplicate property/tenant modal-vs-view code paths                                           | property/tenant detail modal + view                                       | L      |
 
 ---
 
