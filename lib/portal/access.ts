@@ -76,12 +76,19 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         roles: ["owner"],
       },
       {
+        // Folded out of the top-level sidebar (architecture/governance audit 2026-07,
+        // Finding 1): vendor/contact management is already reachable inline via
+        // People → Service Providers (`people-view.tsx` renders `ContactsView`). Kept as a
+        // hidden item so the `/contacts` route stays permitted by `canAccessPortalPath`
+        // (which ignores `hidden`) and direct links keep working — it just no longer
+        // occupies an Operations row. Brings Operations from 7 → 6 items.
         key: "vendors",
         href: "/contacts",
         label: "Vendors",
         labelKey: "navigation.vendors",
         icon: HardHat,
         roles: ["owner"],
+        hidden: true,
       },
       {
         key: "financials",
@@ -153,12 +160,19 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         roles: ["owner"],
       },
       {
+        // Grouped under the single "Compliance" hub (architecture/governance audit
+        // 2026-07, Finding 1): Modelo 179 and Tax Filing are one job split across two
+        // System rows. Tax Filing is now reached via the Compliance sub-nav
+        // (`compliance-sub-nav.tsx`) rather than its own sidebar row; kept `hidden` so the
+        // route stays permitted by `canAccessPortalPath` (which ignores `hidden`). Brings
+        // System from 3 → 2 items and the owner sidebar from 14 → 12.
         key: "tax-filing",
         href: "/compliance/tax-filing",
         label: "Tax Filing",
         labelKey: "navigation.taxFiling",
         icon: Calculator,
         roles: ["owner"],
+        hidden: true,
       },
       {
         key: "settings",
