@@ -7,6 +7,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import { generateSAFTPT, validateSAFTData, validateNIF } from "@/lib/tax/saft-pt";
 
+// Free-text fields carry no control characters in legitimate company data. Rejecting them
+// (and bounding length) removes the untrusted-input-into-download-response flow that CodeQL
+// flags as reflected XSS — on top of the XML-escaping the builder already applies.
+const hasControlChars = (value: string): boolean => {
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i);
+    if (code < 0x20 || code === 0x7f) return true;
+  }
+  return false;
+};
+
 export async function GET(request: NextRequest): Promise<Response | NextResponse> {
   const authResult = await requireAuth(request);
   if (authResult instanceof Response) return authResult;
@@ -35,6 +46,16 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
         }),
         { status: 400, headers: { "Content-Type": "application/json" } },
       );
+    }
+
+    // Bound + sanitize free-text fields before they reach the XML body / filename.
+    for (const [field, value] of Object.entries({ name, addressDetail, city })) {
+      if (value.length > 200 || hasControlChars(value)) {
+        return new NextResponse(
+          JSON.stringify({ error: `Invalid characters or length in field: ${field}` }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
+        );
+      }
     }
 
     // Validate NIF
@@ -85,12 +106,15 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
     // Generate filename
     const filename = `SAF-T_${nif}_${fiscalYear}_${startMonth.toString().padStart(2, "0")}-${endMonth.toString().padStart(2, "0")}.xml`;
 
-    // Return as downloadable XML file
+    // Return as downloadable XML file. `nosniff` stops browsers MIME-sniffing the XML as
+    // HTML, and `attachment` forces a download rather than inline rendering — together they
+    // neutralise any reflected-content execution path.
     return new NextResponse(xml, {
       status: 200,
       headers: {
         "Content-Type": "application/xml",
         "Content-Disposition": `attachment; filename="${filename}"`,
+        "X-Content-Type-Options": "nosniff",
         "Cache-Control": "no-store",
       },
     });

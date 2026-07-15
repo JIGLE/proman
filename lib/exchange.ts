@@ -11,6 +11,16 @@ const CACHE_DIR = path.join(process.cwd(), ".cache");
 const CACHE_FILE = path.join(CACHE_DIR, "exchange-rates.json");
 const TTL = 24 * 60 * 60 * 1000; // 24 hours
 
+// Currency codes are used as object keys into the rate cache. Restrict them to ISO-4217
+// shape (3 uppercase letters) so an attacker-controlled value can never inject a special
+// key (e.g. `__proto__`, `constructor`) into the cache object — remote property injection.
+function assertCurrencyCode(code: string): string {
+  if (!/^[A-Z]{3}$/.test(code)) {
+    throw new Error(`Invalid currency code: ${code}`);
+  }
+  return code;
+}
+
 async function fetchFromProvider(base = "EUR"): Promise<RatesData> {
   const url = `https://api.exchangerate.host/latest?base=${encodeURIComponent(base)}`;
   const res = await fetch(url);
@@ -43,8 +53,13 @@ function writeCache(cache: Record<string, { fetchedAt: number; data: RatesData }
 }
 
 export async function getRates(base = "EUR"): Promise<RatesData> {
+  assertCurrencyCode(base);
   try {
-    const cache = readCache() || {};
+    // Null-prototype map so cache keys can never touch Object.prototype.
+    const cache = Object.assign(Object.create(null), readCache() || {}) as Record<
+      string,
+      { fetchedAt: number; data: RatesData }
+    >;
     const entry = cache[base];
     const now = Date.now();
     if (entry && now - entry.fetchedAt < TTL) {
@@ -67,6 +82,8 @@ export async function getRates(base = "EUR"): Promise<RatesData> {
 }
 
 export async function convertAmount(amount: number, from: string, to: string): Promise<number> {
+  assertCurrencyCode(from);
+  assertCurrencyCode(to);
   if (from === to) return amount;
   const rates = await getRates(from);
   const rate = rates.rates[to];

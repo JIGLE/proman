@@ -251,7 +251,8 @@ export class TaxCalculator {
 
     // ── Stressed-zone deduction (Art. 23 LIRPF as modified by Ley de Vivienda) ──
     let stressedZoneReduction = 0;
-    let appliedTier = "none";
+    // Assigned on every branch below (both the stressed-zone and standard paths).
+    let appliedTier: string;
 
     if (input.isZonaTensionada) {
       // Priority order: 90% > 70% > 60% > 50%
