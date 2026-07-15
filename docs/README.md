@@ -6,8 +6,17 @@ Welcome to the ProMan documentation. This index links to all available guides.
 
 - [Quick Start & README](../README.md) — Install, run, and deploy in minutes
 - [.env.example](../.env.example) — Full list of environment variables with defaults
-- [Active Sprint Board](SPRINT_BOARD_2026Q2.md) — Authoritative execution board and current priorities
+- [Roadmap](../ROADMAP.md) — Living single source of truth for shipped work + the **Decisions Log** (authoritative for architectural/IA decisions)
+- [Development Roadmap](DEVELOPMENT_ROADMAP.md) — What's planned next
 - [Claim Audit (2026-03-11)](CLAIM_AUDIT_2026-03-11.md) — Verification and corrections for public-facing capability/status claims
+
+## Strategy & Audits (current)
+
+- [Product Audit 2026](PRODUCT_AUDIT_2026.md) — Product strategy, habit model, North-Star proposal
+- [UX Audit 2026](UX_AUDIT_2026.md) — Canonical IA and the reconciled backlog status table
+- [Architecture, Governance & Cognitive-Load Audit 2026](ARCHITECTURE_GOVERNANCE_AUDIT_2026.md) — Per-screen density + docs-vs-code drift
+- [Mobile UX Audit](MOBILE_UX_AUDIT.md) — Mobile-first, behavioural findings
+- [Design Award](DESIGN_AWARD.md) — Visual/token craft loop and scorecard
 
 ## Deployment
 

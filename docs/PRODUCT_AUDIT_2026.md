@@ -185,6 +185,16 @@ know what actually shipped (below).
 
 ## 6. Reconciling the existing docs
 
+> **Superseded (2026-07, see `ROADMAP.md` Decisions Log 2026-07-09 and
+> `docs/ARCHITECTURE_GOVERNANCE_AUDIT_2026.md` §1).** The recommendation below to adopt
+> the **task-oriented** IA was **overruled**: the Operations/Intelligence(Reports)/System
+> IA from `UX_AUDIT_2026.md` was already live in `lib/portal/access.ts` and was adopted as
+> canonical; the task-oriented proposal was self-flagged as XL/multi-sprint and never
+> validated. Likewise the "Critical items largely unshipped" claim below predates the
+> M0.1 status reconciliation and is stale — nav consolidation shipped (though the live
+> sidebar has since grown to 14 items; see the architecture/governance audit). The
+> section is kept for provenance; treat the Decisions Log as authoritative for IA.
+
 **Three conflicting IA visions coexist** and should be collapsed to one:
 
 - `UI_CONSISTENCY_GUIDE.md` — 7-item Assets / People / Finance / Insights model.

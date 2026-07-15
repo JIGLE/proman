@@ -4,7 +4,7 @@
 
 ProMan is a self-hosted property management SaaS for landlords and property managers in **Portugal and Spain**. It handles properties, units, tenants, leases, receipts, expenses, maintenance, correspondence, and fiscal compliance.
 
-**Current version**: 1.15.0 | **Stage**: Production-ready (all Q3 sprints complete through Phase 7)
+**Current version**: 1.16.2 | **Stage**: Production-ready (all Q3 sprints complete through Phase 7)
 
 ## Tech Stack
 
@@ -73,7 +73,7 @@ e2e/                # Playwright E2E tests
 
 ## Development Branch
 
-All Claude Code changes go to: **`claude/determined-clarke-swzwsz`**
+All Claude Code changes go to: **`claude/proman-design-polish-6zpz2f`**
 
 ## Roadmap
 

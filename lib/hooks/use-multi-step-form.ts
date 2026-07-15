@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, useRef } from "react";
 import { z } from "zod";
 
 export interface StepConfig<T> {
@@ -133,35 +133,53 @@ export function useMultiStepForm<T extends Record<string, unknown>>(
     return Object.keys(stepErrors).length === 0;
   }, [stepErrors]);
 
+  // `persistence` and `initialData` are typically passed as fresh object literals on
+  // every render of the caller (both current call sites do this), so effects must key
+  // off the stable `persistence.key` string rather than the object reference — and the
+  // load effect must only ever apply a saved draft once per mount, via a ref guard.
+  // Otherwise: load-effect calls setFormData(draft) -> re-render creates a new
+  // `persistence`/`initialData` literal -> both effects' deps look "changed" again ->
+  // load-effect re-applies the (referentially new but identical) draft -> infinite loop
+  // ("Maximum update depth exceeded"), which also re-triggers on every later remount
+  // since the draft is never cleared. Read the latest `initialData` from a ref instead
+  // of listing it as a dependency, for the same reason.
+  const persistenceKey = persistence?.key;
+  const hasLoadedDraftRef = useRef(false);
+  const initialDataRef = useRef(initialData);
+  initialDataRef.current = initialData;
+
   // Load from persistence on mount
   useEffect(() => {
-    if (persistence) {
-      const saved = localStorage.getItem(persistence.key);
-      if (saved) {
-        try {
-          const { data, timestamp, step } = JSON.parse(saved);
-          const ttl = persistence.ttl || 24 * 60 * 60 * 1000; // 24 hours default
+    if (!persistence || hasLoadedDraftRef.current) return;
+    hasLoadedDraftRef.current = true;
+    const saved = localStorage.getItem(persistence.key);
+    if (saved) {
+      try {
+        const { data, timestamp, step } = JSON.parse(saved);
+        const ttl = persistence.ttl || 24 * 60 * 60 * 1000; // 24 hours default
 
-          if (Date.now() - timestamp < ttl) {
-            setFormData(data);
-            setCurrentStep(step);
-            setHasDraft(true);
-          } else {
-            localStorage.removeItem(persistence.key);
-          }
-        } catch {
+        if (Date.now() - timestamp < ttl) {
+          setFormData(data);
+          setCurrentStep(step);
+          setHasDraft(true);
+        } else {
           localStorage.removeItem(persistence.key);
         }
+      } catch {
+        localStorage.removeItem(persistence.key);
       }
     }
-  }, [persistence]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [persistenceKey]);
 
   // Save to persistence when data changes
   useEffect(() => {
-    if (
-      persistence &&
-      Object.keys(formData).some((k) => formData[k as keyof T] !== initialData[k as keyof T])
-    ) {
+    if (!persistence) return;
+    const initial = initialDataRef.current;
+    const changed = Object.keys(formData).some(
+      (k) => formData[k as keyof T] !== initial[k as keyof T],
+    );
+    if (changed) {
       localStorage.setItem(
         persistence.key,
         JSON.stringify({
@@ -172,7 +190,8 @@ export function useMultiStepForm<T extends Record<string, unknown>>(
       );
       setHasDraft(true);
     }
-  }, [formData, currentStep, persistence, initialData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [formData, currentStep, persistenceKey]);
 
   const clearDraft = useCallback(() => {
     if (persistence) {

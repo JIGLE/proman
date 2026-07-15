@@ -119,12 +119,15 @@ export function OnboardingChecklist({
   // Find the first incomplete step to highlight
   const nextStep = steps.find((s) => !s.completed);
 
+  // This card is the guided first-run itself (property → tenant → lease → payment) —
+  // observed live to sometimes render permanently stuck at its `initial` (opacity: 0)
+  // keyframe on mount, hiding the whole checklist with no way to recover short of a
+  // hard reload. A decorative entrance fade isn't worth the risk of hiding required
+  // first-run UI, so this renders as a plain (always-visible) element; the collapse/
+  // expand interaction below is user-triggered and unaffected.
   return (
-    <motion.div
+    <div
       data-tour="onboarding"
-      initial={{ opacity: 0, y: -10 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -10 }}
       className={cn(
         "rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden",
         className,
@@ -342,6 +345,6 @@ export function OnboardingChecklist({
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   );
 }

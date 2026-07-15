@@ -1,7 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
   Building2,
@@ -72,10 +72,23 @@ export function AssetsView(): React.ReactElement {
   const { formatCurrency } = useCurrency();
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const locale = pathname.split("/")[1] || "pt";
   const { properties, leases, receipts, tenants } = state;
   const propertiesViewRef = useRef<PropertiesViewRef>(null);
   const t = useTranslations("portfolio");
+
+  // Onboarding checklist deep-links here with ?action=create-property
+  // (`overview-view.tsx`'s handleAddProperty) expecting the create dialog to open
+  // automatically — previously nothing read this param, so the first onboarding step
+  // silently dropped the user on an empty portfolio page instead.
+  useEffect(() => {
+    if (searchParams.get("action") === "create-property") {
+      propertiesViewRef.current?.openDialog();
+      router.replace(`/${locale}/portfolio`);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   // Add-building dialog state
   const [buildingDialogOpen, setBuildingDialogOpen] = useState(false);
