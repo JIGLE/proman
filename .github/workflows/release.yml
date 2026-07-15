@@ -22,8 +22,8 @@ on:
         default: false
 
 permissions:
-  contents: read
-  packages: read
+  contents: write
+  packages: write
 
 concurrency:
   group: release
@@ -35,8 +35,6 @@ jobs:
     permissions:
       contents: write
       packages: write
-      actions: write
-      pull-requests: write
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -50,14 +48,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
-          # RELEASE_TOKEN is a PAT (or GitHub App token) with contents + pull-requests
-          # write AND branch-protection bypass on main. It lets this workflow push the
-          # release branch, admin-merge the release PR, and push the tag through
-          # protected main — none of which GITHUB_TOKEN can do. Persisting it here means
-          # every later `git push` (release branch + tag) uses it too. Falls back to
-          # GITHUB_TOKEN when unset, in which case the "Merge release PR" step will fail
-          # (as it does today) until the secret is configured.
-          token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -106,13 +96,8 @@ jobs:
           GOOGLE_CLIENT_ID: release-placeholder
           GOOGLE_CLIENT_SECRET: release-placeholder
 
-      # ── Release branch ────────────────────────────────────────────────────
-      # All version bump commits go to release/vX.Y.Z, opened as a PR to main.
-      # This creates an audit trail for every release without requiring a PAT bypass.
-
-      - name: Create release branch
-        run: |
-          git checkout -b release/v${{ steps.version.outputs.new_version }}
+      # ── Version bumps ───────────────────────────────────────────────────
+      # Commit version changes directly to main for clean, fast releases.
 
       - name: Bump package.json version
         run: |
@@ -191,55 +176,14 @@ jobs:
           echo "Generating Helm repo index with URL: $URL"
           helm repo index release-charts --url "$URL"
 
-      - name: Commit version bump to release branch
+      - name: Commit version bump to main
         run: |
           git add package.json package-lock.json helm/proman/Chart.yaml item.yaml docker-compose.yml
           git commit -m "chore(release): bump version to ${{ steps.version.outputs.new_version }}"
-          git push origin release/v${{ steps.version.outputs.new_version }}
-
-      - name: Open release PR
-        id: open-pr
-        # TODO: pin to SHA — see https://github.com/cli/cli pinning guidance
-        # Current: gh CLI bundled in ubuntu-latest runner
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
-        run: |
-          PR_URL=$(gh pr create \
-            --base main \
-            --head release/v${{ steps.version.outputs.new_version }} \
-            --title "chore(release): v${{ steps.version.outputs.new_version }}" \
-            --body "$(cat release_notes.md)
-
-          ---
-          *Automated release PR created by the Release workflow. Auto-merging.*" \
-            --label "release")
-          echo "pr_url=${PR_URL}" >> $GITHUB_OUTPUT
-          PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
-          echo "pr_number=${PR_NUMBER}" >> $GITHUB_OUTPUT
-          echo "Release PR: $PR_URL"
-
-      - name: Merge release PR
-        env:
-          GH_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
-        run: |
-          # Squash-merge the release branch into main for a clean history entry.
-          # --admin bypasses branch protection (unmet required checks, etc.); it only
-          # works when GH_TOKEN belongs to a repo admin or an actor on the branch's
-          # bypass allowlist — i.e. RELEASE_TOKEN. With the GITHUB_TOKEN fallback this
-          # step fails, which is the current behaviour until RELEASE_TOKEN is set.
-          gh pr merge ${{ steps.open-pr.outputs.pr_number }} \
-            --squash \
-            --admin \
-            --subject "chore(release): v${{ steps.version.outputs.new_version }}" \
-            --delete-branch
+          git push origin main
 
       - name: Create and push tag
         run: |
-          # Pull main to get the squash-merge commit before tagging
-          git fetch origin main
-          git checkout main
-          git pull origin main
-
           git fetch --tags
           if git rev-parse -q --verify "refs/tags/v${{ steps.version.outputs.new_version }}" >/dev/null; then
             echo "Tag v${{ steps.version.outputs.new_version }} already exists, skipping tag creation."
