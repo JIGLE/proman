@@ -136,7 +136,7 @@ function runFullLoadTest() {
   print(`Report will be saved to: ${reportPath}\n`, "blue");
 
   try {
-    execSync(`npx artillery run ${configPath} --output ${reportPath}`, {
+    execFileSync("npx", ["artillery", "run", configPath, "--output", reportPath], {
       stdio: "inherit",
     });
 
@@ -162,7 +162,7 @@ function generateHtmlReport(jsonReportPath) {
   print("\nGenerating HTML report...", "blue");
 
   try {
-    execSync(`npx artillery report ${jsonReportPath} --output ${htmlReportPath}`, {
+    execFileSync("npx", ["artillery", "report", jsonReportPath, "--output", htmlReportPath], {
       stdio: "inherit",
     });
 

@@ -48,7 +48,9 @@ self.addEventListener("activate", (event) => {
 });
 
 // Allow the page to trigger an immediate activation after an update.
+// Only accept messages from same-origin clients this worker controls.
 self.addEventListener("message", (event) => {
+  if (event.origin && event.origin !== self.location.origin) return;
   if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
 
