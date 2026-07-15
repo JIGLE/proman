@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Users, Briefcase, Plus, Wrench } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -27,6 +27,8 @@ import { useApp } from "@/lib/contexts/app-context";
 export function PeopleView(): React.ReactElement {
   const [activeTab, setActiveTab] = useTabPersistence("people", "tenants");
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const { state } = useApp();
   const { tenants, owners } = state;
   const tenantsViewRef = useRef<TenantsViewRef>(null);
@@ -39,6 +41,21 @@ export function PeopleView(): React.ReactElement {
       setActiveTab(view);
     }
   }, [activeTab, searchParams, setActiveTab]);
+
+  // Onboarding checklist deep-links here with ?view=tenants&action=create-tenant
+  // (`overview-view.tsx`'s handleAddTenant) expecting the create dialog to open
+  // automatically. `TenantsView` only mounts while its tab is active, so wait until
+  // the tab switch above (if any) lands on "tenants" before opening.
+  const [pendingCreateTenant, setPendingCreateTenant] = useState(
+    () => searchParams.get("action") === "create-tenant",
+  );
+  useEffect(() => {
+    if (pendingCreateTenant && activeTab === "tenants") {
+      tenantsViewRef.current?.openDialog();
+      setPendingCreateTenant(false);
+      router.replace(pathname);
+    }
+  }, [pendingCreateTenant, activeTab, router, pathname]);
 
   // Export columns for tenants
   const tenantColumns = [

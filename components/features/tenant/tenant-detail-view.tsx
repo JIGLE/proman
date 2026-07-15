@@ -100,11 +100,13 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const handleCopyPortalLink = async () => {
     try {
       const res = await fetch(`/api/tenants/${tenantId}/portal-link`, {
-        headers: { "x-csrf-token": csrfToken ?? "" },
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken ?? "" },
+        body: JSON.stringify({ sendEmail: false }),
       });
       if (!res.ok) throw new Error("Failed to generate link");
-      const data = await res.json();
-      await navigator.clipboard.writeText(data.portalUrl);
+      const { data } = await res.json();
+      await navigator.clipboard.writeText(data.portalLink);
       success("Portal link copied to clipboard");
     } catch {
       error("Could not generate portal link");

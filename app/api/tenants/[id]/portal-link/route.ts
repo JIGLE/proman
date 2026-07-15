@@ -88,7 +88,7 @@ export async function POST(
         email: tenant.email,
       },
       portalLink,
-      expiresIn: "30 days",
+      expiresIn: "7 days",
       emailSent,
       emailError,
     });

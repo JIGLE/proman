@@ -158,7 +158,7 @@ export const tenantPortalService = {
             <li>Track maintenance requests</li>
           </ul>
           <p><a href="${portalLink}" style="display:inline-block;background:#2563eb;color:white;padding:12px 24px;text-decoration:none;border-radius:6px;">Access Your Portal</a></p>
-          <p>This link will expire in 30 days.</p>
+          <p>This link will expire in 7 days.</p>
           <p>If you have any questions, please contact your property manager.</p>
         `,
         },

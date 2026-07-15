@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import { useCurrency } from "@/lib/contexts/currency-context";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
 import { getActiveLease } from "@/lib/utils/lease-helpers";
 import { PaymentMatrixView } from "./payment-matrix-view";
-import { ReceiptsView, ReceiptsViewRef } from "./receipts-view";
+import { ReceiptsView } from "./receipts-view";
 import { RentRollView } from "./rent-roll-view";
 import { FinancialsView } from "./financials-view";
 import {
@@ -30,13 +30,30 @@ type PaymentTab = "queue" | "receipts" | "rent-roll" | "tax";
 export function FinancialsContainer() {
   const [activeTab, setActiveTab] = useTabPersistence("payments", "queue");
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
   const tenantId = searchParams.get("tenantId") ?? undefined;
   const propertyId = searchParams.get("propertyId") ?? undefined;
   const tabParam = searchParams.get("tab") as PaymentTab | "overview" | null;
   const { state } = useApp();
   const { formatCurrency } = useCurrency();
   const { isOwnerPortal } = usePortalAccess();
-  const receiptsViewRef = useRef<ReceiptsViewRef>(null);
+  // `ReceiptsView` (which owns the record-payment dialog) only mounts while the Receipts
+  // tab is the active TabsContent — Radix unmounts inactive tab panels by default. The
+  // header "Record payment" button used to poke a ref, which silently no-op'd whenever
+  // another tab (e.g. the default "Due & Overdue" queue) was active. Instead: switch to
+  // the Receipts tab and raise a signal that `ReceiptsView` opens itself from — robust to
+  // the tab-mount + `router.replace` re-render that `setActiveTab` triggers.
+  const [pendingRecordPayment, setPendingRecordPayment] = useState(
+    () => searchParams.get("action") === "record-payment",
+  );
+
+  // If we arrived via the ?action=record-payment deep link, drop the param once consumed.
+  useEffect(() => {
+    if (pendingRecordPayment && searchParams.get("action") === "record-payment") {
+      router.replace(pathname);
+    }
+  }, [pendingRecordPayment, router, pathname, searchParams]);
 
   useEffect(() => {
     if (
@@ -141,7 +158,13 @@ export function FinancialsContainer() {
                   { key: "status", label: "Status" },
                 ]}
               />
-              <Button onClick={() => receiptsViewRef.current?.openDialog()} className="gap-2">
+              <Button
+                onClick={() => {
+                  setPendingRecordPayment(true);
+                  setActiveTab("receipts");
+                }}
+                className="gap-2"
+              >
                 <Plus className="h-4 w-4" />
                 Record payment
               </Button>
@@ -346,7 +369,12 @@ export function FinancialsContainer() {
         )}
 
         <TabsContent value="receipts" className="mt-0">
-          <ReceiptsView ref={receiptsViewRef} tenantId={tenantId} propertyId={propertyId} />
+          <ReceiptsView
+            tenantId={tenantId}
+            propertyId={propertyId}
+            openDialogSignal={pendingRecordPayment}
+            onDialogOpened={() => setPendingRecordPayment(false)}
+          />
         </TabsContent>
 
         {isOwnerPortal && (
