@@ -372,14 +372,16 @@
     "navHowItWorks": "Como funciona",
     "navWorkflow": "Fluxo",
     "demoCta": "Ver demo",
-    "secondaryCta": "Ver como funciona",
+    "secondaryCta": "Ver fluxo do produto",
     "microcopy": "Sem cartão. Sem configuração. Demonstração guiada em menos de 2 minutos.",
     "tenantPortalNote": "É inquilino?",
     "tenantPortalLink": "Aceda ao seu portal aqui",
     "chips": {
-      "simple": "Um fluxo da renda ao recibo",
-      "compliance": "Conformidade PT/ES no mesmo contexto",
-      "workflow": "Contratos, inquilinos e pagamentos ligados"
+      "matching": "Correspondência de movimentos bancários",
+      "receipts": "Automação de recibos",
+      "documents": "Inteligência documental",
+      "tax": "Conector fiscal pronto",
+      "palette": "Sistema de paleta da UE"
     },
     "preview": {
       "label": "Pré-visualização do produto",
@@ -573,6 +575,100 @@
           "description": "Registo pronto para a AT"
         }
       }
+    },
+    "primaryCta": "Comece com o seu portefólio",
+    "requestDemo": "Pedir demonstração",
+    "signIn": "Entrar",
+    "hero2": "Rendimentos, recibos e prova fiscal sob controlo.",
+    "subtitle2": "O Situs ajuda proprietários a acompanhar pagamentos de renda, alocar transferências em atraso ao mês de referência correto, emitir recibos, arquivar documentos, gerir despesas e preparar prova pronta para impostos em carteiras de imóveis da UE.",
+    "floating": {
+      "income": "Rendimento previsto este mês",
+      "receipts": "Recibos a rever",
+      "health": "Saúde da carteira"
+    },
+    "system": {
+      "eyebrow": "Arquitetura do sistema",
+      "title": "Construído em torno do fluxo real do proprietário.",
+      "copy": "A cadeia mais importante é simples: pagamento detetado, mês de referência atribuído, recibo emitido, recibo arquivado, estado fiscal atualizado.",
+      "m1label": "01 // Banca",
+      "m1title": "Detetar pagamentos",
+      "m1body": "Ligue movimentos bancários e associe transferências recebidas a inquilinos, contratos e imóveis.",
+      "m2label": "02 // Alocação",
+      "m2title": "Referenciar o mês certo",
+      "m2body": "Aloque pagamentos ao mês seguinte quando em dia, ou ao período mais antigo por pagar quando em atraso.",
+      "m3label": "03 // Recibos",
+      "m3title": "Emitir e arquivar",
+      "m3body": "Crie rascunhos de recibo, reveja-os, submeta ou exporte, e guarde o PDF no ano do imóvel correto."
+    },
+    "flow": {
+      "eyebrow": "Ciclo pagamento-a-recibo",
+      "title": "Do movimento bancário à prova fiscal.",
+      "s1t": "Importar movimento",
+      "s1b": "A sincronização bancária deteta novas transferências recebidas.",
+      "s2t": "Associar contrato",
+      "s2b": "Remetente, IBAN, valor e referência sugerem o contrato.",
+      "s3t": "Atribuir mês",
+      "s3b": "Inquilinos em dia vão para o mês seguinte; atrasos liquidam o mês mais antigo por pagar.",
+      "s4t": "Emitir recibo",
+      "s4b": "O rascunho do recibo é revisto, emitido e opcionalmente submetido à autoridade fiscal.",
+      "s5t": "Arquivar prova",
+      "s5b": "Recibo, fatura e trilho de auditoria são associados a imóvel, ano e mês."
+    },
+    "pillars": {
+      "eyebrow": "Pilares do produto",
+      "title": "Um centro de comando para a propriedade.",
+      "copy": "O Situs combina estrutura da carteira, finanças, operações, pessoas, documentos e inteligência numa interface centrada no proprietário.",
+      "portfolioLabel": "Portefólio",
+      "portfolioTitle": "Inventário estrutural",
+      "portfolioBody": "Gira imóveis, frações, quotas de propriedade, contratos e itens de atenção atuais.",
+      "financeLabel": "Finanças",
+      "financeTitle": "Matriz de rendas",
+      "financeBody": "Acompanhe cada mês: pago, em atraso, parcial, vencido, recibo emitido e registado fiscalmente.",
+      "documentsLabel": "Documentos",
+      "documentsTitle": "Arquivo inteligente",
+      "documentsBody": "Guarde contratos, recibos, faturas e documentos fiscais por imóvel, ano e tipo.",
+      "expensesLabel": "Despesas",
+      "expensesTitle": "Prova de dedução",
+      "expensesBody": "OCR de faturas, classifique despesas dedutíveis e associe-as ao ano fiscal correto.",
+      "operationsLabel": "Operações",
+      "operationsTitle": "Controlo de tarefas",
+      "operationsBody": "Acompanhe inspeções, tarefas de manutenção, prestadores, prova e obrigações recorrentes.",
+      "intelligenceLabel": "Inteligência",
+      "intelligenceTitle": "Estimativas explicáveis",
+      "intelligenceBody": "Compreenda reserva fiscal, rendimento, risco de atrasos e confiança documental com rastreio de origem."
+    },
+    "preview2": {
+      "eyebrow": "Pré-visualização da interface",
+      "title": "Centro de Controlo.",
+      "copy": "Uma interface silenciosa e retilínea concebida para sessões longas, dados densos e decisões sérias.",
+      "greeting": "Boa tarde, José.",
+      "healthLabel": "Saúde da carteira",
+      "incomeLabel": "Rendimento previsto",
+      "queueLabel": "Fila de recibos",
+      "missionTitle": "Centro de Controlo",
+      "m1": "Renda em atraso de João Silva",
+      "m1tag": "Contrato",
+      "m2": "Tranche de IMI a pagar",
+      "m2tag": "Imposto",
+      "m3": "Rascunho de recibo por rever",
+      "m3tag": "Recibo",
+      "timelineTitle": "Cronologia de pagamento",
+      "t1": "Pagamento de 1 jun",
+      "t1tag": "Ref: Jul",
+      "t2": "Pagamento em atraso alocado",
+      "t2tag": "Mais antigo por pagar",
+      "t3": "Recibo arquivado",
+      "t3tag": "Guardado"
+    },
+    "closing2": {
+      "title": "Traga cada período de renda, recibo e documento à vista.",
+      "copy": "O Situs foi concebido para proprietários que precisam que a história do pagamento seja clara: o que chegou, a que mês pertence, que recibo foi emitido e onde está guardada a prova.",
+      "primary": "Pedir demonstração",
+      "secondary": "Ver arquitetura do produto"
+    },
+    "footer2": {
+      "tagline": "Situs // Sovereign Capital System",
+      "modules": "Banca · Recibos · Documentos · Prova Fiscal"
     }
   },
   "errors": {

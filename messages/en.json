@@ -372,14 +372,16 @@
     "navHowItWorks": "How it works",
     "navWorkflow": "Workflow",
     "demoCta": "Try Free Demo",
-    "secondaryCta": "See how it works",
+    "secondaryCta": "View product workflow",
     "microcopy": "No card. No setup. Guided walkthrough in under 2 minutes.",
     "tenantPortalNote": "Are you a tenant?",
     "tenantPortalLink": "Access your portal here",
     "chips": {
-      "simple": "One flow from rent to receipt",
-      "compliance": "PT/ES compliance in context",
-      "workflow": "Contracts, tenants, and payments connected"
+      "matching": "Bank movement matching",
+      "receipts": "Receipt automation",
+      "documents": "Document intelligence",
+      "tax": "Tax connector ready",
+      "palette": "EU palette system"
     },
     "preview": {
       "label": "Live product preview",
@@ -573,6 +575,100 @@
           "description": "Tax-ready record for AT or Hacienda"
         }
       }
+    },
+    "primaryCta": "Start with your portfolio",
+    "requestDemo": "Request demo",
+    "signIn": "Sign in",
+    "hero2": "Property income, receipts and tax evidence under control.",
+    "subtitle2": "Situs helps owners track rent payments, allocate late transfers to the correct reference month, emit receipts, archive documents, manage expenses and prepare tax-ready evidence across EU property portfolios.",
+    "floating": {
+      "income": "Expected income this month",
+      "receipts": "Receipts awaiting review",
+      "health": "Portfolio health"
+    },
+    "system": {
+      "eyebrow": "System architecture",
+      "title": "Built around the owner's real workflow.",
+      "copy": "The most important chain is simple: payment detected, reference month assigned, receipt emitted, receipt archived, tax status updated.",
+      "m1label": "01 // Banking",
+      "m1title": "Detect payments",
+      "m1body": "Connect bank movements and match incoming transfers to tenants, contracts and properties.",
+      "m2label": "02 // Allocation",
+      "m2title": "Reference the right month",
+      "m2body": "Allocate payments to the next month when current, or to the oldest unpaid period when late.",
+      "m3label": "03 // Receipts",
+      "m3title": "Emit and archive",
+      "m3body": "Create receipt drafts, review them, submit or export, and save the PDF to the right property year."
+    },
+    "flow": {
+      "eyebrow": "Payment-to-receipt lifecycle",
+      "title": "From bank movement to tax evidence.",
+      "s1t": "Import movement",
+      "s1b": "Bank API sync detects new incoming transfers.",
+      "s2t": "Match contract",
+      "s2b": "Sender, IBAN, amount and reference suggest the lease.",
+      "s3t": "Assign month",
+      "s3b": "Current tenants map to next month; arrears settle oldest unpaid month.",
+      "s4t": "Emit receipt",
+      "s4b": "Receipt draft is reviewed, emitted and optionally submitted to tax authority.",
+      "s5t": "Archive evidence",
+      "s5b": "Receipt, invoice and audit trail are linked to property, year and month."
+    },
+    "pillars": {
+      "eyebrow": "Product pillars",
+      "title": "One command center for ownership.",
+      "copy": "Situs combines portfolio structure, finance, operations, people, documents and intelligence into one owner-first interface.",
+      "portfolioLabel": "Portfolio",
+      "portfolioTitle": "Structural inventory",
+      "portfolioBody": "Manage properties, units, ownership shares, leases and current attention items.",
+      "financeLabel": "Finance",
+      "financeTitle": "Rent matrix",
+      "financeBody": "Track every month: paid, late, partial, overdue, receipt issued and tax registered.",
+      "documentsLabel": "Documents",
+      "documentsTitle": "Smart archive",
+      "documentsBody": "Store contracts, receipts, invoices and tax documents by property, year and type.",
+      "expensesLabel": "Expenses",
+      "expensesTitle": "Deduction evidence",
+      "expensesBody": "OCR invoices, classify deductible expenses and link them to the correct tax year.",
+      "operationsLabel": "Operations",
+      "operationsTitle": "Task control",
+      "operationsBody": "Follow inspections, maintenance tasks, contractors, evidence and recurring obligations.",
+      "intelligenceLabel": "Intelligence",
+      "intelligenceTitle": "Explainable estimates",
+      "intelligenceBody": "Understand tax reserve, yield, arrears risk and document confidence with source traces."
+    },
+    "preview2": {
+      "eyebrow": "Interface preview",
+      "title": "Mission Control Center.",
+      "copy": "A quiet, rectilinear interface designed for long sessions, dense data and serious decisions.",
+      "greeting": "Good afternoon, José.",
+      "healthLabel": "Portfolio health",
+      "incomeLabel": "Expected income",
+      "queueLabel": "Receipt queue",
+      "missionTitle": "Mission Control Center",
+      "m1": "Rent payment overdue from João Silva",
+      "m1tag": "Covenant",
+      "m2": "IMI property tax tranche due",
+      "m2tag": "Tax",
+      "m3": "Receipt draft pending review",
+      "m3tag": "Receipt",
+      "timelineTitle": "Payment timeline",
+      "t1": "Jun 1 payment",
+      "t1tag": "Ref: Jul",
+      "t2": "Late payment allocated",
+      "t2tag": "Oldest unpaid",
+      "t3": "Receipt archived",
+      "t3tag": "Saved"
+    },
+    "closing2": {
+      "title": "Bring every rent period, receipt and document into view.",
+      "copy": "Situs is designed for owners who need the payment story to be clear: what arrived, what month it belongs to, what receipt was emitted, and where the evidence is stored.",
+      "primary": "Request demo",
+      "secondary": "View product architecture"
+    },
+    "footer2": {
+      "tagline": "Situs // Sovereign Capital System",
+      "modules": "Banking · Receipts · Documents · Tax Evidence"
     }
   },
   "errors": {

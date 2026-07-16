@@ -372,14 +372,16 @@
     "navHowItWorks": "Come funziona",
     "navWorkflow": "Flusso di lavoro",
     "demoCta": "Prova la demo gratuita",
-    "secondaryCta": "Scopri come funziona",
+    "secondaryCta": "Vedi il flusso del prodotto",
     "microcopy": "Nessuna carta. Nessuna configurazione. Guida in meno di 2 minuti.",
     "tenantPortalNote": "Sei un inquilino?",
     "tenantPortalLink": "Accedi al tuo portale qui",
     "chips": {
-      "simple": "Un flusso dall'affitto alla ricevuta",
-      "compliance": "Conformità fiscale in contesto",
-      "workflow": "Contratti, inquilini e pagamenti collegati"
+      "matching": "Riconciliazione movimenti bancari",
+      "receipts": "Automazione ricevute",
+      "documents": "Intelligenza documentale",
+      "tax": "Connettore fiscale pronto",
+      "palette": "Sistema di palette UE"
     },
     "preview": {
       "label": "Anteprima prodotto",
@@ -573,6 +575,100 @@
           "description": "Record pronto per il fisco"
         }
       }
+    },
+    "primaryCta": "Inizia con il tuo portafoglio",
+    "requestDemo": "Richiedi demo",
+    "signIn": "Accedi",
+    "hero2": "Redditi, ricevute e prove fiscali sotto controllo.",
+    "subtitle2": "Situs aiuta i proprietari a tracciare i pagamenti degli affitti, allocare i bonifici in ritardo al mese di riferimento corretto, emettere ricevute, archiviare documenti, gestire le spese e preparare prove pronte per le imposte su portafogli immobiliari dell'UE.",
+    "floating": {
+      "income": "Reddito previsto questo mese",
+      "receipts": "Ricevute da rivedere",
+      "health": "Salute del portafoglio"
+    },
+    "system": {
+      "eyebrow": "Architettura del sistema",
+      "title": "Costruito attorno al flusso reale del proprietario.",
+      "copy": "La catena più importante è semplice: pagamento rilevato, mese di riferimento assegnato, ricevuta emessa, ricevuta archiviata, stato fiscale aggiornato.",
+      "m1label": "01 // Banca",
+      "m1title": "Rilevare i pagamenti",
+      "m1body": "Collega i movimenti bancari e abbina i bonifici in entrata a inquilini, contratti e immobili.",
+      "m2label": "02 // Allocazione",
+      "m2title": "Riferire al mese giusto",
+      "m2body": "Alloca i pagamenti al mese successivo quando in regola, o al periodo non pagato più vecchio quando in ritardo.",
+      "m3label": "03 // Ricevute",
+      "m3title": "Emettere e archiviare",
+      "m3body": "Crea bozze di ricevuta, rivedile, invia o esporta e salva il PDF nell'anno dell'immobile corretto."
+    },
+    "flow": {
+      "eyebrow": "Ciclo pagamento-ricevuta",
+      "title": "Dal movimento bancario alla prova fiscale.",
+      "s1t": "Importa movimento",
+      "s1b": "La sincronizzazione bancaria rileva nuovi bonifici in entrata.",
+      "s2t": "Abbina contratto",
+      "s2b": "Mittente, IBAN, importo e causale suggeriscono il contratto.",
+      "s3t": "Assegna mese",
+      "s3b": "Gli inquilini in regola passano al mese successivo; gli arretrati saldano il mese non pagato più vecchio.",
+      "s4t": "Emetti ricevuta",
+      "s4b": "La bozza di ricevuta viene rivista, emessa e facoltativamente inviata all'autorità fiscale.",
+      "s5t": "Archivia prova",
+      "s5b": "Ricevuta, fattura e registro di audit sono collegati a immobile, anno e mese."
+    },
+    "pillars": {
+      "eyebrow": "Pilastri del prodotto",
+      "title": "Un centro di comando per la proprietà.",
+      "copy": "Situs combina struttura del portafoglio, finanza, operazioni, persone, documenti e intelligenza in un'unica interfaccia pensata per il proprietario.",
+      "portfolioLabel": "Portafoglio",
+      "portfolioTitle": "Inventario strutturale",
+      "portfolioBody": "Gestisci immobili, unità, quote di proprietà, contratti e elementi da monitorare.",
+      "financeLabel": "Finanza",
+      "financeTitle": "Matrice affitti",
+      "financeBody": "Traccia ogni mese: pagato, in ritardo, parziale, scaduto, ricevuta emessa e registrata fiscalmente.",
+      "documentsLabel": "Documenti",
+      "documentsTitle": "Archivio intelligente",
+      "documentsBody": "Conserva contratti, ricevute, fatture e documenti fiscali per immobile, anno e tipo.",
+      "expensesLabel": "Spese",
+      "expensesTitle": "Prova di deduzione",
+      "expensesBody": "OCR delle fatture, classifica le spese deducibili e collegale all'anno fiscale corretto.",
+      "operationsLabel": "Operazioni",
+      "operationsTitle": "Controllo attività",
+      "operationsBody": "Segui ispezioni, attività di manutenzione, fornitori, prove e obblighi ricorrenti.",
+      "intelligenceLabel": "Intelligenza",
+      "intelligenceTitle": "Stime spiegabili",
+      "intelligenceBody": "Comprendi riserva fiscale, rendimento, rischio arretrati e affidabilità documentale con tracce di origine."
+    },
+    "preview2": {
+      "eyebrow": "Anteprima interfaccia",
+      "title": "Centro di Controllo.",
+      "copy": "Un'interfaccia silenziosa e rettilinea progettata per sessioni lunghe, dati densi e decisioni serie.",
+      "greeting": "Buon pomeriggio, José.",
+      "healthLabel": "Salute del portafoglio",
+      "incomeLabel": "Reddito previsto",
+      "queueLabel": "Coda ricevute",
+      "missionTitle": "Centro di Controllo",
+      "m1": "Affitto scaduto da João Silva",
+      "m1tag": "Contratto",
+      "m2": "Rata IMU da pagare",
+      "m2tag": "Imposta",
+      "m3": "Bozza di ricevuta da rivedere",
+      "m3tag": "Ricevuta",
+      "timelineTitle": "Cronologia pagamento",
+      "t1": "Pagamento 1 giu",
+      "t1tag": "Rif: Lug",
+      "t2": "Pagamento in ritardo allocato",
+      "t2tag": "Più vecchio non pagato",
+      "t3": "Ricevuta archiviata",
+      "t3tag": "Salvato"
+    },
+    "closing2": {
+      "title": "Porta in vista ogni periodo di affitto, ricevuta e documento.",
+      "copy": "Situs è pensato per proprietari che hanno bisogno che la storia del pagamento sia chiara: cosa è arrivato, a quale mese appartiene, quale ricevuta è stata emessa e dove è conservata la prova.",
+      "primary": "Richiedi demo",
+      "secondary": "Vedi architettura del prodotto"
+    },
+    "footer2": {
+      "tagline": "Situs // Sovereign Capital System",
+      "modules": "Banca · Ricevute · Documenti · Prove Fiscali"
     }
   },
   "errors": {
