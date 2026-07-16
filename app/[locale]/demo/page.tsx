@@ -72,7 +72,7 @@ export default function DemoPage() {
         </div>
 
         <div className="space-y-2">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Lares Demo</h1>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Situs Demo</h1>
           <p className="text-gray-500 dark:text-gray-400">
             {status === "error" ? error : t("demo.preparing")}
           </p>

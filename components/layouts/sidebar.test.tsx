@@ -73,8 +73,8 @@ describe("Sidebar", () => {
     // Header collapse toggle should be present with Expand label
     expect(getByLabelText!("Expand Sidebar")).toBeDefined();
 
-    // Header text 'Lares' should be hidden when collapsed
-    expect(queryByText!("Lares")).toBeNull();
+    // Header text 'Situs' should be hidden when collapsed
+    expect(queryByText!("Situs")).toBeNull();
   });
 
   it("shows labels when expanded and username is visible", async () => {

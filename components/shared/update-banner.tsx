@@ -77,7 +77,7 @@ export function UpdateBanner(): React.ReactElement | null {
         <div>
           <strong className="block">New release available: {latest.name || latest.tag_name}</strong>
           <p className="text-sm mt-1">
-            A new version of Lares is available.{" "}
+            A new version of Situs is available.{" "}
             <a className="underline" href={latest.html_url || "#"} target="_blank" rel="noreferrer">
               View release notes
             </a>

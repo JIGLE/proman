@@ -21,7 +21,7 @@ import {
   TrackedLandingLink,
   TrackedExternalLink,
 } from "@/components/shared/landing-analytics";
-import { LaresMark } from "@/components/shared/brand-logo";
+import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { LandingHero, LandingHeroItem } from "@/components/shared/landing-hero";
 import { LandingStickyCta } from "@/components/shared/landing-sticky-cta";
@@ -122,8 +122,8 @@ export default async function LandingPage({ params }: Props) {
       <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#09090e]/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-2">
-            <LaresMark className="h-7 w-7" />
-            <span className="font-display text-lg font-bold tracking-tight">Lares</span>
+            <SitusPortalMark className="h-7 w-7" />
+            <span className="text-[13px] font-medium uppercase tracking-[0.22em]">Situs</span>
           </div>
           <div className="flex items-center gap-1.5 sm:gap-2">
             <LanguageSelector compact className="sm:hidden" />

@@ -42,7 +42,7 @@ import { useCsrf } from "@/lib/contexts/csrf-context";
 import { useTheme } from "@/lib/contexts/theme-context";
 
 interface UserSettings {
-  theme: "light" | "dark" | "system";
+  theme: "normal" | "dark" | "system";
   language: string;
   defaultCurrency: "EUR" | "DKK" | "USD" | "GBP";
   defaultTaxCountry: string | null;
@@ -490,7 +490,7 @@ export function SettingsView(): React.ReactElement {
                 <div className="pt-4 border-t border-border">
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Info className="h-3.5 w-3.5" />
-                    <span>Lares v{appVersion}</span>
+                    <span>Situs v{appVersion}</span>
                   </div>
                 </div>
               )}
@@ -510,8 +510,8 @@ export function SettingsView(): React.ReactElement {
                 <Label>Theme</Label>
                 <div className="flex gap-2">
                   {[
-                    { value: "light", icon: Sun, label: "Light" },
-                    { value: "dark", icon: Moon, label: "Dark" },
+                    { value: "normal", icon: Sun, label: "Matched Normal" },
+                    { value: "dark", icon: Moon, label: "Matched Dark" },
                     { value: "system", icon: Monitor, label: "System" },
                   ].map((option) => (
                     <Button
@@ -589,7 +589,7 @@ export function SettingsView(): React.ReactElement {
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
                         a.href = url;
-                        a.download = "lares-data.json";
+                        a.download = "situs-data.json";
                         a.click();
                         URL.revokeObjectURL(url);
                       } catch {

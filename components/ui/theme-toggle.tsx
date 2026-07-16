@@ -19,6 +19,10 @@ interface ThemeToggleProps {
   showLabel?: boolean;
 }
 
+/**
+ * Mode toggle for the Situs matched themes: Normal / Dark / System.
+ * Country selection is a Settings concern (Appearance tab), not a toggle.
+ */
 export function ThemeToggle({
   variant = "button",
   size = "default",
@@ -34,22 +38,17 @@ export function ThemeToggle({
         size={size === "sm" ? "sm" : "icon"}
         onClick={toggleTheme}
         className={cn("transition-colors", size === "sm" && "h-8 w-8", className)}
-        aria-label={`Switch to ${resolvedTheme === "dark" ? "light" : "dark"} mode`}
+        aria-label={`Switch to ${resolvedTheme === "dark" ? "normal" : "dark"} mode`}
       >
-        <Sun
-          className={cn(
-            "h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0",
-            size === "lg" && "h-5 w-5",
-          )}
-        />
-        <Moon
-          className={cn(
-            "absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100",
-            size === "lg" && "h-5 w-5",
-          )}
-        />
+        {resolvedTheme === "dark" ? (
+          <Moon className={cn("h-4 w-4", size === "lg" && "h-5 w-5")} />
+        ) : (
+          <Sun className={cn("h-4 w-4", size === "lg" && "h-5 w-5")} />
+        )}
         {showLabel && (
-          <span className="ml-2">{resolvedTheme === "dark" ? "Light Mode" : "Dark Mode"}</span>
+          <span className="ml-2">
+            {resolvedTheme === "dark" ? "Matched Normal" : "Matched Dark"}
+          </span>
         )}
       </Button>
     );
@@ -64,35 +63,27 @@ export function ThemeToggle({
           className={cn("transition-colors", size === "sm" && "h-8 w-8", className)}
           aria-label="Toggle theme"
         >
-          <Sun className="h-4 w-4 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
-          <Moon className="absolute h-4 w-4 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
+          {resolvedTheme === "dark" ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[160px]">
         <DropdownMenuItem
-          onClick={() => setTheme("light")}
-          className={cn(theme === "light" && "bg-[var(--color-accent)]/20 text-accent-primary")}
+          onClick={() => setTheme("normal")}
+          className={cn(theme === "normal" && "bg-[var(--color-hover)] text-accent-primary")}
         >
           <Sun className="mr-2 h-4 w-4" />
-          <span>Light</span>
+          <span>Matched Normal</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme("dark")}
-          className={cn(theme === "dark" && "bg-[var(--color-accent)]/20 text-accent-primary")}
+          className={cn(theme === "dark" && "bg-[var(--color-hover)] text-accent-primary")}
         >
           <Moon className="mr-2 h-4 w-4" />
-          <span>Dark</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => setTheme("dark-oled")}
-          className={cn(theme === "dark-oled" && "bg-[var(--color-accent)]/20 text-accent-primary")}
-        >
-          <Moon className="mr-2 h-4 w-4 fill-current" />
-          <span>OLED Black</span>
+          <span>Matched Dark</span>
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme("system")}
-          className={cn(theme === "system" && "bg-[var(--color-accent)]/20 text-accent-primary")}
+          className={cn(theme === "system" && "bg-[var(--color-hover)] text-accent-primary")}
         >
           <Monitor className="mr-2 h-4 w-4" />
           <span>System</span>
