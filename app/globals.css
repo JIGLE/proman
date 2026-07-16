@@ -1,106 +1,116 @@
 @import "tailwindcss";
 
 /* ============================================
-   LARES DESIGN SYSTEM — BRAND PALETTE
+   SITUS DESIGN SYSTEM — SOVEREIGN CAPITAL SYSTEM
    ============================================
-   Brand:       Lares — the Roman household guardians of the home.
-                Warm, premium, pan-European.
-   Base:        Deep Charcoal  #0B0E14
-   Primary:     Pine Teal      #0D9488  (trust, stability, property)
-   Accent:      Terracotta     #E8825A  (Mediterranean warmth, "telha")
-   Brand grad:  Teal → Terracotta (home at golden hour)
-   Success:     Emerald        #10B981
-   Warning:     Amber          #F59E0B
-   Info:        Blue           #3B82F6
-   Destructive: Rose           #F43F5E
+   Brand:       Situs — a Bauhaus portal identity for property capital.
+   Language:    Rectilinear zero-radius panels, thin 1px borders, sparse
+                professional layout. No gradients, no glass, no glow.
+   Body type:   Instrument Sans
+   System type: JetBrains Mono (labels, metadata, IDs, ledgers, status codes)
 
-   Inner borders:  white/5 for subtle depth
-   Glassmorphism:  backdrop-blur + translucent bg
-   Body type:      Plus Jakarta Sans
-   Display type:   Syne (headings, wordmark, hero)
+   Two independent colour systems (see lib/design/country-themes.ts — the
+   single source of truth; the values below are the PT (Portugal) defaults
+   for first paint, swapped at runtime by CountryThemeProvider):
+     1. LOGO ROLES  (--logo-*)      authentic flag colours, never tinted
+     2. UI THEME    (--color-*)     country-matched, readability-first
+   Semantic status colours are country-independent. Raw --semantic-* values
+   are for borders/washes; *-readable variants are contrast-safe for text.
 */
 
 @theme {
   /* ============================================
-     DARK THEME (Default) — Deep Charcoal
+     PT MATCHED NORMAL (default first-paint theme)
      ============================================ */
 
-  /* Base Colors — #0B0E14 deep charcoal foundation */
-  --color-background: #0b0e14;
-  --color-foreground: #e2e8f0;
-  --color-card: rgba(15, 19, 27, 0.8);
-  --color-card-foreground: #e2e8f0;
-  --color-card-solid: #0f131b;
-  --color-popover: #0f131b;
-  --color-popover-foreground: #e2e8f0;
-  --color-primary: #0d9488;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: rgba(13, 148, 136, 0.08);
-  --color-secondary-foreground: #5eead4;
-  --color-muted: #1e2433;
-  --color-muted-foreground: #94a3b8;
-  --color-accent: #0d9488;
-  --color-accent-foreground: #ffffff;
-  --color-destructive: #f43f5e;
-  --color-destructive-foreground: #ffffff;
-  --color-border: rgba(255, 255, 255, 0.05);
-  --color-border-hover: rgba(255, 255, 255, 0.12);
-  --color-input: rgba(255, 255, 255, 0.05);
-  --color-ring: rgba(13, 148, 136, 0.5);
-  --color-focus: rgba(13, 148, 136, 0.5);
+  /* Situs primitives */
+  --color-ink: #221d16;
+  --color-bone: #fbfbfb;
+  --color-canvas: #f6f0e4;
 
-  /* Surface layers — for glassmorphism depth */
-  --color-surface: rgba(15, 19, 27, 0.6);
-  --color-surface-raised: rgba(22, 27, 38, 0.8);
-  --color-surface-overlay: rgba(11, 14, 20, 0.9);
-  --color-surface-elevated: rgba(18, 22, 32, 0.9);
+  /* Base colors (shadcn interface) */
+  --color-background: #f6f0e4;
+  --color-foreground: #221d16;
+  --color-card: rgba(0, 0, 0, 0.025);
+  --color-card-foreground: #221d16;
+  --color-card-solid: #f1e8d8;
+  --color-popover: #f1e8d8;
+  --color-popover-foreground: #221d16;
+  --color-primary: #221d16;
+  --color-primary-foreground: #fbfbfb;
+  --color-secondary: rgba(0, 102, 0, 0.08);
+  --color-secondary-foreground: #006600;
+  --color-muted: #f1e8d8;
+  --color-muted-foreground: #756e63;
+  --color-accent: rgba(0, 0, 0, 0.055);
+  --color-accent-foreground: #221d16;
+  --color-destructive: #b91c1c;
+  --color-destructive-foreground: #fbfbfb;
+  --color-border: #ddd3c3;
+  --color-border-hover: rgba(0, 0, 0, 0.24);
+  --color-input: #ddd3c3;
+  --color-ring: #006600;
+  --color-focus: #006600;
+
+  /* Country accent (readable) + logo roles — PT defaults */
+  --color-ui-accent: #006600;
+  --color-country: #006600;
+  --color-country-soft: rgba(0, 102, 0, 0.08);
+
+  /* Surface layers — flat, no translucency games */
+  --color-surface: rgba(0, 0, 0, 0.025);
+  --color-surface-solid: #f1e8d8;
+  --color-surface-raised: #f1e8d8;
+  --color-surface-overlay: #f6f0e4;
+  --color-surface-elevated: #f1e8d8;
 
   /* Numbered elevation layers — S0 deepest, S3 highest */
-  --color-surface-0: #020617;
-  --color-surface-1: rgba(15, 23, 42, 0.8);
-  --color-surface-2: rgba(22, 27, 38, 0.8);
-  --color-surface-3: rgba(30, 36, 51, 0.9);
-  --color-surface-hover: rgba(13, 148, 136, 0.06);
-  --color-surface-pressed: rgba(13, 148, 136, 0.12);
-  --color-hover: rgba(13, 148, 136, 0.06);
-  --color-active: rgba(13, 148, 136, 0.12);
+  --color-surface-0: #efe6d3;
+  --color-surface-1: rgba(0, 0, 0, 0.02);
+  --color-surface-2: rgba(0, 0, 0, 0.035);
+  --color-surface-3: #f1e8d8;
+  --color-surface-hover: rgba(0, 0, 0, 0.055);
+  --color-surface-pressed: rgba(0, 0, 0, 0.08);
+  --color-hover: rgba(0, 0, 0, 0.055);
+  --color-active: rgba(0, 0, 0, 0.08);
 
-  /* Semantic Colors */
-  --color-success: #10b981;
-  --color-success-foreground: #ffffff;
-  --color-success-muted: rgba(16, 185, 129, 0.1);
-  --color-warning: #f59e0b;
-  --color-warning-foreground: #ffffff;
-  --color-warning-muted: rgba(245, 158, 11, 0.1);
-  --color-info: #3b82f6;
-  --color-info-foreground: #ffffff;
-  --color-info-muted: rgba(59, 130, 246, 0.1);
-  --color-error: #f43f5e;
-  --color-error-foreground: #ffffff;
-  --color-error-muted: rgba(244, 63, 94, 0.1);
+  /* Semantic colors (text-safe variants; raw values further down in :root) */
+  --color-success: #166534;
+  --color-success-foreground: #fbfbfb;
+  --color-success-muted: rgba(22, 101, 52, 0.08);
+  --color-warning: #9e4908;
+  --color-warning-foreground: #fbfbfb;
+  --color-warning-muted: rgba(180, 83, 9, 0.08);
+  --color-info: #1d4ed8;
+  --color-info-foreground: #fbfbfb;
+  --color-info-muted: rgba(29, 78, 216, 0.08);
+  --color-error: #b91c1c;
+  --color-error-foreground: #fbfbfb;
+  --color-error-muted: rgba(185, 28, 28, 0.08);
 
-  /* Accent Colors */
-  --color-accent-primary: #0d9488;
-  --color-accent-primary-foreground: #ffffff;
-  --color-accent-secondary: #e8825a;
-  --color-accent-secondary-foreground: #ffffff;
+  /* Accent aliases (legacy names kept so existing components keep compiling;
+     both point at the readable country accent — Situs has ONE accent) */
+  --color-accent-primary: #006600;
+  --color-accent-primary-foreground: #fbfbfb;
+  --color-accent-secondary: #006600;
+  --color-accent-secondary-foreground: #fbfbfb;
 
-  /* Interactive States */
-  --color-overlay: rgba(0, 0, 0, 0.6);
+  /* Interactive states */
+  --color-overlay: rgba(0, 0, 0, 0.45);
 
-  /* Sidebar — Glassmorphism */
-  --color-sidebar-bg: rgba(11, 14, 20, 0.7);
-  --color-sidebar-foreground: #cbd5e1;
-  --color-sidebar-border: rgba(255, 255, 255, 0.05);
-  --color-sidebar-text: #94a3b8;
-  --color-sidebar-text-active: #5eead4;
-  --color-sidebar-hover: rgba(13, 148, 136, 0.08);
-  --color-sidebar-active: rgba(13, 148, 136, 0.15);
+  /* Sidebar / nav rail — flat surface, 1px border */
+  --color-sidebar-bg: rgba(0, 0, 0, 0.025);
+  --color-sidebar-foreground: #221d16;
+  --color-sidebar-border: #ddd3c3;
+  --color-sidebar-text: #756e63;
+  --color-sidebar-text-active: #006600;
+  --color-sidebar-hover: rgba(0, 0, 0, 0.055);
+  --color-sidebar-active: rgba(0, 102, 0, 0.08);
 
-  /* Inner border system */
-  --color-inner-border: rgba(255, 255, 255, 0.05);
-  --color-inner-border-hover: rgba(255, 255, 255, 0.1);
-  --color-inner-border-active: rgba(13, 148, 136, 0.3);
+  /* Inner border system — collapses to the single 1px border language */
+  --color-inner-border: #ddd3c3;
+  --color-inner-border-hover: rgba(0, 0, 0, 0.24);
+  --color-inner-border-active: #006600;
 
   /* Z-Index layers */
   --z-base: 0;
@@ -110,7 +120,7 @@
   --z-popover: 230;
   --z-toast: 260;
 
-  /* Typography Scale */
+  /* Typography scale */
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -120,8 +130,12 @@
   --font-size-3xl: 1.875rem;
   --font-size-4xl: 2.25rem;
 
-  /* ── Display font (Syne) — headings & hero ───────── */
-  --font-display: var(--font-syne, "Syne", system-ui, sans-serif);
+  /* Typefaces — Instrument Sans everywhere, JetBrains Mono for system text.
+     --font-display intentionally aliases the sans: Situs has one family and
+     spends its boldness on weight/tracking, not on a second face. */
+  --font-sans: var(--font-instrument, "Instrument Sans", "Inter", system-ui, sans-serif);
+  --font-mono: var(--font-jetbrains, "JetBrains Mono", ui-monospace, monospace);
+  --font-display: var(--font-instrument, "Instrument Sans", "Inter", system-ui, sans-serif);
   --line-height-tight: 1.25;
   --line-height-snug: 1.375;
   --line-height-normal: 1.5;
@@ -131,179 +145,154 @@
   --font-weight-semibold: 600;
   --font-weight-bold: 700;
 
-  /* Radius scale — formalized; use rounded-{sm,md,lg,xl,2xl} consistently */
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
-  --radius-2xl: 1.25rem;
+  /* Radius scale — Situs is rectilinear: every step is 0.
+     --radius-full survives as the deliberate escape hatch for genuinely
+     circular geometry (spinners, the portal mark's dot). */
+  --radius-sm: 0;
+  --radius-md: 0;
+  --radius-lg: 0;
+  --radius-xl: 0;
+  --radius-2xl: 0;
   --radius-full: 9999px;
 
-  /* Shadows — subtle glow for depth */
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(13, 148, 136, 0.15) inset;
-  --shadow-modal: 0 25px 50px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-  --shadow-glow: 0 0 20px rgba(13, 148, 136, 0.15);
+  /* Shadows — borders do the separation work; only overlays get depth */
+  --shadow-card: none;
+  --shadow-card-hover: none;
+  --shadow-modal: 0 24px 48px rgba(0, 0, 0, 0.18);
+  --shadow-glow: none;
+}
+
+/* Country/logo tokens + raw semantic constants (not Tailwind utilities —
+   plain custom properties swapped by CountryThemeProvider at runtime). */
+:root {
+  --ui-accent: #006600;
+  --country-highlight-readable: #006600;
+  --country-highlight-soft: rgba(0, 102, 0, 0.08);
+
+  --logo-primary: #006600;
+  --logo-secondary: #ff0000;
+  --logo-accent: #ffff00;
+  --logo-neutral: #ffffff;
+  --logo-canvas: #f1e8d8;
+  --logo-keyline: rgba(0, 0, 0, 0.48);
+
+  --semantic-success: #166534;
+  --semantic-success-soft: rgba(22, 101, 52, 0.08);
+  --semantic-success-readable: #166534;
+  --semantic-warning: #b45309;
+  --semantic-warning-soft: rgba(180, 83, 9, 0.08);
+  --semantic-warning-readable: #9e4908;
+  --semantic-danger: #b91c1c;
+  --semantic-danger-soft: rgba(185, 28, 28, 0.08);
+  --semantic-danger-readable: #b91c1c;
+  --semantic-info: #1d4ed8;
+  --semantic-info-soft: rgba(29, 78, 216, 0.08);
+  --semantic-info-readable: #1d4ed8;
 }
 
 /* ============================================
-   LIGHT THEME
+   PT MATCHED DARK
+   Applied via data-mode="dark" (Situs) and the legacy selectors so themes
+   stored before the migration still render dark until the provider runs.
    ============================================ */
-:root.light,
-[data-theme="light"] {
-  --color-background: #f8fafc;
-  --color-foreground: #0f172a;
-  --color-card: rgba(255, 255, 255, 0.9);
-  --color-card-foreground: #0f172a;
-  --color-card-solid: #ffffff;
-  --color-popover: #ffffff;
-  --color-popover-foreground: #0f172a;
-  --color-primary: #0f766e;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: rgba(15, 118, 110, 0.06);
-  --color-secondary-foreground: #0f766e;
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
-  --color-accent: #0f766e;
-  --color-accent-foreground: #ffffff;
-  --color-destructive: #e11d48;
-  --color-destructive-foreground: #ffffff;
-  --color-border: rgba(0, 0, 0, 0.06);
-  --color-border-hover: rgba(0, 0, 0, 0.12);
-  --color-input: rgba(0, 0, 0, 0.06);
-  --color-ring: rgba(15, 118, 110, 0.4);
-  --color-focus: rgba(15, 118, 110, 0.4);
-
-  --color-surface: rgba(255, 255, 255, 0.7);
-  --color-surface-raised: rgba(255, 255, 255, 0.9);
-  --color-surface-overlay: rgba(248, 250, 252, 0.95);
-  --color-surface-elevated: rgba(255, 255, 255, 0.95);
-
-  --color-surface-0: #f1f5f9;
-  --color-surface-1: rgba(255, 255, 255, 0.85);
-  --color-surface-2: rgba(255, 255, 255, 0.92);
-  --color-surface-3: rgba(255, 255, 255, 0.97);
-  --color-surface-hover: rgba(15, 118, 110, 0.04);
-  --color-surface-pressed: rgba(15, 118, 110, 0.08);
-  --color-hover: rgba(15, 118, 110, 0.04);
-  --color-active: rgba(15, 118, 110, 0.08);
-
-  --color-success: #059669;
-  --color-success-foreground: #ffffff;
-  --color-success-muted: rgba(5, 150, 105, 0.08);
-  --color-warning: #d97706;
-  --color-warning-foreground: #ffffff;
-  --color-warning-muted: rgba(217, 119, 6, 0.08);
-  --color-info: #2563eb;
-  --color-info-foreground: #ffffff;
-  --color-info-muted: rgba(37, 99, 235, 0.08);
-  --color-error: #e11d48;
-  --color-error-foreground: #ffffff;
-  --color-error-muted: rgba(225, 29, 72, 0.08);
-
-  --color-accent-primary: #0f766e;
-  --color-accent-primary-foreground: #ffffff;
-  --color-accent-secondary: #cf6a43;
-  --color-accent-secondary-foreground: #ffffff;
-
-  --color-overlay: rgba(0, 0, 0, 0.4);
-
-  --color-sidebar-bg: rgba(255, 255, 255, 0.75);
-  --color-sidebar-foreground: #334155;
-  --color-sidebar-border: rgba(0, 0, 0, 0.06);
-  --color-sidebar-text: #64748b;
-  --color-sidebar-text-active: #0f766e;
-  --color-sidebar-hover: rgba(15, 118, 110, 0.06);
-  --color-sidebar-active: rgba(15, 118, 110, 0.1);
-
-  --color-inner-border: rgba(0, 0, 0, 0.06);
-  --color-inner-border-hover: rgba(0, 0, 0, 0.1);
-  --color-inner-border-active: rgba(15, 118, 110, 0.25);
-
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(0, 0, 0, 0.04) inset;
-  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(15, 118, 110, 0.1) inset;
-  --shadow-modal: 0 25px 50px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.06) inset;
-  --shadow-glow: 0 0 20px rgba(15, 118, 110, 0.08);
-}
-
-/* ============================================
-   OLED DARK THEME (Pure Black for OLED screens)
-   ============================================ */
+[data-mode="dark"],
+:root.dark,
+[data-theme="dark"],
 :root.dark-oled,
 [data-theme="dark-oled"] {
-  --color-background: #000000;
-  --color-foreground: #e2e8f0;
-  --color-card: rgba(8, 8, 12, 0.9);
-  --color-card-foreground: #e2e8f0;
-  --color-card-solid: #08080c;
-  --color-popover: #08080c;
-  --color-popover-foreground: #e2e8f0;
-  --color-primary: #0d9488;
-  --color-primary-foreground: #ffffff;
-  --color-secondary: rgba(13, 148, 136, 0.06);
-  --color-secondary-foreground: #5eead4;
-  --color-muted: #111318;
-  --color-muted-foreground: #94a3b8;
-  --color-accent: #0d9488;
-  --color-accent-foreground: #ffffff;
-  --color-destructive: #f43f5e;
-  --color-destructive-foreground: #ffffff;
-  --color-border: rgba(255, 255, 255, 0.04);
-  --color-border-hover: rgba(255, 255, 255, 0.1);
-  --color-input: rgba(255, 255, 255, 0.04);
-  --color-ring: rgba(13, 148, 136, 0.5);
-  --color-focus: rgba(13, 148, 136, 0.5);
+  --color-ink: #eef7f0;
+  --color-bone: #0d1117;
+  --color-canvas: #0b110d;
 
-  --color-surface: rgba(8, 8, 12, 0.6);
-  --color-surface-raised: rgba(14, 14, 20, 0.8);
-  --color-surface-overlay: rgba(0, 0, 0, 0.95);
-  --color-surface-elevated: rgba(12, 12, 18, 0.9);
+  --color-background: #0b110d;
+  --color-foreground: #eef7f0;
+  --color-card: rgba(255, 255, 255, 0.035);
+  --color-card-foreground: #eef7f0;
+  --color-card-solid: #121b15;
+  --color-popover: #121b15;
+  --color-popover-foreground: #eef7f0;
+  --color-primary: #eef7f0;
+  --color-primary-foreground: #0d1117;
+  --color-secondary: rgba(71, 145, 71, 0.08);
+  --color-secondary-foreground: #479147;
+  --color-muted: #121b15;
+  --color-muted-foreground: #a5b8a9;
+  --color-accent: rgba(255, 255, 255, 0.06);
+  --color-accent-foreground: #eef7f0;
+  --color-destructive: #cd5c5c;
+  --color-destructive-foreground: #0d1117;
+  --color-border: #263428;
+  --color-border-hover: rgba(255, 255, 255, 0.24);
+  --color-input: #263428;
+  --color-ring: #479147;
+  --color-focus: #479147;
 
-  --color-surface-0: #000000;
-  --color-surface-1: rgba(8, 8, 12, 0.8);
-  --color-surface-2: rgba(14, 14, 20, 0.85);
-  --color-surface-3: rgba(20, 20, 28, 0.9);
-  --color-surface-hover: rgba(13, 148, 136, 0.05);
-  --color-surface-pressed: rgba(13, 148, 136, 0.1);
-  --color-hover: rgba(13, 148, 136, 0.05);
-  --color-active: rgba(13, 148, 136, 0.1);
+  --color-ui-accent: #ffff00;
+  --color-country: #479147;
+  --color-country-soft: rgba(71, 145, 71, 0.08);
 
-  --color-success: #10b981;
-  --color-success-foreground: #ffffff;
-  --color-success-muted: rgba(16, 185, 129, 0.08);
-  --color-warning: #f59e0b;
-  --color-warning-foreground: #ffffff;
-  --color-warning-muted: rgba(245, 158, 11, 0.08);
-  --color-info: #3b82f6;
-  --color-info-foreground: #ffffff;
-  --color-info-muted: rgba(59, 130, 246, 0.08);
-  --color-error: #f43f5e;
-  --color-error-foreground: #ffffff;
-  --color-error-muted: rgba(244, 63, 94, 0.08);
+  --color-surface: rgba(255, 255, 255, 0.035);
+  --color-surface-solid: #121b15;
+  --color-surface-raised: #121b15;
+  --color-surface-overlay: #0b110d;
+  --color-surface-elevated: #121b15;
 
-  --color-accent-primary: #0d9488;
-  --color-accent-primary-foreground: #ffffff;
-  --color-accent-secondary: #e8825a;
-  --color-accent-secondary-foreground: #ffffff;
+  --color-surface-0: #080d0a;
+  --color-surface-1: rgba(255, 255, 255, 0.025);
+  --color-surface-2: rgba(255, 255, 255, 0.045);
+  --color-surface-3: #121b15;
+  --color-surface-hover: rgba(255, 255, 255, 0.06);
+  --color-surface-pressed: rgba(255, 255, 255, 0.09);
+  --color-hover: rgba(255, 255, 255, 0.06);
+  --color-active: rgba(255, 255, 255, 0.09);
 
-  --color-overlay: rgba(0, 0, 0, 0.8);
+  --color-success: #57906d;
+  --color-success-foreground: #0d1117;
+  --color-success-muted: rgba(22, 101, 52, 0.15);
+  --color-warning: #bd6827;
+  --color-warning-foreground: #0d1117;
+  --color-warning-muted: rgba(180, 83, 9, 0.15);
+  --color-info: #5c80e3;
+  --color-info-foreground: #0d1117;
+  --color-info-muted: rgba(29, 78, 216, 0.15);
+  --color-error: #cd5c5c;
+  --color-error-foreground: #0d1117;
+  --color-error-muted: rgba(185, 28, 28, 0.15);
 
-  --color-sidebar-bg: rgba(0, 0, 0, 0.8);
-  --color-sidebar-foreground: #cbd5e1;
-  --color-sidebar-border: rgba(255, 255, 255, 0.04);
-  --color-sidebar-text: #94a3b8;
-  --color-sidebar-text-active: #5eead4;
-  --color-sidebar-hover: rgba(13, 148, 136, 0.06);
-  --color-sidebar-active: rgba(13, 148, 136, 0.12);
+  --color-accent-primary: #479147;
+  --color-accent-primary-foreground: #0d1117;
+  --color-accent-secondary: #479147;
+  --color-accent-secondary-foreground: #0d1117;
 
-  --color-inner-border: rgba(255, 255, 255, 0.04);
-  --color-inner-border-hover: rgba(255, 255, 255, 0.08);
-  --color-inner-border-active: rgba(13, 148, 136, 0.25);
+  --color-overlay: rgba(0, 0, 0, 0.65);
 
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-  --shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(13, 148, 136, 0.12) inset;
-  --shadow-modal: 0 25px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-  --shadow-glow: 0 0 20px rgba(13, 148, 136, 0.12);
+  --color-sidebar-bg: rgba(255, 255, 255, 0.035);
+  --color-sidebar-foreground: #eef7f0;
+  --color-sidebar-border: #263428;
+  --color-sidebar-text: #a5b8a9;
+  --color-sidebar-text-active: #ffff00;
+  --color-sidebar-hover: rgba(255, 255, 255, 0.06);
+  --color-sidebar-active: rgba(71, 145, 71, 0.12);
+
+  --color-inner-border: #263428;
+  --color-inner-border-hover: rgba(255, 255, 255, 0.24);
+  --color-inner-border-active: #479147;
+
+  --shadow-card: none;
+  --shadow-card-hover: none;
+  --shadow-modal: 0 24px 48px rgba(0, 0, 0, 0.5);
+  --shadow-glow: none;
+
+  --ui-accent: #ffff00;
+  --country-highlight-readable: #479147;
+  --country-highlight-soft: rgba(71, 145, 71, 0.08);
+  --logo-canvas: #121b15;
+  --logo-keyline: rgba(255, 255, 255, 0.68);
+
+  --semantic-success-readable: #57906d;
+  --semantic-warning-readable: #bd6827;
+  --semantic-danger-readable: #cd5c5c;
+  --semantic-info-readable: #5c80e3;
 }
 
 /* ============================================
@@ -328,7 +317,7 @@ body {
   min-height: 100vh;
   background-color: var(--color-background);
   color: var(--color-foreground);
-  font-family: var(--font-jakarta, "Plus Jakarta Sans", "Inter", system-ui, sans-serif);
+  font-family: var(--font-sans);
   font-feature-settings:
     "rlig" 1,
     "calt" 1;
@@ -342,53 +331,49 @@ body {
   min-height: 100vh;
 }
 
+/* Visible keyboard focus everywhere — 2px country accent, square. */
+:focus-visible {
+  outline: 2px solid var(--country-highlight-readable);
+  outline-offset: 1px;
+  border-radius: 0;
+}
+
 /* ============================================
-   GLASSMORPHISM UTILITIES
+   SITUS PANEL LANGUAGE
+   (legacy glass* class names kept so existing components restyle without
+   edits — implementations are now flat 1px-border panels, no blur)
    ============================================ */
 
+.panel,
 .glass {
   background: var(--color-surface);
-  backdrop-filter: blur(16px) saturate(1.8);
-  -webkit-backdrop-filter: blur(16px) saturate(1.8);
-  border: 1px solid var(--color-inner-border);
+  border: 1px solid var(--color-border);
 }
 
 .glass-heavy {
   background: var(--color-surface-overlay);
-  backdrop-filter: blur(24px) saturate(2);
-  -webkit-backdrop-filter: blur(24px) saturate(2);
-  border: 1px solid var(--color-inner-border);
+  border: 1px solid var(--color-border);
 }
 
 .glass-sidebar {
   background: var(--color-sidebar-bg);
-  backdrop-filter: blur(20px) saturate(1.8);
-  -webkit-backdrop-filter: blur(20px) saturate(1.8);
   border-right: 1px solid var(--color-sidebar-border);
 }
 
 .glass-modal {
-  background: color-mix(in srgb, var(--color-surface-raised) 82%, transparent);
-  backdrop-filter: blur(30px) saturate(1.8);
-  -webkit-backdrop-filter: blur(30px) saturate(1.8);
-  border: 1px solid color-mix(in srgb, var(--color-inner-border-hover) 80%, transparent);
-  box-shadow:
-    var(--shadow-modal),
-    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
-    0 24px 80px rgba(0, 0, 0, 0.35);
+  background: var(--color-surface-overlay);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-modal);
 }
 
-/* Inner border card style */
 .card-elevated {
-  background: var(--color-card);
-  border: 1px solid var(--color-inner-border);
-  box-shadow: var(--shadow-card);
-  transition: all 0.2s ease;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  transition: border-color 0.2s ease;
 }
 
 .card-elevated:hover {
-  border-color: var(--color-inner-border-hover);
-  box-shadow: var(--shadow-card-hover);
+  border-color: var(--color-border-hover);
 }
 
 /* Numbered surface utility classes */
@@ -397,24 +382,88 @@ body {
 }
 .surface-1 {
   background-color: var(--color-surface-1);
-  border: 1px solid var(--color-inner-border);
+  border: 1px solid var(--color-border);
 }
 .surface-2 {
   background-color: var(--color-surface-2);
-  border: 1px solid var(--color-inner-border);
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
 }
 .surface-3 {
   background-color: var(--color-surface-3);
-  border: 1px solid var(--color-inner-border);
-  box-shadow: var(--shadow-modal);
+  border: 1px solid var(--color-border);
+}
+
+/* Mono micro-label — the system voice (labels, metadata, IDs, status codes) */
+.mono-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+.mono-label-xs {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-muted-foreground);
+}
+
+/* Alert cards — 3px semantic left border over a soft wash */
+.alert-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.alert-card.alert-success {
+  border-left: 3px solid var(--semantic-success);
+  background: var(--semantic-success-soft);
+}
+.alert-card.alert-warning {
+  border-left: 3px solid var(--semantic-warning);
+  background: var(--semantic-warning-soft);
+}
+.alert-card.alert-danger {
+  border-left: 3px solid var(--semantic-danger);
+  background: var(--semantic-danger-soft);
+}
+.alert-card.alert-info {
+  border-left: 3px solid var(--semantic-info);
+  background: var(--semantic-info-soft);
+}
+.alert-card.alert-country {
+  border-left: 3px solid var(--country-highlight-readable);
+  background: var(--country-highlight-soft);
+}
+
+/* Status dots — 8px squares, semantic only */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  background: var(--semantic-success);
+}
+.status-dot.status-dot-warn {
+  background: var(--semantic-warning);
+}
+.status-dot.status-dot-danger {
+  background: var(--semantic-danger);
+}
+.status-dot.status-dot-info {
+  background: var(--semantic-info);
 }
 
 /* ============================================
    TYPOGRAPHY SCALE
    ============================================ */
 
-/* Display/wordmark typeface (Syne) — apply to brand & hero text */
+/* Display alias — same family, boldness spent on weight/tracking */
 .font-display {
   font-family: var(--font-display);
 }
@@ -422,43 +471,43 @@ body {
 .text-display-large {
   font-family: var(--font-display);
   font-size: 3.5rem;
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
+  font-weight: 400;
+  line-height: 0.94;
+  letter-spacing: -0.055em;
 }
 
 .text-display-medium {
   font-family: var(--font-display);
   font-size: 2.5rem;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.02em;
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: -0.05em;
 }
 
 .text-display-small {
   font-family: var(--font-display);
   font-size: 2rem;
-  font-weight: 600;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
 }
 
 .text-heading-large {
   font-size: 1.5rem;
-  font-weight: 600;
+  font-weight: 400;
   line-height: 1.4;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 
 .text-heading-medium {
   font-size: 1.25rem;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.4;
 }
 
 .text-heading-small {
   font-size: 1.125rem;
-  font-weight: 600;
+  font-weight: 500;
   line-height: 1.5;
 }
 
@@ -481,22 +530,22 @@ body {
 }
 
 .text-caption {
-  font-size: 0.75rem;
-  font-weight: 500;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
   line-height: 1.3;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
 }
 
+/* Gradients are banned in Situs — legacy class renders solid accent */
 .text-gradient {
-  background: linear-gradient(135deg, var(--color-primary), var(--color-accent-secondary));
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--country-highlight-readable);
 }
 
 /* ============================================
    ANIMATION UTILITIES
+   (calm eases only; no bounce/elastic, no glow)
    ============================================ */
 
 @keyframes shimmer {
@@ -543,7 +592,7 @@ body {
 @keyframes scaleIn {
   from {
     opacity: 0;
-    transform: scale(0.95);
+    transform: scale(0.98);
   }
   to {
     opacity: 1;
@@ -559,16 +608,6 @@ body {
   to {
     opacity: 1;
     transform: translateY(0);
-  }
-}
-
-@keyframes glow-pulse {
-  0%,
-  100% {
-    box-shadow: 0 0 0 0 rgba(13, 148, 136, 0);
-  }
-  50% {
-    box-shadow: 0 0 16px 2px rgba(13, 148, 136, 0.15);
   }
 }
 
@@ -636,8 +675,9 @@ body {
 .animate-slide-up {
   animation: slide-up 0.4s ease-out;
 }
+/* Glow is banned — legacy class kept as a no-op so old markup stays valid */
 .animate-glow-pulse {
-  animation: glow-pulse 2s ease-in-out infinite;
+  animation: none;
 }
 .animate-pulse-gentle {
   animation: pulse-gentle 2s infinite;
@@ -660,7 +700,7 @@ body {
 
 .animate-shimmer {
   animation: shimmer 1.5s infinite linear;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+  background: linear-gradient(90deg, transparent, var(--color-hover), transparent);
   background-size: 200px 100%;
 }
 
@@ -678,16 +718,19 @@ body {
 
 .surface-elevated {
   background-color: var(--color-surface-elevated);
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
 }
 
 .surface-overlay {
   background-color: var(--color-surface-overlay);
-  box-shadow: var(--shadow-card);
+  border: 1px solid var(--color-border);
 }
 
 .interactive {
-  transition: all 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
   cursor: pointer;
 }
 
@@ -713,17 +756,16 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.08);
-  border-radius: 3px;
+  background: var(--color-border);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: var(--color-border-hover);
 }
 
 .scrollbar-thin {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-border-hover) transparent;
+  scrollbar-color: var(--color-border) transparent;
 }
 
 .scrollbar-thin::-webkit-scrollbar {
@@ -734,11 +776,10 @@ body {
   background: transparent;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: var(--color-border-hover);
-  border-radius: 3px;
+  background: var(--color-border);
 }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent-primary);
+  background: var(--color-border-hover);
 }
 
 /* ============================================
@@ -829,9 +870,7 @@ body {
 }
 
 .mobile-card {
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
+  transition: transform 0.15s ease;
 }
 .mobile-card:active {
   transform: scale(0.98);

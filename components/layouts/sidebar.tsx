@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 
-import { LaresMark } from "@/components/shared/brand-logo";
+import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -162,15 +162,15 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
             title="Expand Sidebar"
             aria-label="Expand Sidebar"
           >
-            <LaresMark className="h-7 w-7" />
+            <SitusPortalMark className="h-7 w-7" />
           </button>
         ) : (
           // Expanded: logo + collapse button
           <>
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <LaresMark className="h-7 w-7 shrink-0" />
-              <span className="font-display text-lg font-bold tracking-tight text-[var(--color-foreground)] truncate">
-                Lares
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <SitusPortalMark className="h-7 w-7 shrink-0" />
+              <span className="text-[13px] font-medium uppercase tracking-[0.22em] text-[var(--color-foreground)] truncate">
+                Situs
               </span>
             </div>
             <Button

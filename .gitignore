@@ -136,3 +136,6 @@ eslint.config.cjs
 
 # Design-award capture output (local evidence, not source)
 .design-award/
+
+# Claude Code personal settings (auto-merge/watch authority, not team-shared)
+.claude/settings.local.json

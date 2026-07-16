@@ -1,5 +1,5 @@
 /*
- * Lares service worker — dependency-free.
+ * Situs service worker — dependency-free.
  *
  * Goals (the "installable + basic offline" tier):
  *  - Satisfy Chrome's installability criteria (registered SW with a fetch handler).
@@ -10,7 +10,7 @@
  *    calls or auth.
  */
 
-const VERSION = "lares-v1";
+const VERSION = "situs-v1";
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Plus_Jakarta_Sans, Syne } from "next/font/google";
+import { Instrument_Sans, JetBrains_Mono } from "next/font/google";
 // Development-only server patch to help locate React.Children.only failures
 import "@/lib/dev/patch-react-children-only";
 import "./globals.css";
@@ -9,37 +9,37 @@ import { PwaRegister } from "@/components/shared/pwa-register";
 import { DevAuthProvider } from "@/components/shared/dev-auth";
 import { defaultLocale } from "@/lib/i18n/config";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
-  variable: "--font-jakarta",
+  variable: "--font-instrument",
   display: "swap",
-  weight: ["300", "400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
-const syne = Syne({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  variable: "--font-syne",
+  variable: "--font-jetbrains",
   display: "swap",
-  weight: ["600", "700", "800"],
+  weight: ["400", "500", "600"],
 });
 
-const BRAND_TAGLINE = "Lares — Property management for European landlords";
+const BRAND_TAGLINE = "Situs — Sovereign Capital System";
 const BRAND_DESCRIPTION =
-  "Lares brings your properties, leases, receipts, expenses and tax compliance into one calm, private workspace — with rent-receipt and registry automation built for Portugal and Spain, and more of Europe to come.";
+  "Situs puts property income, receipts and tax evidence under control — bank movement matching, reference-month allocation, receipt automation and document intelligence for EU property portfolios.";
 
 export const metadata: Metadata = {
   title: {
     default: BRAND_TAGLINE,
-    template: "%s · Lares",
+    template: "%s · Situs",
   },
-  applicationName: "Lares",
+  applicationName: "Situs",
   description: BRAND_DESCRIPTION,
   openGraph: {
     title: BRAND_TAGLINE,
     description: BRAND_DESCRIPTION,
     type: "website",
     locale: "en_US",
-    siteName: "Lares",
+    siteName: "Situs",
   },
   twitter: {
     card: "summary_large_image",
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
   // Installable PWA / iOS home-screen support.
   appleWebApp: {
     capable: true,
-    title: "Lares",
+    title: "Situs",
     statusBarStyle: "black-translucent",
   },
   icons: {
@@ -63,8 +63,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#0d9488" },
-    { media: "(prefers-color-scheme: dark)", color: "#0b0e14" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f0e4" },
+    { media: "(prefers-color-scheme: dark)", color: "#0b110d" },
   ],
 };
 
@@ -79,12 +79,14 @@ export default async function RootLayout({
   return (
     <html
       lang={defaultLocale}
-      className={`${plusJakartaSans.variable} ${syne.variable}`}
+      className={`${instrumentSans.variable} ${jetbrainsMono.variable}`}
+      data-country="PT"
+      data-mode="normal"
       data-scroll-behavior="smooth"
       suppressHydrationWarning
     >
       <head>{nonce && <meta name="csp-nonce" content={nonce} />}</head>
-      <body className={`${plusJakartaSans.className} antialiased`}>
+      <body className={`${instrumentSans.className} antialiased`}>
         <DevAuthProvider>
           {/* Update banner (admin-only) */}
           <UpdateBannerClient />
