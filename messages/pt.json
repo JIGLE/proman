@@ -86,7 +86,7 @@
     "home": "Início",
     "properties": "Imóveis",
     "tenants": "Inquilinos",
-    "people": "Inquilinos",
+    "people": "Pessoas",
     "leases": "Contratos",
     "payments": "Pagamentos",
     "financials": "Contas",
@@ -109,7 +109,11 @@
     "taxFiling": "Declaração Fiscal",
     "account": "Conta",
     "more": "Mais",
-    "signOut": "Terminar sessão"
+    "signOut": "Terminar sessão",
+    "coreGroup": "Núcleo",
+    "portfolio": "Portefólio",
+    "operations": "Operações",
+    "intelligence": "Inteligência"
   },
   "dashboard": {
     "welcome": "Bem-vindo ao seu painel de gestão de imóveis",

@@ -13,8 +13,6 @@ import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { LanguageSelector } from "@/components/shared/language-selector";
 import { useDemoMode } from "@/lib/contexts/demo-context";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
 
@@ -68,9 +66,8 @@ function SidebarFooter({
             </p>
           </div>
         </div>
-        <div className="flex items-center justify-between gap-1 px-1">
-          <LanguageSelector compact />
-          <ThemeToggle variant="button" size="sm" className="h-8 w-8" />
+        {/* Appearance (country + mode) and language now live in Settings › Appearance. */}
+        <div className="flex items-center justify-end px-1">
           <Button
             variant="ghost"
             size="sm"
@@ -196,8 +193,8 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
         {menuItems.map((group, groupIndex) => (
           <div key={group.group} role="group" className={cn("space-y-1", groupIndex > 0 && "mt-4")}>
             {!collapsed && (
-              <div className="px-3 py-2">
-                <h3 className="text-xs font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
+              <div className="px-3 pb-1 pt-2">
+                <h3 className="mono-label">
                   {t(group.groupLabelKey.replace("navigation.", "") as Parameters<typeof t>[0])}
                 </h3>
               </div>
@@ -225,17 +222,17 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                   >
                     <div
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                        "flex items-center gap-3 border-l-2 px-3 py-2 text-sm transition-colors",
                         collapsed && "justify-center px-2",
                         isActive
-                          ? "bg-[var(--color-sidebar-active)] text-[var(--color-primary)] ring-1 ring-[var(--color-primary)]/40"
-                          : "text-[var(--color-sidebar-text)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)]",
+                          ? "border-[var(--country-highlight-readable)] bg-[var(--color-sidebar-active)] font-medium text-[var(--country-highlight-readable)]"
+                          : "border-transparent text-[var(--color-sidebar-text)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)]",
                       )}
                     >
                       <Icon
                         className={cn(
                           "h-[18px] w-[18px] shrink-0",
-                          isActive && "text-[var(--color-primary)]",
+                          isActive && "text-[var(--country-highlight-readable)]",
                         )}
                       />
                       {!collapsed && <span className="truncate">{translatedLabel}</span>}

@@ -86,7 +86,7 @@
     "home": "Home",
     "properties": "Immobili",
     "tenants": "Inquilini",
-    "people": "Inquilini",
+    "people": "Persone",
     "leases": "Contratti",
     "payments": "Pagamenti",
     "financials": "Conti",
@@ -109,7 +109,11 @@
     "taxFiling": "Dichiarazione fiscale",
     "account": "Account",
     "more": "Altro",
-    "signOut": "Esci"
+    "signOut": "Esci",
+    "coreGroup": "Core",
+    "portfolio": "Portafoglio",
+    "operations": "Operazioni",
+    "intelligence": "Intelligence"
   },
   "dashboard": {
     "welcome": "Benvenuto nella tua dashboard di gestione immobiliare",
