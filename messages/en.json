@@ -86,7 +86,7 @@
     "home": "Home",
     "properties": "Properties",
     "tenants": "Tenants",
-    "people": "Tenants",
+    "people": "People",
     "leases": "Leases",
     "payments": "Payments",
     "financials": "Accounts",
@@ -109,7 +109,11 @@
     "taxFiling": "Tax Filing",
     "account": "Account",
     "more": "More",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "coreGroup": "Core",
+    "portfolio": "Portfolio",
+    "operations": "Operations",
+    "intelligence": "Intelligence"
   },
   "dashboard": {
     "welcome": "Welcome to your property management dashboard",

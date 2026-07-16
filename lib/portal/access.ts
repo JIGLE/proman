@@ -11,6 +11,7 @@ import {
   Mail,
   Settings,
   ShieldCheck,
+  UserCircle,
   Users,
   Wallet,
   Wrench,
@@ -35,16 +36,25 @@ export interface PortalNavGroup {
   items: PortalNavItem[];
 }
 
+// Situs // Sovereign Capital System information architecture (PR 2 of the rebrand):
+// two groups — Core (the owner's daily surfaces) and System (configuration + identity) —
+// mirroring the approved Mockup.html nav rail. Nav LABELS are the Situs pillars; several
+// underlying route PATHS are unchanged in this PR (path renames + redirects land in a
+// follow-up) — e.g. Finance still serves from `/financials`, Operations from `/maintenance`,
+// Intelligence from `/analytics`. Consolidated surfaces (Reports, Compliance/Tax Filing,
+// Messages, Leases, Vendors) are kept as `hidden` items so their routes stay permitted by
+// `canAccessPortalPath` (which ignores `hidden`) and existing deep links keep working — they
+// are reached from within their new home pillar rather than occupying their own rail row.
 export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
   {
-    group: "Operations",
-    groupLabelKey: "navigation.operationsGroup",
+    group: "Core",
+    groupLabelKey: "navigation.coreGroup",
     items: [
       {
         key: "dashboard",
         href: "/dashboard",
-        label: "Dashboard",
-        labelKey: "navigation.dashboard",
+        label: "Home",
+        labelKey: "navigation.home",
         icon: Home,
         roles: ["owner", "tenant"],
         mobilePrimary: true,
@@ -52,82 +62,37 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
       {
         key: "properties",
         href: "/portfolio",
-        label: "Properties",
-        labelKey: "navigation.properties",
+        label: "Portfolio",
+        labelKey: "navigation.portfolio",
         icon: Building2,
         roles: ["owner", "tenant"],
         mobilePrimary: true,
       },
       {
-        key: "people",
-        href: "/people",
-        label: "Tenants",
-        labelKey: "navigation.people",
-        icon: Users,
-        roles: ["owner"],
-        mobilePrimary: true,
-      },
-      {
-        key: "maintenance",
-        href: "/maintenance",
-        label: "Maintenance",
-        labelKey: "navigation.maintenance",
-        icon: Wrench,
-        roles: ["owner"],
-      },
-      {
-        // Folded out of the top-level sidebar (architecture/governance audit 2026-07,
-        // Finding 1): vendor/contact management is already reachable inline via
-        // People → Service Providers (`people-view.tsx` renders `ContactsView`). Kept as a
-        // hidden item so the `/contacts` route stays permitted by `canAccessPortalPath`
-        // (which ignores `hidden`) and direct links keep working — it just no longer
-        // occupies an Operations row. Brings Operations from 7 → 6 items.
-        key: "vendors",
-        href: "/contacts",
-        label: "Vendors",
-        labelKey: "navigation.vendors",
-        icon: HardHat,
-        roles: ["owner"],
-        hidden: true,
-      },
-      {
         key: "financials",
         href: "/financials",
-        label: "Accounts",
-        labelKey: "navigation.financials",
+        label: "Finance",
+        labelKey: "navigation.finance",
         icon: Wallet,
         roles: ["owner", "tenant"],
         mobilePrimary: true,
       },
       {
-        key: "leases",
-        href: "/leases",
-        label: "Leases",
-        labelKey: "navigation.leases",
-        icon: FileText,
-        roles: ["owner", "tenant"],
-      },
-    ],
-  },
-  {
-    group: "Reports",
-    groupLabelKey: "navigation.intelligenceGroup",
-    items: [
-      {
-        key: "analytics",
-        href: "/analytics",
-        label: "Analytics",
-        labelKey: "navigation.analytics",
-        icon: BarChart2,
+        key: "maintenance",
+        href: "/maintenance",
+        label: "Operations",
+        labelKey: "navigation.operations",
+        icon: Wrench,
         roles: ["owner"],
       },
       {
-        key: "reports",
-        href: "/reports",
-        label: "Reports",
-        labelKey: "navigation.reports",
-        icon: FileBarChart,
+        key: "people",
+        href: "/people",
+        label: "People",
+        labelKey: "navigation.people",
+        icon: Users,
         roles: ["owner"],
+        mobilePrimary: true,
       },
       {
         key: "documents",
@@ -136,13 +101,14 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         labelKey: "navigation.documents",
         icon: FileBox,
         roles: ["owner", "tenant"],
+        mobilePrimary: true,
       },
       {
-        key: "correspondence",
-        href: "/correspondence",
-        label: "Messages",
-        labelKey: "navigation.correspondence",
-        icon: Mail,
+        key: "analytics",
+        href: "/analytics",
+        label: "Intelligence",
+        labelKey: "navigation.intelligence",
+        icon: BarChart2,
         roles: ["owner"],
       },
     ],
@@ -152,20 +118,59 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
     groupLabelKey: "navigation.systemGroup",
     items: [
       {
+        key: "settings",
+        href: "/settings",
+        label: "Settings",
+        labelKey: "navigation.settings",
+        icon: Settings,
+        roles: ["owner"],
+      },
+      {
+        // Dedicated /account page arrives in PR 4; until then Account deep-links into the
+        // Settings Account tab (settings-view supports `?tab=`).
+        key: "account",
+        href: "/settings?tab=account",
+        label: "Account",
+        labelKey: "navigation.account",
+        icon: UserCircle,
+        roles: ["owner", "tenant"],
+      },
+    ],
+  },
+  {
+    // Hidden group: routes that no longer own a rail row but must stay reachable/permitted.
+    // Reached from within their new home pillar (Intelligence, People, Property detail).
+    group: "Hidden",
+    groupLabelKey: "navigation.systemGroup",
+    items: [
+      {
+        key: "reports",
+        href: "/reports",
+        label: "Reports",
+        labelKey: "navigation.reports",
+        icon: FileBarChart,
+        roles: ["owner"],
+        hidden: true,
+      },
+      {
+        key: "correspondence",
+        href: "/correspondence",
+        label: "Messages",
+        labelKey: "navigation.correspondence",
+        icon: Mail,
+        roles: ["owner"],
+        hidden: true,
+      },
+      {
         key: "compliance",
         href: "/compliance/modelo179",
         label: "Compliance",
         labelKey: "navigation.compliance",
         icon: ShieldCheck,
         roles: ["owner"],
+        hidden: true,
       },
       {
-        // Grouped under the single "Compliance" hub (architecture/governance audit
-        // 2026-07, Finding 1): Modelo 179 and Tax Filing are one job split across two
-        // System rows. Tax Filing is now reached via the Compliance sub-nav
-        // (`compliance-sub-nav.tsx`) rather than its own sidebar row; kept `hidden` so the
-        // route stays permitted by `canAccessPortalPath` (which ignores `hidden`). Brings
-        // System from 3 → 2 items and the owner sidebar from 14 → 12.
         key: "tax-filing",
         href: "/compliance/tax-filing",
         label: "Tax Filing",
@@ -175,12 +180,22 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         hidden: true,
       },
       {
-        key: "settings",
-        href: "/settings",
-        label: "Settings",
-        labelKey: "navigation.settings",
-        icon: Settings,
+        key: "leases",
+        href: "/leases",
+        label: "Leases",
+        labelKey: "navigation.leases",
+        icon: FileText,
+        roles: ["owner", "tenant"],
+        hidden: true,
+      },
+      {
+        key: "vendors",
+        href: "/contacts",
+        label: "Vendors",
+        labelKey: "navigation.vendors",
+        icon: HardHat,
         roles: ["owner"],
+        hidden: true,
       },
     ],
   },
