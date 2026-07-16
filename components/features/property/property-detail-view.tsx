@@ -14,6 +14,7 @@ import {
   Receipt,
   Plus,
   Trash2,
+  History,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -644,6 +645,10 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <DollarSign className="h-3.5 w-3.5" />
             {t("tabs.payments")}
           </TabsTrigger>
+          <TabsTrigger value="audit" className="flex items-center gap-1.5">
+            <History className="h-3.5 w-3.5" />
+            {t("tabs.audit")}
+          </TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}
@@ -1161,6 +1166,23 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               </CardContent>
             </Card>
           )}
+        </TabsContent>
+
+        {/* Audit Tab — placeholder until the property audit trail lands (Situs PR 8/10:
+            AuditLog gains resourceType/resourceId + an AuditTrail component reads it). */}
+        <TabsContent value="audit">
+          <Card>
+            <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
+              <div className="flex h-10 w-10 items-center justify-center border border-[var(--color-border)] bg-[var(--color-surface)]">
+                <History className="h-5 w-5 text-[var(--color-muted-foreground)]" />
+              </div>
+              <p className="mono-label">Audit trail</p>
+              <p className="max-w-sm text-sm text-[var(--color-muted-foreground)]">
+                A full activity history for this property — payment allocations, receipt emissions,
+                document changes and manual overrides — will appear here.
+              </p>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
     </div>
