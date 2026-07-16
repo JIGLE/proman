@@ -1173,7 +1173,8 @@
       "maintenance": "Maintenance",
       "payments": "Payments",
       "expenses": "Expenses",
-      "units": "Units"
+      "units": "Units",
+      "audit": "Audit"
     },
     "stats": {
       "tenants": "Tenants",

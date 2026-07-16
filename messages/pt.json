@@ -1173,7 +1173,8 @@
       "maintenance": "Manutenção",
       "payments": "Pagamentos",
       "expenses": "Despesas",
-      "units": "Unidades"
+      "units": "Unidades",
+      "audit": "Auditoria"
     },
     "stats": {
       "tenants": "Inquilinos",
