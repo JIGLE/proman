@@ -40,6 +40,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useCsrf } from "@/lib/contexts/csrf-context";
 import { useTheme } from "@/lib/contexts/theme-context";
+import { COUNTRY_CODES, COUNTRY_THEMES, isCountryCode } from "@/lib/design/country-themes";
 
 interface UserSettings {
   theme: "normal" | "dark" | "system";
@@ -110,7 +111,7 @@ export function SettingsView(): React.ReactElement {
   const { data: session } = useSession();
   const { success, error: showError } = useToast();
   const { token: csrfToken } = useCsrf();
-  const { setTheme } = useTheme();
+  const { setTheme, country, setCountry } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -533,6 +534,32 @@ export function SettingsView(): React.ReactElement {
                     </Button>
                   ))}
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Country palette</Label>
+                <Select
+                  value={country}
+                  onValueChange={(value) => {
+                    if (isCountryCode(value)) setCountry(value);
+                  }}
+                >
+                  <SelectTrigger className="max-w-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COUNTRY_CODES.map((code) => (
+                      <SelectItem key={code} value={code}>
+                        {COUNTRY_THEMES[code].name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Sets the Situs Portal logo colours and the interface accent to your country&apos;s
+                  flag palette. Readability-first: the accent is contrast-adjusted, and status
+                  colours stay the same across every country.
+                </p>
               </div>
 
               <div className="space-y-2">
