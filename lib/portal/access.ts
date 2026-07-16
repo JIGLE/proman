@@ -126,10 +126,8 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         roles: ["owner"],
       },
       {
-        // Dedicated /account page arrives in PR 4; until then Account deep-links into the
-        // Settings Account tab (settings-view supports `?tab=`).
         key: "account",
-        href: "/settings?tab=account",
+        href: "/account",
         label: "Account",
         labelKey: "navigation.account",
         icon: UserCircle,
