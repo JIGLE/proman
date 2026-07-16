@@ -1,33 +1,15 @@
-﻿import { redirect } from "next/navigation";
-import {
-  AlarmClock,
-  ArrowRight,
-  BadgeEuro,
-  Bell,
-  Building2,
-  CheckCircle2,
-  ChevronDown,
-  Globe2,
-  KeyRound,
-  Play,
-  ReceiptText,
-  ScrollText,
-  ShieldCheck,
-  Users,
-  Wrench,
-} from "lucide-react";
+import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+
 import {
   LandingAnalyticsObserver,
   TrackedLandingLink,
-  TrackedExternalLink,
 } from "@/components/shared/landing-analytics";
 import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
 import { LanguageSelector } from "@/components/shared/language-selector";
-import { LandingHero, LandingHeroItem } from "@/components/shared/landing-hero";
 import { LandingStickyCta } from "@/components/shared/landing-sticky-cta";
 import { LocaleSelectOverlay } from "@/components/shared/locale-select-overlay";
 import { Button } from "@/components/ui/button";
-import { getTranslations } from "next-intl/server";
 
 interface Props {
   params: Promise<{ locale: string }>;
@@ -36,7 +18,7 @@ interface Props {
 export default async function LandingPage({ params }: Props) {
   const { locale } = await params;
 
-  // If user is authenticated, redirect to dashboard instead of landing page
+  // Authenticated visitors go straight to the app.
   try {
     const { getServerSession } = await import("next-auth/next");
     const { getAuthOptions } = await import("@/lib/services/auth/auth");
@@ -45,843 +27,453 @@ export default async function LandingPage({ params }: Props) {
       redirect(`/${locale}/dashboard`);
     }
   } catch {
-    // If session check fails, show landing page normally
+    // Session check failed — render the public landing normally.
   }
 
   const t = await getTranslations("landing");
   const tFooter = await getTranslations("footer");
 
-  const trustItems = [
-    t("trust.items.records"),
-    t("trust.items.export"),
-    t("trust.items.pt_es"),
-    t("trust.items.roles"),
-    t("trust.items.documents"),
-    t("trust.items.operations"),
+  const chips = [
+    t("chips.matching"),
+    t("chips.receipts"),
+    t("chips.documents"),
+    t("chips.tax"),
+    t("chips.palette"),
   ];
 
-  const timelineSteps = [
-    {
-      icon: AlarmClock,
-      color: "text-red-400",
-      title: t("timeline.steps.due.title"),
-      description: t("timeline.steps.due.description"),
-    },
-    {
-      icon: Bell,
-      color: "text-amber-400",
-      title: t("timeline.steps.reminder.title"),
-      description: t("timeline.steps.reminder.description"),
-    },
-    {
-      icon: BadgeEuro,
-      color: "text-teal-400",
-      title: t("timeline.steps.payment.title"),
-      description: t("timeline.steps.payment.description"),
-    },
-    {
-      icon: ReceiptText,
-      color: "text-orange-400",
-      title: t("timeline.steps.receipt.title"),
-      description: t("timeline.steps.receipt.description"),
-    },
-    {
-      icon: Globe2,
-      color: "text-emerald-400",
-      title: t("timeline.steps.export.title"),
-      description: t("timeline.steps.export.description"),
-    },
+  const modules = [
+    { label: t("system.m1label"), title: t("system.m1title"), body: t("system.m1body") },
+    { label: t("system.m2label"), title: t("system.m2title"), body: t("system.m2body") },
+    { label: t("system.m3label"), title: t("system.m3title"), body: t("system.m3body") },
   ];
 
-  const howItWorksSteps = [
+  // Workflow accents follow the logo role colours (arc / line / dot), cycling.
+  const flowSteps = [
+    { t: t("flow.s1t"), b: t("flow.s1b"), bar: "var(--logo-primary)" },
+    { t: t("flow.s2t"), b: t("flow.s2b"), bar: "var(--logo-secondary)" },
+    { t: t("flow.s3t"), b: t("flow.s3b"), bar: "var(--logo-accent)" },
+    { t: t("flow.s4t"), b: t("flow.s4b"), bar: "var(--logo-secondary)" },
+    { t: t("flow.s5t"), b: t("flow.s5b"), bar: "var(--logo-accent)" },
+  ];
+
+  const pillars = [
     {
-      key: "collect",
-      icon: AlarmClock,
-      title: t("howItWorks.collect.title"),
-      description: t("howItWorks.collect.description"),
+      label: t("pillars.portfolioLabel"),
+      title: t("pillars.portfolioTitle"),
+      body: t("pillars.portfolioBody"),
     },
     {
-      key: "issue",
-      icon: ReceiptText,
-      title: t("howItWorks.issue.title"),
-      description: t("howItWorks.issue.description"),
+      label: t("pillars.financeLabel"),
+      title: t("pillars.financeTitle"),
+      body: t("pillars.financeBody"),
     },
     {
-      key: "report",
-      icon: Globe2,
-      title: t("howItWorks.report.title"),
-      description: t("howItWorks.report.description"),
+      label: t("pillars.documentsLabel"),
+      title: t("pillars.documentsTitle"),
+      body: t("pillars.documentsBody"),
+    },
+    {
+      label: t("pillars.expensesLabel"),
+      title: t("pillars.expensesTitle"),
+      body: t("pillars.expensesBody"),
+    },
+    {
+      label: t("pillars.operationsLabel"),
+      title: t("pillars.operationsTitle"),
+      body: t("pillars.operationsBody"),
+    },
+    {
+      label: t("pillars.intelligenceLabel"),
+      title: t("pillars.intelligenceTitle"),
+      body: t("pillars.intelligenceBody"),
     },
   ];
 
   return (
-    <div className="min-h-screen bg-[#09090e] text-zinc-50">
+    <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-foreground)]">
       <LocaleSelectOverlay currentLocale={locale} />
 
-      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#09090e]/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+      {/* ── Header ─────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-canvas)]/85 backdrop-blur-md">
+        <div className="mx-auto flex h-[76px] max-w-[1440px] items-center justify-between px-5 sm:px-10">
+          <a href={`/${locale}`} className="flex items-center gap-3">
+            <SitusPortalMark className="h-[34px] w-[34px]" />
+            <span className="text-[13px] font-semibold uppercase tracking-[0.22em]">Situs</span>
+          </a>
+
+          <nav className="hidden items-center gap-6 text-[13px] text-[var(--color-muted-foreground)] md:flex">
+            <a href="#system" className="transition-colors hover:text-[var(--color-foreground)]">
+              {t("system.eyebrow")}
+            </a>
+            <a href="#workflow" className="transition-colors hover:text-[var(--color-foreground)]">
+              {t("flow.eyebrow")}
+            </a>
+            <a href="#modules" className="transition-colors hover:text-[var(--color-foreground)]">
+              {t("pillars.eyebrow")}
+            </a>
+            <a href="#preview" className="transition-colors hover:text-[var(--color-foreground)]">
+              {t("preview2.eyebrow")}
+            </a>
+          </nav>
+
           <div className="flex items-center gap-2">
-            <SitusPortalMark className="h-7 w-7" />
-            <span className="text-[13px] font-medium uppercase tracking-[0.22em]">Situs</span>
-          </div>
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <LanguageSelector compact className="sm:hidden" />
             <div className="hidden sm:block">
-              <LanguageSelector />
+              <LanguageSelector compact />
             </div>
-            <div className="hidden sm:block h-4 w-px bg-white/10" />
             <TrackedLandingLink
-              href="/auth/signin"
-              eventName="landing.signin_click"
-              eventData={{ location: "header" }}
+              href={`/${locale}/demo?perspective=owner`}
+              eventName="landing.demo_start"
+              eventData={{ location: "header", perspective: "owner" }}
             >
-              <Button variant="ghost" size="sm" className="text-zinc-300 hover:text-zinc-50">
-                {t("cta")}
+              <Button size="sm" className="rounded-none font-semibold">
+                {t("requestDemo")}
               </Button>
             </TrackedLandingLink>
           </div>
         </div>
       </header>
 
-      <main className="px-4 pb-24 pt-24 sm:pt-28">
+      <main className="mx-auto max-w-[1440px]">
         <LandingAnalyticsObserver locale={locale} demoEnabled={true} />
 
-        {/* â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        {/* On mobile the hero fills the first screen (app-like, no scroll to see
-            the value prop + CTA); from sm/lg up it returns to the normal grid. */}
-        <section className="relative mx-auto grid min-h-[calc(100svh-8rem)] max-w-6xl content-center gap-10 sm:min-h-0 sm:content-start sm:gap-12 lg:grid-cols-[0.88fr_1.12fr] lg:items-start">
-          <LandingHero>
-            <LandingHeroItem>
-              <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/25 bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-300">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal-400" />
-                {t("eyebrow")}
-              </div>
-            </LandingHeroItem>
-
-            <LandingHeroItem>
-              <h1 className="font-display text-4xl font-bold leading-[1.08] tracking-[-0.04em] text-zinc-50 sm:text-5xl">
-                {t("hero")}
-              </h1>
-            </LandingHeroItem>
-
-            <LandingHeroItem>
-              <p className="max-w-md text-[16px] leading-relaxed text-zinc-400">{t("subtitle")}</p>
-            </LandingHeroItem>
-
-            <LandingHeroItem>
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <TrackedLandingLink
-                  href={`/${locale}/demo?perspective=owner`}
-                  eventName="landing.demo_start"
-                  eventData={{ location: "hero_primary", perspective: "owner" }}
-                  className="w-full sm:w-auto"
-                >
-                  <Button
-                    size="xl"
-                    className="h-12 w-full gap-2 bg-teal-600 px-7 text-[15px] font-semibold text-white shadow-lg shadow-teal-950 hover:bg-teal-500 sm:h-11 sm:w-auto"
-                  >
-                    <Play className="h-3.5 w-3.5" />
-                    {t("demoCta")}
-                  </Button>
-                </TrackedLandingLink>
-                <TrackedLandingLink
-                  href="#workflow"
-                  eventName="landing.workflow_cta_click"
-                  eventData={{ location: "hero_secondary" }}
-                  className="hidden w-full sm:block sm:w-auto"
-                >
-                  <Button
-                    size="xl"
-                    variant="ghost"
-                    className="h-12 w-full gap-2 px-5 text-[15px] text-zinc-400 hover:text-zinc-100 sm:h-11 sm:w-auto"
-                  >
-                    {t("secondaryCta")}
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </TrackedLandingLink>
-              </div>
-            </LandingHeroItem>
-
-            <LandingHeroItem>
-              <div className="space-y-1.5">
-                <p className="text-sm text-zinc-500">{t("microcopy")}</p>
-                <p className="text-sm text-zinc-500">
-                  {t("tenantPortalNote")}{" "}
-                  <a
-                    href="/tenant-portal"
-                    className="text-zinc-400 underline-offset-4 transition-colors hover:text-zinc-200 hover:underline"
-                  >
-                    {t("tenantPortalLink")} →
-                  </a>
-                </p>
-              </div>
-            </LandingHeroItem>
-          </LandingHero>
-
-          {/* Scroll affordance — signals there's more without forcing it (mobile) */}
-          <a
-            href="#workflow"
-            aria-label={t("secondaryCta")}
-            className="pointer-events-auto absolute inset-x-0 bottom-4 mx-auto flex w-fit items-center justify-center text-zinc-600 transition-colors hover:text-zinc-300 lg:hidden"
-          >
-            <ChevronDown className="h-5 w-5 motion-safe:animate-bounce" />
-          </a>
-
-          {/* â”€â”€ Product Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-          <div className="relative hidden lg:block">
-            <div className="pointer-events-none absolute -inset-10 -z-10 rounded-[48px] bg-teal-600/5 blur-3xl" />
-
-            <div className="rounded-[22px] border border-white/[0.08] bg-zinc-900/80 p-3 shadow-2xl shadow-black/60 ring-1 ring-white/[0.03]">
-              <div className="overflow-hidden rounded-[16px] border border-white/[0.05] bg-zinc-950">
-                {/* Chrome bar */}
-                <div className="flex items-center justify-between border-b border-white/[0.05] px-4 py-3">
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex gap-1.5">
-                      <div className="h-2 w-2 rounded-full bg-zinc-800" />
-                      <div className="h-2 w-2 rounded-full bg-zinc-800" />
-                      <div className="h-2 w-2 rounded-full bg-zinc-800" />
-                    </div>
-                    <div className="h-3.5 w-px bg-zinc-800" />
-                    <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-zinc-600">
-                      {t("preview.label")}
-                    </span>
-                  </div>
-                  <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-semibold tracking-wide text-emerald-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
-                    {t("preview.badge")}
-                  </span>
-                </div>
-
-                {/* KPI strip */}
-                <div className="grid grid-cols-3 divide-x divide-white/[0.04] border-b border-white/[0.04]">
-                  <div className="px-4 py-4">
-                    <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-zinc-600">
-                      {t("preview.kpi.overdueLabel")}
-                    </p>
-                    <p className="mt-1.5 text-[22px] font-bold tabular-nums tracking-tight text-red-400">
-                      EUR 950
-                    </p>
-                    <p className="mt-0.5 text-[10px] text-zinc-600">
-                      {t("preview.kpi.overdueHint")}
-                    </p>
-                  </div>
-                  <div className="px-4 py-4">
-                    <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-zinc-600">
-                      {t("preview.kpi.collectedLabel")}
-                    </p>
-                    <p className="mt-1.5 text-[22px] font-bold tabular-nums tracking-tight text-zinc-100">
-                      EUR 3 800
-                    </p>
-                    <p className="mt-0.5 text-[10px] text-zinc-600">
-                      {t("preview.kpi.collectedHint")}
-                    </p>
-                  </div>
-                  <div className="px-4 py-4">
-                    <p className="text-[9px] font-medium uppercase tracking-[0.18em] text-zinc-600">
-                      {t("preview.kpi.receiptsLabel")}
-                    </p>
-                    <p className="mt-1.5 text-[22px] font-bold tabular-nums tracking-tight text-zinc-100">
-                      4 / 5
-                    </p>
-                    <p className="mt-0.5 text-[10px] text-zinc-600">
-                      {t("preview.kpi.receiptsHint")}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Active workflow steps */}
-                <div className="space-y-1.5 p-4">
-                  <p className="mb-3 text-[9px] font-medium uppercase tracking-[0.18em] text-zinc-600">
-                    {t("preview.title")}
-                  </p>
-
-                  {/* Step 1 â€” active */}
-                  <div className="flex items-center gap-3 rounded-xl bg-zinc-900 px-3.5 py-3 ring-1 ring-red-500/20">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red-500/15 text-[10px] font-bold text-red-400">
-                      1
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-semibold leading-tight text-zinc-100">
-                        {t("preview.steps.detect.title")}
-                      </p>
-                      <p className="mt-0.5 text-[10px] text-zinc-500">
-                        {t("preview.steps.detect.description")}
-                      </p>
-                    </div>
-                    <span className="shrink-0 text-[12px] font-semibold tabular-nums text-red-400">
-                      EUR 950
-                    </span>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div className="flex items-center gap-3 rounded-xl bg-zinc-900/60 px-3.5 py-3">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal-500/10 text-[10px] font-bold text-teal-400">
-                      2
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-medium leading-tight text-zinc-300">
-                        {t("preview.steps.receipt.title")}
-                      </p>
-                      <p className="mt-0.5 text-[10px] text-zinc-600">
-                        {t("preview.steps.receipt.description")}
-                      </p>
-                    </div>
-                    <Building2 className="h-3.5 w-3.5 shrink-0 text-teal-400/50" />
-                  </div>
-
-                  {/* Step 3 */}
-                  <div className="flex items-center gap-3 rounded-xl bg-zinc-900/60 px-3.5 py-3">
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-500/10 text-[10px] font-bold text-emerald-400">
-                      3
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[12px] font-medium leading-tight text-zinc-300">
-                        {t("preview.steps.compliance.title")}
-                      </p>
-                      <p className="mt-0.5 text-[10px] text-zinc-600">
-                        {t("preview.steps.compliance.description")}
-                      </p>
-                    </div>
-                    <ShieldCheck className="h-3.5 w-3.5 shrink-0 text-emerald-400/50" />
-                  </div>
-                </div>
-
-                {/* Result footer */}
-                <div className="flex items-center justify-between border-t border-white/[0.04] bg-zinc-900/30 px-4 py-2.5">
-                  <div className="flex items-center gap-3 text-[10px] text-zinc-600">
-                    <span>
-                      {t("preview.result.receipt")}:{" "}
-                      <span className="text-zinc-400">{t("preview.result.done")}</span>
-                    </span>
-                    <span className="h-2.5 w-px bg-zinc-800" />
-                    <span>
-                      {t("preview.result.export")}:{" "}
-                      <span className="text-zinc-400">{t("preview.result.ready")}</span>
-                    </span>
-                  </div>
-                  <span className="text-[10px] font-semibold tracking-wide text-zinc-600">
-                    PT / ES
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* â”€â”€ Trust Strip â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <div className="mx-auto mt-14 max-w-6xl sm:mt-16">
-          <div className="grid grid-cols-2 gap-x-4 gap-y-3 sm:flex sm:flex-wrap sm:items-center sm:justify-center sm:gap-x-7">
-            {trustItems.map((item) => (
-              <div
-                key={item}
-                className="flex items-start gap-2 text-sm text-zinc-500 sm:items-center"
-              >
-                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-zinc-700 sm:mt-0" />
-                {item}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* â”€â”€ Features â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <section className="mx-auto mt-16 max-w-6xl sm:mt-24">
-          <div className="text-center">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
-              {t("features.eyebrow")}
+        {/* ── Hero ─────────────────────────────────────────────── */}
+        <section className="grid items-center gap-12 px-5 py-16 sm:px-10 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
+          <div>
+            <p className="mono-label mb-5">{t("eyebrow")}</p>
+            <h1 className="max-w-2xl text-[clamp(44px,7vw,88px)] font-normal leading-[0.9] tracking-[-0.06em]">
+              {t("hero2")}
+            </h1>
+            <p className="mt-7 max-w-xl text-[clamp(16px,1.5vw,19px)] leading-relaxed text-[var(--color-muted-foreground)]">
+              {t("subtitle2")}
             </p>
-            <h2 className="font-display mt-4 text-[28px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-3xl">
-              {t("features.title")}
-            </h2>
-          </div>
 
-          <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {/* Primary: Rent Collection â€” spans 2 cols */}
-            <div className="space-y-4 rounded-2xl border border-teal-500/20 bg-gradient-to-br from-teal-950/25 to-zinc-900/60 p-6 sm:col-span-2">
-              <div className="flex items-start justify-between">
-                <div className="rounded-xl bg-teal-500/15 p-2.5">
-                  <AlarmClock className="h-5 w-5 text-teal-400" />
-                </div>
-                <span className="rounded-full border border-teal-500/20 bg-teal-500/8 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-teal-400">
-                  {t("features.primaryBadge")}
-                </span>
-              </div>
-              <div>
-                <p className="text-lg font-bold text-zinc-50">
-                  {t("features.items.rentCollection.title")}
-                </p>
-                <p className="mt-2 text-[15px] leading-relaxed text-zinc-400">
-                  {t("features.items.rentCollection.description")}
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5 text-sm font-semibold text-teal-400">
-                {t("features.primaryCta")} <ArrowRight className="h-3.5 w-3.5" />
-              </div>
-            </div>
-
-            {/* Instant Receipts */}
-            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5">
-              <div className="w-fit rounded-lg bg-zinc-800/70 p-2">
-                <ReceiptText className="h-4 w-4 text-zinc-300" />
-              </div>
-              <p className="text-[15px] font-semibold text-zinc-100">
-                {t("features.items.receipts.title")}
-              </p>
-              <p className="text-sm text-zinc-500">{t("features.items.receipts.description")}</p>
-            </div>
-
-            {/* Tax Compliance */}
-            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5">
-              <div className="w-fit rounded-lg bg-zinc-800/70 p-2">
-                <ShieldCheck className="h-4 w-4 text-zinc-300" />
-              </div>
-              <p className="text-[15px] font-semibold text-zinc-100">
-                {t("features.items.taxCompliance.title")}
-              </p>
-              <p className="text-sm text-zinc-500">
-                {t("features.items.taxCompliance.description")}
-              </p>
-            </div>
-
-            {/* Maintenance */}
-            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5">
-              <div className="w-fit rounded-lg bg-zinc-800/70 p-2">
-                <Wrench className="h-4 w-4 text-zinc-300" />
-              </div>
-              <p className="text-[15px] font-semibold text-zinc-100">
-                {t("features.items.maintenance.title")}
-              </p>
-              <p className="text-sm text-zinc-500">{t("features.items.maintenance.description")}</p>
-            </div>
-
-            {/* Lease Management */}
-            <div className="space-y-3 rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5">
-              <div className="w-fit rounded-lg bg-zinc-800/70 p-2">
-                <ScrollText className="h-4 w-4 text-zinc-300" />
-              </div>
-              <p className="text-[15px] font-semibold text-zinc-100">
-                {t("features.items.leaseManagement.title")}
-              </p>
-              <p className="text-sm text-zinc-500">
-                {t("features.items.leaseManagement.description")}
-              </p>
-            </div>
-
-            {/* Tenant Portal â€” full width */}
-            <div className="rounded-2xl border border-white/[0.06] bg-zinc-900/50 p-5 sm:col-span-2 lg:col-span-3">
-              <div className="flex items-center gap-4">
-                <div className="w-fit shrink-0 rounded-lg bg-zinc-800/70 p-2">
-                  <Users className="h-4 w-4 text-zinc-300" />
-                </div>
-                <div>
-                  <p className="text-[15px] font-semibold text-zinc-100">
-                    {t("features.items.tenantPortal.title")}
-                  </p>
-                  <p className="mt-0.5 text-sm text-zinc-500">
-                    {t("features.items.tenantPortal.description")}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* â”€â”€ Workflow Timeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <section
-          id="workflow"
-          className="mx-auto mt-12 max-w-6xl overflow-hidden rounded-3xl px-5 py-10 sm:mt-16 sm:px-10 sm:py-12"
-          style={{
-            background:
-              "radial-gradient(ellipse at 50% -10%, rgba(59,130,246,0.08) 0%, transparent 60%), #0d0d14",
-          }}
-        >
-          <div className="text-center">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
-              {t("timeline.eyebrow")}
-            </p>
-            <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-[28px]">
-              {t("timeline.title")}
-            </h2>
-            <p className="mt-3 text-sm text-zinc-500">{t("timeline.subtitle")}</p>
-          </div>
-
-          {/* Desktop: horizontal */}
-          <div className="relative mt-12 hidden items-start md:flex">
-            <div className="absolute left-[9%] right-[9%] top-5 h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent" />
-            {timelineSteps.map((step) => {
-              const Icon = step.icon;
-              return (
-                <div
-                  key={step.title}
-                  className="relative flex flex-1 flex-col items-center px-3 text-center"
-                >
-                  <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950 shadow-lg shadow-black/40">
-                    <Icon className={`h-4 w-4 ${step.color}`} />
-                  </div>
-                  <p className="mt-4 text-[13px] font-semibold text-zinc-200">{step.title}</p>
-                  <p className="mt-1 max-w-[110px] text-[11px] leading-snug text-zinc-600">
-                    {step.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Mobile: vertical */}
-          <div className="mt-8 md:hidden">
-            {timelineSteps.map((step, i) => {
-              const Icon = step.icon;
-              return (
-                <div key={step.title} className="flex gap-4">
-                  <div className="flex flex-col items-center">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-800 bg-zinc-950">
-                      <Icon className={`h-3.5 w-3.5 ${step.color}`} />
-                    </div>
-                    {i < timelineSteps.length - 1 && (
-                      <div className="my-1 min-h-[24px] w-px flex-1 bg-zinc-800/60" />
-                    )}
-                  </div>
-                  <div className="pb-5">
-                    <p className="text-[13px] font-semibold text-zinc-200">{step.title}</p>
-                    <p className="mt-0.5 text-[12px] text-zinc-500">{step.description}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
-        {/* â”€â”€ How It Works â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <section
-          id="how-it-works"
-          className="mx-auto mt-6 max-w-6xl rounded-3xl border border-white/[0.05] bg-zinc-900/50 p-5 sm:p-10"
-        >
-          <div className="max-w-xl">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
-              {t("howItWorks.eyebrow")}
-            </p>
-            <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-[28px]">
-              {t("howItWorks.title")}
-            </h2>
-            <p className="mt-3 text-[15px] leading-relaxed text-zinc-400">
-              {t("howItWorks.subtitle")}
-            </p>
-          </div>
-
-          <div className="mt-8 grid gap-3 md:grid-cols-3">
-            {howItWorksSteps.map((step, index) => {
-              const Icon = step.icon;
-              return (
-                <div
-                  key={step.key}
-                  className="rounded-2xl border border-white/[0.05] bg-zinc-950/60 p-5"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="rounded-lg bg-zinc-800/80 p-2">
-                      <Icon className="h-4 w-4 text-zinc-400" />
-                    </div>
-                    <span className="text-[11px] font-bold tracking-[0.2em] text-zinc-700">
-                      0{index + 1}
-                    </span>
-                  </div>
-                  <p className="mt-4 text-[15px] font-semibold text-zinc-100">{step.title}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-zinc-500">{step.description}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="mt-8 flex justify-center">
-            <TrackedLandingLink
-              href={`/${locale}/demo?perspective=owner`}
-              eventName="landing.demo_start"
-              eventData={{ location: "how_it_works_cta", perspective: "owner" }}
-            >
-              <Button
-                size="lg"
-                className="gap-2 bg-teal-600 font-semibold text-white shadow-lg shadow-teal-950 hover:bg-teal-500"
-              >
-                <Play className="h-4 w-4" />
-                {t("demoCta")}
-              </Button>
-            </TrackedLandingLink>
-          </div>
-        </section>
-
-        {/* â”€â”€ Demo Cards â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <section className="mx-auto mt-16 max-w-6xl">
-          <div className="mb-8 text-center">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-zinc-600">
-              {t("demo.label")}
-            </p>
-            <h2 className="font-display mt-4 text-[26px] font-bold tracking-[-0.02em] text-zinc-50">
-              {t("demo.title")}
-            </h2>
-            <p className="mt-3 text-sm text-zinc-500">{t("demo.subtitle")}</p>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            {/* Owner â€” operational, portfolio-focused */}
-            <TrackedLandingLink
-              href={`/${locale}/demo?perspective=owner`}
-              eventName="landing.demo_start"
-              eventData={{ location: "demo_card", perspective: "owner" }}
-              className="group rounded-[22px] border border-zinc-800 bg-zinc-900/70 p-6 transition-all hover:border-zinc-700 hover:bg-zinc-900"
-            >
-              <div className="flex items-center justify-between">
-                <div className="rounded-xl border border-zinc-700/50 bg-zinc-800 p-3">
-                  <ShieldCheck className="h-5 w-5 text-zinc-300" />
-                </div>
-                <div className="flex items-center gap-1.5 text-sm text-zinc-600 transition-colors group-hover:text-zinc-300">
-                  {t("demo.cardCta")} <ArrowRight className="h-3.5 w-3.5" />
-                </div>
-              </div>
-              <h3 className="mt-5 text-lg font-bold text-zinc-50">{t("demo.ownerTitle")}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-500">
-                {t("demo.ownerDescription")}
-              </p>
-              <div className="mt-5 space-y-2">
-                {[t("demo.owner.f1"), t("demo.owner.f2"), t("demo.owner.f3")].map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-[13px] text-zinc-500">
-                    <div className="h-1 w-1 shrink-0 rounded-full bg-zinc-600" />
-                    {f}
-                  </div>
-                ))}
-              </div>
-            </TrackedLandingLink>
-
-            {/* Tenant â€” simplified, self-service */}
-            <TrackedLandingLink
-              href={`/${locale}/demo?perspective=tenant`}
-              eventName="landing.demo_start"
-              eventData={{ location: "demo_card", perspective: "tenant" }}
-              className="group rounded-[22px] border border-teal-500/20 bg-gradient-to-br from-teal-950/20 to-zinc-900/50 p-6 transition-all hover:border-teal-500/35"
-            >
-              <div className="flex items-center justify-between">
-                <div className="rounded-xl border border-teal-500/25 bg-teal-500/10 p-3">
-                  <KeyRound className="h-5 w-5 text-teal-400" />
-                </div>
-                <div className="flex items-center gap-1.5 text-sm text-zinc-600 transition-colors group-hover:text-teal-400">
-                  {t("demo.cardCta")} <ArrowRight className="h-3.5 w-3.5" />
-                </div>
-              </div>
-              <h3 className="mt-5 text-lg font-bold text-zinc-50">{t("demo.tenantTitle")}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-zinc-500">
-                {t("demo.tenantDescription")}
-              </p>
-              <div className="mt-5 space-y-2">
-                {[t("demo.tenant.f1"), t("demo.tenant.f2"), t("demo.tenant.f3")].map((f) => (
-                  <div key={f} className="flex items-center gap-2 text-[13px] text-zinc-500">
-                    <div className="h-1 w-1 shrink-0 rounded-full bg-teal-600/50" />
-                    {f}
-                  </div>
-                ))}
-              </div>
-            </TrackedLandingLink>
-          </div>
-        </section>
-
-        {/* â”€â”€ Closing CTA â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <section className="mx-auto mt-20 max-w-6xl sm:mt-28">
-          <div className="mb-10 text-center sm:mb-12">
-            <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/25 bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-300">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal-400" />
-              {t("pricing.eyebrow")}
-            </div>
-            <h2 className="font-display mt-4 text-[28px] font-bold tracking-[-0.03em] text-zinc-50 sm:text-4xl">
-              {t("pricing.title")}
-            </h2>
-            <p className="mx-auto mt-4 max-w-lg text-[15px] leading-relaxed text-zinc-500">
-              {t("pricing.subtitle")}
-            </p>
-          </div>
-
-          <div className="mx-auto grid w-full max-w-md gap-6 lg:max-w-none lg:grid-cols-3">
-            {/* Free */}
-            <div className="flex flex-col rounded-2xl border border-white/[0.06] bg-zinc-900/40 p-6">
-              <p className="text-sm font-semibold text-zinc-400">{t("pricing.free.name")}</p>
-              <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-4xl font-bold tracking-tight text-zinc-50">
-                  {t("pricing.free.price")}
-                </span>
-                <span className="text-sm text-zinc-600">{t("pricing.monthly")}</span>
-              </div>
-              <p className="mt-2 text-[13px] text-zinc-600">{t("pricing.free.description")}</p>
-              <ul className="my-6 flex-1 space-y-3">
-                {[
-                  t("pricing.free.f1"),
-                  t("pricing.free.f2"),
-                  t("pricing.free.f3"),
-                  t("pricing.free.f4"),
-                  t("pricing.free.f5"),
-                ].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-zinc-400">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-zinc-600" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <TrackedLandingLink
-                href="/auth/signin"
-                eventName="landing.pricing_cta"
-                eventData={{ plan: "free" }}
+                href={`/${locale}/demo?perspective=owner`}
+                eventName="landing.demo_start"
+                eventData={{ location: "hero_primary", perspective: "owner" }}
+                className="w-full sm:w-auto"
+              >
+                <Button size="lg" className="w-full rounded-none font-semibold sm:w-auto">
+                  {t("primaryCta")}
+                </Button>
+              </TrackedLandingLink>
+              <TrackedLandingLink
+                href="#workflow"
+                eventName="landing.workflow_cta_click"
+                eventData={{ location: "hero_secondary" }}
+                className="w-full sm:w-auto"
               >
                 <Button
+                  size="lg"
                   variant="outline"
-                  className="w-full border-white/10 text-zinc-300 hover:bg-white/5 hover:text-zinc-50"
+                  className="w-full rounded-none font-semibold sm:w-auto"
                 >
-                  {t("pricing.free.cta")}
+                  {t("secondaryCta")}
                 </Button>
               </TrackedLandingLink>
             </div>
 
-            {/* Pro — highlighted */}
-            <div className="relative flex flex-col rounded-2xl border border-teal-500/40 bg-gradient-to-b from-teal-950/40 to-zinc-900/60 p-6 shadow-xl shadow-teal-950/30">
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-teal-600 px-3 py-0.5 text-[11px] font-semibold text-white">
-                {t("pricing.pro.badge")}
-              </span>
-              <p className="text-sm font-semibold text-teal-300">{t("pricing.pro.name")}</p>
-              <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-4xl font-bold tracking-tight text-zinc-50">
-                  {t("pricing.pro.price")}
-                </span>
-                <span className="text-sm text-zinc-500">{t("pricing.monthly")}</span>
-              </div>
-              <p className="mt-2 text-[13px] text-zinc-500">{t("pricing.pro.description")}</p>
-              <ul className="my-6 flex-1 space-y-3">
-                {[
-                  t("pricing.pro.f1"),
-                  t("pricing.pro.f2"),
-                  t("pricing.pro.f3"),
-                  t("pricing.pro.f4"),
-                  t("pricing.pro.f5"),
-                  t("pricing.pro.f6"),
-                ].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-zinc-300">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-400" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <TrackedExternalLink
-                href="/api/billing/checkout?plan=pro"
-                eventName="landing.pricing_cta"
-                eventData={{ plan: "pro" }}
-              >
-                <Button className="w-full bg-teal-600 font-semibold text-white hover:bg-teal-500">
-                  {t("pricing.pro.cta")}
-                </Button>
-              </TrackedExternalLink>
-            </div>
-
-            {/* Business */}
-            <div className="flex flex-col rounded-2xl border border-white/[0.06] bg-zinc-900/40 p-6">
-              <p className="text-sm font-semibold text-zinc-400">{t("pricing.business.name")}</p>
-              <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-4xl font-bold tracking-tight text-zinc-50">
-                  {t("pricing.business.price")}
-                </span>
-                <span className="text-sm text-zinc-600">{t("pricing.monthly")}</span>
-              </div>
-              <p className="mt-2 text-[13px] text-zinc-600">{t("pricing.business.description")}</p>
-              <ul className="my-6 flex-1 space-y-3">
-                {[
-                  t("pricing.business.f1"),
-                  t("pricing.business.f2"),
-                  t("pricing.business.f3"),
-                  t("pricing.business.f4"),
-                  t("pricing.business.f5"),
-                  t("pricing.business.f6"),
-                ].map((f) => (
-                  <li key={f} className="flex items-start gap-2.5 text-[13px] text-zinc-400">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-zinc-600" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-              <TrackedExternalLink
-                href="/api/billing/checkout?plan=business"
-                eventName="landing.pricing_cta"
-                eventData={{ plan: "business" }}
-              >
-                <Button
-                  variant="outline"
-                  className="w-full border-white/10 text-zinc-300 hover:bg-white/5 hover:text-zinc-50"
+            <div className="mt-10 flex flex-wrap gap-2">
+              {chips.map((chip) => (
+                <span
+                  key={chip}
+                  className="border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-2 font-mono text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]"
                 >
-                  {t("pricing.business.cta")}
-                </Button>
-              </TrackedExternalLink>
+                  {chip}
+                </span>
+              ))}
             </div>
           </div>
 
-          <p className="mt-8 text-center text-[13px] text-zinc-600">
-            {t("pricing.selfHostedNote")}{" "}
-            <a
-              href="https://github.com/JIGLE/proman"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-zinc-500 underline-offset-4 transition-colors hover:text-zinc-300 hover:underline"
-            >
-              {t("pricing.selfHostedLink")}
-            </a>
-          </p>
+          {/* Hero visual — Portal on its canvas, orbited by dashed rings, with floating KPIs */}
+          <div className="relative hidden min-h-[520px] place-items-center lg:grid">
+            <div
+              aria-hidden
+              className="absolute aspect-square w-[min(500px,80%)] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-primary)_45%,var(--color-border))] opacity-70 motion-safe:animate-[spin_28s_linear_infinite]"
+            />
+            <div
+              aria-hidden
+              className="absolute aspect-square w-[min(400px,64%)] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-secondary)_45%,var(--color-border))] opacity-70 motion-safe:animate-[spin_20s_linear_infinite_reverse]"
+            />
+
+            <div className="grid aspect-square w-[min(360px,74%)] place-items-center border border-[var(--color-border)] bg-[var(--logo-canvas)]">
+              <SitusPortalMark className="h-[180px] w-[180px]" />
+            </div>
+
+            <div className="absolute left-0 top-14 min-w-[180px] border border-[var(--color-border)] bg-[var(--color-canvas)]/85 p-3.5 backdrop-blur-sm">
+              <strong className="block text-lg font-normal tracking-tight tabular-nums">
+                €4,820
+              </strong>
+              <span className="mono-label mt-1 block">{t("floating.income")}</span>
+            </div>
+            <div className="absolute bottom-24 right-0 min-w-[180px] border border-[var(--color-border)] bg-[var(--color-canvas)]/85 p-3.5 backdrop-blur-sm">
+              <strong className="block text-lg font-normal tracking-tight">3 drafts</strong>
+              <span className="mono-label mt-1 block">{t("floating.receipts")}</span>
+            </div>
+            <div className="absolute bottom-6 left-10 min-w-[180px] border border-[var(--color-border)] bg-[var(--color-canvas)]/85 p-3.5 backdrop-blur-sm">
+              <strong className="block text-lg font-normal tracking-tight tabular-nums">98%</strong>
+              <span className="mono-label mt-1 block">{t("floating.health")}</span>
+            </div>
+          </div>
         </section>
 
-        <section className="mx-auto mt-20 max-w-lg text-center sm:mt-28">
-          <h2 className="font-display text-[28px] font-bold tracking-[-0.02em] text-zinc-50 sm:text-3xl">
-            {t("closingCta.title")}
+        {/* ── System architecture ──────────────────────────────── */}
+        <section
+          id="system"
+          className="border-t border-[var(--color-border)] px-5 py-16 sm:px-10 lg:py-20"
+        >
+          <div className="grid gap-12 lg:grid-cols-[0.75fr_1.25fr]">
+            <div>
+              <p className="mono-label">{t("system.eyebrow")}</p>
+              <h2 className="mt-4 text-[clamp(30px,4vw,56px)] font-normal leading-[0.98] tracking-[-0.05em]">
+                {t("system.title")}
+              </h2>
+              <p className="mt-5 text-base leading-relaxed text-[var(--color-muted-foreground)]">
+                {t("system.copy")}
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {modules.map((m) => (
+                <div
+                  key={m.title}
+                  className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5"
+                >
+                  <span className="mono-label">{m.label}</span>
+                  <h3 className="mt-4 text-xl font-normal tracking-[-0.03em]">{m.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
+                    {m.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Workflow ─────────────────────────────────────────── */}
+        <section
+          id="workflow"
+          className="border-t border-[var(--color-border)] px-5 py-16 sm:px-10 lg:py-20"
+        >
+          <p className="mono-label">{t("flow.eyebrow")}</p>
+          <h2 className="mt-4 text-[clamp(30px,4vw,56px)] font-normal leading-[0.98] tracking-[-0.05em]">
+            {t("flow.title")}
           </h2>
-          <p className="mt-4 text-[15px] leading-relaxed text-zinc-500">
-            {t("closingCta.subtitle")}
+          <div className="mt-8 grid gap-3 md:grid-cols-5">
+            {flowSteps.map((step, i) => (
+              <div
+                key={step.t}
+                className="relative overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] p-4"
+              >
+                <span
+                  aria-hidden
+                  className="absolute inset-x-0 top-0 h-[3px]"
+                  style={{ background: step.bar }}
+                />
+                <span className="mono-label">
+                  {t("flow.eyebrow")} · {String(i + 1).padStart(2, "0")}
+                </span>
+                <strong className="mt-4 block text-lg font-normal tracking-[-0.02em]">
+                  {step.t}
+                </strong>
+                <p className="mt-2.5 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
+                  {step.b}
+                </p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* ── Product pillars ──────────────────────────────────── */}
+        <section
+          id="modules"
+          className="border-t border-[var(--color-border)] px-5 py-16 sm:px-10 lg:py-20"
+        >
+          <div className="grid gap-12 lg:grid-cols-[0.75fr_1.25fr]">
+            <div>
+              <p className="mono-label">{t("pillars.eyebrow")}</p>
+              <h2 className="mt-4 text-[clamp(30px,4vw,56px)] font-normal leading-[0.98] tracking-[-0.05em]">
+                {t("pillars.title")}
+              </h2>
+              <p className="mt-5 text-base leading-relaxed text-[var(--color-muted-foreground)]">
+                {t("pillars.copy")}
+              </p>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {pillars.map((p) => (
+                <div
+                  key={p.title}
+                  className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 transition-colors hover:bg-[var(--color-hover)]"
+                >
+                  <span className="mono-label">{p.label}</span>
+                  <h3 className="mt-4 text-xl font-normal tracking-[-0.03em]">{p.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
+                    {p.body}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Interface preview (static Mission Control mock-shell) ── */}
+        <section
+          id="preview"
+          className="border-t border-[var(--color-border)] px-5 py-16 sm:px-10 lg:py-20"
+        >
+          <p className="mono-label">{t("preview2.eyebrow")}</p>
+          <h2 className="mt-4 text-[clamp(30px,4vw,56px)] font-normal leading-[0.98] tracking-[-0.05em]">
+            {t("preview2.title")}
+          </h2>
+          <p className="mt-4 max-w-2xl text-base leading-relaxed text-[var(--color-muted-foreground)]">
+            {t("preview2.copy")}
           </p>
-          <div className="mt-8 flex flex-col items-stretch gap-3 sm:flex-row sm:items-center sm:justify-center">
+
+          <div className="mt-9 grid min-h-[480px] grid-cols-1 border border-[var(--color-border)] bg-[var(--color-surface)] md:grid-cols-[220px_1fr]">
+            {/* Rail */}
+            <aside className="border-b border-[var(--color-border)] p-5 md:border-b-0 md:border-r">
+              <div className="mb-7 flex items-center gap-2.5">
+                <SitusPortalMark className="h-6 w-6" />
+                <span className="text-[12px] font-semibold uppercase tracking-[0.18em]">Situs</span>
+              </div>
+              <div className="grid gap-1 text-[13px]">
+                <div
+                  className="border-l-2 px-2.5 py-2 font-medium"
+                  style={{
+                    borderColor: "var(--country-highlight-readable)",
+                    background: "var(--color-hover)",
+                    color: "var(--country-highlight-readable)",
+                  }}
+                >
+                  Home
+                </div>
+                {["Portfolio", "Finance", "Documents", "Intelligence"].map((item) => (
+                  <div
+                    key={item}
+                    className="border-l-2 border-transparent px-2.5 py-2 text-[var(--color-muted-foreground)]"
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </aside>
+
+            {/* Main */}
+            <section className="p-6">
+              <p className="mono-label">{t("preview2.greeting")}</p>
+
+              <div className="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+                {[
+                  { label: t("preview2.healthLabel"), value: "98%" },
+                  { label: t("preview2.incomeLabel"), value: "€4,820" },
+                  { label: t("preview2.queueLabel"), value: "3" },
+                ].map((kpi) => (
+                  <div key={kpi.label} className="border border-[var(--color-border)] p-4">
+                    <span className="mono-label">{kpi.label}</span>
+                    <strong className="mt-2 block text-[26px] font-normal tabular-nums">
+                      {kpi.value}
+                    </strong>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="border border-[var(--color-border)] p-4">
+                  <h4 className="mono-label mb-3">{t("preview2.missionTitle")}</h4>
+                  {[
+                    { text: t("preview2.m1"), tag: t("preview2.m1tag") },
+                    { text: t("preview2.m2"), tag: t("preview2.m2tag") },
+                    { text: t("preview2.m3"), tag: t("preview2.m3tag") },
+                  ].map((row) => (
+                    <div
+                      key={row.text}
+                      className="flex justify-between gap-3 border-t border-[var(--color-border)] py-2.5 text-[13px]"
+                    >
+                      <span>{row.text}</span>
+                      <span className="mono-label whitespace-nowrap">{row.tag}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border border-[var(--color-border)] p-4">
+                  <h4 className="mono-label mb-3">{t("preview2.timelineTitle")}</h4>
+                  {[
+                    { text: t("preview2.t1"), tag: t("preview2.t1tag") },
+                    { text: t("preview2.t2"), tag: t("preview2.t2tag") },
+                    { text: t("preview2.t3"), tag: t("preview2.t3tag") },
+                  ].map((row) => (
+                    <div
+                      key={row.text}
+                      className="flex justify-between gap-3 border-t border-[var(--color-border)] py-2.5 text-[13px]"
+                    >
+                      <span>{row.text}</span>
+                      <span className="mono-label whitespace-nowrap">{row.tag}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        {/* ── Closing CTA ──────────────────────────────────────── */}
+        <section className="border-t border-[var(--color-border)] px-5 py-20 text-center sm:px-10 lg:py-28">
+          <h2 className="mx-auto max-w-3xl text-[clamp(34px,6vw,72px)] font-normal leading-[0.92] tracking-[-0.06em]">
+            {t("closing2.title")}
+          </h2>
+          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-[var(--color-muted-foreground)]">
+            {t("closing2.copy")}
+          </p>
+          <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <TrackedLandingLink
               href={`/${locale}/demo?perspective=owner`}
               eventName="landing.demo_start"
               eventData={{ location: "closing_cta", perspective: "owner" }}
               className="w-full sm:w-auto"
             >
-              <Button
-                size="lg"
-                className="h-12 w-full gap-2 bg-teal-600 font-semibold text-white shadow-lg shadow-teal-950 hover:bg-teal-500 sm:h-10 sm:w-auto"
-              >
-                <Play className="h-4 w-4" />
-                {t("closingCta.primary")}
+              <Button size="lg" className="w-full rounded-none font-semibold sm:w-auto">
+                {t("closing2.primary")}
               </Button>
             </TrackedLandingLink>
             <TrackedLandingLink
-              href="/auth/signin"
-              eventName="landing.signin_click"
+              href="#workflow"
+              eventName="landing.workflow_cta_click"
               eventData={{ location: "closing_cta" }}
               className="w-full sm:w-auto"
             >
               <Button
                 size="lg"
-                variant="ghost"
-                className="h-12 w-full text-zinc-500 hover:text-zinc-200 sm:h-10 sm:w-auto"
+                variant="outline"
+                className="w-full rounded-none font-semibold sm:w-auto"
               >
-                {t("closingCta.secondary")}
+                {t("closing2.secondary")}
               </Button>
             </TrackedLandingLink>
           </div>
         </section>
       </main>
 
-      {/* â”€â”€ Mobile sticky CTA (slides in after the hero) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <LandingStickyCta href={`/${locale}/demo?perspective=owner`} label={t("demoCta")} />
+      <LandingStickyCta href={`/${locale}/demo?perspective=owner`} label={t("requestDemo")} />
 
-      <footer className="mt-16 border-t border-white/[0.04] px-4 pt-10 pb-32 sm:py-10">
-        <div className="mx-auto max-w-6xl text-center text-sm text-zinc-600">
-          <p>{tFooter("copyright", { year: new Date().getFullYear().toString() })}</p>
-          <div className="mt-2 flex items-center justify-center gap-4 text-xs text-zinc-700">
-            <a href={`/${locale}/privacy`} className="transition-colors hover:text-zinc-400">
+      <footer className="border-t border-[var(--color-border)] px-5 py-7 sm:px-10">
+        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 font-mono text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]">
+          <span>{t("footer2.tagline")}</span>
+          <span>{t("footer2.modules")}</span>
+          <span className="flex items-center gap-3">
+            <a
+              href={`/${locale}/privacy`}
+              className="transition-colors hover:text-[var(--color-foreground)]"
+            >
               {tFooter("privacy")}
             </a>
             <span>·</span>
-            <a href={`/${locale}/terms`} className="transition-colors hover:text-zinc-400">
+            <a
+              href={`/${locale}/terms`}
+              className="transition-colors hover:text-[var(--color-foreground)]"
+            >
               {tFooter("terms")}
             </a>
-          </div>
+          </span>
         </div>
       </footer>
     </div>

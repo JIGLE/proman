@@ -372,14 +372,16 @@
     "navHowItWorks": "Cómo funciona",
     "navWorkflow": "Flujo",
     "demoCta": "Probar Demo Gratuita",
-    "secondaryCta": "Ver cómo funciona",
+    "secondaryCta": "Ver flujo del producto",
     "microcopy": "Sin tarjeta. Sin configuración. Demostración guiada en menos de 2 minutos.",
     "tenantPortalNote": "¿Eres inquilino?",
     "tenantPortalLink": "Accede a tu portal aquí",
     "chips": {
-      "simple": "Un flujo del cobro al recibo",
-      "compliance": "Cumplimiento PT/ES en contexto",
-      "workflow": "Contratos, inquilinos y pagos conectados"
+      "matching": "Conciliación de movimientos bancarios",
+      "receipts": "Automatización de recibos",
+      "documents": "Inteligencia documental",
+      "tax": "Conector fiscal listo",
+      "palette": "Sistema de paleta de la UE"
     },
     "preview": {
       "label": "Vista previa del producto",
@@ -573,6 +575,100 @@
           "description": "Registro listo para Hacienda o AT"
         }
       }
+    },
+    "primaryCta": "Empieza con tu cartera",
+    "requestDemo": "Solicitar demo",
+    "signIn": "Iniciar sesión",
+    "hero2": "Ingresos, recibos y prueba fiscal bajo control.",
+    "subtitle2": "Situs ayuda a los propietarios a seguir los pagos de alquiler, asignar transferencias atrasadas al mes de referencia correcto, emitir recibos, archivar documentos, gestionar gastos y preparar prueba lista para impuestos en carteras de inmuebles de la UE.",
+    "floating": {
+      "income": "Ingreso previsto este mes",
+      "receipts": "Recibos por revisar",
+      "health": "Salud de la cartera"
+    },
+    "system": {
+      "eyebrow": "Arquitectura del sistema",
+      "title": "Construido en torno al flujo real del propietario.",
+      "copy": "La cadena más importante es simple: pago detectado, mes de referencia asignado, recibo emitido, recibo archivado, estado fiscal actualizado.",
+      "m1label": "01 // Banca",
+      "m1title": "Detectar pagos",
+      "m1body": "Conecta movimientos bancarios y asocia transferencias entrantes a inquilinos, contratos e inmuebles.",
+      "m2label": "02 // Asignación",
+      "m2title": "Referenciar el mes correcto",
+      "m2body": "Asigna pagos al mes siguiente cuando está al día, o al periodo más antiguo impago cuando hay retraso.",
+      "m3label": "03 // Recibos",
+      "m3title": "Emitir y archivar",
+      "m3body": "Crea borradores de recibo, revísalos, envía o exporta, y guarda el PDF en el año del inmueble correcto."
+    },
+    "flow": {
+      "eyebrow": "Ciclo pago-a-recibo",
+      "title": "Del movimiento bancario a la prueba fiscal.",
+      "s1t": "Importar movimiento",
+      "s1b": "La sincronización bancaria detecta nuevas transferencias entrantes.",
+      "s2t": "Asociar contrato",
+      "s2b": "Remitente, IBAN, importe y referencia sugieren el contrato.",
+      "s3t": "Asignar mes",
+      "s3b": "Inquilinos al día pasan al mes siguiente; los atrasos saldan el mes más antiguo impago.",
+      "s4t": "Emitir recibo",
+      "s4b": "El borrador del recibo se revisa, se emite y opcionalmente se envía a la autoridad fiscal.",
+      "s5t": "Archivar prueba",
+      "s5b": "Recibo, factura y registro de auditoría se vinculan a inmueble, año y mes."
+    },
+    "pillars": {
+      "eyebrow": "Pilares del producto",
+      "title": "Un centro de mando para la propiedad.",
+      "copy": "Situs combina estructura de cartera, finanzas, operaciones, personas, documentos e inteligencia en una interfaz centrada en el propietario.",
+      "portfolioLabel": "Cartera",
+      "portfolioTitle": "Inventario estructural",
+      "portfolioBody": "Gestiona inmuebles, unidades, cuotas de propiedad, contratos y elementos de atención actuales.",
+      "financeLabel": "Finanzas",
+      "financeTitle": "Matriz de alquileres",
+      "financeBody": "Sigue cada mes: pagado, atrasado, parcial, vencido, recibo emitido y registrado fiscalmente.",
+      "documentsLabel": "Documentos",
+      "documentsTitle": "Archivo inteligente",
+      "documentsBody": "Guarda contratos, recibos, facturas y documentos fiscales por inmueble, año y tipo.",
+      "expensesLabel": "Gastos",
+      "expensesTitle": "Prueba de deducción",
+      "expensesBody": "OCR de facturas, clasifica gastos deducibles y vincúlalos al año fiscal correcto.",
+      "operationsLabel": "Operaciones",
+      "operationsTitle": "Control de tareas",
+      "operationsBody": "Sigue inspecciones, tareas de mantenimiento, contratistas, pruebas y obligaciones recurrentes.",
+      "intelligenceLabel": "Inteligencia",
+      "intelligenceTitle": "Estimaciones explicables",
+      "intelligenceBody": "Comprende reserva fiscal, rentabilidad, riesgo de impagos y confianza documental con trazas de origen."
+    },
+    "preview2": {
+      "eyebrow": "Vista previa de la interfaz",
+      "title": "Centro de Control.",
+      "copy": "Una interfaz silenciosa y rectilínea diseñada para sesiones largas, datos densos y decisiones serias.",
+      "greeting": "Buenas tardes, José.",
+      "healthLabel": "Salud de la cartera",
+      "incomeLabel": "Ingreso previsto",
+      "queueLabel": "Cola de recibos",
+      "missionTitle": "Centro de Control",
+      "m1": "Alquiler atrasado de João Silva",
+      "m1tag": "Contrato",
+      "m2": "Tramo de IBI por pagar",
+      "m2tag": "Impuesto",
+      "m3": "Borrador de recibo por revisar",
+      "m3tag": "Recibo",
+      "timelineTitle": "Cronología de pago",
+      "t1": "Pago del 1 jun",
+      "t1tag": "Ref: Jul",
+      "t2": "Pago atrasado asignado",
+      "t2tag": "Más antiguo impago",
+      "t3": "Recibo archivado",
+      "t3tag": "Guardado"
+    },
+    "closing2": {
+      "title": "Ten a la vista cada periodo de alquiler, recibo y documento.",
+      "copy": "Situs está diseñado para propietarios que necesitan que la historia del pago sea clara: qué llegó, a qué mes pertenece, qué recibo se emitió y dónde está guardada la prueba.",
+      "primary": "Solicitar demo",
+      "secondary": "Ver arquitectura del producto"
+    },
+    "footer2": {
+      "tagline": "Situs // Sovereign Capital System",
+      "modules": "Banca · Recibos · Documentos · Prueba Fiscal"
     }
   },
   "errors": {
