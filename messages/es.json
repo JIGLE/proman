@@ -1484,5 +1484,15 @@
       "high": "Alta",
       "urgent": "Urgente"
     }
+  },
+  "portfolioTree": {
+    "title": "Inventario estructural de la cartera",
+    "empty": "Aún no hay inmuebles. Añade tu primer activo para verlo aquí.",
+    "density": "Densidad de filas",
+    "densityCompact": "Compacto",
+    "densityComfortable": "Cómodo",
+    "unclustered": "Sin agrupar",
+    "dotOverdue": "Alquiler atrasado",
+    "dotTickets": "Incidencias de mantenimiento abiertas"
   }
 }

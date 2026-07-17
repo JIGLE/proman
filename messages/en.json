@@ -1484,5 +1484,15 @@
       "high": "High",
       "urgent": "Urgent"
     }
+  },
+  "portfolioTree": {
+    "title": "Structural portfolio inventory",
+    "empty": "No properties yet. Add your first asset to see it here.",
+    "density": "Row density",
+    "densityCompact": "Compact",
+    "densityComfortable": "Comfortable",
+    "unclustered": "Unclustered",
+    "dotOverdue": "Rent payment overdue",
+    "dotTickets": "Open maintenance tickets"
   }
 }

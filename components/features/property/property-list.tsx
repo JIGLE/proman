@@ -71,6 +71,7 @@ import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { AddressVerificationService, AddressSuggestion } from "@/lib/utils/address-verification";
 import PropertyMap from "./property-map";
+import { PortfolioTree } from "./portfolio-tree";
 import { PageHeader } from "@/components/shared/page-header";
 
 // ─── Next Action derivation ────────────────────────────────────────────────────
@@ -190,7 +191,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     useEffect(() => {
       if (viewMode === "map") return;
       const saved = localStorage.getItem("proman-properties-view-mode");
-      if (saved === "grid" || saved === "table") setDataViewMode(saved);
+      if (saved === "grid" || saved === "table" || saved === "tree") setDataViewMode(saved);
     }, [viewMode]);
     const handleViewModeChange = useCallback((mode: DataViewMode) => {
       setDataViewMode(mode);
@@ -1175,6 +1176,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     mode={dataViewMode}
                     onChange={handleViewModeChange}
                     showMap={showMapToggle}
+                    showTree
                   />
                 </div>
               </div>
@@ -1187,6 +1189,16 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     onSelectProperty={handleMapPropertySelect}
                   />
                 </div>
+              ) : dataViewMode === "tree" ? (
+                /* Tree View — Situs structural portfolio inventory */
+                <PortfolioTree
+                  properties={filteredProperties}
+                  buildings={buildings}
+                  tenants={tenants}
+                  maintenance={maintenance}
+                  onSelectProperty={handleMapPropertySelect}
+                  highlightedPropertyId={highlightedPropertyId}
+                />
               ) : dataViewMode === "table" ? (
                 /* Table View */
                 filteredProperties.length === 0 ? (

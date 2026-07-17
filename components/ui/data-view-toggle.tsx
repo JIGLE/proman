@@ -1,15 +1,17 @@
 "use client";
 
-import { LayoutGrid, Map, Table2 } from "lucide-react";
+import { LayoutGrid, ListTree, Map, Table2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/utils";
 
-export type DataViewMode = "grid" | "table" | "map";
+export type DataViewMode = "grid" | "table" | "tree" | "map";
 
 interface DataViewToggleProps {
   mode: DataViewMode;
   onChange: (mode: DataViewMode) => void;
   showMap?: boolean;
+  /** Structural tree view (Situs portfolio inventory). Off by default so other consumers are unaffected. */
+  showTree?: boolean;
   className?: string;
 }
 
@@ -17,18 +19,22 @@ export function DataViewToggle({
   mode,
   onChange,
   showMap = false,
+  showTree = false,
   className,
 }: DataViewToggleProps) {
   return (
     <div
       role="group"
       aria-label="View mode"
-      className={cn("flex items-center gap-1 rounded-md border border-zinc-800 p-0.5", className)}
+      className={cn("flex items-center gap-1 border border-[var(--color-border)] p-0.5", className)}
     >
       <Button
         variant="ghost"
         size="sm"
-        className={cn("h-7 w-7 p-0", mode === "grid" && "bg-zinc-800 text-zinc-100")}
+        className={cn(
+          "h-7 w-7 p-0",
+          mode === "grid" && "bg-[var(--color-hover)] text-[var(--color-foreground)]",
+        )}
         onClick={() => onChange("grid")}
         aria-label="Card view"
         aria-pressed={mode === "grid"}
@@ -39,7 +45,10 @@ export function DataViewToggle({
       <Button
         variant="ghost"
         size="sm"
-        className={cn("h-7 w-7 p-0", mode === "table" && "bg-zinc-800 text-zinc-100")}
+        className={cn(
+          "h-7 w-7 p-0",
+          mode === "table" && "bg-[var(--color-hover)] text-[var(--color-foreground)]",
+        )}
         onClick={() => onChange("table")}
         aria-label="Table view"
         aria-pressed={mode === "table"}
@@ -47,11 +56,30 @@ export function DataViewToggle({
       >
         <Table2 className="h-3.5 w-3.5" aria-hidden="true" />
       </Button>
+      {showTree && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-7 w-7 p-0",
+            mode === "tree" && "bg-[var(--color-hover)] text-[var(--color-foreground)]",
+          )}
+          onClick={() => onChange("tree")}
+          aria-label="Tree view"
+          aria-pressed={mode === "tree"}
+          title="Tree view"
+        >
+          <ListTree className="h-3.5 w-3.5" aria-hidden="true" />
+        </Button>
+      )}
       {showMap && (
         <Button
           variant="ghost"
           size="sm"
-          className={cn("h-7 w-7 p-0", mode === "map" && "bg-zinc-800 text-zinc-100")}
+          className={cn(
+            "h-7 w-7 p-0",
+            mode === "map" && "bg-[var(--color-hover)] text-[var(--color-foreground)]",
+          )}
           onClick={() => onChange("map")}
           aria-label="Map view"
           aria-pressed={mode === "map"}

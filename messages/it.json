@@ -1484,5 +1484,15 @@
       "high": "Alta",
       "urgent": "Urgente"
     }
+  },
+  "portfolioTree": {
+    "title": "Inventario strutturale del portafoglio",
+    "empty": "Nessun immobile ancora. Aggiungi il tuo primo asset per vederlo qui.",
+    "density": "Densità righe",
+    "densityCompact": "Compatta",
+    "densityComfortable": "Comoda",
+    "unclustered": "Non raggruppato",
+    "dotOverdue": "Affitto in ritardo",
+    "dotTickets": "Interventi di manutenzione aperti"
   }
 }
