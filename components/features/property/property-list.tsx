@@ -1658,7 +1658,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               router.push(
-                                                `/${locale}/maintenance?propertyId=${property.id}`,
+                                                `/${locale}/operations?propertyId=${property.id}`,
                                               );
                                             }}
                                             className="rounded transition-opacity hover:opacity-70"

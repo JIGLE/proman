@@ -77,6 +77,12 @@ import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { PageHeader } from "@/components/shared/page-header";
 import { TicketDetailModal } from "./ticket-detail-modal";
 import { OperationsKpiRow } from "./operations-kpi-row";
+import { OperationsCalendar } from "./operations-calendar";
+import { OperationsEvidence } from "./operations-evidence";
+import { ContactsView } from "@/components/features/contacts/contacts-view";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
+import { ListChecks, CalendarDays, Wrench as WrenchIcon, Camera } from "lucide-react";
 
 export function MaintenanceView(): React.ReactElement {
   const { state, addMaintenance, updateMaintenance, deleteMaintenance } = useApp();
@@ -94,6 +100,19 @@ export function MaintenanceView(): React.ReactElement {
   // Detail modal state
   const [selectedTicket, setSelectedTicket] = useState<MaintenanceTicket | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  // Operations subtabs (Task Queue / Calendar / Contractors / Evidence)
+  const [activeTab, setActiveTab] = useTabPersistence("operations", "queue");
+  const openTicketDetail = useCallback((ticket: MaintenanceTicket) => {
+    setSelectedTicket(ticket);
+    setIsDetailOpen(true);
+  }, []);
+  const handleToggleEvidenceRequired = useCallback(
+    async (ticket: MaintenanceTicket, required: boolean) => {
+      await updateMaintenance(ticket.id, { evidenceRequired: required });
+    },
+    [updateMaintenance],
+  );
 
   // Data view mode state with localStorage persistence
   const [dataViewMode, setDataViewMode] = useState<DataViewMode>("grid");
@@ -549,411 +568,456 @@ export function MaintenanceView(): React.ReactElement {
 
           <OperationsKpiRow tickets={maintenance} />
 
-          {/* Search and Filter */}
-          <SearchFilter
-            searchPlaceholder="Search by title, description, or assignee..."
-            onSearchChange={setSearchQuery}
-            onFilterChange={(key, value) => {
-              if (key === "status") setStatusFilter(value);
-              if (key === "priority") setPriorityFilter(value);
-            }}
-            filters={[
-              {
-                key: "status",
-                label: "Status",
-                options: [
-                  { label: "All Statuses", value: "all" },
-                  { label: "Open", value: "open" },
-                  { label: "In Progress", value: "in_progress" },
-                  { label: "Resolved", value: "resolved" },
-                  { label: "Closed", value: "closed" },
-                ],
-                defaultValue: "all",
-              },
-              {
-                key: "priority",
-                label: "Priority",
-                options: [
-                  { label: "All Priorities", value: "all" },
-                  { label: "Low", value: "low" },
-                  { label: "Medium", value: "medium" },
-                  { label: "High", value: "high" },
-                  { label: "Urgent", value: "urgent" },
-                ],
-                defaultValue: "all",
-              },
-            ]}
-          />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="overflow-x-auto">
+              <TabsTrigger value="queue" className="flex items-center gap-1.5">
+                <ListChecks className="h-3.5 w-3.5" />
+                Task Queue
+              </TabsTrigger>
+              <TabsTrigger value="calendar" className="flex items-center gap-1.5">
+                <CalendarDays className="h-3.5 w-3.5" />
+                Calendar
+              </TabsTrigger>
+              <TabsTrigger value="contractors" className="flex items-center gap-1.5">
+                <WrenchIcon className="h-3.5 w-3.5" />
+                Contractors
+              </TabsTrigger>
+              <TabsTrigger value="evidence" className="flex items-center gap-1.5">
+                <Camera className="h-3.5 w-3.5" />
+                Evidence
+              </TabsTrigger>
+            </TabsList>
 
-          {/* Category filter chip strip */}
-          <div className="flex items-center gap-2 flex-wrap">
-            {["all", ...MAINTENANCE_CATEGORIES].map((cat) => (
-              <button
-                key={cat}
-                onClick={() => setCategoryFilter(cat)}
-                className={cn(
-                  "rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors",
-                  categoryFilter === cat
-                    ? "border-accent-primary bg-accent-primary/10 text-accent-primary"
-                    : "border-[var(--color-border)] bg-transparent text-[var(--color-muted-foreground)] hover:border-[var(--color-foreground)]/50",
-                )}
-              >
-                {cat === "all" ? "All categories" : cat}
-              </button>
-            ))}
-          </div>
+            <TabsContent value="calendar" className="mt-0">
+              <OperationsCalendar tickets={maintenance} onTicketClick={openTicketDetail} />
+            </TabsContent>
 
-          {/* Cost summary bar */}
-          {costSummary.count > 0 && (
-            <div className="flex items-center gap-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-4 py-2.5 text-sm">
-              <span className="text-[var(--color-muted-foreground)]">
-                <span className="font-medium text-[var(--color-foreground)]">
-                  {costSummary.count}
-                </span>{" "}
-                open ticket
-                {costSummary.count !== 1 ? "s" : ""}
-              </span>
-              {costSummary.withCost > 0 && (
-                <>
-                  <span className="text-[var(--color-border)]">|</span>
-                  <span className="text-[var(--color-muted-foreground)]">
-                    Est. cost:{" "}
-                    <span className="font-medium text-[var(--color-foreground)]">
-                      {formatCurrency(costSummary.total)}
-                    </span>
-                  </span>
-                  {costSummary.withCost < costSummary.count && (
-                    <span className="text-[var(--color-muted-foreground)] text-xs">
-                      ({costSummary.count - costSummary.withCost} without estimate)
-                    </span>
-                  )}
-                </>
-              )}
-            </div>
-          )}
+            <TabsContent value="contractors" className="mt-0">
+              <ContactsView />
+            </TabsContent>
 
-          <div className="flex items-center justify-end">
-            <DataViewToggle mode={dataViewMode} onChange={handleViewModeChange} />
-          </div>
-
-          {dataViewMode === "table" ? (
-            /* Table View */
-            filteredTickets.length === 0 ? (
-              <EmptyStateIllustration
-                type={maintenance.length === 0 ? "maintenance" : "generic"}
-                title={maintenance.length === 0 ? undefined : "No tickets found"}
-                description={
-                  maintenance.length === 0 ? undefined : "Try adjusting your search or filters"
-                }
-                onAction={maintenance.length === 0 ? dialog.openDialog : undefined}
+            <TabsContent value="evidence" className="mt-0">
+              <OperationsEvidence
+                tickets={maintenance}
+                onToggleRequired={handleToggleEvidenceRequired}
+                onTicketClick={openTicketDetail}
               />
-            ) : (
-              <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-[var(--color-border)] hover:bg-transparent">
-                      <TableHead className="text-[var(--color-muted-foreground)]">
+            </TabsContent>
+
+            <TabsContent value="queue" className="mt-0 space-y-6">
+              {/* Search and Filter */}
+              <SearchFilter
+                searchPlaceholder="Search by title, description, or assignee..."
+                onSearchChange={setSearchQuery}
+                onFilterChange={(key, value) => {
+                  if (key === "status") setStatusFilter(value);
+                  if (key === "priority") setPriorityFilter(value);
+                }}
+                filters={[
+                  {
+                    key: "status",
+                    label: "Status",
+                    options: [
+                      { label: "All Statuses", value: "all" },
+                      { label: "Open", value: "open" },
+                      { label: "In Progress", value: "in_progress" },
+                      { label: "Resolved", value: "resolved" },
+                      { label: "Closed", value: "closed" },
+                    ],
+                    defaultValue: "all",
+                  },
+                  {
+                    key: "priority",
+                    label: "Priority",
+                    options: [
+                      { label: "All Priorities", value: "all" },
+                      { label: "Low", value: "low" },
+                      { label: "Medium", value: "medium" },
+                      { label: "High", value: "high" },
+                      { label: "Urgent", value: "urgent" },
+                    ],
+                    defaultValue: "all",
+                  },
+                ]}
+              />
+
+              {/* Category filter chip strip */}
+              <div className="flex items-center gap-2 flex-wrap">
+                {["all", ...MAINTENANCE_CATEGORIES].map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setCategoryFilter(cat)}
+                    className={cn(
+                      "rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors",
+                      categoryFilter === cat
+                        ? "border-accent-primary bg-accent-primary/10 text-accent-primary"
+                        : "border-[var(--color-border)] bg-transparent text-[var(--color-muted-foreground)] hover:border-[var(--color-foreground)]/50",
+                    )}
+                  >
+                    {cat === "all" ? "All categories" : cat}
+                  </button>
+                ))}
+              </div>
+
+              {/* Cost summary bar */}
+              {costSummary.count > 0 && (
+                <div className="flex items-center gap-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-4 py-2.5 text-sm">
+                  <span className="text-[var(--color-muted-foreground)]">
+                    <span className="font-medium text-[var(--color-foreground)]">
+                      {costSummary.count}
+                    </span>{" "}
+                    open ticket
+                    {costSummary.count !== 1 ? "s" : ""}
+                  </span>
+                  {costSummary.withCost > 0 && (
+                    <>
+                      <span className="text-[var(--color-border)]">|</span>
+                      <span className="text-[var(--color-muted-foreground)]">
+                        Est. cost:{" "}
+                        <span className="font-medium text-[var(--color-foreground)]">
+                          {formatCurrency(costSummary.total)}
+                        </span>
+                      </span>
+                      {costSummary.withCost < costSummary.count && (
+                        <span className="text-[var(--color-muted-foreground)] text-xs">
+                          ({costSummary.count - costSummary.withCost} without estimate)
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
+
+              <div className="flex items-center justify-end">
+                <DataViewToggle mode={dataViewMode} onChange={handleViewModeChange} />
+              </div>
+
+              {dataViewMode === "table" ? (
+                /* Table View */
+                filteredTickets.length === 0 ? (
+                  <EmptyStateIllustration
+                    type={maintenance.length === 0 ? "maintenance" : "generic"}
+                    title={maintenance.length === 0 ? undefined : "No tickets found"}
+                    description={
+                      maintenance.length === 0 ? undefined : "Try adjusting your search or filters"
+                    }
+                    onAction={maintenance.length === 0 ? dialog.openDialog : undefined}
+                  />
+                ) : (
+                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-[var(--color-border)] hover:bg-transparent">
+                          <TableHead className="text-[var(--color-muted-foreground)]">
+                            <SortableHeader
+                              sortKey="title"
+                              label="Title"
+                              currentSort={getSortDirection("title")}
+                              onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
+                            />
+                          </TableHead>
+                          <TableHead className="text-[var(--color-muted-foreground)]">
+                            Property
+                          </TableHead>
+                          <TableHead className="text-[var(--color-muted-foreground)]">
+                            <SortableHeader
+                              sortKey="priority"
+                              label="Priority"
+                              currentSort={getSortDirection("priority")}
+                              onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
+                            />
+                          </TableHead>
+                          <TableHead className="text-[var(--color-muted-foreground)]">
+                            <SortableHeader
+                              sortKey="status"
+                              label="Status"
+                              currentSort={getSortDirection("status")}
+                              onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
+                            />
+                          </TableHead>
+                          <TableHead className="text-[var(--color-muted-foreground)]">
+                            Created
+                          </TableHead>
+                          <TableHead className="text-[var(--color-muted-foreground)]">
+                            Vendor
+                          </TableHead>
+                          <TableHead className="text-[var(--color-muted-foreground)]">
+                            Scheduled
+                          </TableHead>
+                          <TableHead className="text-[var(--color-muted-foreground)] w-10"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sortedTickets.map((ticket) => (
+                          <TableRow
+                            key={ticket.id}
+                            className="border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] cursor-pointer"
+                            onClick={() => {
+                              setSelectedTicket(ticket);
+                              setIsDetailOpen(true);
+                            }}
+                          >
+                            <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
+                              {ticket.title}
+                            </TableCell>
+                            <TableCell className="text-sm text-[var(--color-muted-foreground)]">
+                              {ticket.propertyName || "Unknown"}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={cn("capitalize", getPriorityColor(ticket.priority))}
+                              >
+                                {ticket.priority}
+                              </Badge>
+                            </TableCell>
+                            <TableCell>
+                              <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
+                                {getStatusIcon(ticket.status)}
+                                <span className="capitalize">
+                                  {ticket.status.replace("_", " ")}
+                                </span>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm text-[var(--color-muted-foreground)]">
+                              <div className="flex items-center gap-1">
+                                {ticket.isTenantReport && (
+                                  <User className="h-3.5 w-3.5 text-blue-400" />
+                                )}
+                                {new Date(ticket.createdAt).toLocaleDateString()}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm text-[var(--color-muted-foreground)]">
+                              {ticket.vendorName || ticket.assignedTo || "—"}
+                            </TableCell>
+                            <TableCell className="text-sm text-[var(--color-muted-foreground)]">
+                              {ticket.scheduledDate
+                                ? new Date(ticket.scheduledDate).toLocaleDateString()
+                                : "—"}
+                            </TableCell>
+                            <TableCell>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    aria-label="Ticket options"
+                                  >
+                                    <MoreVertical className="w-4 h-4" aria-hidden="true" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="">
+                                  <DropdownMenuItem
+                                    className="focus:bg-[var(--color-surface-hover)] cursor-pointer"
+                                    onClick={() => handleEdit(ticket)}
+                                  >
+                                    Edit Details
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="focus:bg-[var(--color-surface-hover)] cursor-pointer p-0"
+                                    onSelect={(e) => e.preventDefault()}
+                                  >
+                                    <Select
+                                      value={ticket.status}
+                                      onValueChange={(value) =>
+                                        handleUpdateStatus(ticket, value as MaintenanceStatus)
+                                      }
+                                    >
+                                      <SelectTrigger className="border-0 bg-transparent h-auto px-2 py-1.5 text-[var(--color-foreground)] shadow-none focus:ring-0">
+                                        <SelectValue placeholder="Update Status" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="open">Open</SelectItem>
+                                        <SelectItem value="in_progress">In Progress</SelectItem>
+                                        <SelectItem value="resolved">Resolved</SelectItem>
+                                        <SelectItem value="closed">Closed</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-[var(--color-destructive)] focus:bg-[var(--color-surface-hover)] cursor-pointer"
+                                    onClick={() => handleDelete(ticket)}
+                                  >
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )
+              ) : (
+                <>
+                  {/* Sortable Column Headers */}
+                  {filteredTickets.length > 0 && (
+                    <div className="flex items-center gap-4 px-4 py-2 bg-[var(--color-surface-hover)] rounded-lg border border-[var(--color-border)]">
+                      <div className="flex-1">
                         <SortableHeader
                           sortKey="title"
                           label="Title"
                           currentSort={getSortDirection("title")}
                           onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
                         />
-                      </TableHead>
-                      <TableHead className="text-[var(--color-muted-foreground)]">
-                        Property
-                      </TableHead>
-                      <TableHead className="text-[var(--color-muted-foreground)]">
+                      </div>
+                      <div className="w-32">
                         <SortableHeader
                           sortKey="priority"
                           label="Priority"
                           currentSort={getSortDirection("priority")}
                           onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
                         />
-                      </TableHead>
-                      <TableHead className="text-[var(--color-muted-foreground)]">
+                      </div>
+                      <div className="w-32">
                         <SortableHeader
                           sortKey="status"
                           label="Status"
                           currentSort={getSortDirection("status")}
                           onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
                         />
-                      </TableHead>
-                      <TableHead className="text-[var(--color-muted-foreground)]">
-                        Created
-                      </TableHead>
-                      <TableHead className="text-[var(--color-muted-foreground)]">Vendor</TableHead>
-                      <TableHead className="text-[var(--color-muted-foreground)]">
-                        Scheduled
-                      </TableHead>
-                      <TableHead className="text-[var(--color-muted-foreground)] w-10"></TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {sortedTickets.map((ticket) => (
-                      <TableRow
-                        key={ticket.id}
-                        className="border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] cursor-pointer"
-                        onClick={() => {
-                          setSelectedTicket(ticket);
-                          setIsDetailOpen(true);
-                        }}
-                      >
-                        <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
-                          {ticket.title}
-                        </TableCell>
-                        <TableCell className="text-sm text-[var(--color-muted-foreground)]">
-                          {ticket.propertyName || "Unknown"}
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={cn("capitalize", getPriorityColor(ticket.priority))}
-                          >
-                            {ticket.priority}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
-                            {getStatusIcon(ticket.status)}
-                            <span className="capitalize">{ticket.status.replace("_", " ")}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-[var(--color-muted-foreground)]">
-                          <div className="flex items-center gap-1">
-                            {ticket.isTenantReport && (
-                              <User className="h-3.5 w-3.5 text-blue-400" />
-                            )}
-                            {new Date(ticket.createdAt).toLocaleDateString()}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-sm text-[var(--color-muted-foreground)]">
-                          {ticket.vendorName || ticket.assignedTo || "—"}
-                        </TableCell>
-                        <TableCell className="text-sm text-[var(--color-muted-foreground)]">
-                          {ticket.scheduledDate
-                            ? new Date(ticket.scheduledDate).toLocaleDateString()
-                            : "—"}
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                aria-label="Ticket options"
-                              >
-                                <MoreVertical className="w-4 h-4" aria-hidden="true" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="">
-                              <DropdownMenuItem
-                                className="focus:bg-[var(--color-surface-hover)] cursor-pointer"
-                                onClick={() => handleEdit(ticket)}
-                              >
-                                Edit Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="focus:bg-[var(--color-surface-hover)] cursor-pointer p-0"
-                                onSelect={(e) => e.preventDefault()}
-                              >
-                                <Select
-                                  value={ticket.status}
-                                  onValueChange={(value) =>
-                                    handleUpdateStatus(ticket, value as MaintenanceStatus)
-                                  }
-                                >
-                                  <SelectTrigger className="border-0 bg-transparent h-auto px-2 py-1.5 text-[var(--color-foreground)] shadow-none focus:ring-0">
-                                    <SelectValue placeholder="Update Status" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="open">Open</SelectItem>
-                                    <SelectItem value="in_progress">In Progress</SelectItem>
-                                    <SelectItem value="resolved">Resolved</SelectItem>
-                                    <SelectItem value="closed">Closed</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-[var(--color-destructive)] focus:bg-[var(--color-surface-hover)] cursor-pointer"
-                                onClick={() => handleDelete(ticket)}
-                              >
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            )
-          ) : (
-            <>
-              {/* Sortable Column Headers */}
-              {filteredTickets.length > 0 && (
-                <div className="flex items-center gap-4 px-4 py-2 bg-[var(--color-surface-hover)] rounded-lg border border-[var(--color-border)]">
-                  <div className="flex-1">
-                    <SortableHeader
-                      sortKey="title"
-                      label="Title"
-                      currentSort={getSortDirection("title")}
-                      onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
-                    />
-                  </div>
-                  <div className="w-32">
-                    <SortableHeader
-                      sortKey="priority"
-                      label="Priority"
-                      currentSort={getSortDirection("priority")}
-                      onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
-                    />
-                  </div>
-                  <div className="w-32">
-                    <SortableHeader
-                      sortKey="status"
-                      label="Status"
-                      currentSort={getSortDirection("status")}
-                      onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
-                    />
-                  </div>
-                  <div className="w-32">
-                    <SortableHeader
-                      sortKey="cost"
-                      label="Cost"
-                      currentSort={getSortDirection("cost")}
-                      onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
-                    />
-                  </div>
-                </div>
-              )}
+                      </div>
+                      <div className="w-32">
+                        <SortableHeader
+                          sortKey="cost"
+                          label="Cost"
+                          currentSort={getSortDirection("cost")}
+                          onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
+                        />
+                      </div>
+                    </div>
+                  )}
 
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                {filteredTickets.length === 0 ? (
-                  <div className="col-span-full">
-                    <EmptyStateIllustration
-                      type={maintenance.length === 0 ? "maintenance" : "generic"}
-                      title={maintenance.length === 0 ? undefined : "No tickets found"}
-                      description={
-                        maintenance.length === 0
-                          ? undefined
-                          : "Try adjusting your search or filters"
-                      }
-                      onAction={maintenance.length === 0 ? dialog.openDialog : undefined}
-                    />
-                  </div>
-                ) : (
-                  sortedTickets.map((ticket) => (
-                    <Card
-                      key={ticket.id}
-                      className="cursor-pointer hover:border-[var(--color-foreground)]/30 transition-colors"
-                      onClick={() => {
-                        setSelectedTicket(ticket);
-                        setIsDetailOpen(true);
-                      }}
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex justify-between items-start">
-                          <Badge
-                            variant="outline"
-                            className={cn("capitalize mb-2", getPriorityColor(ticket.priority))}
-                          >
-                            {ticket.priority} Priority
-                          </Badge>
-                          {ticket.isTenantReport && (
-                            <Badge
-                              variant="outline"
-                              className="mb-2 ml-1 bg-blue-500/10 text-blue-400 border-blue-500/30"
-                            >
-                              <User className="h-3 w-3 mr-1" />
-                              Tenant
-                            </Badge>
-                          )}
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                aria-label="Ticket options"
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {filteredTickets.length === 0 ? (
+                      <div className="col-span-full">
+                        <EmptyStateIllustration
+                          type={maintenance.length === 0 ? "maintenance" : "generic"}
+                          title={maintenance.length === 0 ? undefined : "No tickets found"}
+                          description={
+                            maintenance.length === 0
+                              ? undefined
+                              : "Try adjusting your search or filters"
+                          }
+                          onAction={maintenance.length === 0 ? dialog.openDialog : undefined}
+                        />
+                      </div>
+                    ) : (
+                      sortedTickets.map((ticket) => (
+                        <Card
+                          key={ticket.id}
+                          className="cursor-pointer hover:border-[var(--color-foreground)]/30 transition-colors"
+                          onClick={() => {
+                            setSelectedTicket(ticket);
+                            setIsDetailOpen(true);
+                          }}
+                        >
+                          <CardHeader className="pb-3">
+                            <div className="flex justify-between items-start">
+                              <Badge
+                                variant="outline"
+                                className={cn("capitalize mb-2", getPriorityColor(ticket.priority))}
                               >
-                                <MoreVertical className="w-4 h-4" aria-hidden="true" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="">
-                              <DropdownMenuItem
-                                className="focus:bg-[var(--color-surface-hover)] cursor-pointer"
-                                onClick={() => handleEdit(ticket)}
-                              >
-                                Edit Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="focus:bg-[var(--color-surface-hover)] cursor-pointer p-0"
-                                onSelect={(e) => e.preventDefault()}
-                              >
-                                <Select
-                                  value={ticket.status}
-                                  onValueChange={(value) =>
-                                    handleUpdateStatus(ticket, value as MaintenanceStatus)
-                                  }
+                                {ticket.priority} Priority
+                              </Badge>
+                              {ticket.isTenantReport && (
+                                <Badge
+                                  variant="outline"
+                                  className="mb-2 ml-1 bg-blue-500/10 text-blue-400 border-blue-500/30"
                                 >
-                                  <SelectTrigger className="border-0 bg-transparent h-auto px-2 py-1.5 text-[var(--color-foreground)] shadow-none focus:ring-0">
-                                    <SelectValue placeholder="Update Status" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="open">Open</SelectItem>
-                                    <SelectItem value="in_progress">In Progress</SelectItem>
-                                    <SelectItem value="resolved">Resolved</SelectItem>
-                                    <SelectItem value="closed">Closed</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="text-[var(--color-destructive)] focus:bg-[var(--color-surface-hover)] cursor-pointer"
-                                onClick={() => handleDelete(ticket)}
-                              >
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        <CardTitle className="text-lg font-semibold text-[var(--color-foreground)] line-clamp-1">
-                          {ticket.title}
-                        </CardTitle>
-                        <CardDescription className="line-clamp-1">
-                          {ticket.propertyName ? ticket.propertyName : "Unknown Property"}
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent className="pb-3">
-                        <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-3 mb-4">
-                          {ticket.description}
-                        </p>
-                        <div className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2 text-[var(--color-muted-foreground)]">
-                            {getStatusIcon(ticket.status)}
-                            <span className="capitalize">{ticket.status.replace("_", " ")}</span>
-                          </div>
-                          {(ticket.estimatedCost ?? ticket.cost) != null && (
-                            <span className="font-medium text-[var(--color-foreground)]">
-                              {formatCurrency((ticket.estimatedCost ?? ticket.cost)!)}
-                            </span>
-                          )}
-                        </div>
-                      </CardContent>
-                      <CardFooter className="pt-3 border-t border-[var(--color-border)] text-xs text-[var(--color-muted-foreground)] flex justify-between">
-                        <span>Created {new Date(ticket.createdAt).toLocaleDateString()}</span>
-                        {(ticket.vendorName || ticket.assignedTo) && (
-                          <span>Vendor: {ticket.vendorName || ticket.assignedTo}</span>
-                        )}
-                      </CardFooter>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </>
-          )}
+                                  <User className="h-3 w-3 mr-1" />
+                                  Tenant
+                                </Badge>
+                              )}
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8"
+                                    aria-label="Ticket options"
+                                  >
+                                    <MoreVertical className="w-4 h-4" aria-hidden="true" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="">
+                                  <DropdownMenuItem
+                                    className="focus:bg-[var(--color-surface-hover)] cursor-pointer"
+                                    onClick={() => handleEdit(ticket)}
+                                  >
+                                    Edit Details
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="focus:bg-[var(--color-surface-hover)] cursor-pointer p-0"
+                                    onSelect={(e) => e.preventDefault()}
+                                  >
+                                    <Select
+                                      value={ticket.status}
+                                      onValueChange={(value) =>
+                                        handleUpdateStatus(ticket, value as MaintenanceStatus)
+                                      }
+                                    >
+                                      <SelectTrigger className="border-0 bg-transparent h-auto px-2 py-1.5 text-[var(--color-foreground)] shadow-none focus:ring-0">
+                                        <SelectValue placeholder="Update Status" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="open">Open</SelectItem>
+                                        <SelectItem value="in_progress">In Progress</SelectItem>
+                                        <SelectItem value="resolved">Resolved</SelectItem>
+                                        <SelectItem value="closed">Closed</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="text-[var(--color-destructive)] focus:bg-[var(--color-surface-hover)] cursor-pointer"
+                                    onClick={() => handleDelete(ticket)}
+                                  >
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </div>
+                            <CardTitle className="text-lg font-semibold text-[var(--color-foreground)] line-clamp-1">
+                              {ticket.title}
+                            </CardTitle>
+                            <CardDescription className="line-clamp-1">
+                              {ticket.propertyName ? ticket.propertyName : "Unknown Property"}
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent className="pb-3">
+                            <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-3 mb-4">
+                              {ticket.description}
+                            </p>
+                            <div className="flex items-center justify-between text-sm">
+                              <div className="flex items-center gap-2 text-[var(--color-muted-foreground)]">
+                                {getStatusIcon(ticket.status)}
+                                <span className="capitalize">
+                                  {ticket.status.replace("_", " ")}
+                                </span>
+                              </div>
+                              {(ticket.estimatedCost ?? ticket.cost) != null && (
+                                <span className="font-medium text-[var(--color-foreground)]">
+                                  {formatCurrency((ticket.estimatedCost ?? ticket.cost)!)}
+                                </span>
+                              )}
+                            </div>
+                          </CardContent>
+                          <CardFooter className="pt-3 border-t border-[var(--color-border)] text-xs text-[var(--color-muted-foreground)] flex justify-between">
+                            <span>Created {new Date(ticket.createdAt).toLocaleDateString()}</span>
+                            {(ticket.vendorName || ticket.assignedTo) && (
+                              <span>Vendor: {ticket.vendorName || ticket.assignedTo}</span>
+                            )}
+                          </CardFooter>
+                        </Card>
+                      ))
+                    )}
+                  </div>
+                </>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       )}
       <TicketDetailModal
