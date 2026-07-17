@@ -3,13 +3,14 @@
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Users, Briefcase, Plus, Wrench } from "lucide-react";
+import { Users, Briefcase, Plus, Wrench, MessageSquare } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { TenantsView, TenantsViewRef } from "@/components/features/tenant/tenants-view";
 import { OwnersView, OwnersViewRef } from "@/components/features/owner/owners-view";
 import { ContactsView } from "@/components/features/contacts/contacts-view";
+import { CorrespondenceView } from "@/components/features/correspondence/correspondence-view";
 import { ExportButton } from "@/components/ui/export-button";
 import { useApp } from "@/lib/contexts/app-context";
 
@@ -18,11 +19,11 @@ import { useApp } from "@/lib/contexts/app-context";
  *
  * Information Architecture:
  * - Purpose: Manage tenant and owner relationships
- * - Belongs here: Tenant directory, Owner directory, communication history, payment status
- * - Moved to Contracts: Leases (now under Operations > Contracts)
- * - Moved to Maintenance > Contacts: Maintenance contacts (contractors, vendors)
+ * - Belongs here: Tenant directory, Owner directory, service providers, communication history
+ * - Communications tab embeds CorrespondenceView (templates + message log); the standalone
+ *   /correspondence route stays live for deep links but is not a nav rail item
  * - Forbidden: Property CRUD, maintenance details, expense tracking
- * - Links to: Assets (tenant's/owner's property), Maintenance (tickets), Correspondence (messages)
+ * - Links to: Assets (tenant's/owner's property), Maintenance (tickets)
  */
 export function PeopleView(): React.ReactElement {
   const [activeTab, setActiveTab] = useTabPersistence("people", "tenants");
@@ -37,7 +38,13 @@ export function PeopleView(): React.ReactElement {
 
   useEffect(() => {
     const view = searchParams.get("view");
-    if ((view === "owners" || view === "contacts" || view === "tenants") && view !== activeTab) {
+    if (
+      (view === "owners" ||
+        view === "contacts" ||
+        view === "tenants" ||
+        view === "communications") &&
+      view !== activeTab
+    ) {
       setActiveTab(view);
     }
   }, [activeTab, searchParams, setActiveTab]);
@@ -137,7 +144,7 @@ export function PeopleView(): React.ReactElement {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center gap-2">
           {/* Scrollable on narrow screens so no tab label ever clips. */}
-          <TabsList className="flex w-full max-w-lg justify-start overflow-x-auto sm:grid sm:grid-cols-3">
+          <TabsList className="flex w-full max-w-2xl justify-start overflow-x-auto sm:grid sm:grid-cols-4">
             <TabsTrigger value="tenants" className="flex shrink-0 items-center gap-2">
               <Users className="h-4 w-4 shrink-0" />
               <span>{t("tenants")}</span>
@@ -158,6 +165,13 @@ export function PeopleView(): React.ReactElement {
             >
               <Wrench className="h-4 w-4 shrink-0" />
               <span>{t("serviceProviders")}</span>
+            </TabsTrigger>
+            <TabsTrigger
+              value="communications"
+              className="flex shrink-0 items-center gap-2 whitespace-nowrap"
+            >
+              <MessageSquare className="h-4 w-4 shrink-0" />
+              <span>{t("communications")}</span>
             </TabsTrigger>
           </TabsList>
           {activeTab === "tenants" && (
@@ -192,6 +206,10 @@ export function PeopleView(): React.ReactElement {
 
         <TabsContent value="contacts" className="mt-0">
           <ContactsView />
+        </TabsContent>
+
+        <TabsContent value="communications" className="mt-0">
+          <CorrespondenceView />
         </TabsContent>
       </Tabs>
     </div>

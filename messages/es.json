@@ -8,6 +8,7 @@
     "tenants": "Inquilinos",
     "owners": "Propietarios",
     "serviceProviders": "Proveedores",
+    "communications": "Comunicaciones",
     "addTenant": "Añadir inquilino",
     "addOwner": "Añadir propietario"
   },
