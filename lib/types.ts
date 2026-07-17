@@ -251,6 +251,8 @@ export interface MaintenanceTicket {
   invoiceRef?: string;
   isTenantReport?: boolean;
   resolvedAt?: string;
+  evidenceRequired?: boolean;
+  slaDueAt?: string;
   createdAt: string;
   updatedAt: string;
 }

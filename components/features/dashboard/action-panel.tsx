@@ -169,7 +169,7 @@ export function ActionPanel(): ReactElement {
         icon: Wrench,
         message: t("maintenanceOpenAlert", { count: staleMaintenance.length, days: daysOpen }),
         count: staleMaintenance.length,
-        href: "/maintenance",
+        href: "/operations",
         severity: "critical",
       });
     }

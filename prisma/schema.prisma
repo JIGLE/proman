@@ -679,6 +679,9 @@ model MaintenanceTicket {
   invoiceRef        String?
   isTenantReport    Boolean  @default(false)
   resolvedAt        DateTime?
+  // Situs Operations subtabs (PR 10b-1): Evidence tab flag + SLA due date.
+  evidenceRequired  Boolean  @default(false)
+  slaDueAt          DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

@@ -1,13 +1,6 @@
-import { Suspense } from "react";
-import { MaintenanceView } from "@/components/features/maintenance/maintenance-view";
-import { GenericPageSkeleton } from "@/components/ui/page-skeletons";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default function MaintenancePage() {
-  return (
-    <Suspense fallback={<GenericPageSkeleton />}>
-      <MaintenanceView />
-    </Suspense>
-  );
+export default async function MaintenancePage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  redirect(`/${locale}/operations`);
 }
