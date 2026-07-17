@@ -8,12 +8,12 @@ entries:
       truenas.recommended_min_memory: 512Mi
       truenas.recommended_min_storage: 1Gi
     apiVersion: v2
-    appVersion: 1.16.3
-    created: "2026-07-15T13:50:54.021627479Z"
+    appVersion: 1.17.0
+    created: "2026-07-17T22:04:42.794094939Z"
     description: A Helm chart for deploying the Proman property management platform
-    digest: 01a23bb63348afc3769eefb7584a82d0a343b363e5753bddfaff80596f5540cd
+    digest: b2c8fff847d5e7a35ad875ce67008f2cb92ea41189e1c488cfc281777ce6c9d4
     home: https://github.com/JIGLE/proman
-    icon: https://raw.githubusercontent.com/JIGLE/proman/main/public/proman-icon.svg
+    icon: https://raw.githubusercontent.com/JIGLE/proman/main/public/situs-mark.svg
     keywords:
     - property
     - management
@@ -28,11 +28,11 @@ entries:
     - https://ghcr.io/jigle/proman
     type: application
     urls:
-    - https://JIGLE.github.io/proman/release-charts/proman-1.16.3.tgz
-    version: 1.16.3
+    - https://JIGLE.github.io/proman/release-charts/proman-1.17.0.tgz
+    version: 1.17.0
   - apiVersion: v2
     appVersion: 0.6.2
-    created: "2026-07-15T13:50:54.021082627Z"
+    created: "2026-07-17T22:04:42.793664826Z"
     description: A Helm chart for deploying the Proman property management platform
     digest: 7c08cac7e3defae58e846caa8e04a57225afb119f827a993c3f661eb26d2787f
     home: https://github.com/JIGLE/proman
@@ -55,7 +55,7 @@ entries:
     version: 0.6.0
   - apiVersion: v2
     appVersion: 0.1.1
-    created: "2026-07-15T13:50:54.020538497Z"
+    created: "2026-07-17T22:04:42.793197137Z"
     description: A Helm chart for deploying Proman property management app
     digest: 73f015c2991d5e752b6fe16bbb4bcd0bf0c80725a49868413b7285afc8a80af2
     name: proman
@@ -63,4 +63,4 @@ entries:
     urls:
     - https://JIGLE.github.io/proman/release-charts/proman-0.1.0.tgz
     version: 0.1.0
-generated: "2026-07-15T13:50:54.01991064Z"
+generated: "2026-07-17T22:04:42.79275098Z"
