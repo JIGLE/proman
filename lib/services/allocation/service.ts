@@ -232,6 +232,78 @@ export async function allocateReceipt(receiptId: string): Promise<AllocationPlan
   return plan;
 }
 
+/**
+ * Soft-reverse every live allocation for a receipt (e.g. the receipt is
+ * voided): marks allocations reversed, regresses the affected periods'
+ * allocated totals + statuses, and recomputes tenant status. History
+ * survives — rows are never deleted.
+ */
+export async function reverseAllocationsForReceipt(
+  receiptId: string,
+  reason: string,
+): Promise<number> {
+  const prisma = getPrismaClient();
+  const allocations = await prisma.paymentAllocation.findMany({
+    where: { receiptId, reversedAt: null },
+  });
+  if (allocations.length === 0) return 0;
+
+  const now = new Date();
+  const receipt = await prisma.receipt.findUniqueOrThrow({ where: { id: receiptId } });
+
+  await prisma.$transaction(async (tx) => {
+    for (const allocation of allocations) {
+      await tx.paymentAllocation.update({
+        where: { id: allocation.id },
+        data: { reversedAt: now, reversalReason: reason },
+      });
+
+      const period = await tx.rentPeriod.findUniqueOrThrow({
+        where: { id: allocation.rentPeriodId },
+      });
+      const allocatedAmount = Math.max(0, period.allocatedAmount - allocation.amount);
+      const fullyPaid = allocatedAmount >= period.dueAmount - 0.005;
+      await tx.rentPeriod.update({
+        where: { id: period.id },
+        data: {
+          allocatedAmount,
+          paidAt: fullyPaid ? period.paidAt : null,
+          status: derivePeriodStatus(
+            {
+              dueDate: period.dueDate,
+              dueAmount: period.dueAmount,
+              allocatedAmount,
+              fullyPaidAt: fullyPaid ? period.paidAt : null,
+            },
+            now,
+          ),
+        },
+      });
+    }
+
+    const statuses = await tx.rentPeriod.findMany({
+      where: { tenantId: receipt.tenantId },
+      select: { status: true },
+    });
+    await tx.tenant.update({
+      where: { id: receipt.tenantId },
+      data: {
+        paymentStatus: deriveTenantStatus(statuses.map((s) => s.status as RentPeriodStatus)),
+      },
+    });
+  });
+
+  await logAudit({
+    userId: receipt.userId,
+    action: "REVERSE_ALLOCATION",
+    resourceType: "receipt",
+    resourceId: receiptId,
+    details: { reason, count: allocations.length },
+  });
+
+  return allocations.length;
+}
+
 /** Recompute a tenant's derived payment status outside an allocation flow. */
 export async function recomputeTenantStatus(tenantId: string): Promise<void> {
   const prisma = getPrismaClient();
