@@ -44,6 +44,8 @@ model User {
   tenants        Tenant[]
   receipts       Receipt[]
   expenses       Expense[]
+  rentPeriods        RentPeriod[]
+  paymentAllocations PaymentAllocation[]
   maintenanceTickets MaintenanceTicket[]
   leases         Lease[]
   correspondences Correspondence[]
@@ -215,14 +217,20 @@ model VerificationToken {
 }
 
 model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String
-  action    String
-  details   String?
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  action       String
+  details      String?
+  // Situs: anchor entries to a record so per-entity audit trails (property
+  // Audit tab) are a single indexed query. The service interface already
+  // declared these; Migration A persists them.
+  resourceType String?
+  resourceId   String?
+  createdAt    DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([resourceType, resourceId])
   @@map("audit_logs")
 }
 
@@ -301,6 +309,7 @@ model Property {
   nruaRegistrations   NRUARegistration[]
   verificationClaims  PropertyVerificationClaim[]
   correspondences     Correspondence[]
+  rentPeriods         RentPeriod[]
 
   // Performance indexes
   @@index([userId])
@@ -338,6 +347,7 @@ model Tenant {
   paymentTransactions PaymentTransaction[]
   rentReceipts        RentReceipt[]
   nruaRegistrations   NRUARegistration[]
+  rentPeriods         RentPeriod[]
 
   // Performance indexes
   @@index([userId])
@@ -358,13 +368,22 @@ model Receipt {
   type        ReceiptType
   status      ReceiptStatus @default(paid)
   description String?
+  // Situs reference-month workflow (Migration A). `status` keeps meaning the
+  // MONEY state (paid|pending); `lifecycle` is the DOCUMENT state — legacy
+  // rows self-backfill to "emitted" via the default.
+  rentPeriodId   String?
+  referenceMonth String?  // "YYYY-MM" denormalized for queue/list display
+  lifecycle      String   @default("emitted") // draft|review|emitted|voided — Zod-validated
+  source         String   @default("manual")  // manual|automation
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  property   Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  rentPeriod RentPeriod? @relation(fields: [rentPeriodId], references: [id], onDelete: SetNull)
+  allocations PaymentAllocation[]
 
   // Performance indexes for common queries
   @@index([userId])
@@ -373,7 +392,70 @@ model Receipt {
   @@index([status])
   @@index([date])
   @@index([userId, status, date])  // Composite index for insights queries
+  @@index([rentPeriodId])
+  @@index([lifecycle])
   @@map("receipts")
+}
+
+// Situs period ledger — the spine of the Rent Matrix and Current Period Status.
+// year+month is the REFERENCE month (what the money is for), distinct from the
+// payment date. `status` is persisted-derived: recomputed inside the same
+// transaction as every allocation write (see lib/services/allocation).
+model RentPeriod {
+  id              String   @id @default(cuid())
+  userId          String
+  leaseId         String
+  tenantId        String   // denormalized — matrix/tenant queries must not join through Lease
+  propertyId      String   // denormalized — property-detail queries
+  year            Int
+  month           Int      // 1–12
+  dueDate         DateTime
+  dueAmount       Float    // snapshot of the lease rent at generation — survives adjustments
+  allocatedAmount Float    @default(0) // materialized sum of non-reversed allocations
+  paidAt          DateTime? // when the period became fully allocated
+  status          String   @default("upcoming") // upcoming|due|overdue|partially_paid|paid|paid_late|waived
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lease       Lease     @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  receipts    Receipt[]
+  allocations PaymentAllocation[]
+
+  @@unique([leaseId, year, month])
+  @@index([userId, year, month])
+  @@index([leaseId, status])
+  @@index([propertyId, year])
+  @@index([tenantId, status])
+  @@map("rent_periods")
+}
+
+// Money → reference-month join. Reversals are SOFT (reversedAt) so history
+// survives for audit. Bank/online-payment source columns arrive with the bank
+// layer migration; a manual Receipt is the first supported source.
+model PaymentAllocation {
+  id             String    @id @default(cuid())
+  userId         String
+  rentPeriodId   String
+  receiptId      String?
+  amount         Float
+  type           String    @default("rent") // rent|partial|overpayment_credit|adjustment
+  allocatedAt    DateTime  @default(now())
+  createdBy      String    @default("system") // system|user (manual override)
+  reversedAt     DateTime?
+  reversalReason String?
+  createdAt      DateTime  @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rentPeriod RentPeriod @relation(fields: [rentPeriodId], references: [id], onDelete: Cascade)
+  receipt    Receipt?   @relation(fields: [receiptId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([rentPeriodId])
+  @@index([receiptId])
+  @@map("payment_allocations")
 }
 
 model Expense {
@@ -390,6 +472,10 @@ model Expense {
   isDeductible  Boolean  @default(true)  // Whether deductible for IRS/IRPF
   vendorName    String?  // Supplier/vendor name (useful for invoice records)
   vendorVat     String?  // Vendor NIF/VAT number for tax documentation
+  // Situs deduction-evidence workflow: a real Document link (receiptImage
+  // stays for back-compat, deprecated) + a tax review state.
+  documentId      String?
+  taxReviewStatus String?  // pending_review|reviewed|flagged — Zod-validated
   // Recurring expense fields (Wave 2.4)
   isRecurring      Boolean   @default(false)
   recurrenceRule   String?   // "monthly" | "quarterly" | "annual"
@@ -406,6 +492,7 @@ model Expense {
   lease    Lease?   @relation(fields: [leaseId], references: [id], onDelete: SetNull)
   parentExpense    Expense?  @relation("RecurringExpenses", fields: [parentExpenseId], references: [id], onDelete: SetNull)
   childExpenses    Expense[] @relation("RecurringExpenses")
+  document Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
 
   // Performance indexes
   @@index([userId])
@@ -540,6 +627,7 @@ model Lease {
   nruaRegistrations NRUARegistration[]
   expenses  Expense[]
   modelo179Submissions Modelo179Submission[]
+  rentPeriods RentPeriod[]
 
   @@index([userId])
   @@index([propertyId])
@@ -599,6 +687,7 @@ model Document {
   unit     Unit?     @relation(fields: [unitId], references: [id], onDelete: SetNull)
   owner    Owner?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
   tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  expenses Expense[] // Situs: deduction-evidence links (Expense.documentId)
 
   @@index([userId])
   @@index([propertyId])

@@ -58,7 +58,11 @@ export type AuditAction =
   // Admin actions
   | "DATABASE_ACCESS"
   | "DATABASE_EXPORT"
-  | "SETTINGS_CHANGE";
+  | "SETTINGS_CHANGE"
+  // Situs reference-month workflow (Migration A)
+  | "GENERATE_RENT_PERIODS"
+  | "ALLOCATE_PAYMENT"
+  | "REVERSE_ALLOCATION";
 
 export interface AuditLogEntry {
   userId: string;
@@ -86,6 +90,8 @@ export async function logAudit(entry: AuditLogEntry): Promise<void> {
         userId: entry.userId,
         action: entry.action,
         details: details || null,
+        resourceType: entry.resourceType || null,
+        resourceId: entry.resourceId || null,
       },
     });
 
