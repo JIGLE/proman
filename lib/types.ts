@@ -208,7 +208,6 @@ export interface Expense {
   date: string;
   category: string;
   description?: string;
-  receiptImage?: string;
   documentId?: string | null;
   taxReviewStatus?: string;
   isDeductible?: boolean;
