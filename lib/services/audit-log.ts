@@ -69,7 +69,13 @@ export type AuditAction =
   | "CONFIRM_MATCH"
   | "OVERRIDE_MATCH"
   | "IGNORE_TRANSACTION"
-  | "APPLY_RECONCILIATION_RULE";
+  | "APPLY_RECONCILIATION_RULE"
+  // Situs receipt lifecycle + tax connector (Migration C)
+  | "EMIT_RECEIPT"
+  | "SUBMIT_RECEIPT"
+  | "ARCHIVE_RECEIPT"
+  | "VOID_RECEIPT"
+  | "TRANSITION_RECEIPT_LIFECYCLE";
 
 export interface AuditLogEntry {
   userId: string;

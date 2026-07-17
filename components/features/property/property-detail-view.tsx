@@ -54,6 +54,7 @@ import {
   type ExpenseFormData,
 } from "@/lib/schemas/expense.schema";
 import { receiptSchema, type ReceiptFormData } from "@/lib/schemas/receipt.schema";
+import { usePropertyActivity } from "@/lib/hooks/use-property-activity";
 
 interface PropertyDetailViewProps {
   propertyId: string;
@@ -141,6 +142,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   });
 
   const property = state.properties.find((p) => p.id === propertyId);
+  const { data: activity, loading: activityLoading } = usePropertyActivity(propertyId);
 
   // Related entities
   const relatedTenants = useMemo(
@@ -605,6 +607,37 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
           </Card>
         </div>
       </div>
+
+      {/* Current Period Status — Situs reference-month ledger (RentPeriod), not derived here */}
+      {!activityLoading && activity?.currentPeriod && (
+        <div className="grid grid-cols-1 gap-4 border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:grid-cols-3">
+          <div>
+            <p className="mono-label">Current period</p>
+            <p className="mt-1 text-xl font-light tabular-nums text-[var(--color-foreground)]">
+              {String(activity.currentPeriod.month).padStart(2, "0")}/{activity.currentPeriod.year}
+            </p>
+            <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
+              A late payment allocates to the oldest unpaid month, not this one.
+            </p>
+          </div>
+          <div>
+            <p className="mono-label">Payment status</p>
+            <p className="mt-1 text-xl font-light capitalize text-[var(--color-foreground)]">
+              {activity.currentPeriod.status.replace(/_/g, " ")}
+            </p>
+            <p className="mt-1 text-xs text-[var(--color-muted-foreground)] tabular-nums">
+              €{activity.currentPeriod.allocatedAmount.toFixed(2)} / €
+              {activity.currentPeriod.dueAmount.toFixed(2)}
+            </p>
+          </div>
+          <div>
+            <p className="mono-label">Receipt status</p>
+            <p className="mt-1 text-xl font-light capitalize text-[var(--color-foreground)]">
+              {activity.receiptLifecycle ? activity.receiptLifecycle.replace(/_/g, " ") : "—"}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -1166,23 +1199,83 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               </CardContent>
             </Card>
           )}
+
+          {/* PaymentTimeline — reference-month allocation events for this property's ledger */}
+          {activity && activity.timeline.length > 0 && (
+            <div className="border border-[var(--color-border)] bg-[var(--color-surface)]">
+              <div className="border-b border-[var(--color-border)] px-4 py-3">
+                <p className="mono-label">Payment timeline</p>
+              </div>
+              <div className="divide-y divide-[var(--color-border)]">
+                {activity.timeline.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 shrink-0 bg-[var(--ui-accent)]" />
+                      <span>
+                        {entry.reversedAt ? "Reversed" : "Allocated"} ·{" "}
+                        {String(entry.period.month).padStart(2, "0")}/{entry.period.year}
+                        <span className="ml-1 text-xs text-[var(--color-muted-foreground)]">
+                          ({entry.type.replace(/_/g, " ")})
+                        </span>
+                      </span>
+                    </div>
+                    <span
+                      className={cn(
+                        "font-mono tabular-nums",
+                        entry.reversedAt
+                          ? "text-[var(--color-muted-foreground)] line-through"
+                          : "text-[var(--color-foreground)]",
+                      )}
+                    >
+                      €{entry.amount.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </TabsContent>
 
-        {/* Audit Tab — placeholder until the property audit trail lands (Situs PR 8/10:
-            AuditLog gains resourceType/resourceId + an AuditTrail component reads it). */}
+        {/* Audit Tab — Situs Migration A: AuditLog persists resourceType/resourceId,
+            so a property's full trail is one indexed query (app/api/properties/[id]/activity). */}
         <TabsContent value="audit">
-          <Card>
-            <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
-              <div className="flex h-10 w-10 items-center justify-center border border-[var(--color-border)] bg-[var(--color-surface)]">
-                <History className="h-5 w-5 text-[var(--color-muted-foreground)]" />
+          {activity && activity.auditLogs.length > 0 ? (
+            <div className="border border-[var(--color-border)] bg-[var(--color-surface)]">
+              <div className="border-b border-[var(--color-border)] px-4 py-3">
+                <p className="mono-label">Audit trail</p>
               </div>
-              <p className="mono-label">Audit trail</p>
-              <p className="max-w-sm text-sm text-[var(--color-muted-foreground)]">
-                A full activity history for this property — payment allocations, receipt emissions,
-                document changes and manual overrides — will appear here.
-              </p>
-            </CardContent>
-          </Card>
+              <div className="divide-y divide-[var(--color-border)]">
+                {activity.auditLogs.map((entry) => (
+                  <div key={entry.id} className="px-4 py-2.5 text-sm">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="font-mono text-xs uppercase tracking-[0.04em]">
+                        {entry.action.replace(/_/g, " ")}
+                      </span>
+                      <span className="text-xs text-[var(--color-muted-foreground)] tabular-nums">
+                        {new Date(entry.createdAt).toLocaleString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
+                <div className="flex h-10 w-10 items-center justify-center border border-[var(--color-border)] bg-[var(--color-surface)]">
+                  <History className="h-5 w-5 text-[var(--color-muted-foreground)]" />
+                </div>
+                <p className="mono-label">Audit trail</p>
+                <p className="max-w-sm text-sm text-[var(--color-muted-foreground)]">
+                  A full activity history for this property — payment allocations, receipt
+                  emissions, document changes and manual overrides — will appear here.
+                </p>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
     </div>

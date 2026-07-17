@@ -16,6 +16,7 @@ import { ReceiptsView } from "./receipts-view";
 import { RentRollView } from "./rent-roll-view";
 import { YearlyRentMatrix } from "./yearly-rent-matrix";
 import { BankMovementsInbox } from "./bank-movements-inbox";
+import { ReceiptAutomationQueue } from "./receipt-automation-queue";
 import { FinancialsView } from "./financials-view";
 import {
   AlertTriangle,
@@ -379,7 +380,8 @@ export function FinancialsContainer() {
           </TabsContent>
         )}
 
-        <TabsContent value="receipts" className="mt-0">
+        <TabsContent value="receipts" className="mt-0 space-y-4">
+          {isOwnerPortal && <ReceiptAutomationQueue />}
           <ReceiptsView
             tenantId={tenantId}
             propertyId={propertyId}
