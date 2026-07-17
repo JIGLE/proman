@@ -28,6 +28,7 @@ const SEGMENT_LABELS: Record<string, string> = {
   analytics: "Intelligence",
   reports: "Intelligence",
   intelligence: "Intelligence",
+  brand: "Brand",
 };
 
 export interface BreadcrumbOverride {
