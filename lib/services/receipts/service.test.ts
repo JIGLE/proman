@@ -27,13 +27,11 @@ vi.mock("@/lib/services/allocation/service", () => ({
   reverseAllocationsForReceipt: (...args: unknown[]) => mockReverseAllocations(...args),
 }));
 
-const mockGenerateFromHTML = vi
-  .fn()
-  .mockResolvedValue({
-    buffer: Buffer.from("pdf"),
-    mimeType: "application/pdf",
-    fileName: "r.pdf",
-  });
+const mockGenerateFromHTML = vi.fn().mockResolvedValue({
+  buffer: Buffer.from("pdf"),
+  mimeType: "application/pdf",
+  fileName: "r.pdf",
+});
 vi.mock("@/lib/services/pdf-generator", () => ({
   pdfGenerator: { generateFromHTML: (...args: unknown[]) => mockGenerateFromHTML(...args) },
 }));
