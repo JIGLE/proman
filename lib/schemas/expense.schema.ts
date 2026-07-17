@@ -95,6 +95,7 @@ export const expenseSchema = z.object({
   vendorName: z.string().max(150, "Vendor name too long").optional(),
   vendorVat: z.string().max(20, "VAT/NIF too long").optional(),
   receiptImage: z.string().optional(),
+  documentId: z.string().optional().nullable(),
   // Recurring expense fields (Wave 2.4)
   isRecurring: z.boolean().default(false).optional(),
   recurrenceRule: z.enum(RECURRENCE_RULES).optional(),

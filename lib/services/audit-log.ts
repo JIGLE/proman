@@ -75,7 +75,11 @@ export type AuditAction =
   | "SUBMIT_RECEIPT"
   | "ARCHIVE_RECEIPT"
   | "VOID_RECEIPT"
-  | "TRANSITION_RECEIPT_LIFECYCLE";
+  | "TRANSITION_RECEIPT_LIFECYCLE"
+  // Situs Documents/OCR (Migration D)
+  | "OCR_CLASSIFY_DOCUMENT"
+  | "OCR_EXTRACTION_REVIEWED"
+  | "LINK_EXPENSE_DOCUMENT";
 
 export interface AuditLogEntry {
   userId: string;
