@@ -1,7 +1,7 @@
 # ProMan Roadmap
 
 > Living document. Single source of truth for planned work.
-> Last updated: 2026-05-04. UX-audited (end-user simulation): 2026-05-04.
+> Last updated: 2026-07-17 (Situs rebrand PRs 1–12). UX-audited (end-user simulation): 2026-05-04.
 > De-duplicated 2026-07-09 (this file previously contained two copies of the
 > Current State / Phase tables and a partial second Decisions Log — merged
 > into one here; see `docs/PRODUCT_AUDIT_2026.md` for the forward strategy
@@ -9,8 +9,14 @@
 
 ## Current State
 
-**Version**: 1.16.2
-**Stage**: Production-ready. All Q3 sprints (1–5) complete. Decision-driven UI, multi-scenario demo, map view, fiscal compliance (PT/ES), building management, tenant owner-contact callout, and portfolio building grouping in place.
+**Version**: 1.16.3
+**Stage**: Production-ready. All Q3 sprints (1–5) complete. Mid-rebrand to **Situs // Sovereign
+Capital System** (PRs 1–12 of 13 shipped — see "Situs Rebrand" section below): Bauhaus-rectilinear
+brand, country-matched theming, portfolio tree, reference-month rent ledger, bank movement
+matching, receipt lifecycle + PT tax connector, mock OCR classification, generalized audit trail,
+schema consolidation, and an a11y/e2e pass over the new surfaces are all live. Decision-driven UI,
+multi-scenario demo, map view, fiscal compliance (PT/ES), building management, tenant
+owner-contact callout, and portfolio building grouping remain in place underneath the rebrand.
 
 ### Completed Features
 
@@ -152,6 +158,36 @@
 | 7.1 | Load `Building[]` into `AppState`; add CRUD actions to `app-context.tsx`                                   | Done   | Q3-S4  |
 | 7.2 | Building management page or modal: name, address, list of units (properties) with tenant/lease status      | Done   | Q3-S4  |
 | 7.3 | Portfolio view: group properties by building with building-level summary (total units, occupancy, revenue) | Done   | Q3-S5  |
+
+---
+
+## Phase 8 — Situs Rebrand (in progress)
+
+**Goal**: Rebrand ProMan to **Situs // Sovereign Capital System** and build the owner workflow the
+two approved mockups describe: bank movement → match → reference-month allocation → receipt →
+tax evidence → audit trail. 13 sequential PRs on `claude/proman-design-polish-6zpz2f`; see
+`docs/DEVELOPMENT_ROADMAP.md` or the session's plan checkpoint for the full per-PR breakdown.
+
+| #    | Task                                                                                                                                                                               | Status         |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- |
+| 8.1  | Brand foundation: fonts, radius-0 rectilinear tokens, 28-country theme system, Situs Portal logo                                                                                   | Done           |
+| 8.2  | Nav IA: Core/System groups, sidebar rail restyle                                                                                                                                   | Done           |
+| 8.3  | Situs landing page + auth pages restyle                                                                                                                                            | Done           |
+| 8.4  | Settings Appearance country/mode picker + dedicated Account page                                                                                                                   | Done           |
+| 8.5  | Portfolio tree hierarchy view (country → cluster → asset)                                                                                                                          | Done           |
+| 8.6  | Migration A: `RentPeriod`/`PaymentAllocation` reference-month ledger + allocation waterfall engine                                                                                 | Done           |
+| 8.7  | Migration B: bank layer (`BankConnection`/`Account`/`Transaction`/`SyncJob`/`ReconciliationRule`) + CSV import + matching engine + Bank Movements inbox                            | Done           |
+| 8.8  | Migration C: receipt document-lifecycle state machine + PT tax connector wrapper + ReceiptAutomationQueue                                                                          | Done           |
+| 8.9  | Migration D: mock OCR classification (`DocumentExtraction`) + Documents Inbox/OCR Queue/Review Required                                                                            | Done           |
+| 8.10 | Generalized AuditTrail component + TaxConnectorDashboard + Operations KPI row (partial — People registry, Operations subtabs, and the Intelligence route merge deferred to PR 10b) | Done (partial) |
+| 8.11 | Schema consolidation: closed a `Tenant.paymentStatus` manual-override write race, dropped dead `Expense.receiptImage`, added a bank-inbox index                                    | Done           |
+| 8.12 | Axe-core a11y pass + Playwright workflow smoke test over the new surfaces; docs updated (this entry)                                                                               | Done           |
+| 8.13 | Full infra rename (package.json, Docker, Helm, env prefixes) — deliberately last so deploy coordination never blocks product PRs                                                   | Planned        |
+
+> Deferred, lower priority than 8.13: **PR 10b** (Operations Task Queue/Calendar/Contractors
+> subtabs, People registry consolidating Tenants/Owners/Advisors+Contractors+Communications,
+> `/analytics`+`/insights`+`/reports` → `/intelligence` merge) and **PR 4b** (settings monolith
+> split into tab components, Integrations hub, dev-only `/brand` reference page).
 
 ---
 

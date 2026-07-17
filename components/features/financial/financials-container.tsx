@@ -64,6 +64,8 @@ export function FinancialsContainer() {
     if (
       tabParam === "receipts" ||
       tabParam === "queue" ||
+      tabParam === "rent-matrix" ||
+      tabParam === "bank" ||
       tabParam === "rent-roll" ||
       tabParam === "tax"
     ) {
