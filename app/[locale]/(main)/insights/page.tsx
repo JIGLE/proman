@@ -1,16 +1,6 @@
-import { Suspense } from "react";
-import InsightsView from "@/components/features/insights/insights-view";
-import { GenericPageSkeleton } from "@/components/ui/page-skeletons";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
-
-export default function InsightsPage() {
-  return (
-    <Suspense fallback={<GenericPageSkeleton />}>
-      <div className="h-full">
-        <InsightsView />
-      </div>
-    </Suspense>
-  );
+export default async function InsightsPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  redirect(`/${locale}/intelligence`);
 }

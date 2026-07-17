@@ -1,13 +1,6 @@
-import { Suspense } from "react";
-import { AnalyticsDashboard } from "@/components/features/dashboard/analytics-dashboard";
-import { GenericPageSkeleton } from "@/components/ui/page-skeletons";
+import { redirect } from "next/navigation";
 
-export const dynamic = "force-dynamic";
-
-export default function AnalyticsPage() {
-  return (
-    <Suspense fallback={<GenericPageSkeleton />}>
-      <AnalyticsDashboard />
-    </Suspense>
-  );
+export default async function AnalyticsPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  redirect(`/${locale}/intelligence?view=analytics`);
 }
