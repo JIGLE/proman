@@ -24,9 +24,10 @@ const SEGMENT_LABELS: Record<string, string> = {
   owners: "Owners",
   contracts: "Contracts",
   documents: "Documents",
-  insights: "Insights",
-  analytics: "Analytics",
-  reports: "Reports",
+  insights: "Intelligence",
+  analytics: "Intelligence",
+  reports: "Intelligence",
+  intelligence: "Intelligence",
 };
 
 export interface BreadcrumbOverride {

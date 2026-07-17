@@ -39,9 +39,10 @@ export interface PortalNavGroup {
 // Situs // Sovereign Capital System information architecture (PR 2 of the rebrand):
 // two groups — Core (the owner's daily surfaces) and System (configuration + identity) —
 // mirroring the approved Mockup.html nav rail. Nav LABELS are the Situs pillars; Operations
-// moved from `/maintenance` to `/operations` in PR 10b-1 (old path 301s). Finance still
-// serves from `/financials`, Intelligence from `/analytics` — those route renames are a
-// follow-up (PR 10b-3). Consolidated surfaces (Reports, Compliance/Tax Filing,
+// moved from `/maintenance` to `/operations` in PR 10b-1, Intelligence from `/analytics` to
+// `/intelligence` in PR 10b-3 (old paths 301, plus `/insights` and `/reports` which the
+// Intelligence tabs absorbed). Finance still serves from `/financials` — that route rename
+// is unscoped/deferred. Consolidated surfaces (Reports, Compliance/Tax Filing,
 // Messages, Leases, Vendors) are kept as `hidden` items so their routes stay permitted by
 // `canAccessPortalPath` (which ignores `hidden`) and existing deep links keep working — they
 // are reached from within their new home pillar rather than occupying their own rail row.
@@ -105,7 +106,7 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
       },
       {
         key: "analytics",
-        href: "/analytics",
+        href: "/intelligence",
         label: "Intelligence",
         labelKey: "navigation.intelligence",
         icon: BarChart2,
@@ -143,7 +144,7 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
     items: [
       {
         key: "reports",
-        href: "/reports",
+        href: "/intelligence",
         label: "Reports",
         labelKey: "navigation.reports",
         icon: FileBarChart,
@@ -235,6 +236,9 @@ export function normalizePortalPath(pathname: string): string {
   if (normalized === "/tenants") return "/people";
   if (normalized === "/vendors") return "/contacts";
   if (normalized === "/maintenance") return "/operations";
+  if (normalized === "/analytics" || normalized === "/insights" || normalized === "/reports") {
+    return "/intelligence";
+  }
   return normalized;
 }
 
