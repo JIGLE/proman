@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Building2,
   MapPin,
@@ -83,6 +83,29 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   const [ownerAssignError, setOwnerAssignError] = useState("");
   const [ownerAssignSaving, setOwnerAssignSaving] = useState(false);
 
+  // Documents already tagged to this property — the deduction-evidence
+  // picker in the Add Expense dialog (Expense.documentId, Migration A).
+  const [propertyDocuments, setPropertyDocuments] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    if (!propertyId) return;
+    let cancelled = false;
+    fetch(`/api/documents?propertyId=${propertyId}`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => {
+        if (!cancelled && body?.data) {
+          setPropertyDocuments(
+            body.data.map((d: { id: string; name: string }) => ({ id: d.id, name: d.name })),
+          );
+        }
+      })
+      .catch(() => {
+        // Document linking is optional — a failed fetch just hides the picker.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [propertyId]);
+
   // Stable initialData and onSubmit for quick-add dialogs (prevents infinite re-render loop)
   const expenseInitialData = useMemo<ExpenseFormData>(
     () => ({
@@ -92,6 +115,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
       category: "other" as const,
       description: "",
       isDeductible: true,
+      documentId: null,
     }),
     [propertyId],
   );
@@ -402,6 +426,29 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                       }
                     />
                   </div>
+                  {propertyDocuments.length > 0 && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="exp-document">Deduction evidence (optional)</Label>
+                      <Select
+                        value={expenseDialog.formData.documentId ?? "none"}
+                        onValueChange={(v) =>
+                          expenseDialog.updateFormData({ documentId: v === "none" ? null : v })
+                        }
+                      >
+                        <SelectTrigger id="exp-document">
+                          <SelectValue placeholder="Link a document…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No document</SelectItem>
+                          {propertyDocuments.map((doc) => (
+                            <SelectItem key={doc.id} value={doc.id}>
+                              {doc.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <div className="flex justify-end gap-2 pt-2">
                     <Button type="button" variant="outline" onClick={expenseDialog.closeDialog}>
                       Cancel
