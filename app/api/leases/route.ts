@@ -84,6 +84,15 @@ async function handlePost(request: NextRequest): Promise<Response> {
       include: leaseInclude,
     });
 
+    // Situs: seed the reference-month ledger for the new lease (idempotent,
+    // best-effort — the backfill script re-covers any miss).
+    try {
+      const { generateRentPeriods } = await import("@/lib/services/allocation/service");
+      await generateRentPeriods(lease.id);
+    } catch {
+      // Ledger generation must never block lease creation.
+    }
+
     return createSuccessResponse(lease, 201);
   } catch (error) {
     if (error instanceof ZodError) {
