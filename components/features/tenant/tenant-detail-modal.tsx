@@ -352,25 +352,11 @@ export function TenantDetailModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="paymentStatus">Payment Status</Label>
-                <Select
-                  value={formData.paymentStatus}
-                  onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      paymentStatus: value as Tenant["paymentStatus"],
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="overdue">Overdue</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Payment Status</Label>
+                <p className="text-sm text-muted-foreground">
+                  Derived from the rent ledger — record a payment or view the property&apos;s Rent
+                  Matrix to change it.
+                </p>
               </div>
 
               <div className="space-y-2">

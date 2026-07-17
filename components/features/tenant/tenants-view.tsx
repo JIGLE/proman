@@ -228,21 +228,29 @@ function TenantForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="paymentStatus">Payment Status</Label>
-              <Select
-                value={dialog.formData.paymentStatus}
-                onValueChange={(value: Tenant["paymentStatus"]) =>
-                  dialog.updateFormData({ paymentStatus: value })
-                }
-              >
-                <SelectTrigger className={dialog.formErrors.paymentStatus ? "border-red-500" : ""}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="overdue">Overdue</SelectItem>
-                </SelectContent>
-              </Select>
+              {isEdit ? (
+                <p className="text-sm text-muted-foreground">
+                  Derived from the rent ledger — record a payment to change it.
+                </p>
+              ) : (
+                <Select
+                  value={dialog.formData.paymentStatus}
+                  onValueChange={(value: Tenant["paymentStatus"]) =>
+                    dialog.updateFormData({ paymentStatus: value })
+                  }
+                >
+                  <SelectTrigger
+                    className={dialog.formErrors.paymentStatus ? "border-red-500" : ""}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="overdue">Overdue</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
               {dialog.formErrors.paymentStatus && (
                 <p className="text-sm text-destructive">{dialog.formErrors.paymentStatus}</p>
               )}

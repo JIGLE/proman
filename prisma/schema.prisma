@@ -560,6 +560,7 @@ model BankTransaction {
   reversals   BankTransaction[] @relation("TransactionReversal")
 
   @@index([userId, status])
+  @@index([userId, bookingDate])
   @@index([bankAccountId, bookingDate])
   @@index([counterpartyIbanHash])
   @@map("bank_transactions")
@@ -616,12 +617,12 @@ model Expense {
   date          DateTime
   category      String   // ExpenseCategory value — validated by Zod, stored as string (SQLite)
   description   String?
-  receiptImage  String?  // Receipt or invoice image path/URL
   isDeductible  Boolean  @default(true)  // Whether deductible for IRS/IRPF
   vendorName    String?  // Supplier/vendor name (useful for invoice records)
   vendorVat     String?  // Vendor NIF/VAT number for tax documentation
-  // Situs deduction-evidence workflow: a real Document link (receiptImage
-  // stays for back-compat, deprecated) + a tax review state.
+  // Situs deduction-evidence workflow: a real Document link + a tax review
+  // state (receiptImage dropped PR 11 — no reads/writes remained, see the
+  // 20260430000000-style consolidation migration for the drop).
   documentId      String?
   taxReviewStatus String?  // pending_review|reviewed|flagged — Zod-validated
   // Recurring expense fields (Wave 2.4)

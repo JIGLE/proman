@@ -18,7 +18,9 @@ const updateTenantSchema = z.object({
   rent: z.number().min(0).optional(),
   leaseStart: z.string().datetime().optional(),
   leaseEnd: z.string().datetime().optional(),
-  paymentStatus: z.enum(["paid", "overdue", "pending"]).optional(),
+  // paymentStatus is derived from the RentPeriod ledger (Situs Migration A —
+  // lib/services/allocation/service.ts) and is never accepted from a manual
+  // edit; a value here would silently drift the next time an allocation runs.
   notes: z.string().max(1000).optional(),
 });
 

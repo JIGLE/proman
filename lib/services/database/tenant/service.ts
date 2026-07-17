@@ -96,7 +96,8 @@ export const tenantService = {
         rent: data.rent,
         leaseStart: data.leaseStart ? new Date(data.leaseStart) : undefined,
         leaseEnd: data.leaseEnd ? new Date(data.leaseEnd) : undefined,
-        paymentStatus: data.paymentStatus,
+        // paymentStatus is derived from the RentPeriod ledger (Situs Migration A —
+        // lib/services/allocation/service.ts), never accepted here.
         lastPayment: data.lastPayment ? new Date(data.lastPayment) : undefined,
         notes: data.notes,
       },
