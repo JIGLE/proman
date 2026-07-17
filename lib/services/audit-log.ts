@@ -62,7 +62,14 @@ export type AuditAction =
   // Situs reference-month workflow (Migration A)
   | "GENERATE_RENT_PERIODS"
   | "ALLOCATE_PAYMENT"
-  | "REVERSE_ALLOCATION";
+  | "REVERSE_ALLOCATION"
+  // Situs bank layer (Migration B)
+  | "IMPORT_BANK_TRANSACTIONS"
+  | "MATCH_PAYMENT"
+  | "CONFIRM_MATCH"
+  | "OVERRIDE_MATCH"
+  | "IGNORE_TRANSACTION"
+  | "APPLY_RECONCILIATION_RULE";
 
 export interface AuditLogEntry {
   userId: string;

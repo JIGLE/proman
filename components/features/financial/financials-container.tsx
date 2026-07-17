@@ -15,18 +15,20 @@ import { PaymentMatrixView } from "./payment-matrix-view";
 import { ReceiptsView } from "./receipts-view";
 import { RentRollView } from "./rent-roll-view";
 import { YearlyRentMatrix } from "./yearly-rent-matrix";
+import { BankMovementsInbox } from "./bank-movements-inbox";
 import { FinancialsView } from "./financials-view";
 import {
   AlertTriangle,
   BadgeEuro,
   FileText,
   Grid3X3,
+  Landmark,
   Plus,
   Receipt,
   ShieldCheck,
 } from "lucide-react";
 
-type PaymentTab = "queue" | "receipts" | "rent-matrix" | "rent-roll" | "tax";
+type PaymentTab = "queue" | "receipts" | "rent-matrix" | "bank" | "rent-roll" | "tax";
 
 export function FinancialsContainer() {
   const [activeTab, setActiveTab] = useTabPersistence("payments", "queue");
@@ -336,7 +338,7 @@ export function FinancialsContainer() {
       >
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <TabsList
-            className={`grid w-full ${isOwnerPortal ? "max-w-4xl grid-cols-5" : "max-w-sm grid-cols-1"}`}
+            className={`grid w-full ${isOwnerPortal ? "max-w-5xl grid-cols-6" : "max-w-sm grid-cols-1"}`}
           >
             {isOwnerPortal && (
               <TabsTrigger value="queue" className="flex items-center gap-2">
@@ -353,6 +355,10 @@ export function FinancialsContainer() {
                 <TabsTrigger value="rent-matrix" className="flex items-center gap-2">
                   <Grid3X3 className="h-4 w-4" />
                   <span>Rent Matrix</span>
+                </TabsTrigger>
+                <TabsTrigger value="bank" className="flex items-center gap-2">
+                  <Landmark className="h-4 w-4" />
+                  <span>Bank Movements</span>
                 </TabsTrigger>
                 <TabsTrigger value="rent-roll" className="flex items-center gap-2">
                   <BadgeEuro className="h-4 w-4" />
@@ -385,6 +391,12 @@ export function FinancialsContainer() {
         {isOwnerPortal && (
           <TabsContent value="rent-matrix" className="mt-0">
             <YearlyRentMatrix />
+          </TabsContent>
+        )}
+
+        {isOwnerPortal && (
+          <TabsContent value="bank" className="mt-0">
+            <BankMovementsInbox />
           </TabsContent>
         )}
 
