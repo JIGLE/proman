@@ -42,6 +42,7 @@ import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { tenantSchema, type TenantFormData } from "@/lib/schemas/tenant.schema";
 import { getActiveLease } from "@/lib/utils/lease-helpers";
+import { TenantRelationshipMap } from "@/components/features/tenant/tenant-relationship-map";
 
 interface TenantDetailModalProps {
   tenant: Tenant | null;
@@ -426,6 +427,7 @@ export function TenantDetailModal({
                   <TabsTrigger value="overview">Overview</TabsTrigger>
                   <TabsTrigger value="lease">Lease</TabsTrigger>
                   <TabsTrigger value="payments">Payments</TabsTrigger>
+                  <TabsTrigger value="activity">Activity</TabsTrigger>
                 </TabsList>
 
                 {/* Overview tab */}
@@ -574,6 +576,11 @@ export function TenantDetailModal({
                       ))}
                     </div>
                   )}
+                </TabsContent>
+
+                {/* Activity tab — relationship-map strip */}
+                <TabsContent value="activity" className="mt-4">
+                  <TenantRelationshipMap tenantId={tenant.id} />
                 </TabsContent>
               </Tabs>
 

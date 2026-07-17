@@ -8,6 +8,7 @@
     "tenants": "Tenants",
     "owners": "Owners",
     "serviceProviders": "Service providers",
+    "communications": "Communications",
     "addTenant": "Add tenant",
     "addOwner": "Add owner"
   },
