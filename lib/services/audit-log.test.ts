@@ -51,6 +51,8 @@ describe("Audit Log Service", () => {
           userId: "user-123",
           action: "LOGIN",
           details: "User logged in from IP 192.168.1.1",
+          resourceType: null,
+          resourceId: null,
         },
       });
     });
@@ -67,6 +69,8 @@ describe("Audit Log Service", () => {
           userId: "user-123",
           action: "EXPORT_PERSONAL_DATA",
           details: JSON.stringify({ exportedAt: "2024-01-01", format: "JSON" }),
+          resourceType: null,
+          resourceId: null,
         },
       });
     });
@@ -82,6 +86,8 @@ describe("Audit Log Service", () => {
           userId: "user-123",
           action: "LOGOUT",
           details: null,
+          resourceType: null,
+          resourceId: null,
         },
       });
     });
