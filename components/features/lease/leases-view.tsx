@@ -112,12 +112,14 @@ export function LeasesView(): React.ReactElement {
   // Data view mode state with localStorage persistence
   const [dataViewMode, setDataViewMode] = useState<DataViewMode>("grid");
   useEffect(() => {
-    const saved = localStorage.getItem("proman-leases-view-mode");
+    const saved =
+      localStorage.getItem("situs-leases-view-mode") ??
+      localStorage.getItem("proman-leases-view-mode");
     if (saved === "grid" || saved === "table") setDataViewMode(saved);
   }, []);
   const handleViewModeChange = useCallback((mode: DataViewMode) => {
     setDataViewMode(mode);
-    localStorage.setItem("proman-leases-view-mode", mode);
+    localStorage.setItem("situs-leases-view-mode", mode);
   }, []);
 
   const initialFormData: LeaseFormData = {

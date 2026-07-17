@@ -98,12 +98,14 @@ export function MaintenanceView(): React.ReactElement {
   // Data view mode state with localStorage persistence
   const [dataViewMode, setDataViewMode] = useState<DataViewMode>("grid");
   useEffect(() => {
-    const saved = localStorage.getItem("proman-maintenance-view-mode");
+    const saved =
+      localStorage.getItem("situs-maintenance-view-mode") ??
+      localStorage.getItem("proman-maintenance-view-mode");
     if (saved === "grid" || saved === "table") setDataViewMode(saved);
   }, []);
   const handleViewModeChange = useCallback((mode: DataViewMode) => {
     setDataViewMode(mode);
-    localStorage.setItem("proman-maintenance-view-mode", mode);
+    localStorage.setItem("situs-maintenance-view-mode", mode);
   }, []);
 
   const initialFormData: MaintenanceFormData = {

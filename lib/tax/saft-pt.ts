@@ -373,6 +373,11 @@ export async function generateSAFTPT(userId: string, options: SAFTExportOptions)
       taxEntity: companyInfo.taxEntity || "Global",
       productCompanyTaxID: companyInfo.nif,
       softwareCertificateNumber: certNumber,
+      // Kept as "ProMan/ProMan" deliberately during the Situs rebrand: this is the
+      // AT (Autoridade Tributária) software-certification identifier embedded in every
+      // SAF-T export. Renaming it without re-verifying certification implications is a
+      // fiscal-compliance risk, not a cosmetic one — do not change without confirming
+      // against AT's software certification rules first.
       productID: "ProMan/ProMan",
       productVersion: "1.0",
     },
