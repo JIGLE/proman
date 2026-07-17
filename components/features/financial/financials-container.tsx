@@ -17,6 +17,7 @@ import { RentRollView } from "./rent-roll-view";
 import { YearlyRentMatrix } from "./yearly-rent-matrix";
 import { BankMovementsInbox } from "./bank-movements-inbox";
 import { ReceiptAutomationQueue } from "./receipt-automation-queue";
+import { TaxConnectorDashboard } from "./tax-connector-dashboard";
 import { FinancialsView } from "./financials-view";
 import {
   AlertTriangle,
@@ -409,7 +410,8 @@ export function FinancialsContainer() {
         )}
 
         {isOwnerPortal && (
-          <TabsContent value="tax" className="mt-0">
+          <TabsContent value="tax" className="mt-0 space-y-4">
+            <TaxConnectorDashboard />
             <FinancialsView />
           </TabsContent>
         )}

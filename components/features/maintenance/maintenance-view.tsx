@@ -76,6 +76,7 @@ import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { PageHeader } from "@/components/shared/page-header";
 import { TicketDetailModal } from "./ticket-detail-modal";
+import { OperationsKpiRow } from "./operations-kpi-row";
 
 export function MaintenanceView(): React.ReactElement {
   const { state, addMaintenance, updateMaintenance, deleteMaintenance } = useApp();
@@ -543,6 +544,8 @@ export function MaintenanceView(): React.ReactElement {
               </div>
             </div>
           )}
+
+          <OperationsKpiRow tickets={maintenance} />
 
           {/* Search and Filter */}
           <SearchFilter

@@ -15,10 +15,11 @@ const EPSILON = 0.005;
 
 /**
  * Situs property activity read model: Current Period Status (the reference
- * month the ledger says is next to fill), the PaymentTimeline (recent
+ * month the ledger says is next to fill) and the PaymentTimeline (recent
  * allocation events for this property's periods — RentPeriod.propertyId is
- * denormalized, so this is one query, no join through Lease), and an audit
- * trail scoped to this property's receipts/periods/leases.
+ * denormalized, so this is one query, no join through Lease). The property
+ * Audit tab reads the shared AuditTrail component (GET /api/audit-trail)
+ * instead — one reusable surface, not a per-page query.
  */
 async function handleGet(
   request: NextRequest,
@@ -84,27 +85,6 @@ async function handleGet(
     },
   });
 
-  const [receiptIds, leaseIds] = await Promise.all([
-    prisma.receipt.findMany({
-      where: { propertyId, userId: scopeUserId },
-      select: { id: true },
-    }),
-    prisma.lease.findMany({ where: { propertyId, userId: scopeUserId }, select: { id: true } }),
-  ]);
-  const resourceIds = [
-    propertyId,
-    ...periods.map((p) => p.id),
-    ...receiptIds.map((r) => r.id),
-    ...leaseIds.map((l) => l.id),
-  ];
-
-  const auditLogs = await prisma.auditLog.findMany({
-    where: { userId: scopeUserId, resourceId: { in: resourceIds } },
-    orderBy: { createdAt: "desc" },
-    take: 30,
-    select: { id: true, action: true, resourceType: true, createdAt: true, details: true },
-  });
-
   return createSuccessResponse({
     currentPeriod: openPeriod
       ? {
@@ -125,7 +105,6 @@ async function handleGet(
       createdBy: a.createdBy,
       period: a.rentPeriod,
     })),
-    auditLogs,
   });
 }
 

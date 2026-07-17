@@ -55,6 +55,7 @@ import {
 } from "@/lib/schemas/expense.schema";
 import { receiptSchema, type ReceiptFormData } from "@/lib/schemas/receipt.schema";
 import { usePropertyActivity } from "@/lib/hooks/use-property-activity";
+import { AuditTrail } from "@/components/shared/audit-trail";
 
 interface PropertyDetailViewProps {
   propertyId: string;
@@ -188,6 +189,19 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   const relatedExpenses = useMemo(
     () => state.expenses.filter((e) => e.propertyId === propertyId),
     [state.expenses, propertyId],
+  );
+
+  // AuditLog rows key off resourceId=receipt/lease/tenant/property id (Migration A) —
+  // scope the Audit tab to everything already loaded for this property, no extra fetch.
+  const auditResourceIds = useMemo(
+    () => [
+      propertyId,
+      ...relatedTenants.map((t) => t.id),
+      ...relatedLeases.map((l) => l.id),
+      ...relatedReceipts.map((r) => r.id),
+      ...relatedExpenses.map((e) => e.id),
+    ],
+    [propertyId, relatedTenants, relatedLeases, relatedReceipts, relatedExpenses],
   );
 
   const totalRevenue = relatedReceipts.reduce((sum, r) => sum + r.amount, 0);
@@ -1286,43 +1300,13 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
           )}
         </TabsContent>
 
-        {/* Audit Tab — Situs Migration A: AuditLog persists resourceType/resourceId,
-            so a property's full trail is one indexed query (app/api/properties/[id]/activity). */}
+        {/* Audit Tab — the shared AuditTrail component (GET /api/audit-trail), scoped to
+            this property plus its tenants/leases/receipts/expenses (Migration A resourceId keys). */}
         <TabsContent value="audit">
-          {activity && activity.auditLogs.length > 0 ? (
-            <div className="border border-[var(--color-border)] bg-[var(--color-surface)]">
-              <div className="border-b border-[var(--color-border)] px-4 py-3">
-                <p className="mono-label">Audit trail</p>
-              </div>
-              <div className="divide-y divide-[var(--color-border)]">
-                {activity.auditLogs.map((entry) => (
-                  <div key={entry.id} className="px-4 py-2.5 text-sm">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-mono text-xs uppercase tracking-[0.04em]">
-                        {entry.action.replace(/_/g, " ")}
-                      </span>
-                      <span className="text-xs text-[var(--color-muted-foreground)] tabular-nums">
-                        {new Date(entry.createdAt).toLocaleString()}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="flex flex-col items-center gap-3 py-14 text-center">
-                <div className="flex h-10 w-10 items-center justify-center border border-[var(--color-border)] bg-[var(--color-surface)]">
-                  <History className="h-5 w-5 text-[var(--color-muted-foreground)]" />
-                </div>
-                <p className="mono-label">Audit trail</p>
-                <p className="max-w-sm text-sm text-[var(--color-muted-foreground)]">
-                  A full activity history for this property — payment allocations, receipt
-                  emissions, document changes and manual overrides — will appear here.
-                </p>
-              </CardContent>
-            </Card>
-          )}
+          <AuditTrail
+            resourceIds={auditResourceIds}
+            emptyDescription="A full activity history for this property — payment allocations, receipt emissions, document changes and manual overrides — will appear here."
+          />
         </TabsContent>
       </Tabs>
     </div>

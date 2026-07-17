@@ -20,22 +20,14 @@ export interface PropertyTimelineEntry {
   period: { year: number; month: number };
 }
 
-export interface PropertyAuditEntry {
-  id: string;
-  action: string;
-  resourceType: string | null;
-  createdAt: string;
-  details: string | null;
-}
-
 export interface PropertyActivity {
   currentPeriod: PropertyCurrentPeriod | null;
   receiptLifecycle: string | null;
   timeline: PropertyTimelineEntry[];
-  auditLogs: PropertyAuditEntry[];
 }
 
-/** Situs Current Period Status / PaymentTimeline / Audit tab — one fetch. */
+/** Situs Current Period Status / PaymentTimeline — one fetch. The Audit tab
+ * reads the shared AuditTrail component (GET /api/audit-trail) separately. */
 export function usePropertyActivity(propertyId: string | undefined) {
   const [data, setData] = useState<PropertyActivity | null>(null);
   const [loading, setLoading] = useState(true);
