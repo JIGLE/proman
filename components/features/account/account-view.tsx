@@ -10,6 +10,7 @@ import { KeyRound, MonitorSmartphone, ShieldCheck, UserCircle } from "lucide-rea
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AuditTrail } from "@/components/shared/audit-trail";
 
 /**
  * Account — profile, security, sessions and API tokens for the signed-in owner.
@@ -148,6 +149,12 @@ export function AccountView(): React.ReactElement {
           <p className="text-sm text-muted-foreground">No API tokens yet.</p>
         </CardContent>
       </Card>
+
+      {/* Account-wide audit trail */}
+      <div>
+        <p className="mono-label mb-2">Account activity</p>
+        <AuditTrail emptyDescription="Sign-ins, exports, and settings changes for your account will appear here." />
+      </div>
     </div>
   );
 }
