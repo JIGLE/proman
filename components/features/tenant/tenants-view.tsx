@@ -306,7 +306,11 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
     const [propertyFilter, setPropertyFilter] = useState<string>("all");
     const [statusFilter, setStatusFilter] = useState<string>(() => {
       if (typeof window !== "undefined") {
-        return localStorage.getItem("proman-tenants-status-filter") ?? "all";
+        return (
+          localStorage.getItem("situs-tenants-status-filter") ??
+          localStorage.getItem("proman-tenants-status-filter") ??
+          "all"
+        );
       }
       return "all";
     });
@@ -317,12 +321,14 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
     // Data view mode state with localStorage persistence
     const [dataViewMode, setDataViewMode] = useState<DataViewMode>("grid");
     useEffect(() => {
-      const saved = localStorage.getItem("proman-tenants-view-mode");
+      const saved =
+        localStorage.getItem("situs-tenants-view-mode") ??
+        localStorage.getItem("proman-tenants-view-mode");
       if (saved === "grid" || saved === "table") setDataViewMode(saved);
     }, []);
     const handleViewModeChange = useCallback((mode: DataViewMode) => {
       setDataViewMode(mode);
-      localStorage.setItem("proman-tenants-view-mode", mode);
+      localStorage.setItem("situs-tenants-view-mode", mode);
     }, []);
 
     const initialFormData: TenantFormData = {
@@ -513,7 +519,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                 if (key === "property") setPropertyFilter(value);
                 if (key === "status") {
                   setStatusFilter(value);
-                  localStorage.setItem("proman-tenants-status-filter", value);
+                  localStorage.setItem("situs-tenants-status-filter", value);
                 }
               }}
               filters={[

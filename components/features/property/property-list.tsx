@@ -190,12 +190,14 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     );
     useEffect(() => {
       if (viewMode === "map") return;
-      const saved = localStorage.getItem("proman-properties-view-mode");
+      const saved =
+        localStorage.getItem("situs-properties-view-mode") ??
+        localStorage.getItem("proman-properties-view-mode");
       if (saved === "grid" || saved === "table" || saved === "tree") setDataViewMode(saved);
     }, [viewMode]);
     const handleViewModeChange = useCallback((mode: DataViewMode) => {
       setDataViewMode(mode);
-      if (mode !== "map") localStorage.setItem("proman-properties-view-mode", mode);
+      if (mode !== "map") localStorage.setItem("situs-properties-view-mode", mode);
     }, []);
 
     // Building edit dialog state
@@ -241,12 +243,16 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const [searchQuery, setSearchQuery] = useState("");
     const [typeFilter, setTypeFilter] = useState<string>(() =>
       typeof window !== "undefined"
-        ? (localStorage.getItem("proman-properties-type-filter") ?? "all")
+        ? (localStorage.getItem("situs-properties-type-filter") ??
+          localStorage.getItem("proman-properties-type-filter") ??
+          "all")
         : "all",
     );
     const [statusFilter, setStatusFilter] = useState<string>(() =>
       typeof window !== "undefined"
-        ? (localStorage.getItem("proman-properties-status-filter") ?? "all")
+        ? (localStorage.getItem("situs-properties-status-filter") ??
+          localStorage.getItem("proman-properties-status-filter") ??
+          "all")
         : "all",
     );
     const [operationalFilter, setOperationalFilter] = useState<string>("all");
@@ -1136,11 +1142,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     onFilterChange={(key, value) => {
                       if (key === "type") {
                         setTypeFilter(value);
-                        localStorage.setItem("proman-properties-type-filter", value);
+                        localStorage.setItem("situs-properties-type-filter", value);
                       }
                       if (key === "status") {
                         setStatusFilter(value);
-                        localStorage.setItem("proman-properties-status-filter", value);
+                        localStorage.setItem("situs-properties-status-filter", value);
                       }
                     }}
                     filters={[

@@ -16,7 +16,7 @@ keywords:
 maintainers:
   - name: Proman Maintainers
     url: https://github.com/JIGLE
-icon: https://raw.githubusercontent.com/JIGLE/proman/main/public/proman-icon.svg
+icon: https://raw.githubusercontent.com/JIGLE/proman/main/public/situs-mark.svg
 annotations:
   truenas.category: "Productivity"
   truenas.recommended_min_memory: "512Mi"

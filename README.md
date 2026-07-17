@@ -3,11 +3,11 @@
 [![Deploy to GHCR](https://github.com/JIGLE/ProMan/actions/workflows/deploy-ghcr.yml/badge.svg)](https://github.com/JIGLE/ProMan/actions/workflows/deploy-ghcr.yml)
 [![Production Gate](https://github.com/JIGLE/ProMan/actions/workflows/production.yml/badge.svg)](https://github.com/JIGLE/ProMan/actions/workflows/production.yml)
 
-# ProMan — Property Management Dashboard
+# Situs — Sovereign Capital System
 
-A modern, self-hosted property management platform built for landlords and property managers in **Portugal and Spain**. Track properties, tenants, leases, receipts, expenses, maintenance, and correspondence with Iberian-focused tax and legal compliance tooling.
+A modern, self-hosted property management platform (formerly ProMan) built for landlords and property managers in **Portugal and Spain**, built around a reference-month rent ledger: bank movement → match → allocate → receipt → tax filing → audit trail. Track properties, tenants, leases, receipts, expenses, maintenance, and correspondence with Iberian-focused tax and legal compliance tooling.
 
-> **v1.15.0** — Production-ready baseline for the 2026 Portuguese and Spanish rental market. See [RELEASES.md](RELEASES.md) for the full changelog.
+> **v1.16.3** — Situs rebrand in progress (PRs 1–13 of the plan shipped). See [RELEASES.md](RELEASES.md) for the full changelog.
 
 ## Features
 
@@ -212,7 +212,7 @@ The CronJob runs at 08:00 UTC and authenticates with `CRON_SECRET`.
 
 ## Demo Mode
 
-ProMan includes a public demo mode for exploring the app without authentication:
+Situs includes a public demo mode for exploring the app without authentication:
 
 ```
 https://your-domain.com/demo
@@ -226,7 +226,7 @@ https://your-domain.com/demo
 
 ## Database
 
-ProMan uses **SQLite** via Prisma ORM with the `better-sqlite3` adapter. Set up with:
+Situs uses **SQLite** via Prisma ORM with the `better-sqlite3` adapter. Set up with:
 
 ```bash
 npx prisma migrate deploy   # apply all pending migrations

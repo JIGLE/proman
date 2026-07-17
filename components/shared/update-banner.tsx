@@ -51,7 +51,11 @@ export function UpdateBanner(): React.ReactElement | null {
       }
     })();
 
-    setDismissedTag(localStorage.getItem("proman.dismissedUpdate") || null);
+    setDismissedTag(
+      localStorage.getItem("situs.dismissedUpdate") ||
+        localStorage.getItem("proman.dismissedUpdate") ||
+        null,
+    );
   }, []);
 
   useEffect(() => {
@@ -90,7 +94,7 @@ export function UpdateBanner(): React.ReactElement | null {
           <button
             className="text-sm text-muted-foreground"
             onClick={() => {
-              localStorage.setItem("proman.dismissedUpdate", latestTag);
+              localStorage.setItem("situs.dismissedUpdate", latestTag);
               setDismissedTag(latestTag);
             }}
           >
