@@ -62,6 +62,9 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
+  // Let content extend under the notch / home indicator so the mobile top bar
+  // and bottom nav can pad themselves with env(safe-area-inset-*).
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#f6f0e4" },
     { media: "(prefers-color-scheme: dark)", color: "#0b110d" },
