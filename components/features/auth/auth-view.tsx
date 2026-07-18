@@ -1,0 +1,320 @@
+"use client";
+
+import { Suspense, useEffect } from "react";
+import { signIn, useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight, ShieldCheck, Sparkles } from "lucide-react";
+import { ErrorBoundary } from "@/components/shared/error-boundary";
+import { Button } from "@/components/ui/button";
+import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
+
+/** Only allow same-site relative paths, to rule out an open redirect via `callbackUrl`. */
+function safeCallbackUrl(raw: string | null): string | null {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//")) return null;
+  return raw;
+}
+
+const SUPPORTED_LOCALES = ["pt", "en", "es"] as const;
+
+function detectLocale(): string {
+  if (typeof document !== "undefined" && document.referrer) {
+    try {
+      const segment = new URL(document.referrer).pathname.split("/")[1];
+      if (SUPPORTED_LOCALES.includes(segment as (typeof SUPPORTED_LOCALES)[number])) {
+        return segment;
+      }
+    } catch {
+      // ignore malformed referrer
+    }
+  }
+  const browserLang = typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "pt";
+  return SUPPORTED_LOCALES.includes(browserLang as (typeof SUPPORTED_LOCALES)[number])
+    ? browserLang
+    : "pt";
+}
+
+const isDemoEnabled =
+  process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true" || process.env.NODE_ENV !== "production";
+
+export type AuthMode = "signin" | "signup";
+
+const COPY: Record<
+  AuthMode,
+  { eyebrow: string; heading: string; subheading: string; primary: string; switchText: string }
+> = {
+  signin: {
+    eyebrow: "Welcome back",
+    heading: "Sign in to Situs",
+    subheading:
+      "Pick up your rental compliance where you left off — rent, receipts, and fiscal filings for Portugal & Spain.",
+    primary: "Continue with Google",
+    switchText: "New to Situs?",
+  },
+  signup: {
+    eyebrow: "Get started",
+    heading: "Create your Situs account",
+    subheading:
+      "Bring bank movements, receipts and tax evidence under one roof. Your account is created the first time you continue with Google.",
+    primary: "Sign up with Google",
+    switchText: "Already have an account?",
+  },
+};
+
+/** The three proof points shown on the brand panel — the owner workflow in one line each. */
+const PROOF_POINTS = [
+  { k: "01", label: "Bank → match → allocate", note: "Every payment reconciled to its month" },
+  { k: "02", label: "Receipt → emit → archive", note: "PT & ES fiscal documents, on time" },
+  { k: "03", label: "Audit trail, always on", note: "Every workflow step recorded" },
+];
+
+/** Left brand panel: Portal mark orbited by dashed rings, mirroring the landing hero. */
+function BrandPanel() {
+  return (
+    <div className="relative hidden overflow-hidden border-r border-[var(--color-border)] bg-[var(--color-surface-solid)] lg:flex lg:flex-col lg:justify-between lg:p-12">
+      {/* Orbiting Portal motif */}
+      <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
+        <div
+          aria-hidden
+          className="absolute aspect-square w-[26rem] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-primary)_40%,var(--color-border))] opacity-60 motion-safe:animate-[spin_32s_linear_infinite]"
+        />
+        <div
+          aria-hidden
+          className="absolute aspect-square w-[19rem] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-secondary)_40%,var(--color-border))] opacity-60 motion-safe:animate-[spin_24s_linear_infinite_reverse]"
+        />
+      </div>
+
+      <div className="relative flex items-center gap-3">
+        <SitusPortalMark className="h-9 w-9" />
+        <span className="text-[13px] font-semibold uppercase tracking-[0.22em] text-[var(--color-foreground)]">
+          Situs
+        </span>
+      </div>
+
+      <div className="relative motion-safe:animate-slide-up">
+        <p className="mono-label mb-4">Sovereign Capital System</p>
+        <p className="max-w-sm text-[clamp(22px,2vw,30px)] font-normal leading-tight tracking-[-0.03em] text-[var(--color-foreground)]">
+          Property income, receipts and tax evidence under control.
+        </p>
+        <div className="mt-9 space-y-4">
+          {PROOF_POINTS.map((p) => (
+            <div key={p.k} className="flex items-start gap-3">
+              <span className="mono-label-xs pt-1 tabular-nums text-[var(--country-highlight-readable)]">
+                {p.k}
+              </span>
+              <div>
+                <p className="text-sm font-medium text-[var(--color-foreground)]">{p.label}</p>
+                <p className="text-xs text-[var(--color-muted-foreground)]">{p.note}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="relative flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
+        <ShieldCheck className="h-3.5 w-3.5 text-[var(--country-highlight-readable)]" />
+        <span>Self-hosted &amp; GDPR-aligned · Portugal &amp; Spain</span>
+      </div>
+    </div>
+  );
+}
+
+function GoogleGlyph() {
+  return (
+    <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden>
+      <path
+        fill="#4285F4"
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+      />
+    </svg>
+  );
+}
+
+function AuthContent({ mode }: { mode: AuthMode }) {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = safeCallbackUrl(searchParams.get("callbackUrl"));
+  const copy = COPY[mode];
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push(callbackUrl ?? `/${detectLocale()}/dashboard`);
+    }
+  }, [status, router, callbackUrl]);
+
+  const continueWithGoogle = () => {
+    const browserLang = typeof navigator !== "undefined" ? navigator.language?.split("-")[0] : "pt";
+    const locale = ["pt", "en", "es"].includes(browserLang ?? "") ? (browserLang as string) : "pt";
+    signIn("google", { callbackUrl: callbackUrl ?? `/${locale}/dashboard` });
+  };
+
+  if (status === "loading" || session) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--color-background)]">
+        <div className="flex items-center gap-3 text-[var(--color-muted-foreground)]">
+          <SitusPortalMark className="h-6 w-6 motion-safe:animate-pulse" />
+          <span className="text-sm">Loading…</span>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid min-h-screen bg-[var(--color-background)] lg:grid-cols-[0.9fr_1.1fr]">
+      <BrandPanel />
+
+      <div className="flex items-center justify-center px-5 py-12 sm:px-10">
+        <div className="w-full max-w-sm motion-safe:animate-fade-in">
+          {/* Mobile brand lockup (brand panel is desktop-only) */}
+          <div className="mb-8 flex items-center gap-3 lg:hidden">
+            <SitusPortalMark className="h-10 w-10" />
+            <span className="text-[13px] font-semibold uppercase tracking-[0.22em]">Situs</span>
+          </div>
+
+          <p className="mono-label mb-3">{copy.eyebrow}</p>
+          <h1 className="text-[clamp(26px,4vw,34px)] font-normal leading-tight tracking-[-0.03em] text-[var(--color-foreground)]">
+            {copy.heading}
+          </h1>
+          <p className="mt-3 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
+            {copy.subheading}
+          </p>
+
+          {/* Primary: Google (creates the account on first sign-in) */}
+          <Button
+            onClick={continueWithGoogle}
+            variant="outline"
+            className="mt-8 flex h-12 w-full items-center justify-center gap-3 border-[var(--color-border-hover)] text-[15px] font-medium"
+          >
+            <GoogleGlyph />
+            {copy.primary}
+          </Button>
+
+          {/* Secondary: try the live demo — the lowest-friction path, no account */}
+          <button
+            type="button"
+            onClick={() => router.push(`/${detectLocale()}/demo?perspective=owner`)}
+            className="mt-3 flex h-12 w-full items-center justify-center gap-2 border border-[var(--color-border)] bg-transparent text-sm font-medium text-[var(--color-foreground)] transition-colors hover:bg-[var(--color-hover)]"
+          >
+            <Sparkles className="h-4 w-4 text-[var(--country-highlight-readable)]" />
+            Explore the live demo
+            <ArrowRight className="h-4 w-4" />
+          </button>
+
+          {/* Credentials — self-hosted / demo instances only */}
+          {isDemoEnabled && (
+            <>
+              <div className="relative my-7">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-[var(--color-border)]" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="mono-label bg-[var(--color-background)] px-3">
+                    or with email
+                  </span>
+                </div>
+              </div>
+
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const formData = new FormData(e.currentTarget);
+                  signIn("credentials", {
+                    email: formData.get("email"),
+                    password: formData.get("password"),
+                    callbackUrl: callbackUrl ?? `/${detectLocale()}/dashboard`,
+                  });
+                }}
+                className="space-y-3"
+              >
+                <div>
+                  <label htmlFor="auth-email" className="mono-label-xs mb-1.5 block">
+                    Email
+                  </label>
+                  <input
+                    id="auth-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    className="w-full border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm text-[var(--color-foreground)] outline-none transition-colors placeholder:text-[var(--color-muted-foreground)] focus:border-[var(--country-highlight-readable)] focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+                    placeholder="you@example.com"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="auth-password" className="mono-label-xs mb-1.5 block">
+                    Password
+                  </label>
+                  <input
+                    id="auth-password"
+                    name="password"
+                    type="password"
+                    autoComplete={mode === "signup" ? "new-password" : "current-password"}
+                    className="w-full border border-[var(--color-border)] bg-[var(--color-background)] p-3 text-sm text-[var(--color-foreground)] outline-none transition-colors placeholder:text-[var(--color-muted-foreground)] focus:border-[var(--country-highlight-readable)] focus-visible:ring-2 focus-visible:ring-[var(--color-ring)]"
+                    placeholder="••••••••"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="h-11 w-full bg-[var(--color-primary)] font-semibold text-[var(--color-primary-foreground)] hover:opacity-90"
+                >
+                  {mode === "signup" ? "Create account" : "Sign in"}
+                </Button>
+              </form>
+            </>
+          )}
+
+          {/* Mode switch */}
+          <p className="mt-8 text-center text-sm text-[var(--color-muted-foreground)]">
+            {copy.switchText}{" "}
+            <button
+              type="button"
+              onClick={() => router.push(mode === "signin" ? "/auth/signup" : "/auth/signin")}
+              className="font-medium text-[var(--country-highlight-readable)] underline-offset-4 hover:underline"
+            >
+              {mode === "signin" ? "Create an account" : "Sign in"}
+            </button>
+          </p>
+
+          {isDemoEnabled && process.env.NODE_ENV !== "production" && (
+            <p className="mt-4 text-center text-xs text-[var(--color-muted-foreground)]">
+              Demo mode active — enter any credentials
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Shared auth experience, rendered by both /auth/signin and /auth/signup. */
+export function AuthView({ mode }: { mode: AuthMode }) {
+  return (
+    <ErrorBoundary>
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center bg-[var(--color-background)]">
+            <div className="flex items-center gap-3 text-[var(--color-muted-foreground)]">
+              <SitusPortalMark className="h-6 w-6" />
+              <span className="text-sm">Loading…</span>
+            </div>
+          </div>
+        }
+      >
+        <AuthContent mode={mode} />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+export default AuthView;

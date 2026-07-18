@@ -670,7 +670,8 @@
     "footer2": {
       "tagline": "Situs // Sovereign Capital System",
       "modules": "Banking · Receipts · Documents · Tax Evidence"
-    }
+    },
+    "createAccount": "Create account"
   },
   "errors": {
     "notFound": {
