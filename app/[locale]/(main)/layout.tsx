@@ -5,7 +5,6 @@ import { DemoBanner } from "@/components/shared/demo-banner";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { CommandPalette } from "@/components/shared/command-palette";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
-import { AppTour } from "@/components/shared/app-tour";
 import { ScenarioRunner } from "@/components/shared/scenario-runner";
 import { PortalAccessGuard } from "@/components/shared/portal-access-guard";
 
@@ -55,9 +54,6 @@ export default function MainLayout({
 
       {/* Command Palette (⌘K) */}
       <CommandPalette />
-
-      {/* Guided Tour Overlay */}
-      <AppTour />
 
       {/* Demo Scenario Runner FAB */}
       <ScenarioRunner />

@@ -2,15 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { useDemoMode } from "@/lib/contexts/demo-context";
-import {
-  AlertTriangle,
-  LogOut,
-  RotateCcw,
-  PlayCircle,
-  Timer,
-  ChevronUp,
-  ChevronDown,
-} from "lucide-react";
+import { AlertTriangle, LogOut, RotateCcw, Timer, ChevronUp, ChevronDown } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { resetDemoStore } from "@/lib/demo/demo-local-state";
 
@@ -85,17 +77,12 @@ export function DemoBanner() {
     setShowExtendPrompt(false);
   }, []);
 
-  const handleRestartTour = useCallback(() => {
-    // Dispatch custom event that the guided tour component listens for
-    window.dispatchEvent(new CustomEvent("proman:restart-tour"));
-  }, []);
-
   if (!isDemoMode) return null;
 
   const isLowTime = remaining < WARN_THRESHOLD_MS;
 
   return (
-    <div data-tour="demo-banner" role="status" aria-live="polite" className="sticky top-0 z-50">
+    <div role="status" aria-live="polite" className="sticky top-0 z-50">
       <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-amber-500/90 to-orange-500/90 backdrop-blur-sm px-3 py-1 text-xs font-medium text-amber-950 dark:from-amber-600/90 dark:to-orange-600/90 dark:text-amber-50 shadow-sm transition-all duration-200">
         {/* Left: status */}
         <div className="flex items-center gap-2 min-w-0">
@@ -155,16 +142,6 @@ export function DemoBanner() {
                   +15 min
                 </button>
               )}
-
-              {/* Restart Tour */}
-              <button
-                onClick={handleRestartTour}
-                className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-black/10 hover:bg-black/20 transition-colors"
-                title="Restart guided tour"
-              >
-                <PlayCircle className="h-3 w-3" />
-                <span className="hidden sm:inline">Tour</span>
-              </button>
 
               {/* Reset Demo */}
               <button
