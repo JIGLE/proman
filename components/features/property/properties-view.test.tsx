@@ -36,8 +36,10 @@ vi.mock("@/lib/contexts/toast-context", () => ({
 }));
 
 describe("PropertiesView", () => {
-  it("shows empty state when no properties", () => {
+  it("renders the portfolio view when there are no properties", () => {
     render(<PropertiesView />);
-    expect(screen.getByText(/properties\.title/)).toBeDefined();
+    // View-mode-agnostic: the search/filter chrome renders above every mode
+    // (grid/table/tree/map), so it's a stable signal the view mounted.
+    expect(screen.getByPlaceholderText(/search properties/i)).toBeDefined();
   });
 });
