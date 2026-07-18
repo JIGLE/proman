@@ -120,6 +120,12 @@ export default async function LandingPage({ params }: Props) {
             <div className="hidden sm:block">
               <LanguageSelector compact />
             </div>
+            <a
+              href="/auth/signin"
+              className="hidden px-3 py-2 text-[13px] font-medium text-[var(--color-muted-foreground)] transition-colors hover:text-[var(--color-foreground)] sm:inline-block"
+            >
+              {t("signIn")}
+            </a>
             <TrackedLandingLink
               href={`/${locale}/demo?perspective=owner`}
               eventName="landing.demo_start"
@@ -159,8 +165,8 @@ export default async function LandingPage({ params }: Props) {
                 </Button>
               </TrackedLandingLink>
               <TrackedLandingLink
-                href="#workflow"
-                eventName="landing.workflow_cta_click"
+                href="/auth/signup"
+                eventName="landing.signup_start"
                 eventData={{ location: "hero_secondary" }}
                 className="w-full sm:w-auto"
               >
@@ -169,10 +175,17 @@ export default async function LandingPage({ params }: Props) {
                   variant="outline"
                   className="w-full rounded-none font-semibold sm:w-auto"
                 >
-                  {t("secondaryCta")}
+                  {t("createAccount")}
                 </Button>
               </TrackedLandingLink>
             </div>
+
+            <a
+              href="#workflow"
+              className="mt-4 inline-flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] underline-offset-4 transition-colors hover:text-[var(--color-foreground)] hover:underline"
+            >
+              {t("secondaryCta")}
+            </a>
 
             <div className="mt-10 flex flex-wrap gap-2">
               {chips.map((chip) => (

@@ -670,7 +670,8 @@
     "footer2": {
       "tagline": "Situs // Sovereign Capital System",
       "modules": "Banca · Ricevute · Documenti · Prove Fiscali"
-    }
+    },
+    "createAccount": "Crea account"
   },
   "errors": {
     "notFound": {
