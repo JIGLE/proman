@@ -127,7 +127,6 @@ export function OnboardingChecklist({
   // expand interaction below is user-triggered and unaffected.
   return (
     <div
-      data-tour="onboarding"
       className={cn(
         "rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] overflow-hidden",
         className,
