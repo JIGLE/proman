@@ -71,6 +71,7 @@ import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { AddressVerificationService, AddressSuggestion } from "@/lib/utils/address-verification";
 import PropertyMap from "./property-map";
 import { PortfolioTree } from "./portfolio-tree";
+import { PropertyDetailView } from "./property-detail-view";
 import { PageHeader } from "@/components/shared/page-header";
 
 // ─── Next Action derivation ────────────────────────────────────────────────────
@@ -183,10 +184,13 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
 
-    // Data view mode state with localStorage persistence (grid | table | map)
+    // Data view mode state with localStorage persistence (grid | table | tree | map).
+    // Tree is the default Situs Portfolio experience (structural inventory + workspace).
     const [dataViewMode, setDataViewMode] = useState<DataViewMode>(
-      viewMode === "map" ? "map" : "grid",
+      viewMode === "map" ? "map" : "tree",
     );
+    // The asset whose command workspace is open in the tree split (desktop only).
+    const [workspacePropertyId, setWorkspacePropertyId] = useState<string | null>(null);
     useEffect(() => {
       if (viewMode === "map") return;
       const saved =
@@ -634,6 +638,23 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
         onPropertySelect?.(selected.id);
       },
       [onPropertySelect, properties, router, locale],
+    );
+
+    // Tree selection: on desktop, open the asset inline in the right workspace pane
+    // (the Situs tree+workspace split); on smaller screens there is no room for a
+    // side-by-side, so fall back to the routed detail (master→detail).
+    const handleTreeSelect = useCallback(
+      (propertyId: string) => {
+        const isDesktop =
+          typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches;
+        if (isDesktop) {
+          setWorkspacePropertyId(propertyId);
+          onPropertySelect?.(propertyId);
+        } else {
+          handleMapPropertySelect(propertyId);
+        }
+      },
+      [handleMapPropertySelect, onPropertySelect],
     );
 
     return (
@@ -1179,15 +1200,37 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                   />
                 </div>
               ) : dataViewMode === "tree" ? (
-                /* Tree View — Situs structural portfolio inventory */
-                <PortfolioTree
-                  properties={filteredProperties}
-                  buildings={buildings}
-                  tenants={tenants}
-                  maintenance={maintenance}
-                  onSelectProperty={handleMapPropertySelect}
-                  highlightedPropertyId={highlightedPropertyId}
-                />
+                /* Tree View — Situs structural portfolio inventory + command workspace.
+                   Desktop (lg+): a fixed tree rail beside an inline detail workspace.
+                   Below lg: tree only — selecting an asset routes to the detail. */
+                <div className="lg:grid lg:grid-cols-[minmax(300px,340px)_1fr] lg:items-start lg:gap-6">
+                  <div className="lg:border lg:border-[var(--color-border)] lg:bg-[var(--color-card)]">
+                    <PortfolioTree
+                      properties={filteredProperties}
+                      buildings={buildings}
+                      tenants={tenants}
+                      maintenance={maintenance}
+                      onSelectProperty={handleTreeSelect}
+                      highlightedPropertyId={workspacePropertyId ?? highlightedPropertyId}
+                    />
+                  </div>
+                  <div className="hidden min-w-0 lg:block">
+                    {workspacePropertyId ? (
+                      <div
+                        key={workspacePropertyId}
+                        className="border border-[var(--color-border)] bg-[var(--color-card)] p-4 motion-safe:animate-fade-in lg:p-6"
+                      >
+                        <PropertyDetailView propertyId={workspacePropertyId} />
+                      </div>
+                    ) : (
+                      <div className="flex min-h-[440px] items-center justify-center border border-dashed border-[var(--color-border)] p-12 text-center">
+                        <p className="mono-label max-w-[26ch] leading-relaxed">
+                          Select an asset from the tree to open its command workspace.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               ) : dataViewMode === "table" ? (
                 /* Table View */
                 filteredProperties.length === 0 ? (
