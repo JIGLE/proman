@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   OnboardingChecklist,
   type OnboardingChecklistStep,
@@ -84,18 +83,18 @@ function Modelo179Alert({ locale }: { locale: string }): ReactElement | null {
   return (
     <Link
       href={`/${locale}/compliance/modelo179`}
-      className="flex items-center justify-between rounded-lg border border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)] p-4 transition-colors hover:bg-[var(--color-warning)]/10"
+      className="alert-card alert-warning transition-colors hover:brightness-[0.98]"
     >
-      <div className="flex items-center gap-3">
-        <FileCheck2 className="h-4 w-4 shrink-0 text-[var(--color-warning)]" />
-        <span className="text-sm font-medium text-[var(--color-warning)]">
+      <div className="flex min-w-0 items-center gap-3">
+        <FileCheck2 className="h-4 w-4 shrink-0 text-[var(--semantic-warning)]" />
+        <span className="text-sm font-medium text-[var(--color-foreground)]">
           {missingCount} lease{missingCount !== 1 ? "s" : ""} not registered with AT for{" "}
           {targetYear} — Modelo 179 required
         </span>
       </div>
-      <Badge variant="secondary" className="tabular-nums">
+      <span className="font-mono text-xs font-semibold tabular-nums text-[var(--semantic-warning)]">
         {missingCount}
-      </Badge>
+      </span>
     </Link>
   );
 }
@@ -193,7 +192,7 @@ function FeatureHighlightCard({
   return (
     <Card className="border border-[var(--color-border)] bg-[var(--color-card)]">
       <CardContent className="p-5">
-        <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-info-muted)]">
+        <div className="mb-3 inline-flex h-9 w-9 items-center justify-center bg-[var(--color-info-muted)]">
           <Icon className="h-4 w-4 text-[var(--color-primary)]" />
         </div>
         <h3 className="mb-1 text-sm font-semibold text-[var(--color-foreground)]">{title}</h3>
@@ -386,7 +385,7 @@ export function OverviewView({
   const showChecklist = isOwnerPortal && !allStepsDone;
 
   if (loading) {
-    return <div className="h-40 animate-pulse rounded-2xl bg-[var(--color-muted)]/30" />;
+    return <div className="h-40 animate-pulse bg-[var(--color-muted)]/30" />;
   }
 
   if (properties.length === 0 && isOwnerPortal) {
@@ -454,52 +453,58 @@ export function OverviewView({
 
   if (isOwnerPortal) {
     return (
-      <div className="space-y-5">
+      <div className="space-y-5 motion-safe:animate-fade-in">
         {/* Onboarding: top priority when setup is incomplete */}
         {showChecklist && <OnboardingChecklist steps={onboardingSteps} />}
 
         {/* Status hero — the first thing a landlord sees */}
         <ActionPanel />
 
-        {/* Three key numbers — compact, no decorative headers */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-xl border border-[var(--color-success)]/20 bg-[var(--color-success-muted)] p-4">
-            <p className="text-xs text-[var(--color-muted-foreground)]">
-              {t("collectedThisMonth")}
-            </p>
-            <p className="mt-1.5 text-xl font-semibold tracking-tight text-[var(--color-foreground)]">
+        {/* Three key numbers — Situs metric panels: mono label, light numeral,
+            tabular figures. Collected income is the focal metric (country accent);
+            overdue lights up danger only when there is money at risk. */}
+        <div className="grid grid-cols-3 gap-3 motion-safe:animate-slide-up">
+          <div className="panel border-l-[3px] border-l-[var(--country-highlight-readable)] p-4">
+            <p className="mono-label">{t("collectedThisMonth")}</p>
+            <p
+              className="mt-2 text-xl font-light tabular-nums sm:text-2xl text-[var(--color-foreground)]"
+              aria-live="polite"
+            >
               {formatCurrency(dashboardData.monthlyIncome)}
             </p>
           </div>
           <div
-            className={
-              dashboardData.overdueRent > 0
-                ? "rounded-xl border border-[var(--color-destructive)]/20 bg-[var(--color-error-muted)] p-4"
-                : "rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4"
-            }
+            className={cn(
+              "panel p-4",
+              dashboardData.overdueRent > 0 &&
+                "border-l-[3px] border-l-[var(--semantic-danger)] bg-[var(--semantic-danger-soft)]",
+            )}
           >
-            <p className="text-xs text-[var(--color-muted-foreground)]">{t("overdueRentMetric")}</p>
+            <p className="mono-label">{t("overdueRentMetric")}</p>
             <p
-              className={`mt-1.5 text-xl font-semibold tracking-tight ${dashboardData.overdueRent > 0 ? "text-[var(--color-destructive)]" : "text-[var(--color-foreground)]"}`}
+              className={cn(
+                "mt-2 text-xl font-light tabular-nums sm:text-2xl",
+                dashboardData.overdueRent > 0
+                  ? "text-[var(--semantic-danger)]"
+                  : "text-[var(--color-foreground)]",
+              )}
             >
               {formatCurrency(dashboardData.overdueRent)}
             </p>
           </div>
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-4">
-            <p className="text-xs text-[var(--color-muted-foreground)]">{t("occupancyMetric")}</p>
-            <p className="mt-1.5 text-xl font-semibold tracking-tight text-[var(--color-foreground)]">
+          <div className="panel p-4">
+            <p className="mono-label">{t("occupancyMetric")}</p>
+            <p className="mt-2 text-xl font-light tabular-nums sm:text-2xl text-[var(--color-foreground)]">
               {dashboardData.occupancyRate.toFixed(0)}%
             </p>
           </div>
         </div>
 
-        {/* Recent payments — compact list */}
+        {/* Recent payments — compact rectilinear list */}
         {dashboardData.recentPayments.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]">
+          <div className="panel">
             <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3.5">
-              <p className="text-sm font-semibold text-[var(--color-foreground)]">
-                {t("recentPayments")}
-              </p>
+              <p className="mono-label">{t("recentPayments")}</p>
               <button
                 onClick={() => navigate("/financials?tab=receipts")}
                 className="text-sm text-[var(--color-primary)] hover:underline"
@@ -518,7 +523,7 @@ export function OverviewView({
                       {formatDate(receipt.date)}
                     </p>
                   </div>
-                  <p className="ml-4 shrink-0 text-sm font-semibold text-[var(--color-foreground)]">
+                  <p className="ml-4 shrink-0 text-sm font-medium tabular-nums text-[var(--color-foreground)]">
                     {formatCurrency(receipt.amount)}
                   </p>
                 </div>
