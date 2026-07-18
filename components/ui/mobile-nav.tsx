@@ -1,12 +1,13 @@
 "use client";
 
 import * as React from "react";
-import { LogOut, Building2, Menu, X, Globe } from "lucide-react";
+import { LogOut, Globe } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { signOut, useSession } from "next-auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "./avatar";
 import { Sheet, SheetClose, SheetContent, SheetTitle, SheetTrigger } from "./sheet";
 import { LanguageSelector } from "@/components/shared/language-selector";
+import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -66,15 +67,20 @@ export function MobileBottomNav({
     return pathname === fullPath || pathname.startsWith(`${fullPath}/`);
   };
 
+  // Situs rectilinear: no pills, no radius. The active tab is marked by a 2px
+  // country-highlight top border (mirroring the desktop rail's active left
+  // border) rather than a rounded accent chip.
   const tabItemClass = (isActive: boolean) =>
     cn(
-      "flex flex-col items-center justify-center gap-0.5 h-full px-1 py-1 rounded-lg transition-all duration-200",
-      "active:scale-95 touch-manipulation",
-      "focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] focus-visible:ring-offset-1",
+      "flex flex-col items-center justify-center gap-1 h-full px-1 pt-[calc(0.375rem-2px)] pb-1.5 border-t-2 transition-colors duration-200",
+      "active:opacity-70 touch-manipulation",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[var(--color-focus)]",
       isActive
-        ? "bg-accent-primary/15 text-accent-primary"
-        : "text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
+        ? "border-[var(--country-highlight-readable)] text-[var(--country-highlight-readable)]"
+        : "border-transparent text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
     );
+
+  const isSecondaryActive = secondaryNavItems.some((item) => isItemActive(item.href));
 
   // A single bottom bar: the primary tabs plus one "Account" tab that opens a
   // bottom sheet with profile utilities (language, settings, sign-out) — so the
@@ -104,35 +110,26 @@ export function MobileBottomNav({
                 aria-label={item.label}
                 aria-current={isActive ? "page" : undefined}
               >
-                <div
-                  className={cn(
-                    "p-1.5 rounded-lg transition-colors",
-                    isActive && "bg-accent-primary/20",
-                  )}
-                >
-                  <Icon className="h-5 w-5" aria-hidden="true" />
-                </div>
-                <span className="text-xs font-medium">{item.label}</span>
+                <Icon className="h-5 w-5" aria-hidden="true" />
+                <span className="text-[11px] font-medium tracking-tight">{item.label}</span>
               </Link>
             );
           })}
 
           {session && (
             <Sheet>
-              <SheetTrigger className={tabItemClass(false)} aria-label={tNav("more")}>
-                <div className="p-0.5">
-                  <Avatar className="h-7 w-7 ring-1 ring-[var(--color-border)]">
-                    <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
-                    <AvatarFallback className="bg-accent-primary text-white text-[10px] font-semibold">
-                      {initials}
-                    </AvatarFallback>
-                  </Avatar>
-                </div>
-                <span className="text-xs font-medium">{tNav("more")}</span>
+              <SheetTrigger className={tabItemClass(isSecondaryActive)} aria-label={tNav("more")}>
+                <Avatar className="h-6 w-6 rounded-none ring-1 ring-[var(--color-border)]">
+                  <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+                  <AvatarFallback className="rounded-none bg-[var(--country-highlight-readable)] text-[10px] font-semibold text-[var(--color-background)]">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="text-[11px] font-medium tracking-tight">{tNav("more")}</span>
               </SheetTrigger>
               <SheetContent
                 side="bottom"
-                className="max-h-[85vh] overflow-y-auto rounded-t-2xl px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-5"
+                className="max-h-[85vh] overflow-y-auto rounded-none px-4 pb-[max(env(safe-area-inset-bottom),1rem)] pt-5"
               >
                 <SheetTitle className="sr-only">{tNav("more")}</SheetTitle>
                 <div className="mb-4 flex items-center gap-3">
@@ -164,10 +161,10 @@ export function MobileBottomNav({
                             href={`/${currentLocale}${item.href}`}
                             aria-current={isActive ? "page" : undefined}
                             className={cn(
-                              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+                              "flex items-center gap-3 border-l-2 px-3 py-2.5 text-sm transition-colors",
                               isActive
-                                ? "bg-accent-primary/15 text-accent-primary"
-                                : "text-[var(--color-foreground)] hover:bg-[var(--color-hover)]",
+                                ? "border-[var(--country-highlight-readable)] bg-[var(--color-sidebar-active)] font-medium text-[var(--country-highlight-readable)]"
+                                : "border-transparent text-[var(--color-foreground)] hover:bg-[var(--color-hover)]",
                             )}
                           >
                             <Icon
@@ -214,38 +211,43 @@ export function MobileBottomNav({
 }
 
 /**
- * Mobile header component with menu toggle
+ * Situs mobile top bar — the sticky app chrome shown below `md`, giving the
+ * authenticated shell a native-app feel (there is no desktop sidebar on a
+ * phone). It carries the Portal mark and the current section title, derived
+ * from the active nav item so it stays i18n-correct and in sync with the rail.
+ * Purely presentational: no menu toggle — navigation lives in the bottom bar.
  */
-interface MobileHeaderProps {
-  title: string;
-  onMenuClick?: () => void;
-  showMenu?: boolean;
-}
+export function MobileTopBar(): React.ReactElement {
+  const pathname = usePathname();
+  const tNav = useTranslations("navigation");
+  const { navigation } = usePortalAccess();
 
-export function MobileHeader({
-  title,
-  onMenuClick,
-  showMenu,
-}: MobileHeaderProps): React.ReactElement {
+  const currentLocale = pathname.split("/")[1] || "pt";
+  // Path with the locale prefix stripped, e.g. "/portfolio/123".
+  const routePath = `/${pathname.split("/").slice(2).join("/")}`;
+
+  // Resolve the section title from the nav item whose href best matches the
+  // current path (longest prefix wins, so "/settings/tax" still reads
+  // "Settings"). Falls back to the wordmark when nothing matches.
+  const items = navigation.flatMap((group) => group.items);
+  const match = items
+    .filter((item) => routePath === item.href || routePath.startsWith(`${item.href}/`))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+  const title = match
+    ? tNav(match.labelKey.replace("navigation.", "") as Parameters<typeof tNav>[0])
+    : "Situs";
+
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-[var(--color-background)]/95 backdrop-blur border-b border-[var(--color-border)] md:hidden">
-      <div className="flex items-center gap-3">
-        <Building2 className="h-6 w-6 text-accent-primary" aria-hidden="true" />
-        <h1 className="text-lg font-semibold text-[var(--color-foreground)]">{title}</h1>
-      </div>
-      {onMenuClick && (
-        <button
-          onClick={onMenuClick}
-          className="p-2.5 rounded-lg text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-hover)] transition-colors active:scale-95 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
-          aria-label={showMenu ? "Close menu" : "Open menu"}
-        >
-          {showMenu ? (
-            <X className="h-5 w-5" aria-hidden="true" />
-          ) : (
-            <Menu className="h-5 w-5" aria-hidden="true" />
-          )}
-        </button>
-      )}
+    <header
+      className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--color-border)] bg-[var(--color-background)]/95 px-4 pt-[env(safe-area-inset-top,0px)] backdrop-blur md:hidden"
+      style={{ height: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
+    >
+      <Link href={`/${currentLocale}/dashboard`} aria-label="Situs — Home" className="shrink-0">
+        <SitusPortalMark size="sm" className="h-6 w-6" />
+      </Link>
+      <h1 className="truncate text-base font-semibold tracking-tight text-[var(--color-foreground)]">
+        {title}
+      </h1>
     </header>
   );
 }
