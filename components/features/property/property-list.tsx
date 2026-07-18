@@ -34,7 +34,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useCurrency } from "@/lib/contexts/currency-context";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -589,49 +588,35 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     };
 
     const getStatusBadge = (status: Property["status"]) => {
+      // Situs rectilinear status chips — radius-0, 1px border, no decorative motion.
+      const base = "inline-flex items-center gap-1 border px-2 py-1 text-xs font-medium";
       switch (status) {
         case "occupied":
           return (
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-success/20 text-success-foreground border border-success/30"
-            >
+            <span className={cn(base, "border-success/30 bg-success/20 text-success-foreground")}>
               <CheckCircle className="h-3 w-3" />
               Occupied
-            </motion.div>
+            </span>
           );
         case "vacant":
           return (
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border"
-            >
+            <span className={cn(base, "border-border bg-muted text-muted-foreground")}>
               <Building2 className="h-3 w-3" />
               Vacant
-            </motion.div>
+            </span>
           );
         case "maintenance":
           return (
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-warning/20 text-warning-foreground border border-warning/30 animate-pulse-gentle"
-            >
+            <span className={cn(base, "border-warning/30 bg-warning/20 text-warning-foreground")}>
               <Wrench className="h-3 w-3" />
               Maintenance
-            </motion.div>
+            </span>
           );
         default:
           return (
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-accent text-accent-foreground border border-border"
-            >
+            <span className={cn(base, "border-border bg-accent text-accent-foreground")}>
               {status}
-            </motion.div>
+            </span>
           );
       }
     };
@@ -1071,10 +1056,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
 
             <div className="space-y-4">
               {/* Slim operational filter strip */}
-              <div className="flex items-center gap-2 overflow-x-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-2.5 scrollbar-none">
-                <span className="mr-1 hidden shrink-0 text-xs font-medium uppercase tracking-wider text-[var(--color-muted-foreground)] sm:inline">
-                  Filter
-                </span>
+              <div className="panel flex items-center gap-2 overflow-x-auto px-4 py-2.5 scrollbar-none">
+                <span className="mono-label mr-1 hidden shrink-0 sm:inline">Filter</span>
                 {[
                   { key: "all", label: "All", count: properties.length, color: "" },
                   {
@@ -1103,10 +1086,10 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                       type="button"
                       onClick={() => setOperationalFilter(opt.key)}
                       className={cn(
-                        "inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors",
+                        "inline-flex shrink-0 items-center gap-1.5 border px-3 py-1 text-xs font-medium transition-colors",
                         isActive
-                          ? "bg-accent-primary text-white"
-                          : "border border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:border-[var(--color-border-hover)] hover:text-[var(--color-foreground)]",
+                          ? "border-[var(--country-highlight-readable)] bg-[var(--country-highlight-readable)] text-[var(--color-background)]"
+                          : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:border-[var(--color-border-hover)] hover:text-[var(--color-foreground)]",
                       )}
                     >
                       <span className="hidden sm:inline">{opt.label}</span>
@@ -1189,7 +1172,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
 
               {dataViewMode === "map" ? (
                 /* Map View */
-                <div className="overflow-hidden rounded-lg border border-[var(--color-border)]">
+                <div className="overflow-hidden border border-[var(--color-border)]">
                   <PropertyMap
                     highlightedPropertyId={highlightedPropertyId}
                     onSelectProperty={handleMapPropertySelect}
@@ -1217,7 +1200,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     onAction={properties.length === 0 ? dialog.openDialog : undefined}
                   />
                 ) : (
-                  <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card-solid)]">
+                  <div className="border border-[var(--color-border)] bg-[var(--color-card-solid)]">
                     <Table>
                       <TableHeader>
                         <TableRow className="border-[var(--color-border)] hover:bg-transparent">
@@ -1335,7 +1318,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                   if (action.urgency === "ok") return null;
                                   return (
                                     <span
-                                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${nextActionStyles[action.urgency]}`}
+                                      className={`inline-flex items-center border px-2 py-0.5 text-xs font-medium ${nextActionStyles[action.urgency]}`}
                                     >
                                       {tNextAction(
                                         action.labelKey as Parameters<typeof tNextAction>[0],
@@ -1371,7 +1354,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                         return (
                           <div
                             key={building.buildingId}
-                            className="overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]"
+                            className="overflow-hidden border border-[var(--color-border)] bg-[var(--color-card)]"
                           >
                             {/* Building section header — collapsible */}
                             <div className="flex w-full items-center justify-between hover:bg-[var(--color-surface-hover)] transition-colors">
@@ -1549,7 +1532,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         return (
                                           <span
                                             className={cn(
-                                              "mt-0.5 h-2 w-2 shrink-0 rounded-full",
+                                              "mt-0.5 h-2 w-2 shrink-0",
                                               action.urgency === "urgent"
                                                 ? "bg-[var(--color-destructive)]"
                                                 : "bg-[var(--color-warning)]",
@@ -1593,7 +1576,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           if (action.urgency === "ok") return null;
                                           return (
                                             <span
-                                              className={`mt-0.5 w-fit rounded-full border px-1.5 py-0.5 text-[10px] font-medium leading-none ${nextActionStyles[action.urgency]}`}
+                                              className={`mt-0.5 w-fit border px-1.5 py-0.5 text-[10px] font-medium leading-none ${nextActionStyles[action.urgency]}`}
                                             >
                                               {tNextAction(
                                                 action.labelKey as Parameters<
