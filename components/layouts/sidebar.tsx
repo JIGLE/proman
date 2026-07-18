@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useDemoMode } from "@/lib/contexts/demo-context";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
+import { useTheme } from "@/lib/contexts/theme-context";
 
 // ── Nav Item Type ──────────────────────────────────────
 interface SidebarProps {
@@ -40,6 +41,7 @@ function SidebarFooter({
   user,
   subtitle,
 }: SidebarFooterProps): React.ReactElement {
+  const { country, resolvedTheme } = useTheme();
   const initials =
     user?.name
       ?.split(" ")
@@ -66,13 +68,20 @@ function SidebarFooter({
             </p>
           </div>
         </div>
-        {/* Appearance (country + mode) and language now live in Settings › Appearance. */}
-        <div className="flex items-center justify-end px-1">
+        {/* Country · mode indicator (controls live in Settings › Appearance). */}
+        <div className="flex items-center justify-between gap-2 px-1">
+          <Link
+            href={`/${locale}/settings?tab=appearance`}
+            className="mono-label truncate hover:text-[var(--color-foreground)]"
+            title="Appearance settings"
+          >
+            {country} · {resolvedTheme}
+          </Link>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => signOut({ callbackUrl: `/${locale}` })}
-            className="h-8 w-8 p-0 hover:bg-[var(--color-error-muted)] hover:text-[var(--color-destructive)]"
+            className="h-8 w-8 shrink-0 p-0 hover:bg-[var(--color-error-muted)] hover:text-[var(--color-destructive)]"
             title="Sign Out"
             aria-label="Sign Out"
           >

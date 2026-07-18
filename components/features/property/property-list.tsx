@@ -191,6 +191,18 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     );
     // The asset whose command workspace is open in the tree split (desktop only).
     const [workspacePropertyId, setWorkspacePropertyId] = useState<string | null>(null);
+    // Collapse the tree rail to a dots-only spine (desktop; persisted per device).
+    const [railCollapsed, setRailCollapsed] = useState(false);
+    useEffect(() => {
+      setRailCollapsed(localStorage.getItem("situs-portfolio-rail-collapsed") === "1");
+    }, []);
+    const toggleRailCollapsed = useCallback(() => {
+      setRailCollapsed((prev) => {
+        const next = !prev;
+        localStorage.setItem("situs-portfolio-rail-collapsed", next ? "1" : "0");
+        return next;
+      });
+    }, []);
     useEffect(() => {
       if (viewMode === "map") return;
       const saved =
@@ -1203,15 +1215,25 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                 /* Tree View — Situs structural portfolio inventory + command workspace.
                    Desktop (lg+): a fixed tree rail beside an inline detail workspace.
                    Below lg: tree only — selecting an asset routes to the detail. */
-                <div className="lg:grid lg:grid-cols-[minmax(300px,340px)_1fr] lg:items-start lg:gap-6">
-                  <div className="lg:border lg:border-[var(--color-border)] lg:bg-[var(--color-card)]">
+                <div
+                  className={cn(
+                    "lg:grid lg:items-start lg:gap-6",
+                    railCollapsed
+                      ? "lg:grid-cols-[76px_1fr]"
+                      : "lg:grid-cols-[minmax(300px,340px)_1fr]",
+                  )}
+                >
+                  <div>
                     <PortfolioTree
                       properties={filteredProperties}
                       buildings={buildings}
                       tenants={tenants}
                       maintenance={maintenance}
+                      leases={leases}
                       onSelectProperty={handleTreeSelect}
                       highlightedPropertyId={workspacePropertyId ?? highlightedPropertyId}
+                      collapsed={railCollapsed}
+                      onToggleCollapsed={toggleRailCollapsed}
                     />
                   </div>
                   <div className="hidden min-w-0 lg:block">

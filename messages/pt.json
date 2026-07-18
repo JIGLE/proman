@@ -1495,6 +1495,10 @@
     "densityComfortable": "Confortável",
     "unclustered": "Sem agrupamento",
     "dotOverdue": "Renda em atraso",
-    "dotTickets": "Pedidos de manutenção abertos"
+    "dotTickets": "Pedidos de manutenção abertos",
+    "dotLease": "Janela de renovação do contrato",
+    "legend": "Sinais",
+    "collapse": "Recolher painel",
+    "expand": "Expandir painel"
   }
 }

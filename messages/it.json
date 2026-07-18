@@ -1495,6 +1495,10 @@
     "densityComfortable": "Comoda",
     "unclustered": "Non raggruppato",
     "dotOverdue": "Affitto in ritardo",
-    "dotTickets": "Interventi di manutenzione aperti"
+    "dotTickets": "Interventi di manutenzione aperti",
+    "dotLease": "Finestra di rinnovo del contratto",
+    "legend": "Segnali",
+    "collapse": "Comprimi pannello",
+    "expand": "Espandi pannello"
   }
 }

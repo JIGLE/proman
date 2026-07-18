@@ -3,13 +3,16 @@
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ChevronDown, ChevronRight, Rows3 } from "lucide-react";
+import { ChevronDown, ChevronRight, PanelLeftClose, PanelLeftOpen, Rows3 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { COUNTRY_THEMES, isCountryCode } from "@/lib/design/country-themes";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { cn } from "@/lib/utils/utils";
-import type { Building, MaintenanceTicket, Property, Tenant } from "@/lib/types";
+import type { Building, Lease, MaintenanceTicket, Property, Tenant } from "@/lib/types";
+
+/** A lease is in its renewal window when it is active and ends within 60 days. */
+const RENEWAL_WINDOW_MS = 60 * 24 * 60 * 60 * 1000;
 
 /**
  * Structural Portfolio Inventory — the Situs tree view.
@@ -30,14 +33,19 @@ interface PortfolioTreeProps {
   buildings: Building[];
   tenants: Tenant[];
   maintenance: MaintenanceTicket[];
+  leases?: Lease[];
   onSelectProperty?: (propertyId: string) => void;
   highlightedPropertyId?: string;
+  /** Collapse the rail to a dots-only spine (desktop density control). */
+  collapsed?: boolean;
+  onToggleCollapsed?: () => void;
 }
 
 interface AssetNode {
   property: Property;
   overdue: boolean;
   openTickets: number;
+  renewalDue: boolean;
 }
 
 interface ClusterNode {
@@ -63,8 +71,11 @@ export function PortfolioTree({
   buildings,
   tenants,
   maintenance,
+  leases = [],
   onSelectProperty,
   highlightedPropertyId,
+  collapsed = false,
+  onToggleCollapsed,
 }: PortfolioTreeProps): React.ReactElement {
   const t = useTranslations("portfolioTree");
   const { formatCurrency } = useCurrency();
@@ -82,9 +93,9 @@ export function PortfolioTree({
     });
   }, []);
 
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [collapsedNodes, setCollapsedNodes] = useState<Set<string>>(new Set());
   const toggleNode = useCallback((key: string) => {
-    setCollapsed((prev) => {
+    setCollapsedNodes((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
@@ -106,6 +117,16 @@ export function PortfolioTree({
           ticket.propertyId,
           (openTicketsByProperty.get(ticket.propertyId) ?? 0) + 1,
         );
+      }
+    }
+    // Info signal: an active lease entering its 60-day renewal window.
+    const renewalDueByProperty = new Set<string>();
+    const renewalCutoff = Date.now() + RENEWAL_WINDOW_MS;
+    for (const lease of leases) {
+      if (lease.status !== "active" || !lease.propertyId) continue;
+      const end = Date.parse(lease.endDate);
+      if (!Number.isNaN(end) && end > Date.now() && end <= renewalCutoff) {
+        renewalDueByProperty.add(lease.propertyId);
       }
     }
 
@@ -132,6 +153,7 @@ export function PortfolioTree({
         property,
         overdue: overdueByProperty.has(property.id),
         openTickets: openTicketsByProperty.get(property.id) ?? 0,
+        renewalDue: renewalDueByProperty.has(property.id),
       });
     }
 
@@ -153,7 +175,7 @@ export function PortfolioTree({
         };
       })
       .sort((a, b) => a.label.localeCompare(b.label));
-  }, [properties, buildings, tenants, maintenance, t]);
+  }, [properties, buildings, tenants, maintenance, leases, t]);
 
   const rowPad = density === "compact" ? "py-1.5" : "py-2.5";
 
@@ -168,26 +190,49 @@ export function PortfolioTree({
 
   return (
     <div className="border border-[var(--color-border)] bg-[var(--color-surface)]">
-      {/* Header: title + density control */}
-      <div className="flex items-center justify-between gap-4 border-b border-[var(--color-border)] px-4 py-3">
-        <p className="mono-label">{t("title")}</p>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleDensity}
-          className="h-7 gap-1.5 rounded-none px-2 font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--color-muted-foreground)]"
-          aria-pressed={density === "compact"}
-          title={t("density")}
-        >
-          <Rows3 className="h-3.5 w-3.5" aria-hidden="true" />
-          {density === "compact" ? t("densityCompact") : t("densityComfortable")}
-        </Button>
+      {/* Header: title + density + collapse. Collapsed = just an expand affordance. */}
+      <div
+        className={cn(
+          "flex items-center border-b border-[var(--color-border)] py-3",
+          collapsed ? "justify-center px-2" : "justify-between gap-3 px-4",
+        )}
+      >
+        {!collapsed && <p className="mono-label min-w-0 flex-1 truncate">{t("title")}</p>}
+        {!collapsed && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleDensity}
+            className="h-7 gap-1.5 rounded-none px-2 font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--color-muted-foreground)]"
+            aria-pressed={density === "compact"}
+            title={t("density")}
+          >
+            <Rows3 className="h-3.5 w-3.5" aria-hidden="true" />
+            {density === "compact" ? t("densityCompact") : t("densityComfortable")}
+          </Button>
+        )}
+        {onToggleCollapsed && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onToggleCollapsed}
+            className="hidden h-7 w-7 shrink-0 rounded-none p-0 text-[var(--color-muted-foreground)] lg:inline-flex"
+            aria-pressed={collapsed}
+            title={collapsed ? t("expand") : t("collapse")}
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" aria-hidden="true" />
+            )}
+          </Button>
+        )}
       </div>
 
-      <div role="tree" aria-label={t("title")} className="px-2 py-2">
+      <div role="tree" aria-label={t("title")} className={cn("py-2", collapsed ? "px-1" : "px-2")}>
         {tree.map((country) => {
           const countryKey = `country:${country.code}`;
-          const countryCollapsed = collapsed.has(countryKey);
+          const countryCollapsed = collapsedNodes.has(countryKey);
           return (
             <div key={country.code} role="treeitem" aria-expanded={!countryCollapsed}>
               {/* Country row */}
@@ -195,9 +240,11 @@ export function PortfolioTree({
                 type="button"
                 onClick={() => toggleNode(countryKey)}
                 className={cn(
-                  "flex w-full items-center gap-2 border-l-2 border-transparent px-2 text-left transition-colors hover:bg-[var(--color-hover)]",
+                  "flex w-full items-center gap-2 border-l-2 border-transparent text-left transition-colors hover:bg-[var(--color-hover)]",
                   rowPad,
+                  collapsed ? "justify-center px-0" : "px-2",
                 )}
+                title={collapsed ? country.label : undefined}
               >
                 {countryCollapsed ? (
                   <ChevronRight
@@ -210,28 +257,36 @@ export function PortfolioTree({
                     aria-hidden="true"
                   />
                 )}
-                <span className="min-w-0 flex-1 truncate text-sm font-medium">{country.label}</span>
-                <span className="mono-label whitespace-nowrap">
-                  {country.assetCount} · {formatCurrency(country.monthlyRent)}/m
-                </span>
+                {!collapsed && (
+                  <>
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                      {country.label}
+                    </span>
+                    <span className="mono-label whitespace-nowrap">
+                      {country.assetCount} · {formatCurrency(country.monthlyRent)}/m
+                    </span>
+                  </>
+                )}
               </button>
 
               {!countryCollapsed &&
                 country.clusters.map((cluster) => {
                   const clusterKey = `${countryKey}/${cluster.key}`;
-                  const clusterCollapsed = collapsed.has(clusterKey);
+                  const clusterNodeCollapsed = collapsedNodes.has(clusterKey);
                   return (
-                    <div key={cluster.key} role="treeitem" aria-expanded={!clusterCollapsed}>
+                    <div key={cluster.key} role="treeitem" aria-expanded={!clusterNodeCollapsed}>
                       {/* Cluster row */}
                       <button
                         type="button"
                         onClick={() => toggleNode(clusterKey)}
                         className={cn(
-                          "flex w-full items-center gap-2 border-l-2 border-transparent px-2 pl-7 text-left transition-colors hover:bg-[var(--color-hover)]",
+                          "flex w-full items-center gap-2 border-l-2 border-transparent text-left transition-colors hover:bg-[var(--color-hover)]",
                           rowPad,
+                          collapsed ? "justify-center px-0" : "px-2 pl-7",
                         )}
+                        title={collapsed ? cluster.label : undefined}
                       >
-                        {clusterCollapsed ? (
+                        {clusterNodeCollapsed ? (
                           <ChevronRight
                             className="h-3.5 w-3.5 shrink-0 text-[var(--color-muted-foreground)]"
                             aria-hidden="true"
@@ -242,15 +297,19 @@ export function PortfolioTree({
                             aria-hidden="true"
                           />
                         )}
-                        <span className="min-w-0 flex-1 truncate text-sm text-[var(--color-muted-foreground)]">
-                          {cluster.label}
-                        </span>
-                        <span className="mono-label">{cluster.assets.length}</span>
+                        {!collapsed && (
+                          <>
+                            <span className="min-w-0 flex-1 truncate text-sm text-[var(--color-muted-foreground)]">
+                              {cluster.label}
+                            </span>
+                            <span className="mono-label">{cluster.assets.length}</span>
+                          </>
+                        )}
                       </button>
 
                       {/* Asset rows */}
-                      {!clusterCollapsed &&
-                        cluster.assets.map(({ property, overdue, openTickets }) => {
+                      {!clusterNodeCollapsed &&
+                        cluster.assets.map(({ property, overdue, openTickets, renewalDue }) => {
                           const highlighted = property.id === highlightedPropertyId;
                           return (
                             <button
@@ -258,38 +317,53 @@ export function PortfolioTree({
                               type="button"
                               role="treeitem"
                               onClick={() => onSelectProperty?.(property.id)}
+                              title={collapsed ? property.name : undefined}
                               className={cn(
-                                "flex w-full items-center gap-2.5 border-l-2 px-2 pl-12 text-left transition-colors",
+                                "flex w-full items-center border-l-2 text-left transition-colors",
                                 rowPad,
+                                collapsed ? "justify-center gap-1 px-0" : "gap-2.5 px-2 pl-12",
                                 highlighted
                                   ? "border-[var(--country-highlight-readable)] bg-[var(--color-hover)]"
                                   : "border-transparent hover:bg-[var(--color-hover)]",
                               )}
                             >
-                              <span className="min-w-0 flex-1 truncate text-sm">
-                                {property.name}
-                                <span className="ml-2 hidden text-xs text-[var(--color-muted-foreground)] sm:inline">
-                                  {property.address}
+                              {!collapsed && (
+                                <span className="min-w-0 flex-1 truncate text-sm">
+                                  {property.name}
+                                  <span className="ml-2 hidden text-xs text-[var(--color-muted-foreground)] sm:inline">
+                                    {property.address}
+                                  </span>
                                 </span>
-                              </span>
+                              )}
                               {/* Attention strip — square semantic dots, quiet when healthy */}
-                              <span className="flex items-center gap-1" aria-hidden="true">
+                              <span className="flex items-center gap-1">
                                 {overdue && (
                                   <span
                                     className="status-dot status-dot-danger"
                                     title={t("dotOverdue")}
+                                    aria-label={t("dotOverdue")}
                                   />
                                 )}
                                 {openTickets > 0 && (
                                   <span
                                     className="status-dot status-dot-warn"
                                     title={t("dotTickets")}
+                                    aria-label={t("dotTickets")}
+                                  />
+                                )}
+                                {renewalDue && (
+                                  <span
+                                    className="status-dot status-dot-info"
+                                    title={t("dotLease")}
+                                    aria-label={t("dotLease")}
                                   />
                                 )}
                               </span>
-                              <span className="mono-label whitespace-nowrap tabular-nums">
-                                {formatCurrency(property.rent || 0)}/m
-                              </span>
+                              {!collapsed && (
+                                <span className="mono-label whitespace-nowrap tabular-nums">
+                                  {formatCurrency(property.rent || 0)}/m
+                                </span>
+                              )}
                             </button>
                           );
                         })}
@@ -300,6 +374,25 @@ export function PortfolioTree({
           );
         })}
       </div>
+
+      {/* Signal legend — the status-dot code, learnable at a glance. */}
+      {!collapsed && (
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-[var(--color-border)] px-4 py-2.5">
+          <span className="mono-label">{t("legend")}</span>
+          <span className="flex items-center gap-1.5 text-xs text-[var(--color-muted-foreground)]">
+            <span className="status-dot status-dot-danger" aria-hidden="true" />
+            {t("dotOverdue")}
+          </span>
+          <span className="flex items-center gap-1.5 text-xs text-[var(--color-muted-foreground)]">
+            <span className="status-dot status-dot-warn" aria-hidden="true" />
+            {t("dotTickets")}
+          </span>
+          <span className="flex items-center gap-1.5 text-xs text-[var(--color-muted-foreground)]">
+            <span className="status-dot status-dot-info" aria-hidden="true" />
+            {t("dotLease")}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
