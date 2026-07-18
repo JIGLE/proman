@@ -25,7 +25,7 @@ import {
 import { useRouter, usePathname } from "next/navigation";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { getCountryName, resolveCountryCode } from "@/lib/utils/country";
-import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
+import { DataViewMode } from "@/components/ui/data-view-toggle";
 import {
   Table,
   TableBody,
@@ -182,11 +182,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
 
-    // Data view mode state with localStorage persistence (grid | table | tree | map).
-    // Tree is the default Situs Portfolio experience (structural inventory + workspace).
-    const [dataViewMode, setDataViewMode] = useState<DataViewMode>(
-      viewMode === "map" ? "map" : "tree",
-    );
+    // The Portfolio commits to the tree + workspace (mockup-faithful) — no view
+    // toggle. `viewMode="map"` remains for the standalone map embed used elsewhere.
+    const [dataViewMode] = useState<DataViewMode>(viewMode === "map" ? "map" : "tree");
     // The asset whose command workspace is open in the tree split (desktop only).
     const [workspacePropertyId, setWorkspacePropertyId] = useState<string | null>(null);
     // Collapse the tree rail to a dots-only spine (desktop; persisted per device).
@@ -200,19 +198,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
         localStorage.setItem("situs-portfolio-rail-collapsed", next ? "1" : "0");
         return next;
       });
-    }, []);
-    useEffect(() => {
-      if (viewMode === "map") return;
-      const saved =
-        localStorage.getItem("situs-properties-view-mode") ??
-        localStorage.getItem("proman-properties-view-mode");
-      // Grid was retired from the toggle; fall its persisted value back to tree.
-      if (saved === "grid") setDataViewMode("tree");
-      else if (saved === "table" || saved === "tree") setDataViewMode(saved);
-    }, [viewMode]);
-    const handleViewModeChange = useCallback((mode: DataViewMode) => {
-      setDataViewMode(mode);
-      if (mode !== "map") localStorage.setItem("situs-properties-view-mode", mode);
     }, []);
 
     // Building edit dialog state
@@ -1052,18 +1037,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
             </Dialog>
 
             <div className="space-y-4">
-              {/* Decluttered chrome: the tree carries structure + triage, so the
-                  top band is just the view toggle (tree default, table as the
-                  quiet alt). Search + attention filter live in the tree column. */}
-              <div className="flex items-center justify-end">
-                <DataViewToggle
-                  mode={dataViewMode}
-                  onChange={handleViewModeChange}
-                  showTree
-                  showGrid={false}
-                />
-              </div>
-
               {dataViewMode === "map" ? (
                 /* Map View */
                 <div className="overflow-hidden border border-[var(--color-border)]">
@@ -1702,7 +1675,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           if (isMissingMap) {
                                             dialog.openEditDialog(property);
                                           } else {
-                                            handleViewModeChange("map");
                                             onLocateOnMap?.(property.id);
                                           }
                                         }}
