@@ -319,7 +319,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
       <div className="flex flex-col gap-4 sticky top-0 z-20 bg-[var(--color-card-solid)]/95 backdrop-blur-sm">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="p-3 lg:p-4 rounded-xl bg-[var(--color-info-muted)]">
+            <div className="p-3 lg:p-4 bg-[var(--color-info-muted)]">
               <Building2 className="h-8 w-8 lg:h-10 lg:w-10 text-[var(--color-info)]" />
             </div>
             <div>
@@ -708,7 +708,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <Users className="h-3.5 w-3.5" />
             {t("tabs.tenants")}
             {relatedTenants.length > 0 && (
-              <span className="ml-1 rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs">
+              <span className="ml-1 bg-[var(--color-muted)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums">
                 {relatedTenants.length}
               </span>
             )}
@@ -721,7 +721,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <Wrench className="h-3.5 w-3.5" />
             {t("tabs.maintenance")}
             {openTickets > 0 && (
-              <span className="ml-1 rounded-full bg-[var(--color-warning-muted)] text-[var(--color-warning)] px-2 py-0.5 text-xs">
+              <span className="ml-1 bg-[var(--color-warning-muted)] text-[var(--color-warning)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums">
                 {openTickets}
               </span>
             )}
@@ -730,7 +730,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <Receipt className="h-3.5 w-3.5" />
             {t("tabs.expenses")}
             {relatedExpenses.length > 0 && (
-              <span className="ml-1 rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs">
+              <span className="ml-1 bg-[var(--color-muted)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums">
                 {relatedExpenses.length}
               </span>
             )}
@@ -848,7 +848,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               </CardTitle>
               <span
                 className={cn(
-                  "text-xs font-medium px-2 py-0.5 rounded-full",
+                  "text-xs font-medium px-2 py-0.5",
                   Math.abs(ownershipTotal - 100) < 0.01
                     ? "bg-[var(--color-success-muted)] text-[var(--color-success)]"
                     : ownershipTotal > 0
