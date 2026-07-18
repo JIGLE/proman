@@ -305,13 +305,8 @@ export function AssetsView(): React.ReactElement {
         </div>
       </div>
 
-      {/* Properties list — handles list, table and map view internally */}
-      <PropertiesView
-        ref={propertiesViewRef}
-        density="compact"
-        showPageHeader={false}
-        showMapToggle
-      />
+      {/* Portfolio inventory — tree + workspace (table available via the toggle) */}
+      <PropertiesView ref={propertiesViewRef} density="compact" showPageHeader={false} />
 
       {/* Add Building dialog */}
       <Dialog open={buildingDialogOpen} onOpenChange={setBuildingDialogOpen}>

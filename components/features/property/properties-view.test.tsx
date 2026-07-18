@@ -38,8 +38,7 @@ vi.mock("@/lib/contexts/toast-context", () => ({
 describe("PropertiesView", () => {
   it("renders the portfolio view when there are no properties", () => {
     render(<PropertiesView />);
-    // View-mode-agnostic: the search/filter chrome renders above every mode
-    // (grid/table/tree/map), so it's a stable signal the view mounted.
-    expect(screen.getByPlaceholderText(/search properties/i)).toBeDefined();
+    // Tree is the default view; its compact asset filter renders above the tree.
+    expect(screen.getByPlaceholderText(/filter assets/i)).toBeDefined();
   });
 });
