@@ -3,8 +3,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Tenant } from "@/lib/types";
-import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -12,8 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DollarSign, CheckCircle, Clock, XCircle, Filter, Download } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { DollarSign, CheckCircle, Clock, XCircle, Filter } from "lucide-react";
 
 export type PaymentMatrixViewProps = Record<string, never>;
 
@@ -26,14 +24,12 @@ interface PaymentCell {
 
 export function PaymentMatrixView(): React.ReactElement {
   const { state } = useApp();
-  const { tenants, receipts, properties: _properties } = state;
+  const { tenants, receipts } = state;
   const { formatCurrency } = useCurrency();
   const t = useTranslations("paymentMatrix");
   const tMonths = useTranslations("calendar.months");
   const locale = useLocale();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [viewMode, setViewMode] = useState<"detailed" | "heatmap">("detailed");
-  const [expandedProperties, setExpandedProperties] = useState<Set<string>>(new Set());
   const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "pending" | "overdue">("all");
 
   // Generate months array
@@ -117,11 +113,11 @@ export function PaymentMatrixView(): React.ReactElement {
   const getCellIcon = (cell: PaymentCell) => {
     switch (cell.status) {
       case "paid":
-        return <CheckCircle className="h-4 w-4 text-green-500" />;
+        return <CheckCircle className="h-4 w-4 text-[var(--color-success)]" />;
       case "pending":
-        return <Clock className="h-4 w-4 text-yellow-500" />;
+        return <Clock className="h-4 w-4 text-[var(--color-warning)]" />;
       case "overdue":
-        return <XCircle className="h-4 w-4 text-red-500" />;
+        return <XCircle className="h-4 w-4 text-[var(--color-error)]" />;
       default:
         return <div className="h-4 w-4 rounded-full bg-[var(--color-muted)]" />;
     }
@@ -138,28 +134,6 @@ export function PaymentMatrixView(): React.ReactElement {
       default:
         return "bg-[var(--color-muted)]/10 border-[var(--color-border)] hover:bg-[var(--color-muted)]/20";
     }
-  };
-
-  // Group tenants by property
-  const _tenantsByProperty = useMemo(() => {
-    const grouped: Record<string, typeof tenants> = {};
-    tenants.forEach((tenant) => {
-      const propId = tenant.propertyId || "unassigned";
-      if (!grouped[propId]) grouped[propId] = [];
-      grouped[propId].push(tenant);
-    });
-    return grouped;
-  }, [tenants]);
-
-  // Toggle property expansion
-  const _toggleProperty = (propertyId: string) => {
-    const newExpanded = new Set(expandedProperties);
-    if (newExpanded.has(propertyId)) {
-      newExpanded.delete(propertyId);
-    } else {
-      newExpanded.add(propertyId);
-    }
-    setExpandedProperties(newExpanded);
   };
 
   // Filter tenants based on status
@@ -215,7 +189,7 @@ export function PaymentMatrixView(): React.ReactElement {
   return (
     <div className="space-y-6">
       {/* One utility row: the year summary as text (declutter rule 4), plus the
-          view/status/year/export controls — no separate heading, no card grid. */}
+          status/year filters — no separate heading, no card grid. */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <p className="text-sm text-[var(--color-muted-foreground)]">
           {formatCurrency(yearSummary.expected)} {t("totalExpected").toLowerCase()} ·{" "}
@@ -224,26 +198,6 @@ export function PaymentMatrixView(): React.ReactElement {
           {yearSummary.rate}% {t("collectionRate").toLowerCase()}
         </p>
         <div className="flex flex-wrap items-center gap-3">
-          {/* View Mode Toggle */}
-          <div className="flex items-center rounded-lg border border-[var(--color-border)] p-1">
-            <Button
-              variant={viewMode === "detailed" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("detailed")}
-              className="h-7 px-3"
-            >
-              {t("detailed")}
-            </Button>
-            <Button
-              variant={viewMode === "heatmap" ? "secondary" : "ghost"}
-              size="sm"
-              onClick={() => setViewMode("heatmap")}
-              className="h-7 px-3"
-            >
-              {t("heatmap")}
-            </Button>
-          </div>
-
           {/* Status Filter */}
           <Select
             value={statusFilter}
@@ -277,165 +231,13 @@ export function PaymentMatrixView(): React.ReactElement {
               ))}
             </SelectContent>
           </Select>
-
-          {/* Export Button */}
-          <Button variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            {t("export")}
-          </Button>
         </div>
       </div>
 
-      {/* Payment Matrix */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-      >
-        <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
-          <CardHeader>
-            <CardDescription>{t("legend")}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <motion.table
-                className="w-full"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-              >
-                <thead>
-                  <motion.tr
-                    className="border-b border-[var(--color-border)]"
-                    initial={{ y: -10, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                  >
-                    <th
-                      scope="col"
-                      className="sticky left-0 z-10 bg-[var(--color-card)] text-left py-3 px-4 font-medium text-[var(--color-muted-foreground)]"
-                    >
-                      {t("tenant")}
-                    </th>
-                    {months.map((month, index) => (
-                      <motion.th
-                        key={month}
-                        scope="col"
-                        className="text-center py-3 px-2 font-medium text-[var(--color-muted-foreground)] text-sm"
-                        initial={{ y: -10, opacity: 0 }}
-                        animate={{ y: 0, opacity: 1 }}
-                        transition={{ delay: 0.3 + index * 0.05 }}
-                      >
-                        {month}
-                      </motion.th>
-                    ))}
-                    <th
-                      scope="col"
-                      className="text-right py-3 px-4 font-medium text-[var(--color-muted-foreground)]"
-                    >
-                      {t("total")}
-                    </th>
-                  </motion.tr>
-                </thead>
-                <AnimatePresence>
-                  <motion.tbody
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                  >
-                    {filteredTenants.map((tenant, tenantIndex) => (
-                      <motion.tr
-                        key={tenant.id}
-                        className="border-b border-[var(--color-border)] hover:bg-[var(--color-hover)] transition-colors duration-200"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.6 + tenantIndex * 0.1 }}
-                      >
-                        <td className="sticky left-0 z-10 bg-[var(--color-card)] py-3 px-4">
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.7 + tenantIndex * 0.1 }}
-                          >
-                            <div className="font-medium text-[var(--color-foreground)]">
-                              {tenant.name}
-                            </div>
-                            <div className="text-sm text-[var(--color-muted-foreground)]">
-                              {formatCurrency(tenant.rent)}
-                              {t("perMonth")}
-                            </div>
-                          </motion.div>
-                        </td>
-                        {months.map((month, monthIndex) => {
-                          const cell = paymentMatrix[tenant.id]?.[monthIndex] || { status: "none" };
-                          return (
-                            <motion.td
-                              key={month}
-                              className="py-3 px-2 text-center"
-                              initial={{ scale: 0.8, opacity: 0 }}
-                              animate={{ scale: 1, opacity: 1 }}
-                              transition={{
-                                delay: 0.8 + tenantIndex * 0.1 + monthIndex * 0.05,
-                              }}
-                            >
-                              <motion.div
-                                className={`inline-flex items-center justify-center w-8 h-8 rounded border ${getCellColor(cell)} cursor-pointer transition-all duration-200 hover:scale-110`}
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                                title={
-                                  cell.date
-                                    ? t("cellTooltip", {
-                                        status: t(cell.status),
-                                        date: new Date(cell.date).toLocaleDateString(locale),
-                                        amount: formatCurrency(cell.amount || 0),
-                                      })
-                                    : cell.status === "overdue"
-                                      ? t("overdueTooltip")
-                                      : t("noPaymentTooltip")
-                                }
-                              >
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  transition={{
-                                    delay: 1 + tenantIndex * 0.1 + monthIndex * 0.05,
-                                  }}
-                                >
-                                  {getCellIcon(cell)}
-                                </motion.div>
-                              </motion.div>
-                            </motion.td>
-                          );
-                        })}
-                        <td className="py-3 px-4 text-right">
-                          <motion.div
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.9 + tenantIndex * 0.1 }}
-                          >
-                            <div className="font-medium text-[var(--color-foreground)]">
-                              {formatCurrency(getTotalPaid(tenant.id))}
-                            </div>
-                            <div className="text-sm text-[var(--color-muted-foreground)]">
-                              {t("ofExpected", {
-                                amount: formatCurrency(getTotalExpected(tenant)),
-                              })}
-                            </div>
-                          </motion.div>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </motion.tbody>
-                </AnimatePresence>
-              </motion.table>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Legend */}
+      {/* Payment Matrix — legend lives in the header of the one card that
+          needs it, instead of a second card repeating the same four states. */}
       <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
-        <CardContent className="pt-6">
+        <CardHeader>
           <div className="flex flex-wrap gap-6">
             <div className="flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-[var(--color-success)]" />
@@ -455,6 +257,88 @@ export function PaymentMatrixView(): React.ReactElement {
                 {t("noPaymentDue")}
               </span>
             </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[var(--color-border)]">
+                  <th
+                    scope="col"
+                    className="sticky left-0 z-10 bg-[var(--color-card)] text-left py-3 px-4 font-medium text-[var(--color-muted-foreground)]"
+                  >
+                    {t("tenant")}
+                  </th>
+                  {months.map((month) => (
+                    <th
+                      key={month}
+                      scope="col"
+                      className="text-center py-3 px-2 font-medium text-[var(--color-muted-foreground)] text-sm"
+                    >
+                      {month}
+                    </th>
+                  ))}
+                  <th
+                    scope="col"
+                    className="text-right py-3 px-4 font-medium text-[var(--color-muted-foreground)]"
+                  >
+                    {t("total")}
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredTenants.map((tenant) => (
+                  <tr
+                    key={tenant.id}
+                    className="border-b border-[var(--color-border)] hover:bg-[var(--color-hover)] transition-colors duration-200"
+                  >
+                    <td className="sticky left-0 z-10 bg-[var(--color-card)] py-3 px-4">
+                      <div className="font-medium text-[var(--color-foreground)]">
+                        {tenant.name}
+                      </div>
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
+                        {formatCurrency(tenant.rent)}
+                        {t("perMonth")}
+                      </div>
+                    </td>
+                    {months.map((month, monthIndex) => {
+                      const cell = paymentMatrix[tenant.id]?.[monthIndex] || { status: "none" };
+                      return (
+                        <td key={month} className="py-3 px-2 text-center">
+                          <div
+                            className={`inline-flex items-center justify-center w-8 h-8 rounded border ${getCellColor(cell)} cursor-pointer transition-colors`}
+                            title={
+                              cell.date
+                                ? t("cellTooltip", {
+                                    status: t(cell.status),
+                                    date: new Date(cell.date).toLocaleDateString(locale),
+                                    amount: formatCurrency(cell.amount || 0),
+                                  })
+                                : cell.status === "overdue"
+                                  ? t("overdueTooltip")
+                                  : t("noPaymentTooltip")
+                            }
+                          >
+                            {getCellIcon(cell)}
+                          </div>
+                        </td>
+                      );
+                    })}
+                    <td className="py-3 px-4 text-right">
+                      <div className="font-medium text-[var(--color-foreground)]">
+                        {formatCurrency(getTotalPaid(tenant.id))}
+                      </div>
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
+                        {t("ofExpected", {
+                          amount: formatCurrency(getTotalExpected(tenant)),
+                        })}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </CardContent>
       </Card>
