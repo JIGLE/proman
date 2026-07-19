@@ -615,63 +615,12 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </Dialog>
           </div>
         </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Card
-            className="cursor-pointer transition-colors hover:border-[var(--color-border)]"
-            onClick={() => setActiveTab("tenants")}
-          >
-            <CardContent className="p-4">
-              <div className="text-sm text-[var(--color-muted-foreground)]">
-                {t("stats.tenants")}
-              </div>
-              <div className="text-2xl font-bold mt-1">{relatedTenants.length}</div>
-            </CardContent>
-          </Card>
-          <Card
-            className="cursor-pointer transition-colors hover:border-[var(--color-border)]"
-            onClick={() => setActiveTab("leases")}
-          >
-            <CardContent className="p-4">
-              <div className="text-sm text-[var(--color-muted-foreground)]">
-                {t("stats.activeLeases")}
-              </div>
-              <div className="text-2xl font-bold text-[var(--color-success)] mt-1">
-                {activeLeases}
-              </div>
-            </CardContent>
-          </Card>
-          <Card
-            className="cursor-pointer transition-colors hover:border-[var(--color-border)]"
-            onClick={() => setActiveTab("finance")}
-          >
-            <CardContent className="p-4">
-              <div className="text-sm text-[var(--color-muted-foreground)]">
-                {t("stats.revenue")}
-              </div>
-              <div className="text-2xl font-bold mt-1">{formatCurrency(totalRevenue)}</div>
-            </CardContent>
-          </Card>
-          <Card
-            className="cursor-pointer transition-colors hover:border-[var(--color-border)]"
-            onClick={() => setActiveTab("maintenance")}
-          >
-            <CardContent className="p-4">
-              <div className="text-sm text-[var(--color-muted-foreground)]">
-                {t("stats.openTickets")}
-              </div>
-              <div className="text-2xl font-bold text-[var(--color-warning)] mt-1">
-                {openTickets}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
       </div>
 
-      {/* Current Period Status — Situs reference-month ledger (RentPeriod), not derived here */}
+      {/* Current Period Status — the money state leads the workspace (Situs
+          reference-month ledger / RentPeriod). Focal country accent on the left. */}
       {!activityLoading && activity?.currentPeriod && (
-        <div className="grid grid-cols-1 gap-4 border border-[var(--color-border)] bg-[var(--color-surface)] p-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 border border-[var(--color-border)] border-l-[3px] border-l-[var(--country-highlight-readable)] bg-[var(--color-surface)] p-4 sm:grid-cols-3">
           <div>
             <p className="mono-label">Current period</p>
             <p className="mt-1 text-xl font-light tabular-nums text-[var(--color-foreground)]">
@@ -699,6 +648,50 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
           </div>
         </div>
       )}
+
+      {/* Secondary context — entity counts, demoted below the money state. */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <button
+          type="button"
+          onClick={() => setActiveTab("tenants")}
+          className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
+        >
+          <p className="mono-label">{t("stats.tenants")}</p>
+          <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-foreground)]">
+            {relatedTenants.length}
+          </p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("leases")}
+          className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
+        >
+          <p className="mono-label">{t("stats.activeLeases")}</p>
+          <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-success)]">
+            {activeLeases}
+          </p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("finance")}
+          className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
+        >
+          <p className="mono-label">{t("stats.revenue")}</p>
+          <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-foreground)]">
+            {formatCurrency(totalRevenue)}
+          </p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("maintenance")}
+          className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
+        >
+          <p className="mono-label">{t("stats.openTickets")}</p>
+          <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-warning)]">
+            {openTickets}
+          </p>
+        </button>
+      </div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
