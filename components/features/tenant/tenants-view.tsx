@@ -65,7 +65,6 @@ import { useSortableData } from "@/lib/hooks/use-sortable-data";
 import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
-import { PageHeader } from "@/components/shared/page-header";
 import { SwipeableListItem } from "@/components/ui/swipeable-list-item";
 
 export type TenantsViewProps = { density?: "comfortable" | "compact" };
@@ -491,7 +490,6 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
           <LoadingState variant="cards" count={6} />
         ) : (
           <div className="space-y-6">
-            <PageHeader title="Tenants" description="Manage your tenants and their information" />
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogTrigger asChild>
                 <Button onClick={dialog.openDialog} className="hidden">
