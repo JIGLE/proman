@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ExportButton } from "@/components/ui/export-button";
@@ -11,6 +10,7 @@ import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
 import { getActiveLease } from "@/lib/utils/lease-helpers";
+import { cn } from "@/lib/utils/utils";
 import { PaymentMatrixView } from "./payment-matrix-view";
 import { ReceiptsView } from "./receipts-view";
 import { RentRollView } from "./rent-roll-view";
@@ -19,16 +19,7 @@ import { BankMovementsInbox } from "./bank-movements-inbox";
 import { ReceiptAutomationQueue } from "./receipt-automation-queue";
 import { TaxConnectorDashboard } from "./tax-connector-dashboard";
 import { FinancialsView } from "./financials-view";
-import {
-  AlertTriangle,
-  BadgeEuro,
-  FileText,
-  Grid3X3,
-  Landmark,
-  Plus,
-  Receipt,
-  ShieldCheck,
-} from "lucide-react";
+import { BadgeEuro, FileText, Grid3X3, Landmark, Plus, Receipt } from "lucide-react";
 
 type PaymentTab = "queue" | "receipts" | "rent-matrix" | "bank" | "rent-roll" | "tax";
 
@@ -181,157 +172,129 @@ export function FinancialsContainer() {
       </div>
 
       {isOwnerPortal ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <button type="button" onClick={() => setActiveTab("queue")} className="text-left w-full">
-            <Card className="border-[var(--color-destructive)]/20 bg-[var(--color-error-muted)] cursor-pointer hover:ring-1 hover:ring-[var(--color-destructive)]/30 transition-all">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-destructive)]">
-                  <AlertTriangle className="h-4 w-4" />
-                  Overdue rent
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-[var(--color-foreground)]">
-                  {formatCurrency(metrics.overdueAmount)}
-                </div>
-                <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                  Total expected rent currently marked overdue
-                </p>
-              </CardContent>
-            </Card>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <button
+            type="button"
+            onClick={() => setActiveTab("queue")}
+            className={cn(
+              "panel p-4 text-left transition-colors hover:border-[var(--color-border-hover)]",
+              metrics.overdueAmount > 0 &&
+                "border-l-[3px] border-l-[var(--semantic-danger)] bg-[var(--semantic-danger-soft)]",
+            )}
+          >
+            <p className="mono-label">Overdue rent</p>
+            <p
+              className={cn(
+                "mt-2 text-xl font-light tabular-nums sm:text-2xl",
+                metrics.overdueAmount > 0
+                  ? "text-[var(--semantic-danger)]"
+                  : "text-[var(--color-foreground)]",
+              )}
+            >
+              {formatCurrency(metrics.overdueAmount)}
+            </p>
+            <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
+              Total expected rent currently marked overdue
+            </p>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("receipts")}
-            className="text-left w-full"
+            className={cn(
+              "panel p-4 text-left transition-colors hover:border-[var(--color-border-hover)]",
+              metrics.pendingReceipts > 0 &&
+                "border-l-[3px] border-l-[var(--country-highlight-readable)] bg-[var(--country-highlight-soft)]",
+            )}
           >
-            <Card className="cursor-pointer hover:ring-1 hover:ring-[var(--color-border)] transition-all">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
-                  <BadgeEuro className="h-4 w-4 text-emerald-400" />
-                  Collected this month
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-[var(--color-foreground)]">
-                  {formatCurrency(metrics.monthlyCollected)}
-                </div>
-                <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                  Paid rent already received this month
-                </p>
-              </CardContent>
-            </Card>
+            <p className="mono-label">Pending receipts</p>
+            <p className="mt-2 text-xl font-light tabular-nums text-[var(--color-foreground)] sm:text-2xl">
+              {metrics.pendingReceipts}
+            </p>
+            <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
+              Records that still need payment or receipt follow-up
+            </p>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveTab("receipts")}
-            className="text-left w-full"
+            className="panel p-4 text-left transition-colors hover:border-[var(--color-border-hover)]"
           >
-            <Card className="cursor-pointer hover:ring-1 hover:ring-[var(--color-border)] transition-all">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
-                  <Receipt className="h-4 w-4 text-blue-400" />
-                  Pending receipts
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-[var(--color-foreground)]">
-                  {metrics.pendingReceipts}
-                </div>
-                <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                  Records that still need payment or receipt follow-up
-                </p>
-              </CardContent>
-            </Card>
+            <p className="mono-label">Collected this month</p>
+            <p className="mt-2 text-xl font-light tabular-nums text-[var(--semantic-success)] sm:text-2xl">
+              {formatCurrency(metrics.monthlyCollected)}
+            </p>
+            <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
+              Paid rent already received this month
+            </p>
           </button>
 
-          <button type="button" onClick={() => setActiveTab("tax")} className="text-left w-full">
-            <Card className="cursor-pointer hover:ring-1 hover:ring-[var(--color-border)] transition-all">
-              <CardHeader className="pb-2">
-                <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
-                  <FileText className="h-4 w-4 text-amber-400" />
-                  Tax-linked leases
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-[var(--color-foreground)]">
-                  {metrics.taxTrackedLeases}
-                </div>
-                <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                  Lease records carrying PT/ES tax configuration
-                </p>
-              </CardContent>
-            </Card>
+          <button
+            type="button"
+            onClick={() => setActiveTab("tax")}
+            className="panel p-4 text-left transition-colors hover:border-[var(--color-border-hover)]"
+          >
+            <p className="mono-label">Tax-linked leases</p>
+            <p className="mt-2 text-xl font-light tabular-nums text-[var(--color-foreground)] sm:text-2xl">
+              {metrics.taxTrackedLeases}
+            </p>
+            <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
+              Lease records carrying PT/ES tax configuration
+            </p>
           </button>
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card className="border-[var(--color-primary)]/20 bg-[var(--color-info-muted)]">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-primary)]">
-                <BadgeEuro className="h-4 w-4" />
-                Next rent
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-[var(--color-foreground)]">
-                {formatCurrency(tenantLease?.monthlyRent ?? tenantSummary?.rent ?? 0)}
-              </div>
-              <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                Expected amount for your current lease
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
-                <Receipt className="h-4 w-4 text-emerald-400" />
-                Receipts available
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-[var(--color-foreground)]">
-                {tenantPaidReceipts.length}
-              </div>
-              <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                Paid records ready to review or download
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
-                <AlertTriangle className="h-4 w-4 text-amber-400" />
-                Current status
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold capitalize text-[var(--color-foreground)]">
-                {tenantSummary?.paymentStatus ?? "pending"}
-              </div>
-              <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                Latest payment state linked to your tenancy
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)]">
-                <ShieldCheck className="h-4 w-4 text-blue-400" />
-                Lease status
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold capitalize text-[var(--color-foreground)]">
-                {tenantLease?.status ?? "active"}
-              </div>
-              <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-                Your current contract status
-              </p>
-            </CardContent>
-          </Card>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <div className="panel border-l-[3px] border-l-[var(--country-highlight-readable)] p-4">
+            <p className="mono-label">Next rent</p>
+            <p className="mt-2 text-xl font-light tabular-nums text-[var(--color-foreground)] sm:text-2xl">
+              {formatCurrency(tenantLease?.monthlyRent ?? tenantSummary?.rent ?? 0)}
+            </p>
+            <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
+              Expected amount for your current lease
+            </p>
+          </div>
+          <div className="panel p-4">
+            <p className="mono-label">Receipts available</p>
+            <p className="mt-2 text-xl font-light tabular-nums text-[var(--color-foreground)] sm:text-2xl">
+              {tenantPaidReceipts.length}
+            </p>
+            <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
+              Paid records ready to review or download
+            </p>
+          </div>
+          <div
+            className={cn(
+              "panel p-4",
+              tenantSummary?.paymentStatus === "overdue" &&
+                "border-l-[3px] border-l-[var(--semantic-danger)] bg-[var(--semantic-danger-soft)]",
+            )}
+          >
+            <p className="mono-label">Current status</p>
+            <p
+              className={cn(
+                "mt-2 text-xl font-light capitalize tabular-nums sm:text-2xl",
+                tenantSummary?.paymentStatus === "overdue"
+                  ? "text-[var(--semantic-danger)]"
+                  : "text-[var(--color-foreground)]",
+              )}
+            >
+              {tenantSummary?.paymentStatus ?? "pending"}
+            </p>
+            <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
+              Latest payment state linked to your tenancy
+            </p>
+          </div>
+          <div className="panel p-4">
+            <p className="mono-label">Lease status</p>
+            <p className="mt-2 text-xl font-light capitalize tabular-nums text-[var(--color-foreground)] sm:text-2xl">
+              {tenantLease?.status ?? "active"}
+            </p>
+            <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
+              Your current contract status
+            </p>
+          </div>
         </div>
       )}
 
@@ -342,35 +305,42 @@ export function FinancialsContainer() {
       >
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <TabsList
-            className={`grid w-full ${isOwnerPortal ? "max-w-5xl grid-cols-6" : "max-w-sm grid-cols-1"}`}
+            className={cn(
+              "w-full",
+              isOwnerPortal
+                ? "flex max-w-full justify-start gap-1 overflow-x-auto"
+                : "grid max-w-sm grid-cols-1",
+            )}
           >
             {isOwnerPortal && (
-              <TabsTrigger value="queue" className="flex items-center gap-2">
-                <Grid3X3 className="h-4 w-4" />
-                <span>Due &amp; Overdue</span>
+              <TabsTrigger value="queue" className="flex shrink-0 items-center gap-2">
+                <Grid3X3 className="h-4 w-4 shrink-0" />
+                <span className="whitespace-nowrap">Due &amp; Overdue</span>
               </TabsTrigger>
             )}
-            <TabsTrigger value="receipts" className="flex items-center gap-2">
-              <Receipt className="h-4 w-4" />
-              <span>{isOwnerPortal ? "Receipts" : "Payment History"}</span>
+            <TabsTrigger value="receipts" className="flex shrink-0 items-center gap-2">
+              <Receipt className="h-4 w-4 shrink-0" />
+              <span className="whitespace-nowrap">
+                {isOwnerPortal ? "Receipts" : "Payment History"}
+              </span>
             </TabsTrigger>
             {isOwnerPortal && (
               <>
-                <TabsTrigger value="rent-matrix" className="flex items-center gap-2">
-                  <Grid3X3 className="h-4 w-4" />
-                  <span>Rent Matrix</span>
+                <TabsTrigger value="rent-matrix" className="flex shrink-0 items-center gap-2">
+                  <Grid3X3 className="h-4 w-4 shrink-0" />
+                  <span className="whitespace-nowrap">Rent Matrix</span>
                 </TabsTrigger>
-                <TabsTrigger value="bank" className="flex items-center gap-2">
-                  <Landmark className="h-4 w-4" />
-                  <span>Bank Movements</span>
+                <TabsTrigger value="bank" className="flex shrink-0 items-center gap-2">
+                  <Landmark className="h-4 w-4 shrink-0" />
+                  <span className="whitespace-nowrap">Bank Movements</span>
                 </TabsTrigger>
-                <TabsTrigger value="rent-roll" className="flex items-center gap-2">
-                  <BadgeEuro className="h-4 w-4" />
-                  <span>Occupancy & Rent</span>
+                <TabsTrigger value="rent-roll" className="flex shrink-0 items-center gap-2">
+                  <BadgeEuro className="h-4 w-4 shrink-0" />
+                  <span className="whitespace-nowrap">Occupancy & Rent</span>
                 </TabsTrigger>
-                <TabsTrigger value="tax" className="flex items-center gap-2">
-                  <FileText className="h-4 w-4" />
-                  <span>Tax Summary</span>
+                <TabsTrigger value="tax" className="flex shrink-0 items-center gap-2">
+                  <FileText className="h-4 w-4 shrink-0" />
+                  <span className="whitespace-nowrap">Tax Summary</span>
                 </TabsTrigger>
               </>
             )}
