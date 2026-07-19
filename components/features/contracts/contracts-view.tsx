@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import {
   Table,
   TableBody,
@@ -222,14 +222,16 @@ export function ContractsView(): React.ReactElement {
             className="pl-10"
           />
         </div>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="active">Active</TabsTrigger>
-            <TabsTrigger value="expiring">Expiring</TabsTrigger>
-            <TabsTrigger value="expired">Expired</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <SegmentedFilter
+          value={activeTab}
+          onValueChange={setActiveTab}
+          options={[
+            { value: "all", label: "All" },
+            { value: "active", label: "Active" },
+            { value: "expiring", label: "Expiring" },
+            { value: "expired", label: "Expired" },
+          ]}
+        />
       </div>
 
       {/* Leases Table */}

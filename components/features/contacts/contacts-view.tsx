@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SegmentedFilter } from "@/components/ui/segmented-filter";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatCurrency as formatCurrencyUtil, type Currency } from "@/lib/utils/currency";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
@@ -139,14 +139,16 @@ export function ContactsView(): React.ReactElement {
             className="pl-10"
           />
         </div>
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList>
-            <TabsTrigger value="all">All</TabsTrigger>
-            <TabsTrigger value="contractor">Contractors</TabsTrigger>
-            <TabsTrigger value="vendor">Vendors</TabsTrigger>
-            <TabsTrigger value="internal">Internal</TabsTrigger>
-          </TabsList>
-        </Tabs>
+        <SegmentedFilter
+          value={activeTab}
+          onValueChange={setActiveTab}
+          options={[
+            { value: "all", label: "All" },
+            { value: "contractor", label: "Contractors" },
+            { value: "vendor", label: "Vendors" },
+            { value: "internal", label: "Internal" },
+          ]}
+        />
       </div>
 
       {/* Contacts Grid */}
