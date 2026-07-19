@@ -130,17 +130,17 @@ describe("SettingsView", () => {
       expect(fetchMock).toHaveBeenCalledWith("/api/billing/subscription");
     });
     await waitFor(() => {
-      expect(screen.getByRole("tab", { name: "Billing" })).toBeDefined();
+      expect(screen.getByRole("button", { name: "Billing" })).toBeDefined();
     });
   });
 
-  it("hides the Billing tab on self-hosted instances (billing disabled)", async () => {
+  it("hides the Billing section on self-hosted instances (billing disabled)", async () => {
     mockBilling(false);
     render(<SettingsView />);
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith("/api/billing/subscription");
     });
-    expect(screen.queryByRole("tab", { name: "Billing" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Billing" })).toBeNull();
   });
 });
