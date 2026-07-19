@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Wrench, Plus, Search, Star, Phone, Mail, Building2, Tag, Loader2 } from "lucide-react";
+import { Plus, Search, Star, Phone, Mail, Building2, Tag, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/utils/api-client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,6 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatCurrency as formatCurrencyUtil, type Currency } from "@/lib/utils/currency";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
-import { PageHeader } from "@/components/shared/page-header";
 
 interface MaintenanceContact {
   id: string;
@@ -116,51 +115,17 @@ export function ContactsView(): React.ReactElement {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Vendors" description="Manage contractors, vendors, and internal staff">
+      {/* One utility row: counts as text (declutter rule 4), search, type
+          filter, and the add action — no separate heading, no card grid. */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-muted-foreground">
+          {stats.total} contacts · {stats.contractors} contractors · {stats.vendors} vendors ·{" "}
+          {stats.internal} internal
+        </p>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
           Add Vendor
         </Button>
-      </PageHeader>
-
-      {/* Stats Cards */}
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Vendors</CardTitle>
-            <Wrench className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Contractors</CardTitle>
-            <div className="h-2 w-2 rounded-full bg-blue-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.contractors}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Vendors</CardTitle>
-            <div className="h-2 w-2 rounded-full bg-purple-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{stats.vendors}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Internal Staff</CardTitle>
-            <div className="h-2 w-2 rounded-full bg-green-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.internal}</div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Filters and Search */}
