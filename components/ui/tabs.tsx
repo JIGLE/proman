@@ -12,10 +12,7 @@ const TabsList = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <TabsPrimitive.List
     ref={ref}
-    className={cn(
-      "inline-flex h-10 items-center justify-center rounded-lg bg-zinc-800 p-1 text-zinc-400",
-      className,
-    )}
+    className={cn("flex items-center gap-1 border-b border-[var(--color-border)]", className)}
     {...props}
   />
 ));
@@ -28,7 +25,7 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-zinc-950 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-zinc-900 data-[state=active]:text-zinc-50 data-[state=active]:shadow-sm",
+      "inline-flex items-center justify-center whitespace-nowrap border border-b-0 border-transparent px-3 py-2 font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--color-muted-foreground)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--country-highlight-readable)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)] disabled:pointer-events-none disabled:opacity-50 hover:text-[var(--color-foreground)] data-[state=active]:border-[var(--color-border)] data-[state=active]:border-t-2 data-[state=active]:border-t-[var(--country-highlight-readable)] data-[state=active]:bg-[var(--color-hover)] data-[state=active]:text-[var(--color-foreground)]",
       className,
     )}
     {...props}
@@ -43,7 +40,7 @@ const TabsContent = React.forwardRef<
   <TabsPrimitive.Content
     ref={ref}
     className={cn(
-      "mt-2 ring-offset-zinc-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400 focus-visible:ring-offset-2",
+      "mt-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--country-highlight-readable)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]",
       className,
     )}
     {...props}
