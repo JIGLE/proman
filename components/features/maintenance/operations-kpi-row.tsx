@@ -7,8 +7,9 @@ import { cn } from "@/lib/utils/utils";
 import type { MaintenanceTicket } from "@/lib/types";
 
 /**
- * Situs Operations KPI row — Open / Urgent / Scheduled Inspections / Evidence
- * Required, one row capped at four metrics (CLAUDE.md declutter rule 2).
+ * Situs Operations summary line — Open / Urgent / Scheduled Inspections /
+ * Evidence Required as one inline text line (CLAUDE.md declutter rule 4:
+ * counts as text before counts as boxes), not four separate stat panels.
  * "Evidence Required" is a heuristic: an open/in-progress ticket with no
  * attached images — the Documents Evidence tab (deferred to a follow-up PR)
  * will replace this once tickets carry a real evidenceRequired flag.
@@ -37,46 +38,29 @@ export function OperationsKpiRow({
   }, [tickets]);
 
   return (
-    <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <div className="panel p-4">
-        <p className="mono-label">Open</p>
-        <p className="mt-1 text-xl font-light tabular-nums text-[var(--color-foreground)]">
-          {open}
-        </p>
-      </div>
-      <div
+    <p className="text-sm text-[var(--color-muted-foreground)]">
+      <span className="font-medium text-[var(--color-foreground)]">{open}</span> open ·{" "}
+      <span
         className={cn(
-          "panel p-4",
-          urgent > 0 &&
-            "border-l-[3px] border-l-[var(--semantic-danger)] bg-[var(--semantic-danger-soft)]",
+          "font-medium",
+          urgent > 0 ? "text-[var(--semantic-danger)]" : "text-[var(--color-foreground)]",
         )}
       >
-        <p className="mono-label">Urgent</p>
-        <p
-          className={cn(
-            "mt-1 text-xl font-light tabular-nums",
-            urgent > 0 ? "text-[var(--semantic-danger)]" : "text-[var(--color-foreground)]",
-          )}
-        >
-          {urgent}
-        </p>
-      </div>
-      <div className="panel p-4">
-        <p className="mono-label">Scheduled inspections</p>
-        <p className="mt-1 text-xl font-light tabular-nums text-[var(--color-foreground)]">
-          {scheduled}
-        </p>
-        <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">Next 14 days</p>
-      </div>
-      <div className="panel p-4">
-        <p className="mono-label">Evidence required</p>
-        <p className="mt-1 text-xl font-light tabular-nums text-[var(--semantic-warning-readable)]">
-          {evidenceRequired}
-        </p>
-        <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-          Open tickets with no photos attached
-        </p>
-      </div>
-    </div>
+        {urgent}
+      </span>{" "}
+      urgent · <span className="font-medium text-[var(--color-foreground)]">{scheduled}</span>{" "}
+      scheduled (next 14 days) ·{" "}
+      <span
+        className={cn(
+          "font-medium",
+          evidenceRequired > 0
+            ? "text-[var(--semantic-warning-readable)]"
+            : "text-[var(--color-foreground)]",
+        )}
+      >
+        {evidenceRequired}
+      </span>{" "}
+      evidence required
+    </p>
   );
 }

@@ -242,12 +242,15 @@ export function MaintenanceView(): React.ReactElement {
     [updateMaintenance, success],
   );
 
+  // A clear low->urgent escalation ramp: info, neutral, warning, error —
+  // medium and high previously shared the same warning color and were
+  // indistinguishable in a ticket list at a glance.
   const getPriorityColor = (priority: MaintenancePriority) => {
     switch (priority) {
       case "low":
         return "bg-[var(--color-info-muted)] text-[var(--color-info)] border-[var(--color-info)]/20";
       case "medium":
-        return "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20";
+        return "bg-[var(--color-secondary)] text-[var(--color-muted-foreground)] border-[var(--color-border)]";
       case "high":
         return "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20";
       case "urgent":
@@ -276,7 +279,10 @@ export function MaintenanceView(): React.ReactElement {
         <LoadingState variant="cards" count={6} />
       ) : (
         <div className="space-y-6">
-          <PageHeader title="Maintenance" description="Manage work orders and repairs">
+          <PageHeader
+            title="Operations"
+            description="Work orders, inspections, and contractor management"
+          >
             <ExportButton
               data={sortedTickets}
               filename="maintenance"
@@ -595,20 +601,23 @@ export function MaintenanceView(): React.ReactElement {
                 ]}
               />
 
-              {/* Cost summary + view toggle share one row (CLAUDE.md declutter rule 3). */}
+              {/* Cost summary + view toggle share one row (CLAUDE.md declutter rule 3).
+                  The count matches what the list below actually shows (any
+                  status, per the Status filter) — "Est. cost" stays scoped to
+                  open/in-progress work, so its label says so explicitly. */}
               <div className="flex items-center justify-between gap-4">
-                {costSummary.count > 0 ? (
+                {filteredTickets.length > 0 ? (
                   <div className="flex flex-wrap items-center gap-4 text-sm">
                     <span className="text-[var(--color-muted-foreground)]">
                       <span className="font-medium text-[var(--color-foreground)]">
-                        {costSummary.count}
+                        {filteredTickets.length}
                       </span>{" "}
-                      open ticket
-                      {costSummary.count !== 1 ? "s" : ""}
+                      ticket
+                      {filteredTickets.length !== 1 ? "s" : ""}
                     </span>
                     {costSummary.withCost > 0 && (
                       <span className="text-[var(--color-muted-foreground)]">
-                        Est. cost:{" "}
+                        Est. cost (open):{" "}
                         <span className="font-medium text-[var(--color-foreground)]">
                           {formatCurrency(costSummary.total)}
                         </span>
@@ -785,170 +794,131 @@ export function MaintenanceView(): React.ReactElement {
                   </div>
                 )
               ) : (
-                <>
-                  {/* Sortable Column Headers */}
-                  {filteredTickets.length > 0 && (
-                    <div className="flex items-center gap-4 px-4 py-2 bg-[var(--color-surface-hover)] rounded-lg border border-[var(--color-border)]">
-                      <div className="flex-1">
-                        <SortableHeader
-                          sortKey="title"
-                          label="Title"
-                          currentSort={getSortDirection("title")}
-                          onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
-                        />
-                      </div>
-                      <div className="w-32">
-                        <SortableHeader
-                          sortKey="priority"
-                          label="Priority"
-                          currentSort={getSortDirection("priority")}
-                          onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
-                        />
-                      </div>
-                      <div className="w-32">
-                        <SortableHeader
-                          sortKey="status"
-                          label="Status"
-                          currentSort={getSortDirection("status")}
-                          onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
-                        />
-                      </div>
-                      <div className="w-32">
-                        <SortableHeader
-                          sortKey="cost"
-                          label="Cost"
-                          currentSort={getSortDirection("cost")}
-                          onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
-                        />
-                      </div>
+                /* Grid view sorts via the Table view's real column headers —
+                   a fake tabular header row over a multi-column card grid
+                   implied alignment the cards don't have (see clutter audit). */
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                  {filteredTickets.length === 0 ? (
+                    <div className="col-span-full">
+                      <EmptyStateIllustration
+                        type={maintenance.length === 0 ? "maintenance" : "generic"}
+                        title={maintenance.length === 0 ? undefined : "No tickets found"}
+                        description={
+                          maintenance.length === 0
+                            ? undefined
+                            : "Try adjusting your search or filters"
+                        }
+                        onAction={maintenance.length === 0 ? dialog.openDialog : undefined}
+                      />
                     </div>
-                  )}
-
-                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {filteredTickets.length === 0 ? (
-                      <div className="col-span-full">
-                        <EmptyStateIllustration
-                          type={maintenance.length === 0 ? "maintenance" : "generic"}
-                          title={maintenance.length === 0 ? undefined : "No tickets found"}
-                          description={
-                            maintenance.length === 0
-                              ? undefined
-                              : "Try adjusting your search or filters"
-                          }
-                          onAction={maintenance.length === 0 ? dialog.openDialog : undefined}
-                        />
-                      </div>
-                    ) : (
-                      sortedTickets.map((ticket) => (
-                        <Card
-                          key={ticket.id}
-                          className="cursor-pointer hover:border-[var(--color-foreground)]/30 transition-colors"
-                          onClick={() => {
-                            setSelectedTicket(ticket);
-                            setIsDetailOpen(true);
-                          }}
-                        >
-                          <CardHeader className="pb-3">
-                            <div className="flex justify-between items-start">
+                  ) : (
+                    sortedTickets.map((ticket) => (
+                      <Card
+                        key={ticket.id}
+                        className="cursor-pointer hover:border-[var(--color-foreground)]/30 transition-colors"
+                        onClick={() => {
+                          setSelectedTicket(ticket);
+                          setIsDetailOpen(true);
+                        }}
+                      >
+                        <CardHeader className="pb-3">
+                          <div className="flex justify-between items-start">
+                            <Badge
+                              variant="outline"
+                              className={cn("capitalize mb-2", getPriorityColor(ticket.priority))}
+                            >
+                              {ticket.priority} Priority
+                            </Badge>
+                            {ticket.isTenantReport && (
                               <Badge
                                 variant="outline"
-                                className={cn("capitalize mb-2", getPriorityColor(ticket.priority))}
+                                className="mb-2 ml-1 bg-blue-500/10 text-blue-400 border-blue-500/30"
                               >
-                                {ticket.priority} Priority
+                                <User className="h-3 w-3 mr-1" />
+                                Tenant
                               </Badge>
-                              {ticket.isTenantReport && (
-                                <Badge
-                                  variant="outline"
-                                  className="mb-2 ml-1 bg-blue-500/10 text-blue-400 border-blue-500/30"
-                                >
-                                  <User className="h-3 w-3 mr-1" />
-                                  Tenant
-                                </Badge>
-                              )}
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-8 w-8"
-                                    aria-label="Ticket options"
-                                  >
-                                    <MoreVertical className="w-4 h-4" aria-hidden="true" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="">
-                                  <DropdownMenuItem
-                                    className="focus:bg-[var(--color-surface-hover)] cursor-pointer"
-                                    onClick={() => handleEdit(ticket)}
-                                  >
-                                    Edit Details
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="focus:bg-[var(--color-surface-hover)] cursor-pointer p-0"
-                                    onSelect={(e) => e.preventDefault()}
-                                  >
-                                    <Select
-                                      value={ticket.status}
-                                      onValueChange={(value) =>
-                                        handleUpdateStatus(ticket, value as MaintenanceStatus)
-                                      }
-                                    >
-                                      <SelectTrigger className="border-0 bg-transparent h-auto px-2 py-1.5 text-[var(--color-foreground)] shadow-none focus:ring-0">
-                                        <SelectValue placeholder="Update Status" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="open">Open</SelectItem>
-                                        <SelectItem value="in_progress">In Progress</SelectItem>
-                                        <SelectItem value="resolved">Resolved</SelectItem>
-                                        <SelectItem value="closed">Closed</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="text-[var(--color-destructive)] focus:bg-[var(--color-surface-hover)] cursor-pointer"
-                                    onClick={() => handleDelete(ticket)}
-                                  >
-                                    Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                            <CardTitle className="text-lg font-semibold text-[var(--color-foreground)] line-clamp-1">
-                              {ticket.title}
-                            </CardTitle>
-                            <CardDescription className="line-clamp-1">
-                              {ticket.propertyName ? ticket.propertyName : "Unknown Property"}
-                            </CardDescription>
-                          </CardHeader>
-                          <CardContent className="pb-3">
-                            <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-3 mb-4">
-                              {ticket.description}
-                            </p>
-                            <div className="flex items-center justify-between text-sm">
-                              <div className="flex items-center gap-2 text-[var(--color-muted-foreground)]">
-                                {getStatusIcon(ticket.status)}
-                                <span className="capitalize">
-                                  {ticket.status.replace("_", " ")}
-                                </span>
-                              </div>
-                              {(ticket.estimatedCost ?? ticket.cost) != null && (
-                                <span className="font-medium text-[var(--color-foreground)]">
-                                  {formatCurrency((ticket.estimatedCost ?? ticket.cost)!)}
-                                </span>
-                              )}
-                            </div>
-                          </CardContent>
-                          <CardFooter className="pt-3 border-t border-[var(--color-border)] text-xs text-[var(--color-muted-foreground)] flex justify-between">
-                            <span>Created {new Date(ticket.createdAt).toLocaleDateString()}</span>
-                            {(ticket.vendorName || ticket.assignedTo) && (
-                              <span>Vendor: {ticket.vendorName || ticket.assignedTo}</span>
                             )}
-                          </CardFooter>
-                        </Card>
-                      ))
-                    )}
-                  </div>
-                </>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  aria-label="Ticket options"
+                                >
+                                  <MoreVertical className="w-4 h-4" aria-hidden="true" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="">
+                                <DropdownMenuItem
+                                  className="focus:bg-[var(--color-surface-hover)] cursor-pointer"
+                                  onClick={() => handleEdit(ticket)}
+                                >
+                                  Edit Details
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="focus:bg-[var(--color-surface-hover)] cursor-pointer p-0"
+                                  onSelect={(e) => e.preventDefault()}
+                                >
+                                  <Select
+                                    value={ticket.status}
+                                    onValueChange={(value) =>
+                                      handleUpdateStatus(ticket, value as MaintenanceStatus)
+                                    }
+                                  >
+                                    <SelectTrigger className="border-0 bg-transparent h-auto px-2 py-1.5 text-[var(--color-foreground)] shadow-none focus:ring-0">
+                                      <SelectValue placeholder="Update Status" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="open">Open</SelectItem>
+                                      <SelectItem value="in_progress">In Progress</SelectItem>
+                                      <SelectItem value="resolved">Resolved</SelectItem>
+                                      <SelectItem value="closed">Closed</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  className="text-[var(--color-destructive)] focus:bg-[var(--color-surface-hover)] cursor-pointer"
+                                  onClick={() => handleDelete(ticket)}
+                                >
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                          <CardTitle className="text-lg font-semibold text-[var(--color-foreground)] line-clamp-1">
+                            {ticket.title}
+                          </CardTitle>
+                          <CardDescription className="line-clamp-1">
+                            {ticket.propertyName ? ticket.propertyName : "Unknown Property"}
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pb-3">
+                          <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-3 mb-4">
+                            {ticket.description}
+                          </p>
+                          <div className="flex items-center justify-between text-sm">
+                            <div className="flex items-center gap-2 text-[var(--color-muted-foreground)]">
+                              {getStatusIcon(ticket.status)}
+                              <span className="capitalize">{ticket.status.replace("_", " ")}</span>
+                            </div>
+                            {(ticket.estimatedCost ?? ticket.cost) != null && (
+                              <span className="font-medium text-[var(--color-foreground)]">
+                                {formatCurrency((ticket.estimatedCost ?? ticket.cost)!)}
+                              </span>
+                            )}
+                          </div>
+                        </CardContent>
+                        <CardFooter className="pt-3 border-t border-[var(--color-border)] text-xs text-[var(--color-muted-foreground)] flex justify-between">
+                          <span>Created {new Date(ticket.createdAt).toLocaleDateString()}</span>
+                          {(ticket.vendorName || ticket.assignedTo) && (
+                            <span>Vendor: {ticket.vendorName || ticket.assignedTo}</span>
+                          )}
+                        </CardFooter>
+                      </Card>
+                    ))
+                  )}
+                </div>
               )}
             </TabsContent>
           </Tabs>
