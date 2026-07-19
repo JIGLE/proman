@@ -113,29 +113,23 @@ export function PeopleView(): React.ReactElement {
 
         {/* People Statistics — 3-up on every width so the grid stays symmetric */}
         <div className="grid grid-cols-3 gap-3">
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-solid)] p-3 sm:p-4">
-            <div className="text-xs sm:text-sm text-[var(--color-muted-foreground)] mb-1">
-              {t("totalTenants")}
-            </div>
-            <div className="text-xl sm:text-2xl font-bold tabular-nums text-[var(--color-foreground)]">
+          <div className="panel p-3 sm:p-4">
+            <p className="mono-label">{t("totalTenants")}</p>
+            <p className="mt-2 text-xl font-light tabular-nums text-[var(--color-foreground)] sm:text-2xl">
               {tenants.length}
-            </div>
+            </p>
           </div>
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-solid)] p-3 sm:p-4">
-            <div className="text-xs sm:text-sm text-[var(--color-muted-foreground)] mb-1">
-              {t("activeTenants")}
-            </div>
-            <div className="text-xl sm:text-2xl font-bold tabular-nums text-[var(--color-success)]">
+          <div className="panel p-3 sm:p-4">
+            <p className="mono-label">{t("activeTenants")}</p>
+            <p className="mt-2 text-xl font-light tabular-nums text-[var(--semantic-success)] sm:text-2xl">
               {tenants.filter((tenant) => new Date(tenant.leaseEnd) > new Date()).length}
-            </div>
+            </p>
           </div>
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-card-solid)] p-3 sm:p-4">
-            <div className="text-xs sm:text-sm text-[var(--color-muted-foreground)] mb-1">
-              {t("totalOwners")}
-            </div>
-            <div className="text-xl sm:text-2xl font-bold tabular-nums text-[var(--color-foreground)]">
+          <div className="panel p-3 sm:p-4">
+            <p className="mono-label">{t("totalOwners")}</p>
+            <p className="mt-2 text-xl font-light tabular-nums text-[var(--color-foreground)] sm:text-2xl">
               {owners.length}
-            </div>
+            </p>
           </div>
         </div>
       </div>
