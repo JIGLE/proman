@@ -5,7 +5,14 @@ import { useSearchParams } from "next/navigation";
 import { Save, Settings } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils/utils";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useCsrf } from "@/lib/contexts/csrf-context";
 import { useTheme } from "@/lib/contexts/theme-context";
@@ -17,6 +24,17 @@ import { SettingsSystem } from "./settings-system";
 import { SettingsIntegrations } from "./settings-integrations";
 import { SettingsBilling } from "./settings-billing";
 import { defaultSettings, type BillingInfo, type UserSettings } from "./settings-types";
+
+const CORE_SECTIONS = [
+  { value: "account", label: "Account" },
+  { value: "tax", label: "Tax & Region" },
+  { value: "notifications", label: "Notifications" },
+  { value: "security", label: "Security" },
+  { value: "integrations", label: "Integrations" },
+  { value: "system", label: "System" },
+] as const;
+
+type SectionValue = (typeof CORE_SECTIONS)[number]["value"] | "billing";
 
 export function SettingsView(): React.ReactElement {
   const { data: session } = useSession();
@@ -36,6 +54,13 @@ export function SettingsView(): React.ReactElement {
   // Whether to surface any subscription UI at all. Off on self-hosted instances
   // (ENABLE_BILLING unset) so the account never sees subscription framing.
   const showBilling = billing?.billingEnabled === true;
+
+  const [activeSection, setActiveSection] = useState<SectionValue>(
+    (searchParams.get("tab") as SectionValue | null) ?? "account",
+  );
+  const sections = showBilling
+    ? [...CORE_SECTIONS, { value: "billing" as const, label: "Billing" }]
+    : CORE_SECTIONS;
 
   useEffect(() => {
     loadSettings();
@@ -148,67 +173,72 @@ export function SettingsView(): React.ReactElement {
         )}
       </div>
 
-      <Tabs defaultValue={searchParams.get("tab") ?? "account"}>
-        {/* Scrollable on narrow screens — 7 tabs (6 + Billing when enabled) no
-            longer fit a fixed width, but overflow-x-auto handles it. */}
-        <TabsList className="flex w-full justify-start overflow-x-auto sm:w-auto">
-          <TabsTrigger value="account" className="shrink-0">
-            Account
-          </TabsTrigger>
-          <TabsTrigger value="tax" className="shrink-0">
-            Tax &amp; Region
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="shrink-0">
-            Notifications
-          </TabsTrigger>
-          <TabsTrigger value="security" className="shrink-0">
-            Security
-          </TabsTrigger>
-          <TabsTrigger value="integrations" className="shrink-0">
-            Integrations
-          </TabsTrigger>
-          <TabsTrigger value="system" className="shrink-0">
-            System
-          </TabsTrigger>
-          {showBilling && (
-            <TabsTrigger value="billing" className="shrink-0">
-              Billing
-            </TabsTrigger>
+      <div className="grid gap-6 md:grid-cols-[200px_1fr]">
+        {/* Desktop vertical section nav — same left-border-accent language as
+            the main sidebar, so Settings reads as its own mini nav rather
+            than a page of tabs. */}
+        <nav aria-label="Settings sections" className="hidden md:block">
+          <div className="space-y-0.5">
+            {sections.map((section) => (
+              <button
+                key={section.value}
+                type="button"
+                onClick={() => setActiveSection(section.value)}
+                aria-current={activeSection === section.value ? "page" : undefined}
+                className={cn(
+                  "flex w-full items-center border-l-2 px-3 py-2 text-left text-sm transition-colors",
+                  activeSection === section.value
+                    ? "border-[var(--country-highlight-readable)] bg-[var(--color-hover)] font-medium text-[var(--country-highlight-readable)]"
+                    : "border-transparent text-[var(--color-muted-foreground)] hover:bg-[var(--color-hover)] hover:text-[var(--color-foreground)]",
+                )}
+              >
+                {section.label}
+              </button>
+            ))}
+          </div>
+        </nav>
+
+        {/* Mobile section picker */}
+        <div className="md:hidden">
+          <Select
+            value={activeSection}
+            onValueChange={(value: string) => setActiveSection(value as SectionValue)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {sections.map((section) => (
+                <SelectItem key={section.value} value={section.value}>
+                  {section.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div className="min-w-0">
+          {activeSection === "account" && (
+            <SettingsAccount
+              settings={settings}
+              updateSetting={updateSetting}
+              appVersion={appVersion}
+            />
           )}
-        </TabsList>
-
-        <TabsContent value="account" className="mt-6">
-          <SettingsAccount
-            settings={settings}
-            updateSetting={updateSetting}
-            appVersion={appVersion}
-          />
-        </TabsContent>
-
-        <TabsContent value="tax" className="mt-6">
-          <SettingsTax settings={settings} updateSetting={updateSetting} />
-        </TabsContent>
-
-        <TabsContent value="notifications" className="mt-6">
-          <SettingsNotifications settings={settings} updateSetting={updateSetting} />
-        </TabsContent>
-
-        <TabsContent value="security" className="mt-6">
-          <SettingsSecurity />
-        </TabsContent>
-
-        <TabsContent value="integrations" className="mt-6">
-          <SettingsIntegrations />
-        </TabsContent>
-
-        <TabsContent value="system" className="mt-6">
-          <SettingsSystem />
-        </TabsContent>
-
-        <TabsContent value="billing" className="mt-6" hidden={!showBilling}>
-          <SettingsBilling billing={billing} billingLoading={billingLoading} />
-        </TabsContent>
-      </Tabs>
+          {activeSection === "tax" && (
+            <SettingsTax settings={settings} updateSetting={updateSetting} />
+          )}
+          {activeSection === "notifications" && (
+            <SettingsNotifications settings={settings} updateSetting={updateSetting} />
+          )}
+          {activeSection === "security" && <SettingsSecurity />}
+          {activeSection === "integrations" && <SettingsIntegrations />}
+          {activeSection === "system" && <SettingsSystem />}
+          {activeSection === "billing" && showBilling && (
+            <SettingsBilling billing={billing} billingLoading={billingLoading} />
+          )}
+        </div>
+      </div>
     </div>
   );
 }
