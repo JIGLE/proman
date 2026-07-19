@@ -1,16 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect, useCallback } from "react";
-import {
-  Plus,
-  AlertCircle,
-  Clock,
-  CheckCircle,
-  XCircle,
-  MoreVertical,
-  User,
-  AlertTriangle,
-} from "lucide-react";
+import { Plus, AlertCircle, Clock, CheckCircle, XCircle, MoreVertical, User } from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
 import {
@@ -527,41 +518,42 @@ export function MaintenanceView(): React.ReactElement {
           {/* Status strip */}
           {maintenance.length > 0 && (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3">
-                <AlertCircle className="h-4 w-4 shrink-0 text-[var(--color-info)]" />
-                <div>
-                  <p className="text-xs text-[var(--color-muted-foreground)]">Open</p>
-                  <p className="text-lg font-semibold text-[var(--color-foreground)]">
-                    {statusCounts.open}
-                  </p>
-                </div>
+              <div className="panel p-4">
+                <p className="mono-label">Open</p>
+                <p className="mt-1 text-xl font-light tabular-nums text-[var(--color-foreground)]">
+                  {statusCounts.open}
+                </p>
               </div>
-              <div className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3">
-                <Clock className="h-4 w-4 shrink-0 text-[var(--color-warning)]" />
-                <div>
-                  <p className="text-xs text-[var(--color-muted-foreground)]">In Progress</p>
-                  <p className="text-lg font-semibold text-[var(--color-foreground)]">
-                    {statusCounts.inProgress}
-                  </p>
-                </div>
+              <div className="panel p-4">
+                <p className="mono-label">In progress</p>
+                <p className="mt-1 text-xl font-light tabular-nums text-[var(--color-foreground)]">
+                  {statusCounts.inProgress}
+                </p>
               </div>
-              <div className="flex items-center gap-3 rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] px-4 py-3">
-                <CheckCircle className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
-                <div>
-                  <p className="text-xs text-[var(--color-muted-foreground)]">Resolved</p>
-                  <p className="text-lg font-semibold text-[var(--color-foreground)]">
-                    {statusCounts.resolved}
-                  </p>
-                </div>
+              <div className="panel p-4">
+                <p className="mono-label">Resolved</p>
+                <p className="mt-1 text-xl font-light tabular-nums text-[var(--semantic-success)]">
+                  {statusCounts.resolved}
+                </p>
               </div>
-              <div className="flex items-center gap-3 rounded-lg border border-[var(--color-destructive)]/20 bg-[var(--color-error-muted)] px-4 py-3">
-                <AlertTriangle className="h-4 w-4 shrink-0 text-[var(--color-destructive)]" />
-                <div>
-                  <p className="text-xs text-[var(--color-muted-foreground)]">Urgent</p>
-                  <p className="text-lg font-semibold text-[var(--color-destructive)]">
-                    {statusCounts.urgent}
-                  </p>
-                </div>
+              <div
+                className={cn(
+                  "panel p-4",
+                  statusCounts.urgent > 0 &&
+                    "border-l-[3px] border-l-[var(--semantic-danger)] bg-[var(--semantic-danger-soft)]",
+                )}
+              >
+                <p className="mono-label">Urgent</p>
+                <p
+                  className={cn(
+                    "mt-1 text-xl font-light tabular-nums",
+                    statusCounts.urgent > 0
+                      ? "text-[var(--semantic-danger)]"
+                      : "text-[var(--color-foreground)]",
+                  )}
+                >
+                  {statusCounts.urgent}
+                </p>
               </div>
             </div>
           )}
