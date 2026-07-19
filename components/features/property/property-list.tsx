@@ -13,6 +13,7 @@ import {
   Pencil,
   Trash2,
   MoreHorizontal,
+  Search,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -24,7 +25,7 @@ import {
 import { useRouter, usePathname } from "next/navigation";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { getCountryName, resolveCountryCode } from "@/lib/utils/country";
-import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
+import { DataViewMode } from "@/components/ui/data-view-toggle";
 import {
   Table,
   TableBody,
@@ -54,7 +55,6 @@ import {
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
-import { SearchFilter } from "@/components/ui/search-filter";
 import { cn } from "@/lib/utils/utils";
 import { BulkActionBar, getDefaultBulkActions } from "@/components/ui/bulk-action-bar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -130,7 +130,6 @@ export type PropertiesViewProps = {
   highlightedPropertyId?: string;
   density?: "comfortable" | "compact";
   showPageHeader?: boolean;
-  showMapToggle?: boolean;
 };
 
 export type PropertiesViewRef = {
@@ -145,7 +144,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
       onLocateOnMap,
       highlightedPropertyId,
       showPageHeader = true,
-      showMapToggle = false,
     }: PropertiesViewProps,
     ref,
   ): React.ReactElement {
@@ -184,23 +182,22 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
 
-    // Data view mode state with localStorage persistence (grid | table | tree | map).
-    // Tree is the default Situs Portfolio experience (structural inventory + workspace).
-    const [dataViewMode, setDataViewMode] = useState<DataViewMode>(
-      viewMode === "map" ? "map" : "tree",
-    );
+    // The Portfolio commits to the tree + workspace (mockup-faithful) — no view
+    // toggle. `viewMode="map"` remains for the standalone map embed used elsewhere.
+    const [dataViewMode] = useState<DataViewMode>(viewMode === "map" ? "map" : "tree");
     // The asset whose command workspace is open in the tree split (desktop only).
     const [workspacePropertyId, setWorkspacePropertyId] = useState<string | null>(null);
+    // Collapse the tree rail to a dots-only spine (desktop; persisted per device).
+    const [railCollapsed, setRailCollapsed] = useState(false);
     useEffect(() => {
-      if (viewMode === "map") return;
-      const saved =
-        localStorage.getItem("situs-properties-view-mode") ??
-        localStorage.getItem("proman-properties-view-mode");
-      if (saved === "grid" || saved === "table" || saved === "tree") setDataViewMode(saved);
-    }, [viewMode]);
-    const handleViewModeChange = useCallback((mode: DataViewMode) => {
-      setDataViewMode(mode);
-      if (mode !== "map") localStorage.setItem("situs-properties-view-mode", mode);
+      setRailCollapsed(localStorage.getItem("situs-portfolio-rail-collapsed") === "1");
+    }, []);
+    const toggleRailCollapsed = useCallback(() => {
+      setRailCollapsed((prev) => {
+        const next = !prev;
+        localStorage.setItem("situs-portfolio-rail-collapsed", next ? "1" : "0");
+        return next;
+      });
     }, []);
 
     // Building edit dialog state
@@ -242,23 +239,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
 
     const buildingDeleteConfirm = useConfirmDialog();
 
-    // Search and filter state
+    // Search + attention filter. The old top chrome (full-width search, type /
+    // status dropdowns and the operational chip strip) was decluttered; a compact
+    // search and an "attention only" toggle now live in the tree column.
     const [searchQuery, setSearchQuery] = useState("");
-    const [typeFilter, setTypeFilter] = useState<string>(() =>
-      typeof window !== "undefined"
-        ? (localStorage.getItem("situs-properties-type-filter") ??
-          localStorage.getItem("proman-properties-type-filter") ??
-          "all")
-        : "all",
-    );
-    const [statusFilter, setStatusFilter] = useState<string>(() =>
-      typeof window !== "undefined"
-        ? (localStorage.getItem("situs-properties-status-filter") ??
-          localStorage.getItem("proman-properties-status-filter") ??
-          "all")
-        : "all",
-    );
-    const [operationalFilter, setOperationalFilter] = useState<string>("all");
+    const [attentionOnly, setAttentionOnly] = useState(false);
 
     // Collapsible building sections
     const [collapsedBuildings, setCollapsedBuildings] = useState<Set<string>>(new Set());
@@ -392,40 +377,16 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     // Filter and search properties
     const filteredProperties = useMemo(() => {
       return properties.filter((property) => {
-        // Search filter (name, address)
         const matchesSearch =
           searchQuery.length === 0 ||
           property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           property.address.toLowerCase().includes(searchQuery.toLowerCase());
 
-        // Type filter
-        const matchesType = typeFilter === "all" || property.type === typeFilter;
+        const matchesAttention = !attentionOnly || needsAttentionPropertyIds.has(property.id);
 
-        // Status filter
-        const matchesStatus = statusFilter === "all" || property.status === statusFilter;
-
-        // Operational filter
-        const matchesOperational =
-          operationalFilter === "all" ||
-          (operationalFilter === "needs-attention" && needsAttentionPropertyIds.has(property.id)) ||
-          (operationalFilter === "lease-renewal" && expiringLeasePropertyIds.has(property.id)) ||
-          (operationalFilter === "open-maintenance" &&
-            openMaintenancePropertyIds.has(property.id)) ||
-          (operationalFilter === "missing-map" && missingMapPropertyIds.has(property.id));
-
-        return matchesSearch && matchesType && matchesStatus && matchesOperational;
+        return matchesSearch && matchesAttention;
       });
-    }, [
-      properties,
-      searchQuery,
-      typeFilter,
-      statusFilter,
-      operationalFilter,
-      needsAttentionPropertyIds,
-      expiringLeasePropertyIds,
-      openMaintenancePropertyIds,
-      missingMapPropertyIds,
-    ]);
+    }, [properties, searchQuery, attentionOnly, needsAttentionPropertyIds]);
 
     // Sorting
     const {
@@ -1076,121 +1037,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
             </Dialog>
 
             <div className="space-y-4">
-              {/* Slim operational filter strip */}
-              <div className="panel flex items-center gap-2 overflow-x-auto px-4 py-2.5 scrollbar-none">
-                <span className="mono-label mr-1 hidden shrink-0 sm:inline">Filter</span>
-                {[
-                  { key: "all", label: "All", count: properties.length, color: "" },
-                  {
-                    key: "needs-attention",
-                    label: "Action needed",
-                    count: needsAttentionPropertyIds.size,
-                    color: "text-[var(--color-destructive)]",
-                  },
-                  {
-                    key: "lease-renewal",
-                    label: "Lease renewal",
-                    count: expiringLeasePropertyIds.size,
-                    color: "text-[var(--color-warning)]",
-                  },
-                  {
-                    key: "open-maintenance",
-                    label: "Maintenance",
-                    count: openMaintenancePropertyIds.size,
-                    color: "text-[var(--color-warning)]",
-                  },
-                ].map((opt) => {
-                  const isActive = operationalFilter === opt.key;
-                  return (
-                    <button
-                      key={opt.key}
-                      type="button"
-                      onClick={() => setOperationalFilter(opt.key)}
-                      className={cn(
-                        "inline-flex shrink-0 items-center gap-1.5 border px-3 py-1 text-xs font-medium transition-colors",
-                        isActive
-                          ? "border-[var(--country-highlight-readable)] bg-[var(--country-highlight-readable)] text-[var(--color-background)]"
-                          : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:border-[var(--color-border-hover)] hover:text-[var(--color-foreground)]",
-                      )}
-                    >
-                      <span className="hidden sm:inline">{opt.label}</span>
-                      <span className="inline sm:hidden">
-                        {opt.key === "all"
-                          ? "All"
-                          : opt.key
-                              .split("-")
-                              .map((w) => w[0].toUpperCase())
-                              .join("")}
-                      </span>
-                      <span
-                        className={cn(
-                          "font-semibold",
-                          isActive
-                            ? "text-white"
-                            : opt.color || "text-[var(--color-muted-foreground)]",
-                        )}
-                      >
-                        {opt.count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Search, Filter, and View Toggle */}
-              <div className="flex items-start gap-2">
-                <div className="min-w-0 flex-1">
-                  <SearchFilter
-                    searchPlaceholder="Search properties by name or address..."
-                    onSearchChange={setSearchQuery}
-                    onFilterChange={(key, value) => {
-                      if (key === "type") {
-                        setTypeFilter(value);
-                        localStorage.setItem("situs-properties-type-filter", value);
-                      }
-                      if (key === "status") {
-                        setStatusFilter(value);
-                        localStorage.setItem("situs-properties-status-filter", value);
-                      }
-                    }}
-                    filters={[
-                      {
-                        key: "type",
-                        label: "Type",
-                        options: [
-                          { label: "All Types", value: "all" },
-                          { label: "Apartment", value: "apartment" },
-                          { label: "House", value: "house" },
-                          { label: "Commercial", value: "commercial" },
-                          { label: "Land", value: "land" },
-                          { label: "Other", value: "other" },
-                        ],
-                        defaultValue: "all",
-                      },
-                      {
-                        key: "status",
-                        label: "Status",
-                        options: [
-                          { label: "All Statuses", value: "all" },
-                          { label: "Occupied", value: "occupied" },
-                          { label: "Vacant", value: "vacant" },
-                          { label: "Maintenance", value: "maintenance" },
-                        ],
-                        defaultValue: "all",
-                      },
-                    ]}
-                  />
-                </div>
-                <div className="shrink-0 pt-0.5">
-                  <DataViewToggle
-                    mode={dataViewMode}
-                    onChange={handleViewModeChange}
-                    showMap={showMapToggle}
-                    showTree
-                  />
-                </div>
-              </div>
-
               {dataViewMode === "map" ? (
                 /* Map View */
                 <div className="overflow-hidden border border-[var(--color-border)]">
@@ -1203,15 +1049,56 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                 /* Tree View — Situs structural portfolio inventory + command workspace.
                    Desktop (lg+): a fixed tree rail beside an inline detail workspace.
                    Below lg: tree only — selecting an asset routes to the detail. */
-                <div className="lg:grid lg:grid-cols-[minmax(300px,340px)_1fr] lg:items-start lg:gap-6">
-                  <div className="lg:border lg:border-[var(--color-border)] lg:bg-[var(--color-card)]">
+                <div
+                  className={cn(
+                    "lg:grid lg:items-start lg:gap-6",
+                    railCollapsed
+                      ? "lg:grid-cols-[76px_1fr]"
+                      : "lg:grid-cols-[minmax(300px,340px)_1fr]",
+                  )}
+                >
+                  <div className="space-y-2">
+                    {/* Compact search + attention filter — contextual to the tree
+                        (replaces the removed top search band + filter chips). */}
+                    {!railCollapsed && (
+                      <div className="flex items-center gap-2">
+                        <div className="relative min-w-0 flex-1">
+                          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+                          <Input
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Filter assets…"
+                            aria-label="Filter assets by name or address"
+                            className="h-8 pl-8 text-sm"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setAttentionOnly((v) => !v)}
+                          aria-pressed={attentionOnly}
+                          title="Show only assets needing attention"
+                          className={cn(
+                            "inline-flex h-8 shrink-0 items-center gap-1.5 border px-2.5 font-mono text-[10px] uppercase tracking-[0.06em] transition-colors",
+                            attentionOnly
+                              ? "border-[var(--semantic-danger)] bg-[var(--semantic-danger-soft)] text-[var(--semantic-danger)]"
+                              : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
+                          )}
+                        >
+                          <span className="status-dot status-dot-danger" aria-hidden="true" />
+                          {needsAttentionPropertyIds.size}
+                        </button>
+                      </div>
+                    )}
                     <PortfolioTree
                       properties={filteredProperties}
                       buildings={buildings}
                       tenants={tenants}
                       maintenance={maintenance}
+                      leases={leases}
                       onSelectProperty={handleTreeSelect}
                       highlightedPropertyId={workspacePropertyId ?? highlightedPropertyId}
+                      collapsed={railCollapsed}
+                      onToggleCollapsed={toggleRailCollapsed}
                     />
                   </div>
                   <div className="hidden min-w-0 lg:block">
@@ -1788,7 +1675,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           if (isMissingMap) {
                                             dialog.openEditDialog(property);
                                           } else {
-                                            handleViewModeChange("map");
                                             onLocateOnMap?.(property.id);
                                           }
                                         }}

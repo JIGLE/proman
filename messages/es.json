@@ -1495,6 +1495,10 @@
     "densityComfortable": "Cómodo",
     "unclustered": "Sin agrupar",
     "dotOverdue": "Alquiler atrasado",
-    "dotTickets": "Incidencias de mantenimiento abiertas"
+    "dotTickets": "Incidencias de mantenimiento abiertas",
+    "dotLease": "Ventana de renovación del contrato",
+    "legend": "Señales",
+    "collapse": "Contraer panel",
+    "expand": "Expandir panel"
   }
 }

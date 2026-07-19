@@ -1495,6 +1495,10 @@
     "densityComfortable": "Comfortable",
     "unclustered": "Unclustered",
     "dotOverdue": "Rent payment overdue",
-    "dotTickets": "Open maintenance tickets"
+    "dotTickets": "Open maintenance tickets",
+    "dotLease": "Lease renewal window",
+    "legend": "Signals",
+    "collapse": "Collapse rail",
+    "expand": "Expand rail"
   }
 }

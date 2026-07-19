@@ -24,7 +24,10 @@ vi.mock("next-auth/react", () => ({
 vi.mock("@/lib/contexts/theme-context", () => ({
   useTheme: () => ({
     theme: "light",
+    resolvedTheme: "normal",
+    country: "PT",
     setTheme: vi.fn(),
+    setCountry: vi.fn(),
     systemTheme: "light",
   }),
 }));
