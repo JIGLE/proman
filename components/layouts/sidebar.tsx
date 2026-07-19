@@ -8,7 +8,7 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, LogOut } from "lucide-react";
 
-import { DomoraMark } from "@/components/shared/brand-logo";
+import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
 import { cn } from "@/lib/utils/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -18,6 +18,7 @@ import { LanguageSelector } from "@/components/shared/language-selector";
 import { NotificationBell } from "@/components/shared/notification-bell";
 import { useDemoMode } from "@/lib/contexts/demo-context";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
+import { useTheme } from "@/lib/contexts/theme-context";
 
 // ── Nav Item Type ──────────────────────────────────────
 interface SidebarProps {
@@ -43,6 +44,7 @@ function SidebarFooter({
   user,
   subtitle,
 }: SidebarFooterProps): React.ReactElement {
+  const { country, resolvedTheme } = useTheme();
   const initials =
     user?.name
       ?.split(" ")
@@ -77,7 +79,7 @@ function SidebarFooter({
             variant="ghost"
             size="sm"
             onClick={() => signOut({ callbackUrl: `/${locale}` })}
-            className="h-8 w-8 p-0 hover:bg-red-500/10 hover:text-red-500"
+            className="h-8 w-8 shrink-0 p-0 hover:bg-[var(--color-error-muted)] hover:text-[var(--color-destructive)]"
             title="Sign Out"
             aria-label="Sign Out"
           >
@@ -148,7 +150,6 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
 
   return (
     <div
-      data-tour="sidebar"
       className={cn(
         "glass-sidebar relative flex h-screen flex-col transition-all duration-300 min-w-0 overflow-x-hidden",
         collapsed ? "w-16" : "w-60",
@@ -164,15 +165,15 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
             title="Expand Sidebar"
             aria-label="Expand Sidebar"
           >
-            <DomoraMark className="h-7 w-7" />
+            <SitusPortalMark className="h-7 w-7" />
           </button>
         ) : (
           // Expanded: logo + collapse button
           <>
-            <div className="flex items-center gap-2 flex-1 min-w-0">
-              <DomoraMark className="h-7 w-7 shrink-0" />
-              <span className="font-display text-lg font-bold tracking-tight text-[var(--color-foreground)] truncate">
-                Domora
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <SitusPortalMark className="h-7 w-7 shrink-0" />
+              <span className="text-[13px] font-medium uppercase tracking-[0.22em] text-[var(--color-foreground)] truncate">
+                Situs
               </span>
             </div>
             <Button
@@ -198,8 +199,8 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
         {menuItems.map((group, groupIndex) => (
           <div key={group.group} role="group" className={cn("space-y-1", groupIndex > 0 && "mt-4")}>
             {!collapsed && (
-              <div className="px-3 py-2">
-                <h3 className="text-xs font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
+              <div className="px-3 pb-1 pt-2">
+                <h3 className="mono-label">
                   {t(group.groupLabelKey.replace("navigation.", "") as Parameters<typeof t>[0])}
                 </h3>
               </div>
@@ -227,17 +228,17 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                   >
                     <div
                       className={cn(
-                        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors",
+                        "flex items-center gap-3 border-l-2 px-3 py-2 text-sm transition-colors",
                         collapsed && "justify-center px-2",
                         isActive
-                          ? "bg-[var(--color-sidebar-active)] text-[var(--color-primary)] ring-1 ring-[var(--color-primary)]/40"
-                          : "text-[var(--color-sidebar-text)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)]",
+                          ? "border-[var(--country-highlight-readable)] bg-[var(--color-sidebar-active)] font-medium text-[var(--country-highlight-readable)]"
+                          : "border-transparent text-[var(--color-sidebar-text)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)]",
                       )}
                     >
                       <Icon
                         className={cn(
                           "h-[18px] w-[18px] shrink-0",
-                          isActive && "text-[var(--color-primary)]",
+                          isActive && "text-[var(--country-highlight-readable)]",
                         )}
                       />
                       {!collapsed && <span className="truncate">{translatedLabel}</span>}

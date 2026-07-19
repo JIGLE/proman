@@ -1,11 +1,10 @@
 import { Sidebar } from "@/components/layouts/sidebar";
-import { MobileBottomNav } from "@/components/ui/mobile-nav";
+import { MobileBottomNav, MobileTopBar } from "@/components/ui/mobile-nav";
 import { SkipLink } from "@/components/ui/accessibility";
 import { DemoBanner } from "@/components/shared/demo-banner";
 import { Breadcrumbs } from "@/components/shared/breadcrumbs";
 import { CommandPalette } from "@/components/shared/command-palette";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
-import { AppTour } from "@/components/shared/app-tour";
 import { ScenarioRunner } from "@/components/shared/scenario-runner";
 import { PortalAccessGuard } from "@/components/shared/portal-access-guard";
 
@@ -32,9 +31,17 @@ export default function MainLayout({
         {/* Demo Mode Banner */}
         <DemoBanner />
 
-        <main id="main-content" className="flex-1 overflow-y-auto pb-16 md:pb-0" tabIndex={-1}>
+        {/* Sticky app-chrome header — mobile only (no sidebar below md). */}
+        <MobileTopBar />
+
+        <main
+          id="main-content"
+          className="flex-1 overflow-y-auto overscroll-y-contain pb-16 md:pb-0"
+          tabIndex={-1}
+        >
           <div className="min-h-full p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">
-            <Breadcrumbs className="mb-4" />
+            {/* Breadcrumbs carry page context on desktop; on mobile the top bar does. */}
+            <Breadcrumbs className="mb-4 hidden md:flex" />
             <ErrorBoundary component="MainContent">
               <PortalAccessGuard>{children}</PortalAccessGuard>
             </ErrorBoundary>
@@ -47,9 +54,6 @@ export default function MainLayout({
 
       {/* Command Palette (⌘K) */}
       <CommandPalette />
-
-      {/* Guided Tour Overlay */}
-      <AppTour />
 
       {/* Demo Scenario Runner FAB */}
       <ScenarioRunner />

@@ -19,6 +19,14 @@ interface MobileNavProps {
   onTabChange?: (tab: string) => void;
 }
 
+/** Endonyms — the same in every catalog, so not routed through i18n. */
+const LOCALE_LABELS: Record<string, string> = {
+  pt: "Português",
+  en: "English",
+  es: "Español",
+  it: "Italiano",
+};
+
 export function MobileBottomNav({
   activeTab: _activeTab,
   onTabChange,
@@ -51,6 +59,16 @@ export function MobileBottomNav({
   const secondaryNavItems = mobileSecondaryNavigation.map((item) => ({
     id: item.key,
     label: navLabel(item.labelKey),
+    icon: item.icon,
+    href: item.href,
+  }));
+  // Everything not on the bottom bar (Maintenance, Leases, Analytics, Reports,
+  // Documents, Messages, Compliance, Settings…) has no other home on a phone — the
+  // desktop sidebar is hidden below `md`. Surface it inside the "More" sheet so the
+  // whole app stays reachable from mobile chrome, not just the 4 primary tabs.
+  const secondaryNavItems = mobileSecondaryNavigation.map((item) => ({
+    id: item.key,
+    label: tNav(item.labelKey.replace("navigation.", "") as Parameters<typeof tNav>[0]),
     icon: item.icon,
     href: item.href,
   }));
@@ -241,38 +259,43 @@ export function MobileBottomNav({
 }
 
 /**
- * Mobile header component with menu toggle
+ * Situs mobile top bar — the sticky app chrome shown below `md`, giving the
+ * authenticated shell a native-app feel (there is no desktop sidebar on a
+ * phone). It carries the Portal mark and the current section title, derived
+ * from the active nav item so it stays i18n-correct and in sync with the rail.
+ * Purely presentational: no menu toggle — navigation lives in the bottom bar.
  */
-interface MobileHeaderProps {
-  title: string;
-  onMenuClick?: () => void;
-  showMenu?: boolean;
-}
+export function MobileTopBar(): React.ReactElement {
+  const pathname = usePathname();
+  const tNav = useTranslations("navigation");
+  const { navigation } = usePortalAccess();
 
-export function MobileHeader({
-  title,
-  onMenuClick,
-  showMenu,
-}: MobileHeaderProps): React.ReactElement {
+  const currentLocale = pathname.split("/")[1] || "pt";
+  // Path with the locale prefix stripped, e.g. "/portfolio/123".
+  const routePath = `/${pathname.split("/").slice(2).join("/")}`;
+
+  // Resolve the section title from the nav item whose href best matches the
+  // current path (longest prefix wins, so "/settings/tax" still reads
+  // "Settings"). Falls back to the wordmark when nothing matches.
+  const items = navigation.flatMap((group) => group.items);
+  const match = items
+    .filter((item) => routePath === item.href || routePath.startsWith(`${item.href}/`))
+    .sort((a, b) => b.href.length - a.href.length)[0];
+  const title = match
+    ? tNav(match.labelKey.replace("navigation.", "") as Parameters<typeof tNav>[0])
+    : "Situs";
+
   return (
-    <header className="sticky top-0 z-30 flex items-center justify-between h-14 px-4 bg-[var(--color-background)]/95 backdrop-blur border-b border-[var(--color-border)] md:hidden">
-      <div className="flex items-center gap-3">
-        <Building2 className="h-6 w-6 text-accent-primary" aria-hidden="true" />
-        <h1 className="text-lg font-semibold text-[var(--color-foreground)]">{title}</h1>
-      </div>
-      {onMenuClick && (
-        <button
-          onClick={onMenuClick}
-          className="p-2.5 rounded-lg text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-hover)] transition-colors active:scale-95 touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]"
-          aria-label={showMenu ? "Close menu" : "Open menu"}
-        >
-          {showMenu ? (
-            <X className="h-5 w-5" aria-hidden="true" />
-          ) : (
-            <Menu className="h-5 w-5" aria-hidden="true" />
-          )}
-        </button>
-      )}
+    <header
+      className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--color-border)] bg-[var(--color-background)]/95 px-4 pt-[env(safe-area-inset-top,0px)] backdrop-blur md:hidden"
+      style={{ height: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
+    >
+      <Link href={`/${currentLocale}/dashboard`} aria-label="Situs — Home" className="shrink-0">
+        <SitusPortalMark size="sm" className="h-6 w-6" />
+      </Link>
+      <h1 className="truncate text-base font-semibold tracking-tight text-[var(--color-foreground)]">
+        {title}
+      </h1>
     </header>
   );
 }

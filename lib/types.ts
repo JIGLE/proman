@@ -208,7 +208,8 @@ export interface Expense {
   date: string;
   category: string;
   description?: string;
-  receiptImage?: string;
+  documentId?: string | null;
+  taxReviewStatus?: string;
   isDeductible?: boolean;
   vendorName?: string;
   vendorVat?: string;
@@ -250,6 +251,8 @@ export interface MaintenanceTicket {
   invoiceRef?: string;
   isTenantReport?: boolean;
   resolvedAt?: string;
+  evidenceRequired?: boolean;
+  slaDueAt?: string;
   createdAt: string;
   updatedAt: string;
 }

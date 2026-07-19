@@ -8,17 +8,7 @@ import {
 import { receiptService } from "@/lib/services/database/receipt";
 import { sanitizeForDatabase, sanitizeNumber } from "@/lib/utils/sanitize";
 import { z } from "zod";
-
-// Validation schema for updates
-const updateReceiptSchema = z.object({
-  tenantId: z.string().min(1).optional(),
-  propertyId: z.string().min(1).optional(),
-  amount: z.number().min(0.01).optional(),
-  date: z.string().datetime().optional(),
-  type: z.enum(["rent", "deposit", "maintenance", "other"]).optional(),
-  status: z.enum(["paid", "pending"]).optional(),
-  description: z.string().max(500).optional(),
-});
+import { updateReceiptSchema } from "@/lib/schemas/receipt.schema";
 
 // GET /api/receipts/[id] - Get a specific receipt
 async function handleGet(

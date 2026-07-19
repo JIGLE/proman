@@ -58,7 +58,28 @@ export type AuditAction =
   // Admin actions
   | "DATABASE_ACCESS"
   | "DATABASE_EXPORT"
-  | "SETTINGS_CHANGE";
+  | "SETTINGS_CHANGE"
+  // Situs reference-month workflow (Migration A)
+  | "GENERATE_RENT_PERIODS"
+  | "ALLOCATE_PAYMENT"
+  | "REVERSE_ALLOCATION"
+  // Situs bank layer (Migration B)
+  | "IMPORT_BANK_TRANSACTIONS"
+  | "MATCH_PAYMENT"
+  | "CONFIRM_MATCH"
+  | "OVERRIDE_MATCH"
+  | "IGNORE_TRANSACTION"
+  | "APPLY_RECONCILIATION_RULE"
+  // Situs receipt lifecycle + tax connector (Migration C)
+  | "EMIT_RECEIPT"
+  | "SUBMIT_RECEIPT"
+  | "ARCHIVE_RECEIPT"
+  | "VOID_RECEIPT"
+  | "TRANSITION_RECEIPT_LIFECYCLE"
+  // Situs Documents/OCR (Migration D)
+  | "OCR_CLASSIFY_DOCUMENT"
+  | "OCR_EXTRACTION_REVIEWED"
+  | "LINK_EXPENSE_DOCUMENT";
 
 export interface AuditLogEntry {
   userId: string;
@@ -86,6 +107,8 @@ export async function logAudit(entry: AuditLogEntry): Promise<void> {
         userId: entry.userId,
         action: entry.action,
         details: details || null,
+        resourceType: entry.resourceType || null,
+        resourceId: entry.resourceId || null,
       },
     });
 

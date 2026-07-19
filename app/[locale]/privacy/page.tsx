@@ -11,8 +11,8 @@ export async function generateMetadata({ params }: Props) {
   const { locale: _locale } = await params;
   const t = await getTranslations("footer");
   return {
-    title: `${t("privacy")} — Domora`,
-    description: "How Domora collects, uses, and protects your personal data.",
+    title: `${t("privacy")} — Situs`,
+    description: "How Situs collects, uses, and protects your personal data.",
     robots: { index: false },
   };
 }
@@ -30,7 +30,7 @@ export default async function PrivacyPage({ params }: Props) {
             href={`/${locale}`}
             className="text-sm font-semibold tracking-tight text-[var(--color-foreground)] transition-opacity hover:opacity-80"
           >
-            Domora
+            Situs
           </Link>
           <LanguageSelector />
         </div>
@@ -55,7 +55,7 @@ export default async function PrivacyPage({ params }: Props) {
               1. Introduction
             </h2>
             <p>
-              Domora (&ldquo;we&rdquo;, &ldquo;our&rdquo;, &ldquo;the platform&rdquo;) is committed
+              Situs (&ldquo;we&rdquo;, &ldquo;our&rdquo;, &ldquo;the platform&rdquo;) is committed
               to protecting your personal data in accordance with the General Data Protection
               Regulation (GDPR) and applicable national law. This policy explains what data we
               collect, how we use it, and your rights as a data subject.

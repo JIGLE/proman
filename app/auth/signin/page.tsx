@@ -1,11 +1,4 @@
-"use client";
-
-import { Suspense } from "react";
-import { signIn, useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
-import { ErrorBoundary } from "@/components/shared/error-boundary";
-import { Button } from "@/components/ui/button";
+import { AuthView } from "@/components/features/auth/auth-view";
 
 export const dynamic = "force-dynamic";
 

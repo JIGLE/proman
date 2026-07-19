@@ -82,9 +82,7 @@ describe("PaymentService", () => {
     // Mock Stripe to fail
     vi.mocked(stripe.paymentIntents.create).mockRejectedOnce(new Error("Stripe API error"));
 
-    const result = await paymentService.createPaymentIntent({
-      /* ... */
-    });
+    const result = await paymentService.createPaymentIntent({/* ... */});
 
     expect(result.success).toBe(false);
     expect(result.error).toContain("Stripe");
@@ -268,9 +266,7 @@ describe("POST /api/webhooks/stripe", () => {
   });
 
   it("should reject events with invalid signature", async () => {
-    const event = {
-      /* ... */
-    };
+    const event = {/* ... */};
 
     const response = await request.post("/api/webhooks/stripe", JSON.stringify(event), {
       headers: { "stripe-signature": "invalid-signature" },

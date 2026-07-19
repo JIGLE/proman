@@ -14,22 +14,10 @@ import { withRateLimit } from "@/lib/utils/rate-limit";
 import { receiptService } from "@/lib/services/database/receipt";
 import { sanitizeForDatabase, sanitizeNumber } from "@/lib/utils/sanitize";
 import { getPaginationFromRequest, createPaginatedResponse } from "@/lib/utils/pagination";
+import { logger } from "@/lib/utils/logger";
 import { getPrismaClient } from "@/lib/services/database/database";
-import { z } from "zod";
 import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
-
-// Validation schemas
-const createReceiptSchema = z.object({
-  tenantId: z.string().min(1),
-  propertyId: z.string().min(1),
-  amount: z.number().min(0.01),
-  date: z.string().datetime(),
-  type: z.enum(["rent", "deposit", "maintenance", "other"]),
-  status: z.enum(["paid", "pending"]).default("paid"),
-  description: z.string().max(500).optional(),
-});
-
-const _updateReceiptSchema = createReceiptSchema.partial();
+import { createReceiptSchema } from "@/lib/schemas/receipt.schema";
 
 // GET /api/receipts - Get all receipts for the authenticated user (with pagination)
 async function handleGet(request: NextRequest): Promise<Response> {
@@ -105,6 +93,18 @@ async function handlePost(request: NextRequest): Promise<Response> {
 
   const validatedData = parseBody(sanitizedBody, createReceiptSchema);
   const receipt = await receiptService.create(scopeUserId, validatedData);
+
+  // Situs reference-month workflow: run the allocation waterfall for rent
+  // receipts (idempotent; ambiguous multi-lease tenants are skipped for
+  // review). Never blocks receipt creation — allocation is best-effort here
+  // and re-runnable via the backfill script.
+  try {
+    const { allocateReceipt } = await import("@/lib/services/allocation/service");
+    await allocateReceipt(receipt.id);
+  } catch (allocErr) {
+    logger.error("Receipt allocation failed", allocErr, { receiptId: receipt.id });
+  }
+
   return createSuccessResponse(receipt, 201);
 }
 

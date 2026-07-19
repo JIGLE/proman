@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { screen, waitFor } from "@testing-library/react";
 import { renderWithProviders as render } from "@/tests/helpers/render-with-providers";
 import { SettingsView } from "./settings-view";
 
@@ -14,6 +15,7 @@ vi.mock("next/navigation", () => ({
     push: vi.fn(),
   }),
   usePathname: () => "/en/settings",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // Mock next-auth
@@ -31,6 +33,20 @@ vi.mock("@/lib/contexts/toast-context", () => ({
     error: vi.fn(),
     warning: vi.fn(),
     info: vi.fn(),
+  }),
+}));
+
+// Mock CSRF + theme contexts (settings-view reads the real hooks)
+vi.mock("@/lib/contexts/csrf-context", () => ({
+  useCsrf: () => ({ token: "test-csrf", isLoading: false, error: null, refreshToken: vi.fn() }),
+}));
+
+vi.mock("@/lib/contexts/theme-context", () => ({
+  useTheme: () => ({
+    theme: "light",
+    resolvedTheme: "light",
+    setTheme: vi.fn(),
+    toggleTheme: vi.fn(),
   }),
 }));
 
@@ -68,5 +84,63 @@ describe("SettingsView", () => {
   it("is a React component that accepts no props", () => {
     const component = SettingsView as any;
     expect(typeof component).toBe("function");
+  });
+
+  const mockBilling = (billingEnabled: boolean) => {
+    fetchMock.mockImplementation((url: string) => {
+      if (url === "/api/billing/subscription") {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            data: {
+              plan: "pro",
+              status: "active",
+              currentPeriodEnd: null,
+              cancelAtPeriodEnd: false,
+              maxProperties: 10,
+              propertyCount: 3,
+              billingEnabled,
+            },
+          }),
+        });
+      }
+      if (url === "/api/health") {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({
+            status: "ok",
+            uptime: 0,
+            environment: "test",
+            checks: {
+              database: { status: "healthy", latency_ms: 1 },
+              email: { status: "healthy" },
+            },
+          }),
+        });
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) });
+    });
+  };
+
+  it("renders the Billing tab when billing is enabled", async () => {
+    mockBilling(true);
+    render(<SettingsView />);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/billing/subscription");
+    });
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "Billing" })).toBeDefined();
+    });
+  });
+
+  it("hides the Billing section on self-hosted instances (billing disabled)", async () => {
+    mockBilling(false);
+    render(<SettingsView />);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith("/api/billing/subscription");
+    });
+    expect(screen.queryByRole("button", { name: "Billing" })).toBeNull();
   });
 });

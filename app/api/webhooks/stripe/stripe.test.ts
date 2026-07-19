@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 
 const {
   mockPaymentService,
+  mockProcessSubscriptionWebhook,
   mockGetSecret,
   mockIsEnabled,
   mockRateLimit,
@@ -11,6 +12,7 @@ const {
   mockPaymentService: {
     processStripeWebhook: vi.fn(),
   },
+  mockProcessSubscriptionWebhook: vi.fn(),
   mockGetSecret: vi.fn(),
   mockIsEnabled: vi.fn(),
   mockRateLimit: vi.fn(),
@@ -19,6 +21,10 @@ const {
 
 vi.mock("@/lib/payment/payment-service", () => ({
   paymentService: mockPaymentService,
+}));
+
+vi.mock("@/lib/billing/subscription-service", () => ({
+  processSubscriptionWebhook: mockProcessSubscriptionWebhook,
 }));
 
 vi.mock("@/lib/utils/env", () => ({
@@ -35,11 +41,11 @@ vi.mock("@/lib/middleware/rate-limit", () => ({
 
 vi.mock("stripe", () => {
   return {
-    default: vi.fn(() => ({
-      webhooks: {
+    default: class MockStripe {
+      webhooks = {
         constructEvent: mockStripeConstructEvent,
-      },
-    })),
+      };
+    },
   };
 });
 
@@ -111,6 +117,56 @@ describe("Stripe Webhook Handler", () => {
       });
 
       expect(mockGetSecret).toBeDefined();
+    });
+  });
+
+  describe("Event dispatch", () => {
+    beforeEach(() => {
+      mockGetSecret.mockImplementation((key: string) => {
+        if (key === "STRIPE_SECRET_KEY") return "sk_test";
+        if (key === "STRIPE_WEBHOOK_SECRET") return "whsec_test";
+        return null;
+      });
+      mockRateLimit.mockResolvedValue(null);
+    });
+
+    it("routes payment-intent events to paymentService", async () => {
+      const event = { type: "payment_intent.succeeded", id: "evt_1" };
+      mockRequest.text = vi.fn().mockResolvedValue(JSON.stringify(event));
+      mockStripeConstructEvent.mockReturnValue(event);
+      mockPaymentService.processStripeWebhook.mockResolvedValue({ success: true });
+
+      const response = await POST(mockRequest as any);
+
+      expect(response.status).toBe(200);
+      expect(mockPaymentService.processStripeWebhook).toHaveBeenCalledWith(event);
+      expect(mockProcessSubscriptionWebhook).not.toHaveBeenCalled();
+    });
+
+    it("routes checkout.session.completed to the subscription service", async () => {
+      const event = { type: "checkout.session.completed", id: "evt_2" };
+      mockRequest.text = vi.fn().mockResolvedValue(JSON.stringify(event));
+      mockStripeConstructEvent.mockReturnValue(event);
+      mockProcessSubscriptionWebhook.mockResolvedValue({ success: true });
+
+      const response = await POST(mockRequest as any);
+
+      expect(response.status).toBe(200);
+      expect(mockProcessSubscriptionWebhook).toHaveBeenCalledWith(event);
+      expect(mockPaymentService.processStripeWebhook).not.toHaveBeenCalled();
+    });
+
+    it("routes customer.subscription.updated to the subscription service", async () => {
+      const event = { type: "customer.subscription.updated", id: "evt_3" };
+      mockRequest.text = vi.fn().mockResolvedValue(JSON.stringify(event));
+      mockStripeConstructEvent.mockReturnValue(event);
+      mockProcessSubscriptionWebhook.mockResolvedValue({ success: true });
+
+      const response = await POST(mockRequest as any);
+
+      expect(response.status).toBe(200);
+      expect(mockProcessSubscriptionWebhook).toHaveBeenCalledWith(event);
+      expect(mockPaymentService.processStripeWebhook).not.toHaveBeenCalled();
     });
   });
 });

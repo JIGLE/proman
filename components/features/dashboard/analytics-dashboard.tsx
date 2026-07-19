@@ -351,7 +351,7 @@ export function AnalyticsDashboard(): React.ReactElement {
         <div>
           <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)] mb-1">
             <Home className="h-4 w-4" />
-            <span>Domora</span>
+            <span>Situs</span>
             <span>/</span>
             <span className="text-[var(--color-foreground)]">Analytics</span>
           </div>

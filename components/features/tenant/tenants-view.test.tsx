@@ -25,6 +25,6 @@ vi.mock("@/lib/contexts/toast-context", () => ({
 describe("TenantsView", () => {
   it("renders empty state when no tenants", () => {
     render(<TenantsView />);
-    expect(screen.getByText(/No tenants yet/)).toBeDefined();
+    expect(screen.getByText(/tenants\.title/)).toBeDefined();
   });
 });

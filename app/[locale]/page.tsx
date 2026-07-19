@@ -1,30 +1,15 @@
-﻿import { redirect } from "next/navigation";
-import {
-  AlarmClock,
-  ArrowRight,
-  BadgeEuro,
-  Bell,
-  Building2,
-  CheckCircle2,
-  Globe2,
-  KeyRound,
-  Play,
-  ReceiptText,
-  ScrollText,
-  ShieldCheck,
-  Users,
-  Wrench,
-} from "lucide-react";
+import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
+
 import {
   LandingAnalyticsObserver,
   TrackedLandingLink,
 } from "@/components/shared/landing-analytics";
-import { DomoraMark } from "@/components/shared/brand-logo";
+import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
 import { LanguageSelector } from "@/components/shared/language-selector";
-import { LandingHero, LandingHeroItem } from "@/components/shared/landing-hero";
+import { LandingStickyCta } from "@/components/shared/landing-sticky-cta";
 import { LocaleSelectOverlay } from "@/components/shared/locale-select-overlay";
 import { Button } from "@/components/ui/button";
-import { getTranslations } from "next-intl/server";
 
 interface Props {
   params: Promise<{ locale: string }>;
@@ -33,7 +18,7 @@ interface Props {
 export default async function LandingPage({ params }: Props) {
   const { locale } = await params;
 
-  // If user is authenticated, redirect to dashboard instead of landing page
+  // Authenticated visitors go straight to the app.
   try {
     const { getServerSession } = await import("next-auth/next");
     const { getAuthOptions } = await import("@/lib/services/auth/auth");
@@ -42,72 +27,65 @@ export default async function LandingPage({ params }: Props) {
       redirect(`/${locale}/dashboard`);
     }
   } catch {
-    // If session check fails, show landing page normally
+    // Session check failed — render the public landing normally.
   }
 
   const t = await getTranslations("landing");
   const tFooter = await getTranslations("footer");
 
-  const trustItems = [
-    t("trust.items.records"),
-    t("trust.items.export"),
-    t("trust.items.pt_es"),
-    t("trust.items.roles"),
-    t("trust.items.documents"),
-    t("trust.items.operations"),
+  const chips = [
+    t("chips.matching"),
+    t("chips.receipts"),
+    t("chips.documents"),
+    t("chips.tax"),
+    t("chips.palette"),
   ];
 
-  const timelineSteps = [
-    {
-      icon: AlarmClock,
-      color: "text-red-400",
-      title: t("timeline.steps.due.title"),
-      description: t("timeline.steps.due.description"),
-    },
-    {
-      icon: Bell,
-      color: "text-amber-400",
-      title: t("timeline.steps.reminder.title"),
-      description: t("timeline.steps.reminder.description"),
-    },
-    {
-      icon: BadgeEuro,
-      color: "text-teal-400",
-      title: t("timeline.steps.payment.title"),
-      description: t("timeline.steps.payment.description"),
-    },
-    {
-      icon: ReceiptText,
-      color: "text-orange-400",
-      title: t("timeline.steps.receipt.title"),
-      description: t("timeline.steps.receipt.description"),
-    },
-    {
-      icon: Globe2,
-      color: "text-emerald-400",
-      title: t("timeline.steps.export.title"),
-      description: t("timeline.steps.export.description"),
-    },
+  const modules = [
+    { label: t("system.m1label"), title: t("system.m1title"), body: t("system.m1body") },
+    { label: t("system.m2label"), title: t("system.m2title"), body: t("system.m2body") },
+    { label: t("system.m3label"), title: t("system.m3title"), body: t("system.m3body") },
   ];
 
-  const howItWorksSteps = [
+  // Workflow accents follow the logo role colours (arc / line / dot), cycling.
+  const flowSteps = [
+    { t: t("flow.s1t"), b: t("flow.s1b"), bar: "var(--logo-primary)" },
+    { t: t("flow.s2t"), b: t("flow.s2b"), bar: "var(--logo-secondary)" },
+    { t: t("flow.s3t"), b: t("flow.s3b"), bar: "var(--logo-accent)" },
+    { t: t("flow.s4t"), b: t("flow.s4b"), bar: "var(--logo-secondary)" },
+    { t: t("flow.s5t"), b: t("flow.s5b"), bar: "var(--logo-accent)" },
+  ];
+
+  const pillars = [
     {
-      key: "collect",
-      icon: AlarmClock,
-      title: t("howItWorks.collect.title"),
-      description: t("howItWorks.collect.description"),
+      label: t("pillars.portfolioLabel"),
+      title: t("pillars.portfolioTitle"),
+      body: t("pillars.portfolioBody"),
     },
     {
-      key: "issue",
-      icon: ReceiptText,
-      title: t("howItWorks.issue.title"),
-      description: t("howItWorks.issue.description"),
+      label: t("pillars.financeLabel"),
+      title: t("pillars.financeTitle"),
+      body: t("pillars.financeBody"),
     },
     {
-      key: "report",
-      icon: Globe2,
-      title: t("howItWorks.report.title"),
-      description: t("howItWorks.report.description"),
+      label: t("pillars.documentsLabel"),
+      title: t("pillars.documentsTitle"),
+      body: t("pillars.documentsBody"),
+    },
+    {
+      label: t("pillars.expensesLabel"),
+      title: t("pillars.expensesTitle"),
+      body: t("pillars.expensesBody"),
+    },
+    {
+      label: t("pillars.operationsLabel"),
+      title: t("pillars.operationsTitle"),
+      body: t("pillars.operationsBody"),
+    },
+    {
+      label: t("pillars.intelligenceLabel"),
+      title: t("pillars.intelligenceTitle"),
+      body: t("pillars.intelligenceBody"),
     },
   ];
 
@@ -115,13 +93,29 @@ export default async function LandingPage({ params }: Props) {
     <div className="min-h-screen bg-[#09090e] text-[var(--color-foreground)]">
       <LocaleSelectOverlay currentLocale={locale} />
 
-      {/* â”€â”€ Header â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-white/[0.06] bg-[#09090e]/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <div className="flex items-center gap-2">
-            <DomoraMark className="h-7 w-7" />
-            <span className="font-display text-lg font-bold tracking-tight">Domora</span>
-          </div>
+      {/* ── Header ─────────────────────────────────────────────── */}
+      <header className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-canvas)]/85 backdrop-blur-md">
+        <div className="mx-auto flex h-[76px] max-w-[1440px] items-center justify-between px-5 sm:px-10">
+          <a href={`/${locale}`} className="flex items-center gap-3">
+            <SitusPortalMark className="h-[34px] w-[34px]" />
+            <span className="text-[13px] font-semibold uppercase tracking-[0.22em]">Situs</span>
+          </a>
+
+          <nav className="hidden items-center gap-6 text-[13px] text-[var(--color-muted-foreground)] md:flex">
+            <a href="#system" className="transition-colors hover:text-[var(--color-foreground)]">
+              {t("system.eyebrow")}
+            </a>
+            <a href="#workflow" className="transition-colors hover:text-[var(--color-foreground)]">
+              {t("flow.eyebrow")}
+            </a>
+            <a href="#modules" className="transition-colors hover:text-[var(--color-foreground)]">
+              {t("pillars.eyebrow")}
+            </a>
+            <a href="#preview" className="transition-colors hover:text-[var(--color-foreground)]">
+              {t("preview2.eyebrow")}
+            </a>
+          </nav>
+
           <div className="flex items-center gap-2">
             {/* Language is reachable on every breakpoint (compact on mobile) */}
             <LanguageSelector compact />
@@ -155,18 +149,19 @@ export default async function LandingPage({ params }: Props) {
         </div>
       </header>
 
-      <main className="px-4 pb-24 pt-28">
+      <main className="mx-auto max-w-[1440px]">
         <LandingAnalyticsObserver locale={locale} demoEnabled={true} />
 
-        {/* â”€â”€ Hero â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-        <section className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[0.88fr_1.12fr] lg:items-start">
-          <LandingHero>
-            <LandingHeroItem>
-              <div className="inline-flex items-center gap-2 rounded-full border border-teal-500/25 bg-teal-500/10 px-3 py-1 text-xs font-medium text-teal-300">
-                <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-teal-400" />
-                {t("eyebrow")}
-              </div>
-            </LandingHeroItem>
+        {/* ── Hero ─────────────────────────────────────────────── */}
+        <section className="grid items-center gap-12 px-5 py-16 sm:px-10 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
+          <div>
+            <p className="mono-label mb-5">{t("eyebrow")}</p>
+            <h1 className="max-w-2xl text-[clamp(44px,7vw,88px)] font-normal leading-[0.9] tracking-[-0.06em]">
+              {t("hero2")}
+            </h1>
+            <p className="mt-7 max-w-xl text-[clamp(16px,1.5vw,19px)] leading-relaxed text-[var(--color-muted-foreground)]">
+              {t("subtitle2")}
+            </p>
 
             <LandingHeroItem>
               <h1 className="font-display text-[40px] font-bold leading-[1.08] tracking-[-0.04em] text-[var(--color-foreground)] sm:text-5xl">
@@ -578,14 +573,10 @@ export default async function LandingPage({ params }: Props) {
           </div>
         </section>
 
-        {/* â”€â”€ Workflow Timeline â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Product pillars ──────────────────────────────────── */}
         <section
-          id="workflow"
-          className="mx-auto mt-16 max-w-6xl overflow-hidden rounded-3xl px-6 py-12 sm:px-10"
-          style={{
-            background:
-              "radial-gradient(ellipse at 50% -10%, rgba(59,130,246,0.08) 0%, transparent 60%), #0d0d14",
-          }}
+          id="modules"
+          className="border-t border-[var(--color-border)] px-5 py-16 sm:px-10 lg:py-20"
         >
           <div className="text-center">
             <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--color-muted-foreground)]">
@@ -606,8 +597,8 @@ export default async function LandingPage({ params }: Props) {
               const Icon = step.icon;
               return (
                 <div
-                  key={step.title}
-                  className="relative flex flex-1 flex-col items-center px-3 text-center"
+                  key={p.title}
+                  className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 transition-colors hover:bg-[var(--color-hover)]"
                 >
                   <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-background)] shadow-lg shadow-black/40">
                     <Icon className={`h-4 w-4 ${step.color}`} />
@@ -651,7 +642,7 @@ export default async function LandingPage({ params }: Props) {
           </div>
         </section>
 
-        {/* â”€â”€ How It Works â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
+        {/* ── Interface preview (static Mission Control mock-shell) ── */}
         <section
           id="how-it-works"
           className="mx-auto mt-6 max-w-6xl rounded-3xl border border-white/[0.05] bg-[var(--color-card)]/50 p-8 sm:p-10"
@@ -971,24 +962,118 @@ export default async function LandingPage({ params }: Props) {
           <p className="mt-4 text-[15px] leading-relaxed text-[var(--color-muted-foreground)]">
             {t("closingCta.subtitle")}
           </p>
-          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+
+          <div className="mt-9 grid min-h-[480px] grid-cols-1 border border-[var(--color-border)] bg-[var(--color-surface)] md:grid-cols-[220px_1fr]">
+            {/* Rail */}
+            <aside className="border-b border-[var(--color-border)] p-5 md:border-b-0 md:border-r">
+              <div className="mb-7 flex items-center gap-2.5">
+                <SitusPortalMark className="h-6 w-6" />
+                <span className="text-[12px] font-semibold uppercase tracking-[0.18em]">Situs</span>
+              </div>
+              <div className="grid gap-1 text-[13px]">
+                <div
+                  className="border-l-2 px-2.5 py-2 font-medium"
+                  style={{
+                    borderColor: "var(--country-highlight-readable)",
+                    background: "var(--color-hover)",
+                    color: "var(--country-highlight-readable)",
+                  }}
+                >
+                  Home
+                </div>
+                {["Portfolio", "Finance", "Documents", "Intelligence"].map((item) => (
+                  <div
+                    key={item}
+                    className="border-l-2 border-transparent px-2.5 py-2 text-[var(--color-muted-foreground)]"
+                  >
+                    {item}
+                  </div>
+                ))}
+              </div>
+            </aside>
+
+            {/* Main */}
+            <section className="p-6">
+              <p className="mono-label">{t("preview2.greeting")}</p>
+
+              <div className="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-3">
+                {[
+                  { label: t("preview2.healthLabel"), value: "98%" },
+                  { label: t("preview2.incomeLabel"), value: "€4,820" },
+                  { label: t("preview2.queueLabel"), value: "3" },
+                ].map((kpi) => (
+                  <div key={kpi.label} className="border border-[var(--color-border)] p-4">
+                    <span className="mono-label">{kpi.label}</span>
+                    <strong className="mt-2 block text-[26px] font-normal tabular-nums">
+                      {kpi.value}
+                    </strong>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div className="border border-[var(--color-border)] p-4">
+                  <h4 className="mono-label mb-3">{t("preview2.missionTitle")}</h4>
+                  {[
+                    { text: t("preview2.m1"), tag: t("preview2.m1tag") },
+                    { text: t("preview2.m2"), tag: t("preview2.m2tag") },
+                    { text: t("preview2.m3"), tag: t("preview2.m3tag") },
+                  ].map((row) => (
+                    <div
+                      key={row.text}
+                      className="flex justify-between gap-3 border-t border-[var(--color-border)] py-2.5 text-[13px]"
+                    >
+                      <span>{row.text}</span>
+                      <span className="mono-label whitespace-nowrap">{row.tag}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="border border-[var(--color-border)] p-4">
+                  <h4 className="mono-label mb-3">{t("preview2.timelineTitle")}</h4>
+                  {[
+                    { text: t("preview2.t1"), tag: t("preview2.t1tag") },
+                    { text: t("preview2.t2"), tag: t("preview2.t2tag") },
+                    { text: t("preview2.t3"), tag: t("preview2.t3tag") },
+                  ].map((row) => (
+                    <div
+                      key={row.text}
+                      className="flex justify-between gap-3 border-t border-[var(--color-border)] py-2.5 text-[13px]"
+                    >
+                      <span>{row.text}</span>
+                      <span className="mono-label whitespace-nowrap">{row.tag}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        {/* ── Closing CTA ──────────────────────────────────────── */}
+        <section className="border-t border-[var(--color-border)] px-5 py-20 text-center sm:px-10 lg:py-28">
+          <h2 className="mx-auto max-w-3xl text-[clamp(34px,6vw,72px)] font-normal leading-[0.92] tracking-[-0.06em]">
+            {t("closing2.title")}
+          </h2>
+          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-[var(--color-muted-foreground)]">
+            {t("closing2.copy")}
+          </p>
+          <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
             <TrackedLandingLink
               href={`/${locale}/demo?perspective=owner`}
               eventName="landing.demo_start"
               eventData={{ location: "closing_cta", perspective: "owner" }}
+              className="w-full sm:w-auto"
             >
-              <Button
-                size="lg"
-                className="gap-2 bg-teal-600 font-semibold text-white shadow-lg shadow-teal-950 hover:bg-teal-500"
-              >
-                <Play className="h-4 w-4" />
-                {t("closingCta.primary")}
+              <Button size="lg" className="w-full rounded-none font-semibold sm:w-auto">
+                {t("closing2.primary")}
               </Button>
             </TrackedLandingLink>
             <TrackedLandingLink
-              href="/auth/signin"
-              eventName="landing.signin_click"
+              href="#workflow"
+              eventName="landing.workflow_cta_click"
               eventData={{ location: "closing_cta" }}
+              className="w-full sm:w-auto"
             >
               <Button
                 size="lg"
@@ -1019,7 +1104,7 @@ export default async function LandingPage({ params }: Props) {
             >
               {tFooter("terms")}
             </a>
-          </div>
+          </span>
         </div>
       </footer>
     </div>

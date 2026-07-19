@@ -124,6 +124,16 @@ async function handlePost(request: NextRequest): Promise<Response> {
     const validatedData = createDocumentSchema.parse(sanitizedBody);
 
     const document = await documentService.create(scopeUserId, validatedData);
+
+    // Situs OCR classification: best-effort, never blocks the upload — the
+    // Review Required tab exists precisely because this is a mock engine.
+    try {
+      const { classifyAndPersist } = await import("@/lib/services/ocr/service");
+      await classifyAndPersist(document.id);
+    } catch {
+      // Classification must never block document creation.
+    }
+
     return createSuccessResponse(document, 201);
   } catch (error) {
     if (error instanceof z.ZodError) {

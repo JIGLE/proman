@@ -43,6 +43,15 @@ export const tenantService = {
     userId: string,
     data: Omit<Tenant, "id" | "userId" | "createdAt" | "updatedAt" | "propertyName">,
   ): Promise<Tenant> {
+    // `leaseStart`/`leaseEnd` are legacy required (non-null) columns on Tenant, but the
+    // create dialog treats lease details as optional ("Add lease & contact details"),
+    // and the real lease record is created separately via the Leases workflow. Default
+    // to a one-year term from today rather than `new Date("")` (Invalid Date), which
+    // Prisma rejects and previously 500'd on the minimal name+email path.
+    const leaseStart = data.leaseStart ? new Date(data.leaseStart) : new Date();
+    const leaseEnd = data.leaseEnd
+      ? new Date(data.leaseEnd)
+      : new Date(leaseStart.getFullYear() + 1, leaseStart.getMonth(), leaseStart.getDate());
     const tenant = await getPrismaClient().tenant.create({
       data: {
         userId,
@@ -51,8 +60,8 @@ export const tenantService = {
         phone: data.phone,
         propertyId: data.propertyId,
         rent: data.rent,
-        leaseStart: new Date(data.leaseStart),
-        leaseEnd: new Date(data.leaseEnd),
+        leaseStart,
+        leaseEnd,
         paymentStatus: data.paymentStatus,
         lastPayment: data.lastPayment ? new Date(data.lastPayment) : null,
         notes: data.notes,
@@ -87,7 +96,8 @@ export const tenantService = {
         rent: data.rent,
         leaseStart: data.leaseStart ? new Date(data.leaseStart) : undefined,
         leaseEnd: data.leaseEnd ? new Date(data.leaseEnd) : undefined,
-        paymentStatus: data.paymentStatus,
+        // paymentStatus is derived from the RentPeriod ledger (Situs Migration A —
+        // lib/services/allocation/service.ts), never accepted here.
         lastPayment: data.lastPayment ? new Date(data.lastPayment) : undefined,
         notes: data.notes,
       },

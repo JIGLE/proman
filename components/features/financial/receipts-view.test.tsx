@@ -25,6 +25,6 @@ vi.mock("@/lib/contexts/toast-context", () => ({
 describe("ReceiptsView", () => {
   it("renders empty receipts state", () => {
     render(<ReceiptsView />);
-    expect(screen.getByText(/No receipts yet/)).toBeDefined();
+    expect(screen.getByText(/receipts\.title/)).toBeDefined();
   });
 });

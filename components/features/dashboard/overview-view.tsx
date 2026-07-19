@@ -22,7 +22,6 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   OnboardingChecklist,
   type OnboardingChecklistStep,
@@ -89,18 +88,18 @@ function Modelo179Alert({ locale }: { locale: string }): ReactElement | null {
   return (
     <Link
       href={`/${locale}/compliance/modelo179`}
-      className="flex items-center justify-between rounded-lg border border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)] p-4 transition-colors hover:bg-[var(--color-warning)]/10"
+      className="alert-card alert-warning transition-colors hover:brightness-[0.98]"
     >
-      <div className="flex items-center gap-3">
-        <FileCheck2 className="h-4 w-4 shrink-0 text-[var(--color-warning)]" />
-        <span className="text-sm font-medium text-[var(--color-warning)]">
+      <div className="flex min-w-0 items-center gap-3">
+        <FileCheck2 className="h-4 w-4 shrink-0 text-[var(--semantic-warning)]" />
+        <span className="text-sm font-medium text-[var(--color-foreground)]">
           {missingCount} lease{missingCount !== 1 ? "s" : ""} not registered with AT for{" "}
           {targetYear} — Modelo 179 required
         </span>
       </div>
-      <Badge variant="secondary" className="tabular-nums">
+      <span className="font-mono text-xs font-semibold tabular-nums text-[var(--semantic-warning)]">
         {missingCount}
-      </Badge>
+      </span>
     </Link>
   );
 }
@@ -155,7 +154,7 @@ function FeatureHighlightCard({
   return (
     <Card className="border border-[var(--color-border)] bg-[var(--color-card)]">
       <CardContent className="p-5">
-        <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--color-info-muted)]">
+        <div className="mb-3 inline-flex h-9 w-9 items-center justify-center bg-[var(--color-info-muted)]">
           <Icon className="h-4 w-4 text-[var(--color-primary)]" />
         </div>
         <h3 className="mb-1 text-sm font-semibold text-[var(--color-foreground)]">{title}</h3>
@@ -376,7 +375,7 @@ export function OverviewView({
   const showChecklist = isOwnerPortal && !allStepsDone;
 
   if (loading) {
-    return <div className="h-40 animate-pulse rounded-2xl bg-[var(--color-muted)]/30" />;
+    return <div className="h-40 animate-pulse bg-[var(--color-muted)]/30" />;
   }
 
   if (properties.length === 0 && isOwnerPortal) {
@@ -492,13 +491,11 @@ export function OverviewView({
           />
         </StatGrid>
 
-        {/* Recent payments — compact list */}
+        {/* Recent payments — compact rectilinear list */}
         {dashboardData.recentPayments.length > 0 && (
-          <div className="overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-card)]">
+          <div className="panel">
             <div className="flex items-center justify-between border-b border-[var(--color-border)] px-5 py-3.5">
-              <p className="text-sm font-semibold text-[var(--color-foreground)]">
-                {t("recentPayments")}
-              </p>
+              <p className="mono-label">{t("recentPayments")}</p>
               <button
                 onClick={() => navigate("/financials?tab=receipts")}
                 className="text-sm text-[var(--color-primary)] hover:underline"
@@ -517,7 +514,7 @@ export function OverviewView({
                       {formatDate(receipt.date)}
                     </p>
                   </div>
-                  <p className="ml-4 shrink-0 text-sm font-semibold text-[var(--color-foreground)]">
+                  <p className="ml-4 shrink-0 text-sm font-medium tabular-nums text-[var(--color-foreground)]">
                     {formatCurrency(receipt.amount)}
                   </p>
                 </div>

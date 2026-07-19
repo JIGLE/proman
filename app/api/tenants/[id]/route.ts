@@ -18,7 +18,9 @@ const updateTenantSchema = z.object({
   rent: z.number().min(0).optional(),
   leaseStart: z.string().datetime().optional(),
   leaseEnd: z.string().datetime().optional(),
-  paymentStatus: z.enum(["paid", "overdue", "pending"]).optional(),
+  // paymentStatus is derived from the RentPeriod ledger (Situs Migration A —
+  // lib/services/allocation/service.ts) and is never accepted from a manual
+  // edit; a value here would silently drift the next time an allocation runs.
   notes: z.string().max(1000).optional(),
 });
 
@@ -65,9 +67,7 @@ async function handlePut(
   try {
     // Resolve id from context params
     const maybeParams = context?.params as
-      | Record<string, string>
-      | Promise<Record<string, string>>
-      | undefined;
+      Record<string, string> | Promise<Record<string, string>> | undefined;
     const resolvedParams = maybeParams instanceof Promise ? await maybeParams : maybeParams;
     const id = resolvedParams?.id;
     if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);

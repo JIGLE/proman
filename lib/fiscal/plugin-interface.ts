@@ -1,7 +1,7 @@
 /**
  * Country fiscal plugin interface.
  *
- * Each country that Domora supports must provide a plugin implementing
+ * Each country that Situs supports must provide a plugin implementing
  * FiscalPlugin. Plugins read live rates from the TaxRule DB so that
  * legislative changes need only a DB update, not a code change.
  */

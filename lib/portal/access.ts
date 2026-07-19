@@ -8,8 +8,10 @@ import {
   HardHat,
   Home,
   Mail,
+  Palette,
   Settings,
   ShieldCheck,
+  UserCircle,
   Users,
   Wallet,
   Wrench,
@@ -34,16 +36,26 @@ export interface PortalNavGroup {
   items: PortalNavItem[];
 }
 
+// Situs // Sovereign Capital System information architecture (PR 2 of the rebrand):
+// two groups — Core (the owner's daily surfaces) and System (configuration + identity) —
+// mirroring the approved Mockup.html nav rail. Nav LABELS are the Situs pillars; Operations
+// moved from `/maintenance` to `/operations` in PR 10b-1, Intelligence from `/analytics` to
+// `/intelligence` in PR 10b-3 (old paths 301, plus `/insights` and `/reports` which the
+// Intelligence tabs absorbed). Finance still serves from `/financials` — that route rename
+// is unscoped/deferred. Consolidated surfaces (Reports, Compliance/Tax Filing,
+// Messages, Leases, Vendors) are kept as `hidden` items so their routes stay permitted by
+// `canAccessPortalPath` (which ignores `hidden`) and existing deep links keep working — they
+// are reached from within their new home pillar rather than occupying their own rail row.
 export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
   {
-    group: "Operations",
-    groupLabelKey: "navigation.operationsGroup",
+    group: "Core",
+    groupLabelKey: "navigation.coreGroup",
     items: [
       {
         key: "dashboard",
         href: "/dashboard",
-        label: "Dashboard",
-        labelKey: "navigation.dashboard",
+        label: "Home",
+        labelKey: "navigation.home",
         icon: Home,
         roles: ["owner", "tenant"],
         mobilePrimary: true,
@@ -51,8 +63,8 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
       {
         key: "properties",
         href: "/portfolio",
-        label: "Properties",
-        labelKey: "navigation.properties",
+        label: "Portfolio",
+        labelKey: "navigation.portfolio",
         icon: Building2,
         roles: ["owner", "tenant"],
         mobilePrimary: true,
@@ -120,13 +132,14 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         labelKey: "navigation.documents",
         icon: FileBox,
         roles: ["owner", "tenant"],
+        mobilePrimary: true,
       },
       {
-        key: "correspondence",
-        href: "/correspondence",
-        label: "Messages",
-        labelKey: "navigation.correspondence",
-        icon: Mail,
+        key: "analytics",
+        href: "/intelligence",
+        label: "Intelligence",
+        labelKey: "navigation.intelligence",
+        icon: BarChart2,
         roles: ["owner"],
       },
     ],
@@ -136,12 +149,55 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
     groupLabelKey: "navigation.systemGroup",
     items: [
       {
+        key: "settings",
+        href: "/settings",
+        label: "Settings",
+        labelKey: "navigation.settings",
+        icon: Settings,
+        roles: ["owner"],
+      },
+      {
+        key: "account",
+        href: "/account",
+        label: "Account",
+        labelKey: "navigation.account",
+        icon: UserCircle,
+        roles: ["owner", "tenant"],
+      },
+    ],
+  },
+  {
+    // Hidden group: routes that no longer own a rail row but must stay reachable/permitted.
+    // Reached from within their new home pillar (Intelligence, People, Property detail).
+    group: "Hidden",
+    groupLabelKey: "navigation.systemGroup",
+    items: [
+      {
+        key: "reports",
+        href: "/intelligence",
+        label: "Reports",
+        labelKey: "navigation.reports",
+        icon: FileBarChart,
+        roles: ["owner"],
+        hidden: true,
+      },
+      {
+        key: "correspondence",
+        href: "/correspondence",
+        label: "Messages",
+        labelKey: "navigation.correspondence",
+        icon: Mail,
+        roles: ["owner"],
+        hidden: true,
+      },
+      {
         key: "compliance",
         href: "/compliance/modelo179",
         label: "Compliance",
         labelKey: "navigation.compliance",
         icon: ShieldCheck,
         roles: ["owner"],
+        hidden: true,
       },
       {
         key: "tax-filing",
@@ -150,14 +206,37 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         labelKey: "navigation.taxFiling",
         icon: Calculator,
         roles: ["owner"],
+        hidden: true,
       },
       {
-        key: "settings",
-        href: "/settings",
-        label: "Settings",
-        labelKey: "navigation.settings",
-        icon: Settings,
+        key: "leases",
+        href: "/leases",
+        label: "Leases",
+        labelKey: "navigation.leases",
+        icon: FileText,
+        roles: ["owner", "tenant"],
+        hidden: true,
+      },
+      {
+        key: "vendors",
+        href: "/contacts",
+        label: "Vendors",
+        labelKey: "navigation.vendors",
+        icon: HardHat,
         roles: ["owner"],
+        hidden: true,
+      },
+      {
+        // Internal dev/admin reference only — the page itself 404s in
+        // production (NODE_ENV check). Never shown in the nav rail; this
+        // entry exists only so canAccessPortalPath permits the direct URL.
+        key: "brand",
+        href: "/brand",
+        label: "Brand",
+        labelKey: "navigation.brand",
+        icon: Palette,
+        roles: ["owner"],
+        hidden: true,
       },
     ],
   },

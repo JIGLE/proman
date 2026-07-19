@@ -9,7 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-const DISMISS_KEY = "domora.pwa.install-dismissed";
+const DISMISS_KEY = "lares.pwa.install-dismissed";
 
 /**
  * Registers the service worker and renders an unobtrusive "Install app" prompt
@@ -76,14 +76,14 @@ export function PwaRegister(): React.ReactElement | null {
   return (
     <div
       role="dialog"
-      aria-label="Install Domora"
+      aria-label="Install Situs"
       className="fixed inset-x-3 bottom-[5.5rem] z-[var(--z-toast)] mx-auto flex max-w-sm items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-3 shadow-[var(--shadow-modal)] backdrop-blur-md md:inset-x-auto md:right-4 md:bottom-4 md:left-auto"
     >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[color-mix(in_oklab,var(--color-primary)_15%,transparent)] text-[var(--color-primary)]">
         <Download className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-[var(--color-foreground)]">Install Domora</p>
+        <p className="text-sm font-semibold text-[var(--color-foreground)]">Install Situs</p>
         <p className="truncate text-xs text-[var(--color-muted-foreground)]">
           Add to your home screen for a faster, app-like experience.
         </p>

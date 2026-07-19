@@ -36,3 +36,17 @@ export type Document = z.infer<typeof documentSchema>;
 export type DocumentFormData = z.infer<typeof documentSchema>;
 export type DocumentUpdate = z.infer<typeof documentUpdateSchema>;
 export type DocumentUpdateFormData = z.infer<typeof documentUpdateSchema>;
+
+// Situs OCR review (Migration D) — see lib/services/ocr/service.ts.
+export const extractionReviewSchema = z
+  .object({
+    accept: z.boolean(),
+    type: documentTypeEnum.optional(),
+    linkedEntityType: z.enum(["tenant", "property", "owner"]).nullable().optional(),
+    linkedEntityId: z.string().nullable().optional(),
+  })
+  .refine((body) => body.accept || !!body.type, {
+    message: "A corrected type is required when rejecting the proposal",
+  });
+
+export type ExtractionReviewInput = z.infer<typeof extractionReviewSchema>;

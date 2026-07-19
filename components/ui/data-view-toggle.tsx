@@ -1,15 +1,19 @@
 "use client";
 
-import { LayoutGrid, Map, Table2 } from "lucide-react";
+import { LayoutGrid, ListTree, Map, Table2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils/utils";
 
-export type DataViewMode = "grid" | "table" | "map";
+export type DataViewMode = "grid" | "table" | "tree" | "map";
 
 interface DataViewToggleProps {
   mode: DataViewMode;
   onChange: (mode: DataViewMode) => void;
   showMap?: boolean;
+  /** Structural tree view (Situs portfolio inventory). Off by default so other consumers are unaffected. */
+  showTree?: boolean;
+  /** Card/grid view. On by default; the Portfolio hides it in favour of tree + table. */
+  showGrid?: boolean;
   className?: string;
 }
 
@@ -17,6 +21,8 @@ export function DataViewToggle({
   mode,
   onChange,
   showMap = false,
+  showTree = false,
+  showGrid = true,
   className,
 }: DataViewToggleProps) {
   return (
@@ -28,6 +34,22 @@ export function DataViewToggle({
         className,
       )}
     >
+      {showGrid && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-7 w-7 p-0",
+            mode === "grid" && "bg-[var(--color-hover)] text-[var(--color-foreground)]",
+          )}
+          onClick={() => onChange("grid")}
+          aria-label="Card view"
+          aria-pressed={mode === "grid"}
+          title="Card view"
+        >
+          <LayoutGrid className="h-3.5 w-3.5" aria-hidden="true" />
+        </Button>
+      )}
       <Button
         variant="ghost"
         size="sm"
@@ -56,6 +78,22 @@ export function DataViewToggle({
       >
         <Table2 className="h-3.5 w-3.5" aria-hidden="true" />
       </Button>
+      {showTree && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className={cn(
+            "h-7 w-7 p-0",
+            mode === "tree" && "bg-[var(--color-hover)] text-[var(--color-foreground)]",
+          )}
+          onClick={() => onChange("tree")}
+          aria-label="Tree view"
+          aria-pressed={mode === "tree"}
+          title="Tree view"
+        >
+          <ListTree className="h-3.5 w-3.5" aria-hidden="true" />
+        </Button>
+      )}
       {showMap && (
         <Button
           variant="ghost"

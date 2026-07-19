@@ -55,6 +55,14 @@ import { PageHeader } from "@/components/shared/page-header";
 export interface ReceiptsViewProps {
   tenantId?: string;
   propertyId?: string;
+  /**
+   * When this flips to `true`, the record-payment dialog opens itself. Lets the parent
+   * request the dialog after switching to this tab without racing a ref across the
+   * tab-mount + `router.replace` re-render that `useTabPersistence` triggers.
+   */
+  openDialogSignal?: boolean;
+  /** Called once the dialog has been opened in response to `openDialogSignal`. */
+  onDialogOpened?: () => void;
 }
 
 export interface ReceiptsViewRef {
@@ -111,6 +119,18 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
     useImperativeHandle(ref, () => ({
       openDialog,
     }));
+
+    // Open the dialog when the parent raises the signal. Fires both when this view was
+    // already mounted (signal flips false→true) and when it just mounted with the signal
+    // already true (switching in from another tab) — robust to either ordering.
+    const { openDialogSignal, onDialogOpened } = props;
+    useEffect(() => {
+      if (openDialogSignal) {
+        openDialog();
+        onDialogOpened?.();
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [openDialogSignal]);
 
     useEffect(() => {
       if (!isOpen || editingItem) {

@@ -36,8 +36,9 @@ vi.mock("@/lib/contexts/toast-context", () => ({
 }));
 
 describe("PropertiesView", () => {
-  it("shows empty state when no properties", () => {
+  it("renders the portfolio view when there are no properties", () => {
     render(<PropertiesView />);
-    expect(screen.getByText(/No properties yet/)).toBeDefined();
+    // Tree is the default view; its compact asset filter renders above the tree.
+    expect(screen.getByPlaceholderText(/filter assets/i)).toBeDefined();
   });
 });

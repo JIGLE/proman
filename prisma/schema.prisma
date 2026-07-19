@@ -44,6 +44,8 @@ model User {
   tenants        Tenant[]
   receipts       Receipt[]
   expenses       Expense[]
+  rentPeriods        RentPeriod[]
+  paymentAllocations PaymentAllocation[]
   maintenanceTickets MaintenanceTicket[]
   leases         Lease[]
   correspondences Correspondence[]
@@ -58,6 +60,16 @@ model User {
   governmentVerifications GovernmentVerification[]
   modelo179Submissions Modelo179Submission[]
   taxFilings     TaxFiling[]
+  productEvents  ProductEvent[]
+  subscription   Subscription?
+  bankConnections     BankConnection[]
+  bankAccounts        BankAccount[]
+  bankTransactions    BankTransaction[]
+  bankSyncJobs        BankSyncJob[]
+  reconciliationRules ReconciliationRule[]
+  taxAuthorityConnectors TaxAuthorityConnector[]
+  taxSubmissionLogs      TaxSubmissionLog[]
+  documentExtractions    DocumentExtraction[]
 }
 
 model EmailLog {
@@ -213,14 +225,20 @@ model VerificationToken {
 }
 
 model AuditLog {
-  id        String   @id @default(cuid())
-  userId    String
-  action    String
-  details   String?
-  createdAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  userId       String
+  action       String
+  details      String?
+  // Situs: anchor entries to a record so per-entity audit trails (property
+  // Audit tab) are a single indexed query. The service interface already
+  // declared these; Migration A persists them.
+  resourceType String?
+  resourceId   String?
+  createdAt    DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([resourceType, resourceId])
   @@map("audit_logs")
 }
 
@@ -299,6 +317,7 @@ model Property {
   nruaRegistrations   NRUARegistration[]
   verificationClaims  PropertyVerificationClaim[]
   correspondences     Correspondence[]
+  rentPeriods         RentPeriod[]
 
   // Performance indexes
   @@index([userId])
@@ -336,6 +355,7 @@ model Tenant {
   paymentTransactions PaymentTransaction[]
   rentReceipts        RentReceipt[]
   nruaRegistrations   NRUARegistration[]
+  rentPeriods         RentPeriod[]
 
   // Performance indexes
   @@index([userId])
@@ -356,13 +376,26 @@ model Receipt {
   type        ReceiptType
   status      ReceiptStatus @default(paid)
   description String?
+  // Situs reference-month workflow (Migration A). `status` keeps meaning the
+  // MONEY state (paid|pending); `lifecycle` is the DOCUMENT state — legacy
+  // rows self-backfill to "emitted" via the default.
+  rentPeriodId   String?
+  referenceMonth String?  // "YYYY-MM" denormalized for queue/list display
+  // draft|review|emitted|submitted|accepted|rejected|exported|voided — Zod-validated
+  // (Migration C, lib/services/receipts/lifecycle.ts). Legacy rows self-backfill to "emitted".
+  lifecycle      String   @default("emitted")
+  source         String   @default("manual")  // manual|automation
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
   // Relations
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  property   Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  rentPeriod RentPeriod? @relation(fields: [rentPeriodId], references: [id], onDelete: SetNull)
+  allocations PaymentAllocation[]
+  bankTransactions BankTransaction[]
+  rentReceiptFilings RentReceipt[]
 
   // Performance indexes for common queries
   @@index([userId])
@@ -371,7 +404,207 @@ model Receipt {
   @@index([status])
   @@index([date])
   @@index([userId, status, date])  // Composite index for insights queries
+  @@index([rentPeriodId])
+  @@index([lifecycle])
   @@map("receipts")
+}
+
+// Situs period ledger — the spine of the Rent Matrix and Current Period Status.
+// year+month is the REFERENCE month (what the money is for), distinct from the
+// payment date. `status` is persisted-derived: recomputed inside the same
+// transaction as every allocation write (see lib/services/allocation).
+model RentPeriod {
+  id              String   @id @default(cuid())
+  userId          String
+  leaseId         String
+  tenantId        String   // denormalized — matrix/tenant queries must not join through Lease
+  propertyId      String   // denormalized — property-detail queries
+  year            Int
+  month           Int      // 1–12
+  dueDate         DateTime
+  dueAmount       Float    // snapshot of the lease rent at generation — survives adjustments
+  allocatedAmount Float    @default(0) // materialized sum of non-reversed allocations
+  paidAt          DateTime? // when the period became fully allocated
+  status          String   @default("upcoming") // upcoming|due|overdue|partially_paid|paid|paid_late|waived
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lease       Lease     @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  receipts    Receipt[]
+  allocations PaymentAllocation[]
+  rentReceiptFilings RentReceipt[]
+
+  @@unique([leaseId, year, month])
+  @@index([userId, year, month])
+  @@index([leaseId, status])
+  @@index([propertyId, year])
+  @@index([tenantId, status])
+  @@map("rent_periods")
+}
+
+// Money → reference-month join. Reversals are SOFT (reversedAt) so history
+// survives for audit. Bank/online-payment source columns arrive with the bank
+// layer migration; a manual Receipt is the first supported source.
+model PaymentAllocation {
+  id             String    @id @default(cuid())
+  userId         String
+  rentPeriodId   String
+  receiptId      String?
+  amount         Float
+  type           String    @default("rent") // rent|partial|overpayment_credit|adjustment
+  allocatedAt    DateTime  @default(now())
+  createdBy      String    @default("system") // system|user (manual override)
+  reversedAt     DateTime?
+  reversalReason String?
+  createdAt      DateTime  @default(now())
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rentPeriod RentPeriod @relation(fields: [rentPeriodId], references: [id], onDelete: Cascade)
+  receipt    Receipt?   @relation(fields: [receiptId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([rentPeriodId])
+  @@index([receiptId])
+  @@map("payment_allocations")
+}
+
+// ── Situs bank layer (Migration B) ─────────────────────────────────────────
+// Manual/CSV import is the first-class source; PSD2 later is just a new
+// `provider` value on BankConnection, not a schema change. Consent fields
+// live on the connection (1:1 in practice). IBANs follow the repo PII
+// pattern: AES-256-GCM ciphertext + SHA-256 hash column so matching and
+// dedupe never require decryption.
+
+model BankConnection {
+  id               String    @id @default(cuid())
+  userId           String
+  provider         String    @default("manual") // manual|csv|psd2_<provider> later
+  institutionName  String
+  status           String    @default("active") // pending_consent|active|expired|revoked|error
+  consentId        String?
+  consentExpiresAt DateTime?
+  consentScope     String?
+  lastSyncAt       DateTime?
+  metadata         String?   // JSON — provider-specific settings
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  user     User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accounts BankAccount[]
+  syncJobs BankSyncJob[]
+
+  @@index([userId])
+  @@map("bank_connections")
+}
+
+model BankAccount {
+  id           String  @id @default(cuid())
+  connectionId String
+  userId       String
+  label        String
+  iban         String? // AES-256-GCM encrypted (lib/utils/pii-encryption)
+  ibanHash     String? // SHA-256 of normalized IBAN — matching without decryption
+  ibanLast4    String?
+  currency     String  @default("EUR")
+  isActive     Boolean @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  connection   BankConnection    @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  transactions BankTransaction[]
+
+  @@unique([connectionId, ibanHash])
+  @@index([userId])
+  @@map("bank_accounts")
+}
+
+// The inbox row. `fingerprint` makes imports idempotent: hash of
+// account + amount + booking date + counterparty + reference — an exact
+// re-import is rejected by the unique constraint before any matching runs.
+// bookingDate = payment date; valueDate = settlement date (kept distinct).
+model BankTransaction {
+  id                   String    @id @default(cuid())
+  userId               String
+  bankAccountId        String
+  syncJobId            String?
+  externalId           String?
+  fingerprint          String    @unique
+  amount               Float     // signed; negative = outflow/reversal
+  currency             String    @default("EUR")
+  bookingDate          DateTime
+  valueDate            DateTime?
+  counterpartyName     String?
+  counterpartyIban     String?   // encrypted
+  counterpartyIbanHash String?
+  reference            String?
+  rawData              String?   // JSON — original imported row
+  status               String    @default("imported") // imported|auto_matched|needs_review|matched_confirmed|ignored|duplicate
+  suggestedLeaseId     String?   // advisory only — no FK so lease deletion never breaks the inbox
+  matchConfidence      Float?
+  matchReasons         String?   // JSON — explainability: fired signals, warnings, duplicate hints
+  duplicateOfId        String?   // suspected fuzzy-duplicate original (advisory)
+  receiptId            String?   // rent Receipt created on match — the allocation entry point
+  reversalOfId         String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bankAccount BankAccount       @relation(fields: [bankAccountId], references: [id], onDelete: Cascade)
+  syncJob     BankSyncJob?      @relation(fields: [syncJobId], references: [id], onDelete: SetNull)
+  receipt     Receipt?          @relation(fields: [receiptId], references: [id], onDelete: SetNull)
+  reversalOf  BankTransaction?  @relation("TransactionReversal", fields: [reversalOfId], references: [id], onDelete: SetNull)
+  reversals   BankTransaction[] @relation("TransactionReversal")
+
+  @@index([userId, status])
+  @@index([userId, bookingDate])
+  @@index([bankAccountId, bookingDate])
+  @@index([counterpartyIbanHash])
+  @@map("bank_transactions")
+}
+
+model BankSyncJob {
+  id           String    @id @default(cuid())
+  userId       String
+  connectionId String
+  type         String    @default("csv_import") // csv_import|manual_entry|api_sync
+  status       String    @default("completed") // pending|running|completed|failed
+  startedAt    DateTime  @default(now())
+  finishedAt   DateTime?
+  stats        String?   // JSON — {imported, duplicates, autoMatched, needsReview, errors}
+  error        String?
+
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connection   BankConnection    @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  transactions BankTransaction[]
+
+  @@index([userId])
+  @@index([connectionId])
+  @@map("bank_sync_jobs")
+}
+
+// Rules run BEFORE confidence scoring (priority ascending). Confirmed manual
+// matches offer "save as rule" — that is how sender IBANs get learned.
+model ReconciliationRule {
+  id            String    @id @default(cuid())
+  userId        String
+  name          String
+  priority      Int       @default(100)
+  isActive      Boolean   @default(true)
+  condition     String    // JSON — {field: iban_hash|counterparty_name|reference_regex|amount_range, op, value}
+  action        String    // JSON — {type: assign_lease|ignore, leaseId?}
+  timesApplied  Int       @default(0)
+  lastAppliedAt DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, priority])
+  @@map("reconciliation_rules")
 }
 
 model Expense {
@@ -384,10 +617,14 @@ model Expense {
   date          DateTime
   category      String   // ExpenseCategory value — validated by Zod, stored as string (SQLite)
   description   String?
-  receiptImage  String?  // Receipt or invoice image path/URL
   isDeductible  Boolean  @default(true)  // Whether deductible for IRS/IRPF
   vendorName    String?  // Supplier/vendor name (useful for invoice records)
   vendorVat     String?  // Vendor NIF/VAT number for tax documentation
+  // Situs deduction-evidence workflow: a real Document link + a tax review
+  // state (receiptImage dropped PR 11 — no reads/writes remained, see the
+  // 20260430000000-style consolidation migration for the drop).
+  documentId      String?
+  taxReviewStatus String?  // pending_review|reviewed|flagged — Zod-validated
   // Recurring expense fields (Wave 2.4)
   isRecurring      Boolean   @default(false)
   recurrenceRule   String?   // "monthly" | "quarterly" | "annual"
@@ -404,6 +641,7 @@ model Expense {
   lease    Lease?   @relation(fields: [leaseId], references: [id], onDelete: SetNull)
   parentExpense    Expense?  @relation("RecurringExpenses", fields: [parentExpenseId], references: [id], onDelete: SetNull)
   childExpenses    Expense[] @relation("RecurringExpenses")
+  document Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
 
   // Performance indexes
   @@index([userId])
@@ -441,6 +679,9 @@ model MaintenanceTicket {
   invoiceRef        String?
   isTenantReport    Boolean  @default(false)
   resolvedAt        DateTime?
+  // Situs Operations subtabs (PR 10b-1): Evidence tab flag + SLA due date.
+  evidenceRequired  Boolean  @default(false)
+  slaDueAt          DateTime?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -538,6 +779,7 @@ model Lease {
   nruaRegistrations NRUARegistration[]
   expenses  Expense[]
   modelo179Submissions Modelo179Submission[]
+  rentPeriods RentPeriod[]
 
   @@index([userId])
   @@index([propertyId])
@@ -592,17 +834,46 @@ model Document {
   updatedAt   DateTime @updatedAt
 
   // Relations
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  unit     Unit?     @relation(fields: [unitId], references: [id], onDelete: SetNull)
-  owner    Owner?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property  Property?          @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  unit      Unit?              @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  owner     Owner?             @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  tenant    Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  expenses  Expense[] // Situs: deduction-evidence links (Expense.documentId)
+  extraction DocumentExtraction?
 
   @@index([userId])
   @@index([propertyId])
   @@index([type])
   @@index([expiresAt])
   @@map("documents")
+}
+
+// Situs OCR sidecar (Migration D) — 1:1 with Document, leaves the hot
+// Document model untouched. "mock" is the only engine today (no live OCR
+// integration yet — same mock-first pattern as the bank/tax connector
+// layers); classification proposes a document type + a linked entity for a
+// human to confirm in the Review Required tab.
+model DocumentExtraction {
+  id                 String    @id @default(cuid())
+  documentId         String    @unique
+  userId             String
+  status             String    @default("pending") // pending|processing|completed|failed|review_required
+  engine             String    @default("mock")
+  confidence         Float?
+  extractedFields    String?   // JSON — engine-specific key/value proposals
+  suggestedType       String?  // proposed DocumentType value
+  linkedEntityType    String?  // "tenant"|"property"|"lease"|"expense"
+  linkedEntityId      String?
+  reviewedAt          DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+
+  document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@map("document_extractions")
 }
 
 model Invoice {
@@ -1030,12 +1301,77 @@ model UserSettings {
   emailNotifications       Boolean  @default(true)
   taxReminderNotifications Boolean  @default(true)
   distributionNotifications Boolean @default(true)
+  // Server-side onboarding-checklist dismissal — was localStorage-only, so it
+  // didn't survive across browsers/devices and couldn't be measured. Null
+  // means "not dismissed" (or dismissed pre-migration, on an old client).
+  onboardingDismissedAt    DateTime?
   createdAt                DateTime @default(now())
   updatedAt                DateTime @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_settings")
+}
+
+/// Lightweight product-analytics event sink (docs/PRODUCT_AUDIT_2026.md §9: the
+/// app had landing-page funnel tracking but no in-app product analytics).
+/// Deliberately generic (name + JSON metadata) rather than a table per event
+/// type — most core-loop facts (first property/tenant/lease/receipt, rent
+/// marked paid, rent receipt issued) are already derivable retroactively from
+/// existing tables' createdAt/status columns, so this sink is reserved for
+/// signals that have no other home, e.g. "a reminder notification was clicked"
+/// (as opposed to "a notification was marked read" via a bulk action).
+model ProductEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  metadata  String?  // JSON
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, name])
+  @@index([createdAt])
+  @@map("product_events")
+}
+
+/// SaaS subscription state for the app itself (distinct from the
+/// tenant-facing Stripe rent-collection flow in PaymentMethod/PaymentTransaction).
+/// No row for a user means Free — a row is only created once a Checkout
+/// Session completes (docs/PRODUCT_AUDIT_2026.md §2: pricing tiers were
+/// previously unbacked marketing copy).
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  plan                 SubscriptionPlan   @default(free)
+  status               SubscriptionStatus @default(active)
+  stripeCustomerId     String?
+  stripeSubscriptionId String?
+  stripePriceId        String?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([stripeCustomerId])
+  @@index([stripeSubscriptionId])
+  @@map("subscriptions")
+}
+
+enum SubscriptionPlan {
+  free
+  pro
+  business
+}
+
+enum SubscriptionStatus {
+  active
+  trialing
+  past_due
+  canceled
+  incomplete
 }
 
 // ========================================
@@ -1181,20 +1517,78 @@ model RentReceipt {
   atResponseCode    String?  // Response from AT webservice
   pdfPath           String?  // Path to generated PDF
   xmlPayload        String?  // Stored XML for AT submission
+  // Situs receipt lifecycle (Migration C) — links this fiscal document back
+  // to the reference-month ledger and to the lifecycle-managed Receipt that
+  // triggered its emission.
+  rentPeriodId      String?
+  receiptId         String?
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
   // Relations
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  property   Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  rentPeriod RentPeriod? @relation(fields: [rentPeriodId], references: [id], onDelete: SetNull)
+  receipt    Receipt?    @relation(fields: [receiptId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([tenantId])
   @@index([propertyId])
   @@index([status])
   @@index([paymentDate])
+  @@index([rentPeriodId])
+  @@index([receiptId])
   @@map("rent_receipts")
+}
+
+// ── Situs tax connector layer (Migration C) ────────────────────────────────
+// One row per (user, connector) — mode defaults to "review": every emission
+// routes through human review before anything reaches a tax authority. The
+// PT connector (lib/tax/connectors/pt-at.ts) wraps the existing
+// rent-receipts-pt.ts numbering/XML/5-day-rule logic unchanged; ES is
+// export-only today. TaxSubmissionLog is the append-only record the
+// Intelligence Tax Connector dashboard (PR 10) reads.
+model TaxAuthorityConnector {
+  id              String    @id @default(cuid())
+  userId          String
+  country         String    // ISO country code: "PT", "ES", …
+  connectorKey    String    // "pt_at_recibos" | "es_aeat_info" | …
+  mode            String    @default("review") // sandbox|review|live
+  status          String    @default("active")  // active|disabled|error
+  lastSubmissionAt DateTime?
+  credentialsRef  String?   // AES-256-GCM encrypted (lib/utils/pii-encryption)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submissionLogs  TaxSubmissionLog[]
+
+  @@unique([userId, connectorKey])
+  @@index([userId])
+  @@map("tax_authority_connectors")
+}
+
+model TaxSubmissionLog {
+  id           String   @id @default(cuid())
+  userId       String
+  connectorId  String
+  subjectType  String   // rent_receipt|modelo179|nrua|tax_filing
+  subjectId    String
+  action       String   // validate|submit|poll|cancel
+  mode         String   // sandbox|review|live — snapshot at call time
+  status       String   // success|error|pending
+  responseCode String?
+  responseBody String?
+  createdAt    DateTime @default(now())
+
+  user      User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  connector TaxAuthorityConnector @relation(fields: [connectorId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([connectorId])
+  @@index([subjectType, subjectId])
+  @@map("tax_submission_logs")
 }
 
 enum RentReceiptStatus {

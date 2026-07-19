@@ -518,6 +518,18 @@ Keep it unstyled/minimal. The goal is a soft landing, not a feature page.
 
 ### 3.1 Redesign the navigation around user tasks, not data entities
 
+> **Status (2026-07-09, roadmap 3.3): not adopted.** Three competing IA proposals
+> existed across this doc, `docs/UI_CONSISTENCY_GUIDE.md`, and `docs/UX_AUDIT_2026.md`.
+> The one actually built is `docs/UX_AUDIT_2026.md`'s Operations/Intelligence(Reports)/
+> System grouping (`lib/portal/access.ts`), already shipped and confirmed live in that
+> audit's own §C2 status note — not this task-oriented redesign. This item is explicitly
+> flagged below as XL/multi-sprint, requiring a design sprint and real user validation
+> before engineering; neither happened, so adopting it now would mean overwriting a nav
+> structure that already reflects several reasoned, shipped decisions (see `ROADMAP.md`'s
+> Decisions Log, e.g. "Maintenance promoted to first-class nav item", "Analytics/Insights/
+> Reports added to nav in Phase 1") with an unvalidated one. Kept here as a real option if
+> user research ever supports it — do not implement from this doc alone.
+
 **Audit ref:** Critical (most impactful single change in the plan)  
 **Effort:** XL
 

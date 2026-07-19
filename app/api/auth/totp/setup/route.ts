@@ -5,7 +5,7 @@ import { getPrismaClient } from "@/lib/services/database/database";
 import { encryptPII } from "@/lib/utils/pii-encryption";
 import { totpGenerateSecret, totpKeyuri } from "@/lib/utils/totp";
 
-const APP_NAME = "Domora";
+const APP_NAME = "Situs";
 
 // GET /api/auth/totp/setup — generate a new TOTP secret and QR code URI
 export async function GET(request: NextRequest) {

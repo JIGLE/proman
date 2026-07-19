@@ -3,11 +3,11 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Offline · Domora</title>
+    <title>Offline · Situs</title>
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <style>
       :root {
-        color-scheme: dark;
+        color-scheme: light;
       }
       * {
         box-sizing: border-box;
@@ -22,71 +22,91 @@
         align-items: center;
         justify-content: center;
         padding: 24px;
-        background: #0b0e14;
-        color: #e2e8f0;
+        background: #f6f0e4;
+        color: #221d16;
         font-family:
-          "Plus Jakarta Sans", "Inter", system-ui, -apple-system, sans-serif;
+          "Instrument Sans", "Inter", system-ui, -apple-system, sans-serif;
         text-align: center;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+        }
+        body {
+          background: #0b110d;
+          color: #eef7f0;
+        }
+        p {
+          color: #a5b8a9 !important;
+        }
+        .mark-card {
+          background: #121b15 !important;
+          border-color: #263428 !important;
+        }
+        button {
+          background: #eef7f0 !important;
+          color: #0d1117 !important;
+        }
       }
       .card {
         max-width: 380px;
       }
-      .mark {
-        width: 72px;
-        height: 72px;
+      .mark-card {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 104px;
+        height: 104px;
         margin: 0 auto 24px;
+        background: #f1e8d8;
+        border: 1px solid #ddd3c3;
+      }
+      .mark {
+        width: 64px;
+        height: 64px;
       }
       h1 {
         font-size: 1.5rem;
-        font-weight: 700;
-        letter-spacing: -0.01em;
+        font-weight: 500;
+        letter-spacing: -0.02em;
         margin: 0 0 8px;
       }
       p {
         margin: 0 0 24px;
-        color: #94a3b8;
+        color: #756e63;
         line-height: 1.6;
       }
       button {
         appearance: none;
-        border: 0;
+        border: 1px solid #221d16;
         cursor: pointer;
-        border-radius: 0.75rem;
+        border-radius: 0;
         padding: 12px 24px;
         font: inherit;
         font-weight: 600;
-        color: #fff;
-        background: linear-gradient(135deg, #0d9488, #e8825a);
+        color: #fbfbfb;
+        background: #221d16;
       }
       button:hover {
-        filter: brightness(1.08);
+        filter: brightness(1.15);
       }
     </style>
   </head>
   <body>
     <div class="card">
-      <svg class="mark" viewBox="0 0 128 128" role="img" aria-label="Domora">
-        <defs>
-          <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#0d9488" />
-            <stop offset="100%" stop-color="#e8825a" />
-          </linearGradient>
-        </defs>
-        <rect width="128" height="128" rx="28" fill="#11151d" />
-        <path
-          d="M40 100V58a24 24 0 0 1 48 0v42"
-          fill="none"
-          stroke="url(#g)"
-          stroke-width="12"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        />
-        <path d="M33 100h62" fill="none" stroke="url(#g)" stroke-width="12" stroke-linecap="round" />
-        <circle cx="64" cy="61" r="7" fill="url(#g)" />
-      </svg>
+      <div class="mark-card">
+        <svg class="mark" viewBox="0 0 100 100" role="img" aria-label="Situs">
+          <circle cx="50" cy="50" r="44" fill="#006600" stroke="rgba(0,0,0,0.48)" stroke-width="1.25" stroke-dasharray="3 3" opacity="0.35" />
+          <path d="M20 50 C20 33.4 33.4 20 50 20 C66.6 20 80 33.4 80 50" fill="none" stroke="rgba(0,0,0,0.48)" stroke-width="15" stroke-linecap="round" />
+          <path d="M20 50 C20 33.4 33.4 20 50 20 C66.6 20 80 33.4 80 50" fill="none" stroke="#006600" stroke-width="12" stroke-linecap="round" />
+          <path d="M20 72 H80" stroke="rgba(0,0,0,0.48)" stroke-width="11" stroke-linecap="round" />
+          <path d="M20 72 H80" stroke="#FF0000" stroke-width="8" stroke-linecap="round" />
+          <circle cx="50" cy="50" r="12" fill="#FFFF00" stroke="rgba(0,0,0,0.48)" stroke-width="1.25" />
+        </svg>
+      </div>
       <h1>You're offline</h1>
       <p>
-        Domora can't reach the network right now. Check your connection — your
+        Situs can't reach the network right now. Check your connection — your
         data is safe and will be here when you're back.
       </p>
       <button onclick="location.reload()">Try again</button>

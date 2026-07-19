@@ -65,7 +65,6 @@ import { useSortableData } from "@/lib/hooks/use-sortable-data";
 import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
-import { PageHeader } from "@/components/shared/page-header";
 import { SwipeableListItem } from "@/components/ui/swipeable-list-item";
 
 export type TenantsViewProps = { density?: "comfortable" | "compact" };
@@ -228,21 +227,29 @@ function TenantForm({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="paymentStatus">Payment Status</Label>
-              <Select
-                value={dialog.formData.paymentStatus}
-                onValueChange={(value: Tenant["paymentStatus"]) =>
-                  dialog.updateFormData({ paymentStatus: value })
-                }
-              >
-                <SelectTrigger className={dialog.formErrors.paymentStatus ? "border-red-500" : ""}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="paid">Paid</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="overdue">Overdue</SelectItem>
-                </SelectContent>
-              </Select>
+              {isEdit ? (
+                <p className="text-sm text-muted-foreground">
+                  Derived from the rent ledger — record a payment to change it.
+                </p>
+              ) : (
+                <Select
+                  value={dialog.formData.paymentStatus}
+                  onValueChange={(value: Tenant["paymentStatus"]) =>
+                    dialog.updateFormData({ paymentStatus: value })
+                  }
+                >
+                  <SelectTrigger
+                    className={dialog.formErrors.paymentStatus ? "border-red-500" : ""}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="paid">Paid</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="overdue">Overdue</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
               {dialog.formErrors.paymentStatus && (
                 <p className="text-sm text-destructive">{dialog.formErrors.paymentStatus}</p>
               )}
@@ -298,7 +305,11 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
     const [propertyFilter, setPropertyFilter] = useState<string>("all");
     const [statusFilter, setStatusFilter] = useState<string>(() => {
       if (typeof window !== "undefined") {
-        return localStorage.getItem("proman-tenants-status-filter") ?? "all";
+        return (
+          localStorage.getItem("situs-tenants-status-filter") ??
+          localStorage.getItem("proman-tenants-status-filter") ??
+          "all"
+        );
       }
       return "all";
     });
@@ -309,12 +320,14 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
     // Data view mode state with localStorage persistence
     const [dataViewMode, setDataViewMode] = useState<DataViewMode>("grid");
     useEffect(() => {
-      const saved = localStorage.getItem("proman-tenants-view-mode");
+      const saved =
+        localStorage.getItem("situs-tenants-view-mode") ??
+        localStorage.getItem("proman-tenants-view-mode");
       if (saved === "grid" || saved === "table") setDataViewMode(saved);
     }, []);
     const handleViewModeChange = useCallback((mode: DataViewMode) => {
       setDataViewMode(mode);
-      localStorage.setItem("proman-tenants-view-mode", mode);
+      localStorage.setItem("situs-tenants-view-mode", mode);
     }, []);
 
     const initialFormData: TenantFormData = {
@@ -523,7 +536,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                 if (key === "property") setPropertyFilter(value);
                 if (key === "status") {
                   setStatusFilter(value);
-                  localStorage.setItem("proman-tenants-status-filter", value);
+                  localStorage.setItem("situs-tenants-status-filter", value);
                 }
               }}
               filters={[

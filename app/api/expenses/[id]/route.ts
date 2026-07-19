@@ -21,6 +21,7 @@ const updateExpenseSchema = z.object({
   category: z.string().min(1).optional(),
   description: z.string().max(200, "Description too long").optional().nullable(),
   vendor: z.string().max(100, "Vendor name too long").optional().nullable(),
+  documentId: z.string().optional().nullable(),
 });
 
 // GET /api/expenses/[id] - Get a specific expense

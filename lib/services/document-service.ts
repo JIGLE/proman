@@ -14,13 +14,7 @@ import { randomBytes } from "crypto";
 // ============================================================================
 
 export type DocumentType =
-  | "contract"
-  | "invoice"
-  | "receipt"
-  | "photo"
-  | "floor_plan"
-  | "certificate"
-  | "other";
+  "contract" | "invoice" | "receipt" | "photo" | "floor_plan" | "certificate" | "other";
 
 export interface Document {
   id: string;
@@ -159,12 +153,7 @@ export interface RentReceiptTemplateData {
 
 export interface NoticeTemplateData {
   noticeType:
-    | "late_payment"
-    | "lease_violation"
-    | "eviction"
-    | "rent_increase"
-    | "lease_renewal"
-    | "general";
+    "late_payment" | "lease_violation" | "eviction" | "rent_increase" | "lease_renewal" | "general";
   recipientName: string;
   recipientAddress: string;
   propertyAddress: string;

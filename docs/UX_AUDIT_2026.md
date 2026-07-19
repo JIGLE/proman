@@ -2,6 +2,26 @@
 
 **Version 1.0 · May 2026 · Senior SaaS UX Architecture Review**
 
+> **Status reconciliation (2026-07-09).** This audit's backlog (§E) was never
+> marked done/open, so nothing in the repo could say what actually shipped —
+> see `docs/PRODUCT_AUDIT_2026.md` §6. The table below verifies each Critical
+> and High item against the current code. Items not listed (Medium/Low) were
+> not re-checked in this pass. See `docs/DEVELOPMENT_ROADMAP.md` M0.1 for the
+> follow-up.
+>
+> | ID  | Item                                                                           | Status                                                                                                                                                                                                                                                                                                                                                                                  |
+> | --- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | C1  | i18n tenant portal — all hardcoded text                                        | **Partially fixed.** `app/tenant-portal/[token]/page.tsx` now uses `useTranslations`. Still open: hardcoded `pt-PT`/EUR formatting and `alert()` dialogs (see `docs/PRODUCT_AUDIT_2026.md` §5).                                                                                                                                                                                         |
+> | C2  | Nav conceptual overlap (Portfolio/Properties/Buildings/People/Contacts/Owners) | **Mostly fixed.** Sidebar (`lib/portal/access.ts`) now shows one canonical label per concept ("Properties"→`/portfolio`, "Tenants"→`/people`) inside 3 grouped sections (Operations/Reports/System) — the audit's own proposed IA shipped. `/properties` and `/tenants` remain as thin redirect stubs (harmless). `Buildings`/`Owners` still exist as ungrouped routes outside the nav. |
+> | C3  | `text-zinc-*` hardcoded tokens in dashboard — breaks light mode                | **Fixed.** `overview-view.tsx` has zero `zinc-*` literals; verified rendering correctly in light/dark/OLED this session (see the design-polish work on this branch).                                                                                                                                                                                                                    |
+> | C4  | Analytics + Insights duplicate pages                                           | **Open.** `/insights` still exists as a separate route/page, not merged with `/analytics`.                                                                                                                                                                                                                                                                                              |
+> | H2  | Financials tab count reduction (7 → 5)                                         | **Exceeded.** Financials now ships 4 tabs (queue/receipts/rent-roll/tax), already below the proposed 5.                                                                                                                                                                                                                                                                                 |
+> | H3  | Tenant portal brought under main app shell                                     | **Open.** `app/tenant-portal/layout.tsx` has its own layout (shares i18n messages but not the sidebar/header shell).                                                                                                                                                                                                                                                                    |
+>
+> Also found and fixed during this reconciliation: `lib/portal/access.ts` had a
+> **literal duplicate "Vendors" nav item** in the Operations group (dead weight,
+> not a documented backlog item) — removed.
+
 ---
 
 ## Executive Summary
@@ -101,6 +121,16 @@ Sidebar (12 items, 3 groups)
 ---
 
 ### Proposed Navigation Architecture (AFTER)
+
+> **Status (2026-07-09, roadmap 3.3): adopted — this is the canonical IA.** Confirmed
+> shipped in `lib/portal/access.ts` (see §C2 status note above). The two competing
+> proposals in `docs/UI_CONSISTENCY_GUIDE.md` and `docs/UX_IMPROVEMENT_PLAN.md` §3.1
+> were marked not-adopted in favor of this one. Implementation evolved a few item
+> placements since this diagram was drawn (e.g. Vendors added to Operations;
+> Correspondence stayed separate rather than merging into Documents; Compliance/Tax
+> Filing became their own System items rather than folding into Reports) — treat
+> `lib/portal/access.ts` as the source of truth for exact current item placement, this
+> diagram for the overall three-group shape.
 
 ```
 Sidebar (8 primary items, 2 conceptual sections)

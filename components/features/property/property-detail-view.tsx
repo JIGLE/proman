@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import {
   Building2,
   MapPin,
@@ -14,6 +14,7 @@ import {
   Receipt,
   Plus,
   Trash2,
+  History,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -54,6 +55,8 @@ import {
   type ExpenseFormData,
 } from "@/lib/schemas/expense.schema";
 import { receiptSchema, type ReceiptFormData } from "@/lib/schemas/receipt.schema";
+import { usePropertyActivity } from "@/lib/hooks/use-property-activity";
+import { AuditTrail } from "@/components/shared/audit-trail";
 
 interface PropertyDetailViewProps {
   propertyId: string;
@@ -82,6 +85,29 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   const [ownerAssignError, setOwnerAssignError] = useState("");
   const [ownerAssignSaving, setOwnerAssignSaving] = useState(false);
 
+  // Documents already tagged to this property — the deduction-evidence
+  // picker in the Add Expense dialog (Expense.documentId, Migration A).
+  const [propertyDocuments, setPropertyDocuments] = useState<{ id: string; name: string }[]>([]);
+  useEffect(() => {
+    if (!propertyId) return;
+    let cancelled = false;
+    fetch(`/api/documents?propertyId=${propertyId}`, { credentials: "include" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((body) => {
+        if (!cancelled && body?.data) {
+          setPropertyDocuments(
+            body.data.map((d: { id: string; name: string }) => ({ id: d.id, name: d.name })),
+          );
+        }
+      })
+      .catch(() => {
+        // Document linking is optional — a failed fetch just hides the picker.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [propertyId]);
+
   // Stable initialData and onSubmit for quick-add dialogs (prevents infinite re-render loop)
   const expenseInitialData = useMemo<ExpenseFormData>(
     () => ({
@@ -91,6 +117,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
       category: "other" as const,
       description: "",
       isDeductible: true,
+      documentId: null,
     }),
     [propertyId],
   );
@@ -141,6 +168,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   });
 
   const property = state.properties.find((p) => p.id === propertyId);
+  const { data: activity, loading: activityLoading } = usePropertyActivity(propertyId);
 
   // Related entities
   const relatedTenants = useMemo(
@@ -162,6 +190,19 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   const relatedExpenses = useMemo(
     () => state.expenses.filter((e) => e.propertyId === propertyId),
     [state.expenses, propertyId],
+  );
+
+  // AuditLog rows key off resourceId=receipt/lease/tenant/property id (Migration A) —
+  // scope the Audit tab to everything already loaded for this property, no extra fetch.
+  const auditResourceIds = useMemo(
+    () => [
+      propertyId,
+      ...relatedTenants.map((t) => t.id),
+      ...relatedLeases.map((l) => l.id),
+      ...relatedReceipts.map((r) => r.id),
+      ...relatedExpenses.map((e) => e.id),
+    ],
+    [propertyId, relatedTenants, relatedLeases, relatedReceipts, relatedExpenses],
   );
 
   const totalRevenue = relatedReceipts.reduce((sum, r) => sum + r.amount, 0);
@@ -314,7 +355,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
       <div className="flex flex-col gap-4 sticky top-0 z-20 bg-[var(--color-card)]/95 backdrop-blur-sm">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="p-3 lg:p-4 rounded-xl bg-[var(--color-info-muted)]">
+            <div className="p-3 lg:p-4 bg-[var(--color-info-muted)]">
               <Building2 className="h-8 w-8 lg:h-10 lg:w-10 text-[var(--color-info)]" />
             </div>
             <div>
@@ -435,6 +476,29 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                       }
                     />
                   </div>
+                  {propertyDocuments.length > 0 && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="exp-document">Deduction evidence (optional)</Label>
+                      <Select
+                        value={expenseDialog.formData.documentId ?? "none"}
+                        onValueChange={(v) =>
+                          expenseDialog.updateFormData({ documentId: v === "none" ? null : v })
+                        }
+                      >
+                        <SelectTrigger id="exp-document">
+                          <SelectValue placeholder="Link a document…" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">No document</SelectItem>
+                          {propertyDocuments.map((doc) => (
+                            <SelectItem key={doc.id} value={doc.id}>
+                              {doc.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
                   <div className="flex justify-end gap-2 pt-2">
                     <Button type="button" variant="outline" onClick={expenseDialog.closeDialog}>
                       Cancel
@@ -587,6 +651,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </Dialog>
           </div>
         </div>
+      </div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -639,6 +704,50 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardContent>
           </Card>
         </div>
+      )}
+
+      {/* Secondary context — entity counts, demoted below the money state. */}
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+        <button
+          type="button"
+          onClick={() => setActiveTab("tenants")}
+          className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
+        >
+          <p className="mono-label">{t("stats.tenants")}</p>
+          <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-foreground)]">
+            {relatedTenants.length}
+          </p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("leases")}
+          className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
+        >
+          <p className="mono-label">{t("stats.activeLeases")}</p>
+          <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-success)]">
+            {activeLeases}
+          </p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("finance")}
+          className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
+        >
+          <p className="mono-label">{t("stats.revenue")}</p>
+          <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-foreground)]">
+            {formatCurrency(totalRevenue)}
+          </p>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab("maintenance")}
+          className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
+        >
+          <p className="mono-label">{t("stats.openTickets")}</p>
+          <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-warning)]">
+            {openTickets}
+          </p>
+        </button>
       </div>
 
       {/* Relationship strip — connected entities, always visible */}
@@ -652,7 +761,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <Users className="h-3.5 w-3.5" />
             {t("tabs.tenants")}
             {relatedTenants.length > 0 && (
-              <span className="ml-1 rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs">
+              <span className="ml-1 bg-[var(--color-muted)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums">
                 {relatedTenants.length}
               </span>
             )}
@@ -665,7 +774,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <Wrench className="h-3.5 w-3.5" />
             {t("tabs.maintenance")}
             {openTickets > 0 && (
-              <span className="ml-1 rounded-full bg-[var(--color-warning-muted)] text-[var(--color-warning)] px-2 py-0.5 text-xs">
+              <span className="ml-1 bg-[var(--color-warning-muted)] text-[var(--color-warning)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums">
                 {openTickets}
               </span>
             )}
@@ -674,7 +783,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <Receipt className="h-3.5 w-3.5" />
             {t("tabs.expenses")}
             {relatedExpenses.length > 0 && (
-              <span className="ml-1 rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs">
+              <span className="ml-1 bg-[var(--color-muted)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums">
                 {relatedExpenses.length}
               </span>
             )}
@@ -682,6 +791,10 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
           <TabsTrigger value="finance" className="flex items-center gap-1.5">
             <DollarSign className="h-3.5 w-3.5" />
             {t("tabs.payments")}
+          </TabsTrigger>
+          <TabsTrigger value="audit" className="flex items-center gap-1.5">
+            <History className="h-3.5 w-3.5" />
+            {t("tabs.audit")}
           </TabsTrigger>
         </TabsList>
 
@@ -733,7 +846,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               </CardTitle>
               <span
                 className={cn(
-                  "text-xs font-medium px-2 py-0.5 rounded-full",
+                  "text-xs font-medium px-2 py-0.5",
                   Math.abs(ownershipTotal - 100) < 0.01
                     ? "bg-[var(--color-success-muted)] text-[var(--color-success)]"
                     : ownershipTotal > 0
@@ -936,7 +1049,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => router.push(`/${locale}/maintenance?propertyId=${propertyId}`)}
+                    onClick={() => router.push(`/${locale}/operations?propertyId=${propertyId}`)}
                   >
                     <Wrench className="h-3.5 w-3.5 mr-1.5" />
                     View in Maintenance
@@ -1145,6 +1258,53 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               </CardContent>
             </Card>
           )}
+
+          {/* PaymentTimeline — reference-month allocation events for this property's ledger */}
+          {activity && activity.timeline.length > 0 && (
+            <div className="border border-[var(--color-border)] bg-[var(--color-surface)]">
+              <div className="border-b border-[var(--color-border)] px-4 py-3">
+                <p className="mono-label">Payment timeline</p>
+              </div>
+              <div className="divide-y divide-[var(--color-border)]">
+                {activity.timeline.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="flex items-center justify-between gap-3 px-4 py-2.5 text-sm"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="h-2 w-2 shrink-0 bg-[var(--ui-accent)]" />
+                      <span>
+                        {entry.reversedAt ? "Reversed" : "Allocated"} ·{" "}
+                        {String(entry.period.month).padStart(2, "0")}/{entry.period.year}
+                        <span className="ml-1 text-xs text-[var(--color-muted-foreground)]">
+                          ({entry.type.replace(/_/g, " ")})
+                        </span>
+                      </span>
+                    </div>
+                    <span
+                      className={cn(
+                        "font-mono tabular-nums",
+                        entry.reversedAt
+                          ? "text-[var(--color-muted-foreground)] line-through"
+                          : "text-[var(--color-foreground)]",
+                      )}
+                    >
+                      €{entry.amount.toFixed(2)}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Audit Tab — the shared AuditTrail component (GET /api/audit-trail), scoped to
+            this property plus its tenants/leases/receipts/expenses (Migration A resourceId keys). */}
+        <TabsContent value="audit">
+          <AuditTrail
+            resourceIds={auditResourceIds}
+            emptyDescription="A full activity history for this property — payment allocations, receipt emissions, document changes and manual overrides — will appear here."
+          />
         </TabsContent>
       </Tabs>
     </div>

@@ -9,9 +9,13 @@ const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
 
-// DATABASE_URL may be unset in development; in that case we default to ./dev.db
+// DATABASE_URL may be unset; in that case we default to the same file
+// prisma.config.ts uses (data/proman.db in production, dev.db otherwise).
 if (!process.env.DATABASE_URL) {
-  console.warn("[ensure-sqlite] DATABASE_URL is not set; defaulting to dev.db for local/dev usage");
+  console.warn(
+    "[ensure-sqlite] DATABASE_URL is not set; defaulting to prisma.config.ts's path " +
+      `(${process.env.NODE_ENV === "production" ? "data/proman.db" : "dev.db"}).`,
+  );
 } else {
   console.debug(
     "[ensure-sqlite] DATABASE_URL is available:",
@@ -19,14 +23,17 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-// Determine DB path from DATABASE_URL (if provided) or default to ./dev.db
+// Determine DB path from DATABASE_URL, falling back to the same default as
+// prisma.config.ts (data/proman.db in production, dev.db otherwise) so every
+// code path here targets the file the app actually reads.
 const dbUrlFromEnv = process.env.DATABASE_URL;
+const defaultDbFile = process.env.NODE_ENV === "production" ? "data/proman.db" : "dev.db";
 let DB_PATH;
 if (dbUrlFromEnv && dbUrlFromEnv.startsWith("file:")) {
   const dbPath = dbUrlFromEnv.replace(/^file:\/\//, "").replace(/^file:/, "");
   DB_PATH = path.resolve(process.cwd(), dbPath);
 } else {
-  DB_PATH = path.resolve(process.cwd(), "dev.db");
+  DB_PATH = path.resolve(process.cwd(), defaultDbFile);
 }
 const BACKUP_PATH = `${DB_PATH}.backup`;
 
@@ -66,11 +73,23 @@ function log(...args) {
   console.debug("[ensure-sqlite]", ...args);
 }
 
-const dbUrl = process.env.DATABASE_URL;
-if (!dbUrl || !dbUrl.startsWith("file:")) {
-  log("No sqlite DATABASE_URL configured; skipping sqlite ensure step.");
+// Resolve the sqlite URL, mirroring prisma.config.ts's own default so this step
+// always targets the SAME file the app reads. Previously, when DATABASE_URL was
+// unset the whole ensure step was skipped — but prisma.config.ts still defaults
+// to data/proman.db (prod), so the app's real DB never got migrated and every
+// query 500'd with P2022 "column does not exist".
+let dbUrl = process.env.DATABASE_URL;
+if (!dbUrl) {
+  dbUrl = process.env.NODE_ENV === "production" ? "file:./data/proman.db" : "file:./dev.db";
+  log(`DATABASE_URL not set; defaulting to ${dbUrl} (matches prisma.config.ts).`);
+}
+if (!dbUrl.startsWith("file:")) {
+  log("DATABASE_URL is not sqlite (file:); skipping sqlite ensure step.");
   process.exit(0);
 }
+// Ensure child `prisma` invocations resolve to the same DB even if the env var
+// was originally unset.
+process.env.DATABASE_URL = dbUrl;
 
 const dbPath = dbUrl.replace(/^file:\/\//, "").replace(/^file:/, "");
 const resolved = path.resolve(process.cwd(), dbPath);
@@ -179,7 +198,7 @@ try {
       execSync("npx prisma db push --schema=prisma/schema.prisma --accept-data-loss", {
         stdio: "inherit",
         env: { ...process.env, DATABASE_URL: dbUrl },
-        timeout: 60000,
+        timeout: 120000,
       });
       log("Prisma DB push completed successfully.");
 
@@ -252,16 +271,62 @@ try {
   // schema already matches the database, so the overhead on normal starts is negligible.
   db.close();
   if (autoSchemaSync) {
-    try {
-      log("Running schema sync (prisma db push --schema=prisma/schema.prisma)...");
-      execSync("npx prisma db push --schema=prisma/schema.prisma", {
-        stdio: "inherit",
-        env: { ...process.env, DATABASE_URL: dbUrl },
-        timeout: 60000,
+    const pushEnv = { ...process.env, DATABASE_URL: dbUrl };
+    // Prisma 7's `db push` prints its help text and exits 0 when given an
+    // unknown flag — a silent no-op that looks like success. So we don't trust
+    // the exit code: we capture output and require an explicit "in sync"
+    // confirmation, otherwise treat it as a failure to escalate.
+    const runPush = (extra) =>
+      execSync(`npx prisma db push --schema=prisma/schema.prisma${extra}`, {
+        stdio: ["ignore", "pipe", "pipe"],
+        env: pushEnv,
+        timeout: 120000,
+        encoding: "utf8",
       });
-      log("Schema sync completed successfully.");
+    const confirmsSync = (out) => /in sync with (your|the) prisma schema/i.test(out || "");
+
+    let synced = false;
+    try {
+      log("Running schema sync (prisma db push)...");
+      const out = runPush("");
+      if (out) process.stdout.write(out);
+      synced = confirmsSync(out);
+      if (synced) log("Schema sync completed successfully.");
+      else log("Schema sync did not confirm an in-sync schema; will attempt a forced sync.");
     } catch (syncErr) {
-      log("Schema sync failed (non-fatal):", syncErr && syncErr.message);
+      // The additive push was refused — the diff needs a destructive change
+      // (a dropped/renamed/retyped column). Leaving the DB on a schema the app
+      // can't query means every request 500s with P2022.
+      log("Additive schema sync could not apply cleanly:", syncErr && syncErr.message);
+    }
+
+    if (!synced) {
+      // Back up the file, then force the sync so the container never boots on a
+      // schema the app can't query. AUTO_DB_SCHEMA_SYNC_FORCE=false disables this.
+      const allowForce =
+        process.env.AUTO_DB_SCHEMA_SYNC_FORCE !== "false" &&
+        process.env.AUTO_DB_SCHEMA_SYNC_FORCE !== "0";
+      if (!allowForce) {
+        error("AUTO_DB_SCHEMA_SYNC_FORCE=false — leaving schema unchanged; the app may 500.");
+      } else {
+        try {
+          const stamp = new Date().toISOString().replace(/[:.]/g, "-");
+          const backup = `${resolved}.bak-${stamp}`;
+          fs.copyFileSync(resolved, backup);
+          log("Backed up database before forced sync →", backup);
+        } catch (bkErr) {
+          error("Could not back up database before forced sync:", bkErr && bkErr.message);
+        }
+        try {
+          log("Retrying schema sync with --accept-data-loss...");
+          const out = runPush(" --accept-data-loss");
+          if (out) process.stdout.write(out);
+          if (confirmsSync(out)) log("Forced schema sync completed successfully.");
+          else error("Forced schema sync did not confirm an in-sync schema. Check DB permissions.");
+        } catch (forceErr) {
+          error("Forced schema sync failed:", forceErr && forceErr.message);
+        }
+      }
     }
   }
 

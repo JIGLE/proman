@@ -7,11 +7,18 @@
  * - Lease renewal reminders (D-60 before expiration)
  * - Recibo de Renda deadline reminders (D+5 after payment, PT only)
  *
+ * Each trigger writes the in-app Notification row AND (see ./reminder-email)
+ * sends the same reminder as a localized email, gated on the landlord's own
+ * UserSettings.emailNotifications/.taxReminderNotifications preference — the
+ * email inherits the in-app notification's existing per-entity dedup check,
+ * so it's sent exactly once per entity, same as the notification is.
+ *
  * Designed to be called from a cron endpoint (e.g., /api/cron/notifications)
  */
 
 import { getPrismaClient } from "@/lib/services/database/database";
 import { logger } from "@/lib/utils/logger";
+import { sendReminderEmail, resetReminderEmailCache } from "./reminder-email";
 
 const log = logger.child("notification-automation");
 
@@ -64,15 +71,24 @@ async function generateRentReminders(prisma: ReturnType<typeof getPrismaClient>)
     const tenantName = invoice.tenant?.name ?? "Tenant";
     const propertyAddr = invoice.property?.address ?? "Property";
 
+    const amount = `€${invoice.amount.toFixed(2)}`;
+    const date = invoice.dueDate.toLocaleDateString("pt-PT");
+
     await prisma.notification.create({
       data: {
         userId: invoice.userId,
         type: "payment_due",
         title: `Rent payment due in 5 days`,
-        message: `Payment of €${invoice.amount.toFixed(2)} from ${tenantName} for ${propertyAddr} is due on ${invoice.dueDate.toLocaleDateString("pt-PT")}.`,
+        message: `Payment of ${amount} from ${tenantName} for ${propertyAddr} is due on ${date}.`,
         entityType: "Invoice",
         entityId: invoice.id,
       },
+    });
+    await sendReminderEmail(prisma, invoice.userId, "rentReminder", {
+      tenant: tenantName,
+      property: propertyAddr,
+      amount,
+      date,
     });
     created++;
   }
@@ -125,15 +141,23 @@ async function generateOverdueNotices(prisma: ReturnType<typeof getPrismaClient>
     const tenantName = invoice.tenant?.name ?? "Tenant";
     const propertyAddr = invoice.property?.address ?? "Property";
 
+    const amount = `€${invoice.amount.toFixed(2)}`;
+
     await prisma.notification.create({
       data: {
         userId: invoice.userId,
         type: "payment_overdue",
         title: `Payment overdue by ${suffix}`,
-        message: `Payment of €${invoice.amount.toFixed(2)} from ${tenantName} for ${propertyAddr} is overdue by ${suffix}.`,
+        message: `Payment of ${amount} from ${tenantName} for ${propertyAddr} is overdue by ${suffix}.`,
         entityType: "Invoice",
         entityId: invoice.id,
       },
+    });
+    await sendReminderEmail(prisma, invoice.userId, "overdueNotice", {
+      tenant: tenantName,
+      property: propertyAddr,
+      amount,
+      days: daysPastDue,
     });
     created++;
   }
@@ -182,15 +206,22 @@ async function generateLeaseRenewalReminders(
     const tenantName = lease.tenant?.name ?? "Tenant";
     const propertyAddr = lease.property?.address ?? "Property";
 
+    const date = lease.endDate.toLocaleDateString("pt-PT");
+
     await prisma.notification.create({
       data: {
         userId: lease.userId,
         type: "lease_renewal_reminder",
         title: "Lease expiring in 60 days",
-        message: `Lease for ${tenantName} at ${propertyAddr} expires on ${lease.endDate.toLocaleDateString("pt-PT")}. Consider renewal or sending notice.`,
+        message: `Lease for ${tenantName} at ${propertyAddr} expires on ${date}. Consider renewal or sending notice.`,
         entityType: "Lease",
         entityId: lease.id,
       },
+    });
+    await sendReminderEmail(prisma, lease.userId, "leaseRenewal", {
+      tenant: tenantName,
+      property: propertyAddr,
+      date,
     });
     created++;
   }
@@ -265,16 +296,25 @@ async function generateReceiptDeadlineReminders(
     const tenantName = payment.tenant.name ?? "Tenant";
     const propertyAddr = payment.tenant.property.address ?? "Property";
 
+    const amount = `€${payment.amount.toFixed(2)}`;
+
     await prisma.notification.create({
       data: {
         userId: payment.tenant.userId,
         type: "rent_receipt_due",
         title: "Recibo de renda deadline tomorrow",
-        message: `A rent receipt for ${tenantName} at ${propertyAddr} (payment of €${payment.amount.toFixed(2)}) must be issued by tomorrow to meet the 5-day legal deadline.`,
+        message: `A rent receipt for ${tenantName} at ${propertyAddr} (payment of ${amount}) must be issued by tomorrow to meet the 5-day legal deadline.`,
         entityType: "PaymentTransaction",
         entityId: payment.id,
       },
     });
+    await sendReminderEmail(
+      prisma,
+      payment.tenant.userId,
+      "receiptDeadline",
+      { tenant: tenantName, property: propertyAddr, amount },
+      { gate: "tax" },
+    );
     created++;
   }
   return created;
@@ -286,6 +326,7 @@ async function generateReceiptDeadlineReminders(
  */
 export async function runNotificationAutomation(): Promise<AutomationResult> {
   const prisma = getPrismaClient();
+  resetReminderEmailCache();
   const errors: string[] = [];
   let rentReminders = 0;
   let overdueNotices = 0;

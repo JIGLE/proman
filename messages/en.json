@@ -1,7 +1,20 @@
 {
+  "people": {
+    "title": "People",
+    "subtitle": "Manage tenants, property owners, and service providers.",
+    "totalTenants": "Total tenants",
+    "activeTenants": "Active tenants",
+    "totalOwners": "Total owners",
+    "tenants": "Tenants",
+    "owners": "Owners",
+    "serviceProviders": "Service providers",
+    "communications": "Communications",
+    "addTenant": "Add tenant",
+    "addOwner": "Add owner"
+  },
   "portfolio": {
     "badge": "Properties workspace",
-    "title": "Properties",
+    "title": "Portfolio Inventory",
     "addProperty": "Add Property",
     "openMap": "Open map",
     "stats": {
@@ -74,7 +87,7 @@
     "home": "Home",
     "properties": "Properties",
     "tenants": "Tenants",
-    "people": "Tenants",
+    "people": "People",
     "leases": "Leases",
     "payments": "Payments",
     "financials": "Money",
@@ -113,8 +126,6 @@
     "portfolioOverview": "Properties Overview",
     "recentProperties": "Recent Properties",
     "viewAll": "View all",
-    "achievements": "Achievements",
-    "achievementsDescription": "Milestones and recognitions for your property management success",
     "latestTenantPayments": "Latest tenant payments",
     "currentPropertyConditions": "Current property conditions",
     "paid": "Paid",
@@ -220,6 +231,7 @@
     "docExpiryWarning": "{count} document(s) expiring within 60 days",
     "allClear": "All clear",
     "allClearDesc": "No outstanding rent, overdue payments, or urgent maintenance.",
+    "streakMonths": "{count} months in a row with rent fully collected",
     "oneItemNeedsAttention": "1 item needs your attention",
     "itemsNeedAttention": "{count} items need your attention",
     "setupComplete": "Setup complete"
@@ -289,75 +301,83 @@
   "emptyState": {
     "properties": {
       "title": "No properties yet",
-      "description": "Add your first property to start managing your portfolio."
+      "description": "Add your first property to start managing your portfolio. Track occupancy, revenue, and maintenance all in one place.",
+      "action": "Add Property"
     },
     "tenants": {
       "title": "No tenants yet",
-      "description": "Once you have properties, add tenants to track leases and payments."
+      "description": "Once you have properties set up, add tenants to track leases, payments, and communications.",
+      "action": "Add Tenant"
     },
     "payments": {
       "title": "No payments recorded",
-      "description": "Start recording rent payments to track revenue."
+      "description": "Start recording rent payments to track your revenue and generate financial reports automatically. Go to a lease to record the first payment.",
+      "action": "Record Payment"
     },
     "generic": {
       "title": "Nothing here yet",
-      "description": "Get started by adding your first item."
+      "description": "Get started by adding your first item.",
+      "action": "Add New"
     },
     "leases": {
-      "title": "No leases yet",
-      "description": "Create lease agreements to formalize tenant relationships.",
-      "action": "Add First Lease"
+      "title": "No leases created",
+      "description": "Create lease agreements to formalise tenant relationships and automate renewal reminders. Start by adding a property and a tenant first.",
+      "action": "Create Lease"
     },
     "maintenance": {
-      "title": "No maintenance tickets",
-      "description": "Create a new ticket to track maintenance requests.",
+      "title": "No maintenance requests",
+      "description": "When tenants report issues, they'll appear here. You can also create tickets proactively.",
       "action": "Create Ticket"
     },
     "correspondence": {
-      "title": "No templates yet",
-      "description": "Create correspondence templates to streamline communications.",
-      "action": "Create Template"
+      "title": "No correspondence yet",
+      "description": "Send notices, reminders, and updates to your tenants. All communication history is tracked here.",
+      "action": "Send Message"
     },
     "reports": {
       "title": "No reports available",
-      "description": "Reports are generated from your property and financial data."
+      "description": "Reports are generated from your property and financial data. Add properties and record payments to unlock insights.",
+      "action": "Get Started"
     },
     "owners": {
       "title": "No owners yet",
-      "description": "Add owners to start tracking shared property ownership.",
-      "action": "Add First Owner"
+      "description": "Add owners to start tracking shared property ownership and revenue splits.",
+      "action": "Add Owner"
     },
     "receipts": {
       "title": "No receipts yet",
-      "description": "Create payment receipts to keep a record of payments received.",
-      "action": "Create First Receipt"
+      "description": "Create payment receipts to keep a record of rent and other payments received. Record a payment to generate receipts automatically.",
+      "action": "Create Receipt"
     },
     "expenses": {
       "title": "No expenses recorded",
-      "description": "Track property expenses to monitor costs."
+      "description": "Track property expenses to monitor costs and generate accurate financial reports.",
+      "action": "Add Expense"
     },
     "invoices": {
       "title": "No invoices yet",
-      "description": "Create invoices for tenants to formalize payment obligations.",
+      "description": "Create invoices for tenants to formalize payment obligations and track billing.",
       "action": "Create Invoice"
     },
     "contracts": {
       "title": "No contracts found",
-      "description": "Contracts are created from lease agreements."
+      "description": "Contracts represent formal agreements. Create leases to see associated contracts here.",
+      "action": "View Leases"
     },
     "documents": {
       "title": "No documents yet",
-      "description": "Upload documents to keep records organized.",
+      "description": "Upload documents to keep property records, contracts, and correspondence organized.",
       "action": "Upload Document"
     },
     "contacts": {
       "title": "No contacts found",
-      "description": "Contacts are populated from your tenants and owners."
+      "description": "Contacts are populated from your tenants, owners, and service providers.",
+      "action": "Add Contact"
     },
     "units": {
       "title": "No units yet",
-      "description": "Add units to this property to track individual spaces.",
-      "action": "Add First Unit"
+      "description": "Add units to this property to track individual spaces, tenants, and leases.",
+      "action": "Add Unit"
     },
     "noResults": {
       "title": "No results found",
@@ -387,20 +407,22 @@
     "entryTenant": "I'm a tenant",
     "entryTenantDesc": "Access your rental portal",
     "hero": "Collect rent. Issue receipts. Stay compliant.",
-    "subtitle": "Domora automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
+    "subtitle": "Lares automates the monthly compliance cycle for landlords in Portugal and Spain — from payment follow-up to AT electronic receipts and IRS / IRPF tax exports.",
     "cta": "Sign in",
     "headerCta": "Get started",
     "navHowItWorks": "How it works",
     "navWorkflow": "Workflow",
     "demoCta": "Try Free Demo",
-    "secondaryCta": "See how it works",
+    "secondaryCta": "View product workflow",
     "microcopy": "No card. No setup. Guided walkthrough in under 2 minutes.",
     "tenantPortalNote": "Are you a tenant?",
     "tenantPortalLink": "Access your portal here",
     "chips": {
-      "simple": "One flow from rent to receipt",
-      "compliance": "PT/ES compliance in context",
-      "workflow": "Contracts, tenants, and payments connected"
+      "matching": "Bank movement matching",
+      "receipts": "Receipt automation",
+      "documents": "Document intelligence",
+      "tax": "Tax connector ready",
+      "palette": "EU palette system"
     },
     "preview": {
       "label": "Live product preview",
@@ -543,9 +565,9 @@
         "name": "Business",
         "price": "€49",
         "description": "For property managers running larger portfolios.",
-        "cta": "Contact sales",
+        "cta": "Get started",
         "f1": "Unlimited properties",
-        "f2": "Team access (up to 5 users)",
+        "f2": "Team access (coming soon)",
         "f3": "NRUA export (Spain)",
         "f4": "SAF-T PT export",
         "f5": "Priority support",
@@ -594,7 +616,102 @@
           "description": "Tax-ready record for AT or Hacienda"
         }
       }
-    }
+    },
+    "primaryCta": "Start with your portfolio",
+    "requestDemo": "Request demo",
+    "signIn": "Sign in",
+    "hero2": "Property income, receipts and tax evidence under control.",
+    "subtitle2": "Situs helps owners track rent payments, allocate late transfers to the correct reference month, emit receipts, archive documents, manage expenses and prepare tax-ready evidence across EU property portfolios.",
+    "floating": {
+      "income": "Expected income this month",
+      "receipts": "Receipts awaiting review",
+      "health": "Portfolio health"
+    },
+    "system": {
+      "eyebrow": "System architecture",
+      "title": "Built around the owner's real workflow.",
+      "copy": "The most important chain is simple: payment detected, reference month assigned, receipt emitted, receipt archived, tax status updated.",
+      "m1label": "01 // Banking",
+      "m1title": "Detect payments",
+      "m1body": "Connect bank movements and match incoming transfers to tenants, contracts and properties.",
+      "m2label": "02 // Allocation",
+      "m2title": "Reference the right month",
+      "m2body": "Allocate payments to the next month when current, or to the oldest unpaid period when late.",
+      "m3label": "03 // Receipts",
+      "m3title": "Emit and archive",
+      "m3body": "Create receipt drafts, review them, submit or export, and save the PDF to the right property year."
+    },
+    "flow": {
+      "eyebrow": "Payment-to-receipt lifecycle",
+      "title": "From bank movement to tax evidence.",
+      "s1t": "Import movement",
+      "s1b": "Bank API sync detects new incoming transfers.",
+      "s2t": "Match contract",
+      "s2b": "Sender, IBAN, amount and reference suggest the lease.",
+      "s3t": "Assign month",
+      "s3b": "Current tenants map to next month; arrears settle oldest unpaid month.",
+      "s4t": "Emit receipt",
+      "s4b": "Receipt draft is reviewed, emitted and optionally submitted to tax authority.",
+      "s5t": "Archive evidence",
+      "s5b": "Receipt, invoice and audit trail are linked to property, year and month."
+    },
+    "pillars": {
+      "eyebrow": "Product pillars",
+      "title": "One command center for ownership.",
+      "copy": "Situs combines portfolio structure, finance, operations, people, documents and intelligence into one owner-first interface.",
+      "portfolioLabel": "Portfolio",
+      "portfolioTitle": "Structural inventory",
+      "portfolioBody": "Manage properties, units, ownership shares, leases and current attention items.",
+      "financeLabel": "Finance",
+      "financeTitle": "Rent matrix",
+      "financeBody": "Track every month: paid, late, partial, overdue, receipt issued and tax registered.",
+      "documentsLabel": "Documents",
+      "documentsTitle": "Smart archive",
+      "documentsBody": "Store contracts, receipts, invoices and tax documents by property, year and type.",
+      "expensesLabel": "Expenses",
+      "expensesTitle": "Deduction evidence",
+      "expensesBody": "OCR invoices, classify deductible expenses and link them to the correct tax year.",
+      "operationsLabel": "Operations",
+      "operationsTitle": "Task control",
+      "operationsBody": "Follow inspections, maintenance tasks, contractors, evidence and recurring obligations.",
+      "intelligenceLabel": "Intelligence",
+      "intelligenceTitle": "Explainable estimates",
+      "intelligenceBody": "Understand tax reserve, yield, arrears risk and document confidence with source traces."
+    },
+    "preview2": {
+      "eyebrow": "Interface preview",
+      "title": "Mission Control Center.",
+      "copy": "A quiet, rectilinear interface designed for long sessions, dense data and serious decisions.",
+      "greeting": "Good afternoon, José.",
+      "healthLabel": "Portfolio health",
+      "incomeLabel": "Expected income",
+      "queueLabel": "Receipt queue",
+      "missionTitle": "Mission Control Center",
+      "m1": "Rent payment overdue from João Silva",
+      "m1tag": "Covenant",
+      "m2": "IMI property tax tranche due",
+      "m2tag": "Tax",
+      "m3": "Receipt draft pending review",
+      "m3tag": "Receipt",
+      "timelineTitle": "Payment timeline",
+      "t1": "Jun 1 payment",
+      "t1tag": "Ref: Jul",
+      "t2": "Late payment allocated",
+      "t2tag": "Oldest unpaid",
+      "t3": "Receipt archived",
+      "t3tag": "Saved"
+    },
+    "closing2": {
+      "title": "Bring every rent period, receipt and document into view.",
+      "copy": "Situs is designed for owners who need the payment story to be clear: what arrived, what month it belongs to, what receipt was emitted, and where the evidence is stored.",
+      "primary": "Request demo",
+      "secondary": "View product architecture"
+    },
+    "footer2": {
+      "tagline": "Situs // Sovereign Capital System",
+      "modules": "Banking · Receipts · Documents · Tax Evidence"
+    },
+    "createAccount": "Create account"
   },
   "errors": {
     "notFound": {
@@ -769,7 +886,27 @@
     "documentUploaded": "Document Uploaded",
     "rentReceiptDue": "Rent Receipt Due",
     "nruaRegistration": "NRUA Registration Required",
-    "markAllRead": "Mark All as Read"
+    "markAllRead": "Mark All as Read",
+    "email": {
+      "rentReminder": {
+        "subject": "Rent payment due in 5 days — {property}",
+        "body": "Payment of {amount} from {tenant} for {property} is due on {date}."
+      },
+      "overdueNotice": {
+        "subject": "Payment overdue by {days, plural, one {# day} other {# days}} — {property}",
+        "body": "Payment of {amount} from {tenant} for {property} is overdue by {days, plural, one {# day} other {# days}}."
+      },
+      "leaseRenewal": {
+        "subject": "Lease expiring in 60 days — {property}",
+        "body": "The lease for {tenant} at {property} expires on {date}. Consider renewal or sending notice."
+      },
+      "receiptDeadline": {
+        "subject": "Recibo de renda deadline tomorrow — {property}",
+        "body": "A rent receipt for {tenant} at {property} (payment of {amount}) must be issued by tomorrow to meet the 5-day legal deadline."
+      },
+      "footer": "You're receiving this because email notifications are enabled in your Lares settings.",
+      "viewInApp": "View in Lares"
+    }
   },
   "owners": {
     "title": "Property Owners",
@@ -818,6 +955,9 @@
       "payments": "Payments",
       "receipts": "Receipts",
       "invoices": "Invoices",
+      "invoiceLabel": "Invoice",
+      "paymentInitiated": "Payment initiated. Reference: {ref}",
+      "paymentFailed": "Payment failed. Please try again.",
       "allCaughtUp": "You're all caught up",
       "noDuePayments": "No payments due right now. Your next rent is scheduled as usual.",
       "monthlyRent": "Monthly Rent",
@@ -1069,7 +1209,8 @@
       "maintenance": "Maintenance",
       "payments": "Payments",
       "expenses": "Expenses",
-      "units": "Units"
+      "units": "Units",
+      "audit": "Audit"
     },
     "stats": {
       "tenants": "Tenants",
@@ -1156,12 +1297,29 @@
   "insights": {
     "title": "Insights",
     "description": "Portfolio performance and analytics",
-    "occupancyRate": "Occupancy Rate",
-    "severity": {
-      "danger": "Critical",
-      "warning": "Warning",
-      "info": "Info"
-    }
+    "subtitle": "Executive summary of your portfolio performance",
+    "refresh": "Refresh",
+    "kpiMonthlyRevenue": "Monthly Revenue",
+    "kpiOccupancy": "Occupancy",
+    "kpiActiveTenants": "Active Tenants",
+    "kpiAvgRent": "Avg. Rent",
+    "ofTotal": "of {total} total",
+    "vsLastMonth": "{value}% vs last month",
+    "revenueTrend": "Revenue Trend",
+    "last6Months": "Last 6 months",
+    "noRevenueData": "No revenue data yet — record payments to see trends",
+    "portfolioMix": "Portfolio Mix",
+    "addPropertiesToSeeBreakdown": "Add properties to see breakdown",
+    "upcomingLeaseExpirations": "Upcoming Lease Expirations",
+    "viewAll": "View all",
+    "unknownTenant": "Unknown tenant",
+    "unknownProperty": "Unknown property",
+    "expired": "Expired",
+    "daysLeft": "{count}d left",
+    "analyticsDashboard": "Analytics Dashboard",
+    "analyticsDashboardDesc": "Interactive charts, KPIs, occupancy gauges, and property performance tables",
+    "financialReports": "Financial Reports",
+    "financialReportsDesc": "Generate and export financial summaries, tax reports, and rent rolls"
   },
   "reports": {
     "title": "Reports",
@@ -1197,7 +1355,7 @@
     "banner": "Demo Mode – Changes are not saved",
     "exitButton": "Exit Demo",
     "preparing": "Preparing demo environment...",
-    "title": "Domora Demo",
+    "title": "Lares Demo",
     "readOnly": "This feature is read-only in demo mode",
     "changesNotSaved": "Demo mode: changes are not saved"
   },
@@ -1211,7 +1369,7 @@
     "tooManyRequests": "Too many requests. Please try again in {retryAfter} seconds."
   },
   "footer": {
-    "copyright": "© {year} Domora. All rights reserved.",
+    "copyright": "© {year} Lares. All rights reserved.",
     "privacy": "Privacy Policy",
     "terms": "Terms of Service"
   },
@@ -1300,5 +1458,81 @@
     "loadingIncome": "Loading income data...",
     "portugal": "Portugal",
     "spain": "Spain"
+  },
+  "paymentMatrix": {
+    "title": "Payment Tracking Matrix",
+    "subtitle": "Monthly payment status overview for all tenants",
+    "detailed": "Detailed",
+    "heatmap": "Heatmap",
+    "allStatus": "All Status",
+    "paid": "Paid",
+    "pending": "Pending",
+    "overdue": "Overdue",
+    "export": "Export",
+    "totalExpected": "Total Expected",
+    "forYear": "For {year}",
+    "totalReceived": "Total Received",
+    "paidAmounts": "Paid amounts",
+    "outstanding": "Outstanding",
+    "pendingPayments": "Pending payments",
+    "collectionRate": "Collection Rate",
+    "paymentSuccessRate": "Payment success rate",
+    "matrixTitle": "Payment Matrix - {year}",
+    "legend": "Green: Paid • Yellow: Pending • Red: Overdue • Gray: No payment due",
+    "tenant": "Tenant",
+    "total": "Total",
+    "perMonth": "/mo",
+    "ofExpected": "of {amount}",
+    "cellTooltip": "{status} on {date} — {amount}",
+    "overdueTooltip": "Overdue payment",
+    "noPaymentTooltip": "No payment",
+    "noPaymentDue": "No payment due",
+    "noTenantsYet": "No Tenants Yet",
+    "addTenantsToTrack": "Add tenants to start tracking payments"
+  },
+  "notificationCenter": {
+    "title": "Notifications",
+    "bellAriaLabel": "Notifications",
+    "bellAriaLabelUnread": "Notifications ({count} unread)",
+    "newBadge": "{count} new",
+    "markAllRead": "Mark all read",
+    "markAllAsReadLabel": "Mark all as read",
+    "closeLabel": "Close notifications",
+    "all": "All ({count})",
+    "unread": "Unread ({count})",
+    "noUnreadNotifications": "No unread notifications",
+    "noNotifications": "No notifications",
+    "allCaughtUp": "You're all caught up!",
+    "notificationsWillAppear": "Notifications will appear here",
+    "clearAll": "Clear all",
+    "clearAllLabel": "Clear all notifications",
+    "settings": "Settings",
+    "settingsLabel": "Notification settings",
+    "markAsReadLabel": "Mark as read",
+    "deleteLabel": "Delete",
+    "justNow": "Just now",
+    "minutesAgo": "{count}m ago",
+    "hoursAgo": "{count}h ago",
+    "daysAgo": "{count}d ago",
+    "priority": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "urgent": "Urgent"
+    }
+  },
+  "portfolioTree": {
+    "title": "Structural portfolio inventory",
+    "empty": "No properties yet. Add your first asset to see it here.",
+    "density": "Row density",
+    "densityCompact": "Compact",
+    "densityComfortable": "Comfortable",
+    "unclustered": "Unclustered",
+    "dotOverdue": "Rent payment overdue",
+    "dotTickets": "Open maintenance tickets",
+    "dotLease": "Lease renewal window",
+    "legend": "Signals",
+    "collapse": "Collapse rail",
+    "expand": "Expand rail"
   }
 }

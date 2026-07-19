@@ -24,7 +24,10 @@ vi.mock("next-auth/react", () => ({
 vi.mock("@/lib/contexts/theme-context", () => ({
   useTheme: () => ({
     theme: "light",
+    resolvedTheme: "normal",
+    country: "PT",
     setTheme: vi.fn(),
+    setCountry: vi.fn(),
     systemTheme: "light",
   }),
 }));
@@ -73,8 +76,8 @@ describe("Sidebar", () => {
     // Header collapse toggle should be present with Expand label
     expect(getByLabelText!("Expand Sidebar")).toBeDefined();
 
-    // Header text 'Domora' should be hidden when collapsed
-    expect(queryByText!("Domora")).toBeNull();
+    // Header text 'Situs' should be hidden when collapsed
+    expect(queryByText!("Situs")).toBeNull();
   });
 
   it("shows labels when expanded and username is visible", async () => {

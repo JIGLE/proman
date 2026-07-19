@@ -42,6 +42,7 @@ import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { tenantSchema, type TenantFormData } from "@/lib/schemas/tenant.schema";
 import { getActiveLease } from "@/lib/utils/lease-helpers";
+import { TenantRelationshipMap } from "@/components/features/tenant/tenant-relationship-map";
 
 interface TenantDetailModalProps {
   tenant: Tenant | null;
@@ -363,25 +364,11 @@ export function TenantDetailModal({
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="paymentStatus">Payment Status</Label>
-                <Select
-                  value={formData.paymentStatus}
-                  onValueChange={(value) =>
-                    setFormData({
-                      ...formData,
-                      paymentStatus: value as Tenant["paymentStatus"],
-                    })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="overdue">Overdue</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Label>Payment Status</Label>
+                <p className="text-sm text-muted-foreground">
+                  Derived from the rent ledger — record a payment or view the property&apos;s Rent
+                  Matrix to change it.
+                </p>
               </div>
 
               <div className="space-y-2">
@@ -451,6 +438,7 @@ export function TenantDetailModal({
                   <TabsTrigger value="overview">Overview</TabsTrigger>
                   <TabsTrigger value="lease">Lease</TabsTrigger>
                   <TabsTrigger value="payments">Payments</TabsTrigger>
+                  <TabsTrigger value="activity">Activity</TabsTrigger>
                 </TabsList>
 
                 {/* Overview tab */}
@@ -599,6 +587,11 @@ export function TenantDetailModal({
                       ))}
                     </div>
                   )}
+                </TabsContent>
+
+                {/* Activity tab — relationship-map strip */}
+                <TabsContent value="activity" className="mt-4">
+                  <TenantRelationshipMap tenantId={tenant.id} />
                 </TabsContent>
               </Tabs>
 

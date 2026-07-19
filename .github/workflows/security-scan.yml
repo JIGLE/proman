@@ -23,10 +23,10 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -80,10 +80,10 @@ jobs:
     timeout-minutes: 15
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
@@ -125,7 +125,9 @@ jobs:
     name: CodeQL Security Analysis
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    continue-on-error: true # Requires GitHub Advanced Security (unavailable on free private repos)
+    # Code scanning is free on public repositories (this repo is public) — no GitHub
+    # Advanced Security required. This is a real gate: a failed analysis fails the job,
+    # and findings are uploaded to the Security tab (Settings → Code security).
     permissions:
       actions: read
       contents: read
@@ -134,19 +136,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        language: ["javascript"]
+        language: ["javascript-typescript"]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
+          # JS/TS is interpreted — no build needed; build-mode: none is faster and avoids
+          # flaky autobuild now that this job is no longer continue-on-error.
+          build-mode: none
           queries: security-and-quality
-
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v4
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
@@ -157,10 +159,11 @@ jobs:
     name: Dependency Review
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
-    continue-on-error: true # Requires GitHub Advanced Security (unavailable on free private repos)
+    # Dependency review is free on public repositories — no GitHub Advanced Security
+    # required. Gates on critical-severity introductions (fail-on-severity below).
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Dependency Review
         uses: actions/dependency-review-action@v5
@@ -174,12 +177,12 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: TruffleHog Secret Scan
-        uses: trufflesecurity/trufflehog@v3.95.4
+        uses: trufflesecurity/trufflehog@v3.95.9
         with:
           path: ./
           base: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
@@ -194,13 +197,13 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
       - name: TruffleHog Unverified Scan
         id: trufflehog-unverified
-        uses: trufflesecurity/trufflehog@v3.95.4
+        uses: trufflesecurity/trufflehog@v3.95.9
         with:
           path: ./
           base: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}

@@ -126,10 +126,10 @@ export const SECTION_ROUTES = {
   home: "/dashboard",
   assets: "/portfolio",
   people: "/people",
-  maintenance: "/maintenance",
+  maintenance: "/operations",
   correspondence: "/correspondence",
   finance: "/financials",
-  insights: "/analytics",
+  insights: "/intelligence",
   settings: "/settings",
 } as const;
 

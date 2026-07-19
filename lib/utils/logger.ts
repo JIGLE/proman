@@ -96,6 +96,18 @@ const formatLogEntry = (entry: LogEntry): string => {
   return output;
 };
 
+// Strip CR/LF and other control characters so untrusted values (user input, external
+// errors) can't forge or split log lines when written to the console — log injection.
+const sanitizeLogText = (value: string): string => {
+  let out = "";
+  for (let i = 0; i < value.length; i++) {
+    const code = value.charCodeAt(i);
+    // Keep printable characters; replace C0 controls and DEL with a space.
+    out += code < 0x20 || code === 0x7f ? " " : value[i];
+  }
+  return out;
+};
+
 // Create a log entry
 const createLogEntry = (
   level: LogLevel,
@@ -106,7 +118,7 @@ const createLogEntry = (
   const entry: LogEntry = {
     timestamp: new Date().toISOString(),
     level,
-    message,
+    message: sanitizeLogText(message),
   };
 
   if (context && Object.keys(context).length > 0) {
@@ -115,8 +127,8 @@ const createLogEntry = (
 
   if (error) {
     entry.error = {
-      name: error.name,
-      message: error.message,
+      name: sanitizeLogText(error.name),
+      message: sanitizeLogText(error.message),
       stack: error.stack,
     };
   }

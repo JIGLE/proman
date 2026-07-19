@@ -79,8 +79,8 @@ FROM node:26-alpine AS runner
 ARG BUILD_VERSION
 ARG GIT_COMMIT
 ARG BUILD_TIME
-LABEL org.opencontainers.image.title="Proman" \
-      org.opencontainers.image.description="Property Management System" \
+LABEL org.opencontainers.image.title="Situs" \
+      org.opencontainers.image.description="Sovereign Capital System — property income, receipts and tax evidence" \
       org.opencontainers.image.version="${BUILD_VERSION}" \
       org.opencontainers.image.source="https://github.com/JIGLE/proman" \
       org.opencontainers.image.revision="${GIT_COMMIT}" \

@@ -25,10 +25,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -36,77 +33,22 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils/utils";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useTheme } from "@/lib/contexts/theme-context";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 
-interface UserSettings {
-  theme: "light" | "dark" | "system";
-  language: string;
-  defaultCurrency: "EUR" | "DKK" | "USD" | "GBP";
-  defaultTaxCountry: string | null;
-  emailNotifications: boolean;
-  taxReminderNotifications: boolean;
-  distributionNotifications: boolean;
-}
+const CORE_SECTIONS = [
+  { value: "account", label: "Account" },
+  { value: "tax", label: "Tax & Region" },
+  { value: "notifications", label: "Notifications" },
+  { value: "security", label: "Security" },
+  { value: "integrations", label: "Integrations" },
+  { value: "system", label: "System" },
+] as const;
 
-interface FiscalProfile {
-  fiscalResidency: string | null;
-  nhrStatus: boolean;
-  nhrYear: number | null;
-  ificiStatus: boolean;
-  ificiYear: number | null;
-}
-
-const defaultSettings: UserSettings = {
-  theme: "system",
-  language: "en",
-  defaultCurrency: "EUR",
-  defaultTaxCountry: null,
-  emailNotifications: true,
-  taxReminderNotifications: true,
-  distributionNotifications: true,
-};
-
-const defaultFiscalProfile: FiscalProfile = {
-  fiscalResidency: null,
-  nhrStatus: false,
-  nhrYear: null,
-  ificiStatus: false,
-  ificiYear: null,
-};
-
-const currencies = [
-  { value: "EUR", label: "Euro (€)", symbol: "€" },
-  { value: "DKK", label: "Danish Krone (kr)", symbol: "kr" },
-  { value: "USD", label: "US Dollar ($)", symbol: "$" },
-  { value: "GBP", label: "British Pound (£)", symbol: "£" },
-];
-
-const countries = [
-  { value: "PT", label: "Portugal" },
-  { value: "ES", label: "Spain" },
-  { value: "DK", label: "Denmark" },
-];
-
-const languages = [
-  { value: "en", label: "English" },
-  { value: "es", label: "Español" },
-  { value: "pt", label: "Português" },
-];
-
-const fiscalResidencyOptions = [
-  { value: "PT", label: "Portugal" },
-  { value: "ES", label: "Spain" },
-  { value: "FR", label: "France" },
-  { value: "DE", label: "Germany" },
-  { value: "IT", label: "Italy" },
-  { value: "GB", label: "United Kingdom" },
-  { value: "OTHER", label: "Other" },
-];
+type SectionValue = (typeof CORE_SECTIONS)[number]["value"] | "billing";
 
 export function SettingsView(): React.ReactElement {
   const { data: session } = useSession();
@@ -122,62 +64,53 @@ export function SettingsView(): React.ReactElement {
   const [justSaved, setJustSaved] = useState(false);
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [appVersion, setAppVersion] = useState<string>("");
-  const [systemInfo, setSystemInfo] = useState<{
-    status: string;
-    uptime: number;
-    environment: string;
-    checks: {
-      database: { status: string; latency_ms: number };
-      email: { status: string; provider?: string };
-    };
-  } | null>(null);
-  const [systemLoading, setSystemLoading] = useState(false);
 
-  // Fiscal profile state
-  const [fiscalProfile, setFiscalProfile] = useState<FiscalProfile>(defaultFiscalProfile);
-  const [fiscalLoading, setFiscalLoading] = useState(true);
-  const [fiscalSaving, setFiscalSaving] = useState(false);
-  const [fiscalHasChanges, setFiscalHasChanges] = useState(false);
+  const [billing, setBilling] = useState<BillingInfo | null>(null);
+  const [billingLoading, setBillingLoading] = useState(true);
+  // Whether to surface any subscription UI at all. Off on self-hosted instances
+  // (ENABLE_BILLING unset) so the account never sees subscription framing.
+  const showBilling = billing?.billingEnabled === true;
 
-  // MFA / TOTP state
-  const [totpEnabled, setTotpEnabled] = useState(false);
-  const [totpLoading, setTotpLoading] = useState(true);
-  const [totpSetupStep, setTotpSetupStep] = useState<"idle" | "qr" | "verify" | "backup">("idle");
-  const [totpQr, setTotpQr] = useState("");
-  const [totpSecret, setTotpSecret] = useState("");
-  const [totpCode, setTotpCode] = useState("");
-  const [totpBackupCodes, setTotpBackupCodes] = useState<string[]>([]);
-  const [totpWorking, setTotpWorking] = useState(false);
-
-  // Extract current locale from pathname
-  const currentLocale = pathname.split("/")[1] || "en";
-
-  const fetchSystemInfo = async () => {
-    setSystemLoading(true);
-    try {
-      const res = await fetch("/api/health");
-      if (res.ok) {
-        const data = await res.json();
-        setSystemInfo(data);
-      }
-    } catch {
-      // Health endpoint unavailable
-    } finally {
-      setSystemLoading(false);
-    }
-  };
+  const [activeSection, setActiveSection] = useState<SectionValue>(
+    (searchParams.get("tab") as SectionValue | null) ?? "account",
+  );
+  const sections = showBilling
+    ? [...CORE_SECTIONS, { value: "billing" as const, label: "Billing" }]
+    : CORE_SECTIONS;
 
   useEffect(() => {
     loadSettings();
-    loadFiscalProfile();
-    loadTotpStatus();
-    fetchSystemInfo();
+    loadBilling();
     fetch("/version.json")
       .then((r) => r.json())
       .then((d) => setAppVersion(d.version || ""))
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    const checkout = searchParams.get("checkout");
+    if (checkout === "success") {
+      success("Subscription updated — thank you!");
+    } else if (checkout === "canceled") {
+      showError("Checkout was canceled");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const loadBilling = async () => {
+    try {
+      const response = await fetch("/api/billing/subscription");
+      if (response.ok) {
+        const data = await response.json();
+        if (data.data) setBilling(data.data);
+      }
+    } catch (err) {
+      console.error("Failed to load billing info:", err);
+    } finally {
+      setBillingLoading(false);
+    }
+  };
 
   const loadSettings = async () => {
     if (!session?.user) {
@@ -919,101 +852,30 @@ export function SettingsView(): React.ReactElement {
                 size="sm"
                 onClick={() => router.push(`/${currentLocale}/settings/tax-rules`)}
               >
-                <Landmark className="h-4 w-4 mr-1.5" />
-                Open Tax Rules
-              </Button>
-            </CardContent>
-          </Card>
+                {section.label}
+              </button>
+            ))}
+          </div>
+        </nav>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Server className="h-5 w-5" />
-                System Status
-              </CardTitle>
-              <CardDescription>Server, database, and service health</CardDescription>
-            </CardHeader>
-            <CardContent className="max-w-lg space-y-4">
-              {systemLoading ? (
-                <div className="flex items-center justify-center h-16">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary" />
-                </div>
-              ) : systemInfo ? (
-                <>
-                  <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
-                    <div className="flex items-center gap-2">
-                      <Database className="h-4 w-4 text-muted-foreground" />
-                      <Label>Database</Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-block h-2 w-2 rounded-full ${
-                          systemInfo.checks.database.status === "healthy"
-                            ? "bg-[var(--color-success)]"
-                            : systemInfo.checks.database.status === "mock"
-                              ? "bg-amber-500"
-                              : "bg-[var(--color-destructive)]"
-                        }`}
-                      />
-                      <span className="text-sm text-muted-foreground capitalize">
-                        {systemInfo.checks.database.status}
-                      </span>
-                      {systemInfo.checks.database.latency_ms > 0 && (
-                        <span className="text-xs text-muted-foreground">
-                          ({systemInfo.checks.database.latency_ms}ms)
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
-                    <div className="flex items-center gap-2">
-                      <Activity className="h-4 w-4 text-muted-foreground" />
-                      <Label>Uptime</Label>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {Math.floor(systemInfo.uptime / 3600)}h{" "}
-                      {Math.floor((systemInfo.uptime % 3600) / 60)}m
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
-                    <div className="flex items-center gap-2">
-                      <HardDrive className="h-4 w-4 text-muted-foreground" />
-                      <Label>Environment</Label>
-                    </div>
-                    <span className="text-sm text-muted-foreground capitalize">
-                      {systemInfo.environment}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between py-2">
-                    <div className="flex items-center gap-2">
-                      <Bell className="h-4 w-4 text-muted-foreground" />
-                      <Label>Email Service</Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`inline-block h-2 w-2 rounded-full ${
-                          systemInfo.checks.email.status === "configured"
-                            ? "bg-[var(--color-success)]"
-                            : "bg-amber-500"
-                        }`}
-                      />
-                      <span className="text-sm text-muted-foreground capitalize">
-                        {systemInfo.checks.email.status}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="pt-2">
-                    <Button variant="outline" size="sm" onClick={fetchSystemInfo}>
-                      Refresh
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <p className="text-sm text-muted-foreground">Unable to fetch system information</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+        {/* Mobile section picker */}
+        <div className="md:hidden">
+          <Select
+            value={activeSection}
+            onValueChange={(value: string) => setActiveSection(value as SectionValue)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {sections.map((section) => (
+                <SelectItem key={section.value} value={section.value}>
+                  {section.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
         {/* Security tab */}
         <TabsContent value="security" className="mt-6 space-y-6">

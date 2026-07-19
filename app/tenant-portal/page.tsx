@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Building2, Mail } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import { ResendLinkForm } from "./resend-link-form";
 
 export default async function TenantPortalLandingPage(): Promise<React.ReactElement> {
   const t = await getTranslations("tenantPortal.landing");
@@ -37,6 +38,8 @@ export default async function TenantPortalLandingPage(): Promise<React.ReactElem
             <li>{t("step3")}</li>
           </ol>
         </div>
+
+        <ResendLinkForm />
 
         <div className="flex items-center gap-2 justify-center text-sm text-[var(--color-muted-foreground)]">
           <Mail className="h-4 w-4 text-[var(--color-muted-foreground)]" />

@@ -2,8 +2,8 @@ apiVersion: v2
 name: proman
 description: A Helm chart for deploying the Proman property management platform
 type: application
-version: 1.14.1
-appVersion: "1.14.1"
+version: 1.18.0
+appVersion: "1.18.0"
 home: https://github.com/JIGLE/proman
 sources:
   - https://github.com/JIGLE/proman
@@ -16,7 +16,7 @@ keywords:
 maintainers:
   - name: Proman Maintainers
     url: https://github.com/JIGLE
-icon: https://raw.githubusercontent.com/JIGLE/proman/main/public/proman-icon.svg
+icon: https://raw.githubusercontent.com/JIGLE/proman/main/public/situs-mark.svg
 annotations:
   truenas.category: "Productivity"
   truenas.recommended_min_memory: "512Mi"

@@ -89,17 +89,12 @@ export function DemoBanner() {
     setShowExtendPrompt(false);
   }, []);
 
-  const handleRestartTour = useCallback(() => {
-    // Dispatch custom event that the guided tour component listens for
-    window.dispatchEvent(new CustomEvent("proman:restart-tour"));
-  }, []);
-
   if (!isDemoMode) return null;
 
   const isLowTime = remaining < WARN_THRESHOLD_MS;
 
   return (
-    <div data-tour="demo-banner" role="status" aria-live="polite" className="sticky top-0 z-50">
+    <div role="status" aria-live="polite" className="sticky top-0 z-50">
       <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-amber-500/90 to-orange-500/90 backdrop-blur-sm px-3 py-1 text-xs font-medium text-amber-950 dark:from-amber-600/90 dark:to-orange-600/90 dark:text-amber-50 shadow-sm transition-all duration-200">
         {/* Left: status */}
         <div className="flex items-center gap-2 min-w-0">

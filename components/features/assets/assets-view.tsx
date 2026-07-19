@@ -282,7 +282,7 @@ export function AssetsView(): React.ReactElement {
             <DropdownMenuTrigger asChild>
               <Button className="gap-2">
                 <Plus className="h-4 w-4" />
-                Add
+                New asset
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52">

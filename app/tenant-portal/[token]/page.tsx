@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
+import { getCurrencyLocale, type Currency } from "@/lib/utils/currency";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/ui/card";
 import { Button } from "@/ui/button";
 import { Badge } from "@/ui/badge";
@@ -66,6 +67,7 @@ interface TenantPortalData {
       id: string;
       name: string;
       address: string;
+      currency?: Currency;
     };
   };
   invoices: Array<{
@@ -102,12 +104,16 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
   const router = useRouter();
   const t = useTranslations("tenantPortal.main");
   const tErrors = useTranslations("tenantPortal.errors");
+  const locale = useLocale();
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<TenantPortalData | null>(null);
   const [activeTab, setActiveTab] = useState("overview");
   const [processingPayment, setProcessingPayment] = useState<string | null>(null);
+  const [paymentMsg, setPaymentMsg] = useState<{ type: "success" | "error"; text: string } | null>(
+    null,
+  );
 
   // Maintenance state
   const [tickets, setTickets] = useState<TicketItem[]>([]);
@@ -244,11 +250,17 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
     }
   };
 
+  const currency: Currency = data?.tenant.property?.currency ?? "EUR";
+  const dateLocale = getCurrencyLocale(currency, locale);
+
   const formatCurrency = (amount: number) =>
-    new Intl.NumberFormat("pt-PT", { style: "currency", currency: "EUR" }).format(amount);
+    new Intl.NumberFormat(getCurrencyLocale(currency, locale), {
+      style: "currency",
+      currency,
+    }).format(amount);
 
   const formatDate = (dateString: string) =>
-    new Date(dateString).toLocaleDateString("pt-PT", {
+    new Date(dateString).toLocaleDateString(dateLocale, {
       day: "2-digit",
       month: "short",
       year: "numeric",
@@ -283,6 +295,7 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
   const handlePayInvoice = async (invoiceId: string, amount: number) => {
     if (!token || processingPayment) return;
     setProcessingPayment(invoiceId);
+    setPaymentMsg(null);
     try {
       const response = await fetch(`/api/tenant-portal/${token}/pay`, {
         method: "POST",
@@ -291,11 +304,14 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
       });
       if (!response.ok) {
         const err = await response.json();
-        throw new Error(err.error || "Payment failed");
+        throw new Error(err.error || t("paymentFailed"));
       }
       const result = await response.json();
       if (result.data?.clientSecret) {
-        alert(`Payment initiated. Reference: ${result.data.paymentIntentId}`);
+        setPaymentMsg({
+          type: "success",
+          text: t("paymentInitiated", { ref: result.data.paymentIntentId }),
+        });
       }
       const dataResponse = await fetch(`/api/tenant-portal/${token}`);
       if (dataResponse.ok) {
@@ -303,7 +319,10 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
         setData(refreshed.data);
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Payment failed");
+      setPaymentMsg({
+        type: "error",
+        text: err instanceof Error ? err.message : t("paymentFailed"),
+      });
     } finally {
       setProcessingPayment(null);
     }
@@ -738,6 +757,13 @@ export default function TenantPortalPage({ params }: TenantPortalPageProps) {
                       </div>
                     ))}
                   </div>
+                )}
+                {paymentMsg && (
+                  <p
+                    className={`mt-3 text-sm ${paymentMsg.type === "success" ? "text-[var(--color-success)]" : "text-[var(--color-destructive)]"}`}
+                  >
+                    {paymentMsg.text}
+                  </p>
                 )}
               </CardContent>
             </Card>

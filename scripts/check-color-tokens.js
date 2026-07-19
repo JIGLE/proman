@@ -2,10 +2,14 @@
 /**
  * Advisory design-token audit.
  *
- * Flags hardcoded Tailwind color literals (e.g. `bg-red-500`, `text-green-400`)
- * in components/ that should instead use the semantic design tokens defined in
- * app/globals.css (`var(--color-*)` via `bg-[var(--color-success)]`, the Badge
- * `success|warning|destructive|info` variants, etc.).
+ * Flags hardcoded Tailwind color literals in components/ and app/ that should
+ * instead use the semantic design tokens defined in app/globals.css
+ * (`var(--color-*)` via `bg-[var(--color-success)]`, the Badge
+ * `success|warning|destructive|info` variants, etc.). Two kinds are caught:
+ *   - semantic literals (`bg-red-500`, `text-green-400`) — wrong hue channel;
+ *   - neutral literals (`bg-zinc-900`, `text-zinc-400`) — these DON'T remap per
+ *     theme, so they render dark-on-dark in the light and OLED themes. This is
+ *     the higher-severity class: it silently breaks the non-default themes.
  *
  * This is intentionally NON-BLOCKING: it prints a report and always exits 0, so
  * it never breaks CI on the existing backlog. Use it to ratchet the count down
@@ -19,7 +23,9 @@ const path = require("path");
 const ROOT = path.resolve(__dirname, "..");
 const SCAN_DIRS = ["components", "app"];
 const COLOR_FAMILIES =
-  "red|green|blue|amber|yellow|purple|violet|indigo|emerald|rose|orange|pink|fuchsia|sky|cyan|teal|lime";
+  "red|green|blue|amber|yellow|purple|violet|indigo|emerald|rose|orange|pink|fuchsia|sky|cyan|teal|lime|" +
+  // Neutrals — these are the theme-breakers: they never remap for light/OLED.
+  "zinc|slate|gray|neutral|stone";
 const UTILITY = "bg|text|border|ring|from|to|via|fill|stroke|shadow|divide|outline|decoration";
 const PATTERN = new RegExp(`\\b(?:${UTILITY})-(?:${COLOR_FAMILIES})-[0-9]{2,3}\\b`, "g");
 
@@ -33,8 +39,13 @@ const ALLOWLIST = [
   path.join("app", "[locale]", "page.tsx"),
 ];
 
-/** Baseline count at the time the ratchet was introduced. Lower this as you migrate. */
-const BASELINE = 639;
+/**
+ * Baseline count — the ratchet ceiling for `--strict`. Lower this as you migrate.
+ * Raised from 639 (semantic-only) to 1192 when neutral families were added to the
+ * scan, net of the flagship-screen migration (property list/detail/sheet,
+ * financials). Every token migration should drive this number DOWN.
+ */
+const BASELINE = 1192;
 
 function walk(dir, acc) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

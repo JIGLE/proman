@@ -6,7 +6,14 @@ This document defines the **non-negotiable rules** for all UI development in Pro
 
 ## Information Architecture
 
-### Top-Level Navigation (7 Items Max)
+> **Status (2026-07-09, roadmap 3.3):** this flat "Assets/People/Finance" grouping was
+> **not adopted**. Three IA proposals existed across this doc, `docs/UX_AUDIT_2026.md`,
+> and `docs/UX_IMPROVEMENT_PLAN.md`; only one was actually built. The canonical IA is
+> `docs/UX_AUDIT_2026.md`'s Operations/Intelligence(Reports)/System grouping — already
+> shipped in `lib/portal/access.ts` and confirmed live in that audit's own §C2 status
+> note. Kept here for history; do not use this structure as a reference for new nav work.
+
+### Top-Level Navigation (7 Items Max) — superseded, see status note above
 
 ```
 Home         → Dashboard overview

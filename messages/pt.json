@@ -1,7 +1,20 @@
 {
+  "people": {
+    "title": "Pessoas",
+    "subtitle": "Gerir inquilinos, proprietários e prestadores de serviços.",
+    "totalTenants": "Total de inquilinos",
+    "activeTenants": "Inquilinos ativos",
+    "totalOwners": "Total de proprietários",
+    "tenants": "Inquilinos",
+    "owners": "Proprietários",
+    "serviceProviders": "Prestadores",
+    "communications": "Comunicações",
+    "addTenant": "Adicionar inquilino",
+    "addOwner": "Adicionar proprietário"
+  },
   "portfolio": {
     "badge": "Área do portfólio",
-    "title": "Portfólio",
+    "title": "Inventário do Portfólio",
     "addProperty": "Adicionar imóvel",
     "openMap": "Abrir mapa",
     "stats": {
@@ -74,7 +87,7 @@
     "home": "Início",
     "properties": "Imóveis",
     "tenants": "Inquilinos",
-    "people": "Inquilinos",
+    "people": "Pessoas",
     "leases": "Contratos",
     "payments": "Pagamentos",
     "financials": "Contas",
@@ -113,8 +126,6 @@
     "portfolioOverview": "Visão Geral das Propriedades",
     "recentProperties": "Propriedades Recentes",
     "viewAll": "Ver tudo",
-    "achievements": "Conquistas",
-    "achievementsDescription": "Marcos e reconhecimentos pelo sucesso na gestão de propriedades",
     "latestTenantPayments": "Últimos pagamentos de inquilinos",
     "currentPropertyConditions": "Condições atuais das propriedades",
     "paid": "Pago",
@@ -220,6 +231,7 @@
     "docExpiryWarning": "{count} documento(s) a expirar em 60 dias",
     "allClear": "Tudo em ordem",
     "allClearDesc": "Sem rendas em falta, pagamentos em atraso ou manutenção urgente.",
+    "streakMonths": "{count} meses seguidos com a renda totalmente cobrada",
     "oneItemNeedsAttention": "1 item precisa da sua atenção",
     "itemsNeedAttention": "{count} itens precisam da sua atenção",
     "setupComplete": "Configuração concluída"
@@ -288,76 +300,84 @@
   },
   "emptyState": {
     "properties": {
-      "title": "Nenhum imóvel ainda",
-      "description": "Adicione o seu primeiro imóvel para começar a gerir o seu portfólio."
+      "title": "Ainda não há imóveis",
+      "description": "Adicione o seu primeiro imóvel para começar a gerir o seu portefólio. Acompanhe ocupação, receita e manutenção num só lugar.",
+      "action": "Adicionar Imóvel"
     },
     "tenants": {
-      "title": "Nenhum inquilino ainda",
-      "description": "Depois de ter imóveis, adicione inquilinos para acompanhar contratos e pagamentos."
+      "title": "Ainda não há inquilinos",
+      "description": "Depois de configurar imóveis, adicione inquilinos para acompanhar contratos, pagamentos e comunicações.",
+      "action": "Adicionar Inquilino"
     },
     "payments": {
       "title": "Nenhum pagamento registado",
-      "description": "Comece a registar pagamentos de renda para acompanhar a receita."
+      "description": "Comece a registar pagamentos de renda para acompanhar a sua receita e gerar relatórios financeiros automaticamente. Aceda a um contrato para registar o primeiro pagamento.",
+      "action": "Registar Pagamento"
     },
     "generic": {
-      "title": "Nada aqui ainda",
-      "description": "Comece por adicionar o seu primeiro item."
+      "title": "Ainda não há nada aqui",
+      "description": "Comece por adicionar o seu primeiro item.",
+      "action": "Adicionar Novo"
     },
     "leases": {
-      "title": "Nenhum contrato ainda",
-      "description": "Crie contratos de arrendamento para formalizar as relações com inquilinos.",
-      "action": "Adicionar Primeiro Contrato"
+      "title": "Nenhum contrato criado",
+      "description": "Crie contratos de arrendamento para formalizar relações com inquilinos e automatizar lembretes de renovação. Comece por adicionar um imóvel e um inquilino.",
+      "action": "Criar Contrato"
     },
     "maintenance": {
-      "title": "Sem pedidos de manutenção",
-      "description": "Crie um novo pedido para acompanhar solicitações de manutenção.",
+      "title": "Nenhum pedido de manutenção",
+      "description": "Quando os inquilinos reportarem problemas, aparecerão aqui. Também pode criar pedidos proativamente.",
       "action": "Criar Pedido"
     },
     "correspondence": {
-      "title": "Nenhum modelo ainda",
-      "description": "Crie modelos de correspondência para agilizar as comunicações.",
-      "action": "Criar Modelo"
+      "title": "Ainda não há correspondência",
+      "description": "Envie avisos, lembretes e atualizações aos seus inquilinos. Todo o histórico de comunicação fica registado aqui.",
+      "action": "Enviar Mensagem"
     },
     "reports": {
       "title": "Nenhum relatório disponível",
-      "description": "Os relatórios são gerados a partir dos dados dos imóveis e finanças."
+      "description": "Os relatórios são gerados a partir dos seus dados de imóveis e financeiros. Adicione imóveis e registe pagamentos para desbloquear informações.",
+      "action": "Começar"
     },
     "owners": {
-      "title": "Nenhum proprietário ainda",
-      "description": "Adicione proprietários para acompanhar a co-propriedade.",
-      "action": "Adicionar Primeiro Proprietário"
+      "title": "Ainda não há proprietários",
+      "description": "Adicione proprietários para começar a acompanhar a propriedade partilhada e divisões de receita.",
+      "action": "Adicionar Proprietário"
     },
     "receipts": {
-      "title": "Nenhum recibo ainda",
-      "description": "Crie recibos de pagamento para manter o registo dos pagamentos recebidos.",
-      "action": "Criar Primeiro Recibo"
+      "title": "Ainda não há recibos",
+      "description": "Crie recibos de pagamento para manter um registo das rendas e outros pagamentos recebidos. Registe um pagamento para gerar recibos automaticamente.",
+      "action": "Criar Recibo"
     },
     "expenses": {
       "title": "Nenhuma despesa registada",
-      "description": "Registe despesas dos imóveis para monitorizar custos."
+      "description": "Acompanhe as despesas dos imóveis para monitorizar custos e gerar relatórios financeiros precisos.",
+      "action": "Adicionar Despesa"
     },
     "invoices": {
-      "title": "Nenhuma fatura ainda",
-      "description": "Crie faturas para inquilinos para formalizar as obrigações de pagamento.",
+      "title": "Ainda não há faturas",
+      "description": "Crie faturas para os inquilinos para formalizar obrigações de pagamento e acompanhar a faturação.",
       "action": "Criar Fatura"
     },
     "contracts": {
       "title": "Nenhum contrato encontrado",
-      "description": "Os contratos são criados a partir dos contratos de arrendamento."
+      "description": "Os contratos representam acordos formais. Crie contratos de arrendamento para ver aqui os contratos associados.",
+      "action": "Ver Contratos"
     },
     "documents": {
-      "title": "Nenhum documento ainda",
-      "description": "Carregue documentos para manter os registos organizados.",
+      "title": "Ainda não há documentos",
+      "description": "Carregue documentos para manter organizados os registos de imóveis, contratos e correspondência.",
       "action": "Carregar Documento"
     },
     "contacts": {
       "title": "Nenhum contacto encontrado",
-      "description": "Os contactos são preenchidos a partir dos inquilinos e proprietários."
+      "description": "Os contactos são preenchidos a partir dos seus inquilinos, proprietários e prestadores de serviços.",
+      "action": "Adicionar Contacto"
     },
     "units": {
-      "title": "Nenhuma unidade ainda",
-      "description": "Adicione unidades a este imóvel para acompanhar os espaços individuais.",
-      "action": "Adicionar Primeira Unidade"
+      "title": "Ainda não há unidades",
+      "description": "Adicione unidades a este imóvel para acompanhar espaços individuais, inquilinos e contratos.",
+      "action": "Adicionar Unidade"
     },
     "noResults": {
       "title": "Nenhum resultado encontrado",
@@ -387,20 +407,22 @@
     "entryTenant": "Sou inquilino",
     "entryTenantDesc": "Aceda ao seu portal de arrendamento",
     "hero": "Receba rendas. Emita recibos. Cumpra a lei.",
-    "subtitle": "O Domora automatiza o ciclo mensal de conformidade para senhorios em Portugal e Espanha — do acompanhamento de pagamento ao recibo eletrónico AT e às exportações fiscais IRS / IRPF.",
+    "subtitle": "O Lares automatiza o ciclo mensal de conformidade para senhorios em Portugal e Espanha — do acompanhamento de pagamento ao recibo eletrónico AT e às exportações fiscais IRS / IRPF.",
     "cta": "Entrar",
     "headerCta": "Começar",
     "navHowItWorks": "Como funciona",
     "navWorkflow": "Fluxo",
     "demoCta": "Ver demo",
-    "secondaryCta": "Ver como funciona",
+    "secondaryCta": "Ver fluxo do produto",
     "microcopy": "Sem cartão. Sem configuração. Demonstração guiada em menos de 2 minutos.",
     "tenantPortalNote": "É inquilino?",
     "tenantPortalLink": "Aceda ao seu portal aqui",
     "chips": {
-      "simple": "Um fluxo da renda ao recibo",
-      "compliance": "Conformidade PT/ES no mesmo contexto",
-      "workflow": "Contratos, inquilinos e pagamentos ligados"
+      "matching": "Correspondência de movimentos bancários",
+      "receipts": "Automação de recibos",
+      "documents": "Inteligência documental",
+      "tax": "Conector fiscal pronto",
+      "palette": "Sistema de paleta da UE"
     },
     "preview": {
       "label": "Pré-visualização do produto",
@@ -543,9 +565,9 @@
         "name": "Business",
         "price": "€49",
         "description": "Para gestores de imóveis com portfolios maiores.",
-        "cta": "Contactar vendas",
+        "cta": "Começar",
         "f1": "Imóveis ilimitados",
-        "f2": "Acesso de equipa (até 5 utilizadores)",
+        "f2": "Acesso de equipa (brevemente)",
         "f3": "Exportação NRUA (Espanha)",
         "f4": "Exportação SAF-T PT",
         "f5": "Suporte prioritário",
@@ -594,7 +616,102 @@
           "description": "Registo pronto para a AT"
         }
       }
-    }
+    },
+    "primaryCta": "Comece com o seu portefólio",
+    "requestDemo": "Pedir demonstração",
+    "signIn": "Entrar",
+    "hero2": "Rendimentos, recibos e prova fiscal sob controlo.",
+    "subtitle2": "O Situs ajuda proprietários a acompanhar pagamentos de renda, alocar transferências em atraso ao mês de referência correto, emitir recibos, arquivar documentos, gerir despesas e preparar prova pronta para impostos em carteiras de imóveis da UE.",
+    "floating": {
+      "income": "Rendimento previsto este mês",
+      "receipts": "Recibos a rever",
+      "health": "Saúde da carteira"
+    },
+    "system": {
+      "eyebrow": "Arquitetura do sistema",
+      "title": "Construído em torno do fluxo real do proprietário.",
+      "copy": "A cadeia mais importante é simples: pagamento detetado, mês de referência atribuído, recibo emitido, recibo arquivado, estado fiscal atualizado.",
+      "m1label": "01 // Banca",
+      "m1title": "Detetar pagamentos",
+      "m1body": "Ligue movimentos bancários e associe transferências recebidas a inquilinos, contratos e imóveis.",
+      "m2label": "02 // Alocação",
+      "m2title": "Referenciar o mês certo",
+      "m2body": "Aloque pagamentos ao mês seguinte quando em dia, ou ao período mais antigo por pagar quando em atraso.",
+      "m3label": "03 // Recibos",
+      "m3title": "Emitir e arquivar",
+      "m3body": "Crie rascunhos de recibo, reveja-os, submeta ou exporte, e guarde o PDF no ano do imóvel correto."
+    },
+    "flow": {
+      "eyebrow": "Ciclo pagamento-a-recibo",
+      "title": "Do movimento bancário à prova fiscal.",
+      "s1t": "Importar movimento",
+      "s1b": "A sincronização bancária deteta novas transferências recebidas.",
+      "s2t": "Associar contrato",
+      "s2b": "Remetente, IBAN, valor e referência sugerem o contrato.",
+      "s3t": "Atribuir mês",
+      "s3b": "Inquilinos em dia vão para o mês seguinte; atrasos liquidam o mês mais antigo por pagar.",
+      "s4t": "Emitir recibo",
+      "s4b": "O rascunho do recibo é revisto, emitido e opcionalmente submetido à autoridade fiscal.",
+      "s5t": "Arquivar prova",
+      "s5b": "Recibo, fatura e trilho de auditoria são associados a imóvel, ano e mês."
+    },
+    "pillars": {
+      "eyebrow": "Pilares do produto",
+      "title": "Um centro de comando para a propriedade.",
+      "copy": "O Situs combina estrutura da carteira, finanças, operações, pessoas, documentos e inteligência numa interface centrada no proprietário.",
+      "portfolioLabel": "Portefólio",
+      "portfolioTitle": "Inventário estrutural",
+      "portfolioBody": "Gira imóveis, frações, quotas de propriedade, contratos e itens de atenção atuais.",
+      "financeLabel": "Finanças",
+      "financeTitle": "Matriz de rendas",
+      "financeBody": "Acompanhe cada mês: pago, em atraso, parcial, vencido, recibo emitido e registado fiscalmente.",
+      "documentsLabel": "Documentos",
+      "documentsTitle": "Arquivo inteligente",
+      "documentsBody": "Guarde contratos, recibos, faturas e documentos fiscais por imóvel, ano e tipo.",
+      "expensesLabel": "Despesas",
+      "expensesTitle": "Prova de dedução",
+      "expensesBody": "OCR de faturas, classifique despesas dedutíveis e associe-as ao ano fiscal correto.",
+      "operationsLabel": "Operações",
+      "operationsTitle": "Controlo de tarefas",
+      "operationsBody": "Acompanhe inspeções, tarefas de manutenção, prestadores, prova e obrigações recorrentes.",
+      "intelligenceLabel": "Inteligência",
+      "intelligenceTitle": "Estimativas explicáveis",
+      "intelligenceBody": "Compreenda reserva fiscal, rendimento, risco de atrasos e confiança documental com rastreio de origem."
+    },
+    "preview2": {
+      "eyebrow": "Pré-visualização da interface",
+      "title": "Centro de Controlo.",
+      "copy": "Uma interface silenciosa e retilínea concebida para sessões longas, dados densos e decisões sérias.",
+      "greeting": "Boa tarde, José.",
+      "healthLabel": "Saúde da carteira",
+      "incomeLabel": "Rendimento previsto",
+      "queueLabel": "Fila de recibos",
+      "missionTitle": "Centro de Controlo",
+      "m1": "Renda em atraso de João Silva",
+      "m1tag": "Contrato",
+      "m2": "Tranche de IMI a pagar",
+      "m2tag": "Imposto",
+      "m3": "Rascunho de recibo por rever",
+      "m3tag": "Recibo",
+      "timelineTitle": "Cronologia de pagamento",
+      "t1": "Pagamento de 1 jun",
+      "t1tag": "Ref: Jul",
+      "t2": "Pagamento em atraso alocado",
+      "t2tag": "Mais antigo por pagar",
+      "t3": "Recibo arquivado",
+      "t3tag": "Guardado"
+    },
+    "closing2": {
+      "title": "Traga cada período de renda, recibo e documento à vista.",
+      "copy": "O Situs foi concebido para proprietários que precisam que a história do pagamento seja clara: o que chegou, a que mês pertence, que recibo foi emitido e onde está guardada a prova.",
+      "primary": "Pedir demonstração",
+      "secondary": "Ver arquitetura do produto"
+    },
+    "footer2": {
+      "tagline": "Situs // Sovereign Capital System",
+      "modules": "Banca · Recibos · Documentos · Prova Fiscal"
+    },
+    "createAccount": "Criar conta"
   },
   "errors": {
     "notFound": {
@@ -769,7 +886,27 @@
     "documentUploaded": "Documento Carregado",
     "rentReceiptDue": "Recibo de Renda Pendente",
     "nruaRegistration": "Registo NRUA Necessário",
-    "markAllRead": "Marcar Tudo como Lido"
+    "markAllRead": "Marcar Tudo como Lido",
+    "email": {
+      "rentReminder": {
+        "subject": "Pagamento de renda vence em 5 dias — {property}",
+        "body": "O pagamento de {amount} de {tenant} para {property} vence em {date}."
+      },
+      "overdueNotice": {
+        "subject": "Pagamento em atraso há {days, plural, one {# dia} other {# dias}} — {property}",
+        "body": "O pagamento de {amount} de {tenant} para {property} está em atraso há {days, plural, one {# dia} other {# dias}}."
+      },
+      "leaseRenewal": {
+        "subject": "Contrato expira em 60 dias — {property}",
+        "body": "O contrato de {tenant} em {property} expira em {date}. Considere a renovação ou o envio de aviso."
+      },
+      "receiptDeadline": {
+        "subject": "Prazo do recibo de renda termina amanhã — {property}",
+        "body": "É necessário emitir um recibo de renda para {tenant} em {property} (pagamento de {amount}) até amanhã, para cumprir o prazo legal de 5 dias."
+      },
+      "footer": "Está a receber este email porque as notificações por email estão ativadas nas suas definições da Lares.",
+      "viewInApp": "Ver na Lares"
+    }
   },
   "owners": {
     "title": "Proprietários",
@@ -818,6 +955,9 @@
       "payments": "Pagamentos",
       "receipts": "Recibos",
       "invoices": "Faturas",
+      "invoiceLabel": "Fatura",
+      "paymentInitiated": "Pagamento iniciado. Referência: {ref}",
+      "paymentFailed": "Falha no pagamento. Por favor tente novamente.",
       "allCaughtUp": "Está tudo em dia",
       "noDuePayments": "Sem pagamentos em dívida agora. A sua próxima renda está agendada normalmente.",
       "monthlyRent": "Renda Mensal",
@@ -1069,7 +1209,8 @@
       "maintenance": "Manutenção",
       "payments": "Pagamentos",
       "expenses": "Despesas",
-      "units": "Unidades"
+      "units": "Unidades",
+      "audit": "Auditoria"
     },
     "stats": {
       "tenants": "Inquilinos",
@@ -1156,12 +1297,29 @@
   "insights": {
     "title": "Análises",
     "description": "Desempenho e análise do portfólio",
-    "occupancyRate": "Taxa de Ocupação",
-    "severity": {
-      "danger": "Crítico",
-      "warning": "Aviso",
-      "info": "Informação"
-    }
+    "subtitle": "Resumo executivo do desempenho do seu portefólio",
+    "refresh": "Atualizar",
+    "kpiMonthlyRevenue": "Receita Mensal",
+    "kpiOccupancy": "Ocupação",
+    "kpiActiveTenants": "Inquilinos Ativos",
+    "kpiAvgRent": "Renda Média",
+    "ofTotal": "de {total} no total",
+    "vsLastMonth": "{value}% face ao mês anterior",
+    "revenueTrend": "Tendência de Receita",
+    "last6Months": "Últimos 6 meses",
+    "noRevenueData": "Ainda sem dados de receita — registe pagamentos para ver tendências",
+    "portfolioMix": "Composição do Portefólio",
+    "addPropertiesToSeeBreakdown": "Adicione imóveis para ver a distribuição",
+    "upcomingLeaseExpirations": "Contratos a Terminar em Breve",
+    "viewAll": "Ver tudo",
+    "unknownTenant": "Inquilino desconhecido",
+    "unknownProperty": "Imóvel desconhecido",
+    "expired": "Expirado",
+    "daysLeft": "faltam {count}d",
+    "analyticsDashboard": "Painel de Análise",
+    "analyticsDashboardDesc": "Gráficos interativos, KPIs, indicadores de ocupação e tabelas de desempenho de imóveis",
+    "financialReports": "Relatórios Financeiros",
+    "financialReportsDesc": "Gere e exporte resumos financeiros, relatórios fiscais e mapas de renda"
   },
   "reports": {
     "title": "Relatórios",
@@ -1197,7 +1355,7 @@
     "banner": "Modo Demo – As alterações não são guardadas",
     "exitButton": "Sair do Demo",
     "preparing": "A preparar o ambiente de demonstração...",
-    "title": "Domora Demo",
+    "title": "Lares Demo",
     "readOnly": "Esta funcionalidade é apenas de leitura no modo demo",
     "changesNotSaved": "Modo demo: as alterações não são guardadas"
   },
@@ -1211,7 +1369,7 @@
     "tooManyRequests": "Demasiados pedidos. Por favor tente novamente em {retryAfter} segundos."
   },
   "footer": {
-    "copyright": "© {year} Domora. Todos os direitos reservados.",
+    "copyright": "© {year} Lares. Todos os direitos reservados.",
     "privacy": "Política de Privacidade",
     "terms": "Termos de Serviço"
   },
@@ -1300,5 +1458,81 @@
     "loadingIncome": "A carregar dados de rendimento...",
     "portugal": "Portugal",
     "spain": "Espanha"
+  },
+  "paymentMatrix": {
+    "title": "Matriz de Acompanhamento de Pagamentos",
+    "subtitle": "Visão geral mensal do estado de pagamento de todos os inquilinos",
+    "detailed": "Detalhado",
+    "heatmap": "Mapa de Calor",
+    "allStatus": "Todos os Estados",
+    "paid": "Pago",
+    "pending": "Pendente",
+    "overdue": "Em Atraso",
+    "export": "Exportar",
+    "totalExpected": "Total Esperado",
+    "forYear": "Para {year}",
+    "totalReceived": "Total Recebido",
+    "paidAmounts": "Valores pagos",
+    "outstanding": "Em Dívida",
+    "pendingPayments": "Pagamentos pendentes",
+    "collectionRate": "Taxa de Cobrança",
+    "paymentSuccessRate": "Taxa de sucesso de pagamento",
+    "matrixTitle": "Matriz de Pagamentos - {year}",
+    "legend": "Verde: Pago • Amarelo: Pendente • Vermelho: Em atraso • Cinzento: Sem pagamento devido",
+    "tenant": "Inquilino",
+    "total": "Total",
+    "perMonth": "/mês",
+    "ofExpected": "de {amount}",
+    "cellTooltip": "{status} em {date} — {amount}",
+    "overdueTooltip": "Pagamento em atraso",
+    "noPaymentTooltip": "Sem pagamento",
+    "noPaymentDue": "Sem pagamento devido",
+    "noTenantsYet": "Ainda Não Há Inquilinos",
+    "addTenantsToTrack": "Adicione inquilinos para começar a acompanhar pagamentos"
+  },
+  "notificationCenter": {
+    "title": "Notificações",
+    "bellAriaLabel": "Notificações",
+    "bellAriaLabelUnread": "Notificações ({count} por ler)",
+    "newBadge": "{count} novas",
+    "markAllRead": "Marcar tudo como lido",
+    "markAllAsReadLabel": "Marcar tudo como lido",
+    "closeLabel": "Fechar notificações",
+    "all": "Todas ({count})",
+    "unread": "Por ler ({count})",
+    "noUnreadNotifications": "Sem notificações por ler",
+    "noNotifications": "Sem notificações",
+    "allCaughtUp": "Está tudo em dia!",
+    "notificationsWillAppear": "As notificações aparecerão aqui",
+    "clearAll": "Limpar tudo",
+    "clearAllLabel": "Limpar todas as notificações",
+    "settings": "Definições",
+    "settingsLabel": "Definições de notificações",
+    "markAsReadLabel": "Marcar como lida",
+    "deleteLabel": "Eliminar",
+    "justNow": "Agora mesmo",
+    "minutesAgo": "há {count}m",
+    "hoursAgo": "há {count}h",
+    "daysAgo": "há {count}d",
+    "priority": {
+      "low": "Baixa",
+      "medium": "Média",
+      "high": "Alta",
+      "urgent": "Urgente"
+    }
+  },
+  "portfolioTree": {
+    "title": "Inventário estrutural da carteira",
+    "empty": "Ainda sem imóveis. Adicione o seu primeiro ativo para o ver aqui.",
+    "density": "Densidade das linhas",
+    "densityCompact": "Compacto",
+    "densityComfortable": "Confortável",
+    "unclustered": "Sem agrupamento",
+    "dotOverdue": "Renda em atraso",
+    "dotTickets": "Pedidos de manutenção abertos",
+    "dotLease": "Janela de renovação do contrato",
+    "legend": "Sinais",
+    "collapse": "Recolher painel",
+    "expand": "Expandir painel"
   }
 }

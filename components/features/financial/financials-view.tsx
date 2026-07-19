@@ -346,7 +346,9 @@ export function FinancialsView(): React.ReactElement {
                       >
                         <SelectTrigger
                           id="property"
-                          className={dialog.formErrors.propertyId ? "border-red-500" : ""}
+                          className={
+                            dialog.formErrors.propertyId ? "border-[var(--color-destructive)]" : ""
+                          }
                         >
                           <SelectValue placeholder="Select property" />
                         </SelectTrigger>
@@ -372,7 +374,9 @@ export function FinancialsView(): React.ReactElement {
                       >
                         <SelectTrigger
                           id="category"
-                          className={dialog.formErrors.category ? "border-red-500" : ""}
+                          className={
+                            dialog.formErrors.category ? "border-[var(--color-destructive)]" : ""
+                          }
                         >
                           <SelectValue placeholder="Select category" />
                         </SelectTrigger>
@@ -403,7 +407,9 @@ export function FinancialsView(): React.ReactElement {
                             amount: parseFloat(e.target.value),
                           })
                         }
-                        className={dialog.formErrors.amount ? "border-red-500" : ""}
+                        className={
+                          dialog.formErrors.amount ? "border-[var(--color-destructive)]" : ""
+                        }
                       />
                       {dialog.formErrors.amount && (
                         <p className="text-sm text-destructive">{dialog.formErrors.amount}</p>
@@ -416,7 +422,9 @@ export function FinancialsView(): React.ReactElement {
                         type="date"
                         value={dialog.formData.date}
                         onChange={(e) => dialog.updateFormData({ date: e.target.value })}
-                        className={dialog.formErrors.date ? "border-red-500" : ""}
+                        className={
+                          dialog.formErrors.date ? "border-[var(--color-destructive)]" : ""
+                        }
                       />
                       {dialog.formErrors.date && (
                         <p className="text-sm text-destructive">{dialog.formErrors.date}</p>
@@ -543,7 +551,7 @@ export function FinancialsView(): React.ReactElement {
                 <TrendingUp className="h-4 w-4 text-green-500" aria-hidden="true" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-[var(--color-foreground)]">
+                <div className="text-2xl font-bold text-[var(--color-foreground)] tabular-nums">
                   {formatCurrency(metrics.totalIncome)}
                 </div>
                 <p className="text-xs text-[var(--color-muted-foreground)]">
@@ -559,7 +567,7 @@ export function FinancialsView(): React.ReactElement {
                 <TrendingDown className="h-4 w-4 text-red-500" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-[var(--color-foreground)]">
+                <div className="text-2xl font-bold text-[var(--color-foreground)] tabular-nums">
                   {formatCurrency(metrics.totalExpenses)}
                 </div>
                 <p className="text-xs text-[var(--color-muted-foreground)]">
@@ -575,15 +583,19 @@ export function FinancialsView(): React.ReactElement {
                 <DollarSign
                   className={cn(
                     "h-4 w-4",
-                    metrics.netProfit >= 0 ? "text-green-500" : "text-red-500",
+                    metrics.netProfit >= 0
+                      ? "text-[var(--color-success)]"
+                      : "text-[var(--color-destructive)]",
                   )}
                 />
               </CardHeader>
               <CardContent>
                 <div
                   className={cn(
-                    "text-2xl font-bold",
-                    metrics.netProfit >= 0 ? "text-green-500" : "text-red-500",
+                    "text-2xl font-bold tabular-nums",
+                    metrics.netProfit >= 0
+                      ? "text-[var(--color-success)]"
+                      : "text-[var(--color-destructive)]",
                   )}
                 >
                   {formatCurrency(metrics.netProfit)}
@@ -764,16 +776,18 @@ export function FinancialsView(): React.ReactElement {
                               className={cn(
                                 "text-xs px-2 py-0.5 rounded-full font-medium shrink-0",
                                 receipt.status === "paid"
-                                  ? "bg-green-900/40 text-green-400"
-                                  : "bg-yellow-900/40 text-yellow-400",
+                                  ? "bg-[var(--color-success-muted)] text-[var(--color-success)]"
+                                  : "bg-[var(--color-warning-muted)] text-[var(--color-warning)]",
                               )}
                             >
                               {receipt.status}
                             </span>
                             <span
                               className={cn(
-                                "font-semibold text-sm shrink-0",
-                                receipt.status === "paid" ? "text-green-400" : "text-yellow-400",
+                                "font-semibold text-sm shrink-0 tabular-nums",
+                                receipt.status === "paid"
+                                  ? "text-[var(--color-success)]"
+                                  : "text-[var(--color-warning)]",
                               )}
                             >
                               {formatCurrency(receipt.amount)}
@@ -806,8 +820,8 @@ export function FinancialsView(): React.ReactElement {
                       .map((expense) => (
                         <div key={expense.id} className="flex items-center justify-between">
                           <div className="flex items-center gap-3">
-                            <div className="p-2 bg-red-900/20 rounded-full shrink-0">
-                              <FileText className="w-4 h-4 text-red-500" />
+                            <div className="p-2 bg-[var(--color-error-muted)] rounded-full shrink-0">
+                              <FileText className="w-4 h-4 text-[var(--color-destructive)]" />
                             </div>
                             <div className="min-w-0">
                               <p className="text-sm font-medium text-[var(--color-foreground)]">
@@ -819,7 +833,7 @@ export function FinancialsView(): React.ReactElement {
                               </p>
                             </div>
                           </div>
-                          <div className="text-sm font-bold text-red-500 shrink-0">
+                          <div className="text-sm font-bold text-[var(--color-destructive)] shrink-0 tabular-nums">
                             -{formatCurrency(expense.amount)}
                           </div>
                         </div>

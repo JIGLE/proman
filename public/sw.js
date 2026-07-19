@@ -1,5 +1,5 @@
 /*
- * Domora service worker — dependency-free.
+ * Situs service worker — dependency-free.
  *
  * Goals (the "installable + basic offline" tier):
  *  - Satisfy Chrome's installability criteria (registered SW with a fetch handler).
@@ -10,7 +10,7 @@
  *    calls or auth.
  */
 
-const VERSION = "domora-v1";
+const VERSION = "situs-v1";
 const SHELL_CACHE = `${VERSION}-shell`;
 const RUNTIME_CACHE = `${VERSION}-runtime`;
 
@@ -48,7 +48,9 @@ self.addEventListener("activate", (event) => {
 });
 
 // Allow the page to trigger an immediate activation after an update.
+// Only accept messages from same-origin clients this worker controls.
 self.addEventListener("message", (event) => {
+  if (event.origin && event.origin !== self.location.origin) return;
   if (event.data === "SKIP_WAITING") self.skipWaiting();
 });
 

@@ -26,6 +26,8 @@ export const maintenanceSchema = z.object({
   vendorPhone: z.string().max(20).optional(),
   invoiceRef: z.string().max(50).optional(),
   isTenantReport: z.boolean().optional(),
+  evidenceRequired: z.boolean().optional(),
+  slaDueAt: z.string().optional(),
   // @deprecated — kept for backward compat
   cost: z.number().min(0).optional(),
   assignedTo: z.string().optional(),

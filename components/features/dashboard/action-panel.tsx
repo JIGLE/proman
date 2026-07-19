@@ -11,10 +11,10 @@ import {
   ChevronRight,
   Clock,
   FileWarning,
+  Flame,
   Wrench,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils/utils";
 import { useApp } from "@/lib/contexts/app-context";
 
@@ -29,18 +29,18 @@ interface ActionAlert {
   severity: AlertSeverity;
 }
 
-const severityStyles: Record<AlertSeverity, string> = {
-  critical:
-    "border-[var(--color-destructive)]/20 bg-[var(--color-destructive)]/5 text-[var(--color-destructive)] hover:bg-[var(--color-destructive)]/10",
-  warning:
-    "border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)] text-[var(--color-warning)] hover:bg-[var(--color-warning)]/10",
-  info: "border-[var(--color-info)]/20 bg-[var(--color-info-muted)] text-[var(--color-info)] hover:bg-[var(--color-info)]/10",
+/** Situs alert-card variant per severity (3px semantic left border + soft wash). */
+const severityAlertClass: Record<AlertSeverity, string> = {
+  critical: "alert-danger",
+  warning: "alert-warning",
+  info: "alert-info",
 };
 
-const badgeVariantMap: Record<AlertSeverity, "destructive" | "secondary" | "outline"> = {
-  critical: "destructive",
-  warning: "secondary",
-  info: "outline",
+/** Semantic accent for the leading icon + count, matching the left border. */
+const severityAccent: Record<AlertSeverity, string> = {
+  critical: "text-[var(--semantic-danger)]",
+  warning: "text-[var(--semantic-warning)]",
+  info: "text-[var(--semantic-info)]",
 };
 
 function AlertRow({ alert, locale }: { alert: ActionAlert; readonly locale: string }) {
@@ -49,19 +49,26 @@ function AlertRow({ alert, locale }: { alert: ActionAlert; readonly locale: stri
     <Link
       href={`/${locale}${alert.href}`}
       className={cn(
-        "flex items-center justify-between rounded-lg border p-4 transition-colors",
-        severityStyles[alert.severity],
+        "alert-card transition-colors hover:brightness-[0.98]",
+        severityAlertClass[alert.severity],
       )}
     >
-      <div className="flex items-center gap-3">
-        <Icon className="h-4 w-4 shrink-0" />
-        <span className="text-sm font-medium">{alert.message}</span>
+      <div className="flex min-w-0 items-center gap-3">
+        <Icon className={cn("h-4 w-4 shrink-0", severityAccent[alert.severity])} />
+        <span className="truncate text-sm font-medium text-[var(--color-foreground)]">
+          {alert.message}
+        </span>
       </div>
-      <div className="flex items-center gap-2">
-        <Badge variant={badgeVariantMap[alert.severity]} className="tabular-nums">
+      <div className="flex shrink-0 items-center gap-2.5">
+        <span
+          className={cn(
+            "font-mono text-xs font-semibold tabular-nums",
+            severityAccent[alert.severity],
+          )}
+        >
           {alert.count}
-        </Badge>
-        <ChevronRight className="h-4 w-4 opacity-50" />
+        </span>
+        <ChevronRight className="h-4 w-4 opacity-40" />
       </div>
     </Link>
   );
@@ -80,6 +87,14 @@ export function ActionPanel(): ReactElement {
     fetch("/api/documents/expiring")
       .then((r) => r.json())
       .then((d) => setDocExpiry(d.data ?? d))
+      .catch(() => null);
+  }, []);
+
+  const [streakMonths, setStreakMonths] = useState(0);
+  useEffect(() => {
+    fetch("/api/activation")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => setStreakMonths(d?.data?.complianceStreak?.streakMonths ?? 0))
       .catch(() => null);
   }, []);
 
@@ -160,7 +175,7 @@ export function ActionPanel(): ReactElement {
         icon: Wrench,
         message: t("maintenanceOpenAlert", { count: staleMaintenance.length, days: daysOpen }),
         count: staleMaintenance.length,
-        href: "/maintenance",
+        href: "/operations",
         severity: "critical",
       });
     }
@@ -283,12 +298,22 @@ export function ActionPanel(): ReactElement {
       </CardHeader>
       <CardContent className="space-y-2">
         {alerts.length === 0 ? (
-          <div className="flex items-center gap-3 rounded-lg border border-[var(--color-success)]/20 bg-[var(--color-success-muted)] p-4">
-            <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--color-success)]" />
-            <div>
-              <p className="text-sm font-medium text-[var(--color-success)]">{t("allClear")}</p>
-              <p className="text-xs text-[var(--color-muted-foreground)]">{t("allClearDesc")}</p>
+          <div className="alert-card alert-success">
+            <div className="flex items-center gap-3">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-[var(--semantic-success)]" />
+              <div>
+                <p className="text-sm font-medium text-[var(--color-foreground)]">
+                  {t("allClear")}
+                </p>
+                <p className="text-xs text-[var(--color-muted-foreground)]">{t("allClearDesc")}</p>
+              </div>
             </div>
+            {streakMonths > 0 && (
+              <div className="flex shrink-0 items-center gap-1.5 border border-[var(--semantic-warning)]/30 bg-[var(--semantic-warning-soft)] px-2.5 py-1 text-xs font-medium text-[var(--semantic-warning)]">
+                <Flame className="h-3.5 w-3.5" />
+                {t("streakMonths", { count: streakMonths })}
+              </div>
+            )}
           </div>
         ) : (
           <>

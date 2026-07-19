@@ -11,8 +11,8 @@ export async function generateMetadata({ params }: Props) {
   const { locale: _locale } = await params;
   const t = await getTranslations("footer");
   return {
-    title: `${t("terms")} — Domora`,
-    description: "Terms and conditions governing the use of Domora.",
+    title: `${t("terms")} — Situs`,
+    description: "Terms and conditions governing the use of Situs.",
     robots: { index: false },
   };
 }
@@ -30,7 +30,7 @@ export default async function TermsPage({ params }: Props) {
             href={`/${locale}`}
             className="text-sm font-semibold tracking-tight text-[var(--color-foreground)] transition-opacity hover:opacity-80"
           >
-            Domora
+            Situs
           </Link>
           <LanguageSelector />
         </div>
@@ -55,7 +55,7 @@ export default async function TermsPage({ params }: Props) {
               1. Acceptance of Terms
             </h2>
             <p>
-              By creating an account or using the Domora platform you agree to be bound by these
+              By creating an account or using the Situs platform you agree to be bound by these
               Terms of Service. If you do not agree, you must not use the platform.
             </p>
             <p className="mt-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3 text-sm text-amber-400">

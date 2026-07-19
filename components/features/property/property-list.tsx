@@ -13,6 +13,7 @@ import {
   Pencil,
   Trash2,
   MoreHorizontal,
+  Search,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -24,7 +25,7 @@ import {
 import { useRouter, usePathname } from "next/navigation";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import { getCountryName, resolveCountryCode } from "@/lib/utils/country";
-import { DataViewToggle, DataViewMode } from "@/components/ui/data-view-toggle";
+import { DataViewMode } from "@/components/ui/data-view-toggle";
 import {
   Table,
   TableBody,
@@ -34,7 +35,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useCurrency } from "@/lib/contexts/currency-context";
-import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -55,7 +55,6 @@ import {
 } from "@/components/ui/select";
 import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
-import { SearchFilter } from "@/components/ui/search-filter";
 import { cn } from "@/lib/utils/utils";
 import { BulkActionBar, getDefaultBulkActions } from "@/components/ui/bulk-action-bar";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -71,6 +70,8 @@ import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { AddressVerificationService, AddressSuggestion } from "@/lib/utils/address-verification";
 import PropertyMap from "./property-map";
+import { PortfolioTree } from "./portfolio-tree";
+import { PropertyDetailView } from "./property-detail-view";
 import { PageHeader } from "@/components/shared/page-header";
 
 // ─── Next Action derivation ────────────────────────────────────────────────────
@@ -129,7 +130,6 @@ export type PropertiesViewProps = {
   highlightedPropertyId?: string;
   density?: "comfortable" | "compact";
   showPageHeader?: boolean;
-  showMapToggle?: boolean;
 };
 
 export type PropertiesViewRef = {
@@ -144,7 +144,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
       onLocateOnMap,
       highlightedPropertyId,
       showPageHeader = true,
-      showMapToggle = false,
     }: PropertiesViewProps,
     ref,
   ): React.ReactElement {
@@ -183,18 +182,22 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const [addressSuggestions, setAddressSuggestions] = useState<AddressSuggestion[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
 
-    // Data view mode state with localStorage persistence (grid | table | map)
-    const [dataViewMode, setDataViewMode] = useState<DataViewMode>(
-      viewMode === "map" ? "map" : "grid",
-    );
+    // The Portfolio commits to the tree + workspace (mockup-faithful) — no view
+    // toggle. `viewMode="map"` remains for the standalone map embed used elsewhere.
+    const [dataViewMode] = useState<DataViewMode>(viewMode === "map" ? "map" : "tree");
+    // The asset whose command workspace is open in the tree split (desktop only).
+    const [workspacePropertyId, setWorkspacePropertyId] = useState<string | null>(null);
+    // Collapse the tree rail to a dots-only spine (desktop; persisted per device).
+    const [railCollapsed, setRailCollapsed] = useState(false);
     useEffect(() => {
-      if (viewMode === "map") return;
-      const saved = localStorage.getItem("proman-properties-view-mode");
-      if (saved === "grid" || saved === "table") setDataViewMode(saved);
-    }, [viewMode]);
-    const handleViewModeChange = useCallback((mode: DataViewMode) => {
-      setDataViewMode(mode);
-      if (mode !== "map") localStorage.setItem("proman-properties-view-mode", mode);
+      setRailCollapsed(localStorage.getItem("situs-portfolio-rail-collapsed") === "1");
+    }, []);
+    const toggleRailCollapsed = useCallback(() => {
+      setRailCollapsed((prev) => {
+        const next = !prev;
+        localStorage.setItem("situs-portfolio-rail-collapsed", next ? "1" : "0");
+        return next;
+      });
     }, []);
 
     // Building edit dialog state
@@ -236,19 +239,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
 
     const buildingDeleteConfirm = useConfirmDialog();
 
-    // Search and filter state
+    // Search + attention filter. The old top chrome (full-width search, type /
+    // status dropdowns and the operational chip strip) was decluttered; a compact
+    // search and an "attention only" toggle now live in the tree column.
     const [searchQuery, setSearchQuery] = useState("");
-    const [typeFilter, setTypeFilter] = useState<string>(() =>
-      typeof window !== "undefined"
-        ? (localStorage.getItem("proman-properties-type-filter") ?? "all")
-        : "all",
-    );
-    const [statusFilter, setStatusFilter] = useState<string>(() =>
-      typeof window !== "undefined"
-        ? (localStorage.getItem("proman-properties-status-filter") ?? "all")
-        : "all",
-    );
-    const [operationalFilter, setOperationalFilter] = useState<string>("all");
+    const [attentionOnly, setAttentionOnly] = useState(false);
 
     // Collapsible building sections
     const [collapsedBuildings, setCollapsedBuildings] = useState<Set<string>>(new Set());
@@ -382,40 +377,16 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     // Filter and search properties
     const filteredProperties = useMemo(() => {
       return properties.filter((property) => {
-        // Search filter (name, address)
         const matchesSearch =
           searchQuery.length === 0 ||
           property.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           property.address.toLowerCase().includes(searchQuery.toLowerCase());
 
-        // Type filter
-        const matchesType = typeFilter === "all" || property.type === typeFilter;
+        const matchesAttention = !attentionOnly || needsAttentionPropertyIds.has(property.id);
 
-        // Status filter
-        const matchesStatus = statusFilter === "all" || property.status === statusFilter;
-
-        // Operational filter
-        const matchesOperational =
-          operationalFilter === "all" ||
-          (operationalFilter === "needs-attention" && needsAttentionPropertyIds.has(property.id)) ||
-          (operationalFilter === "lease-renewal" && expiringLeasePropertyIds.has(property.id)) ||
-          (operationalFilter === "open-maintenance" &&
-            openMaintenancePropertyIds.has(property.id)) ||
-          (operationalFilter === "missing-map" && missingMapPropertyIds.has(property.id));
-
-        return matchesSearch && matchesType && matchesStatus && matchesOperational;
+        return matchesSearch && matchesAttention;
       });
-    }, [
-      properties,
-      searchQuery,
-      typeFilter,
-      statusFilter,
-      operationalFilter,
-      needsAttentionPropertyIds,
-      expiringLeasePropertyIds,
-      openMaintenancePropertyIds,
-      missingMapPropertyIds,
-    ]);
+    }, [properties, searchQuery, attentionOnly, needsAttentionPropertyIds]);
 
     // Sorting
     const {
@@ -582,49 +553,35 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     };
 
     const getStatusBadge = (status: Property["status"]) => {
+      // Situs rectilinear status chips — radius-0, 1px border, no decorative motion.
+      const base = "inline-flex items-center gap-1 border px-2 py-1 text-xs font-medium";
       switch (status) {
         case "occupied":
           return (
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-success/20 text-success-foreground border border-success/30"
-            >
+            <span className={cn(base, "border-success/30 bg-success/20 text-success-foreground")}>
               <CheckCircle className="h-3 w-3" />
               Occupied
-            </motion.div>
+            </span>
           );
         case "vacant":
           return (
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border"
-            >
+            <span className={cn(base, "border-border bg-muted text-muted-foreground")}>
               <Building2 className="h-3 w-3" />
               Vacant
-            </motion.div>
+            </span>
           );
         case "maintenance":
           return (
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-warning/20 text-warning-foreground border border-warning/30 animate-pulse-gentle"
-            >
+            <span className={cn(base, "border-warning/30 bg-warning/20 text-warning-foreground")}>
               <Wrench className="h-3 w-3" />
               Maintenance
-            </motion.div>
+            </span>
           );
         default:
           return (
-            <motion.div
-              initial={{ scale: 0.9 }}
-              animate={{ scale: 1 }}
-              className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-accent text-accent-foreground border border-border"
-            >
+            <span className={cn(base, "border-border bg-accent text-accent-foreground")}>
               {status}
-            </motion.div>
+            </span>
           );
       }
     };
@@ -643,6 +600,39 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
       },
       [onPropertySelect, properties, router, locale],
     );
+
+    // Tree selection: on desktop, open the asset inline in the right workspace pane
+    // (the Situs tree+workspace split); on smaller screens there is no room for a
+    // side-by-side, so fall back to the routed detail (master→detail).
+    const handleTreeSelect = useCallback(
+      (propertyId: string) => {
+        const isDesktop =
+          typeof window !== "undefined" && window.matchMedia("(min-width: 1024px)").matches;
+        if (isDesktop) {
+          setWorkspacePropertyId(propertyId);
+          onPropertySelect?.(propertyId);
+        } else {
+          handleMapPropertySelect(propertyId);
+        }
+      },
+      [handleMapPropertySelect, onPropertySelect],
+    );
+
+    // If the viewport shrinks below the split breakpoint while an asset is open
+    // inline, push it to the routed detail instead of leaving a selected tree row
+    // with no visible workspace behind it.
+    useEffect(() => {
+      if (typeof window === "undefined" || !workspacePropertyId) return;
+      const mql = window.matchMedia("(min-width: 1024px)");
+      const handleChange = (e: MediaQueryListEvent) => {
+        if (!e.matches) {
+          handleMapPropertySelect(workspacePropertyId);
+          setWorkspacePropertyId(null);
+        }
+      };
+      mql.addEventListener("change", handleChange);
+      return () => mql.removeEventListener("change", handleChange);
+    }, [workspacePropertyId, handleMapPropertySelect]);
 
     return (
       <>
@@ -1187,6 +1177,79 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     onSelectProperty={handleMapPropertySelect}
                   />
                 </div>
+              ) : dataViewMode === "tree" ? (
+                /* Tree View — Situs structural portfolio inventory + command workspace.
+                   Desktop (lg+): a fixed tree rail beside an inline detail workspace.
+                   Below lg: tree only — selecting an asset routes to the detail. */
+                <div
+                  className={cn(
+                    "lg:grid lg:items-start lg:gap-6",
+                    railCollapsed
+                      ? "lg:grid-cols-[76px_1fr]"
+                      : "lg:grid-cols-[minmax(300px,340px)_1fr]",
+                  )}
+                >
+                  <div className="space-y-2">
+                    {/* Compact search + attention filter — contextual to the tree
+                        (replaces the removed top search band + filter chips). */}
+                    {!railCollapsed && (
+                      <div className="flex items-center gap-2">
+                        <div className="relative min-w-0 flex-1">
+                          <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
+                          <Input
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Filter assets…"
+                            aria-label="Filter assets by name or address"
+                            className="h-8 pl-8 text-sm"
+                          />
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setAttentionOnly((v) => !v)}
+                          aria-pressed={attentionOnly}
+                          title="Show only assets needing attention"
+                          className={cn(
+                            "inline-flex h-8 shrink-0 items-center gap-1.5 border px-2.5 font-mono text-[10px] uppercase tracking-[0.06em] transition-colors",
+                            attentionOnly
+                              ? "border-[var(--semantic-danger)] bg-[var(--semantic-danger-soft)] text-[var(--semantic-danger)]"
+                              : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
+                          )}
+                        >
+                          <span className="status-dot status-dot-danger" aria-hidden="true" />
+                          {needsAttentionPropertyIds.size}
+                        </button>
+                      </div>
+                    )}
+                    <PortfolioTree
+                      properties={filteredProperties}
+                      buildings={buildings}
+                      tenants={tenants}
+                      maintenance={maintenance}
+                      leases={leases}
+                      onSelectProperty={handleTreeSelect}
+                      highlightedPropertyId={workspacePropertyId ?? highlightedPropertyId}
+                      collapsed={railCollapsed}
+                      onToggleCollapsed={toggleRailCollapsed}
+                    />
+                  </div>
+                  <div className="hidden min-w-0 lg:block">
+                    {workspacePropertyId ? (
+                      <div
+                        key={workspacePropertyId}
+                        className="border border-[var(--color-border)] bg-[var(--color-card)] p-4 motion-safe:animate-fade-in lg:p-6"
+                      >
+                        <PropertyDetailView propertyId={workspacePropertyId} />
+                      </div>
+                    ) : (
+                      <div className="flex min-h-[440px] items-center justify-center border border-dashed border-[var(--color-border)] p-12 text-center">
+                        <p className="mono-label max-w-[26ch] leading-relaxed">
+                          Select an asset from the tree to open its command workspace.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               ) : dataViewMode === "table" ? (
                 /* Table View */
                 filteredProperties.length === 0 ? (
@@ -1317,7 +1380,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                   if (action.urgency === "ok") return null;
                                   return (
                                     <span
-                                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${nextActionStyles[action.urgency]}`}
+                                      className={`inline-flex items-center border px-2 py-0.5 text-xs font-medium ${nextActionStyles[action.urgency]}`}
                                     >
                                       {tNextAction(
                                         action.labelKey as Parameters<typeof tNextAction>[0],
@@ -1531,7 +1594,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         return (
                                           <span
                                             className={cn(
-                                              "mt-0.5 h-2 w-2 shrink-0 rounded-full",
+                                              "mt-0.5 h-2 w-2 shrink-0",
                                               action.urgency === "urgent"
                                                 ? "bg-[var(--color-destructive)]"
                                                 : "bg-[var(--color-warning)]",
@@ -1575,7 +1638,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           if (action.urgency === "ok") return null;
                                           return (
                                             <span
-                                              className={`mt-0.5 w-fit rounded-full border px-1.5 py-0.5 text-[10px] font-medium leading-none ${nextActionStyles[action.urgency]}`}
+                                              className={`mt-0.5 w-fit border px-1.5 py-0.5 text-[10px] font-medium leading-none ${nextActionStyles[action.urgency]}`}
                                             >
                                               {tNextAction(
                                                 action.labelKey as Parameters<
@@ -1640,7 +1703,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               router.push(
-                                                `/${locale}/maintenance?propertyId=${property.id}`,
+                                                `/${locale}/operations?propertyId=${property.id}`,
                                               );
                                             }}
                                             className="rounded transition-opacity hover:opacity-70"
@@ -1744,7 +1807,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           if (isMissingMap) {
                                             dialog.openEditDialog(property);
                                           } else {
-                                            handleViewModeChange("map");
                                             onLocateOnMap?.(property.id);
                                           }
                                         }}

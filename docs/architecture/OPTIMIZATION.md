@@ -158,12 +158,13 @@ Compressed (gzip):                ~140-150 MB
 ```
 
 **Comparison**:
-| Metric | Before | After | Savings |
-|--------|--------|-------|---------|
-| Base Image | 190 MB | 87 MB | -103 MB |
-| Total Uncompressed | ~750 MB | ~650 MB | -100 MB (13%) |
-| Compressed | ~160 MB | ~140-150 MB | -10-20 MB (6-13%) |
-| Pull Speed (1Gbps) | ~1.3s | ~1.0s | -23% |
+
+| Metric             | Before  | After       | Savings           |
+| ------------------ | ------- | ----------- | ----------------- |
+| Base Image         | 190 MB  | 87 MB       | -103 MB           |
+| Total Uncompressed | ~750 MB | ~650 MB     | -100 MB (13%)     |
+| Compressed         | ~160 MB | ~140-150 MB | -10-20 MB (6-13%) |
+| Pull Speed (1Gbps) | ~1.3s   | ~1.0s       | -23%              |
 
 ## Future Optimization Opportunities
 
