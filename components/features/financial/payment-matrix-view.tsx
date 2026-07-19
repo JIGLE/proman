@@ -3,7 +3,7 @@ import { useTranslations, useLocale } from "next-intl";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Tenant } from "@/lib/types";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Calendar, DollarSign, CheckCircle, Clock, XCircle, Filter, Download } from "lucide-react";
+import { DollarSign, CheckCircle, Clock, XCircle, Filter, Download } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export type PaymentMatrixViewProps = Record<string, never>;
@@ -187,6 +187,17 @@ export function PaymentMatrixView(): React.ReactElement {
     return paidMonths * tenant.rent;
   };
 
+  // One summary line instead of four boxed cards (CLAUDE.md declutter rule 4) —
+  // the container's own KPI row above the tab bar already covers this-month
+  // figures, so this line only needs to carry the year total for this matrix.
+  const yearSummary = useMemo(() => {
+    const expected = tenants.reduce((total, tenant) => total + getTotalExpected(tenant), 0);
+    const received = tenants.reduce((total, tenant) => total + getTotalPaid(tenant.id), 0);
+    const rate = expected > 0 ? Math.round((received / expected) * 100) : 0;
+    return { expected, received, outstanding: expected - received, rate };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [tenants, paymentMatrix]);
+
   if (tenants.length === 0) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -203,13 +214,15 @@ export function PaymentMatrixView(): React.ReactElement {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
-            {t("title")}
-          </h2>
-          <p className="text-[var(--color-muted-foreground)]">{t("subtitle")}</p>
-        </div>
+      {/* One utility row: the year summary as text (declutter rule 4), plus the
+          view/status/year/export controls — no separate heading, no card grid. */}
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <p className="text-sm text-[var(--color-muted-foreground)]">
+          {formatCurrency(yearSummary.expected)} {t("totalExpected").toLowerCase()} ·{" "}
+          {formatCurrency(yearSummary.received)} {t("totalReceived").toLowerCase()} ·{" "}
+          {formatCurrency(yearSummary.outstanding)} {t("outstanding").toLowerCase()} ·{" "}
+          {yearSummary.rate}% {t("collectionRate").toLowerCase()}
+        </p>
         <div className="flex flex-wrap items-center gap-3">
           {/* View Mode Toggle */}
           <div className="flex items-center rounded-lg border border-[var(--color-border)] p-1">
@@ -273,87 +286,6 @@ export function PaymentMatrixView(): React.ReactElement {
         </div>
       </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-              {t("totalExpected")}
-            </CardTitle>
-            <DollarSign className="h-4 w-4 text-[var(--color-muted-foreground)]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[var(--color-foreground)]">
-              {formatCurrency(
-                tenants.reduce((total, tenant) => total + getTotalExpected(tenant), 0),
-              )}
-            </div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">
-              {t("forYear", { year: selectedYear })}
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-              {t("totalReceived")}
-            </CardTitle>
-            <CheckCircle className="h-4 w-4 text-[var(--color-success)]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[var(--color-foreground)]">
-              {formatCurrency(
-                tenants.reduce((total, tenant) => total + getTotalPaid(tenant.id), 0),
-              )}
-            </div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">{t("paidAmounts")}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-              {t("outstanding")}
-            </CardTitle>
-            <Clock className="h-4 w-4 text-[var(--color-warning)]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[var(--color-foreground)]">
-              {formatCurrency(
-                tenants.reduce((total, tenant) => total + getTotalExpected(tenant), 0) -
-                  tenants.reduce((total, tenant) => total + getTotalPaid(tenant.id), 0),
-              )}
-            </div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">{t("pendingPayments")}</p>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-              {t("collectionRate")}
-            </CardTitle>
-            <Calendar className="h-4 w-4 text-[var(--color-muted-foreground)]" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-[var(--color-foreground)]">
-              {tenants.length > 0
-                ? Math.round(
-                    (tenants.reduce((total, tenant) => total + getTotalPaid(tenant.id), 0) /
-                      tenants.reduce((total, tenant) => total + getTotalExpected(tenant), 0)) *
-                      100,
-                  )
-                : 0}
-              %
-            </div>
-            <p className="text-xs text-[var(--color-muted-foreground)]">
-              {t("paymentSuccessRate")}
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
       {/* Payment Matrix */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -362,9 +294,6 @@ export function PaymentMatrixView(): React.ReactElement {
       >
         <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
           <CardHeader>
-            <CardTitle className="text-[var(--color-foreground)]">
-              {t("matrixTitle", { year: selectedYear })}
-            </CardTitle>
             <CardDescription>{t("legend")}</CardDescription>
           </CardHeader>
           <CardContent>

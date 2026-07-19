@@ -86,6 +86,12 @@ e2e/                # Playwright E2E tests
 - **Tax connectors**: one `TaxAuthorityConnector` row per user×country×connector key, `mode` locked to sandbox/review until explicitly promoted to live (no live AT/AEAT integration exists yet). Every call appends an immutable `TaxSubmissionLog` row — read via `GET /api/tax/connectors` (Finance › Tax Summary tab).
 - **OCR classification**: mock-only today (`lib/services/ocr/classifier.ts`, pure) — proposes a document type from filename/description keywords across all 4 locales and links to whatever entity the upload already carried. Runs best-effort on every document upload; ambiguous or unlinked results land in the Documents "Review Required" tab.
 - **Generalized audit trail**: `components/shared/audit-trail.tsx` + `GET /api/audit-trail` — pass `resourceIds` to scope to specific records (property detail Audit tab) or omit for the account-wide trail (Account page). Backed by `AuditLog.resourceType`/`resourceId`, persisted on every workflow mutation.
+- **Screen density (declutter rules)**: established from a 2026-07 cross-page audit that found Finance/People/Operations stacking 6–9 chrome bands (duplicate headers, duplicate KPI rows, permanent filter pills) before any real content. Apply to every main list/detail screen:
+  1. **One heading per screen.** If a container already renders a page title, the active tab's own view does not repeat it — the tab label is the heading.
+  2. **One stat row, capped at 3–4 metrics.** Never stack two KPI/status rows on one screen; merge them. A metric nobody acts on belongs in a subtitle line, not a bordered panel.
+  3. **Filters collapse behind one control past two.** A search box plus one dropdown is a utility row; a search box plus a dropdown plus a wall of pills is not — fold pills into the dropdown or a single "Filters" popover.
+  4. **Counts as text before counts as boxes.** Prefer an inline subtitle (e.g. `"12 units · 9 occupied (75%) · €14,100/mo"`, the Portfolio pattern) over separate stat panels when the counts aren't independently actionable.
+  5. **Every sub-view heading goes through i18n or gets deleted.** A hardcoded-English heading sitting under a translated tab label is a sign it was never load-bearing.
 
 ## CI Gates
 

@@ -195,16 +195,6 @@ export function MaintenanceView(): React.ReactElement {
     return { total, count: open.length, withCost };
   }, [filteredTickets]);
 
-  const statusCounts = useMemo(
-    () => ({
-      open: maintenance.filter((t) => t.status === "open").length,
-      inProgress: maintenance.filter((t) => t.status === "in_progress").length,
-      resolved: maintenance.filter((t) => t.status === "resolved").length,
-      urgent: maintenance.filter((t) => t.priority === "urgent").length,
-    }),
-    [maintenance],
-  );
-
   const handleEdit = (ticket: MaintenanceTicket) => {
     dialog.openEditDialog(ticket, (t) => ({
       propertyId: t.propertyId,
@@ -515,50 +505,9 @@ export function MaintenanceView(): React.ReactElement {
             </Dialog>
           </PageHeader>
 
-          {/* Status strip */}
-          {maintenance.length > 0 && (
-            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <div className="panel p-4">
-                <p className="mono-label">Open</p>
-                <p className="mt-1 text-xl font-light tabular-nums text-[var(--color-foreground)]">
-                  {statusCounts.open}
-                </p>
-              </div>
-              <div className="panel p-4">
-                <p className="mono-label">In progress</p>
-                <p className="mt-1 text-xl font-light tabular-nums text-[var(--color-foreground)]">
-                  {statusCounts.inProgress}
-                </p>
-              </div>
-              <div className="panel p-4">
-                <p className="mono-label">Resolved</p>
-                <p className="mt-1 text-xl font-light tabular-nums text-[var(--semantic-success)]">
-                  {statusCounts.resolved}
-                </p>
-              </div>
-              <div
-                className={cn(
-                  "panel p-4",
-                  statusCounts.urgent > 0 &&
-                    "border-l-[3px] border-l-[var(--semantic-danger)] bg-[var(--semantic-danger-soft)]",
-                )}
-              >
-                <p className="mono-label">Urgent</p>
-                <p
-                  className={cn(
-                    "mt-1 text-xl font-light tabular-nums",
-                    statusCounts.urgent > 0
-                      ? "text-[var(--semantic-danger)]"
-                      : "text-[var(--color-foreground)]",
-                  )}
-                >
-                  {statusCounts.urgent}
-                </p>
-              </div>
-            </div>
-          )}
-
-          <OperationsKpiRow tickets={maintenance} />
+          {/* One merged stat row (CLAUDE.md declutter rule 2) — Open / Urgent /
+              Scheduled inspections / Evidence required. */}
+          {maintenance.length > 0 && <OperationsKpiRow tickets={maintenance} />}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList className="overflow-x-auto">
@@ -604,6 +553,7 @@ export function MaintenanceView(): React.ReactElement {
                 onFilterChange={(key, value) => {
                   if (key === "status") setStatusFilter(value);
                   if (key === "priority") setPriorityFilter(value);
+                  if (key === "category") setCategoryFilter(value);
                 }}
                 filters={[
                   {
@@ -630,57 +580,49 @@ export function MaintenanceView(): React.ReactElement {
                     ],
                     defaultValue: "all",
                   },
+                  {
+                    key: "category",
+                    label: "Category",
+                    options: [
+                      { label: "All Categories", value: "all" },
+                      ...MAINTENANCE_CATEGORIES.map((cat) => ({
+                        label: cat.charAt(0).toUpperCase() + cat.slice(1),
+                        value: cat,
+                      })),
+                    ],
+                    defaultValue: "all",
+                  },
                 ]}
               />
 
-              {/* Category filter chip strip */}
-              <div className="flex items-center gap-2 flex-wrap">
-                {["all", ...MAINTENANCE_CATEGORIES].map((cat) => (
-                  <button
-                    key={cat}
-                    onClick={() => setCategoryFilter(cat)}
-                    className={cn(
-                      "rounded-full border px-3 py-1 text-xs font-medium capitalize transition-colors",
-                      categoryFilter === cat
-                        ? "border-accent-primary bg-accent-primary/10 text-accent-primary"
-                        : "border-[var(--color-border)] bg-transparent text-[var(--color-muted-foreground)] hover:border-[var(--color-foreground)]/50",
-                    )}
-                  >
-                    {cat === "all" ? "All categories" : cat}
-                  </button>
-                ))}
-              </div>
-
-              {/* Cost summary bar */}
-              {costSummary.count > 0 && (
-                <div className="flex items-center gap-6 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] px-4 py-2.5 text-sm">
-                  <span className="text-[var(--color-muted-foreground)]">
-                    <span className="font-medium text-[var(--color-foreground)]">
-                      {costSummary.count}
-                    </span>{" "}
-                    open ticket
-                    {costSummary.count !== 1 ? "s" : ""}
-                  </span>
-                  {costSummary.withCost > 0 && (
-                    <>
-                      <span className="text-[var(--color-border)]">|</span>
+              {/* Cost summary + view toggle share one row (CLAUDE.md declutter rule 3). */}
+              <div className="flex items-center justify-between gap-4">
+                {costSummary.count > 0 ? (
+                  <div className="flex flex-wrap items-center gap-4 text-sm">
+                    <span className="text-[var(--color-muted-foreground)]">
+                      <span className="font-medium text-[var(--color-foreground)]">
+                        {costSummary.count}
+                      </span>{" "}
+                      open ticket
+                      {costSummary.count !== 1 ? "s" : ""}
+                    </span>
+                    {costSummary.withCost > 0 && (
                       <span className="text-[var(--color-muted-foreground)]">
                         Est. cost:{" "}
                         <span className="font-medium text-[var(--color-foreground)]">
                           {formatCurrency(costSummary.total)}
                         </span>
+                        {costSummary.withCost < costSummary.count && (
+                          <span className="ml-1 text-xs">
+                            ({costSummary.count - costSummary.withCost} without estimate)
+                          </span>
+                        )}
                       </span>
-                      {costSummary.withCost < costSummary.count && (
-                        <span className="text-[var(--color-muted-foreground)] text-xs">
-                          ({costSummary.count - costSummary.withCost} without estimate)
-                        </span>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-
-              <div className="flex items-center justify-end">
+                    )}
+                  </div>
+                ) : (
+                  <span />
+                )}
                 <DataViewToggle mode={dataViewMode} onChange={handleViewModeChange} />
               </div>
 
