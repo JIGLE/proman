@@ -618,6 +618,22 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
       [handleMapPropertySelect, onPropertySelect],
     );
 
+    // If the viewport shrinks below the split breakpoint while an asset is open
+    // inline, push it to the routed detail instead of leaving a selected tree row
+    // with no visible workspace behind it.
+    useEffect(() => {
+      if (typeof window === "undefined" || !workspacePropertyId) return;
+      const mql = window.matchMedia("(min-width: 1024px)");
+      const handleChange = (e: MediaQueryListEvent) => {
+        if (!e.matches) {
+          handleMapPropertySelect(workspacePropertyId);
+          setWorkspacePropertyId(null);
+        }
+      };
+      mql.addEventListener("change", handleChange);
+      return () => mql.removeEventListener("change", handleChange);
+    }, [workspacePropertyId, handleMapPropertySelect]);
+
     return (
       <>
         {loading ? (
