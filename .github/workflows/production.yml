@@ -3,6 +3,7 @@ name: Production Gate
 on:
   push:
     branches: [main]
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -15,62 +16,16 @@ env:
   NODE_VERSION: "22"
 
 jobs:
-  lint-type:
-    name: Lint & Type Check
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
-
-      - name: Run linter
-        run: npm run lint
-
-      - name: Format check
-        run: npx prettier --check .
-
-      - name: Type check
-        run: npm run type-check
-
-  test:
-    name: Unit Tests with Coverage
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v7
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-
-      - name: Install dependencies
-        run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
-
-      - name: Run tests with coverage
-        run: npm run test:coverage
-
-      - name: Upload coverage artifact
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: coverage-report-prod
-          path: coverage
-          if-no-files-found: ignore
+  # ── Shared lint/type-check/test trio — see reusable-verify.yml ──
+  verify:
+    uses: ./.github/workflows/reusable-verify.yml
+    permissions:
+      contents: read
 
   build:
     name: Production Build
     runs-on: ubuntu-latest
-    needs: [lint-type, test]
+    needs: verify
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
