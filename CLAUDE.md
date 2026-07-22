@@ -103,6 +103,18 @@ e2e/                # Playwright E2E tests
 
 All Claude Code changes go to: **`claude/proman-design-polish-6zpz2f`**
 
+## Dependabot PRs
+
+**Never push commits directly onto a `dependabot/*` branch to fix an issue the bump introduced.**
+Dependabot treats external commits on its own branches as interference and can abandon/close the
+PR in response (observed firsthand: pushing a fix to `dependabot/npm_and_yarn/production-minor-*`
+got PR #276 silently closed, its branch desynced from GitHub's own PR/CI view even though the
+git ref itself was correct — wasted a long back-and-forth before the closure was noticed). If a
+Dependabot bump needs a fix (a lockfile conflict, a genuine break like a duplicate transitive
+dependency), don't touch its branch — recreate the same version bumps plus the fix on a fresh
+branch of your own (e.g. `chore/deps-<group-name>`), verify, and open a new PR instead. Let the
+original Dependabot PR close on its own once superseded.
+
 ## Roadmap
 
 See `ROADMAP.md` for full task history. All Q3 sprints (Phases 0–7) are complete. The `ROADMAP.md` Decisions Log records architectural choices and their rationale.
