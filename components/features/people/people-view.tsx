@@ -90,18 +90,22 @@ export function PeopleView(): React.ReactElement {
 
   return (
     <div className="space-y-6">
-      {/* Enhanced Page Header */}
-      <div className="flex flex-col gap-4">
-        <div className="flex flex-row items-center justify-between gap-4">
-          {/* The bottom nav already labels this screen — hide the repeated
-              title/subtitle on mobile so content starts higher. */}
-          <div className="hidden sm:block">
-            <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-2">
-              <Users className="h-8 w-8" />
-              {t("title")}
-            </h1>
-            <p className="text-sm text-[var(--color-muted-foreground)] mt-1">{t("subtitle")}</p>
-          </div>
+      {/* Page header. Tenant/owner totals live on the tab count badges below,
+          so no separate stat row is needed. Export only applies to the
+          tenant/owner directories — the Contacts/Communications tabs manage
+          their own data, so it stays hidden there rather than exporting the
+          wrong records under a "{tab}-export" filename. */}
+      <div className="flex flex-row items-center justify-between gap-4">
+        {/* The bottom nav already labels this screen — hide the repeated
+            title/subtitle on mobile so content starts higher. */}
+        <div className="hidden sm:block">
+          <h1 className="text-3xl font-bold text-[var(--color-foreground)] flex items-center gap-2">
+            <Users className="h-8 w-8" />
+            {t("title")}
+          </h1>
+          <p className="text-sm text-[var(--color-muted-foreground)] mt-1">{t("subtitle")}</p>
+        </div>
+        {(activeTab === "tenants" || activeTab === "owners") && (
           <div className="ml-auto flex items-center gap-2">
             <ExportButton
               data={exportConfig.data}
@@ -109,29 +113,7 @@ export function PeopleView(): React.ReactElement {
               columns={exportConfig.columns}
             />
           </div>
-        </div>
-
-        {/* People Statistics — 3-up on every width so the grid stays symmetric */}
-        <div className="grid grid-cols-3 gap-3">
-          <div className="panel p-3 sm:p-4">
-            <p className="mono-label">{t("totalTenants")}</p>
-            <p className="mt-2 text-xl font-light tabular-nums text-[var(--color-foreground)] sm:text-2xl">
-              {tenants.length}
-            </p>
-          </div>
-          <div className="panel p-3 sm:p-4">
-            <p className="mono-label">{t("activeTenants")}</p>
-            <p className="mt-2 text-xl font-light tabular-nums text-[var(--semantic-success)] sm:text-2xl">
-              {tenants.filter((tenant) => new Date(tenant.leaseEnd) > new Date()).length}
-            </p>
-          </div>
-          <div className="panel p-3 sm:p-4">
-            <p className="mono-label">{t("totalOwners")}</p>
-            <p className="mt-2 text-xl font-light tabular-nums text-[var(--color-foreground)] sm:text-2xl">
-              {owners.length}
-            </p>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Tab Navigation - Tenants and Owners */}
