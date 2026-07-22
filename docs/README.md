@@ -8,7 +8,7 @@ Welcome to the ProMan documentation. This index links to all available guides.
 - [.env.example](../.env.example) — Full list of environment variables with defaults
 - [Roadmap](../ROADMAP.md) — Living single source of truth for shipped work + the **Decisions Log** (authoritative for architectural/IA decisions)
 - [Development Roadmap](DEVELOPMENT_ROADMAP.md) — What's planned next
-- [Claim Audit (2026-03-11)](CLAIM_AUDIT_2026-03-11.md) — Verification and corrections for public-facing capability/status claims
+- [Sprint Board (2026 Q3)](SPRINT_BOARD_2026Q3.md) — Current execution board for the roadmap
 
 ## Strategy & Audits (current)
 
@@ -34,7 +34,6 @@ Welcome to the ProMan documentation. This index links to all available guides.
 ## Security
 
 - [Security Guide](SECURITY.md) — HMAC enforcement, init endpoint hardening, secrets management
-- [Security Fixes Summary](SECURITY_FIXES_SUMMARY.md)
 - [Security Testing](SECURITY_TESTING.md)
 - [CSP Nonce Implementation](CSP_NONCE_IMPLEMENTATION.md)
 - [CSRF Integration](CSRF_INTEGRATION.md)
@@ -42,7 +41,6 @@ Welcome to the ProMan documentation. This index links to all available guides.
 ## Monitoring & Observability
 
 - [Metrics & Monitoring Guide](METRICS_AND_MONITORING.md) — Structured logging, Prometheus, Grafana
-- [Monitoring Implementation](MONITORING_IMPLEMENTATION.md)
 - [Monitoring Quick Reference](MONITORING_QUICK_REFERENCE.md)
 - [Monitoring Setup](MONITORING_SETUP.md)
 
@@ -58,7 +56,7 @@ Welcome to the ProMan documentation. This index links to all available guides.
 - [UI Consistency Guide](UI_CONSISTENCY_GUIDE.md)
 - [Accessibility Improvements](ACCESSIBILITY_IMPROVEMENTS.md)
 - [Accessibility Quick Reference](ACCESSIBILITY_QUICK_REFERENCE.md)
-- [UX Phase Summaries](ux/)
+- [Storybook Guide](ux/STORYBOOK_GUIDE.md)
 
 ## Testing
 
@@ -71,3 +69,10 @@ Welcome to the ProMan documentation. This index links to all available guides.
 - [Contributing Guide](../CONTRIBUTING.md)
 - [Releases](../RELEASES.md)
 - [Workflow Naming](workflow-naming.md)
+
+## Archive
+
+Superseded and point-in-time documents (completed phase summaries, dated audits, status
+snapshots) move to [`archive/`](archive/) rather than staying at the top level — see
+[`ARCHIVED.md`](ARCHIVED.md) for the parallel convention covering retired GitHub Actions
+workflows. Kept for historical reference only; not authoritative.
