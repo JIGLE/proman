@@ -121,6 +121,7 @@ test-output.txt
 test-results.txt
 final-test.txt
 *-output.txt
+*_output.txt
 *-results.txt
 /release-charts-local/
 /release-charts-temp/
