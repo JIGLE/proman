@@ -123,7 +123,7 @@
     "js-yaml": "^5.0.0",
     "jsdom": "^29.1.1",
     "prettier": "^3.9.6",
-    "prisma": "^7.8.0",
+    "prisma": "^7.9.0",
     "react-i18next": "^17.0.8",
     "tailwindcss": "^4",
     "typescript": "^5.9.3",
