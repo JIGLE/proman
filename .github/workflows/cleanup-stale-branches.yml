@@ -1,0 +1,21 @@
+name: Cleanup Stale Branches (one-off)
+
+# Temporary utility workflow: deletes remote branches left behind by closed
+# (not merged) PRs #195 and #276, which GitHub does not auto-delete on close
+# (only on merge). Manual-dispatch only; remove this file after use.
+
+on:
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  delete-branches:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Delete stale branches
+        run: |
+          git push origin --delete claude/ux-audit-redesign-0eygsj || echo "already gone: claude/ux-audit-redesign-0eygsj"
+          git push origin --delete dependabot/npm_and_yarn/production-minor-6cc9803288 || echo "already gone: dependabot/npm_and_yarn/production-minor-6cc9803288"
