@@ -353,7 +353,7 @@ const prisma = new PrismaClient({
 ## 📧 Related Documentation
 
 - [PRODUCTION_READINESS_PLAN.md](./PRODUCTION_READINESS_PLAN.md) - Complete roadmap
-- [SECURITY_FIXES_SUMMARY.md](./SECURITY_FIXES_SUMMARY.md) - Security improvements
+- [SECURITY.md](./SECURITY.md) - Security guide
 - [Prisma Documentation](https://www.prisma.io/docs/concepts/components/prisma-client/indexes) - Index best practices
 
 ---
