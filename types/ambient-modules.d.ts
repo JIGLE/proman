@@ -115,6 +115,7 @@ declare module "framer-motion" {
   export function useSpring(value: unknown, config?: Record<string, unknown>): unknown;
   export function useAnimation(): unknown;
   export function useInView(ref: unknown, options?: Record<string, unknown>): boolean;
+  export function useReducedMotion(): boolean | null;
 }
 
 declare module "next-intl" {

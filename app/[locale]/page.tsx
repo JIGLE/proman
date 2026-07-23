@@ -9,6 +9,7 @@ import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { LandingStickyCta } from "@/components/shared/landing-sticky-cta";
 import { LocaleSelectOverlay } from "@/components/shared/locale-select-overlay";
+import { PwaWelcome } from "@/components/shared/pwa-welcome";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -92,6 +93,10 @@ export default async function LandingPage({ params }: Props) {
   return (
     <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-foreground)]">
       <LocaleSelectOverlay currentLocale={locale} />
+
+      {/* Installed-PWA visitors get an app-native welcome instead of the marketing scroll below.
+          Renders null for normal browser tabs (standalone display-mode detected client-side). */}
+      <PwaWelcome locale={locale} />
 
       {/* ── Header ─────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-canvas)]/85 backdrop-blur-md">
