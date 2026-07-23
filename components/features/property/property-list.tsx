@@ -493,8 +493,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
       (propertyId: string) => {
         const selected = properties.find((property) => property.id === propertyId);
         if (!selected) return;
-        // Open property detail via route modal query param
-        router.push(`/${locale}/portfolio?modal=${selected.id}`);
+        // Open property detail overlay via the shared `?detail=` query param
+        router.push(`/${locale}/portfolio?detail=property:${selected.id}`);
         onPropertySelect?.(selected.id);
       },
       [onPropertySelect, properties, router, locale],
@@ -722,8 +722,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               key={property.id}
                               className="border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-surface-hover)]"
                               onClick={() => {
-                                // Open property detail via route modal query param
-                                router.push(`/${locale}/portfolio?modal=${property.id}`);
+                                // Open property detail overlay via the shared `?detail=` query param
+                                router.push(`/${locale}/portfolio?detail=property:${property.id}`);
                                 onPropertySelect?.(property.id);
                               }}
                             >
@@ -998,7 +998,9 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                       <div
                                         className="flex min-w-0 flex-1 cursor-pointer flex-col"
                                         onClick={() => {
-                                          router.push(`/${locale}/portfolio?modal=${property.id}`);
+                                          router.push(
+                                            `/${locale}/portfolio?detail=property:${property.id}`,
+                                          );
                                           onPropertySelect?.(property.id);
                                         }}
                                       >
@@ -1164,7 +1166,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             router.push(
-                                              `/${locale}/portfolio?modal=${property.id}`,
+                                              `/${locale}/portfolio?detail=property:${property.id}`,
                                             );
                                           }}
                                           className="shrink-0 rounded-md p-1.5 text-[var(--color-warning)] transition-colors hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-warning)]"

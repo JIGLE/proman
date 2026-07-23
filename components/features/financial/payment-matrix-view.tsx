@@ -1,7 +1,9 @@
 import { useState, useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
+import { withEntityDetail } from "@/lib/utils/entity-detail-url";
 import { Tenant } from "@/lib/types";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -29,6 +31,9 @@ export function PaymentMatrixView(): React.ReactElement {
   const t = useTranslations("paymentMatrix");
   const tMonths = useTranslations("calendar.months");
   const locale = useLocale();
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [statusFilter, setStatusFilter] = useState<"all" | "paid" | "pending" | "overdue">("all");
 
@@ -294,9 +299,22 @@ export function PaymentMatrixView(): React.ReactElement {
                     className="border-b border-[var(--color-border)] hover:bg-[var(--color-hover)] transition-colors duration-200"
                   >
                     <td className="sticky left-0 z-10 bg-[var(--color-card)] py-3 px-4">
-                      <div className="font-medium text-[var(--color-foreground)]">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          router.push(
+                            withEntityDetail(
+                              pathname,
+                              searchParams.toString(),
+                              "tenant",
+                              tenant.id,
+                            ),
+                          )
+                        }
+                        className="font-medium text-[var(--color-foreground)] hover:underline text-left"
+                      >
                         {tenant.name}
-                      </div>
+                      </button>
                       <div className="text-sm text-[var(--color-muted-foreground)]">
                         {formatCurrency(tenant.rent)}
                         {t("perMonth")}

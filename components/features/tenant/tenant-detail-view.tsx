@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Users,
   Mail,
@@ -13,7 +13,7 @@ import {
   DollarSign,
   Link2,
 } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils/utils";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { useCsrf } from "@/lib/contexts/csrf-context";
@@ -28,7 +28,7 @@ import { EntityLink } from "@/components/shared/entity-link";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { getActiveLease as findActiveLease } from "@/lib/utils/lease-helpers";
 import { buildLocalizedFinancialReviewPath } from "@/lib/utils/financial-navigation";
-import { TenantDetailModal } from "@/components/features/tenant/tenant-detail-modal";
+import { withEntityDetail } from "@/lib/utils/entity-detail-url";
 
 interface TenantDetailViewProps {
   tenantId: string;
@@ -47,9 +47,9 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   const { success, error } = useToast();
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const locale = pathname.split("/")[1] || "pt";
   const [activeTab, setActiveTab] = useTabPersistence("tenant-detail", "overview");
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const tenant = state.tenants.find((t) => t.id === tenantId);
 
@@ -174,7 +174,13 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           >
             <Mail className="h-4 w-4 mr-1" /> Contact
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setIsEditModalOpen(true)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              router.push(withEntityDetail(pathname, searchParams.toString(), "tenant", tenantId))
+            }
+          >
             <Edit className="h-4 w-4 mr-1" /> Edit
           </Button>
         </div>
@@ -449,12 +455,6 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           )}
         </TabsContent>
       </Tabs>
-
-      <TenantDetailModal
-        tenant={tenant}
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-      />
     </div>
   );
 }

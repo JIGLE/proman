@@ -1501,5 +1501,29 @@
     "legend": "Señales",
     "collapse": "Contraer panel",
     "expand": "Expandir panel"
+  },
+  "entityOverlay": {
+    "openFullPage": "Abrir página completa",
+    "notFound": "No encontrado",
+    "property": {
+      "title": "Detalles del inmueble",
+      "description": "Detalles del inmueble {name}"
+    },
+    "tenant": {
+      "title": "Detalles del inquilino",
+      "description": "Detalles del inquilino {name}"
+    },
+    "owner": {
+      "title": "Detalles del propietario",
+      "description": "Detalles del propietario {name}"
+    },
+    "lease": {
+      "title": "Detalles del contrato",
+      "description": "Detalles del contrato {name}"
+    },
+    "document": {
+      "title": "Detalles del documento",
+      "description": "Detalles del documento {name}"
+    }
   }
 }

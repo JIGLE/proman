@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { withEntityDetail } from "@/lib/utils/entity-detail-url";
 import { useSession } from "next-auth/react";
 import { useCsrf } from "@/lib/contexts/csrf-context";
 import { useDemoMode } from "@/lib/contexts/demo-context";
@@ -32,20 +33,16 @@ import { EmptyStateIllustration } from "@/components/ui/empty-state-illustration
 import { Download, Trash2, Search, Filter, Clock } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { DocumentType } from "./document-types";
-import { documentTypeConfig, formatFileSize, formatDocumentDate } from "./document-types";
+import {
+  documentTypeConfig,
+  formatFileSize,
+  formatDocumentDate,
+  getExpiryInfo,
+} from "./document-types";
 import { useDocuments } from "./use-documents";
 import { DocumentUploadDialog } from "./document-upload-dialog";
 import { DocumentTemplateDialog } from "./document-template-dialog";
 import { DocumentReviewQueue } from "./document-review-queue";
-
-function getExpiryInfo(expiresAt: string | null | undefined) {
-  if (!expiresAt) return null;
-  const days = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86400000);
-  if (days < 0) return { label: "Expired", variant: "destructive" as const };
-  if (days <= 14) return { label: `Expires in ${days}d`, variant: "destructive" as const };
-  if (days <= 60) return { label: `Expires in ${days}d`, variant: "warning" as const };
-  return null;
-}
 
 export interface DocumentsViewProps {
   /** Scopes the archive to a single property — set when embedded in the property detail overlay. */
@@ -64,10 +61,16 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
   const { token: csrfToken } = useCsrf();
   const { isOwnerPortal } = usePortalAccess();
   const { isDemoMode } = useDemoMode();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<DocumentType | "all">("all");
   const [propertyFilter, setPropertyFilter] = useState<string>(propertyId ?? "all");
+
+  const openDocumentOverlay = (docId: string) => {
+    router.push(withEntityDetail(pathname, searchParams.toString(), "document", docId));
+  };
 
   useEffect(() => {
     const propertyIdParam = searchParams.get("propertyId");
@@ -224,7 +227,8 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
                   return (
                     <div
                       key={doc.id}
-                      className="flex items-center justify-between border border-[var(--color-border)] p-3"
+                      className="flex items-center justify-between border border-[var(--color-border)] p-3 cursor-pointer hover:bg-[var(--color-hover)]"
+                      onClick={() => openDocumentOverlay(doc.id)}
                     >
                       <div className="flex items-center gap-3">
                         <Icon className="h-5 w-5 text-[var(--color-muted-foreground)]" />
@@ -238,7 +242,10 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
                       <Button
                         variant="ghost"
                         size="icon"
-                        onClick={() => handleDownload(doc)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDownload(doc);
+                        }}
                         aria-label="Download document"
                       >
                         <Download className="h-4 w-4" aria-hidden="true" />
@@ -406,7 +413,8 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
                           return (
                             <div
                               key={doc.id}
-                              className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:bg-zinc-800/60"
+                              className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:bg-zinc-800/60 cursor-pointer"
+                              onClick={() => openDocumentOverlay(doc.id)}
                             >
                               <div className="flex items-center gap-4">
                                 <div className="rounded-lg bg-muted p-2">
@@ -452,7 +460,10 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
                                   )}
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
+                              <div
+                                className="flex items-center gap-2"
+                                onClick={(e) => e.stopPropagation()}
+                              >
                                 <Button
                                   variant="ghost"
                                   size="icon"

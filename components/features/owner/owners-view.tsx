@@ -20,15 +20,16 @@ import { Textarea } from "@/components/ui/textarea";
 import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { SearchFilter } from "@/components/ui/search-filter";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useApp } from "@/lib/contexts/app-context";
 import { Owner } from "@/lib/types";
 import { ownerSchema, type OwnerFormData } from "@/lib/schemas/owner.schema";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import jsPDF from "jspdf";
-import { OwnerDetailModal } from "./owner-detail-modal";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
+import { withEntityDetail } from "@/lib/utils/entity-detail-url";
 
 export type OwnersViewRef = {
   openDialog: () => void;
@@ -44,9 +45,13 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
     const compact = true; // Always compact
     const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
 
-    // Owner detail modal state
-    const [selectedOwner, setSelectedOwner] = useState<Owner | null>(null);
-    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    // Owner detail overlay — opened via the shared `?detail=owner:<id>` mechanism
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const openOwnerOverlay = (ownerId: string) => {
+      router.push(withEntityDetail(pathname, searchParams.toString(), "owner", ownerId));
+    };
 
     // Search and filter state
     const [searchQuery, setSearchQuery] = useState("");
@@ -357,10 +362,7 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                   <Card
                     key={owner.id}
                     className="bg-zinc-900 border-zinc-800 cursor-pointer hover:border-[var(--color-accent-primary)]/40 hover:shadow-lg transition-all duration-200"
-                    onClick={() => {
-                      setSelectedOwner(owner);
-                      setIsDetailModalOpen(true);
-                    }}
+                    onClick={() => openOwnerOverlay(owner.id)}
                   >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle
@@ -456,7 +458,10 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                           variant="outline"
                           size="sm"
                           className="w-full mt-2"
-                          onClick={() => generateStatement(owner)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            generateStatement(owner);
+                          }}
                           disabled={generatingPdf === owner.id}
                         >
                           <Download className="w-4 h-4 mr-2" />
@@ -471,22 +476,6 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
           </div>
         )}
 
-        {/* Owner Detail Modal */}
-        <OwnerDetailModal
-          owner={selectedOwner}
-          isOpen={isDetailModalOpen}
-          onClose={() => {
-            setIsDetailModalOpen(false);
-            setSelectedOwner(null);
-          }}
-          onEdit={(updatedOwner) => {
-            setSelectedOwner(updatedOwner);
-          }}
-          onDelete={() => {
-            setIsDetailModalOpen(false);
-            setSelectedOwner(null);
-          }}
-        />
         <ConfirmationDialog dialog={confirmDialog} />
       </>
     );

@@ -51,7 +51,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { SearchFilter } from "@/components/ui/search-filter";
 import { BulkActionBar, getDefaultBulkActions } from "@/components/ui/bulk-action-bar";
-import { TenantDetailModal } from "./tenant-detail-modal";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { withEntityDetail } from "@/lib/utils/entity-detail-url";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { useApp } from "@/lib/contexts/app-context";
@@ -296,9 +297,13 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
     const confirmDialog = useConfirmDialog();
     const compact = true; // Always compact
 
-    // Tenant detail modal state
-    const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
-    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    // Tenant detail overlay — opened via the shared `?detail=tenant:<id>` mechanism
+    const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
+    const openTenantOverlay = (tenantId: string) => {
+      router.push(withEntityDetail(pathname, searchParams.toString(), "tenant", tenantId));
+    };
 
     // Search and filter state
     const [searchQuery, setSearchQuery] = useState("");
@@ -601,10 +606,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         <TableRow
                           key={tenant.id}
                           className="border-zinc-800 cursor-pointer hover:bg-zinc-800/50"
-                          onClick={() => {
-                            setSelectedTenant(tenant);
-                            setIsDetailModalOpen(true);
-                          }}
+                          onClick={() => openTenantOverlay(tenant.id)}
                         >
                           <TableCell className="text-sm font-medium text-zinc-100">
                             {tenant.name}
@@ -718,10 +720,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             icon: <Eye className="h-5 w-5" />,
                             label: "Open",
                             className: "bg-accent-primary",
-                            onAction: () => {
-                              setSelectedTenant(tenant);
-                              setIsDetailModalOpen(true);
-                            },
+                            onAction: () => openTenantOverlay(tenant.id),
                           }}
                           endAction={{
                             icon: <Trash2 className="h-5 w-5" />,
@@ -734,10 +733,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             className={cn(
                               "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40 cursor-pointer",
                             )}
-                            onClick={() => {
-                              setSelectedTenant(tenant);
-                              setIsDetailModalOpen(true);
-                            }}
+                            onClick={() => openTenantOverlay(tenant.id)}
                           >
                             <Checkbox
                               checked={isSelected}
@@ -879,22 +875,6 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
           </div>
         )}
 
-        {/* Tenant Detail Modal */}
-        <TenantDetailModal
-          tenant={selectedTenant}
-          isOpen={isDetailModalOpen}
-          onClose={() => {
-            setIsDetailModalOpen(false);
-            setSelectedTenant(null);
-          }}
-          onEdit={(updatedTenant) => {
-            setSelectedTenant(updatedTenant);
-          }}
-          onDelete={() => {
-            setIsDetailModalOpen(false);
-            setSelectedTenant(null);
-          }}
-        />
         <ConfirmationDialog dialog={confirmDialog} />
       </>
     );

@@ -1,18 +1,28 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { Search, Building2, Users, DollarSign, Plus, ArrowRight, FileText } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import {
+  Search,
+  Building2,
+  Users,
+  UserCircle,
+  DollarSign,
+  Plus,
+  ArrowRight,
+  FileText,
+} from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils/utils";
 import { useApp } from "@/lib/contexts/app-context";
 import { usePortalAccess } from "@/lib/contexts/portal-context";
+import { withEntityDetail } from "@/lib/utils/entity-detail-url";
 
 interface CommandItem {
   id: string;
   label: string;
   description?: string;
   icon: React.ComponentType<{ className?: string }>;
-  category: "action" | "property" | "tenant" | "lease" | "navigation";
+  category: "action" | "property" | "tenant" | "owner" | "lease" | "navigation";
   href?: string;
   onSelect?: () => void;
 }
@@ -25,6 +35,7 @@ export function CommandPalette() {
   const listRef = useRef<HTMLDivElement>(null);
   const { state } = useApp();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const { portalRole, navigation } = usePortalAccess();
   const locale = pathname.split("/")[1] || "pt";
@@ -103,13 +114,14 @@ export function CommandPalette() {
       })),
     );
 
+    const detailSearch = searchParams.toString();
     const propertyItems: CommandItem[] = state.properties.map((p) => ({
       id: `property-${p.id}`,
       label: p.name,
       description: p.address,
       icon: Building2,
       category: "property" as const,
-      href: `/${locale}/portfolio/${p.id}`,
+      href: withEntityDetail(pathname, detailSearch, "property", p.id),
     }));
 
     const tenantItems: CommandItem[] = state.tenants.map((t) => ({
@@ -118,11 +130,29 @@ export function CommandPalette() {
       description: t.email,
       icon: Users,
       category: "tenant" as const,
-      href: `/${locale}/people/${t.id}`,
+      href: withEntityDetail(pathname, detailSearch, "tenant", t.id),
     }));
 
-    return [...actions, ...navigationItems, ...propertyItems, ...tenantItems];
-  }, [navigation, portalRole, state.properties, state.tenants, locale]);
+    const ownerItems: CommandItem[] = state.owners.map((o) => ({
+      id: `owner-${o.id}`,
+      label: o.name,
+      description: o.email,
+      icon: UserCircle,
+      category: "owner" as const,
+      href: withEntityDetail(pathname, detailSearch, "owner", o.id),
+    }));
+
+    return [...actions, ...navigationItems, ...propertyItems, ...tenantItems, ...ownerItems];
+  }, [
+    navigation,
+    portalRole,
+    state.properties,
+    state.tenants,
+    state.owners,
+    locale,
+    pathname,
+    searchParams,
+  ]);
 
   // Filter
   const filtered = useMemo(() => {
@@ -177,6 +207,7 @@ export function CommandPalette() {
     navigation: "Navigation",
     property: "Properties",
     tenant: "Tenants",
+    owner: "Owners",
     lease: "Leases",
   };
 

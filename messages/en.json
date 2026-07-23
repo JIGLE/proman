@@ -1501,5 +1501,29 @@
     "legend": "Signals",
     "collapse": "Collapse rail",
     "expand": "Expand rail"
+  },
+  "entityOverlay": {
+    "openFullPage": "Open full page",
+    "notFound": "Not found",
+    "property": {
+      "title": "Property details",
+      "description": "Property details for {name}"
+    },
+    "tenant": {
+      "title": "Tenant details",
+      "description": "Tenant details for {name}"
+    },
+    "owner": {
+      "title": "Owner details",
+      "description": "Owner details for {name}"
+    },
+    "lease": {
+      "title": "Lease details",
+      "description": "Lease details for {name}"
+    },
+    "document": {
+      "title": "Document details",
+      "description": "Document details for {name}"
+    }
   }
 }
