@@ -33,9 +33,12 @@ function getPrismaClient(): PrismaClient {
         try {
           fs.accessSync(resolvedPath, fs.constants.W_OK);
         } catch {
+          const dir = require("path").dirname(resolvedPath);
           throw new Error(
-            `SQLite DB file is not writable: ${resolvedPath}. ` +
-              `Fix permissions with: chmod 666 ${resolvedPath} && chown app:app ${resolvedPath}`,
+            `SQLite DB file is not writable: ${resolvedPath}. The container runs as ` +
+              `nextjs:nextjs (uid/gid 1001:1001, see Dockerfile) — fix ownership on the ` +
+              `mounted host directory (not "app", which doesn't exist in this image): ` +
+              `chown -R 1001:1001 ${dir} && chmod -R 770 ${dir}`,
           );
         }
       }
