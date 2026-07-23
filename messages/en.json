@@ -1187,7 +1187,9 @@
       "edit": "Edit",
       "reviewPayments": "Review Payments",
       "documents": "Documents",
-      "backToProperties": "Back to Properties"
+      "backToProperties": "Back to Properties",
+      "openInFinance": "Open in Finance",
+      "openInDocuments": "Open in Documents"
     },
     "notFound": "Property not found",
     "status": {

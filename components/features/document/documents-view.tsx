@@ -47,7 +47,18 @@ function getExpiryInfo(expiresAt: string | null | undefined) {
   return null;
 }
 
-export function DocumentsView() {
+export interface DocumentsViewProps {
+  /** Scopes the archive to a single property — set when embedded in the property detail overlay. */
+  propertyId?: string;
+  /**
+   * Drops the internal header, the portfolio-wide stats cards, and the Inbox/OCR Queue/Review
+   * Required triage tabs (those queues are about documents not yet linked to a property, so
+   * they don't apply once this view is scoped to one). Upload/template actions stay available.
+   */
+  embedded?: boolean;
+}
+
+export function DocumentsView({ propertyId, embedded = false }: DocumentsViewProps = {}) {
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const { token: csrfToken } = useCsrf();
@@ -56,12 +67,12 @@ export function DocumentsView() {
 
   const [searchTerm, setSearchTerm] = useState("");
   const [typeFilter, setTypeFilter] = useState<DocumentType | "all">("all");
-  const [propertyFilter, setPropertyFilter] = useState<string>("all");
+  const [propertyFilter, setPropertyFilter] = useState<string>(propertyId ?? "all");
 
   useEffect(() => {
-    const propertyId = searchParams.get("propertyId");
+    const propertyIdParam = searchParams.get("propertyId");
     const search = searchParams.get("search");
-    if (propertyId) setPropertyFilter(propertyId);
+    if (propertyIdParam) setPropertyFilter(propertyIdParam);
     if (search) setSearchTerm(search);
   }, [searchParams]);
 
@@ -89,12 +100,12 @@ export function DocumentsView() {
     const filters: string[] = [];
     if (searchTerm) filters.push(`Search: ${searchTerm}`);
     if (typeFilter !== "all") filters.push(`Type: ${documentTypeConfig[typeFilter].label}`);
-    if (propertyFilter !== "all") {
+    if (!embedded && propertyFilter !== "all") {
       const name = properties.find((p) => p.id === propertyFilter)?.name ?? "Property";
       filters.push(`Property: ${name}`);
     }
     return filters;
-  }, [properties, propertyFilter, searchTerm, typeFilter]);
+  }, [embedded, properties, propertyFilter, searchTerm, typeFilter]);
 
   const groupedDocuments = useMemo(() => {
     return documents.reduce<Record<string, typeof documents>>((acc, doc) => {
@@ -131,33 +142,38 @@ export function DocumentsView() {
     );
   }
 
+  const uploadActions = isOwnerPortal && (
+    <>
+      <DocumentTemplateDialog csrfToken={csrfToken} />
+      <DocumentUploadDialog
+        csrfToken={csrfToken}
+        properties={properties}
+        tenants={tenants}
+        owners={owners}
+        onSuccess={refetch}
+      />
+    </>
+  );
+
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">
-            {isOwnerPortal ? "Documents" : "My documents"}
-          </h2>
-          <p className="text-muted-foreground">
-            {isOwnerPortal
-              ? "Manage contracts, receipts, and property files by entity instead of one flat list."
-              : "Review the documents shared with your tenancy and download what you need quickly."}
-          </p>
-        </div>
-        {isOwnerPortal && (
-          <div className="flex gap-2">
-            <DocumentTemplateDialog csrfToken={csrfToken} />
-            <DocumentUploadDialog
-              csrfToken={csrfToken}
-              properties={properties}
-              tenants={tenants}
-              owners={owners}
-              onSuccess={refetch}
-            />
+      {!embedded && (
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h2 className="text-2xl font-bold tracking-tight">
+              {isOwnerPortal ? "Documents" : "My documents"}
+            </h2>
+            <p className="text-muted-foreground">
+              {isOwnerPortal
+                ? "Manage contracts, receipts, and property files by entity instead of one flat list."
+                : "Review the documents shared with your tenancy and download what you need quickly."}
+            </p>
           </div>
-        )}
-      </div>
+          {uploadActions && <div className="flex gap-2">{uploadActions}</div>}
+        </div>
+      )}
+
+      {embedded && uploadActions && <div className="flex justify-end gap-2">{uploadActions}</div>}
 
       {error && (
         <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-lg">
@@ -169,7 +185,7 @@ export function DocumentsView() {
       )}
 
       <Tabs defaultValue="archive" className="space-y-6">
-        {isOwnerPortal && (
+        {!embedded && isOwnerPortal && (
           <TabsList>
             <TabsTrigger value="archive">Archive</TabsTrigger>
             <TabsTrigger value="inbox">
@@ -244,8 +260,8 @@ export function DocumentsView() {
         </TabsContent>
 
         <TabsContent value="archive" className="mt-0 space-y-6">
-          {/* Stats Cards */}
-          {stats && (
+          {/* Stats Cards — portfolio-wide totals, not property-scoped, so hidden when embedded */}
+          {!embedded && stats && (
             <div className="grid gap-4 md:grid-cols-4">
               <Card>
                 <CardHeader className="pb-2">
@@ -330,7 +346,7 @@ export function DocumentsView() {
                     ))}
                   </SelectContent>
                 </Select>
-                {isOwnerPortal && (
+                {!embedded && isOwnerPortal && (
                   <Select value={propertyFilter} onValueChange={setPropertyFilter}>
                     <SelectTrigger className="w-[180px]">
                       <SelectValue placeholder="Filter by property" />

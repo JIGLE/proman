@@ -1187,7 +1187,9 @@
       "edit": "Modifica",
       "reviewPayments": "Revisiona pagamenti",
       "documents": "Documenti",
-      "backToProperties": "Torna agli immobili"
+      "backToProperties": "Torna agli immobili",
+      "openInFinance": "Apri in Finanza",
+      "openInDocuments": "Apri in Documenti"
     },
     "notFound": "Immobile non trovato",
     "status": {
