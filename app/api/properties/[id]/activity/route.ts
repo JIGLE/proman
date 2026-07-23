@@ -38,6 +38,13 @@ async function handleGet(
     return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
   }
 
+  const url = new URL(request.url);
+  const yearParam = Number(url.searchParams.get("year"));
+  const year =
+    Number.isInteger(yearParam) && yearParam >= 2000 && yearParam <= 2100
+      ? yearParam
+      : new Date().getUTCFullYear();
+
   const prisma = getPrismaClient();
   const property = await prisma.property.findFirst({
     where: { id: propertyId, userId: scopeUserId },
@@ -59,6 +66,21 @@ async function handleGet(
   });
   const openPeriod =
     periods.find((p) => p.allocatedAmount < p.dueAmount - EPSILON) ?? periods.at(-1) ?? null;
+
+  // Year strip: the requested year's 12 reference months, keyed by month (1-12).
+  // Derived from the same `periods` fetch above — no extra query. If a property
+  // ever has two leases with a period in the same month (tenant turnover), the
+  // later-ordered one wins; this is a display simplification, not a ledger change.
+  const yearMonths: Record<number, { status: string; dueAmount: number; allocatedAmount: number }> =
+    {};
+  for (const p of periods) {
+    if (p.year !== year) continue;
+    yearMonths[p.month] = {
+      status: p.status,
+      dueAmount: p.dueAmount,
+      allocatedAmount: p.allocatedAmount,
+    };
+  }
 
   let receiptLifecycle: string | null = null;
   if (openPeriod) {
@@ -95,6 +117,7 @@ async function handleGet(
           allocatedAmount: openPeriod.allocatedAmount,
         }
       : null,
+    yearStrip: { year, months: yearMonths },
     receiptLifecycle,
     timeline: allocations.map((a) => ({
       id: a.id,
