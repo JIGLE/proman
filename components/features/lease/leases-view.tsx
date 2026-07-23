@@ -80,8 +80,9 @@ import { useSortableData } from "@/lib/hooks/use-sortable-data";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { PageHeader } from "@/components/shared/page-header";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useLocale } from "next-intl";
+import { withEntityDetail } from "@/lib/utils/entity-detail-url";
 
 export type LeasesViewProps = Record<string, never>;
 
@@ -92,8 +93,12 @@ export function LeasesView(): React.ReactElement {
   const { formatCurrency, currencySymbol } = useCurrency();
   const confirmDialog = useConfirmDialog();
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const locale = useLocale();
+  const openLeaseOverlay = (leaseId: string) => {
+    router.push(withEntityDetail(pathname, searchParams.toString(), "lease", leaseId));
+  };
   const [contractFile, setContractFile] = useState<File | null>(null);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editingLease, setEditingLease] = useState<Lease | null>(null);
@@ -1151,11 +1156,12 @@ export function LeasesView(): React.ReactElement {
                       <TableRow
                         key={lease.id}
                         className={cn(
-                          "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)]",
+                          "border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] cursor-pointer",
                           selectedLeaseIds.has(lease.id) && "bg-indigo-950/30",
                         )}
+                        onClick={() => openLeaseOverlay(lease.id)}
                       >
-                        <TableCell className="pl-4 w-10">
+                        <TableCell className="pl-4 w-10" onClick={(e) => e.stopPropagation()}>
                           <Checkbox
                             checked={selectedLeaseIds.has(lease.id)}
                             onChange={() => toggleLeaseSelection(lease.id)}
@@ -1178,7 +1184,7 @@ export function LeasesView(): React.ReactElement {
                           {formatCurrency(lease.monthlyRent)}
                         </TableCell>
                         <TableCell>{getStatusBadge(lease.status)}</TableCell>
-                        <TableCell>
+                        <TableCell onClick={(e) => e.stopPropagation()}>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                               <Button
@@ -1296,7 +1302,7 @@ export function LeasesView(): React.ReactElement {
                   <Card
                     key={lease.id}
                     className="overflow-hidden transition-all hover:shadow-lg cursor-pointer"
-                    onClick={() => router.push(`/${locale}/leases/${lease.id}`)}
+                    onClick={() => openLeaseOverlay(lease.id)}
                   >
                     <div className="aspect-video w-full bg-[var(--color-secondary)] relative">
                       <div className="absolute inset-0 flex items-center justify-center">

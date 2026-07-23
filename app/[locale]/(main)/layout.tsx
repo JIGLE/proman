@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { Sidebar } from "@/components/layouts/sidebar";
 import { MobileBottomNav, MobileTopBar } from "@/components/ui/mobile-nav";
 import { SkipLink } from "@/components/ui/accessibility";
@@ -7,6 +8,7 @@ import { CommandPalette } from "@/components/shared/command-palette";
 import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { ScenarioRunner } from "@/components/shared/scenario-runner";
 import { PortalAccessGuard } from "@/components/shared/portal-access-guard";
+import { EntityDetailRouteClient } from "@/components/shared/entity-detail-route-client";
 
 export default function MainLayout({
   children,
@@ -54,6 +56,11 @@ export default function MainLayout({
 
       {/* Command Palette (⌘K) */}
       <CommandPalette />
+
+      {/* Entity detail overlay — mounted once so `?detail=<type>:<id>` works from any page */}
+      <Suspense fallback={null}>
+        <EntityDetailRouteClient />
+      </Suspense>
 
       {/* Demo Scenario Runner FAB */}
       <ScenarioRunner />

@@ -70,3 +70,14 @@ export function formatDocumentDate(dateString: string): string {
     day: "numeric",
   });
 }
+
+export function getExpiryInfo(
+  expiresAt: string | null | undefined,
+): { label: string; variant: "destructive" | "warning" } | null {
+  if (!expiresAt) return null;
+  const days = Math.ceil((new Date(expiresAt).getTime() - Date.now()) / 86400000);
+  if (days < 0) return { label: "Expired", variant: "destructive" };
+  if (days <= 14) return { label: `Expires in ${days}d`, variant: "destructive" };
+  if (days <= 60) return { label: `Expires in ${days}d`, variant: "warning" };
+  return null;
+}

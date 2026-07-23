@@ -1,20 +1,35 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Building2, Users, FileText, Wrench, Receipt } from "lucide-react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { Building2, Users, UserCircle, FileText, FileIcon, Wrench, Receipt } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { Badge } from "@/components/ui/badge";
+import { withEntityDetail } from "@/lib/utils/entity-detail-url";
 
-type EntityType = "property" | "tenant" | "lease" | "maintenance" | "receipt";
+type EntityType =
+  "property" | "tenant" | "owner" | "lease" | "document" | "maintenance" | "receipt";
 
+/**
+ * Entities with `overlay: true` open the shared `?detail=<type>:<id>` overlay
+ * on the current page instead of navigating to a full-page route — `basePath`
+ * is unused for those. Maintenance/receipt have no overlay yet and keep
+ * navigating to their existing full-page destination.
+ */
 const ENTITY_CONFIG: Record<
   EntityType,
-  { icon: React.ComponentType<{ className?: string }>; basePath: string; color: string }
+  {
+    icon: React.ComponentType<{ className?: string }>;
+    basePath?: string;
+    overlay?: boolean;
+    color: string;
+  }
 > = {
-  property: { icon: Building2, basePath: "/portfolio", color: "text-blue-500" },
-  tenant: { icon: Users, basePath: "/people", color: "text-emerald-500" },
-  lease: { icon: FileText, basePath: "/leases", color: "text-violet-500" },
+  property: { icon: Building2, overlay: true, color: "text-blue-500" },
+  tenant: { icon: Users, overlay: true, color: "text-emerald-500" },
+  owner: { icon: UserCircle, overlay: true, color: "text-sky-500" },
+  lease: { icon: FileText, overlay: true, color: "text-violet-500" },
+  document: { icon: FileIcon, overlay: true, color: "text-zinc-400" },
   maintenance: { icon: Wrench, basePath: "/operations", color: "text-amber-500" },
   receipt: { icon: Receipt, basePath: "/financials", color: "text-green-500" },
 };
@@ -41,10 +56,13 @@ export function EntityLink({
   className,
 }: EntityLinkProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const locale = pathname.split("/")[1] || "pt";
   const config = ENTITY_CONFIG[type];
   const Icon = config.icon;
-  const href = `/${locale}${config.basePath}/${id}`;
+  const href = config.overlay
+    ? withEntityDetail(pathname, searchParams.toString(), type, id)
+    : `/${locale}${config.basePath}/${id}`;
 
   if (variant === "badge") {
     return (
