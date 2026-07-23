@@ -348,7 +348,7 @@ jobs:
             const ref = 'refs/tags/v' + process.env.NEW_VERSION
             const inputs = {
               version: process.env.NEW_VERSION,
-              deploy_k8s: 'true',
+              deploy_k8s: 'false',
               kube_namespace: 'ix-app',
               kube_deployment: 'proman',
               kube_container: 'proman'
