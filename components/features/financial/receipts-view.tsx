@@ -63,6 +63,12 @@ export interface ReceiptsViewProps {
   openDialogSignal?: boolean;
   /** Called once the dialog has been opened in response to `openDialogSignal`. */
   onDialogOpened?: () => void;
+  /**
+   * Drops the internal `PageHeader` (title/description) when this view is mounted
+   * inside another surface that already renders its own heading — e.g. the property
+   * detail "Review Payments" overlay. The Add Receipt action stays available.
+   */
+  embedded?: boolean;
 }
 
 export interface ReceiptsViewRef {
@@ -252,174 +258,166 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
       return <Badge className={colors[type]}>{type.charAt(0).toUpperCase() + type.slice(1)}</Badge>;
     };
 
+    const addReceiptButton = isOwnerPortal && (
+      <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
+        <DialogTrigger asChild>
+          <Button onClick={dialog.openDialog} className="flex items-center gap-2">
+            <Plus className="w-4 h-4" />
+            Add Receipt
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-[var(--color-foreground)]">
+              {dialog.editingItem ? "Edit Receipt" : "Add New Receipt"}
+            </DialogTitle>
+            <DialogDescription>
+              {dialog.editingItem ? "Update receipt information" : "Create a new payment receipt"}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={dialog.handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="tenant">Tenant</Label>
+                <Select
+                  value={dialog.formData.tenantId}
+                  onValueChange={(value) => dialog.updateFormData({ tenantId: value })}
+                >
+                  <SelectTrigger className={dialog.formErrors.tenantId ? "border-red-500" : ""}>
+                    <SelectValue placeholder="Select tenant" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tenants.map((tenant) => (
+                      <SelectItem key={tenant.id} value={tenant.id}>
+                        {tenant.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {dialog.formErrors.tenantId && (
+                  <p className="text-sm text-destructive">{dialog.formErrors.tenantId}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="property">Property</Label>
+                <Select
+                  value={dialog.formData.propertyId}
+                  onValueChange={(value) => dialog.updateFormData({ propertyId: value })}
+                >
+                  <SelectTrigger className={dialog.formErrors.propertyId ? "border-red-500" : ""}>
+                    <SelectValue placeholder="Select property" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {properties.map((property) => (
+                      <SelectItem key={property.id} value={property.id}>
+                        {property.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {dialog.formErrors.propertyId && (
+                  <p className="text-sm text-destructive">{dialog.formErrors.propertyId}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="amount">Amount ($)</Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={dialog.formData.amount}
+                  onChange={(e) =>
+                    dialog.updateFormData({
+                      amount: parseFloat(e.target.value) || 0,
+                    })
+                  }
+                  className={dialog.formErrors.amount ? "border-red-500" : ""}
+                  required
+                />
+                {dialog.formErrors.amount && (
+                  <p className="text-sm text-destructive">{dialog.formErrors.amount}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="date">Payment Date</Label>
+                <Input
+                  id="date"
+                  type="date"
+                  value={dialog.formData.date}
+                  onChange={(e) => dialog.updateFormData({ date: e.target.value })}
+                  className={dialog.formErrors.date ? "border-red-500" : ""}
+                  required
+                />
+                {dialog.formErrors.date && (
+                  <p className="text-sm text-destructive">{dialog.formErrors.date}</p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="type">Payment Type</Label>
+                <Select
+                  value={dialog.formData.type}
+                  onValueChange={(value: Receipt["type"]) => dialog.updateFormData({ type: value })}
+                >
+                  <SelectTrigger className={dialog.formErrors.type ? "border-red-500" : ""}>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="rent">Rent</SelectItem>
+                    <SelectItem value="deposit">Deposit</SelectItem>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                {dialog.formErrors.type && (
+                  <p className="text-sm text-destructive">{dialog.formErrors.type}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description">Description (Optional)</Label>
+              <Textarea
+                id="description"
+                value={dialog.formData.description}
+                onChange={(e) => dialog.updateFormData({ description: e.target.value })}
+                className={dialog.formErrors.description ? "border-red-500" : ""}
+                rows={3}
+              />
+              {dialog.formErrors.description && (
+                <p className="text-sm text-destructive">{dialog.formErrors.description}</p>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={dialog.closeDialog}>
+                Cancel
+              </Button>
+              <Button type="submit" loading={dialog.isSubmitting}>
+                {dialog.editingItem ? "Update Receipt" : "Create Receipt"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+    );
+
     return (
       <>
         {loading ? (
           <LoadingState variant="cards" count={6} />
         ) : (
           <div className="space-y-6">
-            <PageHeader title="Receipts" description={description}>
-              {isOwnerPortal && (
-                <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
-                  <DialogTrigger asChild>
-                    <Button onClick={dialog.openDialog} className="flex items-center gap-2">
-                      <Plus className="w-4 h-4" />
-                      Add Receipt
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                      <DialogTitle className="text-[var(--color-foreground)]">
-                        {dialog.editingItem ? "Edit Receipt" : "Add New Receipt"}
-                      </DialogTitle>
-                      <DialogDescription>
-                        {dialog.editingItem
-                          ? "Update receipt information"
-                          : "Create a new payment receipt"}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <form onSubmit={dialog.handleSubmit} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="tenant">Tenant</Label>
-                          <Select
-                            value={dialog.formData.tenantId}
-                            onValueChange={(value) => dialog.updateFormData({ tenantId: value })}
-                          >
-                            <SelectTrigger
-                              className={dialog.formErrors.tenantId ? "border-red-500" : ""}
-                            >
-                              <SelectValue placeholder="Select tenant" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {tenants.map((tenant) => (
-                                <SelectItem key={tenant.id} value={tenant.id}>
-                                  {tenant.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {dialog.formErrors.tenantId && (
-                            <p className="text-sm text-destructive">{dialog.formErrors.tenantId}</p>
-                          )}
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="property">Property</Label>
-                          <Select
-                            value={dialog.formData.propertyId}
-                            onValueChange={(value) => dialog.updateFormData({ propertyId: value })}
-                          >
-                            <SelectTrigger
-                              className={dialog.formErrors.propertyId ? "border-red-500" : ""}
-                            >
-                              <SelectValue placeholder="Select property" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {properties.map((property) => (
-                                <SelectItem key={property.id} value={property.id}>
-                                  {property.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          {dialog.formErrors.propertyId && (
-                            <p className="text-sm text-destructive">
-                              {dialog.formErrors.propertyId}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="amount">Amount ($)</Label>
-                          <Input
-                            id="amount"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={dialog.formData.amount}
-                            onChange={(e) =>
-                              dialog.updateFormData({
-                                amount: parseFloat(e.target.value) || 0,
-                              })
-                            }
-                            className={dialog.formErrors.amount ? "border-red-500" : ""}
-                            required
-                          />
-                          {dialog.formErrors.amount && (
-                            <p className="text-sm text-destructive">{dialog.formErrors.amount}</p>
-                          )}
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="date">Payment Date</Label>
-                          <Input
-                            id="date"
-                            type="date"
-                            value={dialog.formData.date}
-                            onChange={(e) => dialog.updateFormData({ date: e.target.value })}
-                            className={dialog.formErrors.date ? "border-red-500" : ""}
-                            required
-                          />
-                          {dialog.formErrors.date && (
-                            <p className="text-sm text-destructive">{dialog.formErrors.date}</p>
-                          )}
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="type">Payment Type</Label>
-                          <Select
-                            value={dialog.formData.type}
-                            onValueChange={(value: Receipt["type"]) =>
-                              dialog.updateFormData({ type: value })
-                            }
-                          >
-                            <SelectTrigger
-                              className={dialog.formErrors.type ? "border-red-500" : ""}
-                            >
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="rent">Rent</SelectItem>
-                              <SelectItem value="deposit">Deposit</SelectItem>
-                              <SelectItem value="maintenance">Maintenance</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          {dialog.formErrors.type && (
-                            <p className="text-sm text-destructive">{dialog.formErrors.type}</p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="description">Description (Optional)</Label>
-                        <Textarea
-                          id="description"
-                          value={dialog.formData.description}
-                          onChange={(e) => dialog.updateFormData({ description: e.target.value })}
-                          className={dialog.formErrors.description ? "border-red-500" : ""}
-                          rows={3}
-                        />
-                        {dialog.formErrors.description && (
-                          <p className="text-sm text-destructive">
-                            {dialog.formErrors.description}
-                          </p>
-                        )}
-                      </div>
-
-                      <div className="flex justify-end gap-2">
-                        <Button type="button" variant="outline" onClick={dialog.closeDialog}>
-                          Cancel
-                        </Button>
-                        <Button type="submit" loading={dialog.isSubmitting}>
-                          {dialog.editingItem ? "Update Receipt" : "Create Receipt"}
-                        </Button>
-                      </div>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              )}
-            </PageHeader>
+            {props.embedded ? (
+              addReceiptButton && <div className="flex justify-end">{addReceiptButton}</div>
+            ) : (
+              <PageHeader title="Receipts" description={description}>
+                {addReceiptButton}
+              </PageHeader>
+            )}
 
             <div className="grid gap-4">
               {filteredReceipts.length === 0 ? (

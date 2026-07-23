@@ -1187,7 +1187,9 @@
       "edit": "Editar",
       "reviewPayments": "Revisar Pagos",
       "documents": "Documentos",
-      "backToProperties": "Volver a Propiedades"
+      "backToProperties": "Volver a Propiedades",
+      "openInFinance": "Abrir en Finanzas",
+      "openInDocuments": "Abrir en Documentos"
     },
     "notFound": "Propiedad no encontrada",
     "status": {

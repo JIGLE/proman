@@ -16,6 +16,7 @@ import {
   Trash2,
   History,
   Pencil,
+  ExternalLink,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -59,6 +60,9 @@ import { usePropertyActivity } from "@/lib/hooks/use-property-activity";
 import { AuditTrail } from "@/components/shared/audit-trail";
 import { PropertyFormDialog, type PropertyFormDialogRef } from "./property-form-dialog";
 import { PropertyYearStrip } from "./property-year-strip";
+import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
+import { ReceiptsView } from "@/components/features/financial/receipts-view";
+import { DocumentsView } from "@/components/features/document/documents-view";
 
 interface PropertyDetailViewProps {
   propertyId: string;
@@ -86,6 +90,10 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   const [ownerAssignPct, setOwnerAssignPct] = useState<number | "">("");
   const [ownerAssignError, setOwnerAssignError] = useState("");
   const [ownerAssignSaving, setOwnerAssignSaving] = useState(false);
+
+  // Quick-action overlays: keep the header actions in-page instead of navigating away
+  const [reviewPaymentsOpen, setReviewPaymentsOpen] = useState(false);
+  const [documentsOpen, setDocumentsOpen] = useState(false);
 
   // Documents already tagged to this property — the deduction-evidence
   // picker in the Add Expense dialog (Expense.documentId, Migration A).
@@ -325,6 +333,74 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
       {/* Edit property — own instance of the shared create/edit form */}
       <PropertyFormDialog ref={editFormDialogRef} />
 
+      {/* Quick-action overlay: Review Payments — scoped ReceiptsView, stays on this page */}
+      <Sheet open={reviewPaymentsOpen} onOpenChange={setReviewPaymentsOpen}>
+        <SheetContent side="center" className="p-0">
+          <SheetTitle className="sr-only">{t("actions.reviewPayments")}</SheetTitle>
+          <SheetDescription className="sr-only">
+            {t("actions.reviewPayments")} — {property.name}
+          </SheetDescription>
+          <div className="flex h-full flex-col">
+            <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] p-4">
+              <div>
+                <p className="text-sm font-medium text-[var(--color-foreground)]">
+                  {t("actions.reviewPayments")}
+                </p>
+                <p className="text-xs text-[var(--color-muted-foreground)]">{property.name}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setReviewPaymentsOpen(false);
+                  router.push(
+                    buildLocalizedFinancialReviewPath(locale, { propertyId: property.id }),
+                  );
+                }}
+              >
+                {t("actions.openInFinance")} <ExternalLink className="h-3.5 w-3.5 ml-1" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <ReceiptsView propertyId={property.id} embedded />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Quick-action overlay: Documents — scoped DocumentsView, stays on this page */}
+      <Sheet open={documentsOpen} onOpenChange={setDocumentsOpen}>
+        <SheetContent side="center" className="p-0">
+          <SheetTitle className="sr-only">{t("actions.documents")}</SheetTitle>
+          <SheetDescription className="sr-only">
+            {t("actions.documents")} — {property.name}
+          </SheetDescription>
+          <div className="flex h-full flex-col">
+            <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] p-4">
+              <div>
+                <p className="text-sm font-medium text-[var(--color-foreground)]">
+                  {t("actions.documents")}
+                </p>
+                <p className="text-xs text-[var(--color-muted-foreground)]">{property.name}</p>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setDocumentsOpen(false);
+                  router.push(`/${locale}/documents?propertyId=${property.id}`);
+                }}
+              >
+                {t("actions.openInDocuments")} <ExternalLink className="h-3.5 w-3.5 ml-1" />
+              </Button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-4">
+              <DocumentsView propertyId={property.id} embedded />
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+
       {/* Header */}
       <div className="flex flex-col gap-4 sticky top-0 z-20 bg-[var(--color-card-solid)]/95 backdrop-blur-sm">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -362,20 +438,10 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             >
               <Pencil className="h-4 w-4 mr-1" /> {t("actions.edit")}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                router.push(buildLocalizedFinancialReviewPath(locale, { propertyId: property.id }))
-              }
-            >
+            <Button variant="outline" size="sm" onClick={() => setReviewPaymentsOpen(true)}>
               <DollarSign className="h-4 w-4 mr-1" /> {t("actions.reviewPayments")}
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push(`/${locale}/documents?propertyId=${property.id}`)}
-            >
+            <Button variant="outline" size="sm" onClick={() => setDocumentsOpen(true)}>
               <FileText className="h-4 w-4 mr-1" /> {t("actions.documents")}
             </Button>
 
