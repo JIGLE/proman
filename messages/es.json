@@ -1170,11 +1170,8 @@
   "propertyDetail": {
     "tabs": {
       "overview": "Resumen",
-      "tenants": "Inquilinos",
-      "leases": "Contratos",
-      "maintenance": "Mantenimiento",
-      "payments": "Pagos",
-      "expenses": "Gastos",
+      "operations": "Operaciones",
+      "money": "Finanzas",
       "units": "Unidades",
       "audit": "Auditoría"
     },
@@ -1187,6 +1184,7 @@
       "netIncome": "Ingreso Neto"
     },
     "actions": {
+      "edit": "Editar",
       "reviewPayments": "Revisar Pagos",
       "documents": "Documentos",
       "backToProperties": "Volver a Propiedades"
@@ -1197,7 +1195,8 @@
       "vacant": "Libre",
       "maintenance": "En Mantenimiento"
     },
-    "related": "Relacionado",
+    "related": "Personas y contratos",
+    "expensesHeading": "Gastos",
     "propertyDetails": "Detalles del Inmueble",
     "monthlyRent": "Alquiler Mensual",
     "type": "Tipo",

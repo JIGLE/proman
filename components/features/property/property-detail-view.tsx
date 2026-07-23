@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import {
   Building2,
   MapPin,
@@ -15,6 +15,7 @@ import {
   Plus,
   Trash2,
   History,
+  Pencil,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -56,6 +57,8 @@ import {
 import { receiptSchema, type ReceiptFormData } from "@/lib/schemas/receipt.schema";
 import { usePropertyActivity } from "@/lib/hooks/use-property-activity";
 import { AuditTrail } from "@/components/shared/audit-trail";
+import { PropertyFormDialog, type PropertyFormDialogRef } from "./property-form-dialog";
+import { PropertyYearStrip } from "./property-year-strip";
 
 interface PropertyDetailViewProps {
   propertyId: string;
@@ -165,6 +168,10 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
     successMessage: { create: "Payment recorded!", update: "Payment updated!" },
     errorMessage: "Failed to record payment.",
   });
+
+  // Edit property: own instance of the same form/schema/updateProperty path
+  // PropertiesView uses for create — see property-form-dialog.tsx.
+  const editFormDialogRef = useRef<PropertyFormDialogRef>(null);
 
   const property = state.properties.find((p) => p.id === propertyId);
   const { data: activity, loading: activityLoading } = usePropertyActivity(propertyId);
@@ -315,6 +322,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
 
   return (
     <div className="space-y-6">
+      {/* Edit property — own instance of the shared create/edit form */}
+      <PropertyFormDialog ref={editFormDialogRef} />
+
       {/* Header */}
       <div className="flex flex-col gap-4 sticky top-0 z-20 bg-[var(--color-card-solid)]/95 backdrop-blur-sm">
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -345,6 +355,13 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => editFormDialogRef.current?.openEditDialog(property)}
+            >
+              <Pencil className="h-4 w-4 mr-1" /> {t("actions.edit")}
+            </Button>
             <Button
               variant="outline"
               size="sm"
@@ -617,43 +634,23 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         </div>
       </div>
 
-      {/* Current Period Status — the money state leads the workspace (Situs
-          reference-month ledger / RentPeriod). Focal country accent on the left. */}
-      {!activityLoading && activity?.currentPeriod && (
-        <div className="grid grid-cols-1 gap-4 border border-[var(--color-border)] border-l-[3px] border-l-[var(--country-highlight-readable)] bg-[var(--color-surface)] p-4 sm:grid-cols-3">
-          <div>
-            <p className="mono-label">Current period</p>
-            <p className="mt-1 text-xl font-light tabular-nums text-[var(--color-foreground)]">
-              {String(activity.currentPeriod.month).padStart(2, "0")}/{activity.currentPeriod.year}
-            </p>
-            <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">
-              A late payment allocates to the oldest unpaid month, not this one.
-            </p>
-          </div>
-          <div>
-            <p className="mono-label">Payment status</p>
-            <p className="mt-1 text-xl font-light capitalize text-[var(--color-foreground)]">
-              {activity.currentPeriod.status.replace(/_/g, " ")}
-            </p>
-            <p className="mt-1 text-xs text-[var(--color-muted-foreground)] tabular-nums">
-              €{activity.currentPeriod.allocatedAmount.toFixed(2)} / €
-              {activity.currentPeriod.dueAmount.toFixed(2)}
-            </p>
-          </div>
-          <div>
-            <p className="mono-label">Receipt status</p>
-            <p className="mt-1 text-xl font-light capitalize text-[var(--color-foreground)]">
-              {activity.receiptLifecycle ? activity.receiptLifecycle.replace(/_/g, " ") : "—"}
-            </p>
-          </div>
-        </div>
+      {/* Year-at-a-glance rent ledger — the money state leads the workspace
+          (Situs reference-month ledger / RentPeriod). Replaces the old
+          text-only Current Period band with a 12-month visual history. */}
+      {!activityLoading && activity?.yearStrip && (
+        <PropertyYearStrip
+          propertyId={propertyId}
+          defaultYearStrip={activity.yearStrip}
+          currentPeriod={activity.currentPeriod}
+          receiptLifecycle={activity.receiptLifecycle}
+        />
       )}
 
       {/* Secondary context — entity counts, demoted below the money state. */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <button
           type="button"
-          onClick={() => setActiveTab("tenants")}
+          onClick={() => setActiveTab("overview")}
           className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
         >
           <p className="mono-label">{t("stats.tenants")}</p>
@@ -663,7 +660,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         </button>
         <button
           type="button"
-          onClick={() => setActiveTab("leases")}
+          onClick={() => setActiveTab("overview")}
           className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
         >
           <p className="mono-label">{t("stats.activeLeases")}</p>
@@ -697,40 +694,18 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="overflow-x-auto">
           <TabsTrigger value="overview">{t("tabs.overview")}</TabsTrigger>
-          <TabsTrigger value="tenants" className="flex items-center gap-1.5">
-            <Users className="h-3.5 w-3.5" />
-            {t("tabs.tenants")}
-            {relatedTenants.length > 0 && (
-              <span className="ml-1 bg-[var(--color-muted)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums">
-                {relatedTenants.length}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="leases" className="flex items-center gap-1.5">
-            <FileText className="h-3.5 w-3.5" />
-            {t("tabs.leases")}
+          <TabsTrigger value="finance" className="flex items-center gap-1.5">
+            <DollarSign className="h-3.5 w-3.5" />
+            {t("tabs.money")}
           </TabsTrigger>
           <TabsTrigger value="maintenance" className="flex items-center gap-1.5">
             <Wrench className="h-3.5 w-3.5" />
-            {t("tabs.maintenance")}
+            {t("tabs.operations")}
             {openTickets > 0 && (
               <span className="ml-1 bg-[var(--color-warning-muted)] text-[var(--color-warning)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums">
                 {openTickets}
               </span>
             )}
-          </TabsTrigger>
-          <TabsTrigger value="expenses" className="flex items-center gap-1.5">
-            <Receipt className="h-3.5 w-3.5" />
-            {t("tabs.expenses")}
-            {relatedExpenses.length > 0 && (
-              <span className="ml-1 bg-[var(--color-muted)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums">
-                {relatedExpenses.length}
-              </span>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="finance" className="flex items-center gap-1.5">
-            <DollarSign className="h-3.5 w-3.5" />
-            {t("tabs.payments")}
           </TabsTrigger>
           <TabsTrigger value="audit" className="flex items-center gap-1.5">
             <History className="h-3.5 w-3.5" />
@@ -776,7 +751,8 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               </CardContent>
             </Card>
 
-            {/* Related Entities */}
+            {/* People & contracts — folds the former standalone Tenants and
+                Leases tabs in here (Overview absorbs them per the tab merge). */}
             <div className="space-y-4">
               <h3 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
                 {t("related")}
@@ -787,7 +763,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                   type="tenant"
                   id={tenant.id}
                   title={tenant.name}
-                  subtitle={tenant.email}
+                  subtitle={`${tenant.email} · ${tenant.phone}`}
                   status={tenant.paymentStatus}
                   statusVariant={
                     tenant.paymentStatus === "paid"
@@ -796,39 +772,67 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                         ? "destructive"
                         : "warning"
                   }
+                  variant="full"
                 />
               ))}
-              {relatedLeases
-                .filter((l) => l.status === "active")
-                .map((lease) => (
-                  <EntityLink
-                    key={lease.id}
-                    type="lease"
-                    id={lease.id}
-                    title={`Lease ${lease.id.slice(0, 8)}`}
-                    subtitle={`${lease.startDate} — ${lease.endDate}`}
-                    status={lease.status}
-                    statusVariant="success"
-                  />
-                ))}
-              {relatedTenants.length === 0 &&
-                relatedLeases.filter((l) => l.status === "active").length === 0 && (
-                  <div className="rounded-lg border border-dashed border-[var(--color-border)] p-4 text-center space-y-2">
-                    <p className="text-sm text-[var(--color-muted-foreground)]">
-                      {property.status === "vacant" ? t("vacantNotice") : t("noRelatedEntities")}
-                    </p>
-                    {property.status === "vacant" && (
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => router.push(`/${locale}/leases`)}
-                      >
-                        <FileText className="h-3.5 w-3.5 mr-1.5" />
-                        {t("createLease")}
-                      </Button>
+              {relatedLeases.map((lease) => {
+                const daysUntilExpiry = Math.ceil(
+                  (new Date(lease.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+                );
+                const isExpiring =
+                  lease.status === "active" && daysUntilExpiry >= 0 && daysUntilExpiry <= 30;
+                return (
+                  <div key={lease.id} className="space-y-1">
+                    <EntityLink
+                      type="lease"
+                      id={lease.id}
+                      title={`Lease ${lease.id.slice(0, 8)}`}
+                      subtitle={`${formatCurrency(lease.monthlyRent)}/mo · ${lease.startDate} — ${lease.endDate}`}
+                      status={lease.status}
+                      statusVariant={
+                        lease.status === "active"
+                          ? "success"
+                          : lease.status === "expired"
+                            ? "destructive"
+                            : "warning"
+                      }
+                      variant="full"
+                    />
+                    {isExpiring && (
+                      <div className="flex items-center justify-between rounded-md border border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)] px-3 py-1.5">
+                        <span className="text-xs text-[var(--color-warning)]">
+                          {t("expiresIn", { days: daysUntilExpiry })}
+                        </span>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-5 px-2 text-xs text-[var(--color-warning)] hover:bg-[var(--color-warning-muted)] hover:text-[var(--color-warning)]"
+                          onClick={() => router.push(`/${locale}/leases`)}
+                        >
+                          {t("renew")}
+                        </Button>
+                      </div>
                     )}
                   </div>
-                )}
+                );
+              })}
+              {relatedTenants.length === 0 && relatedLeases.length === 0 && (
+                <div className="rounded-lg border border-dashed border-[var(--color-border)] p-4 text-center space-y-2">
+                  <p className="text-sm text-[var(--color-muted-foreground)]">
+                    {property.status === "vacant" ? t("vacantNotice") : t("noRelatedEntities")}
+                  </p>
+                  {property.status === "vacant" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => router.push(`/${locale}/leases`)}
+                    >
+                      <FileText className="h-3.5 w-3.5 mr-1.5" />
+                      {t("createLease")}
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
@@ -952,83 +956,6 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="tenants">
-          {relatedTenants.length === 0 ? (
-            <EmptyStateIllustration entityType="tenants" />
-          ) : (
-            <div className="grid gap-3">
-              {relatedTenants.map((tenant) => (
-                <EntityLink
-                  key={tenant.id}
-                  type="tenant"
-                  id={tenant.id}
-                  title={tenant.name}
-                  subtitle={`${tenant.email} · ${tenant.phone}`}
-                  status={tenant.paymentStatus}
-                  statusVariant={
-                    tenant.paymentStatus === "paid"
-                      ? "success"
-                      : tenant.paymentStatus === "overdue"
-                        ? "destructive"
-                        : "warning"
-                  }
-                  variant="full"
-                />
-              ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Leases Tab */}
-        <TabsContent value="leases">
-          {relatedLeases.length === 0 ? (
-            <EmptyStateIllustration entityType="leases" />
-          ) : (
-            <div className="grid gap-3">
-              {relatedLeases.map((lease) => {
-                const daysUntilExpiry = Math.ceil(
-                  (new Date(lease.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24),
-                );
-                const isExpiring =
-                  lease.status === "active" && daysUntilExpiry >= 0 && daysUntilExpiry <= 30;
-                return (
-                  <div key={lease.id} className="space-y-1">
-                    <EntityLink
-                      type="lease"
-                      id={lease.id}
-                      title={`Lease ${lease.id.slice(0, 8)}`}
-                      subtitle={`${formatCurrency(lease.monthlyRent)}/mo · ${lease.startDate} — ${lease.endDate}`}
-                      status={lease.status}
-                      statusVariant={
-                        lease.status === "active"
-                          ? "success"
-                          : lease.status === "expired"
-                            ? "destructive"
-                            : "warning"
-                      }
-                      variant="full"
-                    />
-                    {isExpiring && (
-                      <div className="flex items-center justify-between rounded-md border border-[var(--color-warning)]/20 bg-[var(--color-warning-muted)] px-3 py-1.5">
-                        <span className="text-xs text-[var(--color-warning)]">
-                          {t("expiresIn", { days: daysUntilExpiry })}
-                        </span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-5 px-2 text-xs text-[var(--color-warning)] hover:bg-[var(--color-warning-muted)] hover:text-[var(--color-warning)]"
-                          onClick={() => router.push(`/${locale}/leases`)}
-                        >
-                          {t("renew")}
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </TabsContent>
 
         {/* Maintenance Tab */}
         <TabsContent value="maintenance">
@@ -1089,64 +1016,8 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
           )}
         </TabsContent>
 
-        {/* Expenses Tab */}
-        <TabsContent value="expenses" className="space-y-4">
-          {relatedExpenses.length === 0 ? (
-            <EmptyStateIllustration entityType="expenses" />
-          ) : (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-[var(--color-muted-foreground)]">
-                  {relatedExpenses.length > 0 && (
-                    <>
-                      {tFin("totalExpenses")}:{" "}
-                      <span className="font-semibold text-[var(--color-destructive)]">
-                        {formatCurrency(totalExpenses)}
-                      </span>
-                    </>
-                  )}
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => router.push(`/${locale}/financials?propertyId=${propertyId}`)}
-                >
-                  {tFin("addExpense")}
-                </Button>
-              </div>
-              {relatedExpenses
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .map((expense) => (
-                  <Card key={expense.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium">
-                            {tFin(`categories.${expense.category}`) || expense.category}
-                          </p>
-                          {expense.description && (
-                            <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
-                              {expense.description}
-                            </p>
-                          )}
-                          <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
-                            {new Date(expense.date).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-sm font-semibold text-[var(--color-destructive)]">
-                            -{formatCurrency(expense.amount)}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-            </div>
-          )}
-        </TabsContent>
-
-        {/* Finance Tab */}
+        {/* Money Tab — Payments/P&L merged with the former standalone Expenses
+            tab, per the tab merge (Overview/Money/Operations/Audit). */}
         <TabsContent value="finance" className="space-y-6">
           {/* P&L Metric Cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -1207,6 +1078,51 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               </CardContent>
             </Card>
           </div>
+
+          {/* Expenses — folded in from the former standalone Expenses tab. */}
+          {relatedExpenses.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
+                  {t("expensesHeading")}
+                </h3>
+                <span className="text-sm text-[var(--color-muted-foreground)]">
+                  {tFin("totalExpenses")}:{" "}
+                  <span className="font-semibold text-[var(--color-destructive)]">
+                    {formatCurrency(totalExpenses)}
+                  </span>
+                </span>
+              </div>
+              {relatedExpenses
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .map((expense) => (
+                  <Card key={expense.id}>
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium">
+                            {tFin(`categories.${expense.category}`) || expense.category}
+                          </p>
+                          {expense.description && (
+                            <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
+                              {expense.description}
+                            </p>
+                          )}
+                          <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
+                            {new Date(expense.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-semibold text-[var(--color-destructive)]">
+                            -{formatCurrency(expense.amount)}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          )}
 
           {relatedReceipts.length === 0 && relatedExpenses.length === 0 ? (
             <EmptyStateIllustration entityType="receipts" />

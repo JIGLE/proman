@@ -1170,11 +1170,8 @@
   "propertyDetail": {
     "tabs": {
       "overview": "Overview",
-      "tenants": "Tenants",
-      "leases": "Leases",
-      "maintenance": "Maintenance",
-      "payments": "Payments",
-      "expenses": "Expenses",
+      "operations": "Operations",
+      "money": "Money",
       "units": "Units",
       "audit": "Audit"
     },
@@ -1187,6 +1184,7 @@
       "netIncome": "Net Income"
     },
     "actions": {
+      "edit": "Edit",
       "reviewPayments": "Review Payments",
       "documents": "Documents",
       "backToProperties": "Back to Properties"
@@ -1197,7 +1195,8 @@
       "vacant": "Vacant",
       "maintenance": "Under Maintenance"
     },
-    "related": "Related",
+    "related": "People & contracts",
+    "expensesHeading": "Expenses",
     "propertyDetails": "Property Details",
     "monthlyRent": "Monthly Rent",
     "type": "Type",
