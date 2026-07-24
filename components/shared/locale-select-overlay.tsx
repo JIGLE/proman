@@ -34,6 +34,14 @@ export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+
+    // The installed PWA's own welcome screen (PwaWelcome) already offers a language
+    // control — this blocking chooser is redundant there and would stack on top of it.
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+    if (isStandalone) return;
+
     const already = localStorage.getItem(STORAGE_KEY);
     if (!already) {
       // Slight delay so the page beneath renders first
