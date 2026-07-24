@@ -8,6 +8,7 @@ import { ArrowDown, ChevronDown } from "lucide-react";
 
 import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
 import { TrackedLandingLink } from "@/components/shared/landing-analytics";
+import { LanguageSelector } from "@/components/shared/language-selector";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/lib/contexts/theme-context";
 import type { CountryCode } from "@/lib/design/country-themes";
@@ -24,8 +25,7 @@ import styles from "./landing-hero-sequence.module.css";
  * half of the gesture, then reveals the headline, subtitle and three actions over the second
  * half. Desktop only (lg:+) — mobile keeps the plain static hero below, and the installed-PWA
  * welcome screen (components/shared/pwa-welcome.tsx) already covers the equivalent mobile
- * moment. `--hero-p` is mirrored onto <html> so the site header (rendered in page.tsx, outside
- * this component) can fade in as the sequence settles instead of competing with the splash.
+ * moment.
  */
 
 const LOCALE_FLAGS: Record<Locale, string> = { pt: "🇵🇹", en: "🇬🇧", es: "🇪🇸", it: "🇮🇹" };
@@ -86,7 +86,6 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
 
     if (reducedMotion) {
       root.style.setProperty("--p", "1");
-      document.documentElement.style.setProperty("--hero-p", "1");
       return;
     }
 
@@ -96,7 +95,6 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
     let angle1 = 0;
     let angle2 = 0;
     let boost = 1;
-    let wasActive = true;
     let snapTimer: ReturnType<typeof setTimeout> | null = null;
     let rafId = 0;
 
@@ -109,8 +107,6 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
     const SNAP_HIGH = 0.85; // only auto-complete forward once genuinely close to the end
     const SNAP_LOW = 0.15; // only auto-complete backward once genuinely close to the splash
 
-    document.documentElement.dataset.heroSequenceActive = "true";
-
     function tick(now: number) {
       if (last === null) last = now;
       const dt = Math.min(0.05, (now - last) / 1000);
@@ -121,7 +117,6 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
       current += (target - current) * ease;
       if (Math.abs(target - current) < 0.0004) current = target;
       root!.style.setProperty("--p", current.toFixed(4));
-      document.documentElement.style.setProperty("--hero-p", current.toFixed(4));
 
       if (r1Ref.current && r2Ref.current) {
         boost += (1 - boost) * Math.min(1, BOOST_DECAY * dt);
@@ -129,12 +124,6 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
         angle2 = (angle2 + BASE2 * boost * dt) % 360;
         r1Ref.current.style.rotate = `${angle1.toFixed(2)}deg`;
         r2Ref.current.style.rotate = `${angle2.toFixed(2)}deg`;
-      }
-
-      const active = current < 0.999;
-      if (active !== wasActive) {
-        document.documentElement.dataset.heroSequenceActive = active ? "true" : "false";
-        wasActive = active;
       }
 
       rafId = requestAnimationFrame(tick);
@@ -224,8 +213,6 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
       orbitEl?.removeEventListener("keydown", onOrbitKeydown);
       orbitEl?.removeEventListener("animationend", onOrbitAnimEnd);
       ctaCleanups.forEach((fn) => fn());
-      document.documentElement.style.removeProperty("--hero-p");
-      delete document.documentElement.dataset.heroSequenceActive;
     };
   }, [reducedMotion]);
 
@@ -334,27 +321,66 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
         )}
       </div>
 
+      {/* Mobile-only locale switch — fixed to the viewport corner (not part of the hero-copy
+          flex column below), so it stays put regardless of that column's own centering, and
+          matches the desktop locale control's now-fixed positioning above. The animated popover
+          above is desktop-only, so without this a phone visitor who lands on the wrong locale
+          (past the first-visit overlay) has no way to change it. */}
+      <div className="fixed right-5 top-[max(20px,env(safe-area-inset-top))] z-20 lg:hidden">
+        <LanguageSelector
+          compact
+          className="border border-[var(--color-border)] bg-[var(--color-canvas)]"
+        />
+      </div>
+
       {/* Hero copy */}
-      <div>
+      {/* min-h subtracts the parent <main>'s own mobile padding (pt-8 + pb-16 = 2rem + 4rem =
+          6rem) — without that this column's forced full-viewport height stacks on top of main's
+          padding instead of sharing it, overflowing the real viewport and pushing the last CTA +
+          footer below the fold on an actual phone. justify-center (not justify-start): centering
+          the whole block as one group reads calmer than pinning it to the top, which put the CTAs
+          right under the headline with nothing below, or to the bottom via mt-auto, which left a
+          191px dead zone above them — center once, let both margins breathe evenly instead. */}
+      <div className="flex min-h-[calc(100svh-6rem)] flex-col justify-center pb-[env(safe-area-inset-bottom)] lg:block lg:min-h-0 lg:justify-start lg:pb-0">
+        {/* Mobile-only orbit — brings the same rings/mark motion the desktop hero and the
+            installed-PWA welcome screen use into the phone view, instead of the old plain static
+            mark. Gentle continuous CSS spin; see the module's reduced-motion block for the
+            static fallback. Sized up from the first pass (h-16 mark in a 168px orbit) — it read
+            as small for the amount of screen it's the focal point of. */}
+        <div className={styles.mobileOrbit}>
+          <span className={styles.mobileGlow} aria-hidden />
+          <span className={cn(styles.mobileRing, styles.mobileRingR1)} aria-hidden />
+          <span className={cn(styles.mobileRing, styles.mobileRingR2)} aria-hidden />
+          <SitusPortalMark className="relative z-[1] h-20 w-20" />
+        </div>
+
         <p className={cn("mono-label mb-5", styles.copyEyebrow)}>{t("eyebrow")}</p>
+        {/* Mobile gets its own, lower clamp floor: at 7vw the old clamp(44px,7vw,88px) hit its
+            44px floor on every phone width (7vw ≈ 27px at 390px, well under it), a hard jump from
+            the 10px eyebrow with nothing in between. lg: restores the original curve untouched. */}
         <h1
           className={cn(
-            "max-w-2xl text-[clamp(44px,7vw,88px)] font-normal leading-[0.9] tracking-[-0.06em]",
+            "max-w-2xl text-[clamp(32px,9vw,88px)] font-normal leading-[0.9] tracking-[-0.06em] lg:text-[clamp(44px,7vw,88px)]",
             styles.copyH1,
           )}
         >
           {t("hero2")}
         </h1>
+        {/* The descriptive subtitle is dropped on mobile — the headline + CTAs carry the screen
+            there; kept for desktop where there's room to earn it. */}
         <p
           className={cn(
-            "mt-7 max-w-xl text-[clamp(16px,1.5vw,19px)] leading-relaxed text-[var(--color-muted-foreground)]",
+            "mt-7 hidden max-w-xl text-[clamp(16px,1.5vw,19px)] leading-relaxed text-[var(--color-muted-foreground)] lg:block",
             styles.copySubtitle,
           )}
         >
           {t("subtitle2")}
         </p>
 
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        {/* Fixed margin, not mt-auto — pinning this row to the bottom of a full-height mobile
+            column left a ~191px dead zone between the headline and the buttons. Any leftover
+            space now falls below the row instead, near the footer. */}
+        <div className="mt-12 flex flex-col gap-3 sm:flex-row sm:flex-wrap lg:mt-8">
           <div
             ref={(el) => {
               ctaRefs.current[0] = el;
@@ -405,10 +431,15 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
               eventData={{ location: "hero" }}
               className="w-full sm:w-auto"
             >
+              {/* Tertiary, back in the row as a real button — a plain-text link read as too
+                  disconnected from "Experimentar"/"Aderir" to feel like part of the same group.
+                  variant="ghost" alone was near-invisible (no border), so it's paired with an
+                  explicit thin border here: quieter than "Aderir"'s filled-outline box, but still
+                  a legible button rather than bare text. */}
               <Button
                 size="lg"
-                variant="outline"
-                className="w-full rounded-none font-semibold sm:w-auto"
+                variant="ghost"
+                className="w-full rounded-none border border-[var(--color-border)] font-semibold sm:w-auto"
               >
                 {t("signIn")}
               </Button>
@@ -417,23 +448,32 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
         </div>
       </div>
 
-      {/* Hero visual — full-bleed overlay, centred at rest, travels into this column's space */}
-      <div className="relative hidden min-h-[520px] lg:block">
-        <div className={styles.heroVisual}>
-          <div
-            ref={orbitRef}
-            role="button"
-            tabIndex={0}
-            aria-label={tLocaleCtrl("bloomAria")}
-            className={styles.orbit}
-          >
-            <span className={styles.glow} aria-hidden />
-            <span ref={r1Ref} className={cn(styles.ring, styles.ringR1)} aria-hidden />
-            <span ref={r2Ref} className={cn(styles.ring, styles.ringR2)} aria-hidden />
-            <span className={styles.markScale}>
-              <SitusPortalMark size="sm" className="h-32 w-32" />
-            </span>
-          </div>
+      {/* Empty grid track — just reserves the right column's width/height so the full-bleed
+          overlay below (a root-level sibling, not nested in here) lands exactly where this
+          column would have put it once --v resolves. */}
+      <div className="hidden min-h-[520px] lg:block" />
+
+      {/* Hero visual — full-bleed overlay directly on .root (not the column above), so its own
+          width spans the whole two-column grid: centred on the whole hero at rest, then the CSS
+          module's percentage-based translate carries it into the right column's space as --v
+          resolves. Must be a direct child of .root (the nearest `position: relative` ancestor)
+          for that percentage math to resolve against the right width. */}
+      <div className={styles.heroVisual}>
+        <div
+          ref={orbitRef}
+          role="button"
+          tabIndex={0}
+          aria-label={tLocaleCtrl("bloomAria")}
+          className={styles.orbit}
+        >
+          <span className={styles.glow} aria-hidden />
+          <span ref={r1Ref} className={cn(styles.ring, styles.ringR1)} aria-hidden />
+          <span ref={r2Ref} className={cn(styles.ring, styles.ringR2)} aria-hidden />
+          <span className={styles.markScale}>
+            <SitusPortalMark size="sm" className="h-36 w-36" />
+          </span>
+        </div>
+        <div className={styles.splashFooter}>
           <p className={cn("mono-label", styles.wordmark)}>Situs</p>
           <button
             ref={jumpRef}

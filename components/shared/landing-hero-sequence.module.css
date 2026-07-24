@@ -28,12 +28,17 @@
   }
 }
 
-/* ——— Locale control: language + country-theme, top-right ——— */
+/* ——— Locale control: language + country-theme, fixed to the actual viewport corner ———
+   Deliberately `fixed`, not `absolute` relative to .root: this component's hero section is
+   vertically centred in the viewport (see app/[locale]/page.tsx's lg:justify-center), so an
+   absolute position tied to .root's own box drifts wherever the hero happens to land instead of
+   staying anchored to a corner of the screen — which read as "off" since a language/theme switch
+   is expected to sit in a fixed, predictable spot regardless of how tall the hero content is. */
 .localeControl {
-  position: absolute;
-  top: 4px;
-  right: 0;
-  z-index: 6;
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 20;
   --t: clamp(0, calc((var(--p) - 0.5) * 8.33), 1);
   opacity: var(--t);
 }
@@ -163,15 +168,20 @@
   position: absolute;
   inset: 0;
   pointer-events: none;
-  display: flex;
-  flex-direction: column;
+  /* Hidden below lg — mobile has no scroll sequence and no room for this overlay; matches the
+     column placeholder's own lg:block gating in the component. */
+  display: none;
   align-items: center;
   justify-content: center;
-  gap: 14px;
-  transform: translate(calc((26.25% - 9.6px) * var(--v)), calc(-18px * (1 - var(--v))))
+  transform: translate(calc((26.25% + 11.4px) * var(--v)), calc(-18px * (1 - var(--v))))
     scale(calc(1 + 0.32 * (1 - var(--v))));
   transition: transform 100ms linear;
   will-change: transform;
+}
+@media (min-width: 1024px) {
+  .heroVisual {
+    display: flex;
+  }
 }
 .orbit {
   position: relative;
@@ -193,7 +203,7 @@
   opacity: 0.85;
   background: radial-gradient(
     circle,
-    color-mix(in srgb, var(--logo-primary) 22%, transparent) 0%,
+    color-mix(in srgb, var(--logo-primary) 30%, transparent) 0%,
     transparent 72%
   );
   transition: opacity 200ms ease-out;
@@ -205,7 +215,9 @@
    ease back to its resting speed when idle. The keyline halo is the same trick the mark itself
    uses: some countries' primary colour (Germany's black) sits close to the dark-canvas colour,
    so relying on the flag colour alone for contrast would make the ring — and its point —
-   disappear. */
+   disappear. Border-colour leans heavily toward the flag colour (not a 50/50 mix with
+   --color-border) because the light theme's border token is a pale, low-contrast tan — a light
+   mix of it washes the ring out against the equally pale canvas. */
 .ring {
   position: absolute;
   border-radius: 50%;
@@ -215,11 +227,11 @@
 }
 .ringR1 {
   inset: 0;
-  border-color: color-mix(in srgb, var(--logo-primary) 45%, var(--color-border));
+  border-color: color-mix(in srgb, var(--logo-primary) 72%, var(--color-border));
 }
 .ringR2 {
-  inset: 56px;
-  border-color: color-mix(in srgb, var(--logo-secondary) 40%, var(--color-border));
+  inset: 46px;
+  border-color: color-mix(in srgb, var(--logo-secondary) 66%, var(--color-border));
 }
 .ringR1::after {
   content: "";
@@ -307,7 +319,24 @@
 }
 
 /* ——— Splash-only chrome: a very discreet wordmark, and a hint that's just an arrow — one that
-       doubles as a "jump straight to the end" control for anyone who can't scroll. ——— */
+       doubles as a "jump straight to the end" control for anyone who can't scroll.
+
+       Positioned absolutely (not as flex siblings of .orbit) deliberately: they fade to opacity 0
+       once scrolled but stay in the DOM, and as flex children of .heroVisual their (invisible)
+       height + gaps were still budgeted into that flex column's centering — shifting the whole
+       centred group, .orbit included, ~28px above heroVisual's true centre at every point of the
+       scroll sequence. Taking them out of flow lets .orbit centre on its own, then this wrapper
+       anchors below it with the same fixed gap the design already used. ——— */
+.splashFooter {
+  position: absolute;
+  left: 50%;
+  top: calc(50% + 184px); /* orbit radius (170px) + the 14px gap the layout already used */
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+}
 .wordmark {
   margin: 0;
   letter-spacing: 0.34em;
@@ -365,6 +394,105 @@
   }
 }
 
+/* ——— Mobile-only orbit — same rings/glow/keyline language as the desktop hero-visual and the
+       installed-PWA welcome screen, but a gentle continuous CSS spin (no scroll gesture to drive
+       it on a phone) instead of the JS/wheel-driven rotation above. Static under
+       prefers-reduced-motion, matching the rest of this module. ——— */
+.mobileOrbit {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto 36px;
+  /* Mobile default. Deliberately a media query here rather than relying on the Tailwind
+     "lg:hidden" utility class in the component: that utility and this rule are both
+     single-class selectors, so without the media query they'd be tied on specificity and
+     whichever landed later in the compiled stylesheet would win — which is exactly what
+     produced a duplicate orbit on desktop (this rule's unconditional `display: grid` beat
+     `lg:hidden`). See the identical fix on `.heroVisual` above. */
+  display: grid;
+  place-items: center;
+}
+@media (min-width: 1024px) {
+  .mobileOrbit {
+    display: none;
+  }
+}
+.mobileGlow {
+  position: absolute;
+  inset: 21px;
+  border-radius: 50%;
+  filter: blur(16px);
+  opacity: 0.85;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--logo-primary) 30%, transparent) 0%,
+    transparent 72%
+  );
+}
+.mobileRing {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed;
+  opacity: 0.8;
+  box-shadow: 0 0 0 1px var(--logo-keyline);
+}
+.mobileRingR1 {
+  inset: 0;
+  border-color: color-mix(in srgb, var(--logo-primary) 72%, var(--color-border));
+  animation: mobileSpinCW 22s linear infinite;
+}
+.mobileRingR2 {
+  inset: 26px;
+  border-color: color-mix(in srgb, var(--logo-secondary) 66%, var(--color-border));
+  animation: mobileSpinCCW 16s linear infinite;
+}
+.mobileRingR1::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--logo-primary);
+  box-shadow:
+    0 0 0 1px var(--logo-keyline),
+    0 0 8px 2px color-mix(in srgb, var(--logo-primary) 75%, transparent),
+    0 0 2px 1px var(--logo-primary);
+}
+.mobileRingR2::after {
+  content: "";
+  position: absolute;
+  bottom: -3px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--logo-secondary);
+  box-shadow:
+    0 0 0 1px var(--logo-keyline),
+    0 0 8px 2px color-mix(in srgb, var(--logo-secondary) 75%, transparent),
+    0 0 2px 1px var(--logo-secondary);
+}
+@keyframes mobileSpinCW {
+  from {
+    rotate: 0deg;
+  }
+  to {
+    rotate: 360deg;
+  }
+}
+@keyframes mobileSpinCCW {
+  from {
+    rotate: 0deg;
+  }
+  to {
+    rotate: -360deg;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .root {
     --p: 1 !important;
@@ -400,5 +528,9 @@
   .scrollHint,
   .wordmark {
     opacity: 0 !important;
+  }
+  .mobileRingR1,
+  .mobileRingR2 {
+    animation: none !important;
   }
 }
