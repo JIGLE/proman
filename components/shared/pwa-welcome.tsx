@@ -8,7 +8,6 @@ import { TrackedLandingLink } from "@/components/shared/landing-analytics";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils/utils";
 
 /**
  * App-native welcome screen for the installed PWA. Only ever renders for signed-out visitors
@@ -17,10 +16,10 @@ import { cn } from "@/lib/utils/utils";
  *
  * Sequence: the Portal mark forms alone, centered in the whole screen — then the orbiting
  * rings/glow enter around it — then it all settles into the welcome state: the mark shrinks
- * (~22%) and moves up to sit just above the CTA section (a framer-motion `layout` animation,
- * triggered by the surrounding flex alignment flipping from centered to top-aligned once
- * settled), while the headline and three actions rise in from the bottom. Plays once per mount;
- * does not loop.
+ * (~28%) *inside* the rings, which hold their size and stay up as part of the settled
+ * composition, while the headline and three actions rise in from the bottom. The mark's upward
+ * travel is a framer-motion `layout` animation driven purely by the content growing beneath it
+ * in this always-centered column. Plays once per mount; does not loop.
  */
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
@@ -49,7 +48,11 @@ const fxIn = {
 };
 const markScale = {
   full: { scale: 1 },
-  settled: { scale: 0.78, transition: { duration: 0.5, ease: EASE_OUT } },
+  // 0.72, not 0.78: now that the rings stay up through the settled state, the mark has to share
+  // the frame with them rather than owning it. At 0.78 its own dashed keyline sat ~10px from the
+  // inner ring, which read as crowded; this opens that clearance up so the orbit reads as space
+  // around the mark instead of a band pressed against it.
+  settled: { scale: 0.72, transition: { duration: 0.5, ease: EASE_OUT } },
 };
 const belowContainer = {
   hidden: {},
@@ -85,7 +88,11 @@ export function PwaWelcome({ locale }: { locale: string }) {
 
   if (!standalone) return null;
 
-  const showFx = phase === "rings" && !prefersReducedMotion;
+  // The rings stay up through the settled state rather than fading out with the entrance — they
+  // are part of the welcome composition, not just a flourish, and the mark alone read as bare and
+  // undersized against the copy below it. Their rotation is `motion-safe:` gated in the class
+  // lists, so a reduced-motion visitor gets the same static composition instead of no rings at all.
+  const showFx = phase !== "mark";
   const settled = phase === "welcome";
 
   return (
@@ -107,21 +114,22 @@ export function PwaWelcome({ locale }: { locale: string }) {
         </motion.div>
       )}
 
-      {/* Starts centred in the whole screen (this flex-1 area fills nearly all of it while the
-          language pill and CTAs below are still unmounted) then, once settled, the alignment
-          flips to the top — `layout` on the moving children below turns that into a smooth
-          animated move upward instead of a jump, landing the mark just above the CTA section. */}
-      <div
-        className={cn(
-          "flex flex-1 flex-col items-center text-center",
-          settled ? "justify-start pt-4" : "justify-center",
-        )}
-      >
+      {/* Stays centred in both states. The mark still travels upward on settle — the divider,
+          headline and CTA section mounting below it grow this column's content, so centring it
+          pushes the mark up on its own — and `layout` on the moving children animates that
+          smoothly. Previously this flipped to `justify-start pt-4` when settled, which pinned the
+          group to the top and left a large dead band between the headline and the CTAs; letting
+          it stay centred distributes that space above and below the composition instead. */}
+      <div className="flex flex-1 flex-col items-center justify-center text-center">
         <motion.div
           layout
           transition={{ duration: 0.5, ease: EASE_OUT }}
           className="relative grid place-items-center"
-          style={{ width: 210, height: 210 }}
+          // 236, not 210: at 210 the mark's own dashed keyline (~173px at full scale) was wider
+          // than the inner ring, so during the entrance phase the two collided and the orbit read
+          // as a band cutting through the mark rather than space around it. 236 clears the mark in
+          // both phases while still leaving the column short enough to fit a 844px screen.
+          style={{ width: 236, height: 236 }}
         >
           <AnimatePresence>
             {showFx && (
@@ -159,7 +167,7 @@ export function PwaWelcome({ locale }: { locale: string }) {
                 </span>
                 <span
                   aria-hidden
-                  className="absolute inset-[27px] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-secondary)_45%,var(--color-border))] opacity-70 shadow-[0_0_0_1px_var(--logo-keyline)] motion-safe:animate-[spin_17s_linear_infinite_reverse]"
+                  className="absolute inset-[22px] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-secondary)_45%,var(--color-border))] opacity-70 shadow-[0_0_0_1px_var(--logo-keyline)] motion-safe:animate-[spin_17s_linear_infinite_reverse]"
                 >
                   <span
                     aria-hidden
@@ -171,10 +179,6 @@ export function PwaWelcome({ locale }: { locale: string }) {
                     }}
                   />
                 </span>
-                <span
-                  aria-hidden
-                  className="absolute inset-[52px] rounded-full border border-[var(--color-border)] opacity-55"
-                />
               </motion.div>
             )}
           </AnimatePresence>
@@ -198,7 +202,7 @@ export function PwaWelcome({ locale }: { locale: string }) {
           variants={wordContainer}
           initial={prefersReducedMotion ? "visible" : "hidden"}
           animate="visible"
-          className="mt-5 flex text-xl font-bold uppercase tracking-[0.34em]"
+          className="mt-8 flex text-xl font-bold uppercase tracking-[0.34em]"
         >
           {"SITUS".split("").map((char, i) => (
             <motion.span key={i} variants={letterIn}>
