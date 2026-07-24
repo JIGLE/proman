@@ -671,7 +671,28 @@
       "tagline": "Situs // Sovereign Capital System",
       "modules": "Banca · Recibos · Documentos · Prova Fiscal"
     },
-    "createAccount": "Criar conta"
+    "createAccount": "Criar conta",
+    "heroCta": {
+      "tryIt": "Experimentar",
+      "join": "Aderir"
+    },
+    "localeControl": {
+      "language": "Idioma",
+      "countryTheme": "Tema do país",
+      "searchCountry": "Procurar país…",
+      "noMatch": "Sem correspondência.",
+      "comingSoon": "Brevemente",
+      "bloomAria": "Clique para um efeito de cor",
+      "jumpAria": "Saltar para o fim da sequência"
+    },
+    "countries": {
+      "pt": "Portugal",
+      "es": "Espanha",
+      "de": "Alemanha",
+      "fr": "França",
+      "it": "Itália",
+      "se": "Suécia"
+    }
   },
   "errors": {
     "notFound": {

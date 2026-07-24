@@ -671,7 +671,28 @@
       "tagline": "Situs // Sovereign Capital System",
       "modules": "Banking · Receipts · Documents · Tax Evidence"
     },
-    "createAccount": "Create account"
+    "createAccount": "Create account",
+    "heroCta": {
+      "tryIt": "Try it",
+      "join": "Join"
+    },
+    "localeControl": {
+      "language": "Language",
+      "countryTheme": "Country theme",
+      "searchCountry": "Search country…",
+      "noMatch": "No match.",
+      "comingSoon": "Soon",
+      "bloomAria": "Click for a colour bloom",
+      "jumpAria": "Jump to the end of the sequence"
+    },
+    "countries": {
+      "pt": "Portugal",
+      "es": "Spain",
+      "de": "Germany",
+      "fr": "France",
+      "it": "Italy",
+      "se": "Sweden"
+    }
   },
   "errors": {
     "notFound": {
