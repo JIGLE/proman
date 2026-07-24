@@ -8,15 +8,19 @@ import { TrackedLandingLink } from "@/components/shared/landing-analytics";
 import { LanguageSelector } from "@/components/shared/language-selector";
 import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils/utils";
 
 /**
  * App-native welcome screen for the installed PWA. Only ever renders for signed-out visitors
  * (mounted from the already signed-out-gated `app/[locale]/page.tsx`) opening the app in
  * standalone display mode — a normal browser tab always sees the full marketing page instead.
  *
- * Sequence: the Portal mark forms alone, centered — then the orbiting rings/glow enter around
- * it — then it all settles into the welcome state (mark ~22% smaller, headline and the three
- * actions rising in from the bottom). Plays once per mount; does not loop.
+ * Sequence: the Portal mark forms alone, centered in the whole screen — then the orbiting
+ * rings/glow enter around it — then it all settles into the welcome state: the mark shrinks
+ * (~22%) and moves up to sit just above the CTA section (a framer-motion `layout` animation,
+ * triggered by the surrounding flex alignment flipping from centered to top-aligned once
+ * settled), while the headline and three actions rise in from the bottom. Plays once per mount;
+ * does not loop.
  */
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
@@ -103,8 +107,22 @@ export function PwaWelcome({ locale }: { locale: string }) {
         </motion.div>
       )}
 
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
-        <div className="relative grid place-items-center" style={{ width: 210, height: 210 }}>
+      {/* Starts centred in the whole screen (this flex-1 area fills nearly all of it while the
+          language pill and CTAs below are still unmounted) then, once settled, the alignment
+          flips to the top — `layout` on the moving children below turns that into a smooth
+          animated move upward instead of a jump, landing the mark just above the CTA section. */}
+      <div
+        className={cn(
+          "flex flex-1 flex-col items-center text-center",
+          settled ? "justify-start pt-4" : "justify-center",
+        )}
+      >
+        <motion.div
+          layout
+          transition={{ duration: 0.5, ease: EASE_OUT }}
+          className="relative grid place-items-center"
+          style={{ width: 210, height: 210 }}
+        >
           <AnimatePresence>
             {showFx && (
               <motion.div
@@ -122,14 +140,37 @@ export function PwaWelcome({ locale }: { locale: string }) {
                       "radial-gradient(circle, color-mix(in srgb, var(--logo-primary) 28%, transparent) 0%, transparent 72%)",
                   }}
                 />
+                {/* Keyline halo on the border, same trick the mark's own strokes use: some
+                    countries' primary colour sits close to the canvas (e.g. Germany's black in
+                    dark mode), so the flag colour alone isn't a reliable contrast guarantee. */}
                 <span
                   aria-hidden
-                  className="absolute inset-0 rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-primary)_55%,var(--color-border))] opacity-70 motion-safe:animate-[spin_24s_linear_infinite]"
-                />
+                  className="absolute inset-0 rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-primary)_55%,var(--color-border))] opacity-70 shadow-[0_0_0_1px_var(--logo-keyline)] motion-safe:animate-[spin_24s_linear_infinite]"
+                >
+                  <span
+                    aria-hidden
+                    className="absolute left-1/2 top-0 h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                    style={{
+                      background: "var(--logo-primary)",
+                      boxShadow:
+                        "0 0 0 1px var(--logo-keyline), 0 0 9px 2px color-mix(in srgb, var(--logo-primary) 75%, transparent), 0 0 2px 1px var(--logo-primary)",
+                    }}
+                  />
+                </span>
                 <span
                   aria-hidden
-                  className="absolute inset-[27px] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-secondary)_45%,var(--color-border))] opacity-70 motion-safe:animate-[spin_17s_linear_infinite_reverse]"
-                />
+                  className="absolute inset-[27px] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-secondary)_45%,var(--color-border))] opacity-70 shadow-[0_0_0_1px_var(--logo-keyline)] motion-safe:animate-[spin_17s_linear_infinite_reverse]"
+                >
+                  <span
+                    aria-hidden
+                    className="absolute bottom-0 left-1/2 h-[6px] w-[6px] -translate-x-1/2 translate-y-1/2 rounded-full"
+                    style={{
+                      background: "var(--logo-secondary)",
+                      boxShadow:
+                        "0 0 0 1px var(--logo-keyline), 0 0 9px 2px color-mix(in srgb, var(--logo-secondary) 75%, transparent), 0 0 2px 1px var(--logo-secondary)",
+                    }}
+                  />
+                </span>
                 <span
                   aria-hidden
                   className="absolute inset-[52px] rounded-full border border-[var(--color-border)] opacity-55"
@@ -149,9 +190,11 @@ export function PwaWelcome({ locale }: { locale: string }) {
               onDrawComplete={() => setPhase((p) => (p === "mark" ? "rings" : p))}
             />
           </motion.div>
-        </div>
+        </motion.div>
 
         <motion.div
+          layout
+          transition={{ duration: 0.5, ease: EASE_OUT }}
           variants={wordContainer}
           initial={prefersReducedMotion ? "visible" : "hidden"}
           animate="visible"
@@ -165,6 +208,8 @@ export function PwaWelcome({ locale }: { locale: string }) {
         </motion.div>
 
         <motion.p
+          layout
+          transition={{ duration: 0.5, ease: EASE_OUT }}
           variants={tagIn}
           initial={prefersReducedMotion ? "visible" : "hidden"}
           animate="visible"
@@ -201,29 +246,29 @@ export function PwaWelcome({ locale }: { locale: string }) {
           animate="visible"
           className="flex flex-col gap-2.5 pb-6"
         >
-          <motion.div variants={riseIn}>
+          <motion.div variants={riseIn} whileTap={{ scale: 0.97 }}>
             <TrackedLandingLink
               href={`/${locale}/demo?perspective=owner`}
               eventName="landing.demo_start"
               eventData={{ location: "pwa_welcome_primary", perspective: "owner" }}
             >
               <Button size="lg" className="w-full rounded-none font-semibold">
-                {t("primaryCta")}
+                {t("heroCta.tryIt")}
               </Button>
             </TrackedLandingLink>
           </motion.div>
-          <motion.div variants={riseIn}>
+          <motion.div variants={riseIn} whileTap={{ scale: 0.97 }}>
             <TrackedLandingLink
               href="/auth/signup"
               eventName="landing.signup_start"
               eventData={{ location: "pwa_welcome" }}
             >
               <Button size="lg" variant="outline" className="w-full rounded-none font-semibold">
-                {t("createAccount")}
+                {t("heroCta.join")}
               </Button>
             </TrackedLandingLink>
           </motion.div>
-          <motion.div variants={riseIn}>
+          <motion.div variants={riseIn} whileTap={{ scale: 0.97 }}>
             <TrackedLandingLink
               href="/auth/signin"
               eventName="landing.signin_start"

@@ -1,17 +1,10 @@
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 
-import {
-  LandingAnalyticsObserver,
-  TrackedLandingLink,
-} from "@/components/shared/landing-analytics";
-import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
-import { LanguageSelector } from "@/components/shared/language-selector";
+import { LandingAnalyticsObserver } from "@/components/shared/landing-analytics";
 import { LandingHeroSequence } from "@/components/shared/landing-hero-sequence";
-import { LandingStickyCta } from "@/components/shared/landing-sticky-cta";
 import { LocaleSelectOverlay } from "@/components/shared/locale-select-overlay";
 import { PwaWelcome } from "@/components/shared/pwa-welcome";
-import { Button } from "@/components/ui/button";
 
 interface Props {
   params: Promise<{ locale: string }>;
@@ -32,56 +25,7 @@ export default async function LandingPage({ params }: Props) {
     // Session check failed — render the public landing normally.
   }
 
-  const t = await getTranslations("landing");
   const tFooter = await getTranslations("footer");
-
-  const modules = [
-    { label: t("system.m1label"), title: t("system.m1title"), body: t("system.m1body") },
-    { label: t("system.m2label"), title: t("system.m2title"), body: t("system.m2body") },
-    { label: t("system.m3label"), title: t("system.m3title"), body: t("system.m3body") },
-  ];
-
-  // Workflow accents follow the logo role colours (arc / line / dot), cycling.
-  const flowSteps = [
-    { t: t("flow.s1t"), b: t("flow.s1b"), bar: "var(--logo-primary)" },
-    { t: t("flow.s2t"), b: t("flow.s2b"), bar: "var(--logo-secondary)" },
-    { t: t("flow.s3t"), b: t("flow.s3b"), bar: "var(--logo-accent)" },
-    { t: t("flow.s4t"), b: t("flow.s4b"), bar: "var(--logo-secondary)" },
-    { t: t("flow.s5t"), b: t("flow.s5b"), bar: "var(--logo-accent)" },
-  ];
-
-  const pillars = [
-    {
-      label: t("pillars.portfolioLabel"),
-      title: t("pillars.portfolioTitle"),
-      body: t("pillars.portfolioBody"),
-    },
-    {
-      label: t("pillars.financeLabel"),
-      title: t("pillars.financeTitle"),
-      body: t("pillars.financeBody"),
-    },
-    {
-      label: t("pillars.documentsLabel"),
-      title: t("pillars.documentsTitle"),
-      body: t("pillars.documentsBody"),
-    },
-    {
-      label: t("pillars.expensesLabel"),
-      title: t("pillars.expensesTitle"),
-      body: t("pillars.expensesBody"),
-    },
-    {
-      label: t("pillars.operationsLabel"),
-      title: t("pillars.operationsTitle"),
-      body: t("pillars.operationsBody"),
-    },
-    {
-      label: t("pillars.intelligenceLabel"),
-      title: t("pillars.intelligenceTitle"),
-      body: t("pillars.intelligenceBody"),
-    },
-  ];
 
   return (
     <div className="min-h-screen bg-[var(--color-canvas)] text-[var(--color-foreground)]">
@@ -91,327 +35,50 @@ export default async function LandingPage({ params }: Props) {
           Renders null for normal browser tabs (standalone display-mode detected client-side). */}
       <PwaWelcome locale={locale} />
 
-      {/* ── Header ─────────────────────────────────────────────── */}
-      {/* Fades in as the hero sequence settles (--hero-p, written by LandingHeroSequence);
-          falls back to fully visible wherever that var isn't set (mobile, reduced motion,
-          every other page). */}
-      <header
-        style={{ opacity: "var(--hero-p, 1)" }}
-        className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-canvas)]/85 backdrop-blur-md"
-      >
-        <div className="mx-auto flex h-[76px] max-w-[1440px] items-center justify-between px-5 sm:px-10">
-          <a href={`/${locale}`} className="flex items-center gap-3">
-            <SitusPortalMark className="h-[34px] w-[34px]" />
-            <span className="text-[13px] font-semibold uppercase tracking-[0.22em]">Situs</span>
-          </a>
-
-          <nav className="hidden items-center gap-6 text-[13px] text-[var(--color-muted-foreground)] md:flex">
-            <a href="#system" className="transition-colors hover:text-[var(--color-foreground)]">
-              {t("system.eyebrow")}
-            </a>
-            <a href="#workflow" className="transition-colors hover:text-[var(--color-foreground)]">
-              {t("flow.eyebrow")}
-            </a>
-            <a href="#modules" className="transition-colors hover:text-[var(--color-foreground)]">
-              {t("pillars.eyebrow")}
-            </a>
-            <a href="#preview" className="transition-colors hover:text-[var(--color-foreground)]">
-              {t("preview2.eyebrow")}
-            </a>
-          </nav>
-
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:block">
-              <LanguageSelector compact />
-            </div>
-            <a
-              href="/auth/signin"
-              className="hidden px-3 py-2 text-[13px] font-medium text-[var(--color-muted-foreground)] transition-colors hover:text-[var(--color-foreground)] sm:inline-block"
-            >
-              {t("signIn")}
-            </a>
-            <TrackedLandingLink
-              href={`/${locale}/demo?perspective=owner`}
-              eventName="landing.demo_start"
-              eventData={{ location: "header", perspective: "owner" }}
-            >
-              <Button size="sm" className="rounded-none font-semibold">
-                {t("requestDemo")}
-              </Button>
-            </TrackedLandingLink>
-          </div>
-        </div>
-      </header>
-
-      <main className="mx-auto max-w-[1440px]">
+      {/* The whole page is this one screen — no header/nav, no marketing sections below it, on
+          any viewport. LandingHeroSequence carries its own locale control and CTAs, so nothing
+          else needs to be mounted around it. Desktop centers the hero vertically in the
+          viewport (lg:flex + justify-center); mobile leaves height to LandingHeroSequence's own
+          full-height column, which already pins its CTAs to the bottom. */}
+      {/* Asymmetric mobile padding (pt-8/pb-16, not py-16): the language-selector chip sits right
+          at the top of the hero column, so it inherits this top offset directly — py-16 put it
+          64px down for no reason beyond reusing the desktop value. lg: keeps the original
+          symmetric spacing used for desktop centering. */}
+      <main className="relative px-5 pt-8 pb-16 sm:px-10 lg:flex lg:min-h-screen lg:flex-col lg:justify-center lg:py-24">
         <LandingAnalyticsObserver locale={locale} demoEnabled={true} />
 
-        {/* ── Hero ─────────────────────────────────────────────── */}
-        {/* Desktop gets the scroll-scrubbed splash-to-settle sequence (see component doc
-            comment); it renders the same copy/CTAs plain-and-visible if JS hasn't run yet or
-            the viewport is below the lg breakpoint, so there's no no-JS/mobile regression. */}
-        <section className="px-5 py-16 sm:px-10 lg:min-h-screen lg:py-24">
-          <LandingHeroSequence locale={locale} />
-        </section>
+        <LandingHeroSequence locale={locale} />
 
-        {/* ── System architecture ──────────────────────────────── */}
-        <section
-          id="system"
-          className="border-t border-[var(--color-border)] px-5 py-16 sm:px-10 lg:py-20"
-        >
-          <div className="grid gap-12 lg:grid-cols-[0.75fr_1.25fr]">
-            <div>
-              <p className="mono-label">{t("system.eyebrow")}</p>
-              <h2 className="mt-4 text-[clamp(30px,4vw,56px)] font-normal leading-[0.98] tracking-[-0.05em]">
-                {t("system.title")}
-              </h2>
-              <p className="mt-5 text-base leading-relaxed text-[var(--color-muted-foreground)]">
-                {t("system.copy")}
-              </p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-3">
-              {modules.map((m) => (
-                <div
-                  key={m.title}
-                  className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5"
-                >
-                  <span className="mono-label">{m.label}</span>
-                  <h3 className="mt-4 text-xl font-normal tracking-[-0.03em]">{m.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
-                    {m.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* Condensed on the smallest screens — the full localized sentence plus both links was
+            wrapping to two dense uppercase lines and reading heavy against the CTA stack right
+            above it. Below sm: brand + year only (safe to hand-construct, no locale string
+            surgery) before the always-present, always-localized Privacy/Terms links.
 
-        {/* ── Workflow ─────────────────────────────────────────── */}
-        <section
-          id="workflow"
-          className="border-t border-[var(--color-border)] px-5 py-16 sm:px-10 lg:py-20"
-        >
-          <p className="mono-label">{t("flow.eyebrow")}</p>
-          <h2 className="mt-4 text-[clamp(30px,4vw,56px)] font-normal leading-[0.98] tracking-[-0.05em]">
-            {t("flow.title")}
-          </h2>
-          <div className="mt-8 grid gap-3 md:grid-cols-5">
-            {flowSteps.map((step, i) => (
-              <div
-                key={step.t}
-                className="relative overflow-hidden border border-[var(--color-border)] bg-[var(--color-surface)] p-4"
-              >
-                <span
-                  aria-hidden
-                  className="absolute inset-x-0 top-0 h-[3px]"
-                  style={{ background: step.bar }}
-                />
-                <span className="mono-label">
-                  {t("flow.eyebrow")} · {String(i + 1).padStart(2, "0")}
-                </span>
-                <strong className="mt-4 block text-lg font-normal tracking-[-0.02em]">
-                  {step.t}
-                </strong>
-                <p className="mt-2.5 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
-                  {step.b}
-                </p>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Product pillars ──────────────────────────────────── */}
-        <section
-          id="modules"
-          className="border-t border-[var(--color-border)] px-5 py-16 sm:px-10 lg:py-20"
-        >
-          <div className="grid gap-12 lg:grid-cols-[0.75fr_1.25fr]">
-            <div>
-              <p className="mono-label">{t("pillars.eyebrow")}</p>
-              <h2 className="mt-4 text-[clamp(30px,4vw,56px)] font-normal leading-[0.98] tracking-[-0.05em]">
-                {t("pillars.title")}
-              </h2>
-              <p className="mt-5 text-base leading-relaxed text-[var(--color-muted-foreground)]">
-                {t("pillars.copy")}
-              </p>
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {pillars.map((p) => (
-                <div
-                  key={p.title}
-                  className="border border-[var(--color-border)] bg-[var(--color-surface)] p-5 transition-colors hover:bg-[var(--color-hover)]"
-                >
-                  <span className="mono-label">{p.label}</span>
-                  <h3 className="mt-4 text-xl font-normal tracking-[-0.03em]">{p.title}</h3>
-                  <p className="mt-3 text-sm leading-relaxed text-[var(--color-muted-foreground)]">
-                    {p.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ── Interface preview (static Mission Control mock-shell) ── */}
-        <section
-          id="preview"
-          className="border-t border-[var(--color-border)] px-5 py-16 sm:px-10 lg:py-20"
-        >
-          <p className="mono-label">{t("preview2.eyebrow")}</p>
-          <h2 className="mt-4 text-[clamp(30px,4vw,56px)] font-normal leading-[0.98] tracking-[-0.05em]">
-            {t("preview2.title")}
-          </h2>
-          <p className="mt-4 max-w-2xl text-base leading-relaxed text-[var(--color-muted-foreground)]">
-            {t("preview2.copy")}
-          </p>
-
-          <div className="mt-9 grid min-h-[480px] grid-cols-1 border border-[var(--color-border)] bg-[var(--color-surface)] md:grid-cols-[220px_1fr]">
-            {/* Rail */}
-            <aside className="border-b border-[var(--color-border)] p-5 md:border-b-0 md:border-r">
-              <div className="mb-7 flex items-center gap-2.5">
-                <SitusPortalMark className="h-6 w-6" />
-                <span className="text-[12px] font-semibold uppercase tracking-[0.18em]">Situs</span>
-              </div>
-              <div className="grid gap-1 text-[13px]">
-                <div
-                  className="border-l-2 px-2.5 py-2 font-medium"
-                  style={{
-                    borderColor: "var(--country-highlight-readable)",
-                    background: "var(--color-hover)",
-                    color: "var(--country-highlight-readable)",
-                  }}
-                >
-                  Home
-                </div>
-                {["Portfolio", "Finance", "Documents", "Intelligence"].map((item) => (
-                  <div
-                    key={item}
-                    className="border-l-2 border-transparent px-2.5 py-2 text-[var(--color-muted-foreground)]"
-                  >
-                    {item}
-                  </div>
-                ))}
-              </div>
-            </aside>
-
-            {/* Main */}
-            <section className="p-6">
-              <p className="mono-label">{t("preview2.greeting")}</p>
-
-              <div className="mt-4 grid grid-cols-1 gap-3.5 sm:grid-cols-3">
-                {[
-                  { label: t("preview2.healthLabel"), value: "98%" },
-                  { label: t("preview2.incomeLabel"), value: "€4,820" },
-                  { label: t("preview2.queueLabel"), value: "3" },
-                ].map((kpi) => (
-                  <div key={kpi.label} className="border border-[var(--color-border)] p-4">
-                    <span className="mono-label">{kpi.label}</span>
-                    <strong className="mt-2 block text-[26px] font-normal tabular-nums">
-                      {kpi.value}
-                    </strong>
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-5 grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div className="border border-[var(--color-border)] p-4">
-                  <h4 className="mono-label mb-3">{t("preview2.missionTitle")}</h4>
-                  {[
-                    { text: t("preview2.m1"), tag: t("preview2.m1tag") },
-                    { text: t("preview2.m2"), tag: t("preview2.m2tag") },
-                    { text: t("preview2.m3"), tag: t("preview2.m3tag") },
-                  ].map((row) => (
-                    <div
-                      key={row.text}
-                      className="flex justify-between gap-3 border-t border-[var(--color-border)] py-2.5 text-[13px]"
-                    >
-                      <span>{row.text}</span>
-                      <span className="mono-label whitespace-nowrap">{row.tag}</span>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="border border-[var(--color-border)] p-4">
-                  <h4 className="mono-label mb-3">{t("preview2.timelineTitle")}</h4>
-                  {[
-                    { text: t("preview2.t1"), tag: t("preview2.t1tag") },
-                    { text: t("preview2.t2"), tag: t("preview2.t2tag") },
-                    { text: t("preview2.t3"), tag: t("preview2.t3tag") },
-                  ].map((row) => (
-                    <div
-                      key={row.text}
-                      className="flex justify-between gap-3 border-t border-[var(--color-border)] py-2.5 text-[13px]"
-                    >
-                      <span>{row.text}</span>
-                      <span className="mono-label whitespace-nowrap">{row.tag}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </section>
-          </div>
-        </section>
-
-        {/* ── Closing CTA ──────────────────────────────────────── */}
-        <section className="border-t border-[var(--color-border)] px-5 py-20 text-center sm:px-10 lg:py-28">
-          <h2 className="mx-auto max-w-3xl text-[clamp(34px,6vw,72px)] font-normal leading-[0.92] tracking-[-0.06em]">
-            {t("closing2.title")}
-          </h2>
-          <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-[var(--color-muted-foreground)]">
-            {t("closing2.copy")}
-          </p>
-          <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-            <TrackedLandingLink
-              href={`/${locale}/demo?perspective=owner`}
-              eventName="landing.demo_start"
-              eventData={{ location: "closing_cta", perspective: "owner" }}
-              className="w-full sm:w-auto"
-            >
-              <Button size="lg" className="w-full rounded-none font-semibold sm:w-auto">
-                {t("closing2.primary")}
-              </Button>
-            </TrackedLandingLink>
-            <TrackedLandingLink
-              href="#workflow"
-              eventName="landing.workflow_cta_click"
-              eventData={{ location: "closing_cta" }}
-              className="w-full sm:w-auto"
-            >
-              <Button
-                size="lg"
-                variant="outline"
-                className="w-full rounded-none font-semibold sm:w-auto"
-              >
-                {t("closing2.secondary")}
-              </Button>
-            </TrackedLandingLink>
-          </div>
-        </section>
+            border-t here is deliberate: with nothing tying it to the content above, this line
+            read as an appendix bolted onto the bottom of the page rather than part of the
+            composition — the divider (same border language used throughout the app) turns the
+            empty space above it into a legible footer band instead of a gap. */}
+        <p className="mono-label-xs absolute inset-x-0 bottom-4 border-t border-[var(--color-border)] px-5 pt-4 pb-[env(safe-area-inset-bottom)] text-center text-[var(--color-muted-foreground)] lg:bottom-6 lg:pb-0">
+          <span className="sm:hidden">© {new Date().getFullYear()} Situs</span>
+          <span className="hidden sm:inline">
+            {tFooter("copyright", { year: new Date().getFullYear() })}
+          </span>{" "}
+          ·{" "}
+          <a
+            href={`/${locale}/privacy`}
+            className="transition-colors hover:text-[var(--color-foreground)]"
+          >
+            {tFooter("privacy")}
+          </a>{" "}
+          ·{" "}
+          <a
+            href={`/${locale}/terms`}
+            className="transition-colors hover:text-[var(--color-foreground)]"
+          >
+            {tFooter("terms")}
+          </a>
+        </p>
       </main>
-
-      <LandingStickyCta href={`/${locale}/demo?perspective=owner`} label={t("requestDemo")} />
-
-      <footer className="border-t border-[var(--color-border)] px-5 py-7 sm:px-10">
-        <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 font-mono text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]">
-          <span>{t("footer2.tagline")}</span>
-          <span>{t("footer2.modules")}</span>
-          <span className="flex items-center gap-3">
-            <a
-              href={`/${locale}/privacy`}
-              className="transition-colors hover:text-[var(--color-foreground)]"
-            >
-              {tFooter("privacy")}
-            </a>
-            <span>·</span>
-            <a
-              href={`/${locale}/terms`}
-              className="transition-colors hover:text-[var(--color-foreground)]"
-            >
-              {tFooter("terms")}
-            </a>
-          </span>
-        </div>
-      </footer>
     </div>
   );
 }

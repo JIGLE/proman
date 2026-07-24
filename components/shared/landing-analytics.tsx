@@ -71,26 +71,6 @@ export function TrackedLandingLink({
   );
 }
 
-/**
- * Same click tracking as TrackedLandingLink, but a plain `<a>` for hrefs that
- * aren't a Next.js page — e.g. an API route that redirects (Stripe Checkout)
- * or a `mailto:` link — where Next's client-side router shouldn't intercept
- * the navigation.
- */
-export function TrackedExternalLink({
-  href,
-  className,
-  eventName,
-  eventData,
-  children,
-}: Omit<TrackedLandingLinkProps, "prefetch">) {
-  return (
-    <a href={href} className={className} onClick={() => trackLandingEvent(eventName, eventData)}>
-      {children}
-    </a>
-  );
-}
-
 export function LandingAnalyticsObserver({ locale, demoEnabled }: LandingAnalyticsObserverProps) {
   const trackedPageView = useRef(false);
   const trackedDepths = useRef(new Set<number>());
