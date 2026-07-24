@@ -7,6 +7,7 @@ import {
 } from "@/components/shared/landing-analytics";
 import { SitusPortalMark } from "@/components/shared/situs-portal-logo";
 import { LanguageSelector } from "@/components/shared/language-selector";
+import { LandingHeroSequence } from "@/components/shared/landing-hero-sequence";
 import { LandingStickyCta } from "@/components/shared/landing-sticky-cta";
 import { LocaleSelectOverlay } from "@/components/shared/locale-select-overlay";
 import { PwaWelcome } from "@/components/shared/pwa-welcome";
@@ -33,14 +34,6 @@ export default async function LandingPage({ params }: Props) {
 
   const t = await getTranslations("landing");
   const tFooter = await getTranslations("footer");
-
-  const chips = [
-    t("chips.matching"),
-    t("chips.receipts"),
-    t("chips.documents"),
-    t("chips.tax"),
-    t("chips.palette"),
-  ];
 
   const modules = [
     { label: t("system.m1label"), title: t("system.m1title"), body: t("system.m1body") },
@@ -99,7 +92,13 @@ export default async function LandingPage({ params }: Props) {
       <PwaWelcome locale={locale} />
 
       {/* ── Header ─────────────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-canvas)]/85 backdrop-blur-md">
+      {/* Fades in as the hero sequence settles (--hero-p, written by LandingHeroSequence);
+          falls back to fully visible wherever that var isn't set (mobile, reduced motion,
+          every other page). */}
+      <header
+        style={{ opacity: "var(--hero-p, 1)" }}
+        className="sticky top-0 z-50 border-b border-[var(--color-border)] bg-[var(--color-canvas)]/85 backdrop-blur-md"
+      >
         <div className="mx-auto flex h-[76px] max-w-[1440px] items-center justify-between px-5 sm:px-10">
           <a href={`/${locale}`} className="flex items-center gap-3">
             <SitusPortalMark className="h-[34px] w-[34px]" />
@@ -148,92 +147,11 @@ export default async function LandingPage({ params }: Props) {
         <LandingAnalyticsObserver locale={locale} demoEnabled={true} />
 
         {/* ── Hero ─────────────────────────────────────────────── */}
-        <section className="grid items-center gap-12 px-5 py-16 sm:px-10 lg:grid-cols-[1.05fr_0.95fr] lg:py-24">
-          <div>
-            <p className="mono-label mb-5">{t("eyebrow")}</p>
-            <h1 className="max-w-2xl text-[clamp(44px,7vw,88px)] font-normal leading-[0.9] tracking-[-0.06em]">
-              {t("hero2")}
-            </h1>
-            <p className="mt-7 max-w-xl text-[clamp(16px,1.5vw,19px)] leading-relaxed text-[var(--color-muted-foreground)]">
-              {t("subtitle2")}
-            </p>
-
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <TrackedLandingLink
-                href={`/${locale}/demo?perspective=owner`}
-                eventName="landing.demo_start"
-                eventData={{ location: "hero_primary", perspective: "owner" }}
-                className="w-full sm:w-auto"
-              >
-                <Button size="lg" className="w-full rounded-none font-semibold sm:w-auto">
-                  {t("primaryCta")}
-                </Button>
-              </TrackedLandingLink>
-              <TrackedLandingLink
-                href="/auth/signup"
-                eventName="landing.signup_start"
-                eventData={{ location: "hero_secondary" }}
-                className="w-full sm:w-auto"
-              >
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="w-full rounded-none font-semibold sm:w-auto"
-                >
-                  {t("createAccount")}
-                </Button>
-              </TrackedLandingLink>
-            </div>
-
-            <a
-              href="#workflow"
-              className="mt-4 inline-flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)] underline-offset-4 transition-colors hover:text-[var(--color-foreground)] hover:underline"
-            >
-              {t("secondaryCta")}
-            </a>
-
-            <div className="mt-10 flex flex-wrap gap-2">
-              {chips.map((chip) => (
-                <span
-                  key={chip}
-                  className="border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-2 font-mono text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]"
-                >
-                  {chip}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          {/* Hero visual — Portal on its canvas, orbited by dashed rings, with floating KPIs */}
-          <div className="relative hidden min-h-[520px] place-items-center lg:grid">
-            <div
-              aria-hidden
-              className="absolute aspect-square w-[min(500px,80%)] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-primary)_45%,var(--color-border))] opacity-70 motion-safe:animate-[spin_28s_linear_infinite]"
-            />
-            <div
-              aria-hidden
-              className="absolute aspect-square w-[min(400px,64%)] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-secondary)_45%,var(--color-border))] opacity-70 motion-safe:animate-[spin_20s_linear_infinite_reverse]"
-            />
-
-            <div className="grid aspect-square w-[min(360px,74%)] place-items-center border border-[var(--color-border)] bg-[var(--logo-canvas)]">
-              <SitusPortalMark className="h-[180px] w-[180px]" />
-            </div>
-
-            <div className="absolute left-0 top-14 min-w-[180px] border border-[var(--color-border)] bg-[var(--color-canvas)]/85 p-3.5 backdrop-blur-sm">
-              <strong className="block text-lg font-normal tracking-tight tabular-nums">
-                €4,820
-              </strong>
-              <span className="mono-label mt-1 block">{t("floating.income")}</span>
-            </div>
-            <div className="absolute bottom-24 right-0 min-w-[180px] border border-[var(--color-border)] bg-[var(--color-canvas)]/85 p-3.5 backdrop-blur-sm">
-              <strong className="block text-lg font-normal tracking-tight">3 drafts</strong>
-              <span className="mono-label mt-1 block">{t("floating.receipts")}</span>
-            </div>
-            <div className="absolute bottom-6 left-10 min-w-[180px] border border-[var(--color-border)] bg-[var(--color-canvas)]/85 p-3.5 backdrop-blur-sm">
-              <strong className="block text-lg font-normal tracking-tight tabular-nums">98%</strong>
-              <span className="mono-label mt-1 block">{t("floating.health")}</span>
-            </div>
-          </div>
+        {/* Desktop gets the scroll-scrubbed splash-to-settle sequence (see component doc
+            comment); it renders the same copy/CTAs plain-and-visible if JS hasn't run yet or
+            the viewport is below the lg breakpoint, so there's no no-JS/mobile regression. */}
+        <section className="px-5 py-16 sm:px-10 lg:min-h-screen lg:py-24">
+          <LandingHeroSequence locale={locale} />
         </section>
 
         {/* ── System architecture ──────────────────────────────── */}
