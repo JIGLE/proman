@@ -420,7 +420,9 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2 text-sm">
                         <Mail className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" />
-                        <span className="truncate">{tenant.email || "—"}</span>
+                        <span className="truncate" title={tenant.email || undefined}>
+                          {tenant.email || "—"}
+                        </span>
                       </div>
                       <div className="flex items-center gap-2 text-sm">
                         <Phone className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" />

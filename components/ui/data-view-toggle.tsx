@@ -34,9 +34,8 @@ export function DataViewToggle({
       {showGrid && (
         <Button
           variant="ghost"
-          size="sm"
+          size="icon-sm"
           className={cn(
-            "h-7 w-7 p-0",
             mode === "grid" && "bg-[var(--color-hover)] text-[var(--color-foreground)]",
           )}
           onClick={() => onChange("grid")}
@@ -49,11 +48,8 @@ export function DataViewToggle({
       )}
       <Button
         variant="ghost"
-        size="sm"
-        className={cn(
-          "h-7 w-7 p-0",
-          mode === "table" && "bg-[var(--color-hover)] text-[var(--color-foreground)]",
-        )}
+        size="icon-sm"
+        className={cn(mode === "table" && "bg-[var(--color-hover)] text-[var(--color-foreground)]")}
         onClick={() => onChange("table")}
         aria-label="Table view"
         aria-pressed={mode === "table"}
@@ -64,9 +60,8 @@ export function DataViewToggle({
       {showTree && (
         <Button
           variant="ghost"
-          size="sm"
+          size="icon-sm"
           className={cn(
-            "h-7 w-7 p-0",
             mode === "tree" && "bg-[var(--color-hover)] text-[var(--color-foreground)]",
           )}
           onClick={() => onChange("tree")}
@@ -80,11 +75,8 @@ export function DataViewToggle({
       {showMap && (
         <Button
           variant="ghost"
-          size="sm"
-          className={cn(
-            "h-7 w-7 p-0",
-            mode === "map" && "bg-[var(--color-hover)] text-[var(--color-foreground)]",
-          )}
+          size="icon-sm"
+          className={cn(mode === "map" && "bg-[var(--color-hover)] text-[var(--color-foreground)]")}
           onClick={() => onChange("map")}
           aria-label="Map view"
           aria-pressed={mode === "map"}
