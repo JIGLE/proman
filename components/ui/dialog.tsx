@@ -75,7 +75,7 @@ const DialogContent = React.forwardRef<
         <DialogPrimitive.Description id={descriptionId} className="sr-only">
           Dialog content
         </DialogPrimitive.Description>
-        <DialogPrimitive.Close className="absolute right-4 top-4 z-10 rounded-lg p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-hover)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] disabled:pointer-events-none">
+        <DialogPrimitive.Close className="absolute right-4 top-4 z-10 inline-flex items-center justify-center rounded-lg p-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-[var(--color-hover)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring)] disabled:pointer-events-none max-md:min-h-11 max-md:min-w-11">
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
         </DialogPrimitive.Close>

@@ -107,8 +107,8 @@ export function PropertyYearStrip({
         <div className="flex items-center gap-1">
           <Button
             variant="ghost"
-            size="sm"
-            className="h-7 w-7 rounded-none p-0"
+            size="icon-sm"
+            className="rounded-none"
             onClick={() => setYear((y) => y - 1)}
             aria-label="Previous year"
           >
@@ -117,8 +117,8 @@ export function PropertyYearStrip({
           <span className="font-mono text-sm tabular-nums">{year}</span>
           <Button
             variant="ghost"
-            size="sm"
-            className="h-7 w-7 rounded-none p-0"
+            size="icon-sm"
+            className="rounded-none"
             onClick={() => setYear((y) => y + 1)}
             aria-label="Next year"
           >
