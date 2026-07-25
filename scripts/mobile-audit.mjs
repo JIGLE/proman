@@ -71,7 +71,9 @@ const SURFACES = [
   { id: "financials-tax", path: "/en/financials?tab=tax" },
   { id: "operations", path: "/en/operations" },
   { id: "leases", path: "/en/leases" },
+  { id: "detail-lease", path: "/en/leases?detail=lease:{leaseId}", overlay: true },
   { id: "documents", path: "/en/documents" },
+  { id: "detail-document", path: "/en/documents?detail=document:{documentId}", overlay: true },
   { id: "intelligence", path: "/en/intelligence" },
   { id: "correspondence", path: "/en/correspondence" },
   { id: "buildings", path: "/en/buildings" },
@@ -291,6 +293,8 @@ async function resolveIds(page) {
   return {
     propertyId: await get("/api/properties", (p) => p.id),
     tenantId: await get("/api/tenants", (t) => t.id),
+    leaseId: await get("/api/leases", (l) => l.id),
+    documentId: await get("/api/documents", (d) => d.id),
   };
 }
 

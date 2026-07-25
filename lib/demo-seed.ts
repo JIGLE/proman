@@ -9,6 +9,7 @@ import {
   MaintenancePriority,
   UnitStatus,
   DocumentType,
+  LeaseStatus,
 } from "@prisma/client";
 
 export async function seedDemoData(userId: string): Promise<void> {
@@ -217,6 +218,30 @@ export async function seedDemoData(userId: string): Promise<void> {
       },
     });
     dbTenants.push(tenant);
+  }
+
+  // 4b. Create Leases (one per tenant, mirroring their embedded lease dates/rent so the
+  // Leases pillar and its `?detail=lease:id` overlay have genuine rows to audit/display)
+  const now = new Date();
+  for (let i = 0; i < tenantsData.length; i++) {
+    const t = tenantsData[i];
+    const tenant = dbTenants[i];
+    const prop = dbProperties[t.propertyIndex];
+    const endDate = new Date(t.leaseEnd);
+
+    await prisma.lease.create({
+      data: {
+        userId,
+        propertyId: prop.id,
+        tenantId: tenant.id,
+        startDate: new Date(t.leaseStart),
+        endDate,
+        monthlyRent: t.rent,
+        deposit: t.rent,
+        taxRegime: prop.country === "ES" ? "spain_inmuebles" : "portugal_rendimentos",
+        status: endDate < now ? LeaseStatus.expired : LeaseStatus.active,
+      },
+    });
   }
 
   // 5. Create Receipts (Income)
