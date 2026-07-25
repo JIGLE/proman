@@ -14,12 +14,14 @@ import { Button } from "@/components/ui/button";
  * (mounted from the already signed-out-gated `app/[locale]/page.tsx`) opening the app in
  * standalone display mode — a normal browser tab always sees the full marketing page instead.
  *
- * Sequence: the Portal mark forms alone, centered in the whole screen — then the orbiting
- * rings/glow enter around it — then it all settles into the welcome state: the mark shrinks
- * (~28%) *inside* the rings, which hold their size and stay up as part of the settled
- * composition, while the headline and three actions rise in from the bottom. The mark's upward
- * travel is a framer-motion `layout` animation driven purely by the content growing beneath it
- * in this always-centered column. Plays once per mount; does not loop.
+ * Sequence: the Portal mark forms alone, dead-centre of the whole screen — then the orbiting
+ * rings/glow enter around it — then it all settles: the entire orbit (rings + mark, scaled as one
+ * rigid unit so their proportions never change) explicitly travels from screen-centre up to a
+ * fixed resting spot near the top, while the headline and three actions rise in below it. That
+ * travel is an explicit `top`/`y` animation on one "identity block" (orbit + wordmark + tagline),
+ * not an emergent side-effect of reflow — mirrors how the desktop hero's `.heroVisual` explicitly
+ * translates+scales as one unit rather than leaving position to layout. Plays once per mount;
+ * does not loop.
  */
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
@@ -46,13 +48,14 @@ const fxIn = {
   visible: { opacity: 1, transition: { duration: 0.5 } },
   exit: { opacity: 0, transition: { duration: 0.4 } },
 };
-const markScale = {
+// Scales the WHOLE orbit box (rings + mark together) as one rigid unit — matching the desktop
+// hero's `.heroVisual` transform — rather than scaling the mark alone inside static-size rings.
+// That older approach left the mark-to-ring ratio inconsistent: fine at full scale, but once the
+// mark alone shrank the rings stayed full-size around it, reading as a small mark adrift in
+// oversized rings. Scaling the box keeps rings and mark in constant proportion at every size.
+const orbitScale = {
   full: { scale: 1 },
-  // 0.72, not 0.78: now that the rings stay up through the settled state, the mark has to share
-  // the frame with them rather than owning it. At 0.78 its own dashed keyline sat ~10px from the
-  // inner ring, which read as crowded; this opens that clearance up so the orbit reads as space
-  // around the mark instead of a band pressed against it.
-  settled: { scale: 0.72, transition: { duration: 0.5, ease: EASE_OUT } },
+  settled: { scale: 0.6, transition: { duration: 0.6, ease: EASE_OUT } },
 };
 const belowContainer = {
   hidden: {},
@@ -114,133 +117,155 @@ export function PwaWelcome({ locale }: { locale: string }) {
         </motion.div>
       )}
 
-      {/* Stays centred in both states. The mark still travels upward on settle — the divider,
-          headline and CTA section mounting below it grow this column's content, so centring it
-          pushes the mark up on its own — and `layout` on the moving children animates that
-          smoothly. Previously this flipped to `justify-start pt-4` when settled, which pinned the
-          group to the top and left a large dead band between the headline and the CTAs; letting
-          it stay centred distributes that space above and below the composition instead. */}
-      <div className="flex flex-1 flex-col items-center justify-center text-center">
+      {/* The "stage": a plain relative area, no centering of its own. Its only child is the
+          identity block below, which positions itself explicitly — the stage just supplies the
+          coordinate space (and, via the surrounding flex column, however much height is left once
+          the language-pill row above and the CTA row below claim theirs). */}
+      <div className="relative flex-1">
+        {/* One rigid, explicitly positioned unit: orbit + wordmark + tagline (+ headline once
+            settled). `top`/`y` are the ONLY position driver — both expressed as percentages of
+            this block's own box so framer-motion tweens them as the same value type — rather than
+            leaving position to emerge from flex-centering a group whose content keeps growing.
+            Rest: top 50% + y -50% is the standard centering trick, landing the block's own centre
+            (not just "somewhere in a centered column") on the stage's true centre. Settled: top
+            14% + y 0 — measured so the leftover space above and below the settled block (with the
+            headline mounted) splits evenly, ~86px each side at a 390x844 phone, rather than
+            crowding the block against the language-pill row and leaving a lopsided gap before the
+            CTAs (an earlier top:6% pass produced a 37px/135px split — noticeably uneven). */}
         <motion.div
-          layout
-          transition={{ duration: 0.5, ease: EASE_OUT }}
-          className="relative grid place-items-center"
-          // 236, not 210: at 210 the mark's own dashed keyline (~173px at full scale) was wider
-          // than the inner ring, so during the entrance phase the two collided and the orbit read
-          // as a band cutting through the mark rather than space around it. 236 clears the mark in
-          // both phases while still leaving the column short enough to fit a 844px screen.
-          style={{ width: 236, height: 236 }}
+          className="absolute left-1/2 flex flex-col items-center text-center"
+          // Without an explicit `initial`, framer-motion treats the first `animate` values as an
+          // entrance to transition INTO from an implicit zero baseline — the block would visibly
+          // animate in from the top-left corner on mount instead of simply appearing already
+          // centred. Pinning `initial` to whatever the very first render's target actually is
+          // makes mount instant and reserves the 0.6s transition for the one real move later:
+          // rest -> settled. Reduced-motion visitors start with `phase` already at "welcome" (see
+          // useState above), so their first render's target IS the settled position — using the
+          // rest position here instead would make *that* the thing that animates, which is
+          // exactly the motion prefers-reduced-motion asks to skip.
+          initial={
+            prefersReducedMotion
+              ? { x: "-50%", top: "14%", y: "0%" }
+              : { x: "-50%", top: "50%", y: "-50%" }
+          }
+          animate={{ x: "-50%", top: settled ? "14%" : "50%", y: settled ? "0%" : "-50%" }}
+          transition={{ duration: 0.6, ease: EASE_OUT }}
         >
-          <AnimatePresence>
-            {showFx && (
-              <motion.div
-                className="absolute inset-0"
-                variants={fxIn}
-                initial="hidden"
-                animate="visible"
-                exit="exit"
-              >
-                <span
-                  aria-hidden
-                  className="absolute inset-0 -z-10 rounded-full blur-xl motion-safe:animate-[pulse-gentle_3.4s_ease-in-out_infinite]"
-                  style={{
-                    background:
-                      "radial-gradient(circle, color-mix(in srgb, var(--logo-primary) 28%, transparent) 0%, transparent 72%)",
-                  }}
-                />
-                {/* Keyline halo on the border, same trick the mark's own strokes use: some
-                    countries' primary colour sits close to the canvas (e.g. Germany's black in
-                    dark mode), so the flag colour alone isn't a reliable contrast guarantee. */}
-                <span
-                  aria-hidden
-                  className="absolute inset-0 rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-primary)_55%,var(--color-border))] opacity-70 shadow-[0_0_0_1px_var(--logo-keyline)] motion-safe:animate-[spin_24s_linear_infinite]"
-                >
-                  <span
-                    aria-hidden
-                    className="absolute left-1/2 top-0 h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full"
-                    style={{
-                      background: "var(--logo-primary)",
-                      boxShadow:
-                        "0 0 0 1px var(--logo-keyline), 0 0 9px 2px color-mix(in srgb, var(--logo-primary) 75%, transparent), 0 0 2px 1px var(--logo-primary)",
-                    }}
-                  />
-                </span>
-                <span
-                  aria-hidden
-                  className="absolute inset-[22px] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-secondary)_45%,var(--color-border))] opacity-70 shadow-[0_0_0_1px_var(--logo-keyline)] motion-safe:animate-[spin_17s_linear_infinite_reverse]"
-                >
-                  <span
-                    aria-hidden
-                    className="absolute bottom-0 left-1/2 h-[6px] w-[6px] -translate-x-1/2 translate-y-1/2 rounded-full"
-                    style={{
-                      background: "var(--logo-secondary)",
-                      boxShadow:
-                        "0 0 0 1px var(--logo-keyline), 0 0 9px 2px color-mix(in srgb, var(--logo-secondary) 75%, transparent), 0 0 2px 1px var(--logo-secondary)",
-                    }}
-                  />
-                </span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
           <motion.div
             animate={settled ? "settled" : "full"}
-            variants={markScale}
-            className="relative z-10"
+            variants={orbitScale}
+            className="relative grid place-items-center"
+            // 236, not 210: at 210 the mark's own dashed keyline (~173px at full scale) was wider
+            // than the inner ring, so during the entrance phase the two collided and the orbit
+            // read as a band cutting through the mark rather than space around it. 236 clears the
+            // mark in both phases while still leaving the column short enough to fit a 844px
+            // screen — and now that this whole box scales as one unit (see orbitScale), that
+            // clearance holds at every size, not just at full scale.
+            style={{ width: 236, height: 236 }}
           >
-            <SitusPortalMark
-              size="hero"
-              animated={!prefersReducedMotion}
-              onDrawComplete={() => setPhase((p) => (p === "mark" ? "rings" : p))}
-            />
+            <AnimatePresence>
+              {showFx && (
+                <motion.div
+                  className="absolute inset-0"
+                  variants={fxIn}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                >
+                  <span
+                    aria-hidden
+                    className="absolute inset-0 -z-10 rounded-full blur-xl motion-safe:animate-[pulse-gentle_3.4s_ease-in-out_infinite]"
+                    style={{
+                      background:
+                        "radial-gradient(circle, color-mix(in srgb, var(--logo-primary) 28%, transparent) 0%, transparent 72%)",
+                    }}
+                  />
+                  {/* Keyline halo on the border, same trick the mark's own strokes use: some
+                      countries' primary colour sits close to the canvas (e.g. Germany's black in
+                      dark mode), so the flag colour alone isn't a reliable contrast guarantee. */}
+                  <span
+                    aria-hidden
+                    className="absolute inset-0 rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-primary)_55%,var(--color-border))] opacity-70 shadow-[0_0_0_1px_var(--logo-keyline)] motion-safe:animate-[spin_24s_linear_infinite]"
+                  >
+                    <span
+                      aria-hidden
+                      className="absolute left-1/2 top-0 h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full"
+                      style={{
+                        background: "var(--logo-primary)",
+                        boxShadow:
+                          "0 0 0 1px var(--logo-keyline), 0 0 9px 2px color-mix(in srgb, var(--logo-primary) 75%, transparent), 0 0 2px 1px var(--logo-primary)",
+                      }}
+                    />
+                  </span>
+                  <span
+                    aria-hidden
+                    className="absolute inset-[22px] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-secondary)_45%,var(--color-border))] opacity-70 shadow-[0_0_0_1px_var(--logo-keyline)] motion-safe:animate-[spin_17s_linear_infinite_reverse]"
+                  >
+                    <span
+                      aria-hidden
+                      className="absolute bottom-0 left-1/2 h-[6px] w-[6px] -translate-x-1/2 translate-y-1/2 rounded-full"
+                      style={{
+                        background: "var(--logo-secondary)",
+                        boxShadow:
+                          "0 0 0 1px var(--logo-keyline), 0 0 9px 2px color-mix(in srgb, var(--logo-secondary) 75%, transparent), 0 0 2px 1px var(--logo-secondary)",
+                      }}
+                    />
+                  </span>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <span className="relative z-10">
+              <SitusPortalMark
+                size="hero"
+                animated={!prefersReducedMotion}
+                onDrawComplete={() => setPhase((p) => (p === "mark" ? "rings" : p))}
+              />
+            </span>
           </motion.div>
-        </motion.div>
 
-        <motion.div
-          layout
-          transition={{ duration: 0.5, ease: EASE_OUT }}
-          variants={wordContainer}
-          initial={prefersReducedMotion ? "visible" : "hidden"}
-          animate="visible"
-          className="mt-8 flex text-xl font-bold uppercase tracking-[0.34em]"
-        >
-          {"SITUS".split("").map((char, i) => (
-            <motion.span key={i} variants={letterIn}>
-              {char}
-            </motion.span>
-          ))}
-        </motion.div>
-
-        <motion.p
-          layout
-          transition={{ duration: 0.5, ease: EASE_OUT }}
-          variants={tagIn}
-          initial={prefersReducedMotion ? "visible" : "hidden"}
-          animate="visible"
-          className="mono-label mt-2"
-        >
-          Sovereign Capital System
-        </motion.p>
-
-        {settled && (
           <motion.div
-            variants={belowContainer}
-            initial="hidden"
+            variants={wordContainer}
+            initial={prefersReducedMotion ? "visible" : "hidden"}
             animate="visible"
-            className="mt-7 max-w-[27ch]"
+            className="mt-8 flex text-xl font-bold uppercase tracking-[0.34em]"
           >
-            <motion.div
-              variants={riseIn}
-              className="mx-auto mb-6 h-px w-8 bg-[var(--color-border)]"
-            />
-            <motion.h2
-              variants={riseIn}
-              className="text-[19px] font-normal leading-snug tracking-[-0.02em]"
-            >
-              {t("hero2")}
-            </motion.h2>
+            {"SITUS".split("").map((char, i) => (
+              <motion.span key={i} variants={letterIn}>
+                {char}
+              </motion.span>
+            ))}
           </motion.div>
-        )}
+
+          <motion.p
+            variants={tagIn}
+            initial={prefersReducedMotion ? "visible" : "hidden"}
+            animate="visible"
+            className="mono-label mt-2"
+          >
+            Sovereign Capital System
+          </motion.p>
+
+          {settled && (
+            <motion.div
+              variants={belowContainer}
+              initial="hidden"
+              animate="visible"
+              className="mt-7 max-w-[27ch]"
+            >
+              <motion.div
+                variants={riseIn}
+                className="mx-auto mb-6 h-px w-8 bg-[var(--color-border)]"
+              />
+              <motion.h2
+                variants={riseIn}
+                className="text-[19px] font-normal leading-snug tracking-[-0.02em]"
+              >
+                {t("hero2")}
+              </motion.h2>
+            </motion.div>
+          )}
+        </motion.div>
       </div>
 
       {settled && (
