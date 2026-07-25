@@ -25,11 +25,24 @@ import { Button } from "@/components/ui/button";
  */
 
 const EASE_OUT = [0.16, 1, 0.3, 1] as const;
+// For the identity block's position/scale travel specifically — EASE_OUT above is an extremely
+// front-loaded curve (both y-control-points sit at 1.0), great for a quick fade-in but wrong for a
+// large, visible move: it reaches ~99% of the distance in the first ~10% of the duration, so the
+// travel reads as an instant snap followed by an imperceptible settle, not a glide. This is the
+// same symmetric ease already used below for the mark's own stroke draw-on (arcVariants) — evenly
+// paced across the full duration.
+const TRAVEL_EASE = [0.65, 0, 0.35, 1] as const;
 
 type Phase = "mark" | "rings" | "welcome";
 
 /** How long the rings/glow moment lingers before settling into welcome. */
 const RINGS_HOLD_MS = 1400;
+
+/** The orbit box's side length at rest (full scale) — see the `orbit` motion.div below for why
+ *  290, not 236. Half of it is how far the identity block must shift up so the orbit itself (not
+ *  the wordmark/tagline hanging below it) lands on the stage's true vertical centre. */
+const REST_ORBIT_SIZE = 290;
+const REST_ORBIT_HALF_HEIGHT = REST_ORBIT_SIZE / 2;
 
 const wordContainer = {
   hidden: {},
@@ -55,7 +68,7 @@ const fxIn = {
 // oversized rings. Scaling the box keeps rings and mark in constant proportion at every size.
 const orbitScale = {
   full: { scale: 1 },
-  settled: { scale: 0.6, transition: { duration: 0.6, ease: EASE_OUT } },
+  settled: { scale: 0.6, transition: { duration: 0.7, ease: TRAVEL_EASE } },
 };
 const belowContainer = {
   hidden: {},
@@ -123,45 +136,53 @@ export function PwaWelcome({ locale }: { locale: string }) {
           the language-pill row above and the CTA row below claim theirs). */}
       <div className="relative flex-1">
         {/* One rigid, explicitly positioned unit: orbit + wordmark + tagline (+ headline once
-            settled). `top`/`y` are the ONLY position driver — both expressed as percentages of
-            this block's own box so framer-motion tweens them as the same value type — rather than
-            leaving position to emerge from flex-centering a group whose content keeps growing.
-            Rest: top 50% + y -50% is the standard centering trick, landing the block's own centre
-            (not just "somewhere in a centered column") on the stage's true centre. Settled: top
-            14% + y 0 — measured so the leftover space above and below the settled block (with the
-            headline mounted) splits evenly, ~86px each side at a 390x844 phone, rather than
-            crowding the block against the language-pill row and leaving a lopsided gap before the
-            CTAs (an earlier top:6% pass produced a 37px/135px split — noticeably uneven). */}
+            settled). `top`/`y` are the ONLY position driver, rather than leaving position to
+            emerge from flex-centering a group whose content keeps growing.
+            Rest: top 50% + y REST_Y_OFFSET. REST_Y_OFFSET is a fixed px value (half the orbit's
+            own rest-scale height, negative), NOT "-50%" — "-50%" would centre the whole block
+            (orbit + wordmark + tagline stacked below it), landing the *orbit* above the true
+            centre by roughly half the wordmark+tagline's height. The ask was for the mark itself
+            to sit dead-centre of the screen, so the offset has to be anchored to the orbit alone.
+            Settled: top 12% + y 0 — measured so the leftover space above and below the settled
+            block (with the headline mounted, and the 290px rest orbit box) splits close to
+            evenly, ~75px/70px at a 390x844 phone, rather than crowding the block against the
+            language-pill row and leaving a lopsided gap before the CTAs (top:6% produced a
+            37px/135px split; top:14% — tuned before the orbit box grew from 236 to 290px — had
+            drifted to 87px/57px). */}
         <motion.div
           className="absolute left-1/2 flex flex-col items-center text-center"
           // Without an explicit `initial`, framer-motion treats the first `animate` values as an
           // entrance to transition INTO from an implicit zero baseline — the block would visibly
           // animate in from the top-left corner on mount instead of simply appearing already
           // centred. Pinning `initial` to whatever the very first render's target actually is
-          // makes mount instant and reserves the 0.6s transition for the one real move later:
-          // rest -> settled. Reduced-motion visitors start with `phase` already at "welcome" (see
-          // useState above), so their first render's target IS the settled position — using the
-          // rest position here instead would make *that* the thing that animates, which is
-          // exactly the motion prefers-reduced-motion asks to skip.
+          // makes mount instant and reserves the transition for the one real move later: rest ->
+          // settled. Reduced-motion visitors start with `phase` already at "welcome" (see useState
+          // above), so their first render's target IS the settled position — using the rest
+          // position here instead would make *that* the thing that animates, which is exactly the
+          // motion prefers-reduced-motion asks to skip.
           initial={
             prefersReducedMotion
-              ? { x: "-50%", top: "14%", y: "0%" }
-              : { x: "-50%", top: "50%", y: "-50%" }
+              ? { x: "-50%", top: "12%", y: 0 }
+              : { x: "-50%", top: "50%", y: -REST_ORBIT_HALF_HEIGHT }
           }
-          animate={{ x: "-50%", top: settled ? "14%" : "50%", y: settled ? "0%" : "-50%" }}
-          transition={{ duration: 0.6, ease: EASE_OUT }}
+          animate={{
+            x: "-50%",
+            top: settled ? "12%" : "50%",
+            y: settled ? 0 : -REST_ORBIT_HALF_HEIGHT,
+          }}
+          transition={{ duration: 0.7, ease: TRAVEL_EASE }}
         >
           <motion.div
             animate={settled ? "settled" : "full"}
             variants={orbitScale}
             className="relative grid place-items-center"
-            // 236, not 210: at 210 the mark's own dashed keyline (~173px at full scale) was wider
-            // than the inner ring, so during the entrance phase the two collided and the orbit
-            // read as a band cutting through the mark rather than space around it. 236 clears the
-            // mark in both phases while still leaving the column short enough to fit a 844px
-            // screen — and now that this whole box scales as one unit (see orbitScale), that
-            // clearance holds at every size, not just at full scale.
-            style={{ width: 236, height: 236 }}
+            // 290, not 236: 236 only just cleared the mark's own dashed keyline (~172px visible
+            // disk) from the inner ring (192px at a 22px inset) — ~10px of clearance each side,
+            // which read as cramped rather than as breathing room. 290 (with the inner ring's
+            // inset widened to 30px below) roughly triples that to ~29px each side, closer to how
+            // generously the desktop hero's own rings clear its mark. Scaling the whole box as one
+            // unit (see orbitScale) keeps that clearance proportionally constant at every size.
+            style={{ width: REST_ORBIT_SIZE, height: REST_ORBIT_SIZE }}
           >
             <AnimatePresence>
               {showFx && (
@@ -199,7 +220,7 @@ export function PwaWelcome({ locale }: { locale: string }) {
                   </span>
                   <span
                     aria-hidden
-                    className="absolute inset-[22px] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-secondary)_45%,var(--color-border))] opacity-70 shadow-[0_0_0_1px_var(--logo-keyline)] motion-safe:animate-[spin_17s_linear_infinite_reverse]"
+                    className="absolute inset-[30px] rounded-full border border-dashed border-[color-mix(in_srgb,var(--logo-secondary)_45%,var(--color-border))] opacity-70 shadow-[0_0_0_1px_var(--logo-keyline)] motion-safe:animate-[spin_17s_linear_infinite_reverse]"
                   >
                     <span
                       aria-hidden
