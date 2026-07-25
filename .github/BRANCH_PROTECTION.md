@@ -39,13 +39,22 @@ gh api repos/JIGLE/proman/branches/main/protection \
 
 ### Required status checks configured
 
-| Check name                 | Workflow            |
-| -------------------------- | ------------------- |
-| `Lint & Type Check`        | `ci.yml`            |
-| `Unit Tests`               | `ci.yml`            |
-| `Build validation`         | `ci.yml`            |
-| `Dependency Security Scan` | `security-scan.yml` |
-| `CodeQL Security Analysis` | `security-scan.yml` |
+| Check name                   | Workflow                             |
+| ---------------------------- | ------------------------------------ |
+| `verify / Lint & Type Check` | `ci.yml` (via `reusable-verify.yml`) |
+| `verify / Unit Tests`        | `ci.yml` (via `reusable-verify.yml`) |
+| `Build validation`           | `ci.yml`                             |
+| `Dependency Security Scan`   | `security-scan.yml`                  |
+
+`ci.yml`'s `verify:` job calls `reusable-verify.yml` via `uses:`, and GitHub Actions
+automatically prefixes reusable-workflow job names with the calling job's name — the actual
+posted check names are `verify / Lint & Type Check` and `verify / Unit Tests`, **not** the bare
+`Lint & Type Check` / `Unit Tests` this file previously listed. That mismatch meant the two most
+important gates never matched their required-check names and sat "Expected — waiting..."
+forever, silently relying on an admin merge (`enforce_admins: false`) to get anything through
+(discovered on PR #301). If `reusable-verify.yml`'s job `name:` fields or `ci.yml`'s calling job
+id (`verify`) ever change, update the contexts below to match — do not rename either without
+updating this table and `branch-protection-config.json` together.
 
 ### Notes on the release workflow
 
