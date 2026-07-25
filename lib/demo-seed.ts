@@ -7,6 +7,8 @@ import {
   ReceiptStatus,
   MaintenanceStatus,
   MaintenancePriority,
+  UnitStatus,
+  DocumentType,
 } from "@prisma/client";
 
 export async function seedDemoData(userId: string): Promise<void> {
@@ -57,8 +59,8 @@ export async function seedDemoData(userId: string): Promise<void> {
     {
       name: "Apartment 3A",
       address: "Av. da Liberdade 120, Lisbon",
-      countryCode: "PT",
-      propertyTaxClass: "residential",
+      country: "PT",
+      propertyCountry: "PT",
       type: "apartment" as PropertyType,
       bedrooms: 2,
       bathrooms: 1,
@@ -69,8 +71,8 @@ export async function seedDemoData(userId: string): Promise<void> {
     {
       name: "Penthouse B",
       address: "Av. da Liberdade 120, Lisbon",
-      countryCode: "PT",
-      propertyTaxClass: "residential",
+      country: "PT",
+      propertyCountry: "PT",
       type: "apartment" as PropertyType,
       bedrooms: 3,
       bathrooms: 2,
@@ -81,8 +83,8 @@ export async function seedDemoData(userId: string): Promise<void> {
     {
       name: "Apt 1B",
       address: "Av. da Liberdade 120, Lisbon",
-      countryCode: "PT",
-      propertyTaxClass: "residential",
+      country: "PT",
+      propertyCountry: "PT",
       type: "apartment" as PropertyType,
       bedrooms: 1,
       bathrooms: 1,
@@ -93,8 +95,8 @@ export async function seedDemoData(userId: string): Promise<void> {
     {
       name: "Ground Floor Retail",
       address: "Rua de Santa Catarina 45, Porto",
-      countryCode: "PT",
-      propertyTaxClass: "commercial",
+      country: "PT",
+      propertyCountry: "PT",
       type: "other" as PropertyType,
       bedrooms: 0,
       bathrooms: 1,
@@ -105,8 +107,8 @@ export async function seedDemoData(userId: string): Promise<void> {
     {
       name: "Studio 201",
       address: "Rua de Santa Catarina 45, Porto",
-      countryCode: "PT",
-      propertyTaxClass: "residential",
+      country: "PT",
+      propertyCountry: "PT",
       type: "apartment" as PropertyType,
       bedrooms: 1,
       bathrooms: 1,
@@ -117,8 +119,8 @@ export async function seedDemoData(userId: string): Promise<void> {
     {
       name: "Suite 404",
       address: "Calle de Alcalá 14, Madrid",
-      countryCode: "ES",
-      propertyTaxClass: "residential",
+      country: "ES",
+      propertyCountry: "ES",
       type: "condo" as PropertyType,
       bedrooms: 2,
       bathrooms: 2,
@@ -447,6 +449,241 @@ export async function seedDemoData(userId: string): Promise<void> {
         status: m.status,
         priority: m.priority,
         images: "[]",
+      },
+    });
+  }
+
+  // 8. Create Units
+  const unitsData = [
+    // Apartment 3A has 1 unit
+    {
+      propertyIndex: 0,
+      number: "3A",
+      floor: 3,
+      sizeSqM: 85,
+      bedrooms: 2,
+      bathrooms: 1,
+      status: "occupied" as UnitStatus,
+    },
+    // Penthouse B has 1 unit
+    {
+      propertyIndex: 1,
+      number: "PH",
+      floor: 10,
+      sizeSqM: 180,
+      bedrooms: 3,
+      bathrooms: 2,
+      status: "occupied" as UnitStatus,
+    },
+    // Apt 1B has 1 unit
+    {
+      propertyIndex: 2,
+      number: "1B",
+      floor: 1,
+      sizeSqM: 55,
+      bedrooms: 1,
+      bathrooms: 1,
+      status: "vacant" as UnitStatus,
+    },
+    // Ground Floor Retail has 1 unit
+    {
+      propertyIndex: 3,
+      number: "G",
+      floor: 0,
+      sizeSqM: 120,
+      bedrooms: 0,
+      bathrooms: 1,
+      status: "occupied" as UnitStatus,
+    },
+    // Studio 201 has 1 unit
+    {
+      propertyIndex: 4,
+      number: "201",
+      floor: 2,
+      sizeSqM: 40,
+      bedrooms: 1,
+      bathrooms: 1,
+      status: "maintenance" as UnitStatus,
+    },
+    // Suite 404 has 1 unit
+    {
+      propertyIndex: 5,
+      number: "404",
+      floor: 4,
+      sizeSqM: 110,
+      bedrooms: 2,
+      bathrooms: 2,
+      status: "occupied" as UnitStatus,
+    },
+  ];
+
+  const dbUnits = [];
+  for (const u of unitsData) {
+    const prop = dbProperties[u.propertyIndex];
+    const unit = await prisma.unit.create({
+      data: {
+        propertyId: prop.id,
+        number: u.number,
+        floor: u.floor,
+        sizeSqM: u.sizeSqM,
+        bedrooms: u.bedrooms,
+        bathrooms: u.bathrooms,
+        status: u.status,
+      },
+    });
+    dbUnits.push(unit);
+  }
+
+  // 9. Create RentPeriods (for Jan-May 2026, all paid; June 2026 due/overdue)
+  for (const tenant of dbTenants) {
+    // Find the lease for this tenant
+    const lease = await prisma.lease.findFirst({
+      where: { tenantId: tenant.id },
+    });
+
+    if (lease && tenant.propertyId) {
+      // Create periods for Jan-May 2026 (paid), June 2026 (due/overdue)
+      for (let month = 1; month <= 6; month++) {
+        const dueDate = new Date(2026, month - 1, 1); // 1st of each month
+        const status = month <= 5 ? "paid" : "due";
+        const paidAt = month <= 5 ? new Date(2026, month - 1, 5) : undefined; // Paid on 5th
+
+        await prisma.rentPeriod.create({
+          data: {
+            userId,
+            leaseId: lease.id,
+            tenantId: tenant.id,
+            propertyId: tenant.propertyId,
+            year: 2026,
+            month,
+            dueDate,
+            dueAmount: tenant.rent,
+            allocatedAmount: month <= 5 ? tenant.rent : 0,
+            paidAt,
+            status,
+          },
+        });
+      }
+    }
+  }
+
+  // 10. Create BankConnection and BankAccount
+  const bankConnection = await prisma.bankConnection.create({
+    data: {
+      userId,
+      provider: "manual",
+      institutionName: "Millennium BCP",
+      status: "active",
+      lastSyncAt: new Date(),
+    },
+  });
+
+  const bankAccount = await prisma.bankAccount.create({
+    data: {
+      connectionId: bankConnection.id,
+      userId,
+      label: "Millennium BCP - Property Management",
+      iban: "PT50003506519278167650195", // PT IBAN format (encrypted in production)
+      ibanHash: "mock-hash-iban-001",
+      ibanLast4: "0195",
+      currency: "EUR",
+      isActive: true,
+    },
+  });
+
+  // 11. Create BankTransactions (movements matching the receipts)
+  const bankTransactionsData = [
+    // João Silva rent payments
+    { amount: 1500, date: "2026-01-05", counterparty: "João Silva", ref: "JAN2026-APT3A" },
+    { amount: 1500, date: "2026-02-05", counterparty: "João Silva", ref: "FEB2026-APT3A" },
+    { amount: 1500, date: "2026-03-05", counterparty: "João Silva", ref: "MAR2026-APT3A" },
+    { amount: 1500, date: "2026-04-05", counterparty: "João Silva", ref: "APR2026-APT3A" },
+    { amount: 1500, date: "2026-05-05", counterparty: "João Silva", ref: "MAY2026-APT3A" },
+    // Sophia Dubois rent payments
+    { amount: 3200, date: "2026-01-01", counterparty: "Sophia Dubois", ref: "JAN2026-PENTHOUSE" },
+    { amount: 3200, date: "2026-02-01", counterparty: "Sophia Dubois", ref: "FEB2026-PENTHOUSE" },
+    { amount: 3200, date: "2026-03-01", counterparty: "Sophia Dubois", ref: "MAR2026-PENTHOUSE" },
+    // Carlos Gómez rent payments
+    { amount: 2200, date: "2026-01-15", counterparty: "Carlos Gómez", ref: "JAN2026-RETAIL" },
+    { amount: 2200, date: "2026-02-15", counterparty: "Carlos Gómez", ref: "FEB2026-RETAIL" },
+  ];
+
+  let txId = 0;
+  for (const tx of bankTransactionsData) {
+    txId++;
+    const fingerprint = `fp-${bankAccount.id}-${tx.date}-${tx.amount}-${txId}`;
+
+    await prisma.bankTransaction.create({
+      data: {
+        userId,
+        bankAccountId: bankAccount.id,
+        fingerprint,
+        amount: tx.amount,
+        currency: "EUR",
+        bookingDate: new Date(tx.date),
+        valueDate: new Date(tx.date),
+        counterpartyName: tx.counterparty,
+        counterpartyIban: null,
+        reference: tx.ref,
+      },
+    });
+  }
+
+  // 12. Create Documents (for OCR queue and document vault)
+  const documentsData = [
+    {
+      name: "Lease_Agreement_3A_2025.pdf",
+      propertyIndex: 0,
+      tenantIndex: 0,
+      type: "contract" as DocumentType,
+    },
+    {
+      name: "Rental_Receipt_Jan2026.pdf",
+      propertyIndex: 0,
+      tenantIndex: 0,
+      type: "receipt" as DocumentType,
+    },
+    {
+      name: "Property_Certificate_PT.pdf",
+      propertyIndex: 1,
+      tenantIndex: null,
+      type: "certificate" as DocumentType,
+    },
+    {
+      name: "Floor_Plan_Suite404.pdf",
+      propertyIndex: 5,
+      tenantIndex: 3,
+      type: "floor_plan" as DocumentType,
+    },
+    {
+      name: "Invoice_HVAC_Maintenance.pdf",
+      propertyIndex: 0,
+      tenantIndex: null,
+      type: "invoice" as DocumentType,
+    },
+    {
+      name: "Property_Photo_Exterior.jpg",
+      propertyIndex: 1,
+      tenantIndex: null,
+      type: "photo" as DocumentType,
+    },
+  ];
+
+  for (const doc of documentsData) {
+    const prop = dbProperties[doc.propertyIndex];
+    const tenant = doc.tenantIndex !== null ? dbTenants[doc.tenantIndex] : null;
+
+    await prisma.document.create({
+      data: {
+        userId,
+        name: doc.name,
+        description: `Document for property ${prop.name}`,
+        type: doc.type,
+        mimeType: doc.name.endsWith(".pdf") ? "application/pdf" : "image/jpeg",
+        storagePath: `/documents/${prop.id}/${doc.name}`,
+        fileSize: Math.floor(Math.random() * 5000000) + 100000, // 100KB - 5MB
+        propertyId: prop.id,
+        ...(tenant && { tenantId: tenant.id }),
       },
     });
   }

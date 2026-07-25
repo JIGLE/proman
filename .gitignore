@@ -140,3 +140,6 @@ eslint.config.cjs
 
 # Claude Code personal settings (auto-merge/watch authority, not team-shared)
 .claude/settings.local.json
+
+# Responsive audit harness output (regenerated per run)
+audit-report/

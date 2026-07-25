@@ -93,6 +93,30 @@ e2e/                # Playwright E2E tests
   4. **Counts as text before counts as boxes.** Prefer an inline subtitle (e.g. `"12 units · 9 occupied (75%) · €14,100/mo"`, the Portfolio pattern) over separate stat panels when the counts aren't independently actionable.
   5. **Every sub-view heading goes through i18n or gets deleted.** A hardcoded-English heading sitting under a translated tab label is a sign it was never load-bearing.
 
+## Responsive design (mobile-first rules)
+
+Codified from the 2026-07 mobile audit (`scripts/mobile-audit.mjs`): a comprehensive measurement harness that walks every owner-facing page and modal at 390×844 (Pixel 5) and 393×851 (standard phone), in light + dark themes, to measure horizontal overflow, touch targets, text legibility, and clipping. The harness reports per-surface violations, ranked by severity. Apply these rules as the baseline; per-surface judgement refines dense-data layouts within them.
+
+1. **Nothing scrolls horizontally at viewport width.** The page body and all its first-level children must fit within the viewport. Wide content (tables, grids, code blocks) scrolls _inside its own_ `overflow-x-auto` container with a sticky identity column or first element (e.g. a table's leading column stays pinned while data columns scroll right). Measured: `document.scrollingElement.scrollWidth > clientWidth` triggers a violation; offending elements are reported by depth.
+
+2. **Touch targets are ≥44px CSS on the primary tap path.** Button, link, and interactive-element hit areas must be at least 44×44px (WCAG 2.2 AA recommendation, aligned with the audit's target floor). Icon-only controls (`<IconButton>`) get padding rather than downsizing the hit area — a 24px icon sits in a 44×44 padded wrapper. Text links in prose and small control bars (e.g. close icon in a modal header) can be exempt only with explicit design review; measure via `getBoundingClientRect()` in the audit harness.
+
+3. **Tables declare a mobile fallback strategy explicitly.** At `<md` breakpoint:
+   - **Card fallback** (record lists, small row counts): reformat each row as a card with labels + data in read-only field-row pairs. Typical pattern: property-selection dropdown at top, then an iterable card layout using the `RenderTable` card-mode primitive (see `components/ui/table.tsx`).
+   - **Horizontal scroll with sticky identity** (matrices, high-cardinality cross-column comparison): keep the first column (tenant name, date, lease) sticky/pinned on the left; allow data columns to scroll right inside a `overflow-x-auto` container. Never render an unwrapped table on mobile.
+
+4. **Tab bars past ~4 items collapse to a select/popover on mobile.** When a surface has 5+ tabs at `<md` breakpoint, hide the tab bar and substitute a `<select>` or `Popover` menu to switch tabs (Situs brand pattern: select when navigational tabs, popover when sub-view tabs). The tab labels and badge counts must sync across. Measured: viewport width / tab count ≥ visual minimum (e.g. 60px per tab).
+
+5. **Overlays (modals, sheets, popovers) are full-bleed below `md` and respect safe-area insets.** At `<md`:
+   - Render as `Sheet` (bottom-sheet style) or full-screen overlay, not a centered modal dialog. Use `sheet-scroll-strategy: "content"` so the body scrolls independently and the primary action button stays pinned to the bottom (safe area included).
+   - Apply `env(safe-area-inset-*)` padding to avoid notch/home-indicator overlap on iPhone.
+   - Header and footer remain visible; scrollable body in the middle. Never let the primary CTA scroll out of reach.
+   - At `≥md`, switch to a side panel or centered dialog as the design specifies.
+
+6. **Multi-column forms are single-column below `md`.** When a form has 2+ columns, stack them into one column at `<md`. Use CSS Grid with `grid-template-columns: repeat(auto-fit, minmax(300px, 1fr))` or explicit `md:` breakpoint rewrites — a form field should be full-width on small screens.
+
+All surfaces are measured in the mobile audit (`scripts/mobile-audit.mjs`) on every PR that touches UI; violations are reported in the job summary (advisory, not blocking, per the current ratchet policy). As violations are fixed, re-run the harness to confirm zero horizontal overflow, touch-target and clipping metrics strictly decreasing.
+
 ## CI Gates
 
 - ESLint: `--max-warnings=0` — zero warnings allowed
