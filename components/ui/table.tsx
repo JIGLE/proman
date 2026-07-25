@@ -89,4 +89,110 @@ const TableCaption = React.forwardRef<
 ));
 TableCaption.displayName = "TableCaption";
 
-export { Table, TableHeader, TableBody, TableFooter, TableHead, TableRow, TableCell, TableCaption };
+interface RenderTableColumn<T> {
+  key: string;
+  header: React.ReactNode;
+  cell: (row: T) => React.ReactNode;
+  headerClassName?: string;
+  cellClassName?: string;
+}
+
+interface RenderTableProps<T> {
+  data: T[];
+  columns: RenderTableColumn<T>[];
+  rowKey: (row: T) => string;
+  emptyState?: React.ReactNode;
+  className?: string;
+  /** Pins the first column while data columns scroll right — for matrices where
+   * cross-column comparison is the point (doctrine rule 3, "horizontal scroll" strategy). */
+  stickyFirstColumn?: boolean;
+  /** Below `md`, render each row via `renderCard` instead of a table row — for record
+   * lists (doctrine rule 3, "card fallback" strategy). Mutually exclusive in effect with
+   * `stickyFirstColumn`, which targets matrices instead. */
+  cardMode?: boolean;
+  renderCard?: (row: T) => React.ReactNode;
+}
+
+/**
+ * Shared responsive table: real `<table>` markup at `md` and up (or always, if `cardMode`
+ * is off), scrolling horizontally inside its own container rather than the page body. Opt
+ * into `cardMode` + `renderCard` for the doctrine's record-list mobile strategy.
+ */
+function RenderTable<T>({
+  data,
+  columns,
+  rowKey,
+  emptyState,
+  className,
+  stickyFirstColumn = false,
+  cardMode = false,
+  renderCard,
+}: RenderTableProps<T>): React.ReactElement {
+  if (data.length === 0 && emptyState) {
+    return <>{emptyState}</>;
+  }
+
+  const stickyCellClass = "sticky left-0 z-10 bg-[var(--color-card-solid)]";
+
+  return (
+    <>
+      <div
+        className={cn("relative w-full overflow-x-auto", cardMode && "hidden md:block", className)}
+      >
+        <Table>
+          <TableHeader>
+            <TableRow>
+              {columns.map((col, i) => (
+                <TableHead
+                  key={col.key}
+                  className={cn(
+                    stickyFirstColumn && i === 0 && stickyCellClass,
+                    col.headerClassName,
+                  )}
+                >
+                  {col.header}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {data.map((row) => (
+              <TableRow key={rowKey(row)}>
+                {columns.map((col, i) => (
+                  <TableCell
+                    key={col.key}
+                    className={cn(
+                      stickyFirstColumn && i === 0 && stickyCellClass,
+                      col.cellClassName,
+                    )}
+                  >
+                    {col.cell(row)}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+      {cardMode && renderCard && (
+        <div className="flex flex-col gap-3 md:hidden">
+          {data.map((row) => (
+            <React.Fragment key={rowKey(row)}>{renderCard(row)}</React.Fragment>
+          ))}
+        </div>
+      )}
+    </>
+  );
+}
+
+export {
+  Table,
+  TableHeader,
+  TableBody,
+  TableFooter,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableCaption,
+  RenderTable,
+};

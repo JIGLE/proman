@@ -24,14 +24,17 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline hover:text-primary/80",
       },
       size: {
-        xs: "h-7 px-2 text-xs rounded-md",
-        sm: "h-8 px-3 text-sm rounded-md",
-        default: "h-9 px-4 text-sm",
-        lg: "h-10 px-6 text-base",
+        // Below `md`, min-h/min-w floor every variant to the 44px WCAG 2.2 AA touch target
+        // (rendered height/width still wins when it's already larger, e.g. `xl`) without
+        // changing desktop density, which stays mouse-tuned at the smaller `h-*`/`w-*` value.
+        xs: "h-7 px-2 text-xs rounded-md max-md:min-h-11",
+        sm: "h-8 px-3 text-sm rounded-md max-md:min-h-11",
+        default: "h-9 px-4 text-sm max-md:min-h-11",
+        lg: "h-10 px-6 text-base max-md:min-h-11",
         xl: "h-12 px-8 text-lg",
-        icon: "h-9 w-9",
-        "icon-sm": "h-8 w-8",
-        "icon-lg": "h-10 w-10",
+        icon: "h-9 w-9 max-md:min-h-11 max-md:min-w-11",
+        "icon-sm": "h-8 w-8 max-md:min-h-11 max-md:min-w-11",
+        "icon-lg": "h-10 w-10 max-md:min-h-11 max-md:min-w-11",
       },
       emphasis: {
         low: "font-normal",

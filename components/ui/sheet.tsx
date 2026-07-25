@@ -29,16 +29,18 @@ SheetOverlay.displayName = "SheetOverlay";
 
 type SheetSide = "left" | "right" | "top" | "bottom" | "center";
 
+// Safe-area padding applies only on the edges each variant actually touches at mobile
+// widths (a bottom sheet only needs the bottom inset; a full-height side sheet needs both).
+const SAFE_TOP = "pt-[env(safe-area-inset-top,0px)]";
+const SAFE_BOTTOM = "pb-[env(safe-area-inset-bottom,0px)]";
+
 const sheetVariants: Record<SheetSide, string> = {
-  right:
-    "inset-y-0 right-0 h-full w-full border-l sm:w-[520px] lg:inset-0 lg:w-full lg:h-full lg:border-0 lg:rounded-none data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right",
-  left: "inset-y-0 left-0 h-full w-full border-r sm:w-[520px] data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left",
-  top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
-  bottom:
-    "inset-x-0 bottom-0 border-t data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
+  right: `inset-y-0 right-0 h-full w-full border-l sm:w-[520px] lg:inset-0 lg:w-full lg:h-full lg:border-0 lg:rounded-none ${SAFE_TOP} ${SAFE_BOTTOM} lg:pt-0 lg:pb-0 data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right`,
+  left: `inset-y-0 left-0 h-full w-full border-r sm:w-[520px] ${SAFE_TOP} ${SAFE_BOTTOM} data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left`,
+  top: `inset-x-0 top-0 border-b ${SAFE_TOP} data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top`,
+  bottom: `inset-x-0 bottom-0 border-t ${SAFE_BOTTOM} data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom`,
   // Center variant: full-screen on mobile, centered floating modal on large screens
-  center:
-    "inset-0 h-full w-full md:inset-auto md:left-1/2 md:top-16 md:translate-x-[-50%] md:transform md:w-[75vw] md:max-w-5xl md:h-[calc(100vh-6.5rem)] md:rounded-xl md:border md:border-[var(--color-border)] md:shadow-2xl md:ring-1 md:ring-[var(--color-border)] data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95",
+  center: `inset-0 h-full w-full ${SAFE_TOP} ${SAFE_BOTTOM} md:pt-0 md:pb-0 md:inset-auto md:left-1/2 md:top-16 md:translate-x-[-50%] md:transform md:w-[75vw] md:max-w-5xl md:h-[calc(100vh-6.5rem)] md:rounded-xl md:border md:border-[var(--color-border)] md:shadow-2xl md:ring-1 md:ring-[var(--color-border)] data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95`,
 };
 
 interface SheetContentProps extends React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> {
@@ -67,7 +69,7 @@ const SheetContent = React.forwardRef<
       {children}
       <DialogPrimitive.Close
         aria-label="Close"
-        className="absolute right-4 top-4 z-50 rounded-md p-1.5 text-[var(--color-muted-foreground)] opacity-70 ring-offset-[var(--color-card-solid)] transition-opacity hover:opacity-100 hover:text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] focus:ring-offset-2 disabled:pointer-events-none"
+        className="absolute right-4 top-[calc(1rem+env(safe-area-inset-top,0px))] z-50 rounded-md p-1.5 text-[var(--color-muted-foreground)] opacity-70 ring-offset-[var(--color-card-solid)] transition-opacity hover:opacity-100 hover:text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] focus:ring-offset-2 disabled:pointer-events-none"
       >
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>

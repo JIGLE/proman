@@ -48,4 +48,51 @@ const TabsContent = React.forwardRef<
 ));
 TabsContent.displayName = TabsPrimitive.Content.displayName;
 
-export { Tabs, TabsList, TabsTrigger, TabsContent };
+export interface TabsMobileSelectItem {
+  value: string;
+  label: string;
+  badge?: React.ReactNode;
+}
+
+interface TabsMobileSelectProps {
+  value: string;
+  onValueChange: (value: string) => void;
+  items: TabsMobileSelectItem[];
+  className?: string;
+  "aria-label"?: string;
+}
+
+/**
+ * Doctrine rule 4 fallback for tab bars past ~4 items: a native `<select>` driving the
+ * same controlled value as the adjacent `Tabs`/`TabsList`. Purely additive — pair it with
+ * `<TabsList className="hidden md:flex">` so the bar itself only shows at `md` and up;
+ * this component doesn't toggle its own visibility so callers can choose the breakpoint.
+ */
+const TabsMobileSelect = ({
+  value,
+  onValueChange,
+  items,
+  className,
+  "aria-label": ariaLabel = "Select tab",
+}: TabsMobileSelectProps): React.ReactElement => (
+  <select
+    value={value}
+    onChange={(e) => onValueChange(e.target.value)}
+    aria-label={ariaLabel}
+    className={cn(
+      "h-11 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-card-solid)] px-3",
+      "font-mono text-xs uppercase tracking-[0.06em] text-[var(--color-foreground)]",
+      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--country-highlight-readable)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)]",
+      className,
+    )}
+  >
+    {items.map((item) => (
+      <option key={item.value} value={item.value}>
+        {item.badge ? `${item.label} (${item.badge})` : item.label}
+      </option>
+    ))}
+  </select>
+);
+TabsMobileSelect.displayName = "TabsMobileSelect";
+
+export { Tabs, TabsList, TabsTrigger, TabsContent, TabsMobileSelect };

@@ -21,4 +21,13 @@ describe("Button component", () => {
     expect(btn.className).toContain("custom-class");
     expect(btn.className).toMatch(/h-8/);
   });
+
+  it.each(["xs", "sm", "default", "lg", "icon", "icon-sm", "icon-lg"] as const)(
+    "floors the %s size to a 44px touch target below md",
+    (size) => {
+      render(<Button size={size}>x</Button>);
+      const btn = screen.getByRole("button", { name: /x/i });
+      expect(btn.className).toMatch(/max-md:min-h-11/);
+    },
+  );
 });
