@@ -93,12 +93,7 @@ function measure({ touchFail, touchWarn, minFontPx, tolerance }) {
   const describe = (el) => {
     const cls =
       typeof el.className === "string" && el.className
-        ? "." +
-          el.className
-            .split(/\s+/)
-            .filter(Boolean)
-            .slice(0, 4)
-            .join(".")
+        ? "." + el.className.split(/\s+/).filter(Boolean).slice(0, 4).join(".")
         : "";
     const id = el.id ? `#${el.id}` : "";
     const text = (el.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 40);
@@ -301,9 +296,12 @@ async function resolveIds(page) {
 
 async function auditSurface(context, surface, theme, ids) {
   const page = await context.newPage();
-  await page.addInitScript((mode) => {
-    localStorage.setItem("situs-mode", mode);
-  }, theme === "dark" ? "dark" : "normal");
+  await page.addInitScript(
+    (mode) => {
+      localStorage.setItem("situs-mode", mode);
+    },
+    theme === "dark" ? "dark" : "normal",
+  );
   await page.emulateMedia({ colorScheme: theme === "dark" ? "dark" : "light" });
 
   const path = surface.path.replace(/\{(\w+)\}/g, (_m, key) => ids[key] ?? "");
@@ -401,8 +399,12 @@ function toMarkdown(results, meta) {
   lines.push(
     `| Touch targets under ${TOUCH_WARN}px | ${ok.reduce((a, r) => a + (r.smallTargetCount ?? 0), 0)} |`,
   );
-  lines.push(`| Text under ${MIN_FONT_PX}px | ${ok.reduce((a, r) => a + (r.smallTextCount ?? 0), 0)} |`);
-  lines.push(`| Interactive elements clipped offscreen | ${ok.reduce((a, r) => a + (r.clipped?.length ?? 0), 0)} |`);
+  lines.push(
+    `| Text under ${MIN_FONT_PX}px | ${ok.reduce((a, r) => a + (r.smallTextCount ?? 0), 0)} |`,
+  );
+  lines.push(
+    `| Interactive elements clipped offscreen | ${ok.reduce((a, r) => a + (r.clipped?.length ?? 0), 0)} |`,
+  );
   lines.push(
     `| **Containers clipping content (\`overflow:hidden\`, unreachable)** | **${ok.reduce((a, r) => a + (r.clippedContainerCount ?? 0), 0)}** |`,
   );
@@ -499,7 +501,7 @@ async function main() {
   const results = [];
   for (const surface of surfaces) {
     for (const theme of THEMES) {
-      if (surface.path.includes("{") ) {
+      if (surface.path.includes("{")) {
         const key = surface.path.match(/\{(\w+)\}/)?.[1];
         if (key && !ids[key]) {
           console.log(`[audit] skip ${surface.id} (${theme}) — no ${key} available`);
@@ -531,7 +533,10 @@ async function main() {
     viewport: `${VIEWPORT_WIDTH}×${VIEWPORT_HEIGHT}`,
     themes: THEMES,
   };
-  writeFileSync(join(OUT_DIR, `report-${VIEWPORT_WIDTH}.json`), JSON.stringify({ meta, results }, null, 2));
+  writeFileSync(
+    join(OUT_DIR, `report-${VIEWPORT_WIDTH}.json`),
+    JSON.stringify({ meta, results }, null, 2),
+  );
   writeFileSync(join(OUT_DIR, `report-${VIEWPORT_WIDTH}.md`), toMarkdown(results, meta));
   console.log(`\n[audit] wrote ${OUT_DIR}/report-${VIEWPORT_WIDTH}.{json,md}`);
 
