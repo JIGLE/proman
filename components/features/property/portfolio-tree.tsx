@@ -197,7 +197,11 @@ export function PortfolioTree({
           collapsed ? "justify-center px-2" : "justify-between gap-3 px-4",
         )}
       >
-        {!collapsed && <p className="mono-label min-w-0 flex-1 truncate">{t("title")}</p>}
+        {!collapsed && (
+          <p className="mono-label min-w-0 flex-1 truncate" title={t("title")}>
+            {t("title")}
+          </p>
+        )}
         {!collapsed && (
           <Button
             variant="ghost"
@@ -240,7 +244,7 @@ export function PortfolioTree({
                 type="button"
                 onClick={() => toggleNode(countryKey)}
                 className={cn(
-                  "flex w-full items-center gap-2 border-l-2 border-transparent text-left transition-colors hover:bg-[var(--color-hover)]",
+                  "flex w-full items-center gap-2 border-l-2 border-transparent text-left transition-colors hover:bg-[var(--color-hover)] max-md:min-h-11",
                   rowPad,
                   collapsed ? "justify-center px-0" : "px-2",
                 )}
@@ -280,7 +284,7 @@ export function PortfolioTree({
                         type="button"
                         onClick={() => toggleNode(clusterKey)}
                         className={cn(
-                          "flex w-full items-center gap-2 border-l-2 border-transparent text-left transition-colors hover:bg-[var(--color-hover)]",
+                          "flex w-full items-center gap-2 border-l-2 border-transparent text-left transition-colors hover:bg-[var(--color-hover)] max-md:min-h-11",
                           rowPad,
                           collapsed ? "justify-center px-0" : "px-2 pl-7",
                         )}
@@ -319,7 +323,7 @@ export function PortfolioTree({
                               onClick={() => onSelectProperty?.(property.id)}
                               title={collapsed ? property.name : undefined}
                               className={cn(
-                                "flex w-full items-center border-l-2 text-left transition-colors",
+                                "flex w-full items-center border-l-2 text-left transition-colors max-md:min-h-11",
                                 rowPad,
                                 collapsed ? "justify-center gap-1 px-0" : "gap-2.5 px-2 pl-12",
                                 highlighted

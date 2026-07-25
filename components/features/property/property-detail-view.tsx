@@ -956,8 +956,8 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                         </div>
                         <Button
                           variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)]"
+                          size="icon-sm"
+                          className="text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)]"
                           onClick={() => handleRemoveOwner(owner.id)}
                           title="Remove owner"
                         >
