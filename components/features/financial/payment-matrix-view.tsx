@@ -311,7 +311,7 @@ export function PaymentMatrixView(): React.ReactElement {
                             ),
                           )
                         }
-                        className="font-medium text-[var(--color-foreground)] hover:underline text-left"
+                        className="flex items-center font-medium text-[var(--color-foreground)] hover:underline text-left max-md:min-h-11"
                       >
                         {tenant.name}
                       </button>
