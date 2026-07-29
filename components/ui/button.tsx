@@ -90,13 +90,24 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     } else {
       childForSlot = children;
     }
+    const commonProps = {
+      className: cn(buttonVariants({ variant, size, emphasis, className })),
+      ref,
+      disabled: disabled || loading,
+      ...props,
+    };
+
+    // asChild merges onto a single child via Radix Slot — a sibling spinner node here would
+    // make that a two-child array, forcing SafeSlot's span-wrapping fallback, which floats
+    // Button's classes (including the touch-target floor) onto a wrapper the user can't
+    // actually tap instead of the real interactive child. Loading + asChild isn't used
+    // anywhere today, so asChild always renders exactly one child: childForSlot.
+    if (asChild) {
+      return <Comp {...commonProps}>{childForSlot}</Comp>;
+    }
+
     return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, emphasis, className }))}
-        ref={ref}
-        disabled={disabled || loading}
-        {...props}
-      >
+      <Comp {...commonProps}>
         {loading && (
           <svg className="animate-spin -ml-1 mr-2 h-4 w-4" fill="none" viewBox="0 0 24 24">
             <circle

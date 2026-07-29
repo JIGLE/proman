@@ -280,7 +280,7 @@ function AuthContent({ mode }: { mode: AuthMode }) {
             <button
               type="button"
               onClick={() => router.push(mode === "signin" ? "/auth/signup" : "/auth/signin")}
-              className="font-medium text-[var(--country-highlight-readable)] underline-offset-4 hover:underline"
+              className="inline-flex items-center font-medium text-[var(--country-highlight-readable)] underline-offset-4 hover:underline max-md:min-h-11"
             >
               {mode === "signin" ? "Create an account" : "Sign in"}
             </button>

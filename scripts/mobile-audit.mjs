@@ -83,6 +83,9 @@ const SURFACES = [
   { id: "account", path: "/en/account" },
   { id: "compliance-tax-filing", path: "/en/compliance/tax-filing" },
   { id: "compliance-modelo179", path: "/en/compliance/modelo179" },
+  // Tenant portal: token-gated, so the whole path (not just an id) is substituted — the token
+  // is minted at runtime via the same "invite tenant" API the owner-facing UI calls.
+  { id: "tenant-portal", path: "{tenantPortalPath}", auth: false },
 ];
 
 /**
@@ -290,11 +293,36 @@ async function resolveIds(page) {
       return null;
     }
   };
+  const tenantId = await get("/api/tenants", (t) => t.id);
+
+  // The tenant portal is reached via a signed token minted on demand (no stored value to GET),
+  // so mint one the same way the app's own "invite tenant" flow does: POST is CSRF-guarded.
+  let tenantPortalPath = null;
+  if (tenantId) {
+    try {
+      await page.request.get(`${BASE}/api/csrf-token`);
+      const cookies = await page.context().cookies();
+      const csrf = cookies.find((c) => c.name === "csrf-token")?.value;
+      const res = await page.request.post(`${BASE}/api/tenants/${tenantId}/portal-link`, {
+        headers: csrf ? { "x-csrf-token": csrf } : {},
+        data: {},
+      });
+      if (res.ok()) {
+        const body = await res.json();
+        const portalLink = body?.data?.portalLink;
+        if (portalLink) tenantPortalPath = new URL(portalLink).pathname;
+      }
+    } catch {
+      tenantPortalPath = null;
+    }
+  }
+
   return {
     propertyId: await get("/api/properties", (p) => p.id),
-    tenantId: await get("/api/tenants", (t) => t.id),
+    tenantId,
     leaseId: await get("/api/leases", (l) => l.id),
     documentId: await get("/api/documents", (d) => d.id),
+    tenantPortalPath,
   };
 }
 
@@ -480,6 +508,13 @@ async function main() {
     viewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
     deviceScaleFactor: 2,
   });
+  // Surfaces marked `auth: false` (landing, signin, signup) must never see the bootstrap
+  // session below — an authenticated visit to /auth/signin silently redirects to /dashboard,
+  // which would mislabel the dashboard's own violations as belonging to the signin/signup pages.
+  const anonContext = await browser.newContext({
+    viewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
+    deviceScaleFactor: 2,
+  });
 
   const bootstrap = await context.newPage();
   await login(bootstrap);
@@ -512,7 +547,12 @@ async function main() {
           continue;
         }
       }
-      const r = await auditSurface(context, surface, theme, ids);
+      const r = await auditSurface(
+        surface.auth === false ? anonContext : context,
+        surface,
+        theme,
+        ids,
+      );
       results.push(r);
       const tag =
         r.status === "error"
@@ -530,6 +570,7 @@ async function main() {
   }
 
   await context.close();
+  await anonContext.close();
   await browser.close();
 
   const meta = {

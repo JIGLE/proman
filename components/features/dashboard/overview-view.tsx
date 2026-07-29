@@ -507,7 +507,7 @@ export function OverviewView({
               <p className="mono-label">{t("recentPayments")}</p>
               <button
                 onClick={() => navigate("/financials?tab=receipts")}
-                className="text-sm text-[var(--color-primary)] hover:underline"
+                className="flex items-center text-sm text-[var(--color-primary)] hover:underline max-md:min-h-11"
               >
                 {t("seeAll")}
               </button>

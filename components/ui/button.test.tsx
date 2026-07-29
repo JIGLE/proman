@@ -30,4 +30,28 @@ describe("Button component", () => {
       expect(btn.className).toMatch(/max-md:min-h-11/);
     },
   );
+
+  // Regression: the `loading` spinner slot used to count as a second child even when
+  // `loading` was false, which pushed SafeSlot down its span-wrapping fallback. Radix Slot
+  // then merged these classes onto that inert <span> instead of the real <a>, so the touch
+  // target silently stayed at the link's text height. Assert the classes land on the anchor.
+  it("merges its classes onto the asChild element, not a wrapper", () => {
+    render(
+      <Button asChild size="sm">
+        <a href="/somewhere">Go</a>
+      </Button>,
+    );
+    const link = screen.getByRole("link", { name: /go/i });
+    expect(link.className).toMatch(/max-md:min-h-11/);
+    expect(link.tagName).toBe("A");
+  });
+
+  it("does not wrap an asChild element in an extra span", () => {
+    const { container } = render(
+      <Button asChild>
+        <a href="/somewhere">Go</a>
+      </Button>,
+    );
+    expect(container.querySelector("span")).toBeNull();
+  });
 });
