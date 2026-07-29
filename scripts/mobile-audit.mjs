@@ -515,6 +515,18 @@ async function main() {
     viewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
     deviceScaleFactor: 2,
   });
+  // LocaleSelectOverlay is a blocking, full-screen first-visit language chooser, shown whenever
+  // `proman.locale.selected` is absent. A fresh Playwright context is always a "first visit", so
+  // without this the signed-out surfaces were being measured underneath that overlay — the page's
+  // own controls sat behind a z-[99999] scrim and the numbers described the chooser, not the page.
+  // Presenting as a returning visitor measures the surface these routes actually serve.
+  await anonContext.addInitScript(() => {
+    try {
+      localStorage.setItem("proman.locale.selected", "en");
+    } catch {
+      /* storage disabled — the overlay just shows, same as a real first visit */
+    }
+  });
 
   const bootstrap = await context.newPage();
   await login(bootstrap);

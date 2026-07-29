@@ -38,7 +38,9 @@ export function ComplianceSubNav(): React.ReactElement {
             href={item.href}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "rounded-lg px-4 py-1.5 text-sm font-medium transition-colors",
+              "inline-flex items-center rounded-lg px-4 py-1.5 text-sm font-medium transition-colors",
+              // Padding-sized nav pills, so they never picked up Button's touch-target floor.
+              "max-md:min-h-11",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)]",
               isActive
                 ? "bg-accent-primary/15 text-accent-primary"

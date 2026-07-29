@@ -35,7 +35,10 @@ export function SegmentedFilter<T extends string>({
           variant={value === option.value ? "secondary" : "ghost"}
           size="sm"
           onClick={() => onValueChange(option.value)}
-          className="h-7 px-3"
+          // `sm` supplies the height floor, but only the icon sizes carry a width one — so a
+          // short label like "All" stayed 41px wide. These are discrete tap targets in a row,
+          // not prose, so a width floor is appropriate here.
+          className="h-7 px-3 max-md:min-w-11"
         >
           {option.label}
         </Button>
