@@ -391,7 +391,7 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
               href={`/${locale}/demo?perspective=owner`}
               eventName="landing.demo_start"
               eventData={{ location: "hero_primary", perspective: "owner" }}
-              className="w-full sm:w-auto"
+              className="block w-full sm:w-auto"
             >
               <Button size="lg" className="w-full rounded-none font-semibold sm:w-auto">
                 {t("heroCta.tryIt")}
@@ -408,7 +408,7 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
               href="/auth/signup"
               eventName="landing.signup_start"
               eventData={{ location: "hero_secondary" }}
-              className="w-full sm:w-auto"
+              className="block w-full sm:w-auto"
             >
               <Button
                 size="lg"
@@ -429,7 +429,7 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
               href="/auth/signin"
               eventName="landing.signin_click"
               eventData={{ location: "hero" }}
-              className="w-full sm:w-auto"
+              className="block w-full sm:w-auto"
             >
               {/* Tertiary, back in the row as a real button — a plain-text link read as too
                   disconnected from "Experimentar"/"Aderir" to feel like part of the same group.

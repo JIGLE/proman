@@ -242,7 +242,11 @@ export function MobileTopBar(): React.ReactElement {
       className="sticky top-0 z-30 flex items-center gap-3 border-b border-[var(--color-border)] bg-[var(--color-background)]/95 px-4 pt-[env(safe-area-inset-top,0px)] backdrop-blur md:hidden"
       style={{ height: "calc(3.5rem + env(safe-area-inset-top, 0px))" }}
     >
-      <Link href={`/${currentLocale}/dashboard`} aria-label="Situs — Home" className="shrink-0">
+      <Link
+        href={`/${currentLocale}/dashboard`}
+        aria-label="Situs — Home"
+        className="flex shrink-0 items-center justify-center max-md:min-h-11 max-md:min-w-11"
+      >
         <SitusPortalMark size="sm" className="h-6 w-6" />
       </Link>
       <h1 className="truncate text-base font-semibold tracking-tight text-[var(--color-foreground)]">

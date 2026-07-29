@@ -55,7 +55,10 @@ function AlertRow({ alert, locale }: { alert: ActionAlert; readonly locale: stri
     >
       <div className="flex min-w-0 items-center gap-3">
         <Icon className={cn("h-4 w-4 shrink-0", severityAccent[alert.severity])} />
-        <span className="truncate text-sm font-medium text-[var(--color-foreground)]">
+        <span
+          className="truncate text-sm font-medium text-[var(--color-foreground)]"
+          title={alert.message}
+        >
           {alert.message}
         </span>
       </div>

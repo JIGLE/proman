@@ -69,7 +69,7 @@ const SheetContent = React.forwardRef<
       {children}
       <DialogPrimitive.Close
         aria-label="Close"
-        className="absolute right-4 top-[calc(1rem+env(safe-area-inset-top,0px))] z-50 rounded-md p-1.5 text-[var(--color-muted-foreground)] opacity-70 ring-offset-[var(--color-card-solid)] transition-opacity hover:opacity-100 hover:text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] focus:ring-offset-2 disabled:pointer-events-none"
+        className="absolute right-4 top-[calc(1rem+env(safe-area-inset-top,0px))] z-50 inline-flex items-center justify-center rounded-md p-1.5 text-[var(--color-muted-foreground)] opacity-70 ring-offset-[var(--color-card-solid)] transition-opacity hover:opacity-100 hover:text-[var(--color-foreground)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring)] focus:ring-offset-2 disabled:pointer-events-none max-md:min-h-11 max-md:min-w-11"
       >
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>

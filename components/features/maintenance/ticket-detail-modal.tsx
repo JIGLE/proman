@@ -311,20 +311,15 @@ export function TicketDetailModal({
               </div>
               <div className="flex shrink-0 items-center gap-1">
                 {onEdit && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => onEdit(ticket)}
-                    className="h-7 w-7 p-0"
-                  >
+                  <Button variant="ghost" size="icon-sm" onClick={() => onEdit(ticket)}>
                     <Edit className="h-3.5 w-3.5" />
                   </Button>
                 )}
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon-sm"
                   onClick={handleDelete}
-                  className="h-7 w-7 p-0 text-[var(--color-destructive)] hover:text-[var(--color-destructive)]/70"
+                  className="text-[var(--color-destructive)] hover:text-[var(--color-destructive)]/70"
                 >
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>

@@ -71,7 +71,9 @@ const SURFACES = [
   { id: "financials-tax", path: "/en/financials?tab=tax" },
   { id: "operations", path: "/en/operations" },
   { id: "leases", path: "/en/leases" },
+  { id: "detail-lease", path: "/en/leases?detail=lease:{leaseId}", overlay: true },
   { id: "documents", path: "/en/documents" },
+  { id: "detail-document", path: "/en/documents?detail=document:{documentId}", overlay: true },
   { id: "intelligence", path: "/en/intelligence" },
   { id: "correspondence", path: "/en/correspondence" },
   { id: "buildings", path: "/en/buildings" },
@@ -81,6 +83,9 @@ const SURFACES = [
   { id: "account", path: "/en/account" },
   { id: "compliance-tax-filing", path: "/en/compliance/tax-filing" },
   { id: "compliance-modelo179", path: "/en/compliance/modelo179" },
+  // Tenant portal: token-gated, so the whole path (not just an id) is substituted — the token
+  // is minted at runtime via the same "invite tenant" API the owner-facing UI calls.
+  { id: "tenant-portal", path: "{tenantPortalPath}", auth: false },
 ];
 
 /**
@@ -288,9 +293,36 @@ async function resolveIds(page) {
       return null;
     }
   };
+  const tenantId = await get("/api/tenants", (t) => t.id);
+
+  // The tenant portal is reached via a signed token minted on demand (no stored value to GET),
+  // so mint one the same way the app's own "invite tenant" flow does: POST is CSRF-guarded.
+  let tenantPortalPath = null;
+  if (tenantId) {
+    try {
+      await page.request.get(`${BASE}/api/csrf-token`);
+      const cookies = await page.context().cookies();
+      const csrf = cookies.find((c) => c.name === "csrf-token")?.value;
+      const res = await page.request.post(`${BASE}/api/tenants/${tenantId}/portal-link`, {
+        headers: csrf ? { "x-csrf-token": csrf } : {},
+        data: {},
+      });
+      if (res.ok()) {
+        const body = await res.json();
+        const portalLink = body?.data?.portalLink;
+        if (portalLink) tenantPortalPath = new URL(portalLink).pathname;
+      }
+    } catch {
+      tenantPortalPath = null;
+    }
+  }
+
   return {
     propertyId: await get("/api/properties", (p) => p.id),
-    tenantId: await get("/api/tenants", (t) => t.id),
+    tenantId,
+    leaseId: await get("/api/leases", (l) => l.id),
+    documentId: await get("/api/documents", (d) => d.id),
+    tenantPortalPath,
   };
 }
 
@@ -476,6 +508,25 @@ async function main() {
     viewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
     deviceScaleFactor: 2,
   });
+  // Surfaces marked `auth: false` (landing, signin, signup) must never see the bootstrap
+  // session below — an authenticated visit to /auth/signin silently redirects to /dashboard,
+  // which would mislabel the dashboard's own violations as belonging to the signin/signup pages.
+  const anonContext = await browser.newContext({
+    viewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
+    deviceScaleFactor: 2,
+  });
+  // LocaleSelectOverlay is a blocking, full-screen first-visit language chooser, shown whenever
+  // `proman.locale.selected` is absent. A fresh Playwright context is always a "first visit", so
+  // without this the signed-out surfaces were being measured underneath that overlay — the page's
+  // own controls sat behind a z-[99999] scrim and the numbers described the chooser, not the page.
+  // Presenting as a returning visitor measures the surface these routes actually serve.
+  await anonContext.addInitScript(() => {
+    try {
+      localStorage.setItem("proman.locale.selected", "en");
+    } catch {
+      /* storage disabled — the overlay just shows, same as a real first visit */
+    }
+  });
 
   const bootstrap = await context.newPage();
   await login(bootstrap);
@@ -508,7 +559,12 @@ async function main() {
           continue;
         }
       }
-      const r = await auditSurface(context, surface, theme, ids);
+      const r = await auditSurface(
+        surface.auth === false ? anonContext : context,
+        surface,
+        theme,
+        ids,
+      );
       results.push(r);
       const tag =
         r.status === "error"
@@ -526,6 +582,7 @@ async function main() {
   }
 
   await context.close();
+  await anonContext.close();
   await browser.close();
 
   const meta = {

@@ -59,10 +59,12 @@ export function LanguageSelector({ compact = false, className }: LanguageSelecto
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          size="sm"
+          // `icon` carries both the min-h and min-w touch-target floors; `sm` + a manual
+          // `h-9 w-9` only ever picked up the height one, leaving this trigger 36px wide.
+          size={compact ? "icon" : "sm"}
           className={cn(
             "gap-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/5",
-            compact ? "h-9 w-9 p-0" : "h-9 px-2.5",
+            compact ? "" : "h-9 px-2.5",
             className,
           )}
           title="Language"

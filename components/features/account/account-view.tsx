@@ -105,11 +105,9 @@ export function AccountView(): React.ReactElement {
               </Badge>
             )}
           </div>
-          <Link href={`/${locale}/settings?tab=security`}>
-            <Button variant="outline" size="sm" className="rounded-none">
-              Manage in Settings
-            </Button>
-          </Link>
+          <Button asChild variant="outline" size="sm" className="rounded-none">
+            <Link href={`/${locale}/settings?tab=security`}>Manage in Settings</Link>
+          </Button>
         </CardContent>
       </Card>
 

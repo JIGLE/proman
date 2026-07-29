@@ -753,10 +753,15 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                                   .toUpperCase()}
                               </div>
                               <div className="min-w-0">
-                                <p className="truncate text-sm font-medium text-zinc-100">
+                                <p
+                                  className="truncate text-sm font-medium text-zinc-100"
+                                  title={tenant.name}
+                                >
                                   {tenant.name}
                                 </p>
-                                <p className="truncate text-xs text-zinc-500">{tenant.email}</p>
+                                <p className="truncate text-xs text-zinc-500" title={tenant.email}>
+                                  {tenant.email}
+                                </p>
                               </div>
                             </div>
 
