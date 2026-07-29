@@ -31,6 +31,11 @@ on:
         required: false
         type: boolean
         default: false
+      publish_only:
+        description: "Only run publish job (for recovery when version bump skipped)"
+        required: false
+        type: boolean
+        default: false
   push:
     branches: [main]
 
@@ -46,7 +51,7 @@ jobs:
   # ── Part 1: prepare the release PR (manual dispatch only) ──────────────────
   prepare:
     name: Prepare Release PR
-    if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch' && inputs.publish_only != true
     permissions:
       contents: write
       pull-requests: write
@@ -225,7 +230,7 @@ jobs:
   # ── Part 2: publish tag + release when a version bump lands on main ────────
   publish:
     name: Publish Release
-    if: github.event_name == 'push'
+    if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish_only == true)
     permissions:
       contents: write
       packages: write
