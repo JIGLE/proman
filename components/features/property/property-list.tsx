@@ -136,6 +136,12 @@ export type PropertiesViewProps = {
   highlightedPropertyId?: string;
   density?: "comfortable" | "compact";
   showPageHeader?: boolean;
+  /**
+   * Actions that belong to the asset list itself (create, export). Rendered at the top of the
+   * tree column rather than in the page header, so they sit with the thing they act on. Passed
+   * in rather than owned here because the caller holds the dialogs they open.
+   */
+  treeActions?: React.ReactNode;
 };
 
 export type PropertiesViewRef = {
@@ -150,6 +156,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
       onLocateOnMap,
       highlightedPropertyId,
       showPageHeader = true,
+      treeActions,
     }: PropertiesViewProps,
     ref,
   ): React.ReactElement {
@@ -600,6 +607,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                       workspacePropertyId && "lg:hidden",
                     )}
                   >
+                    {/* Create/export sit above the list they act on rather than in the page
+                        header. Hidden with the rail collapsed, where there is no room. */}
+                    {!railCollapsed && treeActions && (
+                      <div className="flex flex-wrap items-center gap-2">{treeActions}</div>
+                    )}
                     {/* Compact search + attention filter — contextual to the tree
                         (replaces the removed top search band + filter chips). */}
                     {!railCollapsed && (
@@ -695,14 +707,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                               {tNav("portfolio")}
                             </Button>
                           )}
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setWorkspacePropertyId(null)}
-                            className="text-[var(--color-muted-foreground)]"
-                          >
-                            {tPortfolio("closeWorkspace")}
-                          </Button>
                         </div>
                         <div className="border border-[var(--color-border)] bg-[var(--color-card)] p-4 motion-safe:animate-fade-in lg:p-6">
                           <PropertyDetailView propertyId={workspacePropertyId} />
