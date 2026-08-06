@@ -33,7 +33,7 @@ function BrandPanel() {
   const t = useTranslations("auth.brand");
 
   return (
-    <div className="relative hidden overflow-hidden border-r border-[var(--color-border)] bg-[var(--color-surface-solid)] lg:flex lg:flex-col lg:justify-between lg:p-12">
+    <div className="relative hidden overflow-hidden border-r border-[var(--color-border)] bg-[var(--color-surface-solid)] lg:flex lg:flex-col lg:items-center lg:justify-center lg:p-12">
       {/* Orbiting Portal motif */}
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
         <div
@@ -46,16 +46,20 @@ function BrandPanel() {
         />
       </div>
 
-      <div className="relative flex items-center gap-3">
+      {/* Logo and legal line are chrome: pinned to the panel's corners so they cannot stretch
+          the layout. Previously all three blocks were spaced by `justify-between`, which left a
+          ~310px void under the logo and pushed the brand copy down to 40% of the viewport while
+          the form opposite began at 23% — the two halves never read as one composition. */}
+      <div className="absolute left-12 top-12 flex items-center gap-3">
         <SitusPortalMark className="h-9 w-9" />
         <span className="text-[13px] font-semibold uppercase tracking-[0.22em] text-[var(--color-foreground)]">
           Situs
         </span>
       </div>
 
-      <div className="relative motion-safe:animate-slide-up">
+      <div className="relative max-w-md motion-safe:animate-slide-up">
         <p className="mono-label mb-4">{t("system")}</p>
-        <p className="max-w-sm text-[clamp(22px,2vw,30px)] font-normal leading-tight tracking-[-0.03em] text-[var(--color-foreground)]">
+        <p className="text-[clamp(22px,2vw,30px)] font-normal leading-tight tracking-[-0.03em] text-[var(--color-foreground)]">
           {t("tagline")}
         </p>
         <div className="mt-9 space-y-4">
@@ -77,7 +81,7 @@ function BrandPanel() {
         </div>
       </div>
 
-      <div className="relative flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
+      <div className="absolute bottom-12 left-12 flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
         <ShieldCheck className="h-3.5 w-3.5 text-[var(--country-highlight-readable)]" />
         <span>{t("footer")}</span>
       </div>
@@ -145,7 +149,11 @@ function AuthContent({ mode }: { mode: AuthMode }) {
   }
 
   return (
-    <div className="grid min-h-screen bg-[var(--color-background)] lg:grid-cols-[0.9fr_1.1fr]">
+    // Equal halves. The old 0.9fr/1.1fr split gave the *wider* track to the form, which is a
+    // fixed ~384px card, stranding it in 336px of dead space either side at 1920px. Weighting
+    // the brand side instead just moved the void there. Both halves now centre a bounded
+    // content block, so the two read as a pair across the divider at any width.
+    <div className="grid min-h-screen bg-[var(--color-background)] lg:grid-cols-2">
       <BrandPanel />
 
       <div className="flex items-center justify-center px-5 py-12 sm:px-10">
@@ -153,8 +161,11 @@ function AuthContent({ mode }: { mode: AuthMode }) {
           {/* Brand lockup + locale control. The mark is desktop-hidden (BrandPanel carries it
               there), but the selector stays on every viewport: these pages sit outside the
               `[locale]` segment, so this is the only way to change language before signing in. */}
-          <div className="mb-8 flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 lg:invisible">
+          <div className="mb-8 flex items-center justify-between gap-3 lg:justify-end">
+            {/* `lg:hidden`, not `lg:invisible`: BrandPanel already carries the mark at lg, and
+                leaving an invisible placeholder here left the locale control stranded on its
+                own in a half-empty row. */}
+            <div className="flex items-center gap-3 lg:hidden">
               <SitusPortalMark className="h-10 w-10" />
               <span className="text-[13px] font-semibold uppercase tracking-[0.22em]">Situs</span>
             </div>
