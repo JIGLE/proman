@@ -952,7 +952,17 @@
     },
     "tenantName": "Nome inquilino",
     "email": "Email",
-    "phone": "Telefono"
+    "phone": "Telefono",
+    "city": "Città",
+    "ownership": {
+      "title": "Proprietà",
+      "assigned": "{percent}% assegnato",
+      "none": "Nessun proprietario ancora assegnato.",
+      "assign": "Assegna proprietario",
+      "selectOwner": "Scegli proprietario…",
+      "remove": "Rimuovi proprietario",
+      "reachesFull": "Il totale arriverà esattamente al 100% ✓"
+    }
   },
   "Units": {
     "addUnit": "Aggiungi unità",

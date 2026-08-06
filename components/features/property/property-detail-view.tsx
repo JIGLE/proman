@@ -112,6 +112,14 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
    * fallback never fired and the UI showed "financial.categories.Mortgage Interest". Normalise
    * the key, and fall back to the stored label when there is genuinely no translation.
    */
+  /** Lease dates arrive as full ISO timestamps; rendered raw they wrap a card into three lines. */
+  const formatDay = (raw: string): string => {
+    const parsed = new Date(raw);
+    return Number.isNaN(parsed.getTime())
+      ? raw
+      : parsed.toLocaleDateString(locale, { day: "2-digit", month: "short", year: "numeric" });
+  };
+
   const expenseCategoryLabel = (raw?: string | null): string => {
     if (!raw) return tFin("expense");
     const key = `categories.${raw.toLowerCase().replace(/\s+/g, "_")}`;
@@ -936,47 +944,53 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         </TabsList>
 
         {/* Overview Tab */}
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 gap-6 @3xl:grid-cols-3">
-            {/* Property Info */}
-            <Card className="@3xl:col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
-                <CardTitle>{t("propertyDetails")}</CardTitle>
-                {/* Edit sits with the fields it edits rather than in a global action bar. */}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => editFormDialogRef.current?.openEditDialog(property)}
-                >
-                  <Pencil className="mr-1.5 h-3.5 w-3.5" />
-                  {t("actions.edit")}
-                </Button>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {/* Monthly rent, bedrooms and bathrooms are already in the identity row at the
-                    top of this screen (`Ocupado · 2 · 1 · €1500,00/mo`), so repeating them here
-                    was four labelled fields restating what the header had said a few hundred
-                    pixels earlier. Only type and description are unique to this card. */}
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <span className="text-[var(--color-muted-foreground)]">{t("type")}</span>
-                    <p className="font-medium capitalize">{property.type}</p>
-                  </div>
-                  {property.description && (
-                    <div className="col-span-2">
-                      <span className="text-[var(--color-muted-foreground)]">
-                        {t("description")}
-                      </span>
-                      <p className="font-medium">{property.description}</p>
-                    </div>
-                  )}
+        <TabsContent value="overview" className="space-y-5">
+          {/* Spec band, not a card. Monthly rent, bedrooms and bathrooms are already in the
+              identity row a few hundred pixels above (`Occupied · 2 · 1 · €1,500/mo`), so all
+              that is genuinely unique here is the type and the description — one or two fields,
+              which is far too little to justify two thirds of the row. As a card it left People
+              & contracts squeezed into the remaining third, wrapping every lease over three
+              lines. Demoted to a single quiet row so the two real sections below can split the
+              width evenly. */}
+          <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 border-b border-[var(--color-border)] pb-4">
+            <div className="min-w-0 flex-1 space-y-1.5">
+              <dl className="flex flex-wrap items-baseline gap-x-6 gap-y-1">
+                <div className="flex items-baseline gap-2">
+                  <dt className="mono-label">{t("type")}</dt>
+                  <dd className="text-sm font-medium capitalize">{property.type}</dd>
                 </div>
-              </CardContent>
-            </Card>
+                {property.city && (
+                  <div className="flex items-baseline gap-2">
+                    <dt className="mono-label">{t("city")}</dt>
+                    <dd className="text-sm font-medium">{property.city}</dd>
+                  </div>
+                )}
+              </dl>
+              {property.description && (
+                <p className="max-w-[72ch] text-sm text-[var(--color-muted-foreground)]">
+                  {property.description}
+                </p>
+              )}
+            </div>
+            {/* Edit sits with the fields it edits rather than in a global action bar. */}
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={() => editFormDialogRef.current?.openEditDialog(property)}
+            >
+              <Pencil className="mr-1.5 h-3.5 w-3.5" />
+              {t("actions.edit")}
+            </Button>
+          </div>
 
+          {/* Splits at @xl (36rem) rather than @2xl: the workspace container is ~644px at a
+              1280px window, so a 42rem threshold left the pair stacked on the most common
+              laptop width — the exact case this layout exists to fix. */}
+          <div className="grid grid-cols-1 gap-x-6 gap-y-5 @xl:grid-cols-2">
             {/* People & contracts — folds the former standalone Tenants and
                 Leases tabs in here (Overview absorbs them per the tab merge). */}
-            <div className="space-y-4">
+            <section className="space-y-3">
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
                   {t("related")}
@@ -1018,8 +1032,8 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                     <EntityLink
                       type="lease"
                       id={lease.id}
-                      title={`Lease ${lease.id.slice(0, 8)}`}
-                      subtitle={`${formatCurrency(lease.monthlyRent)}/mo · ${lease.startDate} — ${lease.endDate}`}
+                      title={`${formatCurrency(lease.monthlyRent)}/mo`}
+                      subtitle={`${formatDay(lease.startDate)} — ${formatDay(lease.endDate)}`}
                       status={lease.status}
                       statusVariant={
                         lease.status === "active"
@@ -1065,33 +1079,32 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                   )}
                 </div>
               )}
-            </div>
-          </div>
+            </section>
 
-          {/* Ownership & Revenue Share */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                Ownership
-              </CardTitle>
-              <span
-                className={cn(
-                  "text-xs font-medium px-2 py-0.5",
-                  Math.abs(ownershipTotal - 100) < 0.01
-                    ? "bg-[var(--color-success-muted)] text-[var(--color-success)]"
-                    : ownershipTotal > 0
-                      ? "bg-[var(--color-warning-muted)] text-[var(--color-warning)]"
-                      : "bg-[var(--color-popover)] text-[var(--color-muted-foreground)]",
-                )}
-              >
-                {ownershipTotal.toFixed(1)}% assigned
-              </span>
-            </CardHeader>
-            <CardContent className="space-y-4">
+            {/* Ownership & revenue share — the other half of the row, same section shape as its
+                neighbour so the two read as a pair rather than a card stacked under a card. */}
+            <section className="space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wider text-[var(--color-muted-foreground)]">
+                  <Users className="h-4 w-4" />
+                  {t("ownership.title")}
+                </h3>
+                <span
+                  className={cn(
+                    "px-2 py-0.5 text-xs font-medium",
+                    Math.abs(ownershipTotal - 100) < 0.01
+                      ? "bg-[var(--color-success-muted)] text-[var(--color-success)]"
+                      : ownershipTotal > 0
+                        ? "bg-[var(--color-warning-muted)] text-[var(--color-warning)]"
+                        : "bg-[var(--color-popover)] text-[var(--color-muted-foreground)]",
+                  )}
+                >
+                  {t("ownership.assigned", { percent: ownershipTotal.toFixed(1) })}
+                </span>
+              </div>
               {propertyOwners.length === 0 ? (
-                <p className="text-sm text-[var(--color-muted-foreground)] italic">
-                  No owners assigned yet.
+                <p className="text-sm italic text-[var(--color-muted-foreground)]">
+                  {t("ownership.none")}
                 </p>
               ) : (
                 <div className="space-y-2">
@@ -1125,7 +1138,8 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                           size="icon-sm"
                           className="text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)]"
                           onClick={() => handleRemoveOwner(owner.id)}
-                          title="Remove owner"
+                          title={t("ownership.remove")}
+                          aria-label={t("ownership.remove")}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
@@ -1138,13 +1152,11 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               {/* Add owner form */}
               {unassignedOwners.length > 0 && ownershipTotal < 99.999 && (
                 <div className="space-y-2 pt-2 border-t border-[var(--color-border)]">
-                  <p className="text-xs text-[var(--color-muted-foreground)] font-medium uppercase tracking-wide">
-                    Assign owner
-                  </p>
+                  <p className="mono-label">{t("ownership.assign")}</p>
                   <div className="flex gap-2">
                     <Select value={ownerAssignOwnerId} onValueChange={setOwnerAssignOwnerId}>
                       <SelectTrigger className="flex-1 text-sm">
-                        <SelectValue placeholder="Select owner…" />
+                        <SelectValue placeholder={t("ownership.selectOwner")} />
                       </SelectTrigger>
                       <SelectContent>
                         {unassignedOwners.map((o) => (
@@ -1180,13 +1192,13 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                   )}
                   {Math.abs(ownershipTotal + Number(ownerAssignPct || 0) - 100) < 0.01 && (
                     <p className="text-xs text-[var(--color-success)]">
-                      Total will reach exactly 100% ✓
+                      {t("ownership.reachesFull")}
                     </p>
                   )}
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </section>
+          </div>
         </TabsContent>
 
         {/* Maintenance Tab */}

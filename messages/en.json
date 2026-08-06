@@ -952,7 +952,17 @@
     },
     "tenantName": "Tenant name",
     "email": "Email",
-    "phone": "Phone"
+    "phone": "Phone",
+    "city": "City",
+    "ownership": {
+      "title": "Ownership",
+      "assigned": "{percent}% assigned",
+      "none": "No owners assigned yet.",
+      "assign": "Assign owner",
+      "selectOwner": "Select owner…",
+      "remove": "Remove owner",
+      "reachesFull": "Total will reach exactly 100% ✓"
+    }
   },
   "Units": {
     "addUnit": "Add Unit",
