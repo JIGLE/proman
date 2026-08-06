@@ -520,46 +520,49 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
               </DialogContent>
             </Dialog>
 
-            <SearchFilter
-              searchPlaceholder="Search tenants..."
-              onSearchChange={setSearchQuery}
-              onFilterChange={(key, value) => {
-                if (key === "property") setPropertyFilter(value);
-                if (key === "status") {
-                  setStatusFilter(value);
-                  localStorage.setItem("situs-tenants-status-filter", value);
-                }
-              }}
-              filters={[
-                {
-                  key: "property",
-                  label: "Property",
-                  options: [
-                    { label: "All Properties", value: "all" },
-                    ...properties.map((property) => ({
-                      label: property.name,
-                      value: property.id,
-                    })),
-                  ],
-                  defaultValue: "all",
-                },
-                {
-                  key: "status",
-                  label: "Status",
-                  options: [
-                    { label: "All", value: "all" },
-                    { label: "Active", value: "active" },
-                    { label: "Inactive", value: "inactive" },
-                    { label: "Paid", value: "paid" },
-                    { label: "Pending", value: "pending" },
-                    { label: "Overdue", value: "overdue" },
-                  ],
-                  defaultValue: "all",
-                },
-              ]}
-            />
-
-            <div className="flex items-center justify-end">
+            {/* Search, filters and the view toggle share one utility row. The toggle used to sit
+                on a line of its own between the filters and the list — a full band of chrome for
+                a control most people touch once. */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <SearchFilter
+                className="flex-1"
+                searchPlaceholder="Search tenants..."
+                onSearchChange={setSearchQuery}
+                onFilterChange={(key, value) => {
+                  if (key === "property") setPropertyFilter(value);
+                  if (key === "status") {
+                    setStatusFilter(value);
+                    localStorage.setItem("situs-tenants-status-filter", value);
+                  }
+                }}
+                filters={[
+                  {
+                    key: "property",
+                    label: "Property",
+                    options: [
+                      { label: "All Properties", value: "all" },
+                      ...properties.map((property) => ({
+                        label: property.name,
+                        value: property.id,
+                      })),
+                    ],
+                    defaultValue: "all",
+                  },
+                  {
+                    key: "status",
+                    label: "Status",
+                    options: [
+                      { label: "All", value: "all" },
+                      { label: "Active", value: "active" },
+                      { label: "Inactive", value: "inactive" },
+                      { label: "Paid", value: "paid" },
+                      { label: "Pending", value: "pending" },
+                      { label: "Overdue", value: "overdue" },
+                    ],
+                    defaultValue: "all",
+                  },
+                ]}
+              />
               <DataViewToggle mode={dataViewMode} onChange={handleViewModeChange} />
             </div>
 

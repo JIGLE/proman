@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { debounce } from "./debounce";
-import { Search, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Input } from "./input";
 import { Button } from "./button";
+import * as Popover from "./popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./select";
 import { cn } from "@/lib/utils/utils";
 
@@ -13,16 +14,18 @@ export interface FilterOption {
   value: string;
 }
 
+interface Filter {
+  key: string;
+  label: string;
+  options: FilterOption[];
+  defaultValue?: string;
+}
+
 export interface SearchFilterProps {
   onSearchChange: (value: string) => void;
   onFilterChange?: (key: string, value: string) => void;
   searchPlaceholder?: string;
-  filters?: {
-    key: string;
-    label: string;
-    options: FilterOption[];
-    defaultValue?: string;
-  }[];
+  filters?: Filter[];
   debounceMs?: number;
   className?: string;
   showClearButton?: boolean;
@@ -66,13 +69,62 @@ export function SearchFilter({
     onSearchChange("");
   }, [onSearchChange]);
 
+  // Filter values are tracked here as well as reported upward, so the collapsed trigger can
+  // say how many are active — a hidden active filter is worse than a visible dropdown.
+  const [filterValues, setFilterValues] = useState<Record<string, string>>({});
+  const valueFor = (filter: Filter): string =>
+    filterValues[filter.key] ?? filter.defaultValue ?? "all";
+
   const handleFilterChange = useCallback(
     (key: string, value: string) => {
+      setFilterValues((prev) => ({ ...prev, [key]: value }));
       if (onFilterChange) {
         onFilterChange(key, value);
       }
     },
     [onFilterChange],
+  );
+
+  const collapse = filters.length > 2;
+  const activeCount = filters.filter((f) => valueFor(f) !== (f.defaultValue ?? "all")).length;
+
+  const renderFilter = (filter: Filter): React.ReactElement => (
+    <>
+      <Select value={valueFor(filter)} onValueChange={(v) => handleFilterChange(filter.key, v)}>
+        <SelectTrigger
+          className={cn("w-full", !collapse && "sm:w-[180px]")}
+          data-testid={`select-trigger-${filter.key}`}
+        >
+          <SelectValue placeholder={filter.label} />
+        </SelectTrigger>
+        <SelectContent>
+          {filter.options.map((option) => (
+            <SelectItem
+              key={option.value}
+              value={option.value}
+              data-testid={`select-item-${option.value}`}
+            >
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {process.env.NODE_ENV === "test" && (
+        <select
+          data-testid={`native-select-${filter.key}`}
+          value={valueFor(filter)}
+          onChange={(e) => handleFilterChange(filter.key, e.target.value)}
+          hidden
+        >
+          {filter.options.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      )}
+    </>
   );
 
   return (
@@ -106,48 +158,46 @@ export function SearchFilter({
         )}
       </div>
 
-      {/* Filter Dropdowns */}
-      {filters.map((filter) => (
-        <div key={filter.key}>
-          <Select
-            defaultValue={filter.defaultValue || "all"}
-            onValueChange={(value) => handleFilterChange(filter.key, value)}
+      {/* Filter dropdowns. Up to two sit inline as a utility row; past that they fold behind
+          one "Filters" control, per declutter rule 3 in CLAUDE.md — a search box plus three
+          dropdowns is a wall, and Operations was rendering exactly that above its ticket list.
+          The trigger carries a count so an active filter is never hidden. */}
+      {collapse ? (
+        <Popover.Root>
+          <Popover.Trigger asChild>
+            <Button
+              variant="outline"
+              className="justify-start gap-2 sm:w-auto"
+              data-testid="filters-popover-trigger"
+            >
+              <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
+              Filters
+              {activeCount > 0 && (
+                <span className="bg-[var(--color-popover)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums">
+                  {activeCount}
+                </span>
+              )}
+            </Button>
+          </Popover.Trigger>
+          {/* The shared Popover.Content carries only a z-index, so the surface is the caller's
+              job — without it the panel is transparent and the list shows through behind the
+              selects. */}
+          <Popover.Content
+            align="end"
+            sideOffset={6}
+            className="w-64 space-y-3 border border-[var(--color-border)] bg-[var(--color-card-solid)] p-3 shadow-xl"
           >
-            <SelectTrigger
-              className="w-full sm:w-[180px]"
-              data-testid={`select-trigger-${filter.key}`}
-            >
-              <SelectValue placeholder={filter.label} />
-            </SelectTrigger>
-            <SelectContent>
-              {filter.options.map((option) => (
-                <SelectItem
-                  key={option.value}
-                  value={option.value}
-                  data-testid={`select-item-${option.value}`}
-                >
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          {process.env.NODE_ENV === "test" && (
-            <select
-              data-testid={`native-select-${filter.key}`}
-              value={filter.defaultValue || "all"}
-              onChange={(e) => handleFilterChange(filter.key, e.target.value)}
-              hidden
-            >
-              {filter.options.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-      ))}
+            {filters.map((filter) => (
+              <div key={filter.key} className="space-y-1.5">
+                <p className="mono-label">{filter.label}</p>
+                {renderFilter(filter)}
+              </div>
+            ))}
+          </Popover.Content>
+        </Popover.Root>
+      ) : (
+        filters.map((filter) => <div key={filter.key}>{renderFilter(filter)}</div>)
+      )}
     </div>
   );
 }

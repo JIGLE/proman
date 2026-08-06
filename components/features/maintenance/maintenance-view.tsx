@@ -530,82 +530,85 @@ export function MaintenanceView(): React.ReactElement {
             </TabsContent>
 
             <TabsContent value="queue" className="mt-0 space-y-6">
-              {/* Search and Filter */}
-              <SearchFilter
-                searchPlaceholder="Search by title, description, or assignee..."
-                onSearchChange={setSearchQuery}
-                onFilterChange={(key, value) => {
-                  if (key === "status") setStatusFilter(value);
-                  if (key === "priority") setPriorityFilter(value);
-                  if (key === "category") setCategoryFilter(value);
-                }}
-                filters={[
-                  {
-                    key: "status",
-                    label: "Status",
-                    options: [
-                      { label: "All Statuses", value: "all" },
-                      { label: "Open", value: "open" },
-                      { label: "In Progress", value: "in_progress" },
-                      { label: "Resolved", value: "resolved" },
-                      { label: "Closed", value: "closed" },
-                    ],
-                    defaultValue: "all",
-                  },
-                  {
-                    key: "priority",
-                    label: "Priority",
-                    options: [
-                      { label: "All Priorities", value: "all" },
-                      { label: "Low", value: "low" },
-                      { label: "Medium", value: "medium" },
-                      { label: "High", value: "high" },
-                      { label: "Urgent", value: "urgent" },
-                    ],
-                    defaultValue: "all",
-                  },
-                  {
-                    key: "category",
-                    label: "Category",
-                    options: [
-                      { label: "All Categories", value: "all" },
-                      ...MAINTENANCE_CATEGORIES.map((cat) => ({
-                        label: cat.charAt(0).toUpperCase() + cat.slice(1),
-                        value: cat,
-                      })),
-                    ],
-                    defaultValue: "all",
-                  },
-                ]}
-              />
+              {/* Search, filters and the result count share one utility row. The count used to
+                  sit in a band of its own between the filters and the list — a third strip of
+                  chrome to say a number that belongs beside the control that changes it. */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <SearchFilter
+                  className="flex-1"
+                  searchPlaceholder="Search by title, description, or assignee..."
+                  onSearchChange={setSearchQuery}
+                  onFilterChange={(key, value) => {
+                    if (key === "status") setStatusFilter(value);
+                    if (key === "priority") setPriorityFilter(value);
+                    if (key === "category") setCategoryFilter(value);
+                  }}
+                  filters={[
+                    {
+                      key: "status",
+                      label: "Status",
+                      options: [
+                        { label: "All Statuses", value: "all" },
+                        { label: "Open", value: "open" },
+                        { label: "In Progress", value: "in_progress" },
+                        { label: "Resolved", value: "resolved" },
+                        { label: "Closed", value: "closed" },
+                      ],
+                      defaultValue: "all",
+                    },
+                    {
+                      key: "priority",
+                      label: "Priority",
+                      options: [
+                        { label: "All Priorities", value: "all" },
+                        { label: "Low", value: "low" },
+                        { label: "Medium", value: "medium" },
+                        { label: "High", value: "high" },
+                        { label: "Urgent", value: "urgent" },
+                      ],
+                      defaultValue: "all",
+                    },
+                    {
+                      key: "category",
+                      label: "Category",
+                      options: [
+                        { label: "All Categories", value: "all" },
+                        ...MAINTENANCE_CATEGORIES.map((cat) => ({
+                          label: cat.charAt(0).toUpperCase() + cat.slice(1),
+                          value: cat,
+                        })),
+                      ],
+                      defaultValue: "all",
+                    },
+                  ]}
+                />
 
-              {/* Ticket count matches what the list below actually shows (any
-                  status, per the Status filter) — "Est. cost" stays scoped to
-                  open/in-progress work, so its label says so explicitly. */}
-              {filteredTickets.length > 0 && (
-                <div className="flex flex-wrap items-center gap-4 text-sm">
-                  <span className="text-[var(--color-muted-foreground)]">
+                {/* Count matches what the list below actually shows (any status, per the Status
+                    filter) — "Est. cost" stays scoped to open/in-progress work, so its label
+                    says so explicitly. */}
+                {filteredTickets.length > 0 && (
+                  <p className="shrink-0 text-sm text-[var(--color-muted-foreground)]">
                     <span className="font-medium text-[var(--color-foreground)]">
                       {filteredTickets.length}
                     </span>{" "}
-                    ticket
-                    {filteredTickets.length !== 1 ? "s" : ""}
-                  </span>
-                  {costSummary.withCost > 0 && (
-                    <span className="text-[var(--color-muted-foreground)]">
-                      Est. cost (open):{" "}
-                      <span className="font-medium text-[var(--color-foreground)]">
-                        {formatCurrency(costSummary.total)}
-                      </span>
-                      {costSummary.withCost < costSummary.count && (
-                        <span className="ml-1 text-xs">
-                          ({costSummary.count - costSummary.withCost} without estimate)
+                    ticket{filteredTickets.length !== 1 ? "s" : ""}
+                    {costSummary.withCost > 0 && (
+                      <>
+                        {" · "}
+                        Est. cost (open):{" "}
+                        <span className="font-medium text-[var(--color-foreground)]">
+                          {formatCurrency(costSummary.total)}
                         </span>
-                      )}
-                    </span>
-                  )}
-                </div>
-              )}
+                        {costSummary.withCost < costSummary.count && (
+                          <span className="ml-1 text-xs">
+                            ({costSummary.count - costSummary.withCost} without estimate)
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </p>
+                )}
+              </div>
 
               {filteredTickets.length === 0 ? (
                 <EmptyStateIllustration
