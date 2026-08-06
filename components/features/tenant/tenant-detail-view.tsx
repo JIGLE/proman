@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   Users,
   Mail,
@@ -18,7 +19,7 @@ import { cn } from "@/lib/utils/utils";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { useCsrf } from "@/lib/contexts/csrf-context";
 import { useToast } from "@/lib/contexts/toast-context";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsMobileSelect, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,7 +41,18 @@ const PAYMENT_STATUS_VARIANT: Record<string, "default" | "secondary" | "destruct
   overdue: "destructive",
 };
 
+/** Ticket status is snake_case in the schema, camelCase in the `maintenance` catalog. */
+const TICKET_STATUS_KEY = {
+  open: "statusOpen",
+  in_progress: "statusInProgress",
+  resolved: "statusResolved",
+  closed: "statusClosed",
+} as const;
+
 export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
+  const t = useTranslations("tenantDetail");
+  const tStatus = useTranslations("status");
+  const tMaint = useTranslations("maintenance");
   const { state } = useApp();
   const { formatCurrency } = useCurrency();
   const { token: csrfToken } = useCsrf();
@@ -79,10 +91,10 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
   if (!tenant) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-[var(--color-muted-foreground)]">Tenant not found</p>
+        <p className="text-[var(--color-muted-foreground)]">{t("notFound")}</p>
         <Button variant="outline" onClick={() => router.push(`/${locale}/people`)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Tenants
+          {t("backToTenants")}
         </Button>
       </div>
     );
@@ -104,12 +116,12 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
         headers: { "Content-Type": "application/json", "x-csrf-token": csrfToken ?? "" },
         body: JSON.stringify({ sendEmail: false }),
       });
-      if (!res.ok) throw new Error("Failed to generate link");
+      if (!res.ok) throw new Error(t("portalLinkFailed"));
       const { data } = await res.json();
       await navigator.clipboard.writeText(data.portalLink);
-      success("Portal link copied to clipboard");
+      success(t("portalLinkCopied"));
     } catch {
-      error("Could not generate portal link");
+      error(t("portalLinkFailed"));
     }
   };
 
@@ -134,7 +146,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
             </div>
             <div className="flex items-center gap-3 mt-2">
               <Badge variant={PAYMENT_STATUS_VARIANT[tenant.paymentStatus] || "secondary"}>
-                {tenant.paymentStatus}
+                {tStatus(tenant.paymentStatus)}
               </Badge>
               {/* Derived from active lease's monthlyRent */}
               <span className="text-sm font-medium">
@@ -151,7 +163,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
               router.push(buildLocalizedFinancialReviewPath(locale, { tenantId: tenant.id }))
             }
           >
-            <DollarSign className="h-4 w-4 mr-1" /> Review Payments
+            <DollarSign className="h-4 w-4 mr-1" /> {t("reviewPayments")}
           </Button>
           <Button
             variant="outline"
@@ -160,10 +172,10 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
               router.push(`/${locale}/documents?search=${encodeURIComponent(tenant.name)}`)
             }
           >
-            <FileText className="h-4 w-4 mr-1" /> Documents
+            <FileText className="h-4 w-4 mr-1" /> {t("documents")}
           </Button>
           <Button variant="outline" size="sm" onClick={handleCopyPortalLink}>
-            <Link2 className="h-4 w-4 mr-1" /> Portal Link
+            <Link2 className="h-4 w-4 mr-1" /> {t("portalLink")}
           </Button>
           <Button
             variant="outline"
@@ -172,7 +184,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
               window.location.href = `mailto:${tenant.email}`;
             }}
           >
-            <Mail className="h-4 w-4 mr-1" /> Contact
+            <Mail className="h-4 w-4 mr-1" /> {t("contact")}
           </Button>
           <Button
             variant="outline"
@@ -181,7 +193,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
               router.push(withEntityDetail(pathname, searchParams.toString(), "tenant", tenantId))
             }
           >
-            <Edit className="h-4 w-4 mr-1" /> Edit
+            <Edit className="h-4 w-4 mr-1" /> {t("edit")}
           </Button>
         </div>
       </div>
@@ -209,8 +221,8 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           <EntityLink
             type="lease"
             id={activeLease.id}
-            title={`Active Lease`}
-            subtitle={`${formatCurrency(activeLease.monthlyRent)}/mo · Ends ${activeLease.endDate}`}
+            title={t("activeLease")}
+            subtitle={`${formatCurrency(activeLease.monthlyRent)}/mo · ${t("ends", { date: activeLease.endDate })}`}
             status={activeLease.status}
             statusVariant="success"
             variant="full"
@@ -220,15 +232,37 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList>
-          <TabsTrigger value="overview">Overview</TabsTrigger>
+        {/* Five triggers overflowed by 285px at 390px. Doctrine rule 4: select below `md`. */}
+        <TabsMobileSelect
+          className="md:hidden"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          aria-label={t("tabs.overview")}
+          items={[
+            { value: "overview", label: t("tabs.overview") },
+            { value: "lease", label: t("tabs.lease") },
+            {
+              value: "payments",
+              label: t("tabs.payments"),
+              badge: relatedReceipts.length > 0 ? relatedReceipts.length : undefined,
+            },
+            {
+              value: "maintenance",
+              label: t("tabs.maintenance"),
+              badge: openTickets > 0 ? openTickets : undefined,
+            },
+            { value: "messages", label: t("tabs.messages") },
+          ]}
+        />
+        <TabsList className="max-md:hidden">
+          <TabsTrigger value="overview">{t("tabs.overview")}</TabsTrigger>
           <TabsTrigger value="lease" className="flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5" />
-            Lease
+            {t("tabs.lease")}
           </TabsTrigger>
           <TabsTrigger value="payments" className="flex items-center gap-1.5">
             <DollarSign className="h-3.5 w-3.5" />
-            Payments
+            {t("tabs.payments")}
             {relatedReceipts.length > 0 && (
               <span className="ml-1 rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs">
                 {relatedReceipts.length}
@@ -237,7 +271,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           </TabsTrigger>
           <TabsTrigger value="maintenance" className="flex items-center gap-1.5">
             <Wrench className="h-3.5 w-3.5" />
-            Maintenance
+            {t("tabs.maintenance")}
             {openTickets > 0 && (
               <span className="ml-1 rounded-full bg-amber-500/20 text-amber-500 px-2 py-0.5 text-xs">
                 {openTickets}
@@ -246,7 +280,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           </TabsTrigger>
           <TabsTrigger value="messages" className="flex items-center gap-1.5">
             <Mail className="h-3.5 w-3.5" />
-            Messages
+            {t("tabs.messages")}
           </TabsTrigger>
         </TabsList>
 
@@ -255,7 +289,9 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card>
               <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">Monthly Rent</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("monthlyRent")}
+                </div>
                 {/* Derived from active lease's monthlyRent */}
                 <div className="text-2xl font-bold mt-1">
                   {formatCurrency(activeLease?.monthlyRent ?? tenant.rent)}
@@ -264,7 +300,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">Total Paid</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">{t("totalPaid")}</div>
                 <div className="text-2xl font-bold text-green-500 mt-1">
                   {formatCurrency(totalPaid)}
                 </div>
@@ -272,7 +308,9 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">Lease Period</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("leasePeriod")}
+                </div>
                 {/* Derived from active lease's startDate/endDate */}
                 <div className="flex items-center gap-1 mt-1">
                   <Calendar className="h-4 w-4 text-[var(--color-muted-foreground)]" />
@@ -285,7 +323,9 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">Open Tickets</div>
+                <div className="text-sm text-[var(--color-muted-foreground)]">
+                  {t("openTickets")}
+                </div>
                 <div className="text-2xl font-bold text-amber-500 mt-1">{openTickets}</div>
               </CardContent>
             </Card>
@@ -294,7 +334,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           {tenant.notes && (
             <Card>
               <CardHeader>
-                <CardTitle>Notes</CardTitle>
+                <CardTitle>{t("notes")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-[var(--color-muted-foreground)]">{tenant.notes}</p>
@@ -314,8 +354,8 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
                   key={lease.id}
                   type="lease"
                   id={lease.id}
-                  title={`Lease ${lease.id.slice(0, 8)}`}
-                  subtitle={`${formatCurrency(lease.monthlyRent)}/mo · ${lease.startDate} — ${lease.endDate} · Deposit: ${formatCurrency(lease.deposit)}`}
+                  title={`${t("lease")} ${lease.id.slice(0, 8)}`}
+                  subtitle={`${formatCurrency(lease.monthlyRent)}/mo · ${lease.startDate} — ${lease.endDate} · ${t("deposit")}: ${formatCurrency(lease.deposit)}`}
                   status={lease.status}
                   statusVariant={
                     lease.status === "active"
@@ -338,7 +378,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
           ) : (
             <Card>
               <CardHeader>
-                <CardTitle>Payment History</CardTitle>
+                <CardTitle>{t("paymentHistory")}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -357,7 +397,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
                         </div>
                         <div className="flex items-center gap-2">
                           <Badge variant={receipt.status === "paid" ? "default" : "secondary"}>
-                            {receipt.status}
+                            {tStatus(receipt.status)}
                           </Badge>
                           <span
                             className={cn(
@@ -402,7 +442,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
                               : "secondary"
                           }
                         >
-                          {ticket.priority}
+                          {tMaint(ticket.priority)}
                         </Badge>
                         <Badge
                           variant={
@@ -411,7 +451,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
                               : "secondary"
                           }
                         >
-                          {ticket.status}
+                          {tMaint(TICKET_STATUS_KEY[ticket.status])}
                         </Badge>
                       </div>
                     </div>
@@ -445,7 +485,7 @@ export function TenantDetailView({ tenantId }: TenantDetailViewProps) {
                             : "secondary"
                         }
                       >
-                        {msg.status}
+                        {t(`messageStatus.${msg.status}`)}
                       </Badge>
                     </div>
                   </CardContent>

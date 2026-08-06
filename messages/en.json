@@ -1411,5 +1411,38 @@
       "analytics": "Analytics",
       "reports": "Reports"
     }
+  },
+  "tenantDetail": {
+    "reviewPayments": "Review payments",
+    "documents": "Documents",
+    "portalLink": "Portal link",
+    "contact": "Contact",
+    "edit": "Edit",
+    "portalLinkCopied": "Portal link copied to clipboard",
+    "portalLinkFailed": "Could not generate portal link",
+    "activeLease": "Active lease",
+    "ends": "Ends {date}",
+    "lease": "Lease",
+    "deposit": "Deposit",
+    "tabs": {
+      "overview": "Overview",
+      "lease": "Lease",
+      "payments": "Payments",
+      "maintenance": "Maintenance",
+      "messages": "Messages"
+    },
+    "monthlyRent": "Monthly rent",
+    "totalPaid": "Total paid",
+    "leasePeriod": "Lease period",
+    "openTickets": "Open tickets",
+    "notes": "Notes",
+    "paymentHistory": "Payment history",
+    "notFound": "Tenant not found",
+    "backToTenants": "Back to tenants",
+    "messageStatus": {
+      "draft": "Draft",
+      "sent": "Sent",
+      "delivered": "Delivered"
+    }
   }
 }

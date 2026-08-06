@@ -1411,5 +1411,38 @@
       "analytics": "Analítica",
       "reports": "Informes"
     }
+  },
+  "tenantDetail": {
+    "reviewPayments": "Revisar pagos",
+    "documents": "Documentos",
+    "portalLink": "Enlace al portal",
+    "contact": "Contactar",
+    "edit": "Editar",
+    "portalLinkCopied": "Enlace al portal copiado",
+    "portalLinkFailed": "No se pudo generar el enlace al portal",
+    "activeLease": "Contrato activo",
+    "ends": "Termina el {date}",
+    "lease": "Contrato",
+    "deposit": "Fianza",
+    "tabs": {
+      "overview": "Resumen",
+      "lease": "Contrato",
+      "payments": "Pagos",
+      "maintenance": "Mantenimiento",
+      "messages": "Mensajes"
+    },
+    "monthlyRent": "Renta mensual",
+    "totalPaid": "Total pagado",
+    "leasePeriod": "Periodo del contrato",
+    "openTickets": "Incidencias abiertas",
+    "notes": "Notas",
+    "paymentHistory": "Historial de pagos",
+    "notFound": "Inquilino no encontrado",
+    "backToTenants": "Volver a inquilinos",
+    "messageStatus": {
+      "draft": "Borrador",
+      "sent": "Enviado",
+      "delivered": "Entregado"
+    }
   }
 }
