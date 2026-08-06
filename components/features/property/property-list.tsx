@@ -198,6 +198,15 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const [workspacePropertyId, setWorkspacePropertyId] = useState<string | null>(null);
     // The undocked tree, shown while a detail occupies the workspace.
     const [treeFlyoutOpen, setTreeFlyoutOpen] = useState(false);
+    // Re-clicking Portfolio in the sidebar while already here reopens the tree.
+    useEffect(() => {
+      const onReselect = (event: Event) => {
+        const key = (event as CustomEvent<{ key?: string }>).detail?.key;
+        if (key === "properties") setTreeFlyoutOpen(true);
+      };
+      window.addEventListener("situs:nav-reselect", onReselect);
+      return () => window.removeEventListener("situs:nav-reselect", onReselect);
+    }, []);
     // Collapse the tree rail to a dots-only spine (desktop; persisted per device).
     const [railCollapsed, setRailCollapsed] = useState(false);
     useEffect(() => {
@@ -686,10 +695,10 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           maintenance={maintenance}
                           leases={leases}
                           compact
-                          onSelectProperty={(id) => {
-                            handleTreeSelect(id);
-                            setTreeFlyoutOpen(false);
-                          }}
+                          // Deliberately stays open after a selection: at 232px it costs little,
+                          // and leaving it up makes stepping through several assets one click
+                          // each instead of reopening the panel every time.
+                          onSelectProperty={handleTreeSelect}
                           highlightedPropertyId={workspacePropertyId ?? highlightedPropertyId}
                         />
                       </div>

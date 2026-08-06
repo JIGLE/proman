@@ -224,7 +224,19 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                     key={item.key}
                     href={`/${currentLocale}${item.href}`}
                     role="listitem"
-                    onClick={() => onTabChange?.(item.key)}
+                    onClick={() => {
+                      onTabChange?.(item.key);
+                      // Clicking the nav item you are already on is otherwise a no-op, since
+                      // the route does not change. Emit a generic signal so a page can treat
+                      // it as "take me back to this section's index" — Portfolio uses it to
+                      // reopen the asset tree over an open workspace. Pages opt in; nothing
+                      // here knows about any of them.
+                      if (isActive) {
+                        window.dispatchEvent(
+                          new CustomEvent("situs:nav-reselect", { detail: { key: item.key } }),
+                        );
+                      }
+                    }}
                     aria-current={isActive ? "page" : undefined}
                     title={collapsed ? translatedLabel : undefined}
                   >

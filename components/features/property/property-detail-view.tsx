@@ -411,11 +411,16 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   }
 
   return (
-    <div className="space-y-6">
+    // `@container`: this view renders at two very different widths — inside the portfolio
+    // workspace (~1100px on a 1440px window, narrower still while the rail was docked) and as a
+    // full-width page at /portfolio/[id]. Viewport breakpoints cannot tell those apart, so a
+    // wide window with a narrow workspace still fired `lg:` and laid out three columns in a
+    // space that could not hold them. Every layout breakpoint below is a container query, so
+    // the detail responds to the room it actually has.
+    <div className="@container space-y-6">
       {/* Edit property — own instance of the shared create/edit form */}
       <PropertyFormDialog ref={editFormDialogRef} />
 
-      {/* Quick-action overlay: Review Payments — scoped ReceiptsView, stays on this page */}
       {/* Quick-action overlay: Documents — scoped DocumentsView, stays on this page */}
       <Sheet open={documentsOpen} onOpenChange={setDocumentsOpen}>
         <SheetContent side="center" className="p-0">
@@ -451,7 +456,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
 
       {/* Header */}
       <div className="flex flex-col gap-4 sticky top-0 z-20 bg-[var(--color-card-solid)]/95 backdrop-blur-sm">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex flex-col gap-4 @lg:flex-row @lg:items-start @lg:justify-between">
           <div className="flex items-start gap-4">
             <div className="p-3 lg:p-4 bg-[var(--color-info-muted)]">
               <Building2 className="h-8 w-8 lg:h-10 lg:w-10 text-[var(--color-info)]" />
@@ -932,9 +937,9 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 @3xl:grid-cols-3">
             {/* Property Info */}
-            <Card className="lg:col-span-2">
+            <Card className="@3xl:col-span-2">
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
                 <CardTitle>{t("propertyDetails")}</CardTitle>
                 {/* Edit sits with the fields it edits rather than in a global action bar. */}
@@ -1257,7 +1262,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
           {/* P&L row — the same `panel` + mono-label + light tabular treatment the rest of the
               app uses. These were four bordered Cards at text-2xl/bold, which shouted louder
               than the transactions they summarise. */}
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 @2xl:grid-cols-4">
             <div className="panel p-3">
               <p className="mono-label">{t("finance.totalRevenue")}</p>
               <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-success)]">

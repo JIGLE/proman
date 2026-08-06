@@ -305,7 +305,7 @@ export function PortfolioTree({
                         className={cn(
                           "flex w-full items-center gap-2 border-l-2 border-transparent text-left transition-colors hover:bg-[var(--color-hover)] max-md:min-h-11",
                           rowPad,
-                          collapsed ? "justify-center px-0" : "px-2 pl-7",
+                          collapsed ? "justify-center px-0" : compact ? "px-2 pl-4" : "px-2 pl-7",
                         )}
                         title={collapsed ? cluster.label : undefined}
                       >
@@ -347,9 +347,12 @@ export function PortfolioTree({
                                 collapsed
                                   ? "justify-center gap-1 px-0"
                                   : compact
-                                    ? // Shallower indent: with no address or rent competing for
-                                      // the row, the nesting no longer needs 48px to read.
-                                      "gap-2 px-2 pl-6"
+                                    ? // Asset labels sit under their group's label, matching the
+                                      // docked tree's relationship. The first pass used pl-6,
+                                      // which put assets *left* of the group heading above them
+                                      // and broke the hierarchy. Group is pl-4 + chevron + gap,
+                                      // so its text lands at ~36px — hence pl-9 here.
+                                      "gap-2 px-2 pl-9"
                                     : "gap-2.5 px-2 pl-12",
                                 highlighted
                                   ? "border-[var(--country-highlight-readable)] bg-[var(--color-hover)]"
