@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { debounce } from "./debounce";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { Input } from "./input";
@@ -40,6 +41,7 @@ export function SearchFilter({
   className,
   showClearButton = true,
 }: SearchFilterProps): React.ReactElement {
+  const tActions = useTranslations("actions");
   const [searchValue, setSearchValue] = useState("");
 
   // Debounced search handler
@@ -171,7 +173,7 @@ export function SearchFilter({
               data-testid="filters-popover-trigger"
             >
               <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
-              Filters
+              {tActions("filter")}
               {activeCount > 0 && (
                 <span className="bg-[var(--color-popover)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums">
                   {activeCount}

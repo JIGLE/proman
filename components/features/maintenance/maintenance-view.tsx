@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Plus, AlertCircle, Clock, CheckCircle, XCircle, MoreVertical, User } from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
 import {
@@ -52,7 +53,6 @@ import { MaintenanceTicket } from "@/lib/types";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { useSortableData } from "@/lib/hooks/use-sortable-data";
-import { cn } from "@/lib/utils/utils";
 import { MaintenanceStatus, MaintenancePriority } from "@/lib/types";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
@@ -66,7 +66,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { ListChecks, CalendarDays, Wrench as WrenchIcon, Camera } from "lucide-react";
 
+/** Ticket status is stored snake_case; the catalog keys it camelCase under `maintenance`. */
+const STATUS_LABEL_KEY = {
+  open: "statusOpen",
+  in_progress: "statusInProgress",
+  resolved: "statusResolved",
+  closed: "statusClosed",
+} as const;
+
 export function MaintenanceView(): React.ReactElement {
+  const t = useTranslations("maintenance");
   const { state, addMaintenance, updateMaintenance, deleteMaintenance } = useApp();
   const { properties, maintenance, loading } = state;
   const { success, error } = useToast();
@@ -121,10 +130,10 @@ export function MaintenanceView(): React.ReactElement {
     onSubmit: async (data, isEdit) => {
       if (isEdit && dialog.editingItem) {
         await updateMaintenance(dialog.editingItem.id, data);
-        success("Maintenance ticket updated successfully");
+        success(t("toastUpdated"));
       } else {
         await addMaintenance(data);
-        success("Maintenance ticket created successfully");
+        success(t("toastCreated"));
       }
     },
     onError: (errorMessage) => {
@@ -198,18 +207,18 @@ export function MaintenanceView(): React.ReactElement {
     async (ticket: MaintenanceTicket) => {
       confirmDialog.confirm(
         {
-          title: "Delete Ticket",
-          description: `"${ticket.title}" will be permanently removed. This action cannot be undone.`,
-          confirmLabel: "Delete",
+          title: t("deleteTitle"),
+          description: t("deleteConfirm", { title: ticket.title }),
+          confirmLabel: t("delete"),
           variant: "destructive",
         },
         async () => {
           await deleteMaintenance(ticket.id);
-          success(`Ticket "${ticket.title}" deleted`);
+          success(t("toastDeleted", { title: ticket.title }));
         },
       );
     },
-    [deleteMaintenance, success, confirmDialog],
+    [deleteMaintenance, success, confirmDialog, t],
   );
 
   const handleUpdateStatus = useCallback(
@@ -257,54 +266,55 @@ export function MaintenanceView(): React.ReactElement {
         <LoadingState variant="cards" count={6} />
       ) : (
         <div className="space-y-6">
-          <PageHeader
-            title="Operations"
-            description="Work orders, inspections, and contractor management"
-          >
+          <PageHeader title={t("operationsTitle")} description={t("operationsSubtitle")}>
             <ExportButton
               data={sortedTickets}
               filename="maintenance"
               columns={[
-                { key: "title", label: "Title" },
-                { key: "description", label: "Description" },
+                { key: "title", label: t("fieldTitle") },
+                { key: "description", label: t("fieldDescription") },
                 {
                   key: "propertyId",
-                  label: "Property",
-                  format: (value) => properties.find((p) => p.id === value)?.name || "Unknown",
+                  label: t("fieldProperty"),
+                  format: (value) => properties.find((p) => p.id === value)?.name || t("unknown"),
                 },
-                { key: "status", label: "Status" },
-                { key: "priority", label: "Priority" },
+                { key: "status", label: t("fieldStatus") },
+                { key: "priority", label: t("priority") },
                 {
                   key: "cost",
-                  label: "Cost",
-                  format: (value) => (value ? formatCurrency(value as number) : "Not set"),
+                  label: t("fieldCost"),
+                  format: (value) => (value ? formatCurrency(value as number) : t("notSet")),
                 },
-                { key: "vendorName", label: "Vendor", format: (value) => (value as string) || "—" },
+                {
+                  key: "vendorName",
+                  label: t("fieldVendor"),
+                  format: (value) => (value as string) || "—",
+                },
               ]}
             />
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogTrigger asChild>
                 <Button onClick={dialog.openDialog} className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
-                  New Ticket
+                  {t("newTicket")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                   <DialogTitle>
-                    {dialog.editingItem ? "Edit Maintenance Ticket" : "Create Maintenance Ticket"}
+                    {dialog.editingItem ? t("editTicket") : t("createTicket")}
                   </DialogTitle>
-                  <DialogDescription>Submit a new maintenance request</DialogDescription>
+                  <DialogDescription>{t("dialogDescription")}</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={dialog.handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
+                    <Label htmlFor="title">{t("fieldTitle")}</Label>
                     <Input
                       id="title"
                       value={dialog.formData.title}
                       onChange={(e) => dialog.updateFormData({ title: e.target.value })}
                       className={dialog.formErrors.title ? "border-red-500" : ""}
-                      placeholder="e.g. Leaking faucet"
+                      placeholder={t("titlePlaceholder")}
                     />
                     {dialog.formErrors.title && (
                       <p className="text-sm text-destructive">{dialog.formErrors.title}</p>
@@ -313,7 +323,7 @@ export function MaintenanceView(): React.ReactElement {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="property">Property</Label>
+                      <Label htmlFor="property">{t("fieldProperty")}</Label>
                       <Select
                         value={dialog.formData.propertyId}
                         onValueChange={(val) => dialog.updateFormData({ propertyId: val })}
@@ -322,7 +332,7 @@ export function MaintenanceView(): React.ReactElement {
                           id="property"
                           className={dialog.formErrors.propertyId ? "border-red-500" : ""}
                         >
-                          <SelectValue placeholder="Select property" />
+                          <SelectValue placeholder={t("selectProperty")} />
                         </SelectTrigger>
                         <SelectContent>
                           {properties.map((p) => (
@@ -337,7 +347,7 @@ export function MaintenanceView(): React.ReactElement {
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="priority">Priority</Label>
+                      <Label htmlFor="priority">{t("priority")}</Label>
                       <Select
                         value={dialog.formData.priority}
                         onValueChange={(val) =>
@@ -347,20 +357,20 @@ export function MaintenanceView(): React.ReactElement {
                         }
                       >
                         <SelectTrigger id="priority">
-                          <SelectValue placeholder="Priority" />
+                          <SelectValue placeholder={t("priority")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
+                          <SelectItem value="low">{t("low")}</SelectItem>
+                          <SelectItem value="medium">{t("medium")}</SelectItem>
+                          <SelectItem value="high">{t("high")}</SelectItem>
+                          <SelectItem value="urgent">{t("urgent")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
+                    <Label htmlFor="category">{t("category")}</Label>
                     <Select
                       value={dialog.formData.category ?? ""}
                       onValueChange={(val) =>
@@ -370,7 +380,7 @@ export function MaintenanceView(): React.ReactElement {
                       }
                     >
                       <SelectTrigger id="category">
-                        <SelectValue placeholder="Select category (optional)" />
+                        <SelectValue placeholder={t("selectCategory")} />
                       </SelectTrigger>
                       <SelectContent>
                         {MAINTENANCE_CATEGORIES.map((cat) => (
@@ -383,13 +393,13 @@ export function MaintenanceView(): React.ReactElement {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">{t("fieldDescription")}</Label>
                     <Textarea
                       id="description"
                       value={dialog.formData.description}
                       onChange={(e) => dialog.updateFormData({ description: e.target.value })}
                       className={dialog.formErrors.description ? "border-red-500" : ""}
-                      placeholder="Detailed description of the issue..."
+                      placeholder={t("descriptionPlaceholder")}
                       rows={4}
                     />
                     {dialog.formErrors.description && (
@@ -399,18 +409,18 @@ export function MaintenanceView(): React.ReactElement {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="vendorName">Vendor / Contractor</Label>
+                      <Label htmlFor="vendorName">{t("vendorContractor")}</Label>
                       <Input
                         id="vendorName"
                         value={dialog.formData.vendorName || ""}
                         onChange={(e) =>
                           dialog.updateFormData({ vendorName: e.target.value || undefined })
                         }
-                        placeholder="Contractor or staff name"
+                        placeholder={t("vendorPlaceholder")}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="vendorPhone">Vendor Phone</Label>
+                      <Label htmlFor="vendorPhone">{t("vendorPhone")}</Label>
                       <Input
                         id="vendorPhone"
                         value={dialog.formData.vendorPhone || ""}
@@ -439,7 +449,7 @@ export function MaintenanceView(): React.ReactElement {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="invoiceRef">Invoice Ref</Label>
+                      <Label htmlFor="invoiceRef">{t("invoiceRef")}</Label>
                       <Input
                         id="invoiceRef"
                         value={dialog.formData.invoiceRef || ""}
@@ -453,7 +463,7 @@ export function MaintenanceView(): React.ReactElement {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="scheduledDate">Scheduled Date</Label>
+                      <Label htmlFor="scheduledDate">{t("scheduledDate")}</Label>
                       <Input
                         id="scheduledDate"
                         type="date"
@@ -464,7 +474,7 @@ export function MaintenanceView(): React.ReactElement {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="dueDate">Due Date</Label>
+                      <Label htmlFor="dueDate">{t("dueDate")}</Label>
                       <Input
                         id="dueDate"
                         type="date"
@@ -481,7 +491,7 @@ export function MaintenanceView(): React.ReactElement {
                       Cancel
                     </Button>
                     <Button type="submit" loading={dialog.isSubmitting}>
-                      {dialog.editingItem ? "Update Ticket" : "Create Ticket"}
+                      {dialog.editingItem ? t("updateTicket") : t("createTicket")}
                     </Button>
                   </div>
                 </form>
@@ -497,19 +507,19 @@ export function MaintenanceView(): React.ReactElement {
             <TabsList className="overflow-x-auto">
               <TabsTrigger value="queue" className="flex items-center gap-1.5">
                 <ListChecks className="h-3.5 w-3.5" />
-                Task Queue
+                {t("tabs.queue")}
               </TabsTrigger>
               <TabsTrigger value="calendar" className="flex items-center gap-1.5">
                 <CalendarDays className="h-3.5 w-3.5" />
-                Calendar
+                {t("tabs.calendar")}
               </TabsTrigger>
               <TabsTrigger value="contractors" className="flex items-center gap-1.5">
                 <WrenchIcon className="h-3.5 w-3.5" />
-                Contractors
+                {t("tabs.contractors")}
               </TabsTrigger>
               <TabsTrigger value="evidence" className="flex items-center gap-1.5">
                 <Camera className="h-3.5 w-3.5" />
-                Evidence
+                {t("tabs.evidence")}
               </TabsTrigger>
             </TabsList>
 
@@ -536,7 +546,7 @@ export function MaintenanceView(): React.ReactElement {
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <SearchFilter
                   className="flex-1"
-                  searchPlaceholder="Search by title, description, or assignee..."
+                  searchPlaceholder={t("searchPlaceholder")}
                   onSearchChange={setSearchQuery}
                   onFilterChange={(key, value) => {
                     if (key === "status") setStatusFilter(value);
@@ -546,33 +556,33 @@ export function MaintenanceView(): React.ReactElement {
                   filters={[
                     {
                       key: "status",
-                      label: "Status",
+                      label: t("fieldStatus"),
                       options: [
-                        { label: "All Statuses", value: "all" },
-                        { label: "Open", value: "open" },
-                        { label: "In Progress", value: "in_progress" },
-                        { label: "Resolved", value: "resolved" },
-                        { label: "Closed", value: "closed" },
+                        { label: t("allStatuses"), value: "all" },
+                        { label: t("statusOpen"), value: "open" },
+                        { label: t("statusInProgress"), value: "in_progress" },
+                        { label: t("statusResolved"), value: "resolved" },
+                        { label: t("statusClosed"), value: "closed" },
                       ],
                       defaultValue: "all",
                     },
                     {
                       key: "priority",
-                      label: "Priority",
+                      label: t("priority"),
                       options: [
-                        { label: "All Priorities", value: "all" },
-                        { label: "Low", value: "low" },
-                        { label: "Medium", value: "medium" },
-                        { label: "High", value: "high" },
-                        { label: "Urgent", value: "urgent" },
+                        { label: t("allPriorities"), value: "all" },
+                        { label: t("low"), value: "low" },
+                        { label: t("medium"), value: "medium" },
+                        { label: t("high"), value: "high" },
+                        { label: t("urgent"), value: "urgent" },
                       ],
                       defaultValue: "all",
                     },
                     {
                       key: "category",
-                      label: "Category",
+                      label: t("category"),
                       options: [
-                        { label: "All Categories", value: "all" },
+                        { label: t("allCategories"), value: "all" },
                         ...MAINTENANCE_CATEGORIES.map((cat) => ({
                           label: cat.charAt(0).toUpperCase() + cat.slice(1),
                           value: cat,
@@ -591,17 +601,19 @@ export function MaintenanceView(): React.ReactElement {
                     <span className="font-medium text-[var(--color-foreground)]">
                       {filteredTickets.length}
                     </span>{" "}
-                    ticket{filteredTickets.length !== 1 ? "s" : ""}
+                    {t("ticketCountLabel", { count: filteredTickets.length })}
                     {costSummary.withCost > 0 && (
                       <>
                         {" · "}
-                        Est. cost (open):{" "}
+                        {t("estCostOpen")}{" "}
                         <span className="font-medium text-[var(--color-foreground)]">
                           {formatCurrency(costSummary.total)}
                         </span>
                         {costSummary.withCost < costSummary.count && (
                           <span className="ml-1 text-xs">
-                            ({costSummary.count - costSummary.withCost} without estimate)
+                            {t("withoutEstimate", {
+                              count: costSummary.count - costSummary.withCost,
+                            })}
                           </span>
                         )}
                       </>
@@ -613,10 +625,8 @@ export function MaintenanceView(): React.ReactElement {
               {filteredTickets.length === 0 ? (
                 <EmptyStateIllustration
                   type={maintenance.length === 0 ? "maintenance" : "generic"}
-                  title={maintenance.length === 0 ? undefined : "No tickets found"}
-                  description={
-                    maintenance.length === 0 ? undefined : "Try adjusting your search or filters"
-                  }
+                  title={maintenance.length === 0 ? undefined : t("emptyFiltered")}
+                  description={maintenance.length === 0 ? undefined : t("emptyFilteredHint")}
                   onAction={maintenance.length === 0 ? dialog.openDialog : undefined}
                 />
               ) : (
@@ -627,18 +637,18 @@ export function MaintenanceView(): React.ReactElement {
                         <TableHead className="text-[var(--color-muted-foreground)]">
                           <SortableHeader
                             sortKey="title"
-                            label="Title"
+                            label={t("fieldTitle")}
                             currentSort={getSortDirection("title")}
                             onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
                           />
                         </TableHead>
                         <TableHead className="text-[var(--color-muted-foreground)]">
-                          Property
+                          {t("fieldProperty")}
                         </TableHead>
                         <TableHead className="text-[var(--color-muted-foreground)]">
                           <SortableHeader
                             sortKey="priority"
-                            label="Priority"
+                            label={t("priority")}
                             currentSort={getSortDirection("priority")}
                             onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
                           />
@@ -646,19 +656,19 @@ export function MaintenanceView(): React.ReactElement {
                         <TableHead className="text-[var(--color-muted-foreground)]">
                           <SortableHeader
                             sortKey="status"
-                            label="Status"
+                            label={t("fieldStatus")}
                             currentSort={getSortDirection("status")}
                             onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
                           />
                         </TableHead>
                         <TableHead className="text-[var(--color-muted-foreground)]">
-                          Created
+                          {t("fieldCreated")}
                         </TableHead>
                         <TableHead className="text-[var(--color-muted-foreground)]">
-                          Vendor
+                          {t("fieldVendor")}
                         </TableHead>
                         <TableHead className="text-[var(--color-muted-foreground)]">
-                          Scheduled
+                          {t("fieldScheduled")}
                         </TableHead>
                         <TableHead className="text-[var(--color-muted-foreground)] w-10"></TableHead>
                       </TableRow>
@@ -677,20 +687,17 @@ export function MaintenanceView(): React.ReactElement {
                             {ticket.title}
                           </TableCell>
                           <TableCell className="text-sm text-[var(--color-muted-foreground)]">
-                            {ticket.propertyName || "Unknown"}
+                            {ticket.propertyName || t("unknown")}
                           </TableCell>
                           <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={cn("capitalize", getPriorityColor(ticket.priority))}
-                            >
-                              {ticket.priority}
+                            <Badge variant="outline" className={getPriorityColor(ticket.priority)}>
+                              {t(ticket.priority)}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
                               {getStatusIcon(ticket.status)}
-                              <span className="capitalize">{ticket.status.replace("_", " ")}</span>
+                              <span>{t(STATUS_LABEL_KEY[ticket.status])}</span>
                             </div>
                           </TableCell>
                           <TableCell className="text-sm text-[var(--color-muted-foreground)]">
@@ -716,7 +723,7 @@ export function MaintenanceView(): React.ReactElement {
                                   variant="ghost"
                                   size="icon"
                                   className="h-8 w-8"
-                                  aria-label="Ticket options"
+                                  aria-label={t("ticketOptions")}
                                 >
                                   <MoreVertical className="w-4 h-4" aria-hidden="true" />
                                 </Button>
@@ -739,7 +746,7 @@ export function MaintenanceView(): React.ReactElement {
                                     }
                                   >
                                     <SelectTrigger className="border-0 bg-transparent h-auto px-2 py-1.5 text-[var(--color-foreground)] shadow-none focus:ring-0">
-                                      <SelectValue placeholder="Update Status" />
+                                      <SelectValue placeholder={t("updateStatus")} />
                                     </SelectTrigger>
                                     <SelectContent>
                                       <SelectItem value="open">Open</SelectItem>

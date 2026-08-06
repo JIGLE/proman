@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { Lightbulb, BarChart3, FileText } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
@@ -17,30 +18,29 @@ import { ReportsView } from "@/components/features/report/reports-view";
  * being duplicated here.
  */
 export function IntelligenceView(): React.ReactElement {
+  const t = useTranslations("intelligence");
   const [activeTab, setActiveTab] = useTabPersistence("intelligence", "overview");
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold text-[var(--color-foreground)]">Intelligence</h1>
-        <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-          Portfolio insights, deep analytics, and exportable reports in one place.
-        </p>
+        <h1 className="text-3xl font-bold text-[var(--color-foreground)]">{t("title")}</h1>
+        <p className="text-sm text-[var(--color-muted-foreground)] mt-1">{t("subtitle")}</p>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="overflow-x-auto">
           <TabsTrigger value="overview" className="flex items-center gap-1.5">
             <Lightbulb className="h-3.5 w-3.5" />
-            Overview
+            {t("tabs.overview")}
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-1.5">
             <BarChart3 className="h-3.5 w-3.5" />
-            Analytics
+            {t("tabs.analytics")}
           </TabsTrigger>
           <TabsTrigger value="reports" className="flex items-center gap-1.5">
             <FileText className="h-3.5 w-3.5" />
-            Reports
+            {t("tabs.reports")}
           </TabsTrigger>
         </TabsList>
 
