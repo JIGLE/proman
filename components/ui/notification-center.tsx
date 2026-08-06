@@ -184,7 +184,12 @@ function NotificationItem({
             {notification.title}
           </p>
           {notification.priority !== "low" && (
-            <Badge className={cn("text-[10px] px-1.5 py-0", priorityColors[notification.priority])}>
+            <Badge
+              className={cn(
+                "text-[12px] md:text-[10px] px-1.5 py-0",
+                priorityColors[notification.priority],
+              )}
+            >
               {t(`priority.${notification.priority}`)}
             </Badge>
           )}
@@ -192,7 +197,7 @@ function NotificationItem({
         <p className="text-xs text-[var(--color-muted-foreground)] line-clamp-2">
           {notification.message}
         </p>
-        <p className="text-[10px] text-[var(--color-muted-foreground)]">
+        <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)]">
           {formatRelativeTime(notification.timestamp, t)}
         </p>
       </div>
@@ -277,7 +282,7 @@ export function NotificationCenter({
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[12px] md:text-[10px] font-bold text-destructive-foreground">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}

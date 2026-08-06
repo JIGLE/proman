@@ -111,7 +111,7 @@ export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }
                 >
                   <span className="text-3xl leading-none">{locale.flag}</span>
                   <span className="text-xs font-semibold text-zinc-50">{locale.name}</span>
-                  <span className="text-[10px] text-zinc-400 group-hover:text-zinc-300">
+                  <span className="text-[12px] md:text-[10px] text-zinc-400 group-hover:text-zinc-300">
                     {locale.greeting}
                   </span>
                 </motion.button>

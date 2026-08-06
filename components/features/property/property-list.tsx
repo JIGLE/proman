@@ -631,7 +631,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           aria-pressed={attentionOnly}
                           title="Show only assets needing attention"
                           className={cn(
-                            "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 border px-2.5 font-mono text-[10px] uppercase tracking-[0.06em] transition-colors max-md:min-h-11 max-md:min-w-11",
+                            "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 border px-2.5 font-mono text-[12px] md:text-[10px] uppercase tracking-[0.06em] transition-colors max-md:min-h-11 max-md:min-w-11",
                             attentionOnly
                               ? "border-[var(--semantic-danger)] bg-[var(--semantic-danger-soft)] text-[var(--semantic-danger)]"
                               : "border-[var(--color-border)] text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]",
@@ -1054,7 +1054,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                         </span>
                                         {property.status === "vacant" &&
                                           Number(property.rent) > 0 && (
-                                            <span className="text-[10px] text-[var(--color-destructive)]/70">
+                                            <span className="text-[12px] md:text-[10px] text-[var(--color-destructive)]/70">
                                               −{formatCurrency(Number(property.rent))}/mo vacant
                                             </span>
                                           )}
@@ -1069,7 +1069,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                                           if (action.urgency === "ok") return null;
                                           return (
                                             <span
-                                              className={`mt-0.5 w-fit border px-1.5 py-0.5 text-[10px] font-medium leading-none ${nextActionStyles[action.urgency]}`}
+                                              className={`mt-0.5 w-fit border px-1.5 py-0.5 text-[12px] md:text-[10px] font-medium leading-none ${nextActionStyles[action.urgency]}`}
                                             >
                                               {tNextAction(
                                                 action.labelKey as Parameters<

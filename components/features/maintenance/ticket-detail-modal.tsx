@@ -297,17 +297,17 @@ export function TicketDetailModal({
                   </DialogDescription>
                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     <span
-                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${STATUS_COLORS[ticket.status] ?? STATUS_COLORS.open}`}
+                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[12px] md:text-[10px] font-semibold uppercase tracking-wide ${STATUS_COLORS[ticket.status] ?? STATUS_COLORS.open}`}
                     >
                       {ticket.status.replace("_", " ")}
                     </span>
                     <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${PRIORITY_COLORS[ticket.priority] ?? ""}`}
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[12px] md:text-[10px] font-semibold ${PRIORITY_COLORS[ticket.priority] ?? ""}`}
                     >
                       {ticket.priority}
                     </span>
                     {ticket.category && (
-                      <Badge variant="outline" className="text-[10px] py-0">
+                      <Badge variant="outline" className="text-[12px] md:text-[10px] py-0">
                         {ticket.category}
                       </Badge>
                     )}
@@ -388,7 +388,7 @@ export function TicketDetailModal({
                   <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
                     <Building2 className="h-4 w-4 shrink-0 text-accent-primary" />
                     <div className="min-w-0">
-                      <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                      <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
                         Property
                       </p>
                       <p className="text-sm font-medium truncate">{ticket.propertyName}</p>
@@ -399,7 +399,7 @@ export function TicketDetailModal({
                   <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
                     <User className="h-4 w-4 shrink-0 text-accent-primary" />
                     <div className="min-w-0">
-                      <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                      <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
                         Tenant
                       </p>
                       <p className="text-sm font-medium truncate">{ticket.tenantName}</p>
@@ -410,7 +410,7 @@ export function TicketDetailModal({
 
               {/* Description */}
               <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
-                <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-1">
+                <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-1">
                   Description
                 </p>
                 <p className="text-sm text-[var(--color-foreground)]">{ticket.description}</p>
@@ -419,7 +419,7 @@ export function TicketDetailModal({
               {/* Vendor */}
               {vendorDisplay && (
                 <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
-                  <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
+                  <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
                     Vendor / Contractor
                   </p>
                   <div className="flex items-center gap-2">
@@ -443,7 +443,7 @@ export function TicketDetailModal({
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-[var(--color-muted-foreground)]" />
                     <div>
-                      <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                      <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
                         Scheduled
                       </p>
                       <p className="font-medium">{formatDate(ticket.scheduledDate)}</p>
@@ -456,7 +456,7 @@ export function TicketDetailModal({
                       className={`h-4 w-4 ${isOverdue ? "text-[var(--color-destructive)]" : "text-[var(--color-muted-foreground)]"}`}
                     />
                     <div>
-                      <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                      <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
                         Due
                       </p>
                       <p

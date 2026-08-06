@@ -112,13 +112,13 @@ export function DocumentDetailPanel({ documentId }: { documentId: string }) {
 
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div>
-          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
             Size
           </p>
           <p className="mt-0.5 text-[var(--color-foreground)]">{formatFileSize(doc.fileSize)}</p>
         </div>
         <div>
-          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
             Uploaded
           </p>
           <p className="mt-0.5 text-[var(--color-foreground)]">
@@ -129,7 +129,7 @@ export function DocumentDetailPanel({ documentId }: { documentId: string }) {
 
       {doc.description && (
         <div>
-          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-1">
+          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-1">
             Description
           </p>
           <p className="text-sm text-[var(--color-foreground)]">{doc.description}</p>
@@ -138,7 +138,7 @@ export function DocumentDetailPanel({ documentId }: { documentId: string }) {
 
       {(doc.propertyId || doc.tenantId || doc.ownerId) && (
         <div>
-          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
+          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
             Linked to
           </p>
           <div className="grid gap-2 sm:grid-cols-2">

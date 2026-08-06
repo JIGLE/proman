@@ -89,7 +89,7 @@ export function DemoBanner() {
           <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
           {!collapsed && <span className="truncate">{t("demo.banner")}</span>}
           {collapsed && (
-            <span className="text-[10px] font-mono tabular-nums">
+            <span className="text-[12px] md:text-[10px] font-mono tabular-nums">
               <Timer className="h-3 w-3 inline mr-1" />
               {formatTime(remaining)}
             </span>
@@ -103,7 +103,7 @@ export function DemoBanner() {
               <div className="inline-flex items-center gap-1 rounded bg-black/10 p-0.5">
                 <button
                   onClick={() => switchDemoPerspective("owner")}
-                  className={`rounded px-2 py-0.5 text-[10px] font-semibold transition-colors ${
+                  className={`rounded px-2 py-0.5 text-[12px] md:text-[10px] font-semibold transition-colors ${
                     demoPerspective === "owner" ? "bg-black/20" : ""
                   }`}
                 >
@@ -111,7 +111,7 @@ export function DemoBanner() {
                 </button>
                 <button
                   onClick={() => switchDemoPerspective("tenant")}
-                  className={`rounded px-2 py-0.5 text-[10px] font-semibold transition-colors ${
+                  className={`rounded px-2 py-0.5 text-[12px] md:text-[10px] font-semibold transition-colors ${
                     demoPerspective === "tenant" ? "bg-black/20" : ""
                   }`}
                 >
@@ -121,7 +121,7 @@ export function DemoBanner() {
 
               {/* Session timer */}
               <span
-                className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-mono tabular-nums ${
+                className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[12px] md:text-[10px] font-mono tabular-nums ${
                   isLowTime
                     ? "bg-rose-950/40 text-rose-50 animate-pulse"
                     : "bg-black/10 text-amber-950 dark:text-amber-50"
@@ -136,7 +136,7 @@ export function DemoBanner() {
               {isLowTime && (
                 <button
                   onClick={handleExtend}
-                  className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-black/20 hover:bg-black/30 transition-colors"
+                  className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[12px] md:text-[10px] font-semibold bg-black/20 hover:bg-black/30 transition-colors"
                   title="Extend demo by 15 minutes"
                 >
                   +15 min
@@ -146,7 +146,7 @@ export function DemoBanner() {
               {/* Reset Demo */}
               <button
                 onClick={handleReset}
-                className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[10px] font-semibold bg-black/10 hover:bg-black/20 transition-colors"
+                className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[12px] md:text-[10px] font-semibold bg-black/10 hover:bg-black/20 transition-colors"
                 title="Reset demo data to defaults"
               >
                 <RotateCcw className="h-3 w-3" />
@@ -156,7 +156,7 @@ export function DemoBanner() {
               {/* Exit Demo */}
               <button
                 onClick={exitDemo}
-                className="inline-flex items-center gap-1 rounded-md bg-black/15 px-2.5 py-0.5 text-[10px] font-semibold hover:bg-black/25 transition-colors"
+                className="inline-flex items-center gap-1 rounded-md bg-black/15 px-2.5 py-0.5 text-[12px] md:text-[10px] font-semibold hover:bg-black/25 transition-colors"
               >
                 <LogOut className="h-3 w-3" />
                 {t("demo.exitButton")}
@@ -185,7 +185,7 @@ export function DemoBanner() {
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={handleExtend}
-              className="inline-flex items-center gap-1 rounded px-2.5 py-0.5 text-[10px] font-semibold bg-white/20 hover:bg-white/30 transition-colors"
+              className="inline-flex items-center gap-1 rounded px-2.5 py-0.5 text-[12px] md:text-[10px] font-semibold bg-white/20 hover:bg-white/30 transition-colors"
             >
               Extend 15 min
             </button>

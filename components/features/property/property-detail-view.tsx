@@ -942,7 +942,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <DollarSign className="h-3.5 w-3.5" />
             {t("tabs.money")}
             {totalRevenue > 0 && (
-              <span className="ml-1 bg-[var(--color-popover)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
+              <span className="ml-1 bg-[var(--color-popover)] px-1.5 py-0.5 font-mono text-[12px] md:text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
                 {formatCurrency(totalRevenue)}
               </span>
             )}
@@ -951,7 +951,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <Wrench className="h-3.5 w-3.5" />
             {t("tabs.operations")}
             {openTickets > 0 && (
-              <span className="ml-1 bg-[var(--color-warning-muted)] text-[var(--color-warning)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums">
+              <span className="ml-1 bg-[var(--color-warning-muted)] text-[var(--color-warning)] px-1.5 py-0.5 font-mono text-[12px] md:text-[10px] tabular-nums">
                 {openTickets}
               </span>
             )}
@@ -960,7 +960,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             <FileText className="h-3.5 w-3.5" />
             {t("actions.documents")}
             {propertyDocuments.length > 0 && (
-              <span className="ml-1 bg-[var(--color-popover)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
+              <span className="ml-1 bg-[var(--color-popover)] px-1.5 py-0.5 font-mono text-[12px] md:text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
                 {propertyDocuments.length}
               </span>
             )}
@@ -1468,7 +1468,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                   <div key={type} className="space-y-2">
                     <div className="flex items-baseline justify-between gap-2 border-b border-[var(--color-border)] pb-1.5">
                       <h3 className="mono-label">{documentTypeLabel(type)}</h3>
-                      <span className="font-mono text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
+                      <span className="font-mono text-[12px] md:text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
                         {docs.length}
                       </span>
                     </div>
@@ -1480,7 +1480,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                         <span className="truncate text-[var(--color-foreground)]" title={doc.name}>
                           {doc.name}
                         </span>
-                        <span className="shrink-0 font-mono text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
+                        <span className="shrink-0 font-mono text-[12px] md:text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
                           {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString() : "—"}
                         </span>
                       </div>

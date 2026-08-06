@@ -104,7 +104,7 @@ export function OperationsCalendar({ tickets, onTicketClick }: OperationsCalenda
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
           <div
             key={d}
-            className="bg-[var(--color-surface)] px-2 py-1.5 text-center text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]"
+            className="bg-[var(--color-surface)] px-2 py-1.5 text-center text-[12px] md:text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]"
           >
             {d}
           </div>
@@ -126,14 +126,14 @@ export function OperationsCalendar({ tickets, onTicketClick }: OperationsCalenda
                     <button
                       key={`${entry.ticket.id}-${entry.kind}-${i}`}
                       onClick={() => onTicketClick?.(entry.ticket)}
-                      className="flex w-full items-center gap-1 truncate text-left text-[10px] text-[var(--color-foreground)] hover:underline"
+                      className="flex w-full items-center gap-1 truncate text-left text-[12px] md:text-[10px] text-[var(--color-foreground)] hover:underline"
                     >
                       <span className={KIND_DOT_CLASS[entry.kind]} />
                       <span className="truncate">{entry.ticket.title}</span>
                     </button>
                   ))}
                   {cell.entries.length > 3 && (
-                    <p className="text-[10px] text-[var(--color-muted-foreground)]">
+                    <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)]">
                       +{cell.entries.length - 3} more
                     </p>
                   )}

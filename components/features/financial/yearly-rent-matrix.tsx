@@ -162,7 +162,7 @@ export function YearlyRentMatrix(): React.ReactElement {
                         }
                       >
                         <span
-                          className={`inline-block min-w-[42px] px-1 py-0.5 font-mono text-[10px] uppercase tracking-[0.04em] ${
+                          className={`inline-block min-w-[42px] px-1 py-0.5 font-mono text-[12px] md:text-[10px] uppercase tracking-[0.04em] ${
                             cell
                               ? (CELL_STYLES[cell.status] ?? "")
                               : "text-[var(--color-muted-foreground)]"

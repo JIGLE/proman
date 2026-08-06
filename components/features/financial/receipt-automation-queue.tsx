@@ -211,7 +211,7 @@ export function ReceiptAutomationQueue(): React.ReactElement | null {
                     </td>
                     <td className="border-b border-[var(--color-border)] px-3 py-2.5">
                       <span
-                        className={`inline-block px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.04em] ${
+                        className={`inline-block px-1.5 py-0.5 font-mono text-[12px] md:text-[10px] uppercase tracking-[0.04em] ${
                           LIFECYCLE_STYLES[row.lifecycle] ?? ""
                         }`}
                       >

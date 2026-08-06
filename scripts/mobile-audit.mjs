@@ -60,8 +60,12 @@ const STRICT = flag("strict");
  *
  * `pageOverflow` is pinned at 0 and must stay there — it is the doctrine's first rule, it is
  * already met on every surface, and unlike the other metrics it has no legitimate reason to
- * regress. The rest are ceilings to be lowered as the remaining work lands (adopting
- * `RenderTable` and `TabsMobileSelect` should move `clippedContainers` and `smallText`).
+ * regress.
+ *
+ * `smallText` is close to its floor. Of the 310 remaining, 264 are the bottom nav's own labels
+ * at 11px — which is what native iOS/Android tab bars use, so they stay — and 44 are avatar
+ * initials, a glyph sized to its circle rather than text to read. Roughly a dozen genuine ones
+ * are left. Do not chase this one to zero; it would mean overriding two deliberate choices.
  *
  * These come from a **seeded** run (`--seed --strict`, 50 surface-runs). An unseeded run walks
  * empty screens — a table with no rows cannot overflow — so its numbers are meaningless as a
@@ -82,7 +86,7 @@ const BASELINE = {
   touchTargetFails: 2,
   touchTargetWarns: 6,
   clippedContainers: 6,
-  smallText: 456,
+  smallText: 310,
 };
 
 /**

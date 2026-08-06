@@ -414,7 +414,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
               <TabsContent value="overview" className="space-y-3 mt-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
-                    <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
+                    <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
                       Contact
                     </p>
                     <div className="space-y-1.5">
@@ -431,7 +431,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                     </div>
                   </div>
                   <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
-                    <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
+                    <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
                       Property
                     </p>
                     <div className="flex items-start gap-2 text-sm">
@@ -442,7 +442,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                 </div>
                 {tenant.notes && (
                   <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
-                    <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-1">
+                    <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-1">
                       Notes
                     </p>
                     <p className="text-sm text-[var(--color-foreground)]">{tenant.notes}</p>
@@ -476,7 +476,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                       </div>
                       <div className="grid grid-cols-2 gap-3 text-sm">
                         <div>
-                          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
                             Monthly Rent
                           </p>
                           <p className="mt-0.5 font-semibold text-[var(--color-foreground)]">
@@ -484,7 +484,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                           </p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
                             Status
                           </p>
                           <p className="mt-0.5 capitalize font-medium text-[var(--color-foreground)]">
@@ -492,7 +492,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                           </p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
                             Start Date
                           </p>
                           <p className="mt-0.5 text-[var(--color-foreground)]">
@@ -500,7 +500,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                           </p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
                             End Date
                           </p>
                           <p className="mt-0.5 text-[var(--color-foreground)]">

@@ -223,7 +223,9 @@ export function BankMovementsInbox(): React.ReactElement {
           <span className="text-xs text-[var(--color-muted-foreground)]">No suggestion</span>
         )}
         {reasons ? (
-          <span className="block text-[10px] text-[var(--color-muted-foreground)]">{reasons}</span>
+          <span className="block text-[12px] md:text-[10px] text-[var(--color-muted-foreground)]">
+            {reasons}
+          </span>
         ) : null}
       </>
     );
@@ -413,7 +415,7 @@ export function BankMovementsInbox(): React.ReactElement {
 
               <div className="mt-2 flex flex-wrap items-center gap-2">
                 <span
-                  className={`inline-block px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.04em] ${
+                  className={`inline-block px-1.5 py-0.5 font-mono text-[12px] md:text-[10px] uppercase tracking-[0.04em] ${
                     STATUS_STYLES[row.status] ?? ""
                   }`}
                 >
@@ -474,7 +476,7 @@ export function BankMovementsInbox(): React.ReactElement {
               header: "Status",
               cell: (row) => (
                 <span
-                  className={`inline-block px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.04em] ${
+                  className={`inline-block px-1.5 py-0.5 font-mono text-[12px] md:text-[10px] uppercase tracking-[0.04em] ${
                     STATUS_STYLES[row.status] ?? ""
                   }`}
                 >

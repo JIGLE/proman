@@ -127,7 +127,7 @@ export function ScenarioRunner() {
                 transition={{ duration: 0.3 }}
               />
             </div>
-            <span className="text-[10px] text-[var(--color-text-muted)] mt-1 block">
+            <span className="text-[12px] md:text-[10px] text-[var(--color-text-muted)] mt-1 block">
               Step {progress.currentStep + 1} of {progress.totalSteps}
             </span>
           </motion.div>

@@ -245,7 +245,7 @@ export function CommandPalette() {
               placeholder="Search or type a command..."
               className="flex-1 bg-transparent text-sm text-[var(--color-foreground)] placeholder-[var(--color-muted-foreground)] outline-none"
             />
-            <kbd className="hidden sm:inline-flex items-center px-2 py-0.5 rounded bg-[var(--color-muted)] text-[10px] font-mono text-[var(--color-muted-foreground)]">
+            <kbd className="hidden sm:inline-flex items-center px-2 py-0.5 rounded bg-[var(--color-muted)] text-[12px] md:text-[10px] font-mono text-[var(--color-muted-foreground)]">
               ESC
             </kbd>
           </div>
@@ -261,7 +261,7 @@ export function CommandPalette() {
             {Object.entries(grouped).map(([category, categoryItems]) => (
               <div key={category}>
                 <div className="px-4 py-1.5">
-                  <span className="text-[10px] font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
+                  <span className="text-[12px] md:text-[10px] font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
                     {categoryLabels[category] || category}
                   </span>
                 </div>
@@ -300,7 +300,7 @@ export function CommandPalette() {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-4 py-2 border-t border-[var(--color-border)] text-[10px] text-[var(--color-muted-foreground)]">
+          <div className="flex items-center justify-between px-4 py-2 border-t border-[var(--color-border)] text-[12px] md:text-[10px] text-[var(--color-muted-foreground)]">
             <span>↑↓ navigate · ↵ select · esc close</span>
             <span>⌘K to toggle</span>
           </div>

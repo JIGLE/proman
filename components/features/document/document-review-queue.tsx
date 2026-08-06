@@ -192,7 +192,7 @@ export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): R
                     {row.linkedEntityType ?? "unassigned"}
                   </td>
                   <td className="border-b border-[var(--color-border)] px-3 py-2.5">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.04em] text-[var(--color-muted-foreground)]">
+                    <span className="font-mono text-[12px] md:text-[10px] uppercase tracking-[0.04em] text-[var(--color-muted-foreground)]">
                       {row.status.replace(/_/g, " ")}
                     </span>
                   </td>

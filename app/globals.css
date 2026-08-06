@@ -414,9 +414,11 @@ body {
   color: var(--color-muted-foreground);
 }
 
+/* Below `md` this matches `.mono-label` exactly — the two sizes are a desktop refinement, and
+   the 12px legibility floor matters more on a phone than the 1px between them. */
 .mono-label-xs {
   font-family: var(--font-mono);
-  font-size: 11px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-muted-foreground);

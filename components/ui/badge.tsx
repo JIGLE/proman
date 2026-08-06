@@ -27,15 +27,15 @@ const badgeVariants = cva(
         // System voice: JetBrains Mono uppercase over a bordered soft wash —
         // for machine states (receipt/tax/match status codes), per Situs spec.
         status:
-          "border-[var(--color-border)] bg-[var(--color-surface)] font-mono text-[10px] font-normal uppercase tracking-[0.06em] text-[var(--color-muted-foreground)]",
+          "border-[var(--color-border)] bg-[var(--color-surface)] font-mono text-[12px] md:text-[10px] font-normal uppercase tracking-[0.06em] text-[var(--color-muted-foreground)]",
         "status-success":
-          "border-[var(--semantic-success)] bg-[var(--semantic-success-soft)] font-mono text-[10px] font-normal uppercase tracking-[0.06em] text-[var(--semantic-success-readable)]",
+          "border-[var(--semantic-success)] bg-[var(--semantic-success-soft)] font-mono text-[12px] md:text-[10px] font-normal uppercase tracking-[0.06em] text-[var(--semantic-success-readable)]",
         "status-warning":
-          "border-[var(--semantic-warning)] bg-[var(--semantic-warning-soft)] font-mono text-[10px] font-normal uppercase tracking-[0.06em] text-[var(--semantic-warning-readable)]",
+          "border-[var(--semantic-warning)] bg-[var(--semantic-warning-soft)] font-mono text-[12px] md:text-[10px] font-normal uppercase tracking-[0.06em] text-[var(--semantic-warning-readable)]",
         "status-danger":
-          "border-[var(--semantic-danger)] bg-[var(--semantic-danger-soft)] font-mono text-[10px] font-normal uppercase tracking-[0.06em] text-[var(--semantic-danger-readable)]",
+          "border-[var(--semantic-danger)] bg-[var(--semantic-danger-soft)] font-mono text-[12px] md:text-[10px] font-normal uppercase tracking-[0.06em] text-[var(--semantic-danger-readable)]",
         "status-info":
-          "border-[var(--semantic-info)] bg-[var(--semantic-info-soft)] font-mono text-[10px] font-normal uppercase tracking-[0.06em] text-[var(--semantic-info-readable)]",
+          "border-[var(--semantic-info)] bg-[var(--semantic-info-soft)] font-mono text-[12px] md:text-[10px] font-normal uppercase tracking-[0.06em] text-[var(--semantic-info-readable)]",
       },
       size: {
         sm: "px-2 py-0.5 text-xs",

@@ -257,7 +257,7 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
           aria-haspopup="true"
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((v) => !v)}
-          className="inline-flex items-center gap-1.5 border border-[var(--color-border)] bg-[var(--color-canvas)] px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]"
+          className="inline-flex items-center gap-1.5 border border-[var(--color-border)] bg-[var(--color-canvas)] px-2.5 py-1.5 font-mono text-[12px] md:text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]"
         >
           {/* No flag emoji here: Windows ships no country-flag glyphs, so `🇵🇹` falls back to
               the regional-indicator letters and the trigger reads "PT PT". The code alone is
