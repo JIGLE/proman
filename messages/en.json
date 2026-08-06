@@ -455,7 +455,12 @@
     "modelo179Rejected": "Rejected",
     "modelo179ATRef": "AT Reference",
     "modelo179Export": "Export CSV",
-    "modelo179Alert": "{count} lease(s) not registered with AT for {year}"
+    "modelo179Alert": "{count} lease(s) not registered with AT for {year}",
+    "modelo179Tenant": "Tenant",
+    "modelo179Property": "Property",
+    "modelo179Period": "Period",
+    "modelo179Actions": "Actions",
+    "modelo179MarkSubmitted": "Mark as submitted"
   },
   "tax": {
     "title": "Tax Calculation",

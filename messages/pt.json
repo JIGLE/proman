@@ -455,7 +455,12 @@
     "modelo179Rejected": "Rejeitado",
     "modelo179ATRef": "Referência AT",
     "modelo179Export": "Exportar CSV",
-    "modelo179Alert": "{count} contrato(s) não comunicado(s) à AT para {year}"
+    "modelo179Alert": "{count} contrato(s) não comunicado(s) à AT para {year}",
+    "modelo179Tenant": "Inquilino",
+    "modelo179Property": "Imóvel",
+    "modelo179Period": "Período",
+    "modelo179Actions": "Ações",
+    "modelo179MarkSubmitted": "Marcar como submetido"
   },
   "tax": {
     "title": "Cálculo de Impostos",

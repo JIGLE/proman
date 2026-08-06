@@ -32,6 +32,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/lib/contexts/toast-context";
 import { csrfHeaders } from "@/lib/utils/api-client";
+import { RenderTable } from "@/components/ui/table";
 
 type SubmissionStatus = "pending" | "submitted" | "confirmed" | "rejected";
 
@@ -285,75 +286,102 @@ export function Modelo179View(): React.ReactElement {
               No active leases found.
             </p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--color-border)]">
-                    <th className="pb-3 text-left font-medium text-[var(--color-muted-foreground)]">
-                      Tenant
-                    </th>
-                    <th className="pb-3 text-left font-medium text-[var(--color-muted-foreground)]">
-                      Property
-                    </th>
-                    <th className="pb-3 text-left font-medium text-[var(--color-muted-foreground)]">
-                      Period
-                    </th>
-                    <th className="pb-3 text-left font-medium text-[var(--color-muted-foreground)]">
-                      {t("modelo179Status")}
-                    </th>
-                    <th className="pb-3 text-left font-medium text-[var(--color-muted-foreground)]">
-                      {t("modelo179ATRef")}
-                    </th>
-                    <th className="pb-3 text-right font-medium text-[var(--color-muted-foreground)]">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--color-border)]">
-                  {leases.map((lease) => {
-                    const submission = getSubmissionForYear(lease, year);
-                    const status: SubmissionStatus = submission?.status ?? "pending";
-                    return (
-                      <tr key={lease.id} className="group">
-                        <td className="py-3 pr-4">
-                          <div className="font-medium">{lease.tenant.name}</div>
-                          <div className="text-xs text-[var(--color-muted-foreground)]">
-                            {lease.tenant.email}
-                          </div>
-                        </td>
-                        <td className="py-3 pr-4">
-                          <div>{lease.property.name}</div>
-                          <div className="text-xs text-[var(--color-muted-foreground)]">
-                            {lease.property.address}
-                          </div>
-                        </td>
-                        <td className="py-3 pr-4 tabular-nums">
-                          {new Date(lease.startDate).getFullYear()} –{" "}
-                          {new Date(lease.endDate).getFullYear()}
-                        </td>
-                        <td className="py-3 pr-4">
-                          <StatusBadge status={status} />
-                        </td>
-                        <td className="py-3 pr-4 text-[var(--color-muted-foreground)]">
-                          {submission?.atReference ?? "—"}
-                        </td>
-                        <td className="py-3 text-right">
-                          {status !== "confirmed" && (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => openMarkDialog(lease)}
-                            >
-                              Mark as Submitted
-                            </Button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+            <RenderTable
+              data={leases}
+              rowKey={(lease) => lease.id}
+              cardMode
+              renderCard={(lease) => {
+                const status: SubmissionStatus =
+                  getSubmissionForYear(lease, year)?.status ?? "pending";
+                const atRef = getSubmissionForYear(lease, year)?.atReference;
+                return (
+                  <div className="border border-[var(--color-border)] bg-[var(--color-card)] p-3">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">{lease.tenant.name}</p>
+                        <p className="truncate text-xs text-[var(--color-muted-foreground)]">
+                          {lease.property.name}
+                        </p>
+                      </div>
+                      <StatusBadge status={status} />
+                    </div>
+                    <p className="mt-2 text-xs tabular-nums text-[var(--color-muted-foreground)]">
+                      {new Date(lease.startDate).getFullYear()} –{" "}
+                      {new Date(lease.endDate).getFullYear()}
+                      {atRef ? ` · ${atRef}` : ""}
+                    </p>
+                    {status !== "confirmed" && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="mt-3 w-full"
+                        onClick={() => openMarkDialog(lease)}
+                      >
+                        {t("modelo179MarkSubmitted")}
+                      </Button>
+                    )}
+                  </div>
+                );
+              }}
+              columns={[
+                {
+                  key: "tenant",
+                  header: t("modelo179Tenant"),
+                  cell: (lease) => (
+                    <>
+                      <div className="font-medium">{lease.tenant.name}</div>
+                      <div className="text-xs text-[var(--color-muted-foreground)]">
+                        {lease.tenant.email}
+                      </div>
+                    </>
+                  ),
+                },
+                {
+                  key: "property",
+                  header: t("modelo179Property"),
+                  cell: (lease) => (
+                    <>
+                      <div>{lease.property.name}</div>
+                      <div className="text-xs text-[var(--color-muted-foreground)]">
+                        {lease.property.address}
+                      </div>
+                    </>
+                  ),
+                },
+                {
+                  key: "period",
+                  header: t("modelo179Period"),
+                  cell: (lease) =>
+                    `${new Date(lease.startDate).getFullYear()} – ${new Date(lease.endDate).getFullYear()}`,
+                  cellClassName: "tabular-nums",
+                },
+                {
+                  key: "status",
+                  header: t("modelo179Status"),
+                  cell: (lease) => (
+                    <StatusBadge status={getSubmissionForYear(lease, year)?.status ?? "pending"} />
+                  ),
+                },
+                {
+                  key: "atRef",
+                  header: t("modelo179ATRef"),
+                  cell: (lease) => getSubmissionForYear(lease, year)?.atReference ?? "—",
+                  cellClassName: "text-[var(--color-muted-foreground)]",
+                },
+                {
+                  key: "actions",
+                  header: t("modelo179Actions"),
+                  headerClassName: "text-right",
+                  cellClassName: "text-right",
+                  cell: (lease) =>
+                    (getSubmissionForYear(lease, year)?.status ?? "pending") !== "confirmed" ? (
+                      <Button size="sm" variant="outline" onClick={() => openMarkDialog(lease)}>
+                        {t("modelo179MarkSubmitted")}
+                      </Button>
+                    ) : null,
+                },
+              ]}
+            />
           )}
         </CardContent>
       </Card>
