@@ -44,7 +44,14 @@ export default async function LandingPage({ params }: Props) {
           at the top of the hero column, so it inherits this top offset directly — py-16 put it
           64px down for no reason beyond reusing the desktop value. lg: keeps the original
           symmetric spacing used for desktop centering. */}
-      <main className="relative px-5 pt-8 pb-16 sm:px-10 lg:flex lg:min-h-screen lg:flex-col lg:justify-center lg:py-24">
+      {/* Content container: without a max-width the hero ran edge-to-edge, leaving the headline
+          ~40px from the left of a wide desktop with dead space opposite. --page-max is read by
+          landing-hero-sequence.module.css so the fixed locale control lines up with this same
+          column instead of the viewport corner. */}
+      <main
+        style={{ "--page-max": "1400px" } as React.CSSProperties}
+        className="relative mx-auto w-full max-w-[var(--page-max)] px-5 pt-8 pb-16 sm:px-10 lg:flex lg:min-h-screen lg:flex-col lg:justify-center lg:py-24"
+      >
         <LandingAnalyticsObserver locale={locale} demoEnabled={true} />
 
         <LandingHeroSequence locale={locale} />

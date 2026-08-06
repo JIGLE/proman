@@ -172,6 +172,9 @@
   --logo-primary: #006600;
   --logo-secondary: #ff0000;
   --logo-accent: #ffff00;
+  /* Contrast-adjusted accent for UI that is not the mark itself (the hero orbit rings).
+     Raw #ffff00 is invisible on this cream canvas; readableHighlight() darkens it. */
+  --logo-accent-readable: #666600;
   --logo-neutral: #ffffff;
   --logo-canvas: #f1e8d8;
   --logo-keyline: rgba(0, 0, 0, 0.48);
@@ -286,6 +289,8 @@
   --ui-accent: #ffff00;
   --country-highlight-readable: #479147;
   --country-highlight-soft: rgba(71, 145, 71, 0.08);
+  /* Already clears contrast against the dark canvas, so it passes through untinted. */
+  --logo-accent-readable: #ffff00;
   --logo-canvas: #121b15;
   --logo-keyline: rgba(255, 255, 255, 0.68);
 

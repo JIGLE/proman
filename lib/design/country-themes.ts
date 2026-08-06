@@ -530,6 +530,10 @@ export function resolveThemeVars(country: CountryCode, mode: ThemeMode): Record<
     "--logo-primary": entry.roles.primary,
     "--logo-secondary": entry.roles.secondary,
     "--logo-accent": entry.roles.accent,
+    // The raw accent is a flag colour and stays untinted wherever the LOGO renders. The hero's
+    // orbit rings are UI, not the mark, so they take a contrast-adjusted variant instead —
+    // Portugal's accent is pure #FFFF00, which is invisible on the light theme's cream canvas.
+    "--logo-accent-readable": readableHighlight(entry.roles.accent, theme.canvas),
     "--logo-neutral": entry.roles.neutral,
     "--logo-canvas": theme.surfaceSolid,
     "--logo-keyline": logoKeyline,

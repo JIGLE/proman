@@ -9,6 +9,14 @@
 
 .root {
   position: relative;
+  /* .heroVisual is `inset: 0` here and then `scale(1.32)` at rest, so it renders ~32% wider
+     than this box and dragged the whole page into horizontal scroll between ~1150px and
+     ~1700px wide (151px at 1440). It is pointer-events: none and almost entirely empty space
+     around a centred orbit, so clipping at the root's bounds removes the scrollbar without
+     hiding anything. `clip` rather than `hidden`: it must not become a scroll container, and
+     unlike `hidden` it does not trap the position:fixed locale control.
+     Desktop-only bug — the mobile audit measures 390px, where the visual is display:none. */
+  overflow-x: clip;
   --p: 0;
   --mx: 0px;
   --my: 0px;
@@ -37,7 +45,11 @@
 .localeControl {
   position: fixed;
   top: 24px;
-  right: 24px;
+  /* Track the page's content container rather than the raw viewport corner. Pinned to the far
+     right of a wide desktop it sat well outside the reading column — a first-time visitor never
+     looked there. Stays `fixed` (not absolute) because the --t opacity math below ties it to the
+     scroll sequence. Mirrors the --page-max container on the landing <main>. */
+  right: max(24px, calc((100vw - var(--page-max, 1400px)) / 2 + 24px));
   z-index: 20;
   --t: clamp(0, calc((var(--p) - 0.5) * 8.33), 1);
   opacity: var(--t);
@@ -185,6 +197,9 @@
 }
 .orbit {
   position: relative;
+  /* Sized off the viewport from lg up: at 340px flat it read as a small motif marooned in the
+     right-hand column on a wide desktop. Clamped so it never outgrows the grid track. The
+     inner offsets below are percentages, not pixels, so they scale with it. */
   width: 340px;
   height: 340px;
   display: grid;
@@ -192,12 +207,19 @@
   pointer-events: auto;
   cursor: pointer;
 }
+@media (min-width: 1024px) {
+  .orbit {
+    width: clamp(340px, 27vw, 460px);
+    height: clamp(340px, 27vw, 460px);
+  }
+}
 .orbit:hover .glow {
   opacity: 1;
 }
 .glow {
   position: absolute;
-  inset: 40px;
+  /* 40/340 — proportional so it tracks the orbit's clamped size instead of drifting inward. */
+  inset: 11.8%;
   border-radius: 50%;
   filter: blur(22px);
   opacity: 0.85;
@@ -227,11 +249,15 @@
 }
 .ringR1 {
   inset: 0;
-  border-color: color-mix(in srgb, var(--logo-primary) 72%, var(--color-border));
+  /* Leans harder on the accent than the old primary-based mix did (72%). That mix existed to
+     rescue flag colours sitting close to the canvas; --logo-accent-readable is already
+     contrast-corrected, so diluting it toward the pale light-theme border only washed it out. */
+  border-color: color-mix(in srgb, var(--logo-accent-readable) 88%, var(--color-border));
 }
 .ringR2 {
-  inset: 46px;
-  border-color: color-mix(in srgb, var(--logo-secondary) 66%, var(--color-border));
+  /* 46/340 — proportional, so the gap between the rings scales with the orbit. */
+  inset: 13.5%;
+  border-color: color-mix(in srgb, var(--logo-accent-readable) 82%, var(--color-border));
 }
 .ringR1::after {
   content: "";
@@ -242,11 +268,11 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--logo-primary);
+  background: var(--logo-accent-readable);
   box-shadow:
     0 0 0 1px var(--logo-keyline),
-    0 0 9px 2px color-mix(in srgb, var(--logo-primary) 75%, transparent),
-    0 0 2px 1px var(--logo-primary);
+    0 0 9px 2px color-mix(in srgb, var(--logo-accent-readable) 75%, transparent),
+    0 0 2px 1px var(--logo-accent-readable);
 }
 .ringR2::after {
   content: "";
@@ -257,11 +283,11 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--logo-secondary);
+  background: var(--logo-accent-readable);
   box-shadow:
     0 0 0 1px var(--logo-keyline),
-    0 0 9px 2px color-mix(in srgb, var(--logo-secondary) 75%, transparent),
-    0 0 2px 1px var(--logo-secondary);
+    0 0 9px 2px color-mix(in srgb, var(--logo-accent-readable) 75%, transparent),
+    0 0 2px 1px var(--logo-accent-readable);
 }
 .markScale {
   position: relative;
@@ -438,12 +464,12 @@
 }
 .mobileRingR1 {
   inset: 0;
-  border-color: color-mix(in srgb, var(--logo-primary) 72%, var(--color-border));
+  border-color: color-mix(in srgb, var(--logo-accent-readable) 72%, var(--color-border));
   animation: mobileSpinCW 22s linear infinite;
 }
 .mobileRingR2 {
   inset: 26px;
-  border-color: color-mix(in srgb, var(--logo-secondary) 66%, var(--color-border));
+  border-color: color-mix(in srgb, var(--logo-accent-readable) 66%, var(--color-border));
   animation: mobileSpinCCW 16s linear infinite;
 }
 .mobileRingR1::after {
@@ -455,11 +481,11 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--logo-primary);
+  background: var(--logo-accent-readable);
   box-shadow:
     0 0 0 1px var(--logo-keyline),
-    0 0 8px 2px color-mix(in srgb, var(--logo-primary) 75%, transparent),
-    0 0 2px 1px var(--logo-primary);
+    0 0 8px 2px color-mix(in srgb, var(--logo-accent-readable) 75%, transparent),
+    0 0 2px 1px var(--logo-accent-readable);
 }
 .mobileRingR2::after {
   content: "";
@@ -470,11 +496,11 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--logo-secondary);
+  background: var(--logo-accent-readable);
   box-shadow:
     0 0 0 1px var(--logo-keyline),
-    0 0 8px 2px color-mix(in srgb, var(--logo-secondary) 75%, transparent),
-    0 0 2px 1px var(--logo-secondary);
+    0 0 8px 2px color-mix(in srgb, var(--logo-accent-readable) 75%, transparent),
+    0 0 2px 1px var(--logo-accent-readable);
 }
 @keyframes mobileSpinCW {
   from {
