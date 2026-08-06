@@ -36,6 +36,13 @@ interface PortfolioTreeProps {
   leases?: Lease[];
   onSelectProperty?: (propertyId: string) => void;
   highlightedPropertyId?: string;
+  /**
+   * Strip the rows to property name + status dots only, dropping the address, the per-asset
+   * rent and the group rent subtotals. Used by the flyout, where everything omitted here is
+   * already on the detail page behind it — so the panel only has to be wide enough to name
+   * an asset and show whether it needs attention.
+   */
+  compact?: boolean;
   /** Collapse the rail to a dots-only spine (desktop density control). */
   collapsed?: boolean;
   onToggleCollapsed?: () => void;
@@ -74,6 +81,7 @@ export function PortfolioTree({
   leases = [],
   onSelectProperty,
   highlightedPropertyId,
+  compact = false,
   collapsed = false,
   onToggleCollapsed,
 }: PortfolioTreeProps): React.ReactElement {
@@ -189,12 +197,21 @@ export function PortfolioTree({
   }
 
   return (
-    <div className="border border-[var(--color-border)] bg-[var(--color-surface)]">
-      {/* Header: title + density + collapse. Collapsed = just an expand affordance. */}
+    <div
+      className={cn(
+        "bg-[var(--color-surface)]",
+        // In the flyout the Sheet supplies the frame, so the tree drops its own border.
+        compact ? "border-0" : "border border-[var(--color-border)]",
+      )}
+    >
+      {/* Header: title + density + collapse. Collapsed = just an expand affordance.
+          The flyout hides this row entirely — the Sheet has its own header, and neither the
+          density toggle nor the collapse control means anything in an overlay. */}
       <div
         className={cn(
           "flex items-center border-b border-[var(--color-border)] py-3",
           collapsed ? "justify-center px-2" : "justify-between gap-3 px-4",
+          compact && "hidden",
         )}
       >
         {!collapsed && (
@@ -267,7 +284,9 @@ export function PortfolioTree({
                       {country.label}
                     </span>
                     <span className="mono-label whitespace-nowrap">
-                      {country.assetCount} · {formatCurrency(country.monthlyRent)}/m
+                      {compact
+                        ? country.assetCount
+                        : `${country.assetCount} · ${formatCurrency(country.monthlyRent)}/m`}
                     </span>
                   </>
                 )}
@@ -325,18 +344,29 @@ export function PortfolioTree({
                               className={cn(
                                 "flex w-full items-center border-l-2 text-left transition-colors max-md:min-h-11",
                                 rowPad,
-                                collapsed ? "justify-center gap-1 px-0" : "gap-2.5 px-2 pl-12",
+                                collapsed
+                                  ? "justify-center gap-1 px-0"
+                                  : compact
+                                    ? // Shallower indent: with no address or rent competing for
+                                      // the row, the nesting no longer needs 48px to read.
+                                      "gap-2 px-2 pl-6"
+                                    : "gap-2.5 px-2 pl-12",
                                 highlighted
                                   ? "border-[var(--country-highlight-readable)] bg-[var(--color-hover)]"
                                   : "border-transparent hover:bg-[var(--color-hover)]",
                               )}
                             >
                               {!collapsed && (
-                                <span className="min-w-0 flex-1 truncate text-sm">
+                                <span
+                                  className="min-w-0 flex-1 truncate text-sm"
+                                  title={compact ? property.name : undefined}
+                                >
                                   {property.name}
-                                  <span className="ml-2 hidden text-xs text-[var(--color-muted-foreground)] sm:inline">
-                                    {property.address}
-                                  </span>
+                                  {!compact && (
+                                    <span className="ml-2 hidden text-xs text-[var(--color-muted-foreground)] sm:inline">
+                                      {property.address}
+                                    </span>
+                                  )}
                                 </span>
                               )}
                               {/* Attention strip — square semantic dots, quiet when healthy */}
@@ -363,7 +393,7 @@ export function PortfolioTree({
                                   />
                                 )}
                               </span>
-                              {!collapsed && (
+                              {!collapsed && !compact && (
                                 <span className="mono-label whitespace-nowrap tabular-nums">
                                   {formatCurrency(property.rent || 0)}/m
                                 </span>
@@ -379,8 +409,10 @@ export function PortfolioTree({
         })}
       </div>
 
-      {/* Signal legend — the status-dot code, learnable at a glance. */}
-      {!collapsed && (
+      {/* Signal legend — the status-dot code, learnable at a glance. Dropped in the flyout:
+          it wraps to three cramped lines at that width, and each dot already carries its own
+          title/aria-label, so the meaning is still reachable without spending the space. */}
+      {!collapsed && !compact && (
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-[var(--color-border)] px-4 py-2.5">
           <span className="mono-label">{t("legend")}</span>
           <span className="flex items-center gap-1.5 text-xs text-[var(--color-muted-foreground)]">

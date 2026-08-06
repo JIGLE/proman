@@ -1236,7 +1236,9 @@
     "dotLease": "Finestra di rinnovo del contratto",
     "legend": "Segnali",
     "collapse": "Comprimi pannello",
-    "expand": "Espandi pannello"
+    "expand": "Espandi pannello",
+    "closeWorkspace": "Chiudi",
+    "flyoutDescription": "Seleziona un asset per aprire il suo spazio di lavoro"
   },
   "entityOverlay": {
     "openFullPage": "Apri pagina intera",

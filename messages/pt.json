@@ -1236,7 +1236,9 @@
     "dotLease": "Janela de renovação do contrato",
     "legend": "Sinais",
     "collapse": "Recolher painel",
-    "expand": "Expandir painel"
+    "expand": "Expandir painel",
+    "closeWorkspace": "Fechar",
+    "flyoutDescription": "Selecione um ativo para abrir a sua área de trabalho"
   },
   "entityOverlay": {
     "openFullPage": "Abrir página completa",

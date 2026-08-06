@@ -1236,7 +1236,9 @@
     "dotLease": "Lease renewal window",
     "legend": "Signals",
     "collapse": "Collapse rail",
-    "expand": "Expand rail"
+    "expand": "Expand rail",
+    "closeWorkspace": "Close",
+    "flyoutDescription": "Select an asset to open its workspace"
   },
   "entityOverlay": {
     "openFullPage": "Open full page",

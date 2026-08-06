@@ -1236,7 +1236,9 @@
     "dotLease": "Ventana de renovación del contrato",
     "legend": "Señales",
     "collapse": "Contraer panel",
-    "expand": "Expandir panel"
+    "expand": "Expandir panel",
+    "closeWorkspace": "Cerrar",
+    "flyoutDescription": "Seleccione un activo para abrir su espacio de trabajo"
   },
   "entityOverlay": {
     "openFullPage": "Abrir página completa",

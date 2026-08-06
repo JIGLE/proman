@@ -22,6 +22,7 @@ import {
   Trash2,
   MoreHorizontal,
   Search,
+  PanelLeftOpen,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -63,6 +64,13 @@ import {
 import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { cn } from "@/lib/utils/utils";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 import { BulkActionBar, getDefaultBulkActions } from "@/components/ui/bulk-action-bar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useBulkSelection } from "@/lib/hooks/use-bulk-selection";
@@ -172,6 +180,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const pathname = usePathname();
     const locale = pathname.split("/")[1] || "pt";
     const tNextAction = useTranslations("property.nextAction");
+    const tPortfolio = useTranslations("portfolioTree");
+    const tNav = useTranslations("navigation");
     const confirmDialog = useConfirmDialog();
     // Property detail modal state
     // Removed: selectedProperty, isDetailModalOpen (now handled by router/modal route)
@@ -186,6 +196,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const [dataViewMode] = useState<DataViewMode>(viewMode === "map" ? "map" : "tree");
     // The asset whose command workspace is open in the tree split (desktop only).
     const [workspacePropertyId, setWorkspacePropertyId] = useState<string | null>(null);
+    // The undocked tree, shown while a detail occupies the workspace.
+    const [treeFlyoutOpen, setTreeFlyoutOpen] = useState(false);
     // Collapse the tree rail to a dots-only spine (desktop; persisted per device).
     const [railCollapsed, setRailCollapsed] = useState(false);
     useEffect(() => {
@@ -564,16 +576,16 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                 <div
                   className={cn(
                     "lg:grid lg:items-start lg:gap-6",
-                    railCollapsed
-                      ? "lg:grid-cols-[76px_1fr]"
-                      : // Trimmed from minmax(300px,340px): the rail is an index, and the
-                        // workspace beside it is where the work happens. Row content already
-                        // truncates its address at any width in this range, so the extra
-                        // ~50px bought nothing and cost the detail pane.
-                        "lg:grid-cols-[minmax(248px,288px)_1fr]",
+                    workspacePropertyId
+                      ? // A detail is open: the rail undocks into a flyout and the workspace
+                        // takes the full width. The tree is still the whole view until then.
+                        "lg:grid-cols-1"
+                      : railCollapsed
+                        ? "lg:grid-cols-[76px_1fr]"
+                        : "lg:grid-cols-[minmax(248px,288px)_1fr]",
                   )}
                 >
-                  <div className="space-y-2">
+                  <div className={cn("space-y-2", workspacePropertyId && "lg:hidden")}>
                     {/* Compact search + attention filter — contextual to the tree
                         (replaces the removed top search band + filter chips). */}
                     {!railCollapsed && (
@@ -619,11 +631,29 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                   </div>
                   <div className="hidden min-w-0 lg:block">
                     {workspacePropertyId ? (
-                      <div
-                        key={workspacePropertyId}
-                        className="border border-[var(--color-border)] bg-[var(--color-card)] p-4 motion-safe:animate-fade-in lg:p-6"
-                      >
-                        <PropertyDetailView propertyId={workspacePropertyId} />
+                      <div key={workspacePropertyId} className="space-y-2">
+                        {/* The only way back to the portfolio index while a detail is open. */}
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setTreeFlyoutOpen(true)}
+                          >
+                            <PanelLeftOpen className="mr-1.5 h-3.5 w-3.5" />
+                            {tNav("portfolio")}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setWorkspacePropertyId(null)}
+                            className="text-[var(--color-muted-foreground)]"
+                          >
+                            {tPortfolio("closeWorkspace")}
+                          </Button>
+                        </div>
+                        <div className="border border-[var(--color-border)] bg-[var(--color-card)] p-4 motion-safe:animate-fade-in lg:p-6">
+                          <PropertyDetailView propertyId={workspacePropertyId} />
+                        </div>
                       </div>
                     ) : (
                       <div className="flex min-h-[440px] items-center justify-center border border-dashed border-[var(--color-border)] p-12 text-center">
@@ -633,6 +663,38 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                       </div>
                     )}
                   </div>
+
+                  {/* Portfolio flyout — the tree, undocked. Rows carry only the asset name and
+                      its status dots: the address, rent and everything else are on the detail
+                      page behind this panel, so the width is set by the longest name rather
+                      than by columns of data nobody reads here. */}
+                  <Sheet open={treeFlyoutOpen} onOpenChange={setTreeFlyoutOpen}>
+                    <SheetContent side="left" className="flex w-[232px] flex-col p-0 sm:w-[232px]">
+                      <SheetHeader className="border-b border-[var(--color-border)] px-4 py-3">
+                        <SheetTitle className="mono-label text-left">
+                          {tPortfolio("title")}
+                        </SheetTitle>
+                        <SheetDescription className="sr-only">
+                          {tPortfolio("flyoutDescription")}
+                        </SheetDescription>
+                      </SheetHeader>
+                      <div className="min-h-0 flex-1 overflow-y-auto">
+                        <PortfolioTree
+                          properties={filteredProperties}
+                          buildings={buildings}
+                          tenants={tenants}
+                          maintenance={maintenance}
+                          leases={leases}
+                          compact
+                          onSelectProperty={(id) => {
+                            handleTreeSelect(id);
+                            setTreeFlyoutOpen(false);
+                          }}
+                          highlightedPropertyId={workspacePropertyId ?? highlightedPropertyId}
+                        />
+                      </div>
+                    </SheetContent>
+                  </Sheet>
                 </div>
               ) : dataViewMode === "table" ? (
                 /* Table View */
