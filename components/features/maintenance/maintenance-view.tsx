@@ -137,7 +137,7 @@ function TicketCard({
         <dt className="mono-label self-center">{createdLabel}</dt>
         <dd className="text-[var(--color-muted-foreground)]">
           <span className="inline-flex items-center gap-1">
-            {ticket.isTenantReport && <User className="h-3.5 w-3.5 text-blue-400" />}
+            {ticket.isTenantReport && <User className="h-3.5 w-3.5 text-[var(--color-info)]" />}
             {new Date(ticket.createdAt).toLocaleDateString()}
           </span>
         </dd>
@@ -855,7 +855,9 @@ export function MaintenanceView(): React.ReactElement {
                       header: t("fieldCreated"),
                       cell: (ticket) => (
                         <div className="flex items-center gap-1">
-                          {ticket.isTenantReport && <User className="h-3.5 w-3.5 text-blue-400" />}
+                          {ticket.isTenantReport && (
+                            <User className="h-3.5 w-3.5 text-[var(--color-info)]" />
+                          )}
                           {new Date(ticket.createdAt).toLocaleDateString()}
                         </div>
                       ),
