@@ -42,6 +42,27 @@ function isSupportedLocale(segment: string): segment is SupportedLocale {
 }
 
 /**
+ * Locale for a request that carries no `[locale]` URL segment.
+ *
+ * The `proman-locale` cookie wins: it is an explicit choice the visitor made through one of the
+ * language controls, so it should outrank whatever their browser advertises. `Accept-Language`
+ * is the fallback, then `defaultLocale`. Mirrors `lib/i18n/server-locale.ts`, which resolves the
+ * same thing for server components — the proxy cannot import it because that module reads
+ * `next/headers`.
+ */
+function resolveLocale(request: NextRequest): string {
+  const saved = request.cookies.get("proman-locale")?.value;
+  if (saved && isSupportedLocale(saved)) return saved;
+
+  const fromHeader = (request.headers.get("accept-language") ?? "")
+    .split(",")
+    .map((part) => part.split(";")[0].trim().slice(0, 2).toLowerCase())
+    .find(isSupportedLocale);
+
+  return fromHeader ?? defaultLocale;
+}
+
+/**
  * Public API prefixes — these routes must never require a session.
  * /api/auth/**           — NextAuth sign-in / callback endpoints
  * /api/health            — Liveness/readiness probe
@@ -377,17 +398,13 @@ export async function proxy(request: NextRequest) {
 
   if (pathnameHasLocale || isLocaleExemptPath) {
     response = NextResponse.next();
-  } else if (pathname === "/") {
-    const acceptLanguage = request.headers.get("accept-language") ?? "";
-    const preferred = acceptLanguage
-      .split(",")
-      .map((part) => part.split(";")[0].trim().slice(0, 2).toLowerCase())
-      .find((lang) => (locales as readonly string[]).includes(lang));
-    const detectedLocale = (preferred ?? defaultLocale) as typeof defaultLocale;
-    response = NextResponse.redirect(new URL(`/${detectedLocale}`, request.url), { status: 307 });
   } else {
+    // Every locale-less path resolves the same way. Previously only `/` did detection and every
+    // other path was hardcoded to `defaultLocale`, so a locale-less deep link (`/portfolio`)
+    // forced Portuguese on an English visitor. The manifest's app shortcuts are exactly such
+    // links, so they would all have opened in the wrong language.
     const url = request.nextUrl.clone();
-    url.pathname = `/${defaultLocale}${pathname}`;
+    url.pathname = `/${resolveLocale(request)}${pathname === "/" ? "" : pathname}`;
     response = NextResponse.redirect(url, { status: 307 });
   }
 

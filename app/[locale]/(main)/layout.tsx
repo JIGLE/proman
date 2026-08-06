@@ -36,9 +36,15 @@ export default function MainLayout({
         {/* Sticky app-chrome header — mobile only (no sidebar below md). */}
         <MobileTopBar />
 
+        {/* The bottom nav measures `1px border-t + h-16 + env(safe-area-inset-bottom)`
+            (`components/ui/mobile-nav.tsx`), so a flat 4rem reservation left the last 24–48px of
+            every page behind the bar on any device with a home indicator — and 1px behind it
+            even without one. Reserve the same expression the nav is built from; the three terms
+            here mirror its three. Invisible to `scripts/mobile-audit.mjs`, which runs in a
+            context where the inset resolves to 0. */}
         <main
           id="main-content"
-          className="flex-1 overflow-y-auto overscroll-y-contain pb-16 md:pb-0"
+          className="flex-1 overflow-y-auto overscroll-y-contain pb-[calc(4rem+1px+env(safe-area-inset-bottom,0px))] md:pb-0"
           tabIndex={-1}
         >
           <div className="min-h-full p-4 sm:p-6 lg:p-8 max-w-[1600px] mx-auto">

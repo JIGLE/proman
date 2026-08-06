@@ -48,8 +48,10 @@ export function ScenarioRunner() {
 
   if (!isDemoMode) return null;
 
+  // `bottom-20` (80px) cleared the 64px nav only where the safe-area inset is 0; on a device
+  // with a home indicator the nav grows to ~98px and swallowed the FAB.
   return (
-    <div className="fixed bottom-20 right-4 z-[100] md:bottom-6">
+    <div className="fixed right-4 z-[100] max-md:bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] md:bottom-6">
       <AnimatePresence>
         {/* Scenario Menu */}
         {isOpen && !progress?.isRunning && (

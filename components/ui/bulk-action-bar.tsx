@@ -89,7 +89,11 @@ export function BulkActionBar({
         exit={{ opacity: 0, y: 20, scale: 0.95 }}
         transition={{ duration: 0.2, ease: "easeOut" }}
         className={cn(
-          "fixed bottom-6 left-1/2 -translate-x-1/2 z-50",
+          // `bottom-6` is 24px, and the mobile bottom nav is 64px + the safe-area inset — so on a
+          // phone this bar rendered entirely behind it and its actions could not be reached at
+          // all. Sit above the nav below `md`; keep the 24px offset once the nav is gone.
+          "fixed left-1/2 z-50 -translate-x-1/2",
+          "max-md:bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] md:bottom-6",
           "flex items-center gap-3 px-4 py-3 rounded-xl",
           "bg-[var(--color-card)] border border-[var(--color-border)]",
           "shadow-lg backdrop-blur-sm",

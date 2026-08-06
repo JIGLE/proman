@@ -94,6 +94,10 @@ export function MobileBottomNav({
       aria-label="Mobile navigation"
     >
       <div className="bg-[var(--color-background)]/95 backdrop-blur-sm border-t border-[var(--color-border)]">
+        {/* The nav's true height is the wrapper's 1px `border-t` + this `h-16` + the safe-area
+            spacer below. `<main>` reserves that same three-term expression as bottom padding
+            (`app/[locale]/(main)/layout.tsx`) — change one and change the other, or content
+            slides back under the bar. */}
         <div
           className="grid h-16 items-center px-2"
           style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
