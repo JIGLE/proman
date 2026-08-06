@@ -18,6 +18,7 @@
  * Usage:
  *   node scripts/mobile-audit.mjs                  # audit at 390x844, both themes
  *   node scripts/mobile-audit.mjs --seed           # (re)seed demo data first
+ *   node scripts/mobile-audit.mjs --seed --strict  # ratchet: non-zero exit past BASELINE
  *   node scripts/mobile-audit.mjs --width 1440     # desktop regression pass
  *   node scripts/mobile-audit.mjs --only portfolio # filter surfaces by id substring
  */
@@ -51,6 +52,38 @@ const VIEWPORT_WIDTH = Number(opt("width", 390));
 const VIEWPORT_HEIGHT = Number(opt("height", 844));
 const ONLY = opt("only", null);
 const THEMES = opt("theme", "dark,light").split(",");
+const STRICT = flag("strict");
+
+/**
+ * Ratchet ceilings for `--strict`, in the spirit of `scripts/check-color-tokens.js`: a number
+ * that may only ever go down. A run that exceeds any of these exits non-zero.
+ *
+ * `pageOverflow` is pinned at 0 and must stay there — it is the doctrine's first rule, it is
+ * already met on every surface, and unlike the other metrics it has no legitimate reason to
+ * regress. The rest are ceilings to be lowered as the remaining work lands (adopting
+ * `RenderTable` and `TabsMobileSelect` should move `clippedContainers` and `smallText`).
+ *
+ * These come from a **seeded** run (`--seed --strict`, 50 surface-runs). An unseeded run walks
+ * empty screens — a table with no rows cannot overflow — so its numbers are meaningless as a
+ * baseline and `--strict` refuses to compare against them.
+ *
+ * Getting a trustworthy number here required fixing `lib/demo-seed.ts` first: it never deleted
+ * documents or the bank graph, so each re-seed stacked another copy and the counts climbed on
+ * every run (634 → 654 across two identical runs; 494 once the seed became idempotent). A
+ * ratchet against a drifting fixture is worse than no ratchet.
+ *
+ * CI runs a production build against a fresh database, so its numbers may still differ from a
+ * local dev run. That is why the workflow step keeps `continue-on-error: true` for now — once a
+ * few runs show the seeded figures are stable in CI, tighten these to what CI reports and drop
+ * the flag.
+ */
+const BASELINE = {
+  pageOverflow: 0,
+  touchTargetFails: 2,
+  touchTargetWarns: 6,
+  clippedContainers: 6,
+  smallText: 494,
+};
 
 /**
  * Surfaces to audit. `modal` entries resolve a real record id at runtime (see resolveIds)
@@ -591,16 +624,68 @@ async function main() {
     when: new Date().toISOString(),
     viewport: `${VIEWPORT_WIDTH}×${VIEWPORT_HEIGHT}`,
     themes: THEMES,
+    seeded: flag("seed"),
   };
+
+  /**
+   * Pre-aggregated totals. CI reads these directly instead of reducing over `results` in jq —
+   * the previous workflow dug for `.surfaces[]`, `.horizontalOverflow.exceeded` and
+   * `.touchTargets.violations`, none of which have ever existed on this report, so every query
+   * resolved to nothing and the PR summary printed a row of zeroes no matter what was measured.
+   * One shallow, named object is far harder to silently mis-address.
+   */
+  const summary = {
+    surfaceRuns: results.length,
+    failedToLoad: results.filter((r) => r.status === "error").length,
+    pageOverflow: results.filter((r) => r.status !== "error" && r.pageOverflow > 0).length,
+    touchTargetFails: sum(results, "smallTargetFailCount"),
+    touchTargetWarns: sum(results, "smallTargetCount"),
+    clippedContainers: sum(results, "clippedContainerCount"),
+    smallText: sum(results, "smallTextCount"),
+  };
+
   writeFileSync(
     join(OUT_DIR, `report-${VIEWPORT_WIDTH}.json`),
-    JSON.stringify({ meta, results }, null, 2),
+    JSON.stringify({ meta, summary, results }, null, 2),
   );
   writeFileSync(join(OUT_DIR, `report-${VIEWPORT_WIDTH}.md`), toMarkdown(results, meta));
   console.log(`\n[audit] wrote ${OUT_DIR}/report-${VIEWPORT_WIDTH}.{json,md}`);
+  console.log(`[audit] summary ${JSON.stringify(summary)}`);
 
-  const overflowing = results.filter((r) => r.status !== "error" && r.pageOverflow > 0);
-  console.log(`[audit] ${overflowing.length}/${results.length} surface-runs overflow horizontally`);
+  if (!STRICT) return;
+
+  if (!meta.seeded) {
+    console.error(
+      "\n✖ --strict requires --seed. Against an empty database the harness walks empty screens," +
+        " so every count is trivially low and passing the ratchet would prove nothing.",
+    );
+    process.exit(2);
+  }
+
+  const regressions = Object.entries(BASELINE)
+    .filter(([metric, ceiling]) => summary[metric] > ceiling)
+    .map(([metric, ceiling]) => `  ${metric}: ${summary[metric]} exceeds baseline ${ceiling}`);
+
+  if (regressions.length) {
+    console.error(`\n✖ Mobile audit regressed:\n${regressions.join("\n")}`);
+    console.error("\nFix the surface, or lower BASELINE in scripts/mobile-audit.mjs if a metric");
+    console.error("legitimately moved — never raise it to make a red run go green.");
+    process.exit(1);
+  }
+
+  const improved = Object.entries(BASELINE)
+    .filter(([metric, ceiling]) => summary[metric] < ceiling)
+    .map(([metric, ceiling]) => `${metric} ${summary[metric]} < ${ceiling}`);
+  console.log(
+    improved.length
+      ? `\n✓ Mobile audit within baseline — tighten it: ${improved.join(", ")}`
+      : "\n✓ Mobile audit exactly at baseline",
+  );
+}
+
+/** Total a numeric field across surface runs, tolerating surfaces that failed to load. */
+function sum(results, field) {
+  return results.reduce((acc, r) => acc + (r[field] ?? 0), 0);
 }
 
 main().catch((err) => {

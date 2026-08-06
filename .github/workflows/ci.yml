@@ -316,37 +316,60 @@ jobs:
       - name: Wait for app to become healthy
         run: npx wait-on http://localhost:3000 --timeout 120000
 
+      # `--seed` is not optional: without it the harness walks a bare database, and a table with
+      # no rows cannot overflow. Every number this job produced before it was added described
+      # empty screens. `--strict` ratchets against BASELINE in the harness.
       - name: Run mobile audit harness
-        run: node scripts/mobile-audit.mjs
+        run: node scripts/mobile-audit.mjs --seed --strict
         env:
           AUDIT_BASE_URL: http://localhost:3000
           CI: "true"
+        # TODO: drop once two or three runs confirm the seeded numbers are stable in CI — that
+        # is the moment this stops being advisory and starts being a gate.
         continue-on-error: true
 
       - name: Parse and report audit violations
         if: always()
         run: |
-          if [ -f audit-report/report-390.json ]; then
-            echo "## 📱 Mobile Audit Report (390px)" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+          set -euo pipefail
+          REPORT=audit-report/report-390.json
 
-            # Extract violation counts
-            TOTAL_SURFACES=$(jq '.surfaces | length' audit-report/report-390.json || echo "0")
-            OVERFLOW_VIOLATIONS=$(jq '[.surfaces[] | select(.horizontalOverflow.exceeded == true)] | length' audit-report/report-390.json || echo "0")
-            TOUCH_TARGET_VIOLATIONS=$(jq '[.surfaces[] | select(.touchTargets.violations[0] != null)] | length' audit-report/report-390.json || echo "0")
-
-            echo "Scanned **$TOTAL_SURFACES surfaces** at 390×844 (Pixel 5)" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
-            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| Surfaces with horizontal overflow | $OVERFLOW_VIOLATIONS |" >> $GITHUB_STEP_SUMMARY
-            echo "| Surfaces with sub-44px touch targets | $TOUCH_TARGET_VIOLATIONS |" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "See audit-report/report-390.md for details." >> $GITHUB_STEP_SUMMARY
-          else
+          if [ ! -f "$REPORT" ]; then
             echo "## ⚠️ Mobile Audit Failed" >> $GITHUB_STEP_SUMMARY
             echo "The audit harness did not complete. Check the logs above." >> $GITHUB_STEP_SUMMARY
+            exit 0
           fi
+
+          # Read the harness's own pre-aggregated `summary` object. The previous version of this
+          # step reduced over a `.surfaces[]` array that has never existed on this report (the
+          # root keys are meta/summary/results), so every query yielded nothing and `|| echo 0`
+          # turned that into a clean bill of health. `-e` makes a missing key fail the step
+          # instead of silently printing a zero.
+          jq -e '.summary' "$REPORT" > /dev/null
+
+          SEEDED=$(jq -r '.meta.seeded' "$REPORT")
+          read -r RUNS FAILED OVERFLOW TFAIL TWARN CLIPPED SMALLTEXT < <(
+            jq -r '.summary | "\(.surfaceRuns) \(.failedToLoad) \(.pageOverflow) \(.touchTargetFails) \(.touchTargetWarns) \(.clippedContainers) \(.smallText)"' "$REPORT"
+          )
+
+          {
+            echo "## 📱 Mobile Audit Report (390×844)"
+            echo ""
+            echo "Scanned **$RUNS surface-runs** (each surface in both themes) · seeded: \`$SEEDED\`"
+            [ "$SEEDED" = "true" ] || echo ""
+            [ "$SEEDED" = "true" ] || echo "> ⚠️ Unseeded run — these counts describe empty screens and mean little."
+            echo ""
+            echo "| Metric | Count |"
+            echo "|--------|-------|"
+            echo "| Surfaces failing to load | $FAILED |"
+            echo "| **Surface-runs with page-level horizontal overflow** | **$OVERFLOW** |"
+            echo "| Touch targets under 24px (WCAG 2.2 AA fail) | $TFAIL |"
+            echo "| Touch targets under 44px | $TWARN |"
+            echo "| Containers clipping content (unreachable) | $CLIPPED |"
+            echo "| Text under 12px | $SMALLTEXT |"
+            echo ""
+            echo "See \`audit-report/report-390.md\` in the artifact for the per-surface breakdown."
+          } >> $GITHUB_STEP_SUMMARY
 
       - name: Upload mobile audit report
         uses: actions/upload-artifact@v7
