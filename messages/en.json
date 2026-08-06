@@ -594,7 +594,8 @@
     "kpiOpen": "open",
     "kpiUrgent": "urgent",
     "kpiScheduled": "scheduled (next 14 days)",
-    "kpiEvidence": "evidence required"
+    "kpiEvidence": "evidence required",
+    "editDetails": "Edit details"
   },
   "documents": {
     "title": "Documents",

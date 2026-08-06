@@ -594,7 +594,8 @@
     "kpiOpen": "abiertas",
     "kpiUrgent": "urgentes",
     "kpiScheduled": "programadas (próximos 14 días)",
-    "kpiEvidence": "sin evidencia"
+    "kpiEvidence": "sin evidencia",
+    "editDetails": "Editar detalles"
   },
   "documents": {
     "title": "Documentos",
