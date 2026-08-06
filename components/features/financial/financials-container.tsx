@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsMobileSelect, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { ExportButton } from "@/components/ui/export-button";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
@@ -20,6 +20,7 @@ import { ReceiptAutomationQueue } from "./receipt-automation-queue";
 import { TaxConnectorDashboard } from "./tax-connector-dashboard";
 import { FinancialsView } from "./financials-view";
 import { BadgeEuro, FileText, Grid3X3, Landmark, Plus, Receipt } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 
 type PaymentTab = "queue" | "receipts" | "rent-matrix" | "bank" | "rent-roll" | "tax";
 
@@ -130,6 +131,19 @@ export function FinancialsContainer() {
 
   const tenantDescription =
     "Review your rent history, download receipts, and keep the next payment amount visible without owner-only accounting details.";
+
+  /** Tab set as data, so the bar and its mobile select can never drift apart. */
+  const paymentTabs: { value: PaymentTab; label: string; icon: LucideIcon }[] = isOwnerPortal
+    ? [
+        { value: "queue", label: "Due & Overdue", icon: Grid3X3 },
+        { value: "receipts", label: "Receipts", icon: Receipt },
+        { value: "rent-matrix", label: "Rent Matrix", icon: Grid3X3 },
+        { value: "bank", label: "Bank Movements", icon: Landmark },
+        { value: "rent-roll", label: "Occupancy & Rent", icon: BadgeEuro },
+        { value: "tax", label: "Tax Summary", icon: FileText },
+      ]
+    : [{ value: "receipts", label: "Payment History", icon: Receipt }];
+  const collapseTabs = paymentTabs.length > 4;
 
   return (
     <div className="space-y-6">
@@ -303,47 +317,35 @@ export function FinancialsContainer() {
         onValueChange={(value) => setActiveTab(value as PaymentTab)}
         className="space-y-6"
       >
+        {/* One source for both renderings. Doctrine rule 4: past ~4 tabs the bar becomes a
+            select below `md` — six triggers overflowed their container by 444px at 390px, so
+            the last three were reachable only by discovering a horizontal scroll. The tenant
+            portal sees a single tab, so it keeps the bar at every width. */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          {collapseTabs && (
+            <TabsMobileSelect
+              className="md:hidden"
+              value={activeTab}
+              onValueChange={(value) => setActiveTab(value as PaymentTab)}
+              items={paymentTabs.map(({ value, label }) => ({ value, label }))}
+              aria-label={isOwnerPortal ? "Payments section" : "My payments section"}
+            />
+          )}
           <TabsList
             className={cn(
               "w-full",
+              collapseTabs && "max-md:hidden",
               isOwnerPortal
                 ? "flex max-w-full justify-start gap-1 overflow-x-auto"
                 : "grid max-w-sm grid-cols-1",
             )}
           >
-            {isOwnerPortal && (
-              <TabsTrigger value="queue" className="flex shrink-0 items-center gap-2">
-                <Grid3X3 className="h-4 w-4 shrink-0" />
-                <span className="whitespace-nowrap">Due &amp; Overdue</span>
+            {paymentTabs.map(({ value, label, icon: Icon }) => (
+              <TabsTrigger key={value} value={value} className="flex shrink-0 items-center gap-2">
+                <Icon className="h-4 w-4 shrink-0" />
+                <span className="whitespace-nowrap">{label}</span>
               </TabsTrigger>
-            )}
-            <TabsTrigger value="receipts" className="flex shrink-0 items-center gap-2">
-              <Receipt className="h-4 w-4 shrink-0" />
-              <span className="whitespace-nowrap">
-                {isOwnerPortal ? "Receipts" : "Payment History"}
-              </span>
-            </TabsTrigger>
-            {isOwnerPortal && (
-              <>
-                <TabsTrigger value="rent-matrix" className="flex shrink-0 items-center gap-2">
-                  <Grid3X3 className="h-4 w-4 shrink-0" />
-                  <span className="whitespace-nowrap">Rent Matrix</span>
-                </TabsTrigger>
-                <TabsTrigger value="bank" className="flex shrink-0 items-center gap-2">
-                  <Landmark className="h-4 w-4 shrink-0" />
-                  <span className="whitespace-nowrap">Bank Movements</span>
-                </TabsTrigger>
-                <TabsTrigger value="rent-roll" className="flex shrink-0 items-center gap-2">
-                  <BadgeEuro className="h-4 w-4 shrink-0" />
-                  <span className="whitespace-nowrap">Occupancy & Rent</span>
-                </TabsTrigger>
-                <TabsTrigger value="tax" className="flex shrink-0 items-center gap-2">
-                  <FileText className="h-4 w-4 shrink-0" />
-                  <span className="whitespace-nowrap">Tax Summary</span>
-                </TabsTrigger>
-              </>
-            )}
+            ))}
           </TabsList>
         </div>
 

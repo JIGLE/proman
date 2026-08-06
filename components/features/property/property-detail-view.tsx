@@ -24,7 +24,7 @@ import { cn } from "@/lib/utils/utils";
 import { apiFetch } from "@/lib/utils/api-client";
 import { useCsrf } from "@/lib/contexts/csrf-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsMobileSelect, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -906,9 +906,37 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
           on one screen), and revenue now badges the Money tab. Density rules 2 and 4 in
           CLAUDE.md — one stat row, and counts as text before counts as boxes. */}
 
-      {/* Tabs */}
+      {/* Tabs. Five triggers overflowed their container by 207px at 390px, so Documents and
+          Audit were reachable only by discovering a horizontal scroll — doctrine rule 4 swaps
+          the bar for a select below `md`. Badge counts ride along as `Label (3)` so the mobile
+          view states what the bar states. */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="overflow-x-auto">
+        <TabsMobileSelect
+          className="md:hidden"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          aria-label={t("tabs.overview")}
+          items={[
+            { value: "overview", label: t("tabs.overview") },
+            {
+              value: "finance",
+              label: t("tabs.money"),
+              badge: totalRevenue > 0 ? formatCurrency(totalRevenue) : undefined,
+            },
+            {
+              value: "maintenance",
+              label: t("tabs.operations"),
+              badge: openTickets > 0 ? openTickets : undefined,
+            },
+            {
+              value: "documents",
+              label: t("actions.documents"),
+              badge: propertyDocuments.length > 0 ? propertyDocuments.length : undefined,
+            },
+            { value: "audit", label: t("tabs.audit") },
+          ]}
+        />
+        <TabsList className="overflow-x-auto max-md:hidden">
           <TabsTrigger value="overview">{t("tabs.overview")}</TabsTrigger>
           <TabsTrigger value="finance" className="flex items-center gap-1.5">
             <DollarSign className="h-3.5 w-3.5" />

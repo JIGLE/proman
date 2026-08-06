@@ -82,7 +82,7 @@ const BASELINE = {
   touchTargetFails: 2,
   touchTargetWarns: 6,
   clippedContainers: 6,
-  smallText: 494,
+  smallText: 456,
 };
 
 /**
@@ -585,12 +585,14 @@ async function main() {
 
   const surfaces = ONLY ? SURFACES.filter((s) => s.id.includes(ONLY)) : SURFACES;
   const results = [];
+  const skipped = [];
   for (const surface of surfaces) {
     for (const theme of THEMES) {
       if (surface.path.includes("{")) {
         const key = surface.path.match(/\{(\w+)\}/)?.[1];
         if (key && !ids[key]) {
           console.log(`[audit] skip ${surface.id} (${theme}) — no ${key} available`);
+          skipped.push(`${surface.id} (${theme}): no ${key}`);
           continue;
         }
       }
@@ -660,6 +662,17 @@ async function main() {
         " so every count is trivially low and passing the ratchet would prove nothing.",
     );
     process.exit(2);
+  }
+
+  // A skipped surface silently shrinks the denominator, so a run that audits fewer screens
+  // scores better on every total. Observed for real: `tenant-portal` needs a freshly minted
+  // token, and two consecutive runs skipped it while a third did not — moving `surfaceRuns`
+  // between 50 and 52 and taking its text nodes with it. Under `--strict` the surface set has
+  // to be fixed, so a skip is a failure rather than a quiet footnote.
+  if (skipped.length) {
+    console.error(`\n✖ ${skipped.length} surface-run(s) skipped, so the totals are not
+comparable to the baseline:\n  ${skipped.join("\n  ")}`);
+    process.exit(3);
   }
 
   const regressions = Object.entries(BASELINE)
