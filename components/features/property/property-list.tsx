@@ -22,7 +22,6 @@ import {
   Trash2,
   MoreHorizontal,
   Search,
-  PanelLeftClose,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -180,8 +179,6 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const pathname = usePathname();
     const locale = pathname.split("/")[1] || "pt";
     const tNextAction = useTranslations("property.nextAction");
-    const tPortfolio = useTranslations("portfolioTree");
-    const tNav = useTranslations("navigation");
     const confirmDialog = useConfirmDialog();
     // Property detail modal state
     // Removed: selectedProperty, isDetailModalOpen (now handled by router/modal route)
@@ -196,29 +193,28 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
     const [dataViewMode] = useState<DataViewMode>(viewMode === "map" ? "map" : "tree");
     // The asset whose command workspace is open in the tree split (desktop only).
     const [workspacePropertyId, setWorkspacePropertyId] = useState<string | null>(null);
-    // The undocked tree, shown while a detail occupies the workspace.
-    const [treeFlyoutOpen, setTreeFlyoutOpen] = useState(false);
-    // Re-clicking Portfolio in the sidebar while already here reopens the tree.
+
+    // How far the tree split sits below the top of the scroll container. The asset rail is
+    // sized `100vh - this` so it runs to the viewport floor and no further — a plain `h-screen`
+    // would overhang by exactly the height of whatever page header sits above it, and a sticky
+    // element that overhangs its own containing block gets dragged upward until its top (and
+    // its action row) is off-screen. Measured on the wrapper, which never sticks, so the
+    // reading stays the layout position rather than the pinned one.
+    const splitRef = useRef<HTMLDivElement>(null);
+    const [railInset, setRailInset] = useState<number | null>(null);
     useEffect(() => {
-      const onReselect = (event: Event) => {
-        const key = (event as CustomEvent<{ key?: string }>).detail?.key;
-        if (key === "properties") setTreeFlyoutOpen(true);
+      const measure = () => {
+        const el = splitRef.current;
+        const main = el?.closest("main");
+        if (!el || !main) return;
+        const top =
+          el.getBoundingClientRect().top - main.getBoundingClientRect().top + main.scrollTop;
+        setRailInset(Math.max(0, Math.round(top)));
       };
-      window.addEventListener("situs:nav-reselect", onReselect);
-      return () => window.removeEventListener("situs:nav-reselect", onReselect);
-    }, []);
-    // Collapse the tree rail to a dots-only spine (desktop; persisted per device).
-    const [railCollapsed, setRailCollapsed] = useState(false);
-    useEffect(() => {
-      setRailCollapsed(localStorage.getItem("situs-portfolio-rail-collapsed") === "1");
-    }, []);
-    const toggleRailCollapsed = useCallback(() => {
-      setRailCollapsed((prev) => {
-        const next = !prev;
-        localStorage.setItem("situs-portfolio-rail-collapsed", next ? "1" : "0");
-        return next;
-      });
-    }, []);
+      measure();
+      window.addEventListener("resize", measure);
+      return () => window.removeEventListener("resize", measure);
+    }, [loading]);
 
     // Building edit dialog state
     const [editingBuilding, setEditingBuilding] = useState<Building | null>(null);
@@ -580,40 +576,44 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                 </div>
               ) : dataViewMode === "tree" ? (
                 /* Tree View — Situs structural portfolio inventory + command workspace.
-                   Desktop (lg+): a fixed tree rail beside an inline detail workspace.
-                   Below lg: tree only — selecting an asset routes to the detail. */
+                   Desktop (lg+): a permanent asset rail beside an inline detail workspace.
+                   Below lg: rail only — selecting an asset routes to the detail. */
                 <div
-                  className={cn(
-                    "lg:grid lg:items-start lg:gap-6",
-                    workspacePropertyId
-                      ? // A detail is open. The tree is dismissed by default so the workspace
-                        // gets the full width; when reopened it takes a real 232px column and
-                        // *pushes* rather than covering, so the detail's container narrows and
-                        // its container queries reflow it. An overlay would have left the
-                        // detail laid out for a width it no longer has.
-                        treeFlyoutOpen
-                        ? "lg:grid-cols-[232px_1fr]"
-                        : "lg:grid-cols-1"
-                      : railCollapsed
-                        ? "lg:grid-cols-[76px_1fr]"
-                        : "lg:grid-cols-[minmax(248px,288px)_1fr]",
-                  )}
+                  ref={splitRef}
+                  className="lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-6"
                 >
-                  <div
+                  {/* Asset rail. One persistent column rather than a dismissable flyout: it runs
+                      flush into the shell's left padding so it reads as a continuation of the
+                      sidebar rather than a panel floating beside it, holds its own scroll down to
+                      the viewport floor, and keeps its actions and filter pinned above that
+                      scroll — the dismissable version hid all three the moment a detail opened.
+                      It stays in flow so the page heading above it and the workspace beside it
+                      lay out around it instead of under it. */}
+                  <aside
+                    style={
+                      railInset === null
+                        ? undefined
+                        : ({ "--rail-inset": `${railInset}px` } as React.CSSProperties)
+                    }
                     className={cn(
-                      "space-y-2",
-                      // With a detail open this column is the pushed-in tree, rendered below.
-                      workspacePropertyId && "lg:hidden",
+                      "flex flex-col bg-[var(--color-surface)]",
+                      // -ml-8 + the matching width bleed puts the rail's left edge on the
+                      // sidebar's right edge; the overhang lands inside the shell's padding box,
+                      // so it adds no horizontal overflow.
+                      "lg:sticky lg:top-0 lg:-ml-8 lg:w-[calc(100%+2rem)]",
+                      // Painted a full viewport tall, but its *margin* box is shortened by the
+                      // inset — and the margin box is what sticky is allowed to move inside its
+                      // containing block. Without that, a rail as tall as the viewport has no
+                      // room to travel and gets dragged up until its action row is off-screen.
+                      "lg:h-screen lg:mb-[calc(-1*var(--rail-inset,7rem))]",
+                      "lg:border-r lg:border-[var(--color-border)]",
                     )}
                   >
-                    {/* Create/export sit above the list they act on rather than in the page
-                        header. Hidden with the rail collapsed, where there is no room. */}
-                    {!railCollapsed && treeActions && (
-                      <div className="flex flex-wrap items-center gap-2">{treeActions}</div>
-                    )}
-                    {/* Compact search + attention filter — contextual to the tree
-                        (replaces the removed top search band + filter chips). */}
-                    {!railCollapsed && (
+                    <div className="flex-none space-y-2 border-b border-[var(--color-border)] p-3">
+                      {/* Create/export sit with the list they act on, not in the page header. */}
+                      {treeActions && <div className="flex items-center gap-2">{treeActions}</div>}
+                      {/* Compact search + attention filter — contextual to the tree
+                          (replaces the removed top search band + filter chips). */}
                       <div className="flex items-center gap-2">
                         <div className="relative min-w-0 flex-1">
                           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--color-muted-foreground)]" />
@@ -641,62 +641,22 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           {needsAttentionPropertyIds.size}
                         </button>
                       </div>
-                    )}
-                    <PortfolioTree
-                      properties={filteredProperties}
-                      buildings={buildings}
-                      tenants={tenants}
-                      maintenance={maintenance}
-                      leases={leases}
-                      onSelectProperty={handleTreeSelect}
-                      highlightedPropertyId={workspacePropertyId ?? highlightedPropertyId}
-                      collapsed={railCollapsed}
-                      onToggleCollapsed={toggleRailCollapsed}
-                    />
-                  </div>
-                  {/* The tree, pushed in beside an open detail. Rows carry only the asset name
-                      and its status dots — address, rent and the rest live on the detail page
-                      next to it, so the width is set by the longest name. It takes a real grid
-                      column rather than overlaying, so the detail reflows around it. */}
-                  {workspacePropertyId && treeFlyoutOpen && (
-                    <div className="hidden min-w-0 lg:block">
-                      <div className="flex h-full flex-col border border-[var(--color-border)] bg-[var(--color-surface)]">
-                        <div className="flex items-center justify-between gap-2 border-b border-[var(--color-border)] px-3 py-2">
-                          <p className="mono-label min-w-0 truncate">{tNav("portfolio")}</p>
-                          <Button
-                            variant="ghost"
-                            size="icon-sm"
-                            onClick={() => setTreeFlyoutOpen(false)}
-                            title={tPortfolio("collapse")}
-                            aria-label={tPortfolio("collapse")}
-                          >
-                            <PanelLeftClose className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        <div className="min-h-0 flex-1 overflow-y-auto">
-                          <PortfolioTree
-                            properties={filteredProperties}
-                            buildings={buildings}
-                            tenants={tenants}
-                            maintenance={maintenance}
-                            leases={leases}
-                            compact
-                            // Stays open after a selection: at 232px it costs little, and
-                            // leaving it up makes stepping through assets one click each.
-                            onSelectProperty={handleTreeSelect}
-                            highlightedPropertyId={workspacePropertyId ?? highlightedPropertyId}
-                          />
-                        </div>
-                      </div>
                     </div>
-                  )}
+                    <div className="min-h-0 flex-1 lg:overflow-y-auto">
+                      <PortfolioTree
+                        properties={filteredProperties}
+                        buildings={buildings}
+                        tenants={tenants}
+                        maintenance={maintenance}
+                        leases={leases}
+                        onSelectProperty={handleTreeSelect}
+                        highlightedPropertyId={workspacePropertyId ?? highlightedPropertyId}
+                      />
+                    </div>
+                  </aside>
 
                   <div className="hidden min-w-0 lg:block">
                     {workspacePropertyId ? (
-                      // No local "open the tree" button: Portfolio in the sidebar is already
-                      // the thing you would reach for, and it reopens the tree via the
-                      // `situs:nav-reselect` signal. A second control beside the detail was
-                      // just a duplicate of the nav item pointing at the same place.
                       <div
                         key={workspacePropertyId}
                         className="border border-[var(--color-border)] bg-[var(--color-card)] p-4 motion-safe:animate-fade-in lg:p-6"
