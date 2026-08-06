@@ -22,7 +22,6 @@ import {
   Trash2,
   MoreHorizontal,
   Search,
-  PanelLeftOpen,
   PanelLeftClose,
 } from "lucide-react";
 import {
@@ -694,23 +693,15 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
 
                   <div className="hidden min-w-0 lg:block">
                     {workspacePropertyId ? (
-                      <div key={workspacePropertyId} className="space-y-2">
-                        {/* The only way back to the portfolio index while a detail is open. */}
-                        <div className="flex items-center gap-2">
-                          {!treeFlyoutOpen && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setTreeFlyoutOpen(true)}
-                            >
-                              <PanelLeftOpen className="mr-1.5 h-3.5 w-3.5" />
-                              {tNav("portfolio")}
-                            </Button>
-                          )}
-                        </div>
-                        <div className="border border-[var(--color-border)] bg-[var(--color-card)] p-4 motion-safe:animate-fade-in lg:p-6">
-                          <PropertyDetailView propertyId={workspacePropertyId} />
-                        </div>
+                      // No local "open the tree" button: Portfolio in the sidebar is already
+                      // the thing you would reach for, and it reopens the tree via the
+                      // `situs:nav-reselect` signal. A second control beside the detail was
+                      // just a duplicate of the nav item pointing at the same place.
+                      <div
+                        key={workspacePropertyId}
+                        className="border border-[var(--color-border)] bg-[var(--color-card)] p-4 motion-safe:animate-fade-in lg:p-6"
+                      >
+                        <PropertyDetailView propertyId={workspacePropertyId} />
                       </div>
                     ) : (
                       <div className="flex min-h-[440px] items-center justify-center border border-dashed border-[var(--color-border)] p-12 text-center">
