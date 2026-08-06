@@ -87,7 +87,25 @@ export function SearchFilter({
     [onFilterChange],
   );
 
-  const collapse = filters.length > 2;
+  /**
+   * Past two dropdowns the set folds behind one "Filters" control — but only where the row
+   * would actually be a wall. At `lg` and up there is room to show them all, and three visible
+   * selects beat a popover you have to open to see what is filtered.
+   *
+   * Done in state rather than with `lg:hidden` so there is exactly one of each control in the
+   * DOM: rendering both copies would duplicate every select's id, test hook and a11y node.
+   * Both renders start wide, so hydration matches; the effect narrows it after mount.
+   */
+  const [wide, setWide] = useState(true);
+  useEffect(() => {
+    const mql = window.matchMedia("(min-width: 1024px)");
+    const sync = () => setWide(mql.matches);
+    sync();
+    mql.addEventListener("change", sync);
+    return () => mql.removeEventListener("change", sync);
+  }, []);
+
+  const collapse = filters.length > 2 && !wide;
   const activeCount = filters.filter((f) => valueFor(f) !== (f.defaultValue ?? "all")).length;
 
   const renderFilter = (filter: Filter): React.ReactElement => (
@@ -160,10 +178,9 @@ export function SearchFilter({
         )}
       </div>
 
-      {/* Filter dropdowns. Up to two sit inline as a utility row; past that they fold behind
-          one "Filters" control, per declutter rule 3 in CLAUDE.md — a search box plus three
-          dropdowns is a wall, and Operations was rendering exactly that above its ticket list.
-          The trigger carries a count so an active filter is never hidden. */}
+      {/* Filter dropdowns — inline where they fit, folded behind one control where they don't
+          (declutter rule 3). The trigger carries a count so an active filter is never hidden
+          while collapsed. */}
       {collapse ? (
         <Popover.Root>
           <Popover.Trigger asChild>

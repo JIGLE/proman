@@ -90,6 +90,22 @@ vi.mock("@/lib/contexts/theme-context", () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 
+// jsdom implements no CSSOM view API, so any component that reads a media query on mount
+// (SearchFilter decides inline-vs-collapsed filters that way) throws without this. Defaults to
+// the desktop branch, matching the components' own pre-hydration default.
+if (typeof window !== "undefined" && typeof window.matchMedia !== "function") {
+  window.matchMedia = ((query: string) => ({
+    matches: true,
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  })) as unknown as typeof window.matchMedia;
+}
+
 // Inject our minimal Prisma mock when DATABASE_URL is not set. This keeps tests
 // hermetic and avoids requiring a sqlite file for every run.
 if (!process.env.DATABASE_URL) {
