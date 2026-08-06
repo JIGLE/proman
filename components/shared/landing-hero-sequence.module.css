@@ -185,6 +185,9 @@
   display: none;
   align-items: center;
   justify-content: center;
+  /* Single source of truth for the orbit's diameter: .orbit sizes itself from it and
+     .splashFooter positions itself below it from the same value. */
+  --orbit-size: 340px;
   transform: translate(calc((26.25% + 11.4px) * var(--v)), calc(-18px * (1 - var(--v))))
     scale(calc(1 + 0.32 * (1 - var(--v))));
   transition: transform 100ms linear;
@@ -193,25 +196,22 @@
 @media (min-width: 1024px) {
   .heroVisual {
     display: flex;
+    --orbit-size: clamp(340px, 27vw, 460px);
   }
 }
 .orbit {
   position: relative;
   /* Sized off the viewport from lg up: at 340px flat it read as a small motif marooned in the
      right-hand column on a wide desktop. Clamped so it never outgrows the grid track. The
-     inner offsets below are percentages, not pixels, so they scale with it. */
-  width: 340px;
-  height: 340px;
+     inner offsets below are percentages, not pixels, so they scale with it.
+     --orbit-size is declared on .heroVisual so .splashFooter can sit itself relative to the
+     orbit's real radius instead of a hardcoded number that silently goes stale. */
+  width: var(--orbit-size);
+  height: var(--orbit-size);
   display: grid;
   place-items: center;
   pointer-events: auto;
   cursor: pointer;
-}
-@media (min-width: 1024px) {
-  .orbit {
-    width: clamp(340px, 27vw, 460px);
-    height: clamp(340px, 27vw, 460px);
-  }
 }
 .orbit:hover .glow {
   opacity: 1;
@@ -363,7 +363,11 @@
 .splashFooter {
   position: absolute;
   left: 50%;
-  top: calc(50% + 184px); /* orbit radius (170px) + the 14px gap the layout already used */
+  /* Derived from the orbit's actual radius, not a fixed number. It used to be a hardcoded
+     184px (half of the old flat 340px orbit, plus a 14px gap); once the orbit started scaling
+     with the viewport that number went stale and the wordmark and scroll arrow ended up
+     sitting inside the outer ring — 61px inside it at 1920px. */
+  top: calc(50% + var(--orbit-size) / 2 + 22px);
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
