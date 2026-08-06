@@ -233,13 +233,17 @@
      resolves, so this stays a quiet pre-scroll cue rather than competing with settled content. */
   translate: calc(var(--mx) * (1 - var(--v))) calc(var(--my) * (1 - var(--v)));
 }
-/* Ring rotation is fully JS-driven per frame (see component) so it can accelerate on scroll and
-   ease back to its resting speed when idle. The keyline halo is the same trick the mark itself
-   uses: some countries' primary colour (Germany's black) sits close to the dark-canvas colour,
-   so relying on the flag colour alone for contrast would make the ring — and its point —
-   disappear. Border-colour leans heavily toward the flag colour (not a 50/50 mix with
-   --color-border) because the light theme's border token is a pale, low-contrast tan — a light
-   mix of it washes the ring out against the equally pale canvas. */
+/* Colour roles here read as an orrery: the orbital PATH takes the flag's tertiary colour, and
+   the two planets travelling it take the primary (outer) and secondary (inner).
+   The path uses the contrast-corrected --logo-accent-readable, because a raw accent like
+   Portugal's #FFFF00 vanishes on the light theme's cream canvas. The planets stay raw flag
+   colours — they are logo roles, and the keyline halo is what carries them on either canvas,
+   the same trick the mark itself uses (Germany's black primary would otherwise disappear into
+   a dark canvas). Border mixes lean heavily toward the accent rather than a 50/50 blend with
+   --color-border: that token is a pale, low-contrast tan in the light theme, and a lighter mix
+   washes an already-corrected colour out against the equally pale canvas.
+   Ring rotation is fully JS-driven per frame (see component) so it can accelerate on scroll and
+   ease back to its resting speed when idle. */
 .ring {
   position: absolute;
   border-radius: 50%;
@@ -268,11 +272,14 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: var(--logo-accent-readable);
+  /* The planets carry the raw flag colours — primary on the outer orbit, secondary on the
+     inner — against the tertiary path. Raw, not contrast-corrected: these are logo-role
+     colours, and the keyline halo below is what keeps them visible on either canvas. */
+  background: var(--logo-primary);
   box-shadow:
     0 0 0 1px var(--logo-keyline),
-    0 0 9px 2px color-mix(in srgb, var(--logo-accent-readable) 75%, transparent),
-    0 0 2px 1px var(--logo-accent-readable);
+    0 0 9px 2px color-mix(in srgb, var(--logo-primary) 75%, transparent),
+    0 0 2px 1px var(--logo-primary);
 }
 .ringR2::after {
   content: "";
@@ -283,11 +290,11 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--logo-accent-readable);
+  background: var(--logo-secondary);
   box-shadow:
     0 0 0 1px var(--logo-keyline),
-    0 0 9px 2px color-mix(in srgb, var(--logo-accent-readable) 75%, transparent),
-    0 0 2px 1px var(--logo-accent-readable);
+    0 0 9px 2px color-mix(in srgb, var(--logo-secondary) 75%, transparent),
+    0 0 2px 1px var(--logo-secondary);
 }
 .markScale {
   position: relative;
@@ -464,12 +471,12 @@
 }
 .mobileRingR1 {
   inset: 0;
-  border-color: color-mix(in srgb, var(--logo-accent-readable) 72%, var(--color-border));
+  border-color: color-mix(in srgb, var(--logo-accent-readable) 88%, var(--color-border));
   animation: mobileSpinCW 22s linear infinite;
 }
 .mobileRingR2 {
   inset: 26px;
-  border-color: color-mix(in srgb, var(--logo-accent-readable) 66%, var(--color-border));
+  border-color: color-mix(in srgb, var(--logo-accent-readable) 82%, var(--color-border));
   animation: mobileSpinCCW 16s linear infinite;
 }
 .mobileRingR1::after {
@@ -481,11 +488,11 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--logo-accent-readable);
+  background: var(--logo-primary);
   box-shadow:
     0 0 0 1px var(--logo-keyline),
-    0 0 8px 2px color-mix(in srgb, var(--logo-accent-readable) 75%, transparent),
-    0 0 2px 1px var(--logo-accent-readable);
+    0 0 8px 2px color-mix(in srgb, var(--logo-primary) 75%, transparent),
+    0 0 2px 1px var(--logo-primary);
 }
 .mobileRingR2::after {
   content: "";
@@ -496,11 +503,11 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--logo-accent-readable);
+  background: var(--logo-secondary);
   box-shadow:
     0 0 0 1px var(--logo-keyline),
-    0 0 8px 2px color-mix(in srgb, var(--logo-accent-readable) 75%, transparent),
-    0 0 2px 1px var(--logo-accent-readable);
+    0 0 8px 2px color-mix(in srgb, var(--logo-secondary) 75%, transparent),
+    0 0 2px 1px var(--logo-secondary);
 }
 @keyframes mobileSpinCW {
   from {
