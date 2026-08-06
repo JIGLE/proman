@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Users, Briefcase, Plus, Wrench, MessageSquare } from "lucide-react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsMobileSelect, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { TenantsView, TenantsViewRef } from "@/components/features/tenant/tenants-view";
@@ -119,8 +119,21 @@ export function PeopleView(): React.ReactElement {
       {/* Tab Navigation - Tenants and Owners */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <div className="flex items-center gap-2">
-          {/* Scrollable on narrow screens so no tab label ever clips. */}
-          <TabsList className="flex w-full max-w-2xl justify-start overflow-x-auto sm:grid sm:grid-cols-4">
+          {/* The select takes the bar's place below `md`, in the same row, so the adjacent
+              create button stays on the line it has always been on. */}
+          <TabsMobileSelect
+            className="min-w-0 flex-1 md:hidden"
+            value={activeTab}
+            onValueChange={setActiveTab}
+            aria-label={t("tenants")}
+            items={[
+              { value: "tenants", label: t("tenants"), badge: tenants.length },
+              { value: "owners", label: t("owners"), badge: owners.length },
+              { value: "contacts", label: t("serviceProviders") },
+              { value: "communications", label: t("communications") },
+            ]}
+          />
+          <TabsList className="flex w-full max-w-2xl justify-start overflow-x-auto max-md:hidden sm:grid sm:grid-cols-4">
             <TabsTrigger value="tenants" className="flex shrink-0 items-center gap-2">
               <Users className="h-4 w-4 shrink-0" />
               <span>{t("tenants")}</span>

@@ -55,7 +55,7 @@ import { OperationsKpiRow } from "./operations-kpi-row";
 import { OperationsCalendar } from "./operations-calendar";
 import { OperationsEvidence } from "./operations-evidence";
 import { ContactsView } from "@/components/features/contacts/contacts-view";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsMobileSelect, TabsTrigger } from "@/components/ui/tabs";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { ListChecks, CalendarDays, Wrench as WrenchIcon, Camera } from "lucide-react";
 
@@ -638,7 +638,19 @@ export function MaintenanceView(): React.ReactElement {
           {maintenance.length > 0 && <OperationsKpiRow tickets={maintenance} />}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="overflow-x-auto">
+            <TabsMobileSelect
+              className="md:hidden"
+              value={activeTab}
+              onValueChange={setActiveTab}
+              aria-label={t("operationsTitle")}
+              items={[
+                { value: "queue", label: t("tabs.queue") },
+                { value: "calendar", label: t("tabs.calendar") },
+                { value: "contractors", label: t("tabs.contractors") },
+                { value: "evidence", label: t("tabs.evidence") },
+              ]}
+            />
+            <TabsList className="overflow-x-auto max-md:hidden">
               <TabsTrigger value="queue" className="flex items-center gap-1.5">
                 <ListChecks className="h-3.5 w-3.5" />
                 {t("tabs.queue")}
