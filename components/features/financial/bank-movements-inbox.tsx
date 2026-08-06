@@ -23,6 +23,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { useApp } from "@/lib/contexts/app-context";
 import { csrfHeaders } from "@/lib/utils/api-client";
+import { RenderTable } from "@/components/ui/table";
 
 /**
  * Situs Bank Movements inbox — every imported movement with its match
@@ -196,6 +197,109 @@ export function BankMovementsInbox(): React.ReactElement {
     }
   }, [csvText, filter, load]);
 
+  /**
+   * Match suggestion and row actions, shared by the table cell and the mobile card so the two
+   * can never diverge. Both close over `reassigningId`/`busyId`, which is why they live here
+   * rather than as module-level components.
+   */
+  const renderMatch = (row: InboxRow) => {
+    const reasons = formatReasons(row.matchReasons);
+    return (
+      <>
+        {row.suggestedLease ? (
+          <span className="block text-xs">
+            {row.suggestedLease.tenantName}
+            <span className="text-[var(--color-muted-foreground)]">
+              {" "}
+              · {row.suggestedLease.propertyName}
+            </span>
+            {row.matchConfidence !== null ? (
+              <span className="ml-1 font-mono tabular-nums">
+                {Math.round(row.matchConfidence * 100)}%
+              </span>
+            ) : null}
+          </span>
+        ) : (
+          <span className="text-xs text-[var(--color-muted-foreground)]">No suggestion</span>
+        )}
+        {reasons ? (
+          <span className="block text-[10px] text-[var(--color-muted-foreground)]">{reasons}</span>
+        ) : null}
+      </>
+    );
+  };
+
+  const renderActions = (row: InboxRow) => {
+    const actionable = row.status === "needs_review" || row.status === "imported";
+    if (!actionable) return null;
+    if (reassigningId === row.id) {
+      return (
+        <div className="flex items-center gap-1">
+          <Select
+            onValueChange={(leaseId) => void act(row.id, "reassign", leaseId)}
+            disabled={busyId === row.id}
+          >
+            <SelectTrigger className="h-7 w-[190px] rounded-none text-xs">
+              <SelectValue placeholder="Assign to lease…" />
+            </SelectTrigger>
+            <SelectContent>
+              {leaseOptions.map((lease) => (
+                <SelectItem key={lease.id} value={lease.id}>
+                  {lease.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 w-7 rounded-none p-0"
+            onClick={() => setReassigningId(null)}
+            aria-label="Cancel reassign"
+          >
+            <X className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center gap-1">
+        {row.suggestedLeaseId && row.amount > 0 ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 rounded-none px-2 text-xs"
+            onClick={() => void act(row.id, "confirm")}
+            disabled={busyId === row.id}
+          >
+            <Check className="mr-1 h-3 w-3" />
+            Confirm
+          </Button>
+        ) : null}
+        {row.amount > 0 ? (
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-7 rounded-none px-2 text-xs"
+            onClick={() => setReassigningId(row.id)}
+            disabled={busyId === row.id}
+          >
+            Assign
+          </Button>
+        ) : null}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 rounded-none px-2 text-xs text-[var(--color-muted-foreground)]"
+          onClick={() => void act(row.id, "ignore")}
+          disabled={busyId === row.id}
+        >
+          Ignore
+        </Button>
+      </div>
+    );
+  };
+
   return (
     <div className="border border-[var(--color-border)] bg-[var(--color-surface)]">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 py-3">
@@ -285,160 +389,102 @@ export function BankMovementsInbox(): React.ReactElement {
           bank to start matching payments to reference months.
         </p>
       ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[960px] border-collapse text-[13px]">
-            <thead>
-              <tr>
-                {["Booked", "Counterparty", "Reference", "Amount", "Match", "Status", ""].map(
-                  (h, i) => (
-                    <th
-                      key={i}
-                      className={`mono-label border-b border-[var(--color-border)] px-3 py-2 font-normal ${
-                        h === "Amount" ? "text-right" : "text-left"
-                      }`}
-                    >
-                      {h}
-                    </th>
-                  ),
-                )}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row) => {
-                const reasons = formatReasons(row.matchReasons);
-                const actionable = row.status === "needs_review" || row.status === "imported";
-                return (
-                  <tr key={row.id} className="align-top hover:bg-[var(--color-hover)]">
-                    <td className="border-b border-[var(--color-border)] px-3 py-2.5 font-mono text-xs tabular-nums">
-                      {row.bookingDate.slice(0, 10)}
-                    </td>
-                    <td className="border-b border-[var(--color-border)] px-3 py-2.5">
-                      <span className="block max-w-[180px] truncate font-medium">
-                        {row.counterpartyName ?? "—"}
-                      </span>
-                      <span className="block text-xs text-[var(--color-muted-foreground)]">
-                        {row.bankAccount.label}
-                      </span>
-                    </td>
-                    <td className="max-w-[200px] border-b border-[var(--color-border)] px-3 py-2.5">
-                      <span className="block truncate text-xs text-[var(--color-muted-foreground)]">
-                        {row.reference ?? "—"}
-                      </span>
-                    </td>
-                    <td
-                      className={`border-b border-[var(--color-border)] px-3 py-2.5 text-right font-mono tabular-nums ${
-                        row.amount < 0 ? "text-[var(--semantic-danger-readable)]" : ""
-                      }`}
-                    >
-                      {row.amount.toFixed(2)}
-                    </td>
-                    <td className="border-b border-[var(--color-border)] px-3 py-2.5">
-                      {row.suggestedLease ? (
-                        <span className="block text-xs">
-                          {row.suggestedLease.tenantName}
-                          <span className="text-[var(--color-muted-foreground)]">
-                            {" "}
-                            · {row.suggestedLease.propertyName}
-                          </span>
-                          {row.matchConfidence !== null ? (
-                            <span className="ml-1 font-mono tabular-nums">
-                              {Math.round(row.matchConfidence * 100)}%
-                            </span>
-                          ) : null}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-[var(--color-muted-foreground)]">
-                          No suggestion
-                        </span>
-                      )}
-                      {reasons ? (
-                        <span className="block text-[10px] text-[var(--color-muted-foreground)]">
-                          {reasons}
-                        </span>
-                      ) : null}
-                    </td>
-                    <td className="border-b border-[var(--color-border)] px-3 py-2.5">
-                      <span
-                        className={`inline-block px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.04em] ${
-                          STATUS_STYLES[row.status] ?? ""
-                        }`}
-                      >
-                        {STATUS_CODES[row.status] ?? row.status}
-                      </span>
-                    </td>
-                    <td className="border-b border-[var(--color-border)] px-3 py-2.5">
-                      {actionable ? (
-                        reassigningId === row.id ? (
-                          <div className="flex items-center gap-1">
-                            <Select
-                              onValueChange={(leaseId) => void act(row.id, "reassign", leaseId)}
-                              disabled={busyId === row.id}
-                            >
-                              <SelectTrigger className="h-7 w-[190px] rounded-none text-xs">
-                                <SelectValue placeholder="Assign to lease…" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {leaseOptions.map((lease) => (
-                                  <SelectItem key={lease.id} value={lease.id}>
-                                    {lease.label}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 w-7 rounded-none p-0"
-                              onClick={() => setReassigningId(null)}
-                              aria-label="Cancel reassign"
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-1">
-                            {row.suggestedLeaseId && row.amount > 0 ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 rounded-none px-2 text-xs"
-                                onClick={() => void act(row.id, "confirm")}
-                                disabled={busyId === row.id}
-                              >
-                                <Check className="mr-1 h-3 w-3" />
-                                Confirm
-                              </Button>
-                            ) : null}
-                            {row.amount > 0 ? (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 rounded-none px-2 text-xs"
-                                onClick={() => setReassigningId(row.id)}
-                                disabled={busyId === row.id}
-                              >
-                                Assign
-                              </Button>
-                            ) : null}
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-7 rounded-none px-2 text-xs text-[var(--color-muted-foreground)]"
-                              onClick={() => void act(row.id, "ignore")}
-                              disabled={busyId === row.id}
-                            >
-                              Ignore
-                            </Button>
-                          </div>
-                        )
-                      ) : null}
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <RenderTable
+          data={rows}
+          rowKey={(row) => row.id}
+          cardMode
+          renderCard={(row) => (
+            <div className="border border-[var(--color-border)] bg-[var(--color-card)] p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="truncate font-medium">{row.counterpartyName ?? "—"}</p>
+                  <p className="text-xs text-[var(--color-muted-foreground)]">
+                    {row.bankAccount.label} · {row.bookingDate.slice(0, 10)}
+                  </p>
+                </div>
+                <span
+                  className={`shrink-0 font-mono tabular-nums ${
+                    row.amount < 0 ? "text-[var(--semantic-danger-readable)]" : ""
+                  }`}
+                >
+                  {row.amount.toFixed(2)}
+                </span>
+              </div>
+
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <span
+                  className={`inline-block px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.04em] ${
+                    STATUS_STYLES[row.status] ?? ""
+                  }`}
+                >
+                  {STATUS_CODES[row.status] ?? row.status}
+                </span>
+                {row.reference ? (
+                  <span className="min-w-0 truncate text-xs text-[var(--color-muted-foreground)]">
+                    {row.reference}
+                  </span>
+                ) : null}
+              </div>
+
+              <div className="mt-2">{renderMatch(row)}</div>
+              <div className="mt-2">{renderActions(row)}</div>
+            </div>
+          )}
+          columns={[
+            {
+              key: "booked",
+              header: "Booked",
+              cell: (row) => row.bookingDate.slice(0, 10),
+              cellClassName: "font-mono text-xs tabular-nums",
+            },
+            {
+              key: "counterparty",
+              header: "Counterparty",
+              cell: (row) => (
+                <>
+                  <span className="block max-w-[180px] truncate font-medium">
+                    {row.counterpartyName ?? "—"}
+                  </span>
+                  <span className="block text-xs text-[var(--color-muted-foreground)]">
+                    {row.bankAccount.label}
+                  </span>
+                </>
+              ),
+            },
+            {
+              key: "reference",
+              header: "Reference",
+              cell: (row) => (
+                <span className="block truncate text-xs text-[var(--color-muted-foreground)]">
+                  {row.reference ?? "—"}
+                </span>
+              ),
+              cellClassName: "max-w-[200px]",
+            },
+            {
+              key: "amount",
+              header: "Amount",
+              headerClassName: "text-right",
+              cell: (row) => row.amount.toFixed(2),
+              cellClassName: "text-right font-mono tabular-nums",
+            },
+            { key: "match", header: "Match", cell: renderMatch },
+            {
+              key: "status",
+              header: "Status",
+              cell: (row) => (
+                <span
+                  className={`inline-block px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.04em] ${
+                    STATUS_STYLES[row.status] ?? ""
+                  }`}
+                >
+                  {STATUS_CODES[row.status] ?? row.status}
+                </span>
+              ),
+            },
+            { key: "actions", header: "", cell: renderActions },
+          ]}
+        />
       )}
     </div>
   );
