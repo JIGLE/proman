@@ -1243,5 +1243,48 @@
       "title": "Document details",
       "description": "Document details for {name}"
     }
+  },
+  "language": {
+    "label": "Language",
+    "change": "Change language"
+  },
+  "auth": {
+    "loading": "Loading…",
+    "orWithEmail": "or with email",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Sign in",
+    "createAccount": "Create account",
+    "exploreDemo": "Explore the live demo",
+    "demoModeHint": "Demo mode active — enter any credentials",
+    "signin": {
+      "eyebrow": "Welcome back",
+      "heading": "Sign in to Situs",
+      "subheading": "Pick up your rental compliance where you left off — rent, receipts, and fiscal filings for Portugal & Spain.",
+      "primary": "Continue with Google",
+      "switchText": "New to Situs?",
+      "switchAction": "Create an account"
+    },
+    "signup": {
+      "eyebrow": "Get started",
+      "heading": "Create your Situs account",
+      "subheading": "Bring bank movements, receipts and tax evidence under one roof. Your account is created the first time you continue with Google.",
+      "primary": "Sign up with Google",
+      "switchText": "Already have an account?",
+      "switchAction": "Sign in"
+    },
+    "brand": {
+      "system": "Sovereign Capital System",
+      "tagline": "Property income, receipts and tax evidence under control.",
+      "footer": "Self-hosted & GDPR-aligned · Portugal & Spain",
+      "proof": {
+        "bankLabel": "Bank → match → allocate",
+        "bankNote": "Every payment reconciled to its month",
+        "receiptLabel": "Receipt → emit → archive",
+        "receiptNote": "PT & ES fiscal documents, on time",
+        "auditLabel": "Audit trail, always on",
+        "auditNote": "Every workflow step recorded"
+      }
+    }
   }
 }

@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import en from "./en.json";
 import pt from "./pt.json";
 import es from "./es.json";
+import itMessages from "./it.json";
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -42,9 +43,13 @@ function resolvePath(obj: JsonObject, dotPath: string): unknown {
 
 const enPaths = getLeafPaths(en as JsonObject);
 
+// Every shipped locale in `lib/i18n/config.ts` must appear here. Italian was shipped as a
+// fourth locale but was never listed, so nothing caught a missing or orphaned `it` key — it
+// stayed at parity by luck rather than by gate.
 const locales: Array<{ name: string; data: JsonObject }> = [
   { name: "pt", data: pt as JsonObject },
   { name: "es", data: es as JsonObject },
+  { name: "it", data: itMessages as JsonObject },
 ];
 
 // ---------------------------------------------------------------------------

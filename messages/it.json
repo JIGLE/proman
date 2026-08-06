@@ -1243,5 +1243,48 @@
       "title": "Dettagli documento",
       "description": "Dettagli documento {name}"
     }
+  },
+  "language": {
+    "label": "Lingua",
+    "change": "Cambia lingua"
+  },
+  "auth": {
+    "loading": "Caricamento…",
+    "orWithEmail": "o con email",
+    "email": "Email",
+    "password": "Password",
+    "signIn": "Accedi",
+    "createAccount": "Crea account",
+    "exploreDemo": "Esplora la demo dal vivo",
+    "demoModeHint": "Modalità demo attiva — inserisci credenziali qualsiasi",
+    "signin": {
+      "eyebrow": "Bentornato",
+      "heading": "Accedi a Situs",
+      "subheading": "Riprendi la gestione dei tuoi affitti da dove l'avevi lasciata — canoni, ricevute e adempimenti fiscali per Portogallo e Spagna.",
+      "primary": "Continua con Google",
+      "switchText": "Nuovo su Situs?",
+      "switchAction": "Crea un account"
+    },
+    "signup": {
+      "eyebrow": "Inizia",
+      "heading": "Crea il tuo account Situs",
+      "subheading": "Riunisci movimenti bancari, ricevute e prove fiscali in un unico posto. Il tuo account viene creato la prima volta che continui con Google.",
+      "primary": "Registrati con Google",
+      "switchText": "Hai già un account?",
+      "switchAction": "Accedi"
+    },
+    "brand": {
+      "system": "Sovereign Capital System",
+      "tagline": "Redditi, ricevute e prove fiscali sotto controllo.",
+      "footer": "Self-hosted e conforme al GDPR · Portogallo e Spagna",
+      "proof": {
+        "bankLabel": "Banca → abbina → alloca",
+        "bankNote": "Ogni pagamento riconciliato al suo mese",
+        "receiptLabel": "Ricevuta → emetti → archivia",
+        "receiptNote": "Documenti fiscali PT e ES, puntuali",
+        "auditLabel": "Audit trail sempre attivo",
+        "auditNote": "Ogni passaggio del flusso è registrato"
+      }
+    }
   }
 }

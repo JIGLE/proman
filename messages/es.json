@@ -1243,5 +1243,48 @@
       "title": "Detalles del documento",
       "description": "Detalles del documento {name}"
     }
+  },
+  "language": {
+    "label": "Idioma",
+    "change": "Cambiar de idioma"
+  },
+  "auth": {
+    "loading": "Cargando…",
+    "orWithEmail": "o con correo",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "signIn": "Iniciar sesión",
+    "createAccount": "Crear cuenta",
+    "exploreDemo": "Explorar la demo en vivo",
+    "demoModeHint": "Modo demo activo — introduce cualquier credencial",
+    "signin": {
+      "eyebrow": "Bienvenido de nuevo",
+      "heading": "Inicia sesión en Situs",
+      "subheading": "Retoma la gestión de tus alquileres donde la dejaste — rentas, recibos y obligaciones fiscales en Portugal y España.",
+      "primary": "Continuar con Google",
+      "switchText": "¿Nuevo en Situs?",
+      "switchAction": "Crear una cuenta"
+    },
+    "signup": {
+      "eyebrow": "Empezar",
+      "heading": "Crea tu cuenta de Situs",
+      "subheading": "Reúne movimientos bancarios, recibos y justificantes fiscales en un solo lugar. Tu cuenta se crea la primera vez que continúas con Google.",
+      "primary": "Registrarse con Google",
+      "switchText": "¿Ya tienes cuenta?",
+      "switchAction": "Iniciar sesión"
+    },
+    "brand": {
+      "system": "Sovereign Capital System",
+      "tagline": "Ingresos, recibos y prueba fiscal bajo control.",
+      "footer": "Autoalojado y alineado con el RGPD · Portugal y España",
+      "proof": {
+        "bankLabel": "Banco → conciliar → imputar",
+        "bankNote": "Cada pago conciliado con su mes",
+        "receiptLabel": "Recibo → emitir → archivar",
+        "receiptNote": "Documentos fiscales PT y ES, a tiempo",
+        "auditLabel": "Registro de auditoría siempre activo",
+        "auditNote": "Cada paso del proceso queda registrado"
+      }
+    }
   }
 }

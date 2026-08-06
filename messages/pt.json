@@ -1243,5 +1243,48 @@
       "title": "Detalhes do documento",
       "description": "Detalhes do documento {name}"
     }
+  },
+  "language": {
+    "label": "Idioma",
+    "change": "Mudar de idioma"
+  },
+  "auth": {
+    "loading": "A carregar…",
+    "orWithEmail": "ou com email",
+    "email": "Email",
+    "password": "Palavra-passe",
+    "signIn": "Entrar",
+    "createAccount": "Criar conta",
+    "exploreDemo": "Explorar a demonstração",
+    "demoModeHint": "Modo de demonstração ativo — introduza quaisquer credenciais",
+    "signin": {
+      "eyebrow": "Bem-vindo de volta",
+      "heading": "Entrar no Situs",
+      "subheading": "Retome a gestão dos seus arrendamentos onde a deixou — rendas, recibos e obrigações fiscais em Portugal e Espanha.",
+      "primary": "Continuar com Google",
+      "switchText": "Novo no Situs?",
+      "switchAction": "Criar uma conta"
+    },
+    "signup": {
+      "eyebrow": "Começar",
+      "heading": "Criar a sua conta Situs",
+      "subheading": "Reúna movimentos bancários, recibos e comprovativos fiscais num só sítio. A sua conta é criada da primeira vez que continuar com o Google.",
+      "primary": "Registar com Google",
+      "switchText": "Já tem conta?",
+      "switchAction": "Entrar"
+    },
+    "brand": {
+      "system": "Sovereign Capital System",
+      "tagline": "Rendimentos, recibos e prova fiscal sob controlo.",
+      "footer": "Auto-hospedado e alinhado com o RGPD · Portugal e Espanha",
+      "proof": {
+        "bankLabel": "Banco → conciliar → imputar",
+        "bankNote": "Cada pagamento associado ao seu mês",
+        "receiptLabel": "Recibo → emitir → arquivar",
+        "receiptNote": "Documentos fiscais PT e ES, dentro do prazo",
+        "auditLabel": "Trilho de auditoria sempre ativo",
+        "auditNote": "Cada passo do processo é registado"
+      }
+    }
   }
 }
