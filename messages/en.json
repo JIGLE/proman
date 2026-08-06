@@ -551,7 +551,8 @@
     "receipt": "Receipt",
     "photo": "Photo",
     "floorPlan": "Floor Plan",
-    "certificate": "Certificate"
+    "certificate": "Certificate",
+    "other": "Other"
   },
   "notifications": {
     "title": "Notifications",
@@ -908,7 +909,11 @@
       "documents": "Documents",
       "backToProperties": "Back to Properties",
       "openInFinance": "Open in Finance",
-      "openInDocuments": "Open in Documents"
+      "openInDocuments": "Open in Documents",
+      "addExpense": "Add expense",
+      "manageDocuments": "Manage documents",
+      "recordPayment": "Record payment",
+      "cancel": "Cancel"
     },
     "notFound": "Property not found",
     "status": {
@@ -935,7 +940,19 @@
       "collectionRate": "Collection Rate",
       "noData": "No financial data available for this property yet."
     },
-    "addTenant": "Add tenant"
+    "addTenant": "Add tenant",
+    "month": {
+      "subtitle": "Reference month for {property}",
+      "status": "Status",
+      "due": "Due",
+      "allocated": "Allocated",
+      "comingSoon": "Coming soon",
+      "linkBankMovement": "Link a bank movement",
+      "issueTaxReceipt": "Issue rent receipt to the tax authority"
+    },
+    "tenantName": "Tenant name",
+    "email": "Email",
+    "phone": "Phone"
   },
   "Units": {
     "addUnit": "Add Unit",

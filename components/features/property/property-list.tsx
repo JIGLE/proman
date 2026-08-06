@@ -566,7 +566,11 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     "lg:grid lg:items-start lg:gap-6",
                     railCollapsed
                       ? "lg:grid-cols-[76px_1fr]"
-                      : "lg:grid-cols-[minmax(300px,340px)_1fr]",
+                      : // Trimmed from minmax(300px,340px): the rail is an index, and the
+                        // workspace beside it is where the work happens. Row content already
+                        // truncates its address at any width in this range, so the extra
+                        // ~50px bought nothing and cost the detail pane.
+                        "lg:grid-cols-[minmax(248px,288px)_1fr]",
                   )}
                 >
                   <div className="space-y-2">

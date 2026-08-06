@@ -551,7 +551,8 @@
     "receipt": "Recibo",
     "photo": "Fotografia",
     "floorPlan": "Planta",
-    "certificate": "Certificado"
+    "certificate": "Certificado",
+    "other": "Outro"
   },
   "notifications": {
     "title": "Notificações",
@@ -908,7 +909,11 @@
       "documents": "Documentos",
       "backToProperties": "Voltar aos Imóveis",
       "openInFinance": "Abrir em Finanças",
-      "openInDocuments": "Abrir em Documentos"
+      "openInDocuments": "Abrir em Documentos",
+      "addExpense": "Adicionar despesa",
+      "manageDocuments": "Gerir documentos",
+      "recordPayment": "Registar pagamento",
+      "cancel": "Cancelar"
     },
     "notFound": "Imóvel não encontrado",
     "status": {
@@ -935,7 +940,19 @@
       "collectionRate": "Taxa de Cobrança",
       "noData": "Ainda não há dados financeiros para este imóvel."
     },
-    "addTenant": "Adicionar inquilino"
+    "addTenant": "Adicionar inquilino",
+    "month": {
+      "subtitle": "Mês de referência de {property}",
+      "status": "Estado",
+      "due": "Devido",
+      "allocated": "Imputado",
+      "comingSoon": "Brevemente",
+      "linkBankMovement": "Associar um movimento bancário",
+      "issueTaxReceipt": "Emitir recibo de renda para a AT"
+    },
+    "tenantName": "Nome do inquilino",
+    "email": "Email",
+    "phone": "Telefone"
   },
   "Units": {
     "addUnit": "Adicionar Unidade",

@@ -44,27 +44,34 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { useApp } from "@/lib/contexts/app-context";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { EntityLink } from "@/components/shared/entity-link";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
-import { buildLocalizedFinancialReviewPath } from "@/lib/utils/financial-navigation";
 import {
   expenseSchema,
   EXPENSE_CATEGORIES,
   type ExpenseFormData,
 } from "@/lib/schemas/expense.schema";
 import { receiptSchema, type ReceiptFormData } from "@/lib/schemas/receipt.schema";
+import { tenantSchema, type TenantFormData } from "@/lib/schemas/tenant.schema";
 import { usePropertyActivity } from "@/lib/hooks/use-property-activity";
 import { AuditTrail } from "@/components/shared/audit-trail";
 import { PropertyFormDialog, type PropertyFormDialogRef } from "./property-form-dialog";
-import { PropertyYearStrip } from "./property-year-strip";
+import { PropertyYearStrip, type YearStripSelection } from "./property-year-strip";
 import { Sheet, SheetContent, SheetTitle, SheetDescription } from "@/components/ui/sheet";
-import { ReceiptsView } from "@/components/features/financial/receipts-view";
 import { DocumentsView } from "@/components/features/document/documents-view";
+
+/** The slice of `Document` this view needs — enough to list and group by type. */
+interface PropertyDocument {
+  id: string;
+  name: string;
+  type: string;
+  createdAt?: string;
+  fileSize?: number;
+}
 
 interface PropertyDetailViewProps {
   propertyId: string;
@@ -77,7 +84,7 @@ const STATUS_VARIANT: Record<string, "default" | "secondary" | "destructive"> = 
 };
 
 export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
-  const { state, refreshData, addExpense, addReceipt } = useApp();
+  const { state, refreshData, addExpense, addReceipt, addTenant } = useApp();
   const { formatCurrency } = useCurrency();
   const pathname = usePathname();
   const router = useRouter();
@@ -85,6 +92,18 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   const [activeTab, setActiveTab] = useTabPersistence("property-detail", "overview");
   const t = useTranslations("propertyDetail");
   const tFin = useTranslations("financial");
+  const tDoc = useTranslations("documents");
+
+  /**
+   * DocumentType is snake_case in the schema (`floor_plan`) but camelCase in the catalog
+   * (`documents.floorPlan`), so bridge the two and fall back to a humanised label for any
+   * type without a translation.
+   */
+  const documentTypeLabel = (raw: string): string => {
+    const key = raw.replace(/_(\w)/g, (_, c: string) => c.toUpperCase());
+    const label = tDoc(key);
+    return label.endsWith(key) ? raw.replace(/_/g, " ") : label;
+  };
 
   /**
    * Expense categories are stored as human labels ("Mortgage Interest") while the catalog keys
@@ -111,13 +130,15 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   const [ownerAssignError, setOwnerAssignError] = useState("");
   const [ownerAssignSaving, setOwnerAssignSaving] = useState(false);
 
-  // Quick-action overlays: keep the header actions in-page instead of navigating away
-  const [reviewPaymentsOpen, setReviewPaymentsOpen] = useState(false);
+  // Quick-action overlay: Documents still opens in place from the empty-state link below.
   const [documentsOpen, setDocumentsOpen] = useState(false);
+  // The reference month whose detail modal is open, set by clicking a year-strip cell.
+  const [selectedMonth, setSelectedMonth] = useState<YearStripSelection | null>(null);
 
-  // Documents already tagged to this property — the deduction-evidence
-  // picker in the Add Expense dialog (Expense.documentId, Migration A).
-  const [propertyDocuments, setPropertyDocuments] = useState<{ id: string; name: string }[]>([]);
+  // Documents already tagged to this property. Feeds both the deduction-evidence picker in the
+  // Add Expense dialog (Expense.documentId, Migration A) and the Documents tab, which groups
+  // them by `type` — so the fetch keeps type/date/size rather than just id and name.
+  const [propertyDocuments, setPropertyDocuments] = useState<PropertyDocument[]>([]);
   useEffect(() => {
     if (!propertyId) return;
     let cancelled = false;
@@ -126,7 +147,13 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
       .then((body) => {
         if (!cancelled && body?.data) {
           setPropertyDocuments(
-            body.data.map((d: { id: string; name: string }) => ({ id: d.id, name: d.name })),
+            body.data.map((d: PropertyDocument) => ({
+              id: d.id,
+              name: d.name,
+              type: d.type,
+              createdAt: d.createdAt,
+              fileSize: d.fileSize,
+            })),
           );
         }
       })
@@ -195,6 +222,38 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
     onSubmit: handleReceiptSubmit,
     successMessage: { create: "Payment recorded!", update: "Payment updated!" },
     errorMessage: "Failed to record payment.",
+  });
+
+  // Add tenant, in place. This used to deep-link to /people, which meant leaving the property
+  // you were working on and landing on a different page with a modal already open over it —
+  // disorienting, and it lost the context you started from. Its own dialog keeps you here.
+  const tenantInitialData = useMemo<TenantFormData>(
+    () => ({
+      name: "",
+      email: "",
+      phone: "",
+      propertyId,
+      rent: 0,
+      leaseStart: "",
+      leaseEnd: "",
+      paymentStatus: "pending" as const,
+    }),
+    [propertyId],
+  );
+
+  const handleTenantSubmit = useCallback(
+    async (data: TenantFormData) => {
+      await addTenant({ ...data, propertyId });
+    },
+    [addTenant, propertyId],
+  );
+
+  const tenantDialog = useFormDialog<TenantFormData>({
+    schema: tenantSchema,
+    initialData: tenantInitialData,
+    onSubmit: handleTenantSubmit,
+    successMessage: { create: "Tenant added!", update: "Tenant updated!" },
+    errorMessage: "Failed to add tenant.",
   });
 
   // Edit property: own instance of the same form/schema/updateProperty path
@@ -357,40 +416,6 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
       <PropertyFormDialog ref={editFormDialogRef} />
 
       {/* Quick-action overlay: Review Payments — scoped ReceiptsView, stays on this page */}
-      <Sheet open={reviewPaymentsOpen} onOpenChange={setReviewPaymentsOpen}>
-        <SheetContent side="center" className="p-0">
-          <SheetTitle className="sr-only">{t("actions.reviewPayments")}</SheetTitle>
-          <SheetDescription className="sr-only">
-            {t("actions.reviewPayments")} — {property.name}
-          </SheetDescription>
-          <div className="flex h-full flex-col">
-            <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] p-4">
-              <div>
-                <p className="text-sm font-medium text-[var(--color-foreground)]">
-                  {t("actions.reviewPayments")}
-                </p>
-                <p className="text-xs text-[var(--color-muted-foreground)]">{property.name}</p>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setReviewPaymentsOpen(false);
-                  router.push(
-                    buildLocalizedFinancialReviewPath(locale, { propertyId: property.id }),
-                  );
-                }}
-              >
-                {t("actions.openInFinance")} <ExternalLink className="h-3.5 w-3.5 ml-1" />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              <ReceiptsView propertyId={property.id} embedded />
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
-
       {/* Quick-action overlay: Documents — scoped DocumentsView, stays on this page */}
       <Sheet open={documentsOpen} onOpenChange={setDocumentsOpen}>
         <SheetContent side="center" className="p-0">
@@ -453,31 +478,20 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => editFormDialogRef.current?.openEditDialog(property)}
-            >
-              <Pencil className="h-4 w-4 mr-1" /> {t("actions.edit")}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setReviewPaymentsOpen(true)}>
-              <DollarSign className="h-4 w-4 mr-1" /> {t("actions.reviewPayments")}
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => setDocumentsOpen(true)}>
-              <FileText className="h-4 w-4 mr-1" /> {t("actions.documents")}
-            </Button>
-
-            {/* Quick add: Expense */}
+          {/* The header's five-button quick-action bar has gone. Each action now lives where
+              its subject does: Edit with the property's own details (Overview), Add Expense and
+              the expense/receipt dialogs in Money, Documents as its own tab, and Record Payment
+              behind a click on the reference month it applies to. Review Payments is gone
+              outright — the Money tab and the Finance section both already list receipts.
+              The dialogs stay mounted here so any tab can open them. */}
+          <>
+            {/* Both dialogs are state-controlled, so they render nothing until opened and need
+                no trigger element of their own — the buttons that open them now live in the
+                Money tab and the reference-month modal. */}
             <Dialog
               open={expenseDialog.isOpen}
               onOpenChange={(open) => !open && expenseDialog.closeDialog()}
             >
-              <DialogTrigger asChild>
-                <Button variant="outline" size="sm" onClick={expenseDialog.openDialog}>
-                  <Wrench className="h-4 w-4 mr-1" /> Add Expense
-                </Button>
-              </DialogTrigger>
               <DialogContent className="sm:max-w-[440px]">
                 <DialogHeader>
                   <DialogTitle>Record Expense</DialogTitle>
@@ -586,17 +600,6 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               open={receiptDialog.isOpen}
               onOpenChange={(open) => !open && receiptDialog.closeDialog()}
             >
-              <DialogTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="primary"
-                  emphasis="high"
-                  onClick={receiptDialog.openDialog}
-                  className="ml-1"
-                >
-                  <Receipt className="h-4 w-4 mr-1" /> Record Payment
-                </Button>
-              </DialogTrigger>
               <DialogContent className="sm:max-w-[440px]">
                 <DialogHeader>
                   <DialogTitle>Record Payment</DialogTitle>
@@ -719,7 +722,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                 </form>
               </DialogContent>
             </Dialog>
-          </div>
+          </>
         </div>
       </div>
 
@@ -732,8 +735,157 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
           defaultYearStrip={activity.yearStrip}
           currentPeriod={activity.currentPeriod}
           receiptLifecycle={activity.receiptLifecycle}
+          onSelectMonth={setSelectedMonth}
         />
       )}
+
+      {/* Add tenant — scoped to this property, so the form asks only for the person. */}
+      <Dialog
+        open={tenantDialog.isOpen}
+        onOpenChange={(open) => !open && tenantDialog.closeDialog()}
+      >
+        <DialogContent className="sm:max-w-[440px]">
+          <DialogHeader>
+            <DialogTitle>{t("addTenant")}</DialogTitle>
+            <DialogDescription>
+              {t("month.subtitle", { property: property.name })}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={tenantDialog.handleSubmit} className="space-y-4 pt-1">
+            <div className="space-y-1.5">
+              <Label htmlFor="ten-name">{t("tenantName")}</Label>
+              <Input
+                id="ten-name"
+                value={tenantDialog.formData.name}
+                onChange={(e) => tenantDialog.updateFormData({ name: e.target.value })}
+                className={tenantDialog.formErrors.name ? "border-[var(--color-destructive)]" : ""}
+              />
+              {tenantDialog.formErrors.name && (
+                <p className="text-xs text-[var(--color-destructive)]">
+                  {tenantDialog.formErrors.name}
+                </p>
+              )}
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="ten-email">{t("email")}</Label>
+              <Input
+                id="ten-email"
+                type="email"
+                value={tenantDialog.formData.email}
+                onChange={(e) => tenantDialog.updateFormData({ email: e.target.value })}
+                className={tenantDialog.formErrors.email ? "border-[var(--color-destructive)]" : ""}
+              />
+              {tenantDialog.formErrors.email && (
+                <p className="text-xs text-[var(--color-destructive)]">
+                  {tenantDialog.formErrors.email}
+                </p>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="ten-phone">{t("phone")}</Label>
+                <Input
+                  id="ten-phone"
+                  value={tenantDialog.formData.phone}
+                  onChange={(e) => tenantDialog.updateFormData({ phone: e.target.value })}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="ten-rent">{t("monthlyRent")}</Label>
+                <Input
+                  id="ten-rent"
+                  type="number"
+                  value={tenantDialog.formData.rent || ""}
+                  onChange={(e) =>
+                    tenantDialog.updateFormData({ rent: Number(e.target.value) || 0 })
+                  }
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={tenantDialog.closeDialog}>
+                {t("actions.cancel")}
+              </Button>
+              <Button type="submit" disabled={tenantDialog.isSubmitting}>
+                {t("addTenant")}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reference-month detail. Record Payment used to be a header button divorced from the
+          month it applied to; it now opens from the month itself, with the ledger figures for
+          that period alongside it. */}
+      <Dialog
+        open={selectedMonth !== null}
+        onOpenChange={(open) => !open && setSelectedMonth(null)}
+      >
+        <DialogContent className="sm:max-w-[440px]">
+          {selectedMonth && (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  {selectedMonth.label} {selectedMonth.year}
+                </DialogTitle>
+                <DialogDescription>
+                  {t("month.subtitle", { property: property.name })}
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3 pt-1">
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="panel p-3">
+                    <p className="mono-label">{t("month.status")}</p>
+                    <p className="mt-1 text-sm font-medium capitalize text-[var(--color-foreground)]">
+                      {selectedMonth.status ? selectedMonth.status.replace(/_/g, " ") : "—"}
+                    </p>
+                  </div>
+                  <div className="panel p-3">
+                    <p className="mono-label">{t("month.due")}</p>
+                    <p className="mt-1 text-sm font-light tabular-nums text-[var(--color-foreground)]">
+                      {formatCurrency(selectedMonth.dueAmount)}
+                    </p>
+                  </div>
+                  <div className="panel p-3">
+                    <p className="mono-label">{t("month.allocated")}</p>
+                    <p className="mt-1 text-sm font-light tabular-nums text-[var(--color-success)]">
+                      {formatCurrency(selectedMonth.allocatedAmount)}
+                    </p>
+                  </div>
+                </div>
+
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setSelectedMonth(null);
+                    receiptDialog.openDialog();
+                  }}
+                >
+                  <Receipt className="mr-1.5 h-4 w-4" />
+                  {t("actions.recordPayment")}
+                </Button>
+
+                {/* Named but disabled: both need backend work that does not exist yet
+                    (bank-movement linking for a specific period, and issuing the AT rent
+                    receipt from here). Shown so the intended shape of this modal is legible,
+                    not to imply they work. */}
+                <div className="space-y-2 border-t border-[var(--color-border)] pt-3">
+                  <p className="mono-label text-[var(--color-muted-foreground)]">
+                    {t("month.comingSoon")}
+                  </p>
+                  <Button variant="outline" className="w-full justify-start" disabled>
+                    {t("month.linkBankMovement")}
+                  </Button>
+                  <Button variant="outline" className="w-full justify-start" disabled>
+                    {t("month.issueTaxReceipt")}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* The four-card stat row that used to sit here has gone. Every number on it was already
           on screen: tenants and active leases are listed in People & Contracts below, open
@@ -763,6 +915,15 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
               </span>
             )}
           </TabsTrigger>
+          <TabsTrigger value="documents" className="flex items-center gap-1.5">
+            <FileText className="h-3.5 w-3.5" />
+            {t("actions.documents")}
+            {propertyDocuments.length > 0 && (
+              <span className="ml-1 bg-[var(--color-popover)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
+                {propertyDocuments.length}
+              </span>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="audit" className="flex items-center gap-1.5">
             <History className="h-3.5 w-3.5" />
             {t("tabs.audit")}
@@ -774,8 +935,17 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Property Info */}
             <Card className="lg:col-span-2">
-              <CardHeader>
+              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0">
                 <CardTitle>{t("propertyDetails")}</CardTitle>
+                {/* Edit sits with the fields it edits rather than in a global action bar. */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => editFormDialogRef.current?.openEditDialog(property)}
+                >
+                  <Pencil className="mr-1.5 h-3.5 w-3.5" />
+                  {t("actions.edit")}
+                </Button>
               </CardHeader>
               <CardContent className="space-y-3">
                 {/* Monthly rent, bedrooms and bathrooms are already in the identity row at the
@@ -806,19 +976,10 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                 <h3 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
                   {t("related")}
                 </h3>
-                {/* Reuses the existing `?view=tenants&action=create-tenant` deep link the
-                    onboarding checklist already uses, plus the property so the form arrives
-                    with it pre-selected. Tenants below open the shared `?detail=tenant:<id>`
+                {/* Opens in place — the property is already known, so there is nothing to pick
+                    and no reason to leave. Tenants below open the shared `?detail=tenant:<id>`
                     overlay on click (EntityLink), which is the edit path. */}
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() =>
-                    router.push(
-                      `/${locale}/people?view=tenants&action=create-tenant&propertyId=${propertyId}`,
-                    )
-                  }
-                >
+                <Button size="sm" variant="outline" onClick={tenantDialog.openDialog}>
                   <Plus className="mr-1.5 h-3.5 w-3.5" />
                   {t("addTenant")}
                 </Button>
@@ -1085,6 +1246,14 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         {/* Money Tab — Payments/P&L merged with the former standalone Expenses
             tab, per the tab merge (Overview/Money/Operations/Audit). */}
         <TabsContent value="finance" className="space-y-6">
+          {/* Money-tab actions: the expense dialog opens from here, where expenses live. */}
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={expenseDialog.openDialog}>
+              <Wrench className="mr-1.5 h-3.5 w-3.5" />
+              {t("actions.addExpense")}
+            </Button>
+          </div>
+
           {/* P&L row — the same `panel` + mono-label + light tabular treatment the rest of the
               app uses. These were four bordered Cards at text-2xl/bold, which shouted louder
               than the transactions they summarise. */}
@@ -1228,6 +1397,55 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
 
         {/* Audit Tab — the shared AuditTrail component (GET /api/audit-trail), scoped to
             this property plus its tenants/leases/receipts/expenses (Migration A resourceId keys). */}
+        {/* Documents — promoted from a header quick-action sheet to a tab of its own, grouped
+            by document type so a property's paperwork reads as categories rather than one
+            undifferentiated list. */}
+        <TabsContent value="documents" className="space-y-6">
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setDocumentsOpen(true)}>
+              <FileText className="mr-1.5 h-3.5 w-3.5" />
+              {t("actions.manageDocuments")}
+            </Button>
+          </div>
+
+          {propertyDocuments.length === 0 ? (
+            <EmptyStateIllustration entityType="documents" />
+          ) : (
+            <div className="space-y-6">
+              {Object.entries(
+                propertyDocuments.reduce<Record<string, PropertyDocument[]>>((acc, doc) => {
+                  (acc[doc.type] ??= []).push(doc);
+                  return acc;
+                }, {}),
+              )
+                .sort(([a], [b]) => a.localeCompare(b))
+                .map(([type, docs]) => (
+                  <div key={type} className="space-y-2">
+                    <div className="flex items-baseline justify-between gap-2 border-b border-[var(--color-border)] pb-1.5">
+                      <h3 className="mono-label">{documentTypeLabel(type)}</h3>
+                      <span className="font-mono text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
+                        {docs.length}
+                      </span>
+                    </div>
+                    {docs.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center justify-between gap-3 py-1.5 text-sm"
+                      >
+                        <span className="truncate text-[var(--color-foreground)]" title={doc.name}>
+                          {doc.name}
+                        </span>
+                        <span className="shrink-0 font-mono text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
+                          {doc.createdAt ? new Date(doc.createdAt).toLocaleDateString() : "—"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+            </div>
+          )}
+        </TabsContent>
+
         <TabsContent value="audit">
           <AuditTrail
             resourceIds={auditResourceIds}

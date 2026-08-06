@@ -551,7 +551,8 @@
     "receipt": "Recibo",
     "photo": "Fotografía",
     "floorPlan": "Plano",
-    "certificate": "Certificado"
+    "certificate": "Certificado",
+    "other": "Otro"
   },
   "notifications": {
     "title": "Notificaciones",
@@ -908,7 +909,11 @@
       "documents": "Documentos",
       "backToProperties": "Volver a Propiedades",
       "openInFinance": "Abrir en Finanzas",
-      "openInDocuments": "Abrir en Documentos"
+      "openInDocuments": "Abrir en Documentos",
+      "addExpense": "Añadir gasto",
+      "manageDocuments": "Gestionar documentos",
+      "recordPayment": "Registrar pago",
+      "cancel": "Cancelar"
     },
     "notFound": "Propiedad no encontrada",
     "status": {
@@ -935,7 +940,19 @@
       "collectionRate": "Tasa de Cobro",
       "noData": "Aún no hay datos financieros para esta propiedad."
     },
-    "addTenant": "Añadir inquilino"
+    "addTenant": "Añadir inquilino",
+    "month": {
+      "subtitle": "Mes de referencia de {property}",
+      "status": "Estado",
+      "due": "Debido",
+      "allocated": "Imputado",
+      "comingSoon": "Próximamente",
+      "linkBankMovement": "Vincular un movimiento bancario",
+      "issueTaxReceipt": "Emitir recibo de alquiler a la AEAT"
+    },
+    "tenantName": "Nombre del inquilino",
+    "email": "Correo electrónico",
+    "phone": "Teléfono"
   },
   "Units": {
     "addUnit": "Añadir Unidad",

@@ -551,7 +551,8 @@
     "receipt": "Ricevuta",
     "photo": "Foto",
     "floorPlan": "Planimetria",
-    "certificate": "Certificato"
+    "certificate": "Certificato",
+    "other": "Altro"
   },
   "notifications": {
     "title": "Notifiche",
@@ -908,7 +909,11 @@
       "documents": "Documenti",
       "backToProperties": "Torna agli immobili",
       "openInFinance": "Apri in Finanza",
-      "openInDocuments": "Apri in Documenti"
+      "openInDocuments": "Apri in Documenti",
+      "addExpense": "Aggiungi spesa",
+      "manageDocuments": "Gestisci documenti",
+      "recordPayment": "Registra pagamento",
+      "cancel": "Annulla"
     },
     "notFound": "Immobile non trovato",
     "status": {
@@ -935,7 +940,19 @@
       "collectionRate": "Tasso di riscossione",
       "noData": "Nessun dato finanziario disponibile per questo immobile ancora."
     },
-    "addTenant": "Aggiungi inquilino"
+    "addTenant": "Aggiungi inquilino",
+    "month": {
+      "subtitle": "Mese di riferimento di {property}",
+      "status": "Stato",
+      "due": "Dovuto",
+      "allocated": "Allocato",
+      "comingSoon": "Prossimamente",
+      "linkBankMovement": "Collega un movimento bancario",
+      "issueTaxReceipt": "Emetti ricevuta di affitto allAgenzia"
+    },
+    "tenantName": "Nome inquilino",
+    "email": "Email",
+    "phone": "Telefono"
   },
   "Units": {
     "addUnit": "Aggiungi unità",
