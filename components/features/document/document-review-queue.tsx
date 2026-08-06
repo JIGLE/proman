@@ -4,6 +4,7 @@ import * as React from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { csrfHeaders } from "@/lib/utils/api-client";
 import {
   Select,
   SelectContent,
@@ -79,7 +80,7 @@ export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): R
         const res = await fetch(`/api/documents/${documentId}/extraction`, {
           method: "PUT",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: csrfHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({ accept: true }),
         });
         if (!res.ok) {
@@ -106,7 +107,7 @@ export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): R
         const res = await fetch(`/api/documents/${documentId}/extraction`, {
           method: "PUT",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: csrfHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({ accept: false, type }),
         });
         if (!res.ok) {

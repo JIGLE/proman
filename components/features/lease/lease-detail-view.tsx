@@ -33,6 +33,7 @@ import { useToast } from "@/lib/contexts/toast-context";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { EntityLink } from "@/components/shared/entity-link";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 interface LeaseDetailViewProps {
   leaseId: string;
@@ -106,7 +107,7 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
     try {
       const res = await fetch(`/api/leases/${lease.id}/renewal`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           proposedRent: fd.get("proposedRent") ? Number(fd.get("proposedRent")) : undefined,
           startDate: fd.get("startDate") || undefined,
@@ -129,7 +130,10 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
   const handleRenewalWithdraw = async () => {
     if (!lease) return;
     try {
-      const res = await fetch(`/api/leases/${lease.id}/renewal`, { method: "DELETE" });
+      const res = await fetch(`/api/leases/${lease.id}/renewal`, {
+        method: "DELETE",
+        headers: csrfHeaders(),
+      });
       if (!res.ok) throw new Error("Failed");
       const updated = await res.json();
       await updateLease(lease.id, updated);

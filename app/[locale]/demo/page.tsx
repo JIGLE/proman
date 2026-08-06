@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Building2, Loader2 } from "lucide-react";
+import { csrfHeaders } from "@/lib/utils/api-client";
 import {
   setDemoCookieClient,
   setDemoPerspectiveClient,
@@ -38,7 +39,7 @@ export default function DemoPage() {
         sessionStorage.setItem("proman_demo", "1");
 
         // Step 2: Fire-and-forget server-side cookie as backup
-        fetch("/api/demo/init", { method: "POST" }).catch(() => {
+        fetch("/api/demo/init", { method: "POST", headers: csrfHeaders() }).catch(() => {
           // Server may be down — that's fine, client cookie is enough
         });
 

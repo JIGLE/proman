@@ -17,6 +17,7 @@ import {
 import { TaxFilingWizard, type TaxFilingProperty } from "./tax-filing-wizard";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useApp } from "@/lib/app-context-db";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 // ── types ──────────────────────────────────────────────────────────────────
 
@@ -80,7 +81,10 @@ export function TaxFilingView() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const res = await fetch(`/api/tax-filings/${deleteTarget.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/tax-filings/${deleteTarget.id}`, {
+        method: "DELETE",
+        headers: csrfHeaders(),
+      });
       if (res.ok) {
         toast.success(t("filingDeleted"));
         setDeleteTarget(null);

@@ -49,6 +49,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { PageHeader } from "@/components/shared/page-header";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 export function FinancialsView(): React.ReactElement {
   const { state, addExpense, addReceipt } = useApp();
@@ -256,7 +257,7 @@ export function FinancialsView(): React.ReactElement {
     try {
       const res = await fetch("/api/receipts/bulk", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ month }),
       });
       if (!res.ok) {

@@ -18,6 +18,7 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
+import { csrfHeaders } from "@/lib/utils/api-client";
 import { Button } from "./button";
 import { Badge } from "./badge";
 import * as Popover from "@/components/ui/popover";
@@ -45,7 +46,7 @@ export type NotificationPriority = "low" | "medium" | "high" | "urgent";
 function trackReminderClicked(notification: Notification): void {
   fetch("/api/events", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: csrfHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({
       name: "reminder_clicked",
       metadata: { type: notification.type },
@@ -509,7 +510,7 @@ export function useNotifications() {
       try {
         const res = await fetch("/api/notifications", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: csrfHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({
             type:
               Object.entries(dbTypeToUiType).find(([, v]) => v === notification.type)?.[0] ??
@@ -536,19 +537,22 @@ export function useNotifications() {
     // Fire and forget API call
     fetch(`/api/notifications/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: csrfHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ read: true }),
     }).catch(() => {});
   }, []);
 
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    fetch("/api/notifications/mark-all-read", { method: "PUT" }).catch(() => {});
+    fetch("/api/notifications/mark-all-read", {
+      method: "PUT",
+      headers: csrfHeaders(),
+    }).catch(() => {});
   }, []);
 
   const deleteNotification = useCallback((id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-    fetch(`/api/notifications/${id}`, { method: "DELETE" }).catch(() => {});
+    fetch(`/api/notifications/${id}`, { method: "DELETE", headers: csrfHeaders() }).catch(() => {});
   }, []);
 
   const clearAll = useCallback(() => {
@@ -556,7 +560,9 @@ export function useNotifications() {
     setNotifications([]);
     // Delete all in background
     Promise.allSettled(
-      ids.map((id) => fetch(`/api/notifications/${id}`, { method: "DELETE" })),
+      ids.map((id) =>
+        fetch(`/api/notifications/${id}`, { method: "DELETE", headers: csrfHeaders() }),
+      ),
     ).catch(() => {});
   }, [notifications]);
 

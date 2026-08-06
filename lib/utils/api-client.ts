@@ -17,6 +17,43 @@ interface ApiResponse<T = unknown> {
 }
 
 /**
+ * Read the CSRF token straight off the cookie.
+ *
+ * The double-submit-cookie pattern requires the token to be readable by our own JavaScript so
+ * it can be echoed back in the `x-csrf-token` header — `lib/middleware/csrf.ts` sets the cookie
+ * with `httpOnly: false` for exactly this reason. The protection comes from the same-origin
+ * policy (a cross-origin attacker can neither read this cookie nor set the custom header) and
+ * from `sameSite: "strict"`, not from hiding the value from first-party script.
+ *
+ * `app/api/csrf-token/route.ts` returns the *same* value in its body that it writes to the
+ * cookie, and `proxy.ts` seeds the cookie on page navigations, so this is equivalent to the
+ * token held in `CsrfContext` — just reachable from code that has no React context, such as
+ * module-level analytics helpers.
+ */
+export function getCsrfTokenFromDocument(): string | null {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie.match(/(?:^|;\s*)csrf-token=([^;]*)/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
+
+/**
+ * Build headers for a hand-rolled `fetch` that uses a state-changing method.
+ *
+ * `proxy.ts` rejects every non-public `/api/*` POST/PUT/PATCH/DELETE that arrives without a
+ * matching `x-csrf-token` header, so a raw `fetch` without one always 403s. Prefer `apiFetch`
+ * for new code; this exists for call sites whose existing response handling (`res.ok`,
+ * streaming, `Promise.allSettled` over many requests) does not fit `apiFetch`'s
+ * parse-or-throw contract.
+ */
+export function csrfHeaders(extra?: Record<string, string>): Record<string, string> {
+  const token = getCsrfTokenFromDocument();
+  return {
+    ...(extra ?? {}),
+    ...(token ? { "x-csrf-token": token } : {}),
+  };
+}
+
+/**
  * Enhanced fetch wrapper with CSRF token support
  *
  * Supports two call signatures:
@@ -36,22 +73,30 @@ export async function apiFetch<T = unknown>(
   body?: unknown,
   isRetry?: boolean,
 ): Promise<T> {
-  // Determine if using signature 1 (options object) or signature 2 (separate params)
+  // Determine if using signature 1 (options object) or signature 2 (separate params).
+  //
+  // Dispatch keys off `httpMethod` rather than `typeof csrfTokenOrOptions`. The old check was
+  // `typeof csrfTokenOrOptions === "object"`, and `typeof null === "object"` — so a perfectly
+  // ordinary `apiFetch(url, csrfToken, "DELETE")` where `useCsrf()` had not yet resolved its
+  // token (it is `string | null`, null until the token fetch returns) fell into the
+  // options-object branch, collapsed to `{}`, and silently issued a **GET**. The request came
+  // back 200 having done nothing, so the caller reported success. Every existing call site
+  // passes a nullable token, so all of them were exposed to it.
   let options: ApiClientOptions;
 
-  if (typeof csrfTokenOrOptions === "object" || csrfTokenOrOptions === undefined) {
-    // Signature 1: apiFetch(url, options)
-    options = csrfTokenOrOptions || {};
-  } else {
+  if (typeof csrfTokenOrOptions === "string" || httpMethod !== undefined) {
     // Signature 2: apiFetch(url, csrfToken, method, body)
     options = {
       method: httpMethod || "GET",
-      csrfToken: csrfTokenOrOptions,
+      csrfToken: typeof csrfTokenOrOptions === "string" ? csrfTokenOrOptions : null,
     };
 
     if (body !== undefined) {
       options.body = JSON.stringify(body);
     }
+  } else {
+    // Signature 1: apiFetch(url, options)
+    options = (csrfTokenOrOptions as ApiClientOptions | undefined) || {};
   }
 
   const { csrfToken, headers, ...restOptions } = options;
@@ -66,9 +111,14 @@ export async function apiFetch<T = unknown>(
   const httpVerb = (options.method || "GET").toUpperCase();
   const requiresCsrf = ["POST", "PUT", "PATCH", "DELETE"].includes(httpVerb);
 
-  if (requiresCsrf && csrfToken) {
-    requestHeaders["X-CSRF-Token"] = csrfToken;
-  } else if (requiresCsrf && !csrfToken) {
+  // Fall back to the cookie when no token was threaded in. Callers that already hold one from
+  // `useCsrf()` are unaffected; this only rescues call sites with no access to React context
+  // (module-level helpers) and removes the need to plumb the token through every component.
+  const effectiveCsrfToken = csrfToken || (requiresCsrf ? getCsrfTokenFromDocument() : null);
+
+  if (requiresCsrf && effectiveCsrfToken) {
+    requestHeaders["X-CSRF-Token"] = effectiveCsrfToken;
+  } else if (requiresCsrf) {
     // Fail fast for state-changing requests without CSRF token
     const error = new Error("CSRF token not available. Please refresh the page and try again.");
     const typedError = error as Error & { status: number };

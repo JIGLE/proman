@@ -33,6 +33,7 @@ import { useToast } from "@/lib/contexts/toast-context";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { useCurrency } from "@/lib/contexts/currency-context";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -102,6 +103,8 @@ export function TicketDetailModal({
         formData.append("file", file);
         const res = await fetch(`/api/maintenance/${ticket.id}/images`, {
           method: "POST",
+          // No Content-Type: the browser must set the multipart boundary itself.
+          headers: csrfHeaders(),
           body: formData,
         });
         if (!res.ok) {
@@ -130,6 +133,7 @@ export function TicketDetailModal({
       try {
         const res = await fetch(`/api/maintenance/${ticket.id}/images/${filename}`, {
           method: "DELETE",
+          headers: csrfHeaders(),
         });
         if (!res.ok) throw new Error("Delete failed");
         const data = (await res.json()) as { images: string[] };

@@ -275,7 +275,9 @@ async function login(page) {
   }
   await emailInput.fill(EMAIL);
   await page.locator('input[name="password"]').fill(PASSWORD);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  // Match the form's submit button structurally, not by label: the auth pages are localized
+  // and default to Portuguese, so a hardcoded "Sign in" stopped matching.
+  await page.locator('form button[type="submit"]').click();
   await page.waitForURL(/\/(en|pt|es|it)(\/|$|\?)/, { timeout: 20000 });
 }
 

@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useApp } from "@/lib/contexts/app-context";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 /**
  * Situs Bank Movements inbox — every imported movement with its match
@@ -154,7 +155,7 @@ export function BankMovementsInbox(): React.ReactElement {
         const res = await fetch(`/api/bank/transactions/${id}`, {
           method: "PUT",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: csrfHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({ action, leaseId }),
         });
         if (!res.ok) {
@@ -180,7 +181,7 @@ export function BankMovementsInbox(): React.ReactElement {
       const res = await fetch("/api/bank/import", {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ csv: csvText }),
       });
       const body = await res.json().catch(() => null);

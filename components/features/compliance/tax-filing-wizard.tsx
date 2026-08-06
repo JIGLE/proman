@@ -19,6 +19,7 @@ import {
 import { MultiStepFormContainer, StepContent, DraftBanner } from "@/components/ui/multi-step-form";
 import { useMultiStepForm } from "@/lib/hooks/use-multi-step-form";
 import { useToast } from "@/lib/contexts/toast-context";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 // ── fiscal types (inlined — fiscal module not yet in this worktree) ─────────
 
@@ -136,7 +137,7 @@ export function TaxFilingWizard({ properties, onSaved, onCancel }: TaxFilingWiza
       try {
         const res = await fetch(`/api/fiscal/${(data.country as string).toLowerCase()}`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: csrfHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({
             grossIncome: data.grossIncome ?? 0,
             expenses: data.deductibleExpenses ?? 0,
@@ -240,7 +241,7 @@ export function TaxFilingWizard({ properties, onSaved, onCancel }: TaxFilingWiza
     try {
       const res = await fetch("/api/tax-filings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           year: formData.year,
           country: formData.country,

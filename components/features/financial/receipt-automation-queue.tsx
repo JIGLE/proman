@@ -4,6 +4,7 @@ import * as React from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 /**
  * Situs ReceiptAutomationQueue — the receipts still moving through the
@@ -74,7 +75,7 @@ export function ReceiptAutomationQueue(): React.ReactElement | null {
         const res = await fetch(`/api/receipts/${id}/lifecycle`, {
           method: "PUT",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: csrfHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({ to: "emitted" }),
         });
         if (!res.ok) {
@@ -100,7 +101,7 @@ export function ReceiptAutomationQueue(): React.ReactElement | null {
       const res = await fetch(`/api/receipts/${id}/lifecycle`, {
         method: "PUT",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ to: "emitted" }),
       }).catch(() => null);
       if (!res || !res.ok) failures.push(id);

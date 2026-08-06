@@ -57,6 +57,41 @@ module.exports = [
     },
   },
 
+  // ── CSRF guard for browser-side mutations ──────────────────────────────────
+  //
+  // `proxy.ts` rejects every non-public /api/* request using a state-changing method unless it
+  // carries a matching `x-csrf-token` header, so a bare `fetch` with method POST/PUT/PATCH/
+  // DELETE always 403s. That silently broke owner assignment, bank-movement confirmation,
+  // notification mark-read, onboarding and demo init at once, because nothing flagged it.
+  //
+  // The selector deliberately keys off "has a `method` that is not a GET/HEAD/OPTIONS literal"
+  // rather than matching mutating literals directly: `tax-rules-view.tsx` passed its method as
+  // a variable (`method,`) and a literal-only search missed it entirely.
+  {
+    files: ["components/**/*.{ts,tsx}", "app/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}"],
+    ignores: [
+      "app/api/**", // server-side route handlers — never traverse proxy.ts
+      "**/*.test.{ts,tsx}",
+      "**/*.spec.{ts,tsx}",
+      "app/tenant-portal/**", // public per isPublicApiRoute(); token-authenticated
+      "app/auth/mfa/**", // public per isPublicApiRoute()
+      "lib/utils/api-client.ts", // the sanctioned wrapper that adds the header
+    ],
+    rules: {
+      "no-restricted-syntax": [
+        "error",
+        {
+          // Accepts either mechanism: the csrfHeaders() helper, or an explicit
+          // "x-csrf-token" header property (the older hand-rolled pattern in settings-*.tsx).
+          selector:
+            "CallExpression[callee.name='fetch'] > ObjectExpression:has(Property[key.name='method']):not(:has(Property[key.name='method'][value.value=/^(GET|HEAD|OPTIONS)$/i])):not(:has(CallExpression[callee.name='csrfHeaders'])):not(:has(Property[key.value=/^x-csrf-token$/i]))",
+          message:
+            "State-changing fetch without a CSRF token — proxy.ts will reject this with 403. Use apiFetch() from @/lib/utils/api-client, or pass headers: csrfHeaders({ ... }).",
+        },
+      ],
+    },
+  },
+
   // JavaScript files
   {
     files: ["**/*.js"],

@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useToast } from "@/lib/toast-context";
 import { useTranslation } from "react-i18next";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 export function LeaseDocumentUploader({
   tenantId,
@@ -26,6 +27,8 @@ export function LeaseDocumentUploader({
       // Use leases alias route
       const res = await fetch(`/api/leases/${tenantId}/documents`, {
         method: "POST",
+        // No Content-Type: the browser must set the multipart boundary itself.
+        headers: csrfHeaders(),
         body: fd,
         credentials: "include",
       });

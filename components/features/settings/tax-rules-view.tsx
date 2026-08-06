@@ -43,6 +43,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/lib/contexts/toast-context";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 interface TaxRule {
   id: string;
@@ -170,7 +171,7 @@ export function TaxRulesView() {
       const method = editingRule ? "PUT" : "POST";
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(body),
       });
 
@@ -193,7 +194,10 @@ export function TaxRulesView() {
   async function handleDelete() {
     if (!deleteTarget) return;
     try {
-      const res = await fetch(`/api/tax-rules/${deleteTarget.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/tax-rules/${deleteTarget.id}`, {
+        method: "DELETE",
+        headers: csrfHeaders(),
+      });
       if (!res.ok) throw new Error("Delete failed");
       success("Tax rule deleted");
       setDeleteTarget(null);

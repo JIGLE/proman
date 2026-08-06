@@ -21,6 +21,8 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils/utils";
+import { apiFetch } from "@/lib/utils/api-client";
+import { useCsrf } from "@/lib/contexts/csrf-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -86,6 +88,7 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   // (no debug logs in production view)
 
   // Ownership assignment state
+  const { token: csrfToken } = useCsrf();
   const [ownerAssignOwnerId, setOwnerAssignOwnerId] = useState("");
   const [ownerAssignPct, setOwnerAssignPct] = useState<number | "">("");
   const [ownerAssignError, setOwnerAssignError] = useState("");
@@ -264,34 +267,38 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
     setOwnerAssignError("");
     setOwnerAssignSaving(true);
     try {
-      const res = await fetch("/api/property-owners", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ propertyId, ownerId: ownerAssignOwnerId, ownershipPercentage: pct }),
+      await apiFetch("/api/property-owners", csrfToken, "POST", {
+        propertyId,
+        ownerId: ownerAssignOwnerId,
+        ownershipPercentage: pct,
       });
-      if (!res.ok) {
-        const json = await res.json().catch(() => ({}));
-        setOwnerAssignError(json?.error ?? "Failed to assign owner.");
-        return;
-      }
       setOwnerAssignOwnerId("");
       setOwnerAssignPct("");
       await refreshData();
-    } catch {
-      setOwnerAssignError("Network error. Please try again.");
+    } catch (err) {
+      setOwnerAssignError(
+        err instanceof Error ? err.message : "Failed to assign owner. Please try again.",
+      );
     } finally {
       setOwnerAssignSaving(false);
     }
   };
 
   const handleRemoveOwner = async (ownerId: string) => {
+    setOwnerAssignError("");
     try {
-      await fetch(`/api/property-owners?propertyId=${propertyId}&ownerId=${ownerId}`, {
-        method: "DELETE",
-      });
+      await apiFetch(
+        `/api/property-owners?propertyId=${propertyId}&ownerId=${ownerId}`,
+        csrfToken,
+        "DELETE",
+      );
       await refreshData();
-    } catch {
-      // Silently fail in demo mode
+    } catch (err) {
+      // Previously swallowed every error ("silently fail in demo mode"), which is why a failed
+      // removal looked like it had worked. Surface it in the same place as the assign error.
+      setOwnerAssignError(
+        err instanceof Error ? err.message : "Failed to remove owner. Please try again.",
+      );
     }
   };
 

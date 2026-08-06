@@ -233,6 +233,9 @@ function sendToMonitoringService(trackedError: TrackedError): void {
 
   // Custom monitoring endpoint
   if (process.env.NEXT_PUBLIC_MONITORING_ENDPOINT) {
+    // Third-party endpoint, not /api/*: it never passes through proxy.ts's CSRF check, and
+    // attaching our token would disclose it to an external host.
+    // eslint-disable-next-line no-restricted-syntax
     fetch(process.env.NEXT_PUBLIC_MONITORING_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

@@ -31,6 +31,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/lib/contexts/toast-context";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 type SubmissionStatus = "pending" | "submitted" | "confirmed" | "rejected";
 
@@ -185,7 +186,7 @@ export function Modelo179View(): React.ReactElement {
     try {
       const res = await fetch("/api/compliance/modelo179", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({
           leaseId: selectedLease.id,
           periodYear: year,
