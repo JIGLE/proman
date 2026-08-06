@@ -85,6 +85,23 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
   const [activeTab, setActiveTab] = useTabPersistence("property-detail", "overview");
   const t = useTranslations("propertyDetail");
   const tFin = useTranslations("financial");
+
+  /**
+   * Expense categories are stored as human labels ("Mortgage Interest") while the catalog keys
+   * them snake_case ("mortgage_interest"), so a direct `tFin("categories." + raw)` always
+   * missed — and next-intl renders the key path rather than returning undefined, so a `||`
+   * fallback never fired and the UI showed "financial.categories.Mortgage Interest". Normalise
+   * the key, and fall back to the stored label when there is genuinely no translation.
+   */
+  const expenseCategoryLabel = (raw?: string | null): string => {
+    if (!raw) return tFin("expense");
+    const key = `categories.${raw.toLowerCase().replace(/\s+/g, "_")}`;
+    const label = tFin(key);
+    // On a miss next-intl renders the full key path, so detect that rather than testing for
+    // undefined. Normalisation resolves the seeded categories ("Repairs" -> repairs,
+    // "Mortgage Interest" -> mortgage_interest); this only catches genuinely unknown ones.
+    return label.endsWith(key) ? raw : label;
+  };
   // (no debug logs in production view)
 
   // Ownership assignment state
@@ -229,7 +246,6 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
     (m) => m.status === "open" || m.status === "in_progress",
   ).length;
   const activeLeasesList = relatedLeases.filter((l) => l.status === "active");
-  const activeLeases = activeLeasesList.length;
 
   // Ownership: derive from owners state
   const propertyOwners = useMemo(
@@ -719,49 +735,11 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         />
       )}
 
-      {/* Secondary context — entity counts, demoted below the money state. */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <button
-          type="button"
-          onClick={() => setActiveTab("overview")}
-          className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
-        >
-          <p className="mono-label">{t("stats.tenants")}</p>
-          <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-foreground)]">
-            {relatedTenants.length}
-          </p>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("overview")}
-          className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
-        >
-          <p className="mono-label">{t("stats.activeLeases")}</p>
-          <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-success)]">
-            {activeLeases}
-          </p>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("finance")}
-          className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
-        >
-          <p className="mono-label">{t("stats.revenue")}</p>
-          <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-foreground)]">
-            {formatCurrency(totalRevenue)}
-          </p>
-        </button>
-        <button
-          type="button"
-          onClick={() => setActiveTab("maintenance")}
-          className="panel p-3 text-left transition-colors hover:border-[var(--color-border-hover)]"
-        >
-          <p className="mono-label">{t("stats.openTickets")}</p>
-          <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-warning)]">
-            {openTickets}
-          </p>
-        </button>
-      </div>
+      {/* The four-card stat row that used to sit here has gone. Every number on it was already
+          on screen: tenants and active leases are listed in People & Contracts below, open
+          tickets were *already* badged on the Operations tab (so the count rendered three times
+          on one screen), and revenue now badges the Money tab. Density rules 2 and 4 in
+          CLAUDE.md — one stat row, and counts as text before counts as boxes. */}
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -770,6 +748,11 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
           <TabsTrigger value="finance" className="flex items-center gap-1.5">
             <DollarSign className="h-3.5 w-3.5" />
             {t("tabs.money")}
+            {totalRevenue > 0 && (
+              <span className="ml-1 bg-[var(--color-popover)] px-1.5 py-0.5 font-mono text-[10px] tabular-nums text-[var(--color-muted-foreground)]">
+                {formatCurrency(totalRevenue)}
+              </span>
+            )}
           </TabsTrigger>
           <TabsTrigger value="maintenance" className="flex items-center gap-1.5">
             <Wrench className="h-3.5 w-3.5" />
@@ -795,22 +778,14 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                 <CardTitle>{t("propertyDetails")}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                {/* Monthly rent, bedrooms and bathrooms are already in the identity row at the
+                    top of this screen (`Ocupado · 2 · 1 · €1500,00/mo`), so repeating them here
+                    was four labelled fields restating what the header had said a few hundred
+                    pixels earlier. Only type and description are unique to this card. */}
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <span className="text-[var(--color-muted-foreground)]">{t("type")}</span>
                     <p className="font-medium capitalize">{property.type}</p>
-                  </div>
-                  <div>
-                    <span className="text-[var(--color-muted-foreground)]">{t("monthlyRent")}</span>
-                    <p className="font-medium">{formatCurrency(property.rent)}</p>
-                  </div>
-                  <div>
-                    <span className="text-[var(--color-muted-foreground)]">{t("bedrooms")}</span>
-                    <p className="font-medium">{property.bedrooms}</p>
-                  </div>
-                  <div>
-                    <span className="text-[var(--color-muted-foreground)]">{t("bathrooms")}</span>
-                    <p className="font-medium">{property.bathrooms}</p>
                   </div>
                   {property.description && (
                     <div className="col-span-2">
@@ -827,9 +802,27 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
             {/* People & contracts — folds the former standalone Tenants and
                 Leases tabs in here (Overview absorbs them per the tab merge). */}
             <div className="space-y-4">
-              <h3 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
-                {t("related")}
-              </h3>
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
+                  {t("related")}
+                </h3>
+                {/* Reuses the existing `?view=tenants&action=create-tenant` deep link the
+                    onboarding checklist already uses, plus the property so the form arrives
+                    with it pre-selected. Tenants below open the shared `?detail=tenant:<id>`
+                    overlay on click (EntityLink), which is the edit path. */}
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() =>
+                    router.push(
+                      `/${locale}/people?view=tenants&action=create-tenant&propertyId=${propertyId}`,
+                    )
+                  }
+                >
+                  <Plus className="mr-1.5 h-3.5 w-3.5" />
+                  {t("addTenant")}
+                </Button>
+              </div>
               {relatedTenants.map((tenant) => (
                 <EntityLink
                   key={tenant.id}
@@ -1092,110 +1085,56 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
         {/* Money Tab — Payments/P&L merged with the former standalone Expenses
             tab, per the tab merge (Overview/Money/Operations/Audit). */}
         <TabsContent value="finance" className="space-y-6">
-          {/* P&L Metric Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="bg-[var(--color-card-solid)] border-[var(--color-border)]">
-              <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">
-                  {t("finance.totalRevenue")}
-                </div>
-                <div className="text-2xl font-bold text-[var(--color-success)] mt-1">
-                  {formatCurrency(totalRevenue)}
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-[var(--color-card-solid)] border-[var(--color-border)]">
-              <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">
-                  {t("finance.totalExpenses")}
-                </div>
-                <div className="text-2xl font-bold text-[var(--color-destructive)] mt-1">
-                  {formatCurrency(totalExpenses)}
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-[var(--color-card-solid)] border-[var(--color-border)]">
-              <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">
-                  {t("finance.netOperatingIncome")}
-                </div>
-                <div
-                  className={cn(
-                    "text-2xl font-bold mt-1",
-                    netOperatingIncome >= 0
-                      ? "text-[var(--color-success)]"
+          {/* P&L row — the same `panel` + mono-label + light tabular treatment the rest of the
+              app uses. These were four bordered Cards at text-2xl/bold, which shouted louder
+              than the transactions they summarise. */}
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="panel p-3">
+              <p className="mono-label">{t("finance.totalRevenue")}</p>
+              <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-success)]">
+                {formatCurrency(totalRevenue)}
+              </p>
+            </div>
+            <div className="panel p-3">
+              <p className="mono-label">{t("finance.totalExpenses")}</p>
+              <p className="mt-1 text-lg font-light tabular-nums text-[var(--color-destructive)]">
+                {formatCurrency(totalExpenses)}
+              </p>
+            </div>
+            <div className="panel p-3">
+              <p className="mono-label">{t("finance.netOperatingIncome")}</p>
+              <p
+                className={cn(
+                  "mt-1 text-lg font-light tabular-nums",
+                  netOperatingIncome >= 0
+                    ? "text-[var(--color-success)]"
+                    : "text-[var(--color-destructive)]",
+                )}
+              >
+                {formatCurrency(netOperatingIncome)}
+              </p>
+            </div>
+            <div className="panel p-3">
+              <p className="mono-label">{t("finance.collectionRate")}</p>
+              <p
+                className={cn(
+                  "mt-1 text-lg font-light tabular-nums",
+                  collectionMetrics.collectionRate >= 90
+                    ? "text-[var(--color-success)]"
+                    : collectionMetrics.collectionRate >= 70
+                      ? "text-[var(--color-warning)]"
                       : "text-[var(--color-destructive)]",
-                  )}
-                >
-                  {formatCurrency(netOperatingIncome)}
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="bg-[var(--color-card-solid)] border-[var(--color-border)]">
-              <CardContent className="p-4">
-                <div className="text-sm text-[var(--color-muted-foreground)]">
-                  {t("finance.collectionRate")}
-                </div>
-                <div
-                  className={cn(
-                    "text-2xl font-bold mt-1",
-                    collectionMetrics.collectionRate >= 90
-                      ? "text-[var(--color-success)]"
-                      : collectionMetrics.collectionRate >= 70
-                        ? "text-[var(--color-warning)]"
-                        : "text-[var(--color-destructive)]",
-                  )}
-                >
-                  {collectionMetrics.collectionRate.toFixed(1)}%
-                </div>
-              </CardContent>
-            </Card>
+                )}
+              >
+                {collectionMetrics.collectionRate.toFixed(1)}%
+              </p>
+            </div>
           </div>
 
-          {/* Expenses — folded in from the former standalone Expenses tab. */}
-          {relatedExpenses.length > 0 && (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
-                  {t("expensesHeading")}
-                </h3>
-                <span className="text-sm text-[var(--color-muted-foreground)]">
-                  {tFin("totalExpenses")}:{" "}
-                  <span className="font-semibold text-[var(--color-destructive)]">
-                    {formatCurrency(totalExpenses)}
-                  </span>
-                </span>
-              </div>
-              {relatedExpenses
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                .map((expense) => (
-                  <Card key={expense.id}>
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm font-medium">
-                            {tFin(`categories.${expense.category}`) || expense.category}
-                          </p>
-                          {expense.description && (
-                            <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
-                              {expense.description}
-                            </p>
-                          )}
-                          <p className="text-xs text-[var(--color-muted-foreground)] mt-0.5">
-                            {new Date(expense.date).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-sm font-semibold text-[var(--color-destructive)]">
-                            -{formatCurrency(expense.amount)}
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-            </div>
-          )}
+          {/* The standalone Expenses list that used to sit here is gone: every row it rendered
+              also appears in Recent transactions below, so each expense was on screen twice,
+              and its header repeated the totalExpenses figure already in the P&L row above.
+              Transactions now carry the expense description so no detail was lost with it. */}
 
           {relatedReceipts.length === 0 && relatedExpenses.length === 0 ? (
             <EmptyStateIllustration entityType="receipts" />
@@ -1220,9 +1159,14 @@ export function PropertyDetailView({ propertyId }: PropertyDetailViewProps) {
                         <div>
                           <p className="text-sm font-medium">
                             {tx.txType === "receipt"
-                              ? "Payment received"
-                              : tx.category || "Expense"}
+                              ? tFin("paymentReceived")
+                              : expenseCategoryLabel(tx.category)}
                           </p>
+                          {tx.txType === "expense" && tx.description && (
+                            <p className="text-xs text-[var(--color-muted-foreground)]">
+                              {tx.description}
+                            </p>
+                          )}
                           <p className="text-xs text-[var(--color-muted-foreground)]">{tx.date}</p>
                         </div>
                         <span

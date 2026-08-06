@@ -71,7 +71,9 @@ import { SwipeableListItem } from "@/components/ui/swipeable-list-item";
 export type TenantsViewProps = { density?: "comfortable" | "compact" };
 
 export type TenantsViewRef = {
-  openDialog: () => void;
+  /** `prefill` seeds the create form — used when adding a tenant from a property detail,
+   *  so the property the user came from is already selected. */
+  openDialog: (prefill?: Partial<TenantFormData>) => void;
 };
 
 function TenantForm({
@@ -366,7 +368,10 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
 
     // Expose dialog methods to parent via ref
     useImperativeHandle(ref, () => ({
-      openDialog: dialog.openDialog,
+      openDialog: (prefill?: Partial<TenantFormData>) => {
+        dialog.openDialog();
+        if (prefill) dialog.updateFormData(prefill);
+      },
     }));
 
     const getPaymentStatusBadge = (status: Tenant["paymentStatus"]) => {

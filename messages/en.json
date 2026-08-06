@@ -882,7 +882,9 @@
     "recurrenceEndPlaceholder": "Leave blank for never",
     "bulkGenerate": "Generate this month's receipts",
     "bulkGenerateSuccess": "Generated {count} receipts. {skipped} already existed.",
-    "bulkGenerateEmpty": "All receipts for this month already exist."
+    "bulkGenerateEmpty": "All receipts for this month already exist.",
+    "expense": "Expense",
+    "paymentReceived": "Payment received"
   },
   "propertyDetail": {
     "tabs": {
@@ -915,7 +917,6 @@
       "maintenance": "Under Maintenance"
     },
     "related": "People & contracts",
-    "expensesHeading": "Expenses",
     "propertyDetails": "Property Details",
     "monthlyRent": "Monthly Rent",
     "type": "Type",
@@ -933,7 +934,8 @@
       "netOperatingIncome": "Net Operating Income",
       "collectionRate": "Collection Rate",
       "noData": "No financial data available for this property yet."
-    }
+    },
+    "addTenant": "Add tenant"
   },
   "Units": {
     "addUnit": "Add Unit",

@@ -882,7 +882,9 @@
     "recurrenceEndPlaceholder": "Lascia vuoto per non terminare mai",
     "bulkGenerate": "Genera le ricevute di questo mese",
     "bulkGenerateSuccess": "Generate {count} ricevute. {skipped} già esistenti.",
-    "bulkGenerateEmpty": "Tutte le ricevute di questo mese esistono già."
+    "bulkGenerateEmpty": "Tutte le ricevute di questo mese esistono già.",
+    "expense": "Spesa",
+    "paymentReceived": "Pagamento ricevuto"
   },
   "propertyDetail": {
     "tabs": {
@@ -915,7 +917,6 @@
       "maintenance": "In manutenzione"
     },
     "related": "Persone e contratti",
-    "expensesHeading": "Spese",
     "propertyDetails": "Dettagli immobile",
     "monthlyRent": "Canone mensile",
     "type": "Tipo",
@@ -933,7 +934,8 @@
       "netOperatingIncome": "Reddito operativo netto",
       "collectionRate": "Tasso di riscossione",
       "noData": "Nessun dato finanziario disponibile per questo immobile ancora."
-    }
+    },
+    "addTenant": "Aggiungi inquilino"
   },
   "Units": {
     "addUnit": "Aggiungi unità",

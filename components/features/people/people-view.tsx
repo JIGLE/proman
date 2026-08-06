@@ -56,13 +56,19 @@ export function PeopleView(): React.ReactElement {
   const [pendingCreateTenant, setPendingCreateTenant] = useState(
     () => searchParams.get("action") === "create-tenant",
   );
+  // A `propertyId` alongside the action means the user came from that property's detail view
+  // ("Add tenant" in its People & Contracts section), so seed the form with it rather than
+  // making them re-pick the property they were just looking at.
+  const createTenantPropertyId = searchParams.get("propertyId");
   useEffect(() => {
     if (pendingCreateTenant && activeTab === "tenants") {
-      tenantsViewRef.current?.openDialog();
+      tenantsViewRef.current?.openDialog(
+        createTenantPropertyId ? { propertyId: createTenantPropertyId } : undefined,
+      );
       setPendingCreateTenant(false);
       router.replace(pathname);
     }
-  }, [pendingCreateTenant, activeTab, router, pathname]);
+  }, [pendingCreateTenant, activeTab, router, pathname, createTenantPropertyId]);
 
   // Export columns for tenants
   const tenantColumns = [
