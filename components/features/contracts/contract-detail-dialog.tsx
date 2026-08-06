@@ -29,7 +29,8 @@ const statusColors: Record<string, string> = {
   expiring:
     "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20",
   expired: "bg-[var(--color-error-muted)] text-[var(--color-error)] border-[var(--color-error)]/20",
-  terminated: "bg-gray-500/10 text-gray-600 border-gray-500/20",
+  terminated:
+    "bg-[var(--color-popover)] text-[var(--color-muted-foreground)] border-[var(--color-inner-border)]",
 };
 
 export function ContractDetailDialog({
@@ -64,7 +65,7 @@ export function ContractDetailDialog({
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl">
+        <DialogContent className="bg-[var(--color-card)] border-[var(--color-border)] max-w-2xl">
           <DialogHeader>
             <div className="flex items-start justify-between pr-8">
               <div className="flex-1">
@@ -109,7 +110,7 @@ export function ContractDetailDialog({
             </div>
 
             {/* Contract Period */}
-            <div className="border-t border-zinc-800 pt-4">
+            <div className="border-t border-[var(--color-border)] pt-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                 <Calendar className="h-4 w-4" />
                 <span>Contract Period</span>
@@ -129,7 +130,7 @@ export function ContractDetailDialog({
                 </div>
               </div>
               {daysRemaining !== null && (
-                <div className="mt-3 p-3 rounded-lg bg-zinc-800/50">
+                <div className="mt-3 p-3 rounded-lg bg-[var(--color-surface)]">
                   <div className="text-sm">
                     {daysRemaining > 0 ? (
                       <span className="text-amber-400">{daysRemaining} days remaining</span>
@@ -144,7 +145,7 @@ export function ContractDetailDialog({
             </div>
 
             {/* Financial Info */}
-            <div className="border-t border-zinc-800 pt-4">
+            <div className="border-t border-[var(--color-border)] pt-4">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-3">
                 <DollarSign className="h-4 w-4" />
                 <span>Monthly Rent</span>
@@ -157,7 +158,7 @@ export function ContractDetailDialog({
             </div>
 
             {/* Actions */}
-            <div className="border-t border-zinc-800 pt-4 flex gap-2">
+            <div className="border-t border-[var(--color-border)] pt-4 flex gap-2">
               {onEdit && (
                 <Button
                   variant="outline"

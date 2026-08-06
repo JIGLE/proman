@@ -44,8 +44,15 @@ const ALLOWLIST = [
  * Raised from 639 (semantic-only) to 1192 when neutral families were added to the
  * scan, net of the flagship-screen migration (property list/detail/sheet,
  * financials). Every token migration should drive this number DOWN.
+ *
+ * 1192 → 596: the dark-palette neutrals (`bg-zinc-900`, `text-zinc-400`,
+ * `border-zinc-800`…) were not merely unidiomatic, they rendered dark-on-light —
+ * Intelligence › Reports was white text on a cream page. Mapped to the semantic
+ * tokens across `components/**`, skipping lines that already carry a `dark:` pair
+ * and the two surfaces whose dark ground is deliberate (the locale overlay on the
+ * landing hero, and the map's own tiles).
  */
-const BASELINE = 1192;
+const BASELINE = 596;
 
 function walk(dir, acc) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

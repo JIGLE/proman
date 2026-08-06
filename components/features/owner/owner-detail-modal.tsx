@@ -48,7 +48,7 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
   if (!owner) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2">
-        <p className="text-sm text-zinc-400">Owner not found</p>
+        <p className="text-sm text-[var(--color-muted-foreground)]">Owner not found</p>
       </div>
     );
   }
@@ -144,9 +144,11 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-zinc-800 border-zinc-700">
+              <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">Owner Info</CardTitle>
+                  <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                    Owner Info
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="space-y-2">
@@ -169,9 +171,11 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
                 </CardContent>
               </Card>
 
-              <Card className="bg-zinc-800 border-zinc-700">
+              <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">Address</CardTitle>
+                  <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                    Address
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="space-y-2">
@@ -187,9 +191,11 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
             </div>
 
             <div className="space-y-2">
-              <Card className="bg-zinc-800 border-zinc-700">
+              <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">Notes</CardTitle>
+                  <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                    Notes
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Textarea
@@ -212,13 +218,15 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
         ) : (
           <div className="space-y-4">
             {owner.address && (
-              <Card className="bg-zinc-800 border-zinc-700">
+              <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">Address</CardTitle>
+                  <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                    Address
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 text-zinc-500 mt-1" />
+                    <MapPin className="h-4 w-4 text-[var(--color-muted-foreground)] mt-1" />
                     <div className="text-sm">
                       <p className="text-[var(--color-foreground)]">{owner.address}</p>
                     </div>
@@ -229,9 +237,9 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
 
             {/* Properties Owned */}
             {owner.properties && owner.properties.length > 0 && (
-              <Card className="bg-zinc-800 border-zinc-700">
+              <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400 flex items-center gap-2">
+                  <CardTitle className="text-sm text-[var(--color-muted-foreground)] flex items-center gap-2">
                     <Building2 className="h-4 w-4" />
                     Properties Owned ({owner.properties.length})
                   </CardTitle>
@@ -241,12 +249,12 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
                     {owner.properties.map((po) => (
                       <div
                         key={po.id}
-                        className="flex items-center justify-between p-2 bg-zinc-900 rounded"
+                        className="flex items-center justify-between p-2 bg-[var(--color-card)] rounded"
                       >
                         <span className="text-sm text-[var(--color-foreground)]">
                           {po.property?.name || "Unknown Property"}
                         </span>
-                        <span className="text-xs text-zinc-400">
+                        <span className="text-xs text-[var(--color-muted-foreground)]">
                           {po.ownershipPercentage}% ownership
                         </span>
                       </div>
@@ -258,9 +266,11 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
 
             {/* Notes */}
             {owner.notes && (
-              <Card className="bg-zinc-800 border-zinc-700">
+              <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">Notes</CardTitle>
+                  <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                    Notes
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-[var(--color-foreground)]">{owner.notes}</p>
@@ -269,7 +279,7 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-between gap-2 pt-4 border-t border-zinc-800">
+            <div className="flex justify-between gap-2 pt-4 border-t border-[var(--color-border)]">
               <Button
                 variant="destructive"
                 onClick={handleDelete}

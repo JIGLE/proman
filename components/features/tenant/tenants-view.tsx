@@ -507,7 +507,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                   Add Tenant
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="bg-[var(--color-card-solid)] border-[var(--color-border)] max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-[var(--color-foreground)]">
                     {dialog.editingItem ? "Edit Tenant" : "Add New Tenant"}
@@ -572,11 +572,11 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                   compact={compact}
                 />
               ) : (
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900">
+                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card-solid)]">
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-zinc-800 hover:bg-transparent">
-                        <TableHead className="text-zinc-400">
+                      <TableRow className="border-[var(--color-border)] hover:bg-transparent">
+                        <TableHead className="text-[var(--color-muted-foreground)]">
                           <SortableHeader
                             sortKey="name"
                             label="Name"
@@ -584,10 +584,16 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             onSort={(key) => requestSort(key as keyof Tenant)}
                           />
                         </TableHead>
-                        <TableHead className="text-zinc-400">Email</TableHead>
-                        <TableHead className="text-zinc-400">Phone</TableHead>
-                        <TableHead className="text-zinc-400">Property</TableHead>
-                        <TableHead className="text-zinc-400">
+                        <TableHead className="text-[var(--color-muted-foreground)]">
+                          Email
+                        </TableHead>
+                        <TableHead className="text-[var(--color-muted-foreground)]">
+                          Phone
+                        </TableHead>
+                        <TableHead className="text-[var(--color-muted-foreground)]">
+                          Property
+                        </TableHead>
+                        <TableHead className="text-[var(--color-muted-foreground)]">
                           <SortableHeader
                             sortKey="rent"
                             label="Rent"
@@ -595,7 +601,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             onSort={(key) => requestSort(key as keyof Tenant)}
                           />
                         </TableHead>
-                        <TableHead className="text-zinc-400">
+                        <TableHead className="text-[var(--color-muted-foreground)]">
                           <SortableHeader
                             sortKey="paymentStatus"
                             label="Payment Status"
@@ -603,28 +609,32 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             onSort={(key) => requestSort(key as keyof Tenant)}
                           />
                         </TableHead>
-                        <TableHead className="text-zinc-400 w-10"></TableHead>
+                        <TableHead className="text-[var(--color-muted-foreground)] w-10"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {sortedTenants.map((tenant) => (
                         <TableRow
                           key={tenant.id}
-                          className="border-zinc-800 cursor-pointer hover:bg-zinc-800/50"
+                          className="border-[var(--color-border)] cursor-pointer hover:bg-[var(--color-surface-hover)]"
                           onClick={() => openTenantOverlay(tenant.id)}
                         >
-                          <TableCell className="text-sm font-medium text-zinc-100">
+                          <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
                             {tenant.name}
                           </TableCell>
-                          <TableCell className="text-sm text-zinc-400">{tenant.email}</TableCell>
-                          <TableCell className="text-sm text-zinc-400">{tenant.phone}</TableCell>
-                          <TableCell className="text-sm text-zinc-400">
+                          <TableCell className="text-sm text-[var(--color-muted-foreground)]">
+                            {tenant.email}
+                          </TableCell>
+                          <TableCell className="text-sm text-[var(--color-muted-foreground)]">
+                            {tenant.phone}
+                          </TableCell>
+                          <TableCell className="text-sm text-[var(--color-muted-foreground)]">
                             {properties.find((p) => p.id === tenant.propertyId)?.name ||
                               tenant.propertyName ||
                               "Unassigned"}
                           </TableCell>
                           {/* Derived from active lease's monthlyRent */}
-                          <TableCell className="text-sm font-medium text-zinc-100">
+                          <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
                             {formatCurrency(
                               Number(getActiveLease(tenant.id, leases)?.monthlyRent ?? tenant.rent),
                             )}
@@ -700,7 +710,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                     compact={compact}
                   />
                 ) : (
-                  <div className="space-y-1 overflow-hidden rounded-lg border border-zinc-800 bg-zinc-900/60">
+                  <div className="space-y-1 overflow-hidden rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
                     {sortedTenants.map((tenant) => {
                       const isSelected = bulkSelection.isSelected(tenant.id);
                       const activeLease = getActiveLease(tenant.id, leases);
@@ -717,9 +727,9 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         <SwipeableListItem
                           key={tenant.id}
                           className={cn(
-                            "border-b border-zinc-800 last:border-b-0",
+                            "border-b border-[var(--color-border)] last:border-b-0",
                             isOverdue && "border-l-2 border-l-red-500/60",
-                            isSelected && "bg-zinc-800/60",
+                            isSelected && "bg-[var(--color-surface-pressed)]",
                           )}
                           startAction={{
                             icon: <Eye className="h-5 w-5" />,
@@ -736,7 +746,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         >
                           <div
                             className={cn(
-                              "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-zinc-800/40 cursor-pointer",
+                              "flex items-center gap-3 px-4 py-3 transition-colors hover:bg-[var(--color-surface-hover)] cursor-pointer",
                             )}
                             onClick={() => openTenantOverlay(tenant.id)}
                           >
@@ -759,19 +769,22 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                               </div>
                               <div className="min-w-0">
                                 <p
-                                  className="truncate text-sm font-medium text-zinc-100"
+                                  className="truncate text-sm font-medium text-[var(--color-foreground)]"
                                   title={tenant.name}
                                 >
                                   {tenant.name}
                                 </p>
-                                <p className="truncate text-xs text-zinc-500" title={tenant.email}>
+                                <p
+                                  className="truncate text-xs text-[var(--color-muted-foreground)]"
+                                  title={tenant.email}
+                                >
                                   {tenant.email}
                                 </p>
                               </div>
                             </div>
 
                             {/* Property */}
-                            <div className="hidden w-36 shrink-0 truncate text-xs text-zinc-400 md:block">
+                            <div className="hidden w-36 shrink-0 truncate text-xs text-[var(--color-muted-foreground)] md:block">
                               {properties.find((p) => p.id === tenant.propertyId)?.name ||
                                 tenant.propertyName ||
                                 "Unassigned"}
@@ -781,11 +794,13 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             <div className="hidden w-[88px] shrink-0 flex-col items-end text-xs lg:flex">
                               {activeLease ? (
                                 <>
-                                  <span className="text-zinc-500">Ends</span>
+                                  <span className="text-[var(--color-muted-foreground)]">Ends</span>
                                   <span
                                     className={cn(
                                       "font-medium",
-                                      isExpiring ? "text-amber-300" : "text-zinc-300",
+                                      isExpiring
+                                        ? "text-[var(--color-warning)]"
+                                        : "text-[var(--color-muted-foreground)]",
                                     )}
                                   >
                                     {new Date(activeLease.endDate).toLocaleDateString("pt-PT", {
@@ -799,7 +814,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             </div>
 
                             {/* Rent */}
-                            <div className="hidden w-20 shrink-0 text-right text-sm font-semibold text-zinc-100 sm:block">
+                            <div className="hidden w-20 shrink-0 text-right text-sm font-semibold text-[var(--color-foreground)] sm:block">
                               {formatCurrency(Number(activeLease?.monthlyRent ?? tenant.rent))}
                             </div>
 

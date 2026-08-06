@@ -28,7 +28,8 @@ const statusColors: Record<string, string> = {
   expiring:
     "bg-[var(--color-warning-muted)] text-[var(--color-warning)] border-[var(--color-warning)]/20",
   expired: "bg-[var(--color-error-muted)] text-[var(--color-error)] border-[var(--color-error)]/20",
-  terminated: "bg-gray-500/10 text-gray-600 border-gray-500/20",
+  terminated:
+    "bg-[var(--color-popover)] text-[var(--color-muted-foreground)] border-[var(--color-inner-border)]",
 };
 
 export function ContractsView(): React.ReactElement {
@@ -259,7 +260,7 @@ export function ContractsView(): React.ReactElement {
                 sortedLeases.map((lease) => (
                   <TableRow
                     key={lease.id}
-                    className="cursor-pointer hover:bg-zinc-800/50 transition-colors"
+                    className="cursor-pointer hover:bg-[var(--color-surface-hover)] transition-colors"
                     onClick={() => handleViewDetails(lease)}
                   >
                     <TableCell>
