@@ -17,8 +17,10 @@ vi.mock("@/lib/contexts/toast-context", () => ({
 }));
 
 describe("CorrespondenceView", () => {
+  // The next-intl mock in tests/setup returns the key, so assert on the key rather than the
+  // English copy — otherwise the test pins a translation and breaks whenever it is reworded.
   it("shows empty templates state", () => {
     render(<CorrespondenceView />);
-    expect(screen.getByText(/No templates yet/)).toBeDefined();
+    expect(screen.getByText("emptyTitle")).toBeDefined();
   });
 });
