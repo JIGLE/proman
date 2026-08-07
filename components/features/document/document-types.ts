@@ -44,32 +44,32 @@ export const documentTypeConfig: Record<
 > = {
   contract: {
     label: "Contract",
-    color: "bg-blue-500/20 text-blue-700 dark:text-blue-300",
+    color: "bg-blue-500/20 text-blue-800 dark:text-blue-300",
     icon: FileText,
   },
   invoice: {
     label: "Invoice",
-    color: "bg-green-500/20 text-green-700 dark:text-green-300",
+    color: "bg-green-500/20 text-green-800 dark:text-green-300",
     icon: File,
   },
   receipt: {
     label: "Receipt",
-    color: "bg-emerald-500/20 text-emerald-700 dark:text-emerald-300",
+    color: "bg-emerald-500/20 text-emerald-800 dark:text-emerald-300",
     icon: File,
   },
   photo: {
     label: "Photo",
-    color: "bg-purple-500/20 text-purple-700 dark:text-purple-300",
+    color: "bg-purple-500/20 text-purple-800 dark:text-purple-300",
     icon: Image,
   },
   floor_plan: {
     label: "Floor Plan",
-    color: "bg-orange-500/20 text-orange-700 dark:text-orange-300",
+    color: "bg-orange-500/20 text-orange-800 dark:text-orange-300",
     icon: FileImage,
   },
   certificate: {
     label: "Certificate",
-    color: "bg-yellow-500/20 text-yellow-700 dark:text-yellow-300",
+    color: "bg-yellow-500/20 text-yellow-800 dark:text-yellow-300",
     icon: FileText,
   },
   other: {

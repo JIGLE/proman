@@ -294,23 +294,23 @@ export function AssetsView(): React.ReactElement {
               <DropdownMenuTrigger asChild>
                 <Button size="sm" className="h-8 flex-1 gap-1.5">
                   <Plus className="h-3.5 w-3.5" />
-                  New asset
+                  {t("newAsset")}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start" className="w-52">
                 <DropdownMenuItem onClick={() => propertiesViewRef.current?.openDialog()}>
                   <Home className="mr-2 h-3.5 w-3.5" />
-                  New property
+                  {t("newProperty")}
                   <span className="ml-auto text-[11px] text-[var(--color-muted-foreground)]">
-                    standalone unit
+                    {t("newPropertyHint")}
                   </span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setBuildingDialogOpen(true)}>
                   <Building2 className="mr-2 h-3.5 w-3.5" />
-                  New building
+                  {t("newBuilding")}
                   <span className="ml-auto text-[11px] text-[var(--color-muted-foreground)]">
-                    group of units
+                    {t("newBuildingHint")}
                   </span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

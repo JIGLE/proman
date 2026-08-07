@@ -246,7 +246,10 @@ export function BankMovementsInbox(): React.ReactElement {
             onValueChange={(leaseId) => void act(row.id, "reassign", leaseId)}
             disabled={busyId === row.id}
           >
-            <SelectTrigger className="h-7 w-[190px] rounded-none text-xs">
+            <SelectTrigger
+              className="h-7 w-[190px] rounded-none text-xs"
+              aria-label={t("assignToLease")}
+            >
               <SelectValue placeholder={t("assignToLease")} />
             </SelectTrigger>
             <SelectContent>
@@ -313,7 +316,10 @@ export function BankMovementsInbox(): React.ReactElement {
         <p className="mono-label">Bank movements · matching inbox</p>
         <div className="flex items-center gap-2">
           <Select value={filter} onValueChange={setFilter}>
-            <SelectTrigger className="h-8 w-[170px] rounded-none text-xs">
+            <SelectTrigger
+              className="h-8 w-[170px] rounded-none text-xs"
+              aria-label={t("filterStatus")}
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

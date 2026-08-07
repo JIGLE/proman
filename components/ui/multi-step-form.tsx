@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Check, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { Button } from "./button";
 import { cn } from "@/lib/utils/utils";
@@ -250,6 +251,11 @@ export function MultiStepFormContainer({
   submitText = "Submit",
   showIndicator = true,
 }: MultiStepFormContainerProps): React.ReactElement {
+  // Back / Continue / Processing were hardcoded English here. This is a shared primitive, so
+  // every wizard in the app inherited them — lease creation and the tax-filing wizard both showed
+  // English navigation in all four locales. Both consumers render under `[locale]`, so the
+  // provider is always present.
+  const tActions = useTranslations("actions");
   const [direction, setDirection] = React.useState(1);
 
   const handleNext = async () => {
@@ -311,7 +317,7 @@ export function MultiStepFormContainer({
           className="gap-2"
         >
           <ChevronLeft className="h-4 w-4" />
-          Back
+          {tActions("back")}
         </Button>
 
         <div className="flex items-center gap-2">
@@ -329,7 +335,7 @@ export function MultiStepFormContainer({
             {isSubmitting ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
-                Processing...
+                {tActions("processing")}
               </>
             ) : isLastStep ? (
               <>
@@ -338,7 +344,7 @@ export function MultiStepFormContainer({
               </>
             ) : (
               <>
-                Continue
+                {tActions("continue")}
                 <ChevronRight className="h-4 w-4" />
               </>
             )}

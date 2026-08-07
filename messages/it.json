@@ -52,7 +52,12 @@
       "addressUnavailable": "Indirizzo immobile non disponibile",
       "mapAvailable": "La vista mappa è disponibile per la tua abitazione.",
       "mapUnavailable": "La vista mappa sarà disponibile quando le coordinate saranno inserite."
-    }
+    },
+    "newAsset": "Nuovo asset",
+    "newProperty": "Nuovo immobile",
+    "newPropertyHint": "unità indipendente",
+    "newBuilding": "Nuovo edificio",
+    "newBuildingHint": "gruppo di unità"
   },
   "settings": {
     "title": "Impostazioni",
@@ -514,7 +519,10 @@
     "refresh": "Aggiorna",
     "search": "Cerca",
     "filter": "Filtra",
-    "viewAll": "Vedi tutti"
+    "viewAll": "Vedi tutti",
+    "back": "Indietro",
+    "continue": "Continua",
+    "processing": "Elaborazione…"
   },
   "landing": {
     "eyebrow": "Gestione locazioni in Italia e non solo",
@@ -1584,8 +1592,12 @@
       "counterparty": "Controparte",
       "reference": "Riferimento",
       "amount": "Importo",
-      "match": "Corrispondenza"
-    }
+      "match": "Corrispondenza",
+      "filterStatus": "Filtra i movimenti per stato"
+    },
+    "timeRange": "Intervallo di tempo",
+    "filterCountry": "Filtra per paese",
+    "filterReceiptStatus": "Filtra le ricevute per stato"
   },
   "propertyDetail": {
     "tabs": {

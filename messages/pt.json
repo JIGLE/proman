@@ -52,7 +52,12 @@
       "addressUnavailable": "Endereço do imóvel não disponível",
       "mapAvailable": "A vista de mapa está disponível para a sua casa.",
       "mapUnavailable": "A vista de mapa aparecerá quando as coordenadas estiverem disponíveis."
-    }
+    },
+    "newAsset": "Novo ativo",
+    "newProperty": "Novo imóvel",
+    "newPropertyHint": "unidade autónoma",
+    "newBuilding": "Novo edifício",
+    "newBuildingHint": "conjunto de unidades"
   },
   "settings": {
     "title": "Configurações",
@@ -514,7 +519,10 @@
     "refresh": "Atualizar",
     "search": "Pesquisar",
     "filter": "Filtrar",
-    "viewAll": "Ver Tudo"
+    "viewAll": "Ver Tudo",
+    "back": "Voltar",
+    "continue": "Continuar",
+    "processing": "A processar…"
   },
   "landing": {
     "eyebrow": "Operações de arrendamento para Portugal e Espanha",
@@ -1584,8 +1592,12 @@
       "counterparty": "Contraparte",
       "reference": "Referência",
       "amount": "Valor",
-      "match": "Correspondência"
-    }
+      "match": "Correspondência",
+      "filterStatus": "Filtrar movimentos por estado"
+    },
+    "timeRange": "Intervalo de tempo",
+    "filterCountry": "Filtrar por país",
+    "filterReceiptStatus": "Filtrar recibos por estado"
   },
   "propertyDetail": {
     "tabs": {

@@ -52,7 +52,12 @@
       "addressUnavailable": "Property address not available",
       "mapAvailable": "Map view is available for your home.",
       "mapUnavailable": "Map view will appear once coordinates are available."
-    }
+    },
+    "newAsset": "New asset",
+    "newProperty": "New property",
+    "newPropertyHint": "standalone unit",
+    "newBuilding": "New building",
+    "newBuildingHint": "group of units"
   },
   "settings": {
     "title": "Settings",
@@ -514,7 +519,10 @@
     "refresh": "Refresh",
     "search": "Search",
     "filter": "Filter",
-    "viewAll": "View All"
+    "viewAll": "View All",
+    "back": "Back",
+    "continue": "Continue",
+    "processing": "Processing…"
   },
   "landing": {
     "eyebrow": "Portugal & Spain rental operations",
@@ -1584,8 +1592,12 @@
       "counterparty": "Counterparty",
       "reference": "Reference",
       "amount": "Amount",
-      "match": "Match"
-    }
+      "match": "Match",
+      "filterStatus": "Filter movements by status"
+    },
+    "timeRange": "Time range",
+    "filterCountry": "Filter by country",
+    "filterReceiptStatus": "Filter receipts by status"
   },
   "propertyDetail": {
     "tabs": {

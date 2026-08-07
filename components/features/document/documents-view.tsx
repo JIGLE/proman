@@ -304,7 +304,7 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
               value={typeFilter}
               onValueChange={(v) => setTypeFilter(v as DocumentType | "all")}
             >
-              <SelectTrigger className="w-[180px]">
+              <SelectTrigger className="w-[180px]" aria-label={t("filterByType")}>
                 <Filter className="mr-2 h-4 w-4" />
                 <SelectValue placeholder={t("filterByType")} />
               </SelectTrigger>
@@ -319,7 +319,7 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
             </Select>
             {!embedded && isOwnerPortal && (
               <Select value={propertyFilter} onValueChange={setPropertyFilter}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-[180px]" aria-label={t("filterByProperty")}>
                   <SelectValue placeholder={t("filterByProperty")} />
                 </SelectTrigger>
                 <SelectContent>
