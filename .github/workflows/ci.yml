@@ -317,6 +317,15 @@ jobs:
           name: nextjs-build
           path: .next/
 
+      # Nothing in this workflow had ever created a schema, so `mobile-audit.db` was an empty
+      # SQLite file with no tables. `--seed` then failed silently, `resolveIds` returned nulls,
+      # and all ten detail-overlay surfaces skipped — which is why the first completed CI run
+      # reported 42 surface-runs of empty screens instead of 52 of real ones.
+      - name: Create database schema
+        run: npx prisma db push --skip-generate
+        env:
+          DATABASE_URL: file:./mobile-audit.db
+
       - name: Start built application in background
         run: |
           cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
