@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsContent, TabsList, TabsMobileSelect, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ import type { LucideIcon } from "lucide-react";
 type PaymentTab = "queue" | "receipts" | "rent-matrix" | "bank" | "rent-roll" | "tax";
 
 export function FinancialsContainer() {
+  const t = useTranslations("payments");
   const [activeTab, setActiveTab] = useTabPersistence("payments", "queue");
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -124,25 +126,24 @@ export function FinancialsContainer() {
   const tenantPaidReceipts = state.receipts.filter((receipt) => receipt.status === "paid");
 
   const ownerDescription = tenantId
-    ? `Review payment history, receipt output, and next collection steps for ${selectedTenant?.name ?? "the selected tenant"}.`
+    ? t("descTenantScope", { name: selectedTenant?.name ?? t("theSelectedTenant") })
     : propertyId
-      ? `Review rent status, receipts, and tax-ready outputs for ${selectedProperty?.name ?? "the selected property"}.`
-      : "Track due rent, record payments, issue receipts, and review PT/ES tax-ready totals.";
+      ? t("descPropertyScope", { name: selectedProperty?.name ?? t("theSelectedProperty") })
+      : t("desc");
 
-  const tenantDescription =
-    "Review your rent history, download receipts, and keep the next payment amount visible without owner-only accounting details.";
+  const tenantDescription = t("descTenant");
 
   /** Tab set as data, so the bar and its mobile select can never drift apart. */
   const paymentTabs: { value: PaymentTab; label: string; icon: LucideIcon }[] = isOwnerPortal
     ? [
-        { value: "queue", label: "Due & Overdue", icon: Grid3X3 },
-        { value: "receipts", label: "Receipts", icon: Receipt },
-        { value: "rent-matrix", label: "Rent Matrix", icon: Grid3X3 },
-        { value: "bank", label: "Bank Movements", icon: Landmark },
-        { value: "rent-roll", label: "Occupancy & Rent", icon: BadgeEuro },
-        { value: "tax", label: "Tax Summary", icon: FileText },
+        { value: "queue", label: t("tabs.queue"), icon: Grid3X3 },
+        { value: "receipts", label: t("tabs.receipts"), icon: Receipt },
+        { value: "rent-matrix", label: t("tabs.rentMatrix"), icon: Grid3X3 },
+        { value: "bank", label: t("tabs.bank"), icon: Landmark },
+        { value: "rent-roll", label: t("tabs.rentRoll"), icon: BadgeEuro },
+        { value: "tax", label: t("tabs.tax"), icon: FileText },
       ]
-    : [{ value: "receipts", label: "Payment History", icon: Receipt }];
+    : [{ value: "receipts", label: t("tabs.history"), icon: Receipt }];
   const collapseTabs = paymentTabs.length > 4;
 
   return (
@@ -150,7 +151,7 @@ export function FinancialsContainer() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-foreground)]">
-            {isOwnerPortal ? "Payments" : "My payments"}
+            {isOwnerPortal ? t("title") : t("titleTenant")}
           </h1>
           <p className="text-sm text-[var(--color-muted-foreground)]">
             {isOwnerPortal ? ownerDescription : tenantDescription}
@@ -163,11 +164,11 @@ export function FinancialsContainer() {
                 data={state.receipts}
                 filename="payments-export"
                 columns={[
-                  { key: "tenantName", label: "Tenant" },
-                  { key: "propertyName", label: "Property" },
-                  { key: "amount", label: "Amount" },
-                  { key: "date", label: "Date" },
-                  { key: "status", label: "Status" },
+                  { key: "tenantName", label: t("colTenant") },
+                  { key: "propertyName", label: t("colProperty") },
+                  { key: "amount", label: t("colAmount") },
+                  { key: "date", label: t("colDate") },
+                  { key: "status", label: t("colStatus") },
                 ]}
               />
               <Button
@@ -178,7 +179,7 @@ export function FinancialsContainer() {
                 className="gap-2"
               >
                 <Plus className="h-4 w-4" />
-                Record payment
+                {t("recordPayment")}
               </Button>
             </>
           )}
@@ -196,7 +197,7 @@ export function FinancialsContainer() {
                 "border-l-[3px] border-l-[var(--semantic-danger)] bg-[var(--semantic-danger-soft)]",
             )}
           >
-            <p className="mono-label">Overdue rent</p>
+            <p className="mono-label">{t("overdueRent")}</p>
             <p
               className={cn(
                 "mt-2 text-xl font-light tabular-nums sm:text-2xl",
@@ -208,7 +209,7 @@ export function FinancialsContainer() {
               {formatCurrency(metrics.overdueAmount)}
             </p>
             <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
-              Total expected rent currently marked overdue
+              {t("overdueRentHint")}
             </p>
           </button>
 
@@ -221,12 +222,12 @@ export function FinancialsContainer() {
                 "border-l-[3px] border-l-[var(--country-highlight-readable)] bg-[var(--country-highlight-soft)]",
             )}
           >
-            <p className="mono-label">Pending receipts</p>
+            <p className="mono-label">{t("pendingReceipts")}</p>
             <p className="mt-2 text-xl font-light tabular-nums text-[var(--color-foreground)] sm:text-2xl">
               {metrics.pendingReceipts}
             </p>
             <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
-              Records that still need payment or receipt follow-up
+              {t("pendingReceiptsHint")}
             </p>
           </button>
 
@@ -235,12 +236,12 @@ export function FinancialsContainer() {
             onClick={() => setActiveTab("receipts")}
             className="panel p-4 text-left transition-colors hover:border-[var(--color-border-hover)]"
           >
-            <p className="mono-label">Collected this month</p>
+            <p className="mono-label">{t("collectedMonth")}</p>
             <p className="mt-2 text-xl font-light tabular-nums text-[var(--semantic-success)] sm:text-2xl">
               {formatCurrency(metrics.monthlyCollected)}
             </p>
             <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
-              Paid rent already received this month
+              {t("collectedMonthHint")}
             </p>
           </button>
 
@@ -249,33 +250,33 @@ export function FinancialsContainer() {
             onClick={() => setActiveTab("tax")}
             className="panel p-4 text-left transition-colors hover:border-[var(--color-border-hover)]"
           >
-            <p className="mono-label">Tax-linked leases</p>
+            <p className="mono-label">{t("taxLinked")}</p>
             <p className="mt-2 text-xl font-light tabular-nums text-[var(--color-foreground)] sm:text-2xl">
               {metrics.taxTrackedLeases}
             </p>
             <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
-              Lease records carrying PT/ES tax configuration
+              {t("taxLinkedHint")}
             </p>
           </button>
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <div className="panel border-l-[3px] border-l-[var(--country-highlight-readable)] p-4">
-            <p className="mono-label">Next rent</p>
+            <p className="mono-label">{t("nextRent")}</p>
             <p className="mt-2 text-xl font-light tabular-nums text-[var(--color-foreground)] sm:text-2xl">
               {formatCurrency(tenantLease?.monthlyRent ?? tenantSummary?.rent ?? 0)}
             </p>
             <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
-              Expected amount for your current lease
+              {t("nextRentHint")}
             </p>
           </div>
           <div className="panel p-4">
-            <p className="mono-label">Receipts available</p>
+            <p className="mono-label">{t("receiptsAvailable")}</p>
             <p className="mt-2 text-xl font-light tabular-nums text-[var(--color-foreground)] sm:text-2xl">
               {tenantPaidReceipts.length}
             </p>
             <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
-              Paid records ready to review or download
+              {t("receiptsAvailableHint")}
             </p>
           </div>
           <div
@@ -285,7 +286,7 @@ export function FinancialsContainer() {
                 "border-l-[3px] border-l-[var(--semantic-danger)] bg-[var(--semantic-danger-soft)]",
             )}
           >
-            <p className="mono-label">Current status</p>
+            <p className="mono-label">{t("currentStatus")}</p>
             <p
               className={cn(
                 "mt-2 text-xl font-light capitalize tabular-nums sm:text-2xl",
@@ -297,11 +298,11 @@ export function FinancialsContainer() {
               {tenantSummary?.paymentStatus ?? "pending"}
             </p>
             <p className="mt-2 text-[13px] leading-snug text-[var(--color-muted-foreground)]">
-              Latest payment state linked to your tenancy
+              {t("currentStatusHint")}
             </p>
           </div>
           <div className="panel p-4">
-            <p className="mono-label">Lease status</p>
+            <p className="mono-label">{t("leaseStatus")}</p>
             <p className="mt-2 text-xl font-light capitalize tabular-nums text-[var(--color-foreground)] sm:text-2xl">
               {tenantLease?.status ?? "active"}
             </p>
@@ -328,7 +329,7 @@ export function FinancialsContainer() {
               value={activeTab}
               onValueChange={(value) => setActiveTab(value as PaymentTab)}
               items={paymentTabs.map(({ value, label }) => ({ value, label }))}
-              aria-label={isOwnerPortal ? "Payments section" : "My payments section"}
+              aria-label={isOwnerPortal ? t("title") : t("titleTenant")}
             />
           )}
           <TabsList
