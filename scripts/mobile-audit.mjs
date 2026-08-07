@@ -84,7 +84,7 @@ const STRICT = flag("strict");
 const BASELINE = {
   pageOverflow: 0,
   touchTargetFails: 2,
-  touchTargetWarns: 6,
+  touchTargetWarns: 4,
   clippedContainers: 6,
   smallText: 310,
 };

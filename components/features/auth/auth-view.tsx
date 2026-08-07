@@ -269,7 +269,7 @@ function AuthContent({ mode }: { mode: AuthMode }) {
             <button
               type="button"
               onClick={() => router.push(mode === "signin" ? "/auth/signup" : "/auth/signin")}
-              className="inline-flex items-center font-medium text-[var(--country-highlight-readable)] underline-offset-4 hover:underline max-md:min-h-11"
+              className="inline-flex items-center justify-center font-medium text-[var(--country-highlight-readable)] underline-offset-4 hover:underline max-md:min-h-11 max-md:min-w-11"
             >
               {tMode("switchAction")}
             </button>
