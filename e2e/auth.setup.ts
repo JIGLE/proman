@@ -1,107 +1,83 @@
-import { test as setup } from "@playwright/test";
+import { test as setup, expect } from "@playwright/test";
 import path from "path";
 
 const authFile = path.join(__dirname, "../playwright/.auth/user.json");
 
+const BASE = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
+const EMAIL = process.env.E2E_USER_EMAIL || "demo@proman.local";
+const PASSWORD = process.env.E2E_USER_PASSWORD || "demo123";
+
 /**
- * Authentication setup for E2E tests
+ * Authentication setup for E2E tests.
  *
- * In CI environments without real OAuth credentials, this creates a minimal
- * storage state to allow unauthenticated tests to run.
+ * This used to short-circuit on `process.env.CI`, writing an EMPTY storage state and returning:
  *
- * For local development with real credentials, this attempts actual login.
+ *     if (process.env.CI) { await page.context().storageState({ path: authFile }); return; }
+ *
+ * Every spec declaring `test.use({ storageState: ... })` therefore ran signed out in CI. Those
+ * tests landed on the sign-in page, found no navigation, and their `if (await x.isVisible())`
+ * guards swallowed the result — which is why a suite full of "Critical Path" tests could go green
+ * without exercising a single authenticated flow. The guards were the symptom; this was the cause.
+ *
+ * So: authenticate for real, and fail loudly when that is not possible. A setup project that
+ * silently yields no session is worse than one that errors, because everything downstream reports
+ * success.
  */
 setup("authenticate", async ({ page }) => {
-  // In CI without real OAuth, skip actual authentication
-  // Tests that require auth will be designed to handle 401s gracefully
-  if (process.env.CI) {
-    // Create an empty auth state - tests will run unauthenticated
-    // This is intentional: our E2E tests verify security (401 responses)
-    // rather than authenticated flows
-    await page.context().storageState({ path: authFile });
-    return;
+  await page.goto(`${BASE}/auth/signin`, { waitUntil: "domcontentloaded" });
+
+  // Match the form structurally rather than by label. The auth pages are localized and default to
+  // Portuguese, so the previous `getByRole("button", { name: "Sign in with Credentials" })` and
+  // `{ name: "Sign In" }` stopped matching once the locale fix landed — and because both were
+  // wrapped in `.catch(() => false)`, that produced an unauthenticated state instead of an error.
+  // `scripts/mobile-audit.mjs` hit exactly this and settled on these selectors.
+  const emailInput = page.locator('input[name="email"]');
+  try {
+    await emailInput.waitFor({ state: "visible", timeout: 30000 });
+  } catch {
+    throw new Error(
+      `No credentials sign-in form at ${BASE}/auth/signin. The E2E suite needs the demo ` +
+        `credentials provider: set ENABLE_DEMO_LOGIN=true on the server and build with ` +
+        `NEXT_PUBLIC_ENABLE_DEMO_LOGIN=true (a production build compiles the form out otherwise).`,
+    );
   }
 
-  // Navigate to sign-in page
-  await page.goto("/auth/signin");
+  await emailInput.fill(EMAIL);
+  await page.locator('input[name="password"]').fill(PASSWORD);
+  await page.locator('form button[type="submit"]').click();
 
-  // Wait for the page to be ready
-  await page.waitForLoadState("networkidle");
+  // The app serves four locales; the old pattern only matched /en and /pt.
+  await page.waitForURL(/\/(en|pt|es|it)(\/|$|\?)/, { timeout: 20000 });
 
-  // Check if we're already authenticated (redirected to dashboard)
-  const url = page.url();
-  if (url.includes("/en") || url.includes("/pt")) {
-    // Already logged in
-    await page.context().storageState({ path: authFile });
-    return;
+  // Seeding is opt-in. `seedDemoData` deletes and recreates the demo user's records, so it must
+  // never fire against a developer's dev.db just because they ran the suite locally. CI sets
+  // E2E_SEED on the full E2E job only — the smoke job stays unseeded because its tests assert on
+  // unauthenticated API behaviour.
+  if (process.env.E2E_SEED === "true") {
+    // State-changing calls are CSRF-guarded: fetch the token cookie and echo it back in the header.
+    await page.request.get(`${BASE}/api/csrf-token`);
+    const cookies = await page.context().cookies();
+    const csrf = cookies.find((c) => c.name === "csrf-token")?.value;
+    const res = await page.request.post(`${BASE}/api/debug/db/seed`, {
+      headers: csrf ? { "x-csrf-token": csrf } : {},
+    });
+    if (!res.ok()) {
+      throw new Error(
+        `Seeding failed (${res.status()}): ${await res.text()}. Without records the CRUD and ` +
+          `delete-confirmation specs have nothing to act on and skip themselves.`,
+      );
+    }
+
+    // A 200 from the seed route is not proof it produced anything — verify one collection came
+    // back non-empty before letting the suite run against what it believes is seeded data.
+    const properties = await page.request.get(`${BASE}/api/properties`);
+    expect(properties.ok(), `GET /api/properties after seeding → ${properties.status()}`).toBe(
+      true,
+    );
+    const body = await properties.json();
+    const list = Array.isArray(body) ? body : (body.data ?? []);
+    expect(list.length, "seed reported success but no properties came back").toBeGreaterThan(0);
   }
 
-  // For local dev with credentials provider (if configured)
-  const demoEmail = process.env.E2E_USER_EMAIL || "demo@proman.local";
-  const demoPassword = process.env.E2E_USER_PASSWORD || "demo123";
-
-  // Try to find Dev Login form specifically first
-  const devLoginButton = page.getByRole("button", {
-    name: "Sign in with Credentials",
-  });
-
-  const hasDevLogin = await devLoginButton.isVisible().catch(() => false);
-  console.log("[auth.setup] Dev login button visible:", hasDevLogin);
-
-  if (hasDevLogin) {
-    // We are in dev mode with credentials enabled
-    // Use specific locators for the dev form to avoid ambiguity
-    console.log("[auth.setup] Filling credentials form...");
-    await page.locator('input[name="email"]').fill(demoEmail);
-    await page.locator('input[name="password"]').fill(demoPassword);
-
-    // Wait a bit before clicking to ensure form is ready
-    await page.waitForTimeout(500);
-
-    await devLoginButton.click();
-
-    console.log("[auth.setup] Clicked sign in button, waiting for navigation...");
-
-    // Wait for successful navigation to authenticated route
-    try {
-      await page.waitForURL(/\/(en|pt)/, { timeout: 10000 });
-      console.log("[auth.setup] Successfully authenticated:", page.url());
-    } catch (e) {
-      console.log("[auth.setup] Navigation failed:", e);
-      console.log("[auth.setup] Current URL:", page.url());
-      await page.screenshot({ path: "test-results/auth-failed.png" });
-      throw e; // Fail the test if navigation doesn't happen
-    }
-  } else {
-    // Fallback to generic detection (original logic)
-    // Look for email input
-    const emailInput = page.getByLabel(/email/i).or(page.locator('input[type="email"]'));
-    const passwordInput = page.getByLabel(/password/i).or(page.locator('input[type="password"]'));
-
-    // Fill credentials if inputs exist
-    if (await emailInput.isVisible()) {
-      await emailInput.fill(demoEmail);
-    }
-
-    if (await passwordInput.isVisible()) {
-      await passwordInput.fill(demoPassword);
-    }
-
-    // Look for sign-in button
-    const signInButton = page.getByRole("button", { name: "Sign In" }).first();
-    if (await signInButton.isVisible().catch(() => false)) {
-      await signInButton.click();
-
-      // Wait for navigation to complete (with timeout)
-      try {
-        await page.waitForURL(/\/(en|pt)/, { timeout: 10000 });
-      } catch {
-        // Auth may have failed - continue anyway with empty state
-        console.log("Auth login did not redirect - continuing with unauthenticated state");
-      }
-    }
-  }
-
-  // Save authentication state
   await page.context().storageState({ path: authFile });
 });

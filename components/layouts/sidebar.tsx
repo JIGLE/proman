@@ -234,32 +234,40 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
                   item.labelKey.replace("navigation.", "") as Parameters<typeof t>[0],
                 );
                 return (
-                  <Link
-                    key={item.key}
-                    href={`/${currentLocale}${item.href}`}
-                    role="listitem"
-                    onClick={() => onTabChange?.(item.key)}
-                    aria-current={isActive ? "page" : undefined}
-                    title={collapsed ? translatedLabel : undefined}
-                  >
-                    <div
-                      className={cn(
-                        "flex items-center gap-3 border-l-2 px-3 py-2 text-sm transition-colors",
-                        collapsed && "justify-center px-2",
-                        isActive
-                          ? "border-[var(--country-highlight-readable)] bg-[var(--color-sidebar-active)] font-medium text-[var(--country-highlight-readable)]"
-                          : "border-transparent text-[var(--color-sidebar-text)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)]",
-                      )}
+                  // `role="listitem"` belongs on a wrapper, not on the anchor. It used to sit on
+                  // the `Link` itself — presumably to satisfy the parent `role="list"` — but an
+                  // explicit role REPLACES the implicit one, so every item in the main navigation
+                  // was exposed as a list item and not as a link. A screen reader announced
+                  // "Portfolio, list item"; `getByRole("link", …)` matched nothing at all, which
+                  // is why the desktop half of the E2E navigation tests could never have worked
+                  // even with their guards removed. The `aria-current="page"` below is only
+                  // meaningful on a link, so the anchor was always intended to be one.
+                  <div key={item.key} role="listitem">
+                    <Link
+                      href={`/${currentLocale}${item.href}`}
+                      onClick={() => onTabChange?.(item.key)}
+                      aria-current={isActive ? "page" : undefined}
+                      title={collapsed ? translatedLabel : undefined}
                     >
-                      <Icon
+                      <div
                         className={cn(
-                          "h-[18px] w-[18px] shrink-0",
-                          isActive && "text-[var(--country-highlight-readable)]",
+                          "flex items-center gap-3 border-l-2 px-3 py-2 text-sm transition-colors",
+                          collapsed && "justify-center px-2",
+                          isActive
+                            ? "border-[var(--country-highlight-readable)] bg-[var(--color-sidebar-active)] font-medium text-[var(--country-highlight-readable)]"
+                            : "border-transparent text-[var(--color-sidebar-text)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)]",
                         )}
-                      />
-                      {!collapsed && <span className="truncate">{translatedLabel}</span>}
-                    </div>
-                  </Link>
+                      >
+                        <Icon
+                          className={cn(
+                            "h-[18px] w-[18px] shrink-0",
+                            isActive && "text-[var(--country-highlight-readable)]",
+                          )}
+                        />
+                        {!collapsed && <span className="truncate">{translatedLabel}</span>}
+                      </div>
+                    </Link>
+                  </div>
                 );
               })}
             </div>
