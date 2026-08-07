@@ -322,7 +322,7 @@ jobs:
       # and all ten detail-overlay surfaces skipped — which is why the first completed CI run
       # reported 42 surface-runs of empty screens instead of 52 of real ones.
       - name: Create database schema
-        run: npx prisma db push --skip-generate
+        run: npx prisma db push
         env:
           DATABASE_URL: file:./mobile-audit.db
 
