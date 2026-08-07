@@ -4,14 +4,7 @@ import { useState, useMemo } from "react";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { RenderTable } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -144,68 +137,110 @@ export function RentRollView() {
             No active leases for this period.
           </p>
         ) : (
-          <div className="rounded-lg border border-[var(--color-border)]">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-[var(--color-border)] hover:bg-transparent">
-                  <TableHead className="text-[var(--color-muted-foreground)]">Property</TableHead>
-                  <TableHead className="text-[var(--color-muted-foreground)]">Tenant</TableHead>
-                  <TableHead className="text-[var(--color-muted-foreground)] text-right">
-                    Expected
-                  </TableHead>
-                  <TableHead className="text-[var(--color-muted-foreground)] text-right">
-                    Received
-                  </TableHead>
-                  <TableHead className="text-[var(--color-muted-foreground)] text-right">
-                    Delta
-                  </TableHead>
-                  <TableHead className="text-[var(--color-muted-foreground)]">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rentRoll.map((row) => (
-                  <TableRow key={row.leaseId} className="border-[var(--color-border)]">
-                    <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
-                      {row.propertyName}
-                    </TableCell>
-                    <TableCell className="text-sm text-[var(--color-muted-foreground)]">
-                      {row.tenantName}
-                    </TableCell>
-                    <TableCell className="text-sm text-[var(--color-muted-foreground)] text-right">
-                      {formatCurrency(row.expected)}
-                    </TableCell>
-                    <TableCell className="text-sm text-[var(--color-foreground)] text-right">
-                      {formatCurrency(row.received)}
-                    </TableCell>
-                    <TableCell
-                      className={`text-sm text-right font-medium ${row.delta >= 0 ? "text-emerald-400" : "text-red-400"}`}
-                    >
+          <div className="space-y-3">
+            <RenderTable
+              data={rentRoll}
+              rowKey={(row) => row.leaseId}
+              className="rounded-lg border border-[var(--color-border)]"
+              cardMode
+              renderCard={(row) => (
+                <div className="rounded-lg border border-[var(--color-border)] p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-[var(--color-foreground)]">
+                        {row.propertyName}
+                      </p>
+                      <p className="truncate text-xs text-[var(--color-muted-foreground)]">
+                        {row.tenantName}
+                      </p>
+                    </div>
+                    {statusBadge(row.status)}
+                  </div>
+                  <dl className="mt-2 grid grid-cols-3 gap-2 text-sm">
+                    <div>
+                      <dt className="mono-label">Expected</dt>
+                      <dd className="tabular-nums text-[var(--color-muted-foreground)]">
+                        {formatCurrency(row.expected)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="mono-label">Received</dt>
+                      <dd className="tabular-nums text-[var(--color-foreground)]">
+                        {formatCurrency(row.received)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="mono-label">Delta</dt>
+                      <dd
+                        className={`font-medium tabular-nums ${row.delta >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                      >
+                        {row.delta >= 0 ? "+" : ""}
+                        {formatCurrency(row.delta)}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              )}
+              columns={[
+                {
+                  key: "property",
+                  header: "Property",
+                  cell: (row) => row.propertyName,
+                  cellClassName: "text-sm font-medium text-[var(--color-foreground)]",
+                },
+                {
+                  key: "tenant",
+                  header: "Tenant",
+                  cell: (row) => row.tenantName,
+                  cellClassName: "text-sm text-[var(--color-muted-foreground)]",
+                },
+                {
+                  key: "expected",
+                  header: "Expected",
+                  headerClassName: "text-right",
+                  cell: (row) => formatCurrency(row.expected),
+                  cellClassName: "text-sm text-[var(--color-muted-foreground)] text-right",
+                },
+                {
+                  key: "received",
+                  header: "Received",
+                  headerClassName: "text-right",
+                  cell: (row) => formatCurrency(row.received),
+                  cellClassName: "text-sm text-[var(--color-foreground)] text-right",
+                },
+                {
+                  key: "delta",
+                  header: "Delta",
+                  headerClassName: "text-right",
+                  cell: (row) => (
+                    <span className={row.delta >= 0 ? "text-emerald-400" : "text-red-400"}>
                       {row.delta >= 0 ? "+" : ""}
                       {formatCurrency(row.delta)}
-                    </TableCell>
-                    <TableCell>{statusBadge(row.status)}</TableCell>
-                  </TableRow>
-                ))}
-                <TableRow className="border-[var(--color-border)] bg-[var(--color-surface)] font-semibold">
-                  <TableCell className="text-sm text-[var(--color-foreground)]" colSpan={2}>
-                    Totals
-                  </TableCell>
-                  <TableCell className="text-sm text-[var(--color-foreground)] text-right">
-                    {formatCurrency(totals.expected)}
-                  </TableCell>
-                  <TableCell className="text-sm text-[var(--color-foreground)] text-right">
-                    {formatCurrency(totals.received)}
-                  </TableCell>
-                  <TableCell
-                    className={`text-sm text-right font-medium ${totals.delta >= 0 ? "text-emerald-400" : "text-red-400"}`}
-                  >
-                    {totals.delta >= 0 ? "+" : ""}
-                    {formatCurrency(totals.delta)}
-                  </TableCell>
-                  <TableCell />
-                </TableRow>
-              </TableBody>
-            </Table>
+                    </span>
+                  ),
+                  cellClassName: "text-sm text-right font-medium",
+                },
+                { key: "status", header: "Status", cell: (row) => statusBadge(row.status) },
+              ]}
+            />
+
+            {/* Totals live beside the table rather than inside it: `RenderTable` has no footer
+                row, and a totals row appended to a card list reads as one more record. */}
+            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm font-semibold">
+              <span className="text-[var(--color-foreground)]">Totals</span>
+              <span className="flex flex-wrap items-center gap-x-5 tabular-nums">
+                <span className="text-[var(--color-muted-foreground)]">
+                  {formatCurrency(totals.expected)}
+                </span>
+                <span className="text-[var(--color-foreground)]">
+                  {formatCurrency(totals.received)}
+                </span>
+                <span className={totals.delta >= 0 ? "text-emerald-400" : "text-red-400"}>
+                  {totals.delta >= 0 ? "+" : ""}
+                  {formatCurrency(totals.delta)}
+                </span>
+              </span>
+            </div>
           </div>
         )}
       </CardContent>
