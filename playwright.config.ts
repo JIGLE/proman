@@ -1,6 +1,18 @@
 import { defineConfig, devices } from "@playwright/test";
 
 /**
+ * Opt-in browser override, mirroring `PLAYWRIGHT_CHROMIUM` in `scripts/mobile-audit.mjs`.
+ *
+ * CI runs `npx playwright install --with-deps chromium` and leaves this unset, so Playwright
+ * resolves its own matched build — nothing changes there. It exists for sandboxed environments
+ * that pre-install a browser and cannot reach the download CDN; without it the suite cannot be
+ * run locally at all, which is part of how the runner stayed broken for so long unnoticed.
+ */
+const launchOptions = process.env.PLAYWRIGHT_CHROMIUM
+  ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM }
+  : {};
+
+/**
  * Playwright E2E Test Configuration
  * @see https://playwright.dev/docs/test-configuration
  */
@@ -43,12 +55,14 @@ export default defineConfig({
     {
       name: "setup",
       testMatch: /.*\.setup\.ts/,
+      use: { launchOptions },
     },
 
     {
       name: "chromium",
       use: {
         ...devices["Desktop Chrome"],
+        launchOptions,
       },
       dependencies: ["setup"],
     },
@@ -58,6 +72,7 @@ export default defineConfig({
       name: "mobile-chrome",
       use: {
         ...devices["Pixel 5"],
+        launchOptions,
       },
       dependencies: ["setup"],
     },
