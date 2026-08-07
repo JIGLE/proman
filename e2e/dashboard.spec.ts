@@ -1,5 +1,22 @@
 import { test, expect } from "@playwright/test";
 
+/**
+ * NOTE — these tests are currently vacuous and should be rewritten.
+ *
+ * Every navigation below is wrapped in `if (await link.isVisible())`, so when the element is
+ * absent the assertion never runs and the test passes. That makes them pass for the wrong
+ * reason twice over:
+ *   - on mobile-chrome, the sidebar is `hidden md:flex`, so the links are never visible and
+ *     all three navigation tests do nothing at all;
+ *   - on desktop, a nav that stopped rendering would also pass, which is the opposite of what
+ *     a navigation test is for.
+ *
+ * The fix is to assert the link exists (no guard) and to reach it through the bottom nav
+ * (`components/ui/mobile-nav.tsx`) below `md`. Left as-is in this commit because the Playwright
+ * runner could not be executed in the environment where this was found — a test whose entire
+ * body was `throw new Error(...)` reported "passed" — so any rewrite here would be unverified.
+ */
+
 test.describe("Dashboard", () => {
   test("should display the main dashboard", async ({ page }) => {
     await page.goto("/en");

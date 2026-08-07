@@ -255,6 +255,18 @@ jobs:
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
 
+      # The mobile-chrome project (Pixel 5) has been defined in playwright.config.ts since it
+      # was added but has never run — both jobs hardcoded --project=chromium. Non-blocking for
+      # now: this is its first execution anywhere, so the run is a measurement, not a gate.
+      # Promote it by deleting continue-on-error once a few runs have come back green.
+      - name: Run Playwright tests (mobile viewport)
+        run: npx playwright test --project=mobile-chrome
+        continue-on-error: true
+        env:
+          DATABASE_URL: file:./e2e-test.db
+          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
+
       - name: Upload Playwright report
         uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
