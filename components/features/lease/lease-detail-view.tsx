@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   FileText,
   Edit,
@@ -50,6 +51,10 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
   const { state, updateLease } = useApp();
   const { formatCurrency } = useCurrency();
   const { success, error } = useToast();
+  const t = useTranslations("leases.detail");
+  const tLease = useTranslations("leases");
+  const tForms = useTranslations("forms");
+  const tActions = useTranslations("actions");
   const confirmDialog = useConfirmDialog();
   const pathname = usePathname();
   const router = useRouter();
@@ -77,10 +82,10 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
   if (!lease) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-4">
-        <p className="text-[var(--color-muted-foreground)]">Lease not found</p>
+        <p className="text-[var(--color-muted-foreground)]">{t("notFound")}</p>
         <Button variant="outline" onClick={() => router.push(`/${locale}/leases`)}>
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back to Leases
+          {t("backToLeases")}
         </Button>
       </div>
     );
@@ -118,10 +123,10 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
       if (!res.ok) throw new Error("Failed");
       const updated = await res.json();
       await updateLease(lease.id, updated);
-      success("Renewal offer sent");
+      success(t("toastRenewalSent"));
       setRenewalOpen(false);
     } catch {
-      error("Failed to send renewal offer");
+      error(t("toastRenewalFailed"));
     } finally {
       setRenewalSubmitting(false);
     }
@@ -137,27 +142,27 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
       if (!res.ok) throw new Error("Failed");
       const updated = await res.json();
       await updateLease(lease.id, updated);
-      success("Renewal offer withdrawn");
+      success(t("toastRenewalWithdrawn"));
     } catch {
-      error("Failed to withdraw renewal offer");
+      error(t("toastWithdrawFailed"));
     }
   };
 
   const handleTerminate = () => {
     confirmDialog.confirm(
       {
-        title: "Terminate Lease",
-        description: "This lease will be marked as terminated. This action cannot be undone.",
-        confirmLabel: "Terminate",
+        title: t("terminateDialog.title"),
+        description: t("terminateDialog.description"),
+        confirmLabel: t("terminateDialog.confirmLabel"),
         variant: "destructive",
       },
       async () => {
         try {
           await updateLease(lease.id, { status: "terminated" });
-          success("Lease terminated");
+          success(t("toastTerminated"));
           router.push(`/${locale}/leases`);
         } catch {
-          error("Failed to terminate lease");
+          error(t("toastTerminateFailed"));
         }
       },
     );
@@ -184,20 +189,20 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               <Badge variant={STATUS_VARIANT[lease.status] || "secondary"}>{lease.status}</Badge>
               <span className="text-sm font-medium">{formatCurrency(lease.monthlyRent)}/mo</span>
-              {lease.autoRenew && <Badge variant="outline">Auto-renew</Badge>}
+              {lease.autoRenew && <Badge variant="outline">{t("autoRenewBadge")}</Badge>}
               {lease.status === "active" && daysUntilExpiry <= 60 && (
                 <Badge variant="secondary" className="text-amber-500">
-                  Expires in {daysUntilExpiry}d
+                  {t("expiresIn", { days: daysUntilExpiry })}
                 </Badge>
               )}
               {lease.renewalStatus === "offered" && (
                 <Badge variant="secondary" className="gap-1 text-sky-600 dark:text-sky-400">
-                  <Clock className="h-3 w-3" /> Renewal offered
+                  <Clock className="h-3 w-3" /> {t("renewalOffered")}
                 </Badge>
               )}
               {lease.renewalStatus === "accepted" && (
                 <Badge variant="secondary" className="gap-1 text-emerald-600 dark:text-emerald-400">
-                  <CheckCircle2 className="h-3 w-3" /> Renewal accepted
+                  <CheckCircle2 className="h-3 w-3" /> {t("renewalAccepted")}
                 </Badge>
               )}
               {lease.renewalStatus === "declined" && (
@@ -274,45 +279,59 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
       {/* Lease Terms */}
       <Card>
         <CardHeader>
-          <CardTitle>Lease Terms</CardTitle>
+          <CardTitle>{t("terms")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-sm">
             <div>
-              <span className="text-[var(--color-muted-foreground)]">Monthly Rent</span>
+              <span className="text-[var(--color-muted-foreground)]">
+                {tLease("field.monthlyRent")}
+              </span>
               <p className="text-lg font-semibold mt-1">{formatCurrency(lease.monthlyRent)}</p>
             </div>
             <div>
-              <span className="text-[var(--color-muted-foreground)]">Deposit</span>
+              <span className="text-[var(--color-muted-foreground)]">
+                {tLease("field.deposit")}
+              </span>
               <p className="text-lg font-semibold mt-1">{formatCurrency(lease.deposit)}</p>
             </div>
             <div>
-              <span className="text-[var(--color-muted-foreground)]">Start Date</span>
+              <span className="text-[var(--color-muted-foreground)]">
+                {tLease("field.startDate")}
+              </span>
               <p className="text-lg font-semibold mt-1">{lease.startDate}</p>
             </div>
             <div>
-              <span className="text-[var(--color-muted-foreground)]">End Date</span>
+              <span className="text-[var(--color-muted-foreground)]">
+                {tLease("field.endDate")}
+              </span>
               <p className="text-lg font-semibold mt-1">{lease.endDate}</p>
             </div>
             {lease.taxRegime && (
               <div>
-                <span className="text-[var(--color-muted-foreground)]">Tax Regime</span>
+                <span className="text-[var(--color-muted-foreground)]">
+                  {tLease("field.taxRegime")}
+                </span>
                 <p className="font-medium mt-1">{lease.taxRegime}</p>
               </div>
             )}
             <div>
-              <span className="text-[var(--color-muted-foreground)]">Auto-Renew</span>
-              <p className="font-medium mt-1">{lease.autoRenew ? "Yes" : "No"}</p>
+              <span className="text-[var(--color-muted-foreground)]">{t("autoRenewBadge")}</span>
+              <p className="font-medium mt-1">{lease.autoRenew ? t("yes") : t("no")}</p>
             </div>
             <div>
-              <span className="text-[var(--color-muted-foreground)]">Notice Period</span>
-              <p className="font-medium mt-1">{lease.renewalNoticeDays} days</p>
+              <span className="text-[var(--color-muted-foreground)]">{t("noticePeriod")}</span>
+              <p className="font-medium mt-1">
+                {t("noticeDays", { days: lease.renewalNoticeDays })}
+              </p>
             </div>
           </div>
 
           {lease.notes && (
             <div className="mt-6 pt-4 border-t border-[var(--color-border)]">
-              <span className="text-sm text-[var(--color-muted-foreground)]">Notes</span>
+              <span className="text-sm text-[var(--color-muted-foreground)]">
+                {tForms("notes")}
+              </span>
               <p className="text-sm mt-1">{lease.notes}</p>
             </div>
           )}
@@ -323,9 +342,9 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <CardTitle>Payment History</CardTitle>
+            <CardTitle>{t("paymentHistory")}</CardTitle>
             <span className="text-sm text-[var(--color-muted-foreground)]">
-              Total Paid:{" "}
+              {t("totalPaid")}{" "}
               <span className="font-semibold text-green-500">{formatCurrency(totalPaid)}</span>
             </span>
           </div>
@@ -381,19 +400,16 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
       <div className="rounded-xl border border-red-800/30 p-5 space-y-3">
         <div className="flex items-center gap-2">
           <XCircle className="h-4 w-4 text-red-500" />
-          <h3 className="text-sm font-semibold text-red-500">Danger Zone</h3>
+          <h3 className="text-sm font-semibold text-red-500">{t("dangerZone")}</h3>
         </div>
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          Terminating a lease is permanent and cannot be undone. The lease will be marked as
-          terminated and the tenant will no longer have an active lease.
-        </p>
+        <p className="text-sm text-[var(--color-muted-foreground)]">{t("terminateWarning")}</p>
         <Button
           variant="destructive"
           size="sm"
           onClick={handleTerminate}
           disabled={lease.status === "terminated"}
         >
-          <XCircle className="h-4 w-4 mr-1" /> Terminate Lease
+          <XCircle className="h-4 w-4 mr-1" /> {t("terminate")}
         </Button>
       </div>
 
@@ -401,11 +417,11 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
       <Dialog open={renewalOpen} onOpenChange={setRenewalOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Offer Lease Renewal</DialogTitle>
+            <DialogTitle>{t("renewalTitle")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleRenewalSubmit} className="space-y-4">
             <div className="space-y-1.5">
-              <Label htmlFor="proposedRent">Proposed monthly rent</Label>
+              <Label htmlFor="proposedRent">{t("proposedRent")}</Label>
               <Input
                 id="proposedRent"
                 name="proposedRent"
@@ -418,7 +434,7 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="startDate">New start date</Label>
+                <Label htmlFor="startDate">{t("newStartDate")}</Label>
                 <Input
                   id="startDate"
                   name="startDate"
@@ -433,7 +449,7 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="endDate">New end date</Label>
+                <Label htmlFor="endDate">{t("newEndDate")}</Label>
                 <Input
                   id="endDate"
                   name="endDate"
@@ -454,20 +470,15 @@ export function LeaseDetailView({ leaseId }: LeaseDetailViewProps) {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="notes">Notes for tenant (optional)</Label>
-              <Textarea
-                id="notes"
-                name="notes"
-                rows={3}
-                placeholder="Any conditions or comments…"
-              />
+              <Label htmlFor="notes">{t("notesForTenant")}</Label>
+              <Textarea id="notes" name="notes" rows={3} placeholder={t("notesPlaceholder")} />
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setRenewalOpen(false)}>
-                Cancel
+                {tActions("cancel")}
               </Button>
               <Button type="submit" disabled={renewalSubmitting}>
-                {renewalSubmitting ? "Sending…" : "Send Renewal Offer"}
+                {renewalSubmitting ? t("sending") : t("sendRenewal")}
               </Button>
             </DialogFooter>
           </form>
