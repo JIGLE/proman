@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, forwardRef, useImperativeHandle } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   FileText,
   Download,
@@ -80,8 +81,19 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
     const { state, addReceipt, updateReceipt, deleteReceipt } = useApp();
     const { isOwnerPortal } = usePortalAccess();
     const { receipts, tenants, properties, loading } = state;
-    const { success, error } = useToast();
-    const { formatCurrency } = useCurrency();
+    const { success, error: showError } = useToast();
+    const t = useTranslations("financial.receipts");
+    const tActions = useTranslations("actions");
+    const locale = useLocale();
+    /** The stored `type` is a database enum; its display name lives in the catalog. */
+    const receiptTypeLabel = (type: Receipt["type"]) =>
+      ({
+        rent: t("typeRent"),
+        deposit: t("typeDeposit"),
+        maintenance: t("typeMaintenance"),
+        other: t("typeOther"),
+      })[type] ?? type;
+    const { formatCurrency, currencySymbol } = useCurrency();
     const confirmDialog = useConfirmDialog();
     const [generatingPdf, setGeneratingPdf] = useState<string | null>(null);
 
@@ -101,14 +113,14 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
       onSubmit: async (data, isEdit) => {
         if (isEdit && dialog.editingItem) {
           await updateReceipt(dialog.editingItem.id, data);
-          success("Receipt updated successfully");
+          success(t("toastUpdated"));
         } else {
           await addReceipt(data);
-          success("Receipt created successfully");
+          success(t("toastCreated"));
         }
       },
       onError: (errorMessage) => {
-        error(errorMessage);
+        showError(errorMessage);
       },
       validation: { validateOnChange: true, debounceValidation: 300 },
     });
@@ -163,12 +175,12 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
     );
 
     const description = props.tenantId
-      ? "Record payments and receipts for the selected tenant."
+      ? t("descriptionTenant")
       : props.propertyId
-        ? "Record payments and receipts for the selected property."
+        ? t("descriptionProperty")
         : isOwnerPortal
-          ? "Record payments, issue receipts, and export PDF confirmations."
-          : "Review your payment history and download receipts linked to your lease.";
+          ? t("descriptionOwner")
+          : t("descriptionPortal");
 
     const handleEdit = (receipt: Receipt) => {
       dialog.openEditDialog(receipt, (r) => ({
@@ -185,14 +197,14 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
     const handleDelete = (id: string) => {
       confirmDialog.confirm(
         {
-          title: "Delete Receipt",
-          description: "This receipt will be permanently removed. This action cannot be undone.",
-          confirmLabel: "Delete Receipt",
+          title: t("deleteDialog.title"),
+          description: t("deleteDialog.description"),
+          confirmLabel: t("deleteDialog.confirmLabel"),
           variant: "destructive",
         },
         async () => {
           await deleteReceipt(id);
-          success("Receipt deleted successfully!");
+          success(t("toastDeleted"));
         },
       );
     };
@@ -205,12 +217,12 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
 
         // Set up the PDF
         doc.setFontSize(20);
-        doc.text("PAYMENT RECEIPT", 105, 20, { align: "center" });
+        doc.text(t("pdf.heading"), 105, 20, { align: "center" });
 
         // Receipt details
         doc.setFontSize(12);
-        doc.text(`Receipt #: ${receipt.id}`, 20, 40);
-        doc.text(`Date: ${new Date(receipt.date).toLocaleDateString()}`, 20, 50);
+        doc.text(`${t("pdf.number")}: ${receipt.id}`, 20, 40);
+        doc.text(`${t("pdf.date")}: ${new Date(receipt.date).toLocaleDateString(locale)}`, 20, 50);
 
         // Separator
         doc.setLineWidth(0.5);
@@ -218,31 +230,30 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
 
         // Tenant and Property Info
         doc.setFontSize(14);
-        doc.text("TENANT INFORMATION", 20, 75);
+        doc.text(t("pdf.tenantSection"), 20, 75);
         doc.setFontSize(11);
-        doc.text(`Name: ${receipt.tenantName}`, 20, 85);
-        doc.text(`Property: ${receipt.propertyName}`, 20, 95);
+        doc.text(`${t("pdf.name")}: ${receipt.tenantName}`, 20, 85);
+        doc.text(`${t("pdf.property")}: ${receipt.propertyName}`, 20, 95);
 
         // Payment details
         doc.setFontSize(14);
-        doc.text("PAYMENT DETAILS", 20, 115);
+        doc.text(t("pdf.paymentSection"), 20, 115);
         doc.setFontSize(11);
-        doc.text(`Amount: ${formatCurrency(receipt.amount)}`, 20, 125);
-        doc.text(`Type: ${receipt.type.charAt(0).toUpperCase() + receipt.type.slice(1)}`, 20, 135);
+        doc.text(`${t("pdf.amount")}: ${formatCurrency(receipt.amount)}`, 20, 125);
+        doc.text(`${t("pdf.type")}: ${receiptTypeLabel(receipt.type)}`, 20, 135);
         if (receipt.description) {
-          doc.text(`Description: ${receipt.description}`, 20, 145);
+          doc.text(`${t("pdf.description")}: ${receipt.description}`, 20, 145);
         }
 
         // Footer
         doc.setFontSize(10);
-        doc.text("Thank you for your payment!", 105, 170, { align: "center" });
-        doc.text("Property Management Services", 105, 180, { align: "center" });
+        doc.text(t("pdf.thanks"), 105, 170, { align: "center" });
 
         // Save the PDF
         doc.save(`receipt-${receipt.id}.pdf`);
       } catch (error) {
         console.error("Error generating PDF:", error);
-        alert("Error generating PDF. Please try again.");
+        showError(t("pdfFailed"));
       } finally {
         setGeneratingPdf(null);
       }
@@ -263,28 +274,28 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
         <DialogTrigger asChild>
           <Button onClick={dialog.openDialog} className="flex items-center gap-2">
             <Plus className="w-4 h-4" />
-            Add Receipt
+            {t("addReceipt")}
           </Button>
         </DialogTrigger>
         <DialogContent className="bg-[var(--color-card)] border-[var(--color-border)] max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-[var(--color-foreground)]">
-              {dialog.editingItem ? "Edit Receipt" : "Add New Receipt"}
+              {dialog.editingItem ? t("editTitle") : t("createTitle")}
             </DialogTitle>
             <DialogDescription>
-              {dialog.editingItem ? "Update receipt information" : "Create a new payment receipt"}
+              {dialog.editingItem ? t("editDescription") : t("createDescription")}
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={dialog.handleSubmit} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="tenant">Tenant</Label>
+                <Label htmlFor="tenant">{t("tenant")}</Label>
                 <Select
                   value={dialog.formData.tenantId}
                   onValueChange={(value) => dialog.updateFormData({ tenantId: value })}
                 >
                   <SelectTrigger className={dialog.formErrors.tenantId ? "border-red-500" : ""}>
-                    <SelectValue placeholder="Select tenant" />
+                    <SelectValue placeholder={t("selectTenant")} />
                   </SelectTrigger>
                   <SelectContent>
                     {tenants.map((tenant) => (
@@ -299,13 +310,13 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="property">Property</Label>
+                <Label htmlFor="property">{t("property")}</Label>
                 <Select
                   value={dialog.formData.propertyId}
                   onValueChange={(value) => dialog.updateFormData({ propertyId: value })}
                 >
                   <SelectTrigger className={dialog.formErrors.propertyId ? "border-red-500" : ""}>
-                    <SelectValue placeholder="Select property" />
+                    <SelectValue placeholder={t("selectProperty")} />
                   </SelectTrigger>
                   <SelectContent>
                     {properties.map((property) => (
@@ -323,7 +334,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount ($)</Label>
+                <Label htmlFor="amount">{t("amount", { symbol: currencySymbol })}</Label>
                 <Input
                   id="amount"
                   type="number"
@@ -343,7 +354,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="date">Payment Date</Label>
+                <Label htmlFor="date">{t("paymentDate")}</Label>
                 <Input
                   id="date"
                   type="date"
@@ -357,7 +368,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="type">Payment Type</Label>
+                <Label htmlFor="type">{t("paymentType")}</Label>
                 <Select
                   value={dialog.formData.type}
                   onValueChange={(value: Receipt["type"]) => dialog.updateFormData({ type: value })}
@@ -366,10 +377,10 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="rent">Rent</SelectItem>
-                    <SelectItem value="deposit">Deposit</SelectItem>
-                    <SelectItem value="maintenance">Maintenance</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="rent">{t("typeRent")}</SelectItem>
+                    <SelectItem value="deposit">{t("typeDeposit")}</SelectItem>
+                    <SelectItem value="maintenance">{t("typeMaintenance")}</SelectItem>
+                    <SelectItem value="other">{t("typeOther")}</SelectItem>
                   </SelectContent>
                 </Select>
                 {dialog.formErrors.type && (
@@ -379,7 +390,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description (Optional)</Label>
+              <Label htmlFor="description">{t("descriptionOptional")}</Label>
               <Textarea
                 id="description"
                 value={dialog.formData.description}
@@ -394,10 +405,10 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
 
             <div className="flex justify-end gap-2">
               <Button type="button" variant="outline" onClick={dialog.closeDialog}>
-                Cancel
+                {tActions("cancel")}
               </Button>
               <Button type="submit" loading={dialog.isSubmitting}>
-                {dialog.editingItem ? "Update Receipt" : "Create Receipt"}
+                {dialog.editingItem ? t("submitUpdate") : t("submitCreate")}
               </Button>
             </div>
           </form>
@@ -414,7 +425,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
             {props.embedded ? (
               addReceiptButton && <div className="flex justify-end">{addReceiptButton}</div>
             ) : (
-              <PageHeader title="Receipts" description={description}>
+              <PageHeader title={t("title")} description={description}>
                 {addReceiptButton}
               </PageHeader>
             )}
@@ -466,7 +477,7 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8"
-                                aria-label="Receipt options"
+                                aria-label={t("options")}
                               >
                                 <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
                               </Button>
@@ -483,14 +494,14 @@ export const ReceiptsView = forwardRef<ReceiptsViewRef, ReceiptsViewProps>(
                                 <>
                                   <DropdownMenuItem onClick={() => handleEdit(receipt)}>
                                     <Edit className="h-4 w-4 mr-2" />
-                                    Edit Receipt
+                                    {t("edit")}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     className="text-destructive"
                                     onClick={() => handleDelete(receipt.id)}
                                   >
                                     <Trash2 className="h-4 w-4 mr-2" />
-                                    Delete Receipt
+                                    {t("delete")}
                                   </DropdownMenuItem>
                                 </>
                               )}

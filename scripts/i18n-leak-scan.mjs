@@ -61,6 +61,31 @@ async function collect(into) {
     into.add(m.toLowerCase());
 }
 
+/**
+ * Form dialogs hold a large share of a view's copy — every field label, placeholder and submit
+ * verb — and none of it is in the DOM until the dialog opens. Open each create/add trigger,
+ * read it, then close. Runs once per tab, because the trigger for a tab's own dialog does not
+ * exist until that tab is active.
+ */
+async function sweepDialogs(into) {
+  const openers = await page
+    .locator("main button, header button")
+    .filter({
+      hasText: /add|new|create|adicionar|criar|novo|nova|añadir|nuevo|crear|aggiungi|crea/i,
+    })
+    .all();
+  for (const opener of openers.slice(0, 4)) {
+    if (!(await opener.isVisible().catch(() => false))) continue;
+    await opener.click().catch(() => {});
+    await page.waitForTimeout(900);
+    if (await page.locator('[role="dialog"]').count()) {
+      await collect(into);
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(400);
+    }
+  }
+}
+
 /** Open the states a plain page load leaves closed: the other view mode, tabs, dialogs. */
 async function exercise(into) {
   for (const label of ["grid", "table", "list"]) {
@@ -78,6 +103,8 @@ async function exercise(into) {
       }
     }
   }
+  await sweepDialogs(into);
+
   // Re-query between clicks: activating a tab can mount a nested tab bar that did not exist
   // when the list was first captured, and a stale handle would skip it. Collect twice per
   // click so a panel that renders a frame late is still seen.
@@ -95,6 +122,7 @@ async function exercise(into) {
       await collect(into);
       await page.waitForTimeout(600);
       await collect(into);
+      await sweepDialogs(into);
     }
     if (!progressed) break;
   }
