@@ -51,10 +51,14 @@
 # ===========================================
 # 5. Databases (Local Development Only)
 # ===========================================
-dev.db
-dev.db-journal
-ci-test.db
-tests/*.db
+# Match by extension, not by name. These were listed individually, so every SQLite file the
+# workflows create at the repo root showed up as untracked and one commit away from being
+# added: mobile-audit.db, e2e-test.db, e2e-smoke.db, ci-smoke.db, ci-build.db. No .db file has
+# ever been tracked here, so a blanket pattern loses nothing and closes the gap.
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
 tmp/
 
 # ===========================================
