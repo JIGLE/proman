@@ -593,11 +593,27 @@ async function main() {
       headers: csrf ? { "x-csrf-token": csrf } : {},
     });
     console.log(`[audit] seed → ${res.status()}${res.ok() ? "" : ` ${await res.text()}`}`);
+    // A seed that silently no-ops is the difference between measuring the app and measuring its
+    // empty states, and the resulting numbers look plausible either way. Fail here rather than
+    // let a run that seeded nothing be mistaken for a baseline.
+    if (!res.ok()) {
+      throw new Error(
+        `Seeding failed (${res.status()}). The audit's numbers describe empty screens without it.`,
+      );
+    }
     await bootstrap.waitForTimeout(2500);
   }
 
   const ids = await resolveIds(bootstrap);
-  console.log("[audit] resolved ids:", ids);
+  console.log("[audit] resolved ids:", JSON.stringify(ids));
+  // Same reasoning: if the seed reported success but no records came back, something upstream is
+  // wrong and every detail-overlay surface is about to be skipped. Say so with the detail.
+  if (flag("seed") && Object.values(ids).every((v) => !v)) {
+    throw new Error(
+      "Seed reported success but no record ids could be resolved — every detail overlay would " +
+        "be skipped and the totals would not be comparable to the baseline.",
+    );
+  }
   await bootstrap.close();
 
   const surfaces = ONLY ? SURFACES.filter((s) => s.id.includes(ONLY)) : SURFACES;
