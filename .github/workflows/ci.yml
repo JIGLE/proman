@@ -300,13 +300,16 @@ jobs:
           # `auth.setup.ts` only runs it when asked — never against a developer's dev.db.
           E2E_SEED: "true"
 
-      # The mobile-chrome project (Pixel 5) has been defined in playwright.config.ts since it
-      # was added but has never run — both jobs hardcoded --project=chromium. Non-blocking for
-      # now: this is its first execution anywhere, so the run is a measurement, not a gate.
-      # Promote it by deleting continue-on-error once a few runs have come back green.
+      # The mobile-chrome project (Pixel 5) was defined in playwright.config.ts but had never
+      # executed anywhere — both jobs hardcoded --project=chromium, and the runner itself was
+      # not running test bodies. Its first real run reported `90 passed (1.1m)` in CI, matching
+      # chromium exactly, and caught one genuine defect the desktop project could not see: the
+      # Settings mobile section picker had no accessible name, so the only way to navigate
+      # Settings on a phone was anonymous to a screen reader.
+      #
+      # No longer advisory. A regression at phone width now fails the job.
       - name: Run Playwright tests (mobile viewport)
         run: npx playwright test --project=mobile-chrome
-        continue-on-error: true
         env:
           DATABASE_URL: file:${{ github.workspace }}/e2e-test.db
           NEXTAUTH_URL: http://localhost:3000
