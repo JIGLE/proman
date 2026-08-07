@@ -57,10 +57,11 @@ const ALLOWLIST = [
  * and selected-row tint — dropping its dark-only indigo literals for the semantic
  * `--color-info` pair, which is the same dark-on-light bug one screen further in.
  *
- * 591 → 580: deleting the orphaned Contracts view, which nothing has rendered since
- * `/contracts` became a redirect to `/leases`.
+ * 591 → 571: deleting the three views orphaned by d5d01d9 (the portfolio restructure)
+ * and never removed — Contracts, Buildings and Invoices. None had an importer; the
+ * first two sat behind routes that redirect elsewhere.
  */
-const BASELINE = 580;
+const BASELINE = 571;
 
 function walk(dir, acc) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
