@@ -42,6 +42,8 @@ function SidebarFooter({
   subtitle,
 }: SidebarFooterProps): React.ReactElement {
   const { country, resolvedTheme } = useTheme();
+  const tNav = useTranslations("navigation");
+  const tSettings = useTranslations("settings.nav");
   const initials =
     user?.name
       ?.split(" ")
@@ -52,7 +54,13 @@ function SidebarFooter({
   if (!collapsed) {
     return (
       <div className="space-y-2">
-        <div className="flex items-center gap-3 px-2 py-2 rounded-lg">
+        {/* The name is the way into the account. It used to be an inert <div>, so the only
+            route to account settings was a nav row of its own; that row is gone now. */}
+        <Link
+          href={`/${locale}/settings?tab=account`}
+          className="flex min-h-11 items-center gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-[var(--color-hover)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--country-highlight-readable)]"
+          title={tNav("account")}
+        >
           <Avatar className="w-8 h-8 ring-2 ring-[var(--color-inner-border)]">
             <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
             <AvatarFallback className="bg-[var(--color-primary)] text-white text-xs font-semibold">
@@ -67,13 +75,13 @@ function SidebarFooter({
               {subtitle || user?.email}
             </p>
           </div>
-        </div>
+        </Link>
         {/* Country · mode indicator (controls live in Settings › Appearance). */}
         <div className="flex items-center justify-between gap-2 px-1">
           <Link
             href={`/${locale}/settings?tab=appearance`}
             className="mono-label truncate hover:text-[var(--color-foreground)]"
-            title="Appearance settings"
+            title={tSettings("appearance")}
           >
             {country} · {resolvedTheme}
           </Link>
@@ -94,12 +102,18 @@ function SidebarFooter({
 
   return (
     <div className="flex flex-col items-center gap-2">
-      <Avatar className="w-8 h-8 ring-2 ring-[var(--color-inner-border)]">
-        <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
-        <AvatarFallback className="bg-[var(--color-primary)] text-white text-xs font-semibold">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
+      <Link
+        href={`/${locale}/settings?tab=account`}
+        className="rounded-full focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--country-highlight-readable)]"
+        title={tNav("account")}
+      >
+        <Avatar className="w-8 h-8 ring-2 ring-[var(--color-inner-border)]">
+          <AvatarImage src={user?.image || ""} alt={user?.name || "User"} />
+          <AvatarFallback className="bg-[var(--color-primary)] text-white text-xs font-semibold">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+      </Link>
       <Button
         variant="ghost"
         size="sm"

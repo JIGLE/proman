@@ -1,6 +1,7 @@
 "use client";
 
 import { CreditCard, ExternalLink } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import type { BillingInfo } from "./settings-types";
@@ -11,37 +12,41 @@ interface SettingsBillingProps {
 }
 
 export function SettingsBilling({ billing, billingLoading }: SettingsBillingProps) {
+  const t = useTranslations("settings.panel");
+  const locale = useLocale();
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <CreditCard className="h-5 w-5" />
-          Subscription & Billing
+          {t("billing")}
         </CardTitle>
-        <CardDescription>Manage your plan, usage, and payment details</CardDescription>
+        <CardDescription>{t("billingDescription")}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {billingLoading ? (
-          <p className="text-sm text-muted-foreground">Loading...</p>
+          <p className="text-sm text-muted-foreground">{t("loading")}</p>
         ) : billing ? (
           <>
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div>
-                <p className="text-sm text-muted-foreground">Current plan</p>
+                <p className="text-sm text-muted-foreground">{t("currentPlan")}</p>
                 <p className="text-lg font-semibold capitalize">{billing.plan}</p>
                 {billing.plan !== "free" && billing.status !== "active" && (
                   <p className="mt-1 text-xs capitalize text-amber-500">
-                    Status: {billing.status.replace("_", " ")}
+                    {t("planStatus", { status: billing.status.replace("_", " ") })}
                   </p>
                 )}
                 {billing.cancelAtPeriodEnd && billing.currentPeriodEnd && (
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Moves to Free on {new Date(billing.currentPeriodEnd).toLocaleDateString()}
+                    {t("movesToFree", {
+                      date: new Date(billing.currentPeriodEnd).toLocaleDateString(locale),
+                    })}
                   </p>
                 )}
               </div>
               <div className="text-right">
-                <p className="text-sm text-muted-foreground">Properties</p>
+                <p className="text-sm text-muted-foreground">{t("properties")}</p>
                 <p className="text-lg font-semibold">
                   {billing.propertyCount}
                   {billing.maxProperties !== null ? ` / ${billing.maxProperties}` : ""}
@@ -63,25 +68,25 @@ export function SettingsBilling({ billing, billingLoading }: SettingsBillingProp
             <div className="flex flex-wrap gap-3">
               {billing.plan !== "pro" && billing.plan !== "business" && (
                 <Button asChild>
-                  <a href="/api/billing/checkout?plan=pro">Upgrade to Pro</a>
+                  <a href="/api/billing/checkout?plan=pro">{t("upgradePro")}</a>
                 </Button>
               )}
               {billing.plan !== "business" && (
                 <Button asChild variant="outline">
-                  <a href="/api/billing/checkout?plan=business">Upgrade to Business</a>
+                  <a href="/api/billing/checkout?plan=business">{t("upgradeBusiness")}</a>
                 </Button>
               )}
               {billing.plan !== "free" && (
                 <Button asChild variant="ghost" className="gap-1.5">
                   <a href="/api/billing/portal">
-                    Manage billing <ExternalLink className="h-3.5 w-3.5" />
+                    {t("manageBilling")} <ExternalLink className="h-3.5 w-3.5" />
                   </a>
                 </Button>
               )}
             </div>
           </>
         ) : (
-          <p className="text-sm text-muted-foreground">Failed to load billing information.</p>
+          <p className="text-sm text-muted-foreground">{t("billingFailed")}</p>
         )}
       </CardContent>
     </Card>

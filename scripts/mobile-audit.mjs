@@ -31,7 +31,18 @@ const BASE = process.env.AUDIT_BASE_URL ?? "http://localhost:3000";
 const EMAIL = process.env.E2E_USER_EMAIL ?? "demo@proman.local";
 const PASSWORD = process.env.E2E_USER_PASSWORD ?? "demo123";
 const OUT_DIR = process.env.AUDIT_OUT_DIR ?? "audit-report";
-const EXECUTABLE = process.env.PLAYWRIGHT_CHROMIUM ?? "/opt/pw-browsers/chromium";
+/**
+ * Browser to drive. Empty means "let Playwright resolve its own install", which is what CI
+ * needs — the workflow runs `npx playwright install --with-deps chromium` and the binary lands
+ * wherever Playwright expects it.
+ *
+ * This used to default to `/opt/pw-browsers/chromium`, a path that only exists in the sandbox
+ * this harness was written in. On a GitHub runner it does not, so every CI run died at
+ * `browserType.launch` — and because the step carries `continue-on-error`, the job still
+ * reported success. The ratchet had therefore never once executed in CI. Set
+ * `PLAYWRIGHT_CHROMIUM` to override when a specific binary is needed.
+ */
+const EXECUTABLE = process.env.PLAYWRIGHT_CHROMIUM ?? "";
 
 /** WCAG 2.2 AA "Target Size (Minimum)" is 24x24 CSS px; 44 is the comfortable mobile target. */
 const TOUCH_FAIL = 24;
@@ -117,7 +128,9 @@ const SURFACES = [
   { id: "contacts", path: "/en/contacts" },
   { id: "contracts", path: "/en/contracts" },
   { id: "settings", path: "/en/settings" },
-  { id: "account", path: "/en/account" },
+  // Account is a Settings section now; measure it where it lives rather than through the
+  // /account redirect, so the surface id matches the URL that renders.
+  { id: "account", path: "/en/settings?tab=account" },
   { id: "compliance-tax-filing", path: "/en/compliance/tax-filing" },
   { id: "compliance-modelo179", path: "/en/compliance/modelo179" },
   // Tenant portal: token-gated, so the whole path (not just an id) is substituted — the token
@@ -542,7 +555,7 @@ function toMarkdown(results, meta) {
 
 async function main() {
   mkdirSync(OUT_DIR, { recursive: true });
-  const browser = await chromium.launch({ executablePath: EXECUTABLE });
+  const browser = await chromium.launch(EXECUTABLE ? { executablePath: EXECUTABLE } : {});
   const context = await browser.newContext({
     viewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
     deviceScaleFactor: 2,

@@ -346,10 +346,17 @@ jobs:
           set -euo pipefail
           REPORT=audit-report/report-390.json
 
+          # A harness that crashed is not the same as a harness that found violations. The
+          # violations are advisory (continue-on-error on the step above); a crash means the
+          # gate did not run at all, and that must be loud. It was not: the harness died at
+          # browser launch on every CI run and this step exited 0, so the job went green while
+          # measuring nothing.
           if [ ! -f "$REPORT" ]; then
-            echo "## ⚠️ Mobile Audit Failed" >> $GITHUB_STEP_SUMMARY
-            echo "The audit harness did not complete. Check the logs above." >> $GITHUB_STEP_SUMMARY
-            exit 0
+            echo "## ❌ Mobile audit did not run" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "The harness exited before writing \`$REPORT\`. This is a broken gate, not a" >> $GITHUB_STEP_SUMMARY
+            echo "responsive-design regression — check the harness logs above." >> $GITHUB_STEP_SUMMARY
+            exit 1
           fi
 
           # Read the harness's own pre-aggregated `summary` object. The previous version of this

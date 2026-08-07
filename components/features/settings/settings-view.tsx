@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Save, Settings } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { getPortalRoleFromSessionRole, type PortalRole } from "@/lib/portal/access";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -18,6 +19,7 @@ import { useToast } from "@/lib/contexts/toast-context";
 import { useCsrf } from "@/lib/contexts/csrf-context";
 import { useTheme } from "@/lib/contexts/theme-context";
 import { SettingsAccount } from "./settings-account";
+import { SettingsAppearance } from "./settings-appearance";
 import { SettingsTax } from "./settings-tax";
 import { SettingsNotifications } from "./settings-notifications";
 import { SettingsSecurity } from "./settings-security";
@@ -26,17 +28,24 @@ import { SettingsIntegrations } from "./settings-integrations";
 import { SettingsBilling } from "./settings-billing";
 import { defaultSettings, type BillingInfo, type UserSettings } from "./settings-types";
 
-/** Section ids only — labels resolve against `settings.nav` at render. */
-const CORE_SECTIONS = [
-  "account",
-  "tax",
-  "notifications",
-  "security",
-  "integrations",
-  "system",
-] as const;
+/**
+ * Section ids only — labels resolve against `settings.nav` at render.
+ *
+ * `roles` gates the section, not the route: Settings is reachable by both roles because it now
+ * hosts Account, but a tenant has no tax rules, integrations or billing to configure.
+ */
+const SECTIONS = [
+  { id: "account", roles: ["owner", "tenant"] },
+  { id: "appearance", roles: ["owner", "tenant"] },
+  { id: "security", roles: ["owner", "tenant"] },
+  { id: "tax", roles: ["owner"] },
+  { id: "notifications", roles: ["owner"] },
+  { id: "integrations", roles: ["owner"] },
+  { id: "system", roles: ["owner"] },
+  { id: "billing", roles: ["owner"] },
+] as const satisfies readonly { id: string; roles: readonly PortalRole[] }[];
 
-type SectionValue = (typeof CORE_SECTIONS)[number] | "billing";
+type SectionValue = (typeof SECTIONS)[number]["id"];
 
 export function SettingsView(): React.ReactElement {
   const { data: session } = useSession();
@@ -60,12 +69,21 @@ export function SettingsView(): React.ReactElement {
   // (ENABLE_BILLING unset) so the account never sees subscription framing.
   const showBilling = billing?.billingEnabled === true;
 
+  const role = getPortalRoleFromSessionRole(session?.user?.role);
+  const sections: readonly SectionValue[] = SECTIONS.filter(
+    (s) => (s.roles as readonly PortalRole[]).includes(role) && (s.id !== "billing" || showBilling),
+  ).map((s) => s.id);
+
+  // A `?tab=` the current role can't see (a stale link, or an owner URL opened by a tenant)
+  // falls back to the first section rather than rendering an empty panel.
+  const requestedTab = searchParams.get("tab") as SectionValue | null;
   const [activeSection, setActiveSection] = useState<SectionValue>(
-    (searchParams.get("tab") as SectionValue | null) ?? "account",
+    requestedTab && (SECTIONS as readonly { id: string }[]).some((s) => s.id === requestedTab)
+      ? requestedTab
+      : "account",
   );
-  const sections: readonly SectionValue[] = showBilling
-    ? [...CORE_SECTIONS, "billing" as const]
-    : CORE_SECTIONS;
+  const visibleSection = sections.includes(activeSection) ? activeSection : sections[0];
+
   /** `tax` is the section id; its label lives under a different key. */
   const sectionLabel = (value: SectionValue) =>
     value === "tax" ? t("taxRegion") : t(value as Exclude<SectionValue, "tax">);
@@ -190,10 +208,10 @@ export function SettingsView(): React.ReactElement {
                 key={section}
                 type="button"
                 onClick={() => setActiveSection(section)}
-                aria-current={activeSection === section ? "page" : undefined}
+                aria-current={visibleSection === section ? "page" : undefined}
                 className={cn(
                   "flex w-full items-center border-l-2 px-3 py-2 text-left text-sm transition-colors",
-                  activeSection === section
+                  visibleSection === section
                     ? "border-[var(--country-highlight-readable)] bg-[var(--color-hover)] font-medium text-[var(--country-highlight-readable)]"
                     : "border-transparent text-[var(--color-muted-foreground)] hover:bg-[var(--color-hover)] hover:text-[var(--color-foreground)]",
                 )}
@@ -207,7 +225,7 @@ export function SettingsView(): React.ReactElement {
         {/* Mobile section picker */}
         <div className="md:hidden">
           <Select
-            value={activeSection}
+            value={visibleSection}
             onValueChange={(value: string) => setActiveSection(value as SectionValue)}
           >
             <SelectTrigger>
@@ -224,23 +242,20 @@ export function SettingsView(): React.ReactElement {
         </div>
 
         <div className="min-w-0">
-          {activeSection === "account" && (
-            <SettingsAccount
-              settings={settings}
-              updateSetting={updateSetting}
-              appVersion={appVersion}
-            />
-          )}
-          {activeSection === "tax" && (
+          {visibleSection === "account" && <SettingsAccount appVersion={appVersion} />}
+          {visibleSection === "tax" && (
             <SettingsTax settings={settings} updateSetting={updateSetting} />
           )}
-          {activeSection === "notifications" && (
+          {visibleSection === "notifications" && (
             <SettingsNotifications settings={settings} updateSetting={updateSetting} />
           )}
-          {activeSection === "security" && <SettingsSecurity />}
-          {activeSection === "integrations" && <SettingsIntegrations />}
-          {activeSection === "system" && <SettingsSystem />}
-          {activeSection === "billing" && showBilling && (
+          {visibleSection === "appearance" && (
+            <SettingsAppearance settings={settings} updateSetting={updateSetting} />
+          )}
+          {visibleSection === "security" && <SettingsSecurity />}
+          {visibleSection === "integrations" && <SettingsIntegrations />}
+          {visibleSection === "system" && <SettingsSystem />}
+          {visibleSection === "billing" && showBilling && (
             <SettingsBilling billing={billing} billingLoading={billingLoading} />
           )}
         </div>

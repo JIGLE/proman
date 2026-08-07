@@ -20,7 +20,8 @@
 import { chromium } from "playwright";
 
 const BASE = process.env.AUDIT_BASE_URL ?? "http://localhost:3000";
-const EXECUTABLE = process.env.PLAYWRIGHT_CHROMIUM ?? "/opt/pw-browsers/chromium";
+/** Empty means "let Playwright resolve its own install" — see the note in mobile-audit.mjs. */
+const EXECUTABLE = process.env.PLAYWRIGHT_CHROMIUM ?? "";
 const EMAIL = process.env.E2E_USER_EMAIL ?? "demo@proman.local";
 const PASSWORD = process.env.E2E_USER_PASSWORD ?? "demo123";
 const LOCALES = ["en", "pt", "es", "it"];
@@ -45,7 +46,7 @@ const LEAK = new RegExp(
   "gi",
 );
 
-const browser = await chromium.launch({ executablePath: EXECUTABLE });
+const browser = await chromium.launch(EXECUTABLE ? { executablePath: EXECUTABLE } : {});
 const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 const page = await ctx.newPage();
 
