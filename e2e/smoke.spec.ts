@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { settle } from "./helpers/wait";
 
 test.describe("API Health", () => {
   test("ready endpoint should return ok", async ({ request }) => {
@@ -24,7 +25,7 @@ test.describe("Authentication", () => {
   test("signin page should be accessible", async ({ page }) => {
     await page.goto("/auth/signin");
 
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     // Page should have loaded successfully
     const hasContent = await page.locator("body").textContent();

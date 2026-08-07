@@ -1,9 +1,10 @@
 import { test, expect } from "@playwright/test";
+import { settle } from "./helpers/wait";
 
 test.describe("Tenant Self-Service Portal — invalid token handling", () => {
   test("should render an error state for an invalid token, not a 500 crash", async ({ page }) => {
     await page.goto("/tenant-portal/invalid-token-here");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     // Page must load without a Next.js error boundary / unhandled 500
     await expect(page.locator("body")).not.toContainText("Application error");
@@ -17,7 +18,7 @@ test.describe("Tenant Self-Service Portal — invalid token handling", () => {
 
   test("portal page should not crash with an arbitrary token string", async ({ page }) => {
     await page.goto("/tenant-portal/some-completely-random-token-abc123");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     await expect(page.locator("body")).not.toContainText("Application error");
     const title = page.locator("h1, h2, [role='heading']").first();
@@ -92,7 +93,7 @@ test.describe("Tenant Portal — full flow with real token", () => {
 
     // Navigate to the portal using the real token
     await page.goto(portalUrl);
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     // The page must not show an error state
     await expect(page.locator("body")).not.toContainText("Invalid");
@@ -108,7 +109,7 @@ test.describe("Tenant Portal — full flow with real token", () => {
 test.describe("Tenants page — status filter", () => {
   test("status filter should open and select Active", async ({ page }) => {
     await page.goto("/en/people");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     const statusTrigger = page.locator('[data-testid="select-trigger-status"]');
     await statusTrigger.waitFor({ state: "visible" });

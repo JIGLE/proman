@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { settle } from "./helpers/wait";
 
 /**
  * NOTE — these tests are currently vacuous and should be rewritten.
@@ -22,7 +23,7 @@ test.describe("Dashboard", () => {
     await page.goto("/en");
 
     // Wait for page to load
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     // Check for any page content - could be dashboard or redirect to signin
     const hasContent = await page.locator("body").textContent();
@@ -43,7 +44,7 @@ test.describe("Dashboard", () => {
 
     if (await propertiesLink.isVisible()) {
       await propertiesLink.click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
 
       // Verify we're in the portfolio section
       await expect(page.getByText(/portfolio/i).first()).toBeVisible();
@@ -60,7 +61,7 @@ test.describe("Dashboard", () => {
 
     if (await tenantsLink.isVisible()) {
       await tenantsLink.click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
 
       await expect(page.getByText(/people/i).first()).toBeVisible();
     }
@@ -84,7 +85,7 @@ test.describe("Dashboard", () => {
 
       if (await ptOption.isVisible()) {
         await ptOption.click();
-        await page.waitForLoadState("networkidle");
+        await settle(page);
 
         // URL should change to /pt
         await expect(page).toHaveURL(/\/pt/);

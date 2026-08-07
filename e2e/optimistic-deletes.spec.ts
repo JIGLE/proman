@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { settle } from "./helpers/wait";
 
 /**
  * Phase 2 – Optimistic Delete & UI Feedback Tests
@@ -42,12 +43,12 @@ test.describe("No Native confirm() Calls", () => {
     });
 
     await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     const navLink = page.getByRole("link", { name: /portfolio/i }).first();
     if (await navLink.isVisible().catch(() => false)) {
       await navLink.click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
 
       // Try to trigger a delete
       const deleteBtn = page
@@ -73,12 +74,12 @@ test.describe("No Native confirm() Calls", () => {
     });
 
     await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     const navLink = page.getByRole("link", { name: /people/i }).first();
     if (await navLink.isVisible().catch(() => false)) {
       await navLink.click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
 
       const deleteBtn = page
         .getByRole("button", { name: /delete/i })
@@ -103,7 +104,7 @@ test.describe("Page Skeletons", () => {
     page.on("pageerror", (err) => errors.push(err.message));
 
     await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     // Page should load successfully
     const title = await page.title();
@@ -118,12 +119,12 @@ test.describe("Page Skeletons", () => {
     page.on("pageerror", (err) => errors.push(err.message));
 
     await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     const navLink = page.getByRole("link", { name: /portfolio/i }).first();
     if (await navLink.isVisible().catch(() => false)) {
       await navLink.click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
     }
 
     expect(errors).toHaveLength(0);
@@ -134,12 +135,12 @@ test.describe("Page Skeletons", () => {
     page.on("pageerror", (err) => errors.push(err.message));
 
     await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     const navLink = page.getByRole("link", { name: /people/i }).first();
     if (await navLink.isVisible().catch(() => false)) {
       await navLink.click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
     }
 
     expect(errors).toHaveLength(0);

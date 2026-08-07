@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { settle } from "./helpers/wait";
 
 /**
  * Phase 2 CRUD Integrity Tests
@@ -46,7 +47,7 @@ test.describe("Confirmation Dialog UI – Unauthenticated", () => {
     page.on("pageerror", (err) => errors.push(err.message));
 
     await page.goto("/auth/signin");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     // No uncaught JS errors
     expect(errors).toHaveLength(0);
@@ -58,7 +59,7 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
 
   test("property delete shows confirmation dialog", async ({ page }) => {
     await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     // Navigate to portfolio
     const navLink = page.getByRole("link", { name: /portfolio/i }).first();
@@ -67,7 +68,7 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
       return;
     }
     await navLink.click();
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     // Look for a delete button (trash icon or "Delete" text)
     const deleteBtn = page
@@ -96,7 +97,7 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
 
   test("tenant delete shows confirmation dialog", async ({ page }) => {
     await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     const navLink = page.getByRole("link", { name: /people/i }).first();
     if (!(await navLink.isVisible().catch(() => false))) {
@@ -104,7 +105,7 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
       return;
     }
     await navLink.click();
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     const deleteBtn = page
       .getByRole("button", { name: /delete/i })
@@ -129,7 +130,7 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
 
   test("confirmation dialog has glass styling", async ({ page }) => {
     await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     // Navigate to any section with data
     const sections = ["properties", "tenants", "owners", "leases"];
@@ -140,7 +141,7 @@ test.describe("Confirmation Dialog UI – Authenticated", () => {
       if (!(await link.isVisible().catch(() => false))) continue;
 
       await link.click();
-      await page.waitForLoadState("networkidle");
+      await settle(page);
 
       const deleteBtn = page
         .getByRole("button", { name: /delete/i })
@@ -175,7 +176,7 @@ test.describe("Form Validation – Authenticated", () => {
 
   test("property form validates required fields on change", async ({ page }) => {
     await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     const navLink = page.getByRole("link", { name: /portfolio/i }).first();
     if (!(await navLink.isVisible().catch(() => false))) {
@@ -183,7 +184,7 @@ test.describe("Form Validation – Authenticated", () => {
       return;
     }
     await navLink.click();
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     // Open add property dialog
     const addBtn = page.getByRole("button", { name: /add property/i }).first();
