@@ -32,6 +32,9 @@ vi.mock("next/navigation", () => ({
 
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => key,
+  // Components that format dates or currency read the locale directly; without this they
+  // throw "No useLocale export is defined" the moment one is wired for i18n.
+  useLocale: () => "en",
   NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => children,
 }));
 

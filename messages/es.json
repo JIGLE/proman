@@ -1611,5 +1611,39 @@
       "sent": "Enviado",
       "delivered": "Entregado"
     }
+  },
+  "tenants": {
+    "dialogCreateTitle": "Añadir inquilino",
+    "dialogEditTitle": "Editar inquilino",
+    "dialogCreateDescription": "Introduce los datos del inquilino",
+    "dialogEditDescription": "Actualiza los datos del inquilino",
+    "submitCreate": "Crear inquilino",
+    "submitUpdate": "Actualizar inquilino",
+    "moreDetailsShow": "Añadir contrato y contacto",
+    "moreDetailsHide": "Ocultar contrato y contacto",
+    "monthlyRent": "Alquiler mensual",
+    "paymentStatus": "Estado del pago",
+    "paymentStatusDerived": "Derivado del libro de alquileres — registra un pago para cambiarlo.",
+    "searchPlaceholder": "Buscar inquilinos…",
+    "unassigned": "Sin asignar",
+    "endsLabel": "Termina",
+    "sendEmail": "Enviar correo",
+    "open": "Abrir",
+    "optionsFor": "Opciones de {name}",
+    "itemLabel": "inquilinos",
+    "toastCreated": "Inquilino añadido correctamente",
+    "toastUpdated": "Inquilino actualizado correctamente",
+    "toastDeleted": "Inquilino «{name}» eliminado",
+    "toastBulkDeleted": "{count, plural, one {# inquilino eliminado} other {# inquilinos eliminados}}",
+    "deleteOne": {
+      "title": "Eliminar inquilino",
+      "description": "«{name}» se eliminará de forma permanente. Esta acción no se puede deshacer.",
+      "confirmLabel": "Eliminar"
+    },
+    "deleteMany": {
+      "title": "Eliminar inquilinos",
+      "description": "{count, plural, one {# inquilino se eliminará} other {# inquilinos se eliminarán}} de forma permanente. Esta acción no se puede deshacer.",
+      "confirmLabel": "Eliminar todos"
+    }
   }
 }

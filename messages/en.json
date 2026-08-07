@@ -1611,5 +1611,39 @@
       "sent": "Sent",
       "delivered": "Delivered"
     }
+  },
+  "tenants": {
+    "dialogCreateTitle": "Add New Tenant",
+    "dialogEditTitle": "Edit Tenant",
+    "dialogCreateDescription": "Enter tenant details",
+    "dialogEditDescription": "Update tenant information",
+    "submitCreate": "Create Tenant",
+    "submitUpdate": "Update Tenant",
+    "moreDetailsShow": "Add lease & contact details",
+    "moreDetailsHide": "Hide lease & contact details",
+    "monthlyRent": "Monthly Rent",
+    "paymentStatus": "Payment Status",
+    "paymentStatusDerived": "Derived from the rent ledger — record a payment to change it.",
+    "searchPlaceholder": "Search tenants…",
+    "unassigned": "Unassigned",
+    "endsLabel": "Ends",
+    "sendEmail": "Send Email",
+    "open": "Open",
+    "optionsFor": "{name} options",
+    "itemLabel": "tenants",
+    "toastCreated": "Tenant added successfully",
+    "toastUpdated": "Tenant updated successfully",
+    "toastDeleted": "Tenant “{name}” deleted",
+    "toastBulkDeleted": "{count, plural, one {# tenant deleted} other {# tenants deleted}}",
+    "deleteOne": {
+      "title": "Delete tenant",
+      "description": "“{name}” will be permanently removed. This action cannot be undone.",
+      "confirmLabel": "Delete"
+    },
+    "deleteMany": {
+      "title": "Delete tenants",
+      "description": "{count, plural, one {# tenant} other {# tenants}} will be permanently removed. This action cannot be undone.",
+      "confirmLabel": "Delete all"
+    }
   }
 }

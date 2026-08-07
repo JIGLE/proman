@@ -45,6 +45,7 @@ import {
 import { SearchFilter } from "@/components/ui/search-filter";
 import { BulkActionBar, getDefaultBulkActions } from "@/components/ui/bulk-action-bar";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { withEntityDetail } from "@/lib/utils/entity-detail-url";
 
 import { Checkbox } from "@/components/ui/checkbox";
@@ -78,13 +79,17 @@ function TenantForm({
 }) {
   const [showMore, setShowMore] = useState(!dialog.editingItem ? false : true);
   const isEdit = !!dialog.editingItem;
+  const t = useTranslations("tenants");
+  const tForms = useTranslations("forms");
+  const tStatus = useTranslations("status");
+  const tActions = useTranslations("actions");
 
   return (
     <form onSubmit={dialog.handleSubmit} className="space-y-4">
       {/* Required fields — always visible */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="name">Full Name</Label>
+          <Label htmlFor="name">{tForms("fullName")}</Label>
           <Input
             id="name"
             value={dialog.formData.name}
@@ -99,7 +104,7 @@ function TenantForm({
           )}
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
+          <Label htmlFor="email">{tForms("email")}</Label>
           <Input
             id="email"
             type="email"
@@ -127,7 +132,7 @@ function TenantForm({
             className={cn("h-4 w-4 transition-transform", showMore && "rotate-180")}
             aria-hidden="true"
           />
-          {showMore ? "Hide" : "Add"} lease & contact details
+          {showMore ? t("moreDetailsHide") : t("moreDetailsShow")}
         </button>
       )}
 
@@ -135,7 +140,7 @@ function TenantForm({
         <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">{tForms("phone")}</Label>
               <Input
                 id="phone"
                 value={dialog.formData.phone ?? ""}
@@ -149,13 +154,13 @@ function TenantForm({
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="property">Property</Label>
+              <Label htmlFor="property">{tForms("property")}</Label>
               <Select
                 value={dialog.formData.propertyId ?? ""}
                 onValueChange={(value: string) => dialog.updateFormData({ propertyId: value })}
               >
                 <SelectTrigger className={dialog.formErrors.propertyId ? "border-red-500" : ""}>
-                  <SelectValue placeholder="Select property" />
+                  <SelectValue placeholder={tForms("selectProperty")} />
                 </SelectTrigger>
                 <SelectContent>
                   {properties.map((property) => (
@@ -173,7 +178,7 @@ function TenantForm({
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="rent">Monthly Rent</Label>
+              <Label htmlFor="rent">{t("monthlyRent")}</Label>
               <Input
                 id="rent"
                 type="number"
@@ -189,7 +194,7 @@ function TenantForm({
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="leaseStart">Lease Start</Label>
+              <Label htmlFor="leaseStart">{tForms("leaseStart")}</Label>
               <Input
                 id="leaseStart"
                 type="date"
@@ -204,7 +209,7 @@ function TenantForm({
               )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="leaseEnd">Lease End</Label>
+              <Label htmlFor="leaseEnd">{tForms("leaseEnd")}</Label>
               <Input
                 id="leaseEnd"
                 type="date"
@@ -222,11 +227,9 @@ function TenantForm({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="paymentStatus">Payment Status</Label>
+              <Label htmlFor="paymentStatus">{t("paymentStatus")}</Label>
               {isEdit ? (
-                <p className="text-sm text-muted-foreground">
-                  Derived from the rent ledger — record a payment to change it.
-                </p>
+                <p className="text-sm text-muted-foreground">{t("paymentStatusDerived")}</p>
               ) : (
                 <Select
                   value={dialog.formData.paymentStatus}
@@ -240,9 +243,9 @@ function TenantForm({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="paid">Paid</SelectItem>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="overdue">Overdue</SelectItem>
+                    <SelectItem value="paid">{tStatus("paid")}</SelectItem>
+                    <SelectItem value="pending">{tStatus("pending")}</SelectItem>
+                    <SelectItem value="overdue">{tStatus("overdue")}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -253,7 +256,7 @@ function TenantForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">{tForms("notes")}</Label>
             <Textarea
               id="notes"
               value={dialog.formData.notes ?? ""}
@@ -272,10 +275,10 @@ function TenantForm({
 
       <div className="flex justify-end gap-2">
         <Button type="button" variant="outline" onClick={dialog.closeDialog}>
-          Cancel
+          {tActions("cancel")}
         </Button>
         <Button type="submit" loading={dialog.isSubmitting}>
-          {dialog.editingItem ? "Update Tenant" : "Create Tenant"}
+          {dialog.editingItem ? t("submitUpdate") : t("submitCreate")}
         </Button>
       </div>
     </form>
@@ -289,6 +292,11 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
     const { leases } = state;
     const { success } = useToast();
     const { formatCurrency } = useCurrency();
+    const t = useTranslations("tenants");
+    const tForms = useTranslations("forms");
+    const tStatus = useTranslations("status");
+    const tActions = useTranslations("actions");
+    const locale = useLocale();
     const confirmDialog = useConfirmDialog();
     const compact = true; // Always compact
 
@@ -353,8 +361,8 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
         }
       },
       successMessage: {
-        create: "Tenant added successfully!",
-        update: "Tenant updated successfully!",
+        create: t("toastCreated"),
+        update: t("toastUpdated"),
       },
       validation: { validateOnChange: true, debounceValidation: 300 },
     });
@@ -370,11 +378,11 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
     const getPaymentStatusBadge = (status: Tenant["paymentStatus"]) => {
       switch (status) {
         case "paid":
-          return <Badge variant="success">Paid</Badge>;
+          return <Badge variant="success">{tStatus("paid")}</Badge>;
         case "overdue":
-          return <Badge variant="destructive">Overdue</Badge>;
+          return <Badge variant="destructive">{tStatus("overdue")}</Badge>;
         case "pending":
-          return <Badge variant="secondary">Pending</Badge>;
+          return <Badge variant="secondary">{tStatus("pending")}</Badge>;
       }
     };
 
@@ -383,9 +391,9 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
       async (ids: string[]) => {
         confirmDialog.confirm(
           {
-            title: "Delete Tenants",
-            description: `${ids.length} tenant(s) will be permanently removed. This action cannot be undone.`,
-            confirmLabel: "Delete All",
+            title: t("deleteMany.title"),
+            description: t("deleteMany.description", { count: ids.length }),
+            confirmLabel: t("deleteMany.confirmLabel"),
             variant: "destructive",
             count: ids.length,
           },
@@ -393,12 +401,12 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
             for (const id of ids) {
               await deleteTenant(id);
             }
-            success(`Successfully deleted ${ids.length} tenant(s)`);
+            success(t("toastBulkDeleted", { count: ids.length }));
             bulkSelection.clearSelection();
           },
         );
       },
-      [deleteTenant, success, bulkSelection, confirmDialog],
+      [deleteTenant, success, bulkSelection, confirmDialog, t],
     );
 
     // Single delete handler
@@ -410,7 +418,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
             variant="ghost"
             size="icon"
             className="h-8 w-8 shrink-0"
-            aria-label={`${tenant.name} options`}
+            aria-label={t("optionsFor", { name: tenant.name })}
             onClick={(e) => e.stopPropagation()}
           >
             <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
@@ -434,7 +442,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
             }}
           >
             <Edit className="h-4 w-4 mr-2" />
-            Edit
+            {tActions("edit")}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={(e) => {
@@ -443,7 +451,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
             }}
           >
             <Mail className="h-4 w-4 mr-2" />
-            Send Email
+            {t("sendEmail")}
           </DropdownMenuItem>
           <DropdownMenuItem
             className="text-destructive"
@@ -453,7 +461,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
             }}
           >
             <Trash2 className="h-4 w-4 mr-2" />
-            Delete
+            {tActions("delete")}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -463,18 +471,18 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
       async (tenant: Tenant) => {
         confirmDialog.confirm(
           {
-            title: "Delete Tenant",
-            description: `"${tenant.name}" will be permanently removed. This action cannot be undone.`,
-            confirmLabel: "Delete",
+            title: t("deleteOne.title"),
+            description: t("deleteOne.description", { name: tenant.name }),
+            confirmLabel: t("deleteOne.confirmLabel"),
             variant: "destructive",
           },
           async () => {
             await deleteTenant(tenant.id);
-            success(`Tenant "${tenant.name}" deleted`);
+            success(t("toastDeleted", { name: tenant.name }));
           },
         );
       },
-      [deleteTenant, success, confirmDialog],
+      [deleteTenant, success, confirmDialog, t],
     );
 
     // Export selected tenants
@@ -482,7 +490,14 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
       (ids: string[]) => {
         const selectedTenants = tenants.filter((t) => ids.includes(t.id));
         const csvContent = [
-          ["Name", "Email", "Phone", "Property", "Rent", "Status"].join(","),
+          [
+            tForms("fullName"),
+            tForms("email"),
+            tForms("phone"),
+            tForms("property"),
+            tForms("rent"),
+            tForms("status"),
+          ].join(","),
           ...selectedTenants.map((t) =>
             [t.name, t.email, t.phone, t.propertyName || "", t.rent, t.paymentStatus].join(","),
           ),
@@ -496,7 +511,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
         a.click();
         URL.revokeObjectURL(url);
       },
-      [tenants],
+      [tenants, tForms],
     );
 
     // Bulk actions configuration
@@ -554,16 +569,16 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
               <DialogTrigger asChild>
                 <Button onClick={dialog.openDialog} className="hidden">
                   <Plus className="w-4 h-4" />
-                  Add Tenant
+                  {t("dialogCreateTitle")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="bg-[var(--color-card-solid)] border-[var(--color-border)] max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle className="text-[var(--color-foreground)]">
-                    {dialog.editingItem ? "Edit Tenant" : "Add New Tenant"}
+                    {dialog.editingItem ? t("dialogEditTitle") : t("dialogCreateTitle")}
                   </DialogTitle>
                   <DialogDescription>
-                    {dialog.editingItem ? "Update tenant information" : "Enter tenant details"}
+                    {dialog.editingItem ? t("dialogEditDescription") : t("dialogCreateDescription")}
                   </DialogDescription>
                 </DialogHeader>
                 <TenantForm dialog={dialog} properties={properties} />
@@ -576,7 +591,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <SearchFilter
                 className="flex-1"
-                searchPlaceholder="Search tenants..."
+                searchPlaceholder={t("searchPlaceholder")}
                 onSearchChange={setSearchQuery}
                 onFilterChange={(key, value) => {
                   if (key === "property") setPropertyFilter(value);
@@ -588,9 +603,9 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                 filters={[
                   {
                     key: "property",
-                    label: "Property",
+                    label: tForms("property"),
                     options: [
-                      { label: "All Properties", value: "all" },
+                      { label: tForms("allProperties"), value: "all" },
                       ...properties.map((property) => ({
                         label: property.name,
                         value: property.id,
@@ -600,14 +615,14 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                   },
                   {
                     key: "status",
-                    label: "Status",
+                    label: tForms("status"),
                     options: [
-                      { label: "All", value: "all" },
-                      { label: "Active", value: "active" },
-                      { label: "Inactive", value: "inactive" },
-                      { label: "Paid", value: "paid" },
-                      { label: "Pending", value: "pending" },
-                      { label: "Overdue", value: "overdue" },
+                      { label: tStatus("all"), value: "all" },
+                      { label: tStatus("active"), value: "active" },
+                      { label: tStatus("inactive"), value: "inactive" },
+                      { label: tStatus("paid"), value: "paid" },
+                      { label: tStatus("pending"), value: "pending" },
+                      { label: tStatus("overdue"), value: "overdue" },
                     ],
                     defaultValue: "all",
                   },
@@ -654,7 +669,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                         <span className="text-sm text-[var(--color-muted-foreground)]">
                           {properties.find((p) => p.id === tenant.propertyId)?.name ||
                             tenant.propertyName ||
-                            "Unassigned"}
+                            t("unassigned")}
                         </span>
                         <span className="flex items-center gap-2">
                           <span className="text-sm font-medium text-[var(--color-foreground)]">
@@ -673,7 +688,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                       header: (
                         <SortableHeader
                           sortKey="name"
-                          label="Name"
+                          label={tForms("fullName")}
                           currentSort={getSortDirection("name")}
                           onSort={(key) => requestSort(key as keyof Tenant)}
                         />
@@ -683,23 +698,23 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                     },
                     {
                       key: "email",
-                      header: "Email",
+                      header: tForms("email"),
                       cell: (tenant) => tenant.email,
                       cellClassName: "text-sm text-[var(--color-muted-foreground)]",
                     },
                     {
                       key: "phone",
-                      header: "Phone",
+                      header: tForms("phone"),
                       cell: (tenant) => tenant.phone,
                       cellClassName: "text-sm text-[var(--color-muted-foreground)]",
                     },
                     {
                       key: "property",
-                      header: "Property",
+                      header: tForms("property"),
                       cell: (tenant) =>
                         properties.find((p) => p.id === tenant.propertyId)?.name ||
                         tenant.propertyName ||
-                        "Unassigned",
+                        t("unassigned"),
                       cellClassName: "text-sm text-[var(--color-muted-foreground)]",
                     },
                     {
@@ -707,7 +722,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                       header: (
                         <SortableHeader
                           sortKey="rent"
-                          label="Rent"
+                          label={tForms("rent")}
                           currentSort={getSortDirection("rent")}
                           onSort={(key) => requestSort(key as keyof Tenant)}
                         />
@@ -724,7 +739,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                       header: (
                         <SortableHeader
                           sortKey="paymentStatus"
-                          label="Payment Status"
+                          label={t("paymentStatus")}
                           currentSort={getSortDirection("paymentStatus")}
                           onSort={(key) => requestSort(key as keyof Tenant)}
                         />
@@ -772,13 +787,13 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                           )}
                           startAction={{
                             icon: <Eye className="h-5 w-5" />,
-                            label: "Open",
+                            label: t("open"),
                             className: "bg-accent-primary",
                             onAction: () => openTenantOverlay(tenant.id),
                           }}
                           endAction={{
                             icon: <Trash2 className="h-5 w-5" />,
-                            label: "Delete",
+                            label: tActions("delete"),
                             className: "bg-destructive",
                             onAction: () => handleDelete(tenant),
                           }}
@@ -826,14 +841,16 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                             <div className="hidden w-36 shrink-0 truncate text-xs text-[var(--color-muted-foreground)] md:block">
                               {properties.find((p) => p.id === tenant.propertyId)?.name ||
                                 tenant.propertyName ||
-                                "Unassigned"}
+                                t("unassigned")}
                             </div>
 
                             {/* Lease end */}
                             <div className="hidden w-[88px] shrink-0 flex-col items-end text-xs lg:flex">
                               {activeLease ? (
                                 <>
-                                  <span className="text-[var(--color-muted-foreground)]">Ends</span>
+                                  <span className="text-[var(--color-muted-foreground)]">
+                                    {t("endsLabel")}
+                                  </span>
                                   <span
                                     className={cn(
                                       "font-medium",
@@ -842,7 +859,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                                         : "text-[var(--color-muted-foreground)]",
                                     )}
                                   >
-                                    {new Date(activeLease.endDate).toLocaleDateString("pt-PT", {
+                                    {new Date(activeLease.endDate).toLocaleDateString(locale, {
                                       day: "numeric",
                                       month: "short",
                                       year: "numeric",
@@ -862,60 +879,9 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
                               {getPaymentStatusBadge(tenant.paymentStatus)}
                             </div>
 
-                            {/* Actions menu */}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 shrink-0"
-                                  aria-label={`${tenant.name} options`}
-                                  onClick={(e) => e.stopPropagation()}
-                                >
-                                  <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    dialog.openEditDialog(tenant, (t) => ({
-                                      name: t.name,
-                                      email: t.email,
-                                      phone: t.phone || "",
-                                      propertyId: t.propertyId || "",
-                                      rent: Number(t.rent),
-                                      leaseStart: t.leaseStart || "",
-                                      leaseEnd: t.leaseEnd || "",
-                                      paymentStatus: t.paymentStatus,
-                                      notes: t.notes || "",
-                                    }));
-                                  }}
-                                >
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    window.location.href = `mailto:${tenant.email}`;
-                                  }}
-                                >
-                                  <Mail className="h-4 w-4 mr-2" />
-                                  Send Email
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-destructive"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleDelete(tenant);
-                                  }}
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            {/* Actions menu — the shared helper, so the list and the
+                                table row can't drift on what a tenant lets you do. */}
+                            {renderTenantActions(tenant)}
                           </div>
                         </SwipeableListItem>
                       );
@@ -928,7 +894,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
             <BulkActionBar
               selectedCount={bulkSelection.selectedCount}
               totalCount={sortedTenants.length}
-              itemLabel="tenants"
+              itemLabel={t("itemLabel")}
               actions={bulkActions}
               onSelectAll={() => bulkSelection.selectAll(sortedTenants)}
               onClearSelection={bulkSelection.clearSelection}
