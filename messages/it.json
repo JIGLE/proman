@@ -1001,7 +1001,46 @@
     "kpiUrgent": "urgenti",
     "kpiScheduled": "programmati (prossimi 14 giorni)",
     "kpiEvidence": "senza prove",
-    "editDetails": "Modifica dettagli"
+    "editDetails": "Modifica dettagli",
+    "ticket": {
+      "markInProgress": "Segna in corso",
+      "markResolved": "Segna come risolto",
+      "closeTicket": "Chiudi ticket",
+      "noVendor": "Nessun fornitore assegnato",
+      "reportedByTenant": "Segnalato dall'inquilino",
+      "tabOverview": "Riepilogo",
+      "tabCosts": "Costi",
+      "tabActivity": "Attività",
+      "property": "Immobile",
+      "tenant": "Inquilino",
+      "description": "Descrizione",
+      "vendor": "Fornitore / impresa",
+      "scheduled": "Programmato",
+      "estimatedCost": "Costo stimato",
+      "actualCost": "Costo effettivo",
+      "invoiceRef": "Rif. fattura",
+      "noEstimate": "Nessuna stima di costo registrata",
+      "addEstimate": "Aggiungi stima",
+      "noPhotos": "Ancora nessuna foto allegata",
+      "addPhoto": "Aggiungi foto",
+      "removePhoto": "Rimuovi foto",
+      "resolved": "Risolto",
+      "closed": "Chiuso",
+      "created": "Creato",
+      "toastPhotoUploaded": "Foto caricata",
+      "toastPhotoRemoved": "Foto rimossa",
+      "toastPhotoRemoveFailed": "Impossibile rimuovere la foto.",
+      "toastInProgress": "Ticket passato a in corso",
+      "toastStatusFailed": "Impossibile aggiornare lo stato.",
+      "toastResolved": "Ticket risolto",
+      "toastResolveFailed": "Impossibile risolvere il ticket.",
+      "toastClosed": "Ticket chiuso",
+      "toastCloseFailed": "Impossibile chiudere il ticket.",
+      "toastDeleted": "Ticket eliminato",
+      "toastDeleteFailed": "Impossibile eliminare il ticket.",
+      "deleteTitle": "Elimina ticket",
+      "deleteDescription": "Questo ticket e la sua cronologia saranno rimossi definitivamente. L'azione non può essere annullata."
+    }
   },
   "documents": {
     "title": "Documenti",
@@ -1118,7 +1157,14 @@
       "none": "Nessun immobile assegnato.",
       "totalNet": "Entrate nette totali",
       "unknownProperty": "Immobile sconosciuto"
-    }
+    },
+    "notFound": "Proprietario non trovato",
+    "ownerInfo": "Dati del proprietario",
+    "editOwner": "Modifica proprietario",
+    "deleteOwner": "Elimina proprietario",
+    "toastDeleted": "Proprietario eliminato correttamente",
+    "toastUpdateFailed": "Impossibile aggiornare il proprietario.",
+    "deleteDescription": "Questo proprietario sarà rimosso definitivamente. L'azione non può essere annullata."
   },
   "invoices": {
     "title": "Fatture",
@@ -2066,6 +2112,24 @@
       "title": "Elimina inquilini",
       "description": "{count, plural, one {# inquilino sarà rimosso} other {# inquilini saranno rimossi}} definitivamente. L'azione non può essere annullata.",
       "confirmLabel": "Elimina tutti"
+    },
+    "modal": {
+      "notFound": "Inquilino non trovato",
+      "recordPayment": "Registra pagamento",
+      "renewLease": "Rinnova contratto",
+      "addLease": "Aggiungi contratto",
+      "noActiveLease": "Nessun contratto attivo",
+      "noEmail": "Nessun indirizzo e-mail",
+      "paymentOverdue": "Pagamento scaduto",
+      "derivedFromMatrix": "Derivato dal registro dei canoni — registra un pagamento o apri la matrice dei canoni dell'immobile per cambiarlo.",
+      "tabOverview": "Riepilogo",
+      "tabLease": "Contratto",
+      "tabPayments": "Pagamenti",
+      "tabActivity": "Attività",
+      "contact": "Contatto",
+      "activeLease": "Contratto attivo",
+      "noPayments": "Nessun record di pagamento",
+      "editTenant": "Modifica inquilino"
     }
   },
   "contacts": {

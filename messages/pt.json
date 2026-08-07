@@ -1001,7 +1001,46 @@
     "kpiUrgent": "urgentes",
     "kpiScheduled": "agendados (próximos 14 dias)",
     "kpiEvidence": "com evidência em falta",
-    "editDetails": "Editar detalhes"
+    "editDetails": "Editar detalhes",
+    "ticket": {
+      "markInProgress": "Marcar em curso",
+      "markResolved": "Marcar como resolvido",
+      "closeTicket": "Fechar pedido",
+      "noVendor": "Sem prestador atribuído",
+      "reportedByTenant": "Reportado pelo inquilino",
+      "tabOverview": "Resumo",
+      "tabCosts": "Custos",
+      "tabActivity": "Atividade",
+      "property": "Imóvel",
+      "tenant": "Inquilino",
+      "description": "Descrição",
+      "vendor": "Prestador / empreiteiro",
+      "scheduled": "Agendado",
+      "estimatedCost": "Custo estimado",
+      "actualCost": "Custo real",
+      "invoiceRef": "Ref. da fatura",
+      "noEstimate": "Sem estimativa de custo registada",
+      "addEstimate": "Adicionar estimativa",
+      "noPhotos": "Ainda sem fotografias anexadas",
+      "addPhoto": "Adicionar fotografia",
+      "removePhoto": "Remover fotografia",
+      "resolved": "Resolvido",
+      "closed": "Fechado",
+      "created": "Criado",
+      "toastPhotoUploaded": "Fotografia carregada",
+      "toastPhotoRemoved": "Fotografia removida",
+      "toastPhotoRemoveFailed": "Não foi possível remover a fotografia.",
+      "toastInProgress": "Pedido passado a em curso",
+      "toastStatusFailed": "Não foi possível atualizar o estado.",
+      "toastResolved": "Pedido resolvido",
+      "toastResolveFailed": "Não foi possível resolver o pedido.",
+      "toastClosed": "Pedido fechado",
+      "toastCloseFailed": "Não foi possível fechar o pedido.",
+      "toastDeleted": "Pedido eliminado",
+      "toastDeleteFailed": "Não foi possível eliminar o pedido.",
+      "deleteTitle": "Eliminar pedido",
+      "deleteDescription": "Este pedido e o respetivo histórico serão removidos definitivamente. Esta ação não pode ser anulada."
+    }
   },
   "documents": {
     "title": "Documentos",
@@ -1118,7 +1157,14 @@
       "none": "Sem imóveis atribuídos.",
       "totalNet": "Receita líquida total",
       "unknownProperty": "Imóvel desconhecido"
-    }
+    },
+    "notFound": "Proprietário não encontrado",
+    "ownerInfo": "Dados do proprietário",
+    "editOwner": "Editar proprietário",
+    "deleteOwner": "Eliminar proprietário",
+    "toastDeleted": "Proprietário eliminado com sucesso",
+    "toastUpdateFailed": "Não foi possível atualizar o proprietário.",
+    "deleteDescription": "Este proprietário será removido definitivamente. Esta ação não pode ser anulada."
   },
   "invoices": {
     "title": "Faturas",
@@ -2066,6 +2112,24 @@
       "title": "Eliminar inquilinos",
       "description": "{count, plural, one {# inquilino será removido} other {# inquilinos serão removidos}} definitivamente. Esta ação não pode ser anulada.",
       "confirmLabel": "Eliminar todos"
+    },
+    "modal": {
+      "notFound": "Inquilino não encontrado",
+      "recordPayment": "Registar pagamento",
+      "renewLease": "Renovar contrato",
+      "addLease": "Adicionar contrato",
+      "noActiveLease": "Sem contrato ativo",
+      "noEmail": "Sem endereço de e-mail",
+      "paymentOverdue": "Pagamento em atraso",
+      "derivedFromMatrix": "Derivado do livro de rendas — registe um pagamento ou abra a matriz de rendas do imóvel para o alterar.",
+      "tabOverview": "Resumo",
+      "tabLease": "Contrato",
+      "tabPayments": "Pagamentos",
+      "tabActivity": "Atividade",
+      "contact": "Contacto",
+      "activeLease": "Contrato ativo",
+      "noPayments": "Sem registos de pagamento",
+      "editTenant": "Editar inquilino"
     }
   },
   "contacts": {

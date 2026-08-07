@@ -1001,7 +1001,46 @@
     "kpiUrgent": "urgent",
     "kpiScheduled": "scheduled (next 14 days)",
     "kpiEvidence": "evidence required",
-    "editDetails": "Edit details"
+    "editDetails": "Edit details",
+    "ticket": {
+      "markInProgress": "Mark in progress",
+      "markResolved": "Mark resolved",
+      "closeTicket": "Close ticket",
+      "noVendor": "No vendor assigned",
+      "reportedByTenant": "Reported by tenant",
+      "tabOverview": "Overview",
+      "tabCosts": "Costs",
+      "tabActivity": "Activity",
+      "property": "Property",
+      "tenant": "Tenant",
+      "description": "Description",
+      "vendor": "Vendor / contractor",
+      "scheduled": "Scheduled",
+      "estimatedCost": "Estimated cost",
+      "actualCost": "Actual cost",
+      "invoiceRef": "Invoice ref",
+      "noEstimate": "No cost estimate recorded",
+      "addEstimate": "Add estimate",
+      "noPhotos": "No photos attached yet",
+      "addPhoto": "Add photo",
+      "removePhoto": "Remove photo",
+      "resolved": "Resolved",
+      "closed": "Closed",
+      "created": "Created",
+      "toastPhotoUploaded": "Photo uploaded",
+      "toastPhotoRemoved": "Photo removed",
+      "toastPhotoRemoveFailed": "Couldn't remove the photo.",
+      "toastInProgress": "Ticket moved to in progress",
+      "toastStatusFailed": "Couldn't update the status.",
+      "toastResolved": "Ticket resolved",
+      "toastResolveFailed": "Couldn't resolve the ticket.",
+      "toastClosed": "Ticket closed",
+      "toastCloseFailed": "Couldn't close the ticket.",
+      "toastDeleted": "Ticket deleted",
+      "toastDeleteFailed": "Couldn't delete the ticket.",
+      "deleteTitle": "Delete ticket",
+      "deleteDescription": "This ticket and its history will be permanently removed. This action cannot be undone."
+    }
   },
   "documents": {
     "title": "Documents",
@@ -1118,7 +1157,14 @@
       "none": "No properties assigned.",
       "totalNet": "Total net income",
       "unknownProperty": "Unknown property"
-    }
+    },
+    "notFound": "Owner not found",
+    "ownerInfo": "Owner info",
+    "editOwner": "Edit owner",
+    "deleteOwner": "Delete owner",
+    "toastDeleted": "Owner deleted successfully",
+    "toastUpdateFailed": "Couldn't update the owner.",
+    "deleteDescription": "This owner will be permanently removed. This action cannot be undone."
   },
   "invoices": {
     "title": "Invoices",
@@ -2066,6 +2112,24 @@
       "title": "Delete tenants",
       "description": "{count, plural, one {# tenant} other {# tenants}} will be permanently removed. This action cannot be undone.",
       "confirmLabel": "Delete all"
+    },
+    "modal": {
+      "notFound": "Tenant not found",
+      "recordPayment": "Record payment",
+      "renewLease": "Renew lease",
+      "addLease": "Add lease",
+      "noActiveLease": "No active lease",
+      "noEmail": "No email address",
+      "paymentOverdue": "Payment overdue",
+      "derivedFromMatrix": "Derived from the rent ledger — record a payment or open the property's rent matrix to change it.",
+      "tabOverview": "Overview",
+      "tabLease": "Lease",
+      "tabPayments": "Payments",
+      "tabActivity": "Activity",
+      "contact": "Contact",
+      "activeLease": "Active lease",
+      "noPayments": "No payment records",
+      "editTenant": "Edit tenant"
     }
   },
   "contacts": {

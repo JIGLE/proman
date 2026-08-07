@@ -87,6 +87,34 @@ async function sweepDialogs(into) {
   }
 }
 
+/**
+ * Detail modals often open from a row/card click held in local state, with no URL to visit —
+ * the maintenance ticket modal is one. Click the first few list records and read whatever
+ * overlay appears. Without this the scan reports a modal's whole namespace clean simply by
+ * never having rendered it.
+ */
+async function sweepRecords(into) {
+  const rows = await page
+    .locator('main [class*="cursor-pointer"], main tbody tr, main [role="button"]')
+    .all();
+  for (const row of rows.slice(0, 3)) {
+    if (!(await row.isVisible().catch(() => false))) continue;
+    await row.click().catch(() => {});
+    await page.waitForTimeout(900);
+    if (await page.locator('[role="dialog"]').count()) {
+      await collect(into);
+      // Detail modals are tabbed; walk their tabs too.
+      for (const tab of await page.locator('[role="dialog"] [role="tab"]').all()) {
+        await tab.click().catch(() => {});
+        await page.waitForTimeout(400);
+        await collect(into);
+      }
+      await page.keyboard.press("Escape");
+      await page.waitForTimeout(400);
+    }
+  }
+}
+
 /** Open the states a plain page load leaves closed: the other view mode, tabs, dialogs. */
 async function exercise(into) {
   for (const label of ["grid", "table", "list"]) {
@@ -105,6 +133,7 @@ async function exercise(into) {
     }
   }
   await sweepDialogs(into);
+  await sweepRecords(into);
 
   // Re-query between clicks: activating a tab can mount a nested tab bar that did not exist
   // when the list was first captured, and a stale handle would skip it. Collect twice per

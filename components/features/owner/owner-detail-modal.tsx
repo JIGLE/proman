@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Mail, Phone, MapPin, Building2, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,9 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
   const { state, updateOwner, deleteOwner } = useApp();
   const owner = state.owners.find((o) => o.id === ownerId) ?? null;
   const { success, error } = useToast();
+  const t = useTranslations("owners");
+  const tForms = useTranslations("forms");
+  const tActions = useTranslations("actions");
   const confirmDialog = useConfirmDialog();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<OwnerFormData>({
@@ -48,7 +52,7 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
   if (!owner) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2">
-        <p className="text-sm text-[var(--color-muted-foreground)]">Owner not found</p>
+        <p className="text-sm text-[var(--color-muted-foreground)]">{t("notFound")}</p>
       </div>
     );
   }
@@ -57,13 +61,13 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
     try {
       const validated = ownerSchema.parse(formData);
       await updateOwner(owner.id, validated);
-      success("Owner updated successfully");
+      success(t("toastUpdated"));
       setIsEditing(false);
     } catch (err) {
       if (err instanceof Error) {
         error(err.message);
       } else {
-        error("Failed to update owner");
+        error(t("toastUpdateFailed"));
       }
     }
   };
@@ -71,14 +75,14 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
   const handleDelete = () => {
     confirmDialog.confirm(
       {
-        title: "Delete Owner",
-        description: "This owner will be permanently removed. This action cannot be undone.",
-        confirmLabel: "Delete Owner",
+        title: t("deleteOwner"),
+        description: t("deleteDescription"),
+        confirmLabel: t("deleteOwner"),
         variant: "destructive",
       },
       async () => {
         await deleteOwner(owner.id);
-        success("Owner deleted successfully");
+        success(t("toastDeleted"));
         onClose();
       },
     );
@@ -135,7 +139,7 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
           // Edit Mode
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{tForms("fullName")}</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -147,12 +151,12 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
               <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
                   <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
-                    Owner Info
+                    {t("ownerInfo")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{tForms("email")}</Label>
                     <Input
                       id="email"
                       type="email"
@@ -161,7 +165,7 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone">{tForms("phone")}</Label>
                     <Input
                       id="phone"
                       value={formData.phone}
@@ -174,12 +178,12 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
               <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
                   <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
-                    Address
+                    {tForms("address")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="address">{tForms("address")}</Label>
                     <Input
                       id="address"
                       value={formData.address}
@@ -194,7 +198,7 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
               <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
                   <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
-                    Notes
+                    {tForms("notes")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -210,9 +214,9 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
 
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={handleCancel}>
-                Cancel
+                {tActions("cancel")}
               </Button>
-              <Button onClick={handleSave}>Save Changes</Button>
+              <Button onClick={handleSave}>{tActions("save")}</Button>
             </div>
           </div>
         ) : (
@@ -221,7 +225,7 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
               <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
                   <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
-                    Address
+                    {tForms("address")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -269,7 +273,7 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
               <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
                   <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
-                    Notes
+                    {tForms("notes")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -286,11 +290,11 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
                 className="flex items-center gap-1"
               >
                 <Trash2 className="w-4 h-4" />
-                Delete Owner
+                {t("deleteOwner")}
               </Button>
               <Button onClick={() => setIsEditing(true)} className="flex items-center gap-1">
                 <Edit className="w-4 h-4" />
-                Edit Owner
+                {t("editOwner")}
               </Button>
             </div>
           </div>
