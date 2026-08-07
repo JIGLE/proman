@@ -74,7 +74,7 @@ import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { PageHeader } from "@/components/shared/page-header";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
-import { useLocale } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { withEntityDetail } from "@/lib/utils/entity-detail-url";
 
 export type LeasesViewProps = Record<string, never>;
@@ -89,6 +89,7 @@ export function LeasesView(): React.ReactElement {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const locale = useLocale();
+  const t = useTranslations("leases");
   const openLeaseOverlay = (leaseId: string) => {
     router.push(withEntityDetail(pathname, searchParams.toString(), "lease", leaseId));
   };
@@ -138,20 +139,20 @@ export function LeasesView(): React.ReactElement {
   const steps: StepConfig<LeaseFormData>[] = [
     {
       id: "property",
-      title: "Property Selection",
-      description: "Choose the property for this lease",
+      title: t("step.propertyTitle"),
+      description: t("step.propertyDescription"),
       fields: ["propertyId"],
     },
     {
       id: "tenant",
-      title: "Tenant Details",
-      description: "Select the tenant",
+      title: t("step.tenantTitle"),
+      description: t("step.tenantDescription"),
       fields: ["tenantId"],
     },
     {
       id: "terms",
-      title: "Lease Terms",
-      description: "Set rental terms and conditions",
+      title: t("step.termsTitle"),
+      description: t("step.termsDescription"),
       fields: [
         "startDate",
         "endDate",
@@ -164,19 +165,19 @@ export function LeasesView(): React.ReactElement {
     },
     {
       id: "notes",
-      title: "Additional Info",
-      description: "Add notes and contract documents",
+      title: t("step.notesTitle"),
+      description: t("step.notesDescription"),
       fields: ["notes"],
     },
   ];
 
   const wizardSteps: MultiStepFormStep[] = [
-    { id: "property", title: "Property", icon: <Home className="h-4 w-4" /> },
-    { id: "tenant", title: "Tenant", icon: <User className="h-4 w-4" /> },
-    { id: "terms", title: "Terms", icon: <DollarSign className="h-4 w-4" /> },
+    { id: "property", title: t("step.shortProperty"), icon: <Home className="h-4 w-4" /> },
+    { id: "tenant", title: t("step.shortTenant"), icon: <User className="h-4 w-4" /> },
+    { id: "terms", title: t("step.shortTerms"), icon: <DollarSign className="h-4 w-4" /> },
     {
       id: "notes",
-      title: "Documents",
+      title: t("step.shortNotes"),
       icon: <FileCheck className="h-4 w-4" />,
     },
   ];
@@ -202,10 +203,10 @@ export function LeasesView(): React.ReactElement {
 
       if (editingLease) {
         await updateLease(editingLease.id, leaseData);
-        success("Lease updated successfully");
+        success(t("toast.updated"));
       } else {
         await addLease(leaseData);
-        success("Lease created successfully");
+        success(t("toast.created"));
       }
 
       setWizardOpen(false);
@@ -239,10 +240,10 @@ export function LeasesView(): React.ReactElement {
 
       if (isEdit && dialog.editingItem) {
         await updateLease(dialog.editingItem.id, leaseData);
-        success("Lease updated successfully");
+        success(t("toast.updated"));
       } else {
         await addLease(leaseData);
-        success("Lease created successfully");
+        success(t("toast.created"));
       }
       setContractFile(null);
     },
@@ -255,13 +256,13 @@ export function LeasesView(): React.ReactElement {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge variant="success">Active</Badge>;
+        return <Badge variant="success">{t("active")}</Badge>;
       case "expired":
-        return <Badge variant="destructive">Expired</Badge>;
+        return <Badge variant="destructive">{t("expired")}</Badge>;
       case "terminated":
-        return <Badge variant="secondary">Terminated</Badge>;
+        return <Badge variant="secondary">{t("terminated")}</Badge>;
       case "pending":
-        return <Badge variant="default">Pending</Badge>;
+        return <Badge variant="default">{t("pending")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -272,12 +273,12 @@ export function LeasesView(): React.ReactElement {
     if (file) {
       // Validate file size (5MB limit)
       if (file.size > 5 * 1024 * 1024) {
-        error("File size must be less than 5MB");
+        error(t("toast.fileTooLarge"));
         return;
       }
       // Validate file type
       if (file.type !== "application/pdf") {
-        error("Only PDF files are allowed");
+        error(t("toast.pdfOnly"));
         return;
       }
       setContractFile(file);
@@ -305,15 +306,14 @@ export function LeasesView(): React.ReactElement {
   const handleDelete = (id: string) => {
     confirmDialog.confirm(
       {
-        title: "Delete Lease",
-        description:
-          "This lease agreement will be permanently removed. This action cannot be undone.",
-        confirmLabel: "Delete Lease",
+        title: t("deleteDialog.title"),
+        description: t("deleteDialog.description"),
+        confirmLabel: t("deleteDialog.confirmLabel"),
         variant: "destructive",
       },
       async () => {
         await deleteLease(id);
-        success("Lease deleted successfully");
+        success(t("toast.deleted"));
       },
     );
   };
@@ -349,12 +349,12 @@ export function LeasesView(): React.ReactElement {
         const newRent = Math.round(lease.monthlyRent * (1 + pct / 100) * 100) / 100;
         await updateLease(id, { monthlyRent: newRent });
       }
-      success(`Rent increased by ${pct}% for ${selectedLeaseIds.size} lease(s).`);
+      success(t("toast.rentIncreased", { pct, count: selectedLeaseIds.size }));
       setBulkIncreaseOpen(false);
       setBulkPct("");
       setSelectedLeaseIds(new Set());
     } catch {
-      error("Failed to apply rent increase. Please try again.");
+      error(t("toast.rentIncreaseFailed"));
     } finally {
       setBulkApplying(false);
     }
@@ -362,7 +362,7 @@ export function LeasesView(): React.ReactElement {
 
   const handleDownloadNotices = () => {
     const pct = parseFloat(bulkPct);
-    const today = new Date().toLocaleDateString();
+    const today = new Date().toLocaleDateString(locale);
     const lines: string[] = [];
     for (const id of selectedLeaseIds) {
       const lease = leases.find((l) => l.id === id);
@@ -479,18 +479,18 @@ export function LeasesView(): React.ReactElement {
   const renderLeaseActions = (lease: Lease) => (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Lease options">
+        <Button variant="ghost" size="icon" className="h-7 w-7" aria-label={t("leaseOptions")}>
           <MoreHorizontal className="h-4 w-4" aria-hidden="true" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={() => handleEdit(lease)}>
           <Edit className="h-4 w-4 mr-2" />
-          Edit Lease
+          {t("editLease")}
         </DropdownMenuItem>
         <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(lease.id)}>
           <Trash2 className="h-4 w-4 mr-2" />
-          Delete Lease
+          {t("deleteLease")}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -503,7 +503,7 @@ export function LeasesView(): React.ReactElement {
         <Checkbox
           checked={sortedLeases.length > 0 && sortedLeases.every((l) => selectedLeaseIds.has(l.id))}
           onChange={() => toggleSelectAll(sortedLeases.map((l) => l.id))}
-          aria-label="Select all leases"
+          aria-label={t("selectAll")}
         />
       ),
       headerClassName: "w-10 pl-4",
@@ -513,21 +513,21 @@ export function LeasesView(): React.ReactElement {
           <Checkbox
             checked={selectedLeaseIds.has(lease.id)}
             onChange={() => toggleLeaseSelection(lease.id)}
-            aria-label={`Select lease for ${lease.tenant?.name ?? lease.id}`}
+            aria-label={t("selectOne", { name: lease.tenant?.name ?? lease.id })}
           />
         </span>
       ),
     },
     {
       key: "property",
-      header: "Property",
+      header: t("field.property"),
       headerClassName: "text-[var(--color-muted-foreground)]",
       cellClassName: "text-sm text-[var(--color-foreground)]",
       cell: (lease: Lease) => lease.property?.name,
     },
     {
       key: "tenant",
-      header: "Tenant",
+      header: t("field.tenant"),
       headerClassName: "text-[var(--color-muted-foreground)]",
       cellClassName: "text-sm text-[var(--color-muted-foreground)]",
       cell: (lease: Lease) => lease.tenant?.name,
@@ -537,28 +537,28 @@ export function LeasesView(): React.ReactElement {
       header: (
         <SortableHeader
           sortKey="startDate"
-          label="Start"
+          label={t("field.start")}
           currentSort={getSortDirection("startDate")}
           onSort={(key) => requestSort(key as keyof Lease)}
         />
       ),
       headerClassName: "text-[var(--color-muted-foreground)]",
       cellClassName: "text-sm text-[var(--color-muted-foreground)]",
-      cell: (lease: Lease) => new Date(lease.startDate).toLocaleDateString(),
+      cell: (lease: Lease) => new Date(lease.startDate).toLocaleDateString(locale),
     },
     {
       key: "endDate",
-      header: "End",
+      header: t("field.end"),
       headerClassName: "text-[var(--color-muted-foreground)]",
       cellClassName: "text-sm text-[var(--color-muted-foreground)]",
-      cell: (lease: Lease) => new Date(lease.endDate).toLocaleDateString(),
+      cell: (lease: Lease) => new Date(lease.endDate).toLocaleDateString(locale),
     },
     {
       key: "monthlyRent",
       header: (
         <SortableHeader
           sortKey="monthlyRent"
-          label="Monthly Rent"
+          label={t("field.monthlyRent")}
           currentSort={getSortDirection("monthlyRent")}
           onSort={(key) => requestSort(key as keyof Lease)}
         />
@@ -572,7 +572,7 @@ export function LeasesView(): React.ReactElement {
       header: (
         <SortableHeader
           sortKey="status"
-          label="Status"
+          label={t("field.status")}
           currentSort={getSortDirection("status")}
           onSort={(key) => requestSort(key as keyof Lease)}
         />
@@ -582,7 +582,7 @@ export function LeasesView(): React.ReactElement {
     },
     {
       key: "actions",
-      header: "Actions",
+      header: t("field.actions"),
       headerClassName: "text-[var(--color-muted-foreground)] w-24",
       cell: (lease: Lease) => (
         <span onClick={(e) => e.stopPropagation()}>{renderLeaseActions(lease)}</span>
@@ -601,7 +601,7 @@ export function LeasesView(): React.ReactElement {
         <Checkbox
           checked={selectedLeaseIds.has(lease.id)}
           onChange={() => toggleLeaseSelection(lease.id)}
-          aria-label={`Select lease for ${lease.tenant?.name ?? lease.id}`}
+          aria-label={t("selectOne", { name: lease.tenant?.name ?? lease.id })}
         />
         <button
           type="button"
@@ -620,16 +620,16 @@ export function LeasesView(): React.ReactElement {
       </div>
       <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
         <div>
-          <dt className="text-xs text-[var(--color-muted-foreground)]">Monthly Rent</dt>
+          <dt className="text-xs text-[var(--color-muted-foreground)]">{t("field.monthlyRent")}</dt>
           <dd className="font-medium text-[var(--color-foreground)]">
             {formatCurrency(lease.monthlyRent)}
           </dd>
         </div>
         <div>
-          <dt className="text-xs text-[var(--color-muted-foreground)]">Period</dt>
+          <dt className="text-xs text-[var(--color-muted-foreground)]">{t("field.period")}</dt>
           <dd className="text-[var(--color-muted-foreground)]">
-            {new Date(lease.startDate).toLocaleDateString()} →{" "}
-            {new Date(lease.endDate).toLocaleDateString()}
+            {new Date(lease.startDate).toLocaleDateString(locale)} →{" "}
+            {new Date(lease.endDate).toLocaleDateString(locale)}
           </dd>
         </div>
       </dl>
@@ -643,46 +643,43 @@ export function LeasesView(): React.ReactElement {
   return (
     <>
       <div className="space-y-6">
-        <PageHeader
-          title="Lease Management"
-          description="Manage lease agreements and contract documents"
-        >
+        <PageHeader title={t("pageTitle")} description={t("pageDescription")}>
           <ExportButton
             data={sortedLeases}
             filename="leases"
             columns={[
               {
                 key: "tenantId",
-                label: "Tenant",
+                label: t("field.tenant"),
                 format: (value) => tenants.find((t) => t.id === value)?.name || "Unknown",
               },
               {
                 key: "propertyId",
-                label: "Property",
+                label: t("field.property"),
                 format: (value) => properties.find((p) => p.id === value)?.name || "Unknown",
               },
               {
                 key: "startDate",
-                label: "Start Date",
-                format: (value) => new Date(value as string).toLocaleDateString(),
+                label: t("field.startDate"),
+                format: (value) => new Date(value as string).toLocaleDateString(locale),
               },
               {
                 key: "endDate",
-                label: "End Date",
-                format: (value) => new Date(value as string).toLocaleDateString(),
+                label: t("field.endDate"),
+                format: (value) => new Date(value as string).toLocaleDateString(locale),
               },
               {
                 key: "monthlyRent",
-                label: "Monthly Rent",
+                label: t("field.monthlyRent"),
                 format: (value) => formatCurrency(value as number),
               },
               {
                 key: "deposit",
-                label: "Deposit",
+                label: t("field.deposit"),
                 format: (value) => formatCurrency(value as number),
               },
-              { key: "status", label: "Status" },
-              { key: "taxRegime", label: "Tax Regime" },
+              { key: "status", label: t("field.status") },
+              { key: "taxRegime", label: t("field.taxRegime") },
             ]}
           />
 
@@ -701,18 +698,16 @@ export function LeasesView(): React.ReactElement {
             <DialogTrigger asChild>
               <Button onClick={() => setWizardOpen(true)} className="flex items-center gap-2">
                 <Plus className="w-4 h-4" />
-                Add Lease
+                {t("addLease")}
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-[var(--color-foreground)]">
-                  {editingLease ? "Edit Lease" : "Create New Lease"}
+                  {editingLease ? t("dialogEditTitle") : t("dialogCreateTitle")}
                 </DialogTitle>
                 <DialogDescription>
-                  {editingLease
-                    ? "Update lease agreement details"
-                    : "Follow the steps to create a comprehensive lease agreement"}
+                  {editingLease ? t("dialogEditDescription") : t("dialogCreateDescription")}
                 </DialogDescription>
               </DialogHeader>
 
@@ -744,16 +739,16 @@ export function LeasesView(): React.ReactElement {
                 onSubmit={wizard.handleSubmit}
                 onGoToStep={wizard.goToStep}
                 indicatorVariant="pills"
-                submitText={editingLease ? "Update Lease" : "Create Lease"}
+                submitText={editingLease ? t("submitUpdate") : t("submitCreate")}
               >
                 {/* Step 1: Property Selection */}
                 {wizard.currentStep === 0 && (
                   <StepContent
-                    title="Select Property"
-                    description="Choose the property for this lease agreement"
+                    title={t("selectProperty.title")}
+                    description={t("selectProperty.description")}
                   >
                     <div className="space-y-2">
-                      <Label htmlFor="propertyId">Property *</Label>
+                      <Label htmlFor="propertyId">{t("propertyRequired")}</Label>
                       <Select
                         value={wizard.formData.propertyId}
                         onValueChange={(value) => wizard.updateFormData({ propertyId: value })}
@@ -761,12 +756,12 @@ export function LeasesView(): React.ReactElement {
                         <SelectTrigger
                           className={wizard.stepErrors.propertyId ? "border-red-500" : ""}
                         >
-                          <SelectValue placeholder="Select a property..." />
+                          <SelectValue placeholder={t("selectProperty.placeholder")} />
                         </SelectTrigger>
                         <SelectContent>
                           {properties.length === 0 ? (
                             <div className="p-4 text-center text-sm text-[var(--color-muted-foreground)]">
-                              No properties available. Create a property first.
+                              {t("selectProperty.noneAvailable")}
                             </div>
                           ) : (
                             properties.map((property) => (
@@ -785,14 +780,14 @@ export function LeasesView(): React.ReactElement {
                       {properties.length === 0 && (
                         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-4 text-center">
                           <p className="text-sm text-[var(--color-muted-foreground)] mb-2">
-                            No properties found. Create a property first.
+                            {t("selectProperty.noneFound")}
                           </p>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => router.push(`/${locale}/portfolio`)}
                           >
-                            <Plus className="w-4 h-4 mr-2" /> Go to Portfolio
+                            <Plus className="w-4 h-4 mr-2" /> {t("goToPortfolio")}
                           </Button>
                         </div>
                       )}
@@ -805,9 +800,12 @@ export function LeasesView(): React.ReactElement {
 
                 {/* Step 2: Tenant Selection */}
                 {wizard.currentStep === 1 && (
-                  <StepContent title="Select Tenant" description="Choose the tenant for this lease">
+                  <StepContent
+                    title={t("selectTenant.title")}
+                    description={t("selectTenant.description")}
+                  >
                     <div className="space-y-2">
-                      <Label htmlFor="tenantId">Tenant *</Label>
+                      <Label htmlFor="tenantId">{t("tenantRequired")}</Label>
                       <Select
                         value={wizard.formData.tenantId}
                         onValueChange={(value) => wizard.updateFormData({ tenantId: value })}
@@ -815,12 +813,12 @@ export function LeasesView(): React.ReactElement {
                         <SelectTrigger
                           className={wizard.stepErrors.tenantId ? "border-red-500" : ""}
                         >
-                          <SelectValue placeholder="Select a tenant..." />
+                          <SelectValue placeholder={t("selectTenant.placeholder")} />
                         </SelectTrigger>
                         <SelectContent>
                           {tenants.length === 0 ? (
                             <div className="p-4 text-center text-sm text-[var(--color-muted-foreground)]">
-                              No tenants available. Create a tenant first.
+                              {t("selectTenant.noneAvailable")}
                             </div>
                           ) : (
                             tenants.map((tenant) => (
@@ -839,14 +837,14 @@ export function LeasesView(): React.ReactElement {
                       {tenants.length === 0 && (
                         <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-surface-hover)] p-4 text-center">
                           <p className="text-sm text-[var(--color-muted-foreground)] mb-2">
-                            No tenants found. Create a tenant first.
+                            {t("selectTenant.noneFound")}
                           </p>
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => router.push(`/${locale}/people`)}
                           >
-                            <Plus className="w-4 h-4 mr-2" /> Go to People
+                            <Plus className="w-4 h-4 mr-2" /> {t("goToPeople")}
                           </Button>
                         </div>
                       )}
@@ -859,13 +857,10 @@ export function LeasesView(): React.ReactElement {
 
                 {/* Step 3: Lease Terms */}
                 {wizard.currentStep === 2 && (
-                  <StepContent
-                    title="Lease Terms"
-                    description="Set rental amounts and lease duration"
-                  >
+                  <StepContent title={t("step.termsTitle")} description={t("termsStepDescription")}>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="startDate">Start Date *</Label>
+                        <Label htmlFor="startDate">{t("startDateRequired")}</Label>
                         <Input
                           id="startDate"
                           type="date"
@@ -883,7 +878,7 @@ export function LeasesView(): React.ReactElement {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="endDate">End Date *</Label>
+                        <Label htmlFor="endDate">{t("endDateRequired")}</Label>
                         <Input
                           id="endDate"
                           type="date"
@@ -899,7 +894,9 @@ export function LeasesView(): React.ReactElement {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="monthlyRent">Monthly Rent ({currencySymbol}) *</Label>
+                        <Label htmlFor="monthlyRent">
+                          {t("monthlyRentRequired", { symbol: currencySymbol })}
+                        </Label>
                         <Input
                           id="monthlyRent"
                           type="number"
@@ -921,7 +918,9 @@ export function LeasesView(): React.ReactElement {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="deposit">Security Deposit ({currencySymbol}) *</Label>
+                        <Label htmlFor="deposit">
+                          {t("depositRequired", { symbol: currencySymbol })}
+                        </Label>
                         <Input
                           id="deposit"
                           type="number"
@@ -943,7 +942,7 @@ export function LeasesView(): React.ReactElement {
 
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="taxRegime">Tax Regime</Label>
+                        <Label htmlFor="taxRegime">{t("field.taxRegime")}</Label>
                         <Select
                           value={wizard.formData.taxRegime || ""}
                           onValueChange={(value) =>
@@ -953,21 +952,17 @@ export function LeasesView(): React.ReactElement {
                           }
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select tax regime..." />
+                            <SelectValue placeholder={t("taxRegimePlaceholder")} />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="portugal_rendimentos">
-                              Portugal - Rendimentos
-                            </SelectItem>
-                            <SelectItem value="spain_inmuebles">
-                              Spain - Inmuebles Urbanos
-                            </SelectItem>
+                            <SelectItem value="portugal_rendimentos">{t("taxRegimePt")}</SelectItem>
+                            <SelectItem value="spain_inmuebles">{t("taxRegimeEs")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="renewalNoticeDays">Renewal Notice (Days)</Label>
+                        <Label htmlFor="renewalNoticeDays">{t("field.renewalNoticeDays")}</Label>
                         <Input
                           id="renewalNoticeDays"
                           type="number"
@@ -986,12 +981,9 @@ export function LeasesView(): React.ReactElement {
 
                 {/* Step 4: Documents & Notes */}
                 {wizard.currentStep === 3 && (
-                  <StepContent
-                    title="Documents & Notes"
-                    description="Upload contract and add additional information"
-                  >
+                  <StepContent title={t("docsStepTitle")} description={t("docsStepDescription")}>
                     <div className="space-y-2">
-                      <Label htmlFor="contractFile">Lease Contract (PDF)</Label>
+                      <Label htmlFor="contractFile">{t("contractPdf")}</Label>
                       <div className="flex items-center gap-2">
                         <Input
                           id="contractFile"
@@ -1005,7 +997,7 @@ export function LeasesView(): React.ReactElement {
                           className="flex items-center gap-2 px-4 py-2 bg-[var(--color-secondary)] border border-[var(--color-border)] rounded-md cursor-pointer hover:bg-[var(--color-surface-hover)] transition-colors"
                         >
                           <Upload className="w-4 h-4" />
-                          {contractFile ? contractFile.name : "Choose PDF file"}
+                          {contractFile ? contractFile.name : t("choosePdf")}
                         </Label>
                         {contractFile && (
                           <span className="text-sm text-[var(--color-muted-foreground)]">
@@ -1014,17 +1006,17 @@ export function LeasesView(): React.ReactElement {
                         )}
                       </div>
                       <p className="text-xs text-[var(--color-muted-foreground)]">
-                        Maximum file size: 5MB. PDF format only.
+                        {t("maxFileSize")}
                       </p>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="notes">Additional Notes</Label>
+                      <Label htmlFor="notes">{t("additionalNotes")}</Label>
                       <Textarea
                         id="notes"
                         value={wizard.formData.notes}
                         onChange={(e) => wizard.updateFormData({ notes: e.target.value })}
-                        placeholder="Add any special terms, conditions, or notes about this lease..."
+                        placeholder={t("notesPlaceholder")}
                         rows={6}
                         className={wizard.stepErrors.notes ? "border-red-500" : ""}
                       />
@@ -1041,7 +1033,7 @@ export function LeasesView(): React.ReactElement {
 
         {/* Search and Filter */}
         <SearchFilter
-          searchPlaceholder="Search leases by tenant or property name..."
+          searchPlaceholder={t("searchPlaceholder")}
           onSearchChange={setSearchQuery}
           onFilterChange={(key, value) => {
             if (key === "status") setStatusFilter(value);
@@ -1050,23 +1042,23 @@ export function LeasesView(): React.ReactElement {
           filters={[
             {
               key: "status",
-              label: "Status",
+              label: t("field.status"),
               options: [
-                { label: "All Statuses", value: "all" },
-                { label: "Active", value: "active" },
-                { label: "Pending", value: "pending" },
-                { label: "Expired", value: "expired" },
-                { label: "Terminated", value: "terminated" },
+                { label: t("filter.allStatuses"), value: "all" },
+                { label: t("active"), value: "active" },
+                { label: t("pending"), value: "pending" },
+                { label: t("expired"), value: "expired" },
+                { label: t("terminated"), value: "terminated" },
               ],
               defaultValue: "all",
             },
             {
               key: "taxRegime",
-              label: "Tax Regime",
+              label: t("field.taxRegime"),
               options: [
-                { label: "All Regimes", value: "all" },
-                { label: "Exempt (Article 9)", value: "article9" },
-                { label: "IVA (Article 53)", value: "article53" },
+                { label: t("filter.allRegimes"), value: "all" },
+                { label: t("filter.exempt"), value: "article9" },
+                { label: t("filter.iva"), value: "article53" },
               ],
               defaultValue: "all",
             },
@@ -1082,14 +1074,13 @@ export function LeasesView(): React.ReactElement {
             <Clock className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
             <div>
               <p className="font-medium text-amber-600 dark:text-amber-400">
-                {expiringSoon.length} lease{expiringSoon.length > 1 ? "s" : ""} expiring within 60
-                days
+                {t("expiringSoon", { count: expiringSoon.length })}
               </p>
               <p className="mt-1 text-[var(--color-muted-foreground)]">
                 {expiringSoon
                   .map((l) => {
                     const tenant = tenants.find((t) => t.id === l.tenantId)?.name ?? "Unknown";
-                    const end = new Date(l.endDate).toLocaleDateString();
+                    const end = new Date(l.endDate).toLocaleDateString(locale);
                     return `${tenant} (${end})`;
                   })
                   .join(" · ")}
@@ -1105,10 +1096,10 @@ export function LeasesView(): React.ReactElement {
               <div className="flex flex-col items-center justify-center py-16 text-center">
                 <FileText className="h-12 w-12 text-[var(--color-muted-foreground)] mb-4" />
                 <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
-                  Get started with leases
+                  {t("emptyTitle")}
                 </h3>
                 <p className="text-sm text-[var(--color-muted-foreground)] mb-6 max-w-md">
-                  To create your first lease, you&apos;ll need at least one property and one tenant.
+                  {t("emptyDescription")}
                 </p>
                 <div className="flex items-center gap-3">
                   {properties.length === 0 && (
@@ -1117,7 +1108,7 @@ export function LeasesView(): React.ReactElement {
                       size="sm"
                       onClick={() => router.push(`/${locale}/portfolio`)}
                     >
-                      <Plus className="w-4 h-4 mr-2" /> Create Portfolio Property
+                      <Plus className="w-4 h-4 mr-2" /> {t("createProperty")}
                     </Button>
                   )}
                   {tenants.length === 0 && (
@@ -1126,7 +1117,7 @@ export function LeasesView(): React.ReactElement {
                       size="sm"
                       onClick={() => router.push(`/${locale}/people`)}
                     >
-                      <Plus className="w-4 h-4 mr-2" /> Create Person
+                      <Plus className="w-4 h-4 mr-2" /> {t("createPerson")}
                     </Button>
                   )}
                 </div>
@@ -1134,12 +1125,10 @@ export function LeasesView(): React.ReactElement {
             ) : (
               <EmptyStateIllustration
                 type={leases.length === 0 ? "leases" : "generic"}
-                title={leases.length === 0 ? undefined : "No leases found"}
-                description={
-                  leases.length === 0 ? undefined : "Try adjusting your search or filters"
-                }
+                title={leases.length === 0 ? undefined : t("noneFound")}
+                description={leases.length === 0 ? undefined : t("adjustFilters")}
                 onAction={leases.length === 0 ? dialog.openDialog : undefined}
-                actionLabel={leases.length === 0 ? "Add First Lease" : undefined}
+                actionLabel={leases.length === 0 ? t("addFirst") : undefined}
               />
             )
           ) : (
@@ -1148,7 +1137,7 @@ export function LeasesView(): React.ReactElement {
               {selectedLeaseIds.size > 0 && (
                 <div className="flex items-center gap-3 px-4 py-2.5 bg-[var(--color-info-muted)] border border-[var(--color-info)]/30 rounded-lg">
                   <span className="text-sm font-medium text-[var(--color-info)]">
-                    {selectedLeaseIds.size} lease{selectedLeaseIds.size !== 1 ? "s" : ""} selected
+                    {t("bulk.selected", { count: selectedLeaseIds.size })}
                   </span>
                   <div className="ml-auto flex items-center gap-2">
                     <Dialog open={bulkIncreaseOpen} onOpenChange={setBulkIncreaseOpen}>
@@ -1159,20 +1148,19 @@ export function LeasesView(): React.ReactElement {
                           className="border-[var(--color-info)]/40 text-[var(--color-info)]"
                         >
                           <TrendingUp className="h-4 w-4 mr-1.5" />
-                          Increase Rent
+                          {t("bulk.increaseRent")}
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="sm:max-w-[380px]">
                         <DialogHeader>
-                          <DialogTitle>Bulk Rent Increase</DialogTitle>
+                          <DialogTitle>{t("bulk.title")}</DialogTitle>
                           <DialogDescription>
-                            Apply a percentage increase to {selectedLeaseIds.size} selected lease
-                            {selectedLeaseIds.size !== 1 ? "s" : ""}.
+                            {t("bulkDescription", { count: selectedLeaseIds.size })}
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 pt-2">
                           <div className="space-y-1.5">
-                            <Label htmlFor="bulk-pct">Increase percentage (%)</Label>
+                            <Label htmlFor="bulk-pct">{t("bulk.percentLabel")}</Label>
                             <div className="flex gap-2">
                               <Input
                                 id="bulk-pct"
@@ -1180,7 +1168,7 @@ export function LeasesView(): React.ReactElement {
                                 min="0.1"
                                 max="100"
                                 step="0.1"
-                                placeholder="e.g. 3.5"
+                                placeholder={t("bulk.percentPlaceholder")}
                                 value={bulkPct}
                                 onChange={(e) => setBulkPct(e.target.value)}
                                 className="flex-1"
@@ -1230,7 +1218,7 @@ export function LeasesView(): React.ReactElement {
                               disabled={!bulkPct || isNaN(parseFloat(bulkPct))}
                             >
                               <Mail className="h-4 w-4 mr-1.5" />
-                              Download Notices
+                              {t("bulk.downloadNotices")}
                             </Button>
                             <Button
                               size="sm"
@@ -1242,7 +1230,7 @@ export function LeasesView(): React.ReactElement {
                                 parseFloat(bulkPct) <= 0
                               }
                             >
-                              {bulkApplying ? "Applying…" : "Apply Increase"}
+                              {bulkApplying ? t("bulk.applying") : t("bulk.apply")}
                             </Button>
                           </div>
                         </div>
@@ -1254,7 +1242,7 @@ export function LeasesView(): React.ReactElement {
                       className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
                       onClick={() => setSelectedLeaseIds(new Set())}
                     >
-                      Clear
+                      {t("bulk.clear")}
                     </Button>
                   </div>
                 </div>
@@ -1285,7 +1273,7 @@ export function LeasesView(): React.ReactElement {
                 <div className="flex-1">
                   <SortableHeader
                     sortKey="startDate"
-                    label="Start Date"
+                    label={t("field.startDate")}
                     currentSort={getSortDirection("startDate")}
                     onSort={(key) => requestSort(key as keyof Lease)}
                   />
@@ -1293,7 +1281,7 @@ export function LeasesView(): React.ReactElement {
                 <div className="w-32">
                   <SortableHeader
                     sortKey="monthlyRent"
-                    label="Rent"
+                    label={t("field.rent")}
                     currentSort={getSortDirection("monthlyRent")}
                     onSort={(key) => requestSort(key as keyof Lease)}
                   />
@@ -1301,7 +1289,7 @@ export function LeasesView(): React.ReactElement {
                 <div className="w-32">
                   <SortableHeader
                     sortKey="status"
-                    label="Status"
+                    label={t("field.status")}
                     currentSort={getSortDirection("status")}
                     onSort={(key) => requestSort(key as keyof Lease)}
                   />
@@ -1317,11 +1305,10 @@ export function LeasesView(): React.ReactElement {
                     <div className="flex flex-col items-center justify-center py-16 text-center">
                       <FileText className="h-12 w-12 text-[var(--color-muted-foreground)] mb-4" />
                       <h3 className="text-lg font-semibold text-[var(--color-foreground)] mb-2">
-                        Get started with leases
+                        {t("emptyTitle")}
                       </h3>
                       <p className="text-sm text-[var(--color-muted-foreground)] mb-6 max-w-md">
-                        To create your first lease, you&apos;ll need at least one property and one
-                        tenant.
+                        {t("emptyDescription")}
                       </p>
                       <div className="flex items-center gap-3">
                         {properties.length === 0 && (
@@ -1330,7 +1317,7 @@ export function LeasesView(): React.ReactElement {
                             size="sm"
                             onClick={() => router.push(`/${locale}/portfolio`)}
                           >
-                            <Plus className="w-4 h-4 mr-2" /> Create Portfolio Property
+                            <Plus className="w-4 h-4 mr-2" /> {t("createProperty")}
                           </Button>
                         )}
                         {tenants.length === 0 && (
@@ -1339,7 +1326,7 @@ export function LeasesView(): React.ReactElement {
                             size="sm"
                             onClick={() => router.push(`/${locale}/people`)}
                           >
-                            <Plus className="w-4 h-4 mr-2" /> Create Person
+                            <Plus className="w-4 h-4 mr-2" /> {t("createPerson")}
                           </Button>
                         )}
                       </div>
@@ -1347,12 +1334,10 @@ export function LeasesView(): React.ReactElement {
                   ) : (
                     <EmptyStateIllustration
                       type={leases.length === 0 ? "leases" : "generic"}
-                      title={leases.length === 0 ? undefined : "No leases found"}
-                      description={
-                        leases.length === 0 ? undefined : "Try adjusting your search or filters"
-                      }
+                      title={leases.length === 0 ? undefined : t("noneFound")}
+                      description={leases.length === 0 ? undefined : t("adjustFilters")}
                       onAction={leases.length === 0 ? dialog.openDialog : undefined}
-                      actionLabel={leases.length === 0 ? "Add First Lease" : undefined}
+                      actionLabel={leases.length === 0 ? t("addFirst") : undefined}
                     />
                   )}
                 </div>
@@ -1384,11 +1369,14 @@ export function LeasesView(): React.ReactElement {
                           const days = lease.endDate ? daysUntil(lease.endDate) : null;
                           if (days !== null && days <= 30 && days >= 0) {
                             return (
-                              <RelationshipBadge variant="expiry" label={`${days}d to expiry`} />
+                              <RelationshipBadge
+                                variant="expiry"
+                                label={t("daysToExpiry", { days })}
+                              />
                             );
                           }
                           if (days !== null && days < 0) {
-                            return <RelationshipBadge variant="overdue" label="Expired" />;
+                            return <RelationshipBadge variant="overdue" label={t("expired")} />;
                           }
                           return null;
                         })()}
@@ -1396,23 +1384,25 @@ export function LeasesView(): React.ReactElement {
                     </CardHeader>
                     <CardContent className="space-y-3">
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-[var(--color-muted-foreground)]">Rent</span>
+                        <span className="text-[var(--color-muted-foreground)]">
+                          {t("field.rent")}
+                        </span>
                         <span className="font-semibold text-[var(--color-foreground)]">
-                          {formatCurrency(lease.monthlyRent)}/mo
+                          {t("perMonth", { amount: formatCurrency(lease.monthlyRent) })}
                         </span>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-[var(--color-muted-foreground)]">
                         <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
-                          <span>{new Date(lease.startDate).toLocaleDateString()}</span>
+                          <span>{new Date(lease.startDate).toLocaleDateString(locale)}</span>
                         </div>
-                        <span>to</span>
-                        <span>{new Date(lease.endDate).toLocaleDateString()}</span>
+                        <span>{t("dateTo")}</span>
+                        <span>{new Date(lease.endDate).toLocaleDateString(locale)}</span>
                       </div>
                       {lease.contractFile && (
                         <div className="flex items-center justify-between">
                           <span className="text-sm text-[var(--color-muted-foreground)]">
-                            Contract
+                            {t("field.contract")}
                           </span>
                           <Button
                             variant="outline"
@@ -1424,7 +1414,7 @@ export function LeasesView(): React.ReactElement {
                             className="flex items-center gap-1"
                           >
                             <Download className="w-3 h-3" />
-                            Download
+                            {t("download")}
                           </Button>
                         </div>
                       )}
@@ -1433,20 +1423,20 @@ export function LeasesView(): React.ReactElement {
                           <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" className="flex items-center gap-1">
                               <MoreHorizontal className="w-4 h-4" />
-                              Actions
+                              {t("field.actions")}
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleEdit(lease)}>
                               <Edit className="h-4 w-4 mr-2" />
-                              Edit Lease
+                              {t("editLease")}
                             </DropdownMenuItem>
                             <DropdownMenuItem
                               className="text-destructive"
                               onClick={() => handleDelete(lease.id)}
                             >
                               <Trash2 className="h-4 w-4 mr-2" />
-                              Delete Lease
+                              {t("deleteLease")}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
