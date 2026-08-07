@@ -51,8 +51,13 @@ const ALLOWLIST = [
  * tokens across `components/**`, skipping lines that already carry a `dark:` pair
  * and the two surfaces whose dark ground is deliberate (the locale overlay on the
  * landing hero, and the map's own tiles).
+ *
+ * 596 → 591: net of the Documents category chips gaining explicit `dark:` pairs
+ * (+2, a real contrast fix) and the Leases selection chrome — the bulk-actions bar
+ * and selected-row tint — dropping its dark-only indigo literals for the semantic
+ * `--color-info` pair, which is the same dark-on-light bug one screen further in.
  */
-const BASELINE = 596;
+const BASELINE = 591;
 
 function walk(dir, acc) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

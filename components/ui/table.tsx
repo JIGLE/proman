@@ -116,6 +116,9 @@ interface RenderTableProps<T> {
    * its own affordances, since a card usually wants a visible control rather than a click
    * target the size of a paragraph. */
   onRowClick?: (row: T) => void;
+  /** Per-row styling driven by row state (selection, severity). Table only — `renderCard`
+   * already receives the row and can style its own container. */
+  rowClassName?: (row: T) => string | undefined;
 }
 
 /**
@@ -133,6 +136,7 @@ function RenderTable<T>({
   cardMode = false,
   renderCard,
   onRowClick,
+  rowClassName,
 }: RenderTableProps<T>): React.ReactElement {
   if (data.length === 0 && emptyState) {
     return <>{emptyState}</>;
@@ -166,7 +170,7 @@ function RenderTable<T>({
               <TableRow
                 key={rowKey(row)}
                 onClick={onRowClick ? () => onRowClick(row) : undefined}
-                className={onRowClick ? "cursor-pointer" : undefined}
+                className={cn(onRowClick && "cursor-pointer", rowClassName?.(row))}
               >
                 {columns.map((col, i) => (
                   <TableCell
