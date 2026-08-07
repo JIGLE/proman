@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Plus, Search, Star, Phone, Mail, Building2, Tag, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/utils/api-client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -40,6 +41,7 @@ const typeColors: Record<string, string> = {
 };
 
 export function ContactsView(): React.ReactElement {
+  const t = useTranslations("contacts");
   const [contacts, setContacts] = useState<MaintenanceContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -124,7 +126,7 @@ export function ContactsView(): React.ReactElement {
         </p>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          Add Vendor
+          {t("addVendor")}
         </Button>
       </div>
 
@@ -133,7 +135,7 @@ export function ContactsView(): React.ReactElement {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search by name, company, or specialty..."
+            placeholder={t("searchPlaceholder")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -143,10 +145,10 @@ export function ContactsView(): React.ReactElement {
           value={activeTab}
           onValueChange={setActiveTab}
           options={[
-            { value: "all", label: "All" },
-            { value: "contractor", label: "Contractors" },
-            { value: "vendor", label: "Vendors" },
-            { value: "internal", label: "Internal" },
+            { value: "all", label: t("all") },
+            { value: "contractor", label: t("contractors") },
+            { value: "vendor", label: t("vendors") },
+            { value: "internal", label: t("internal") },
           ]}
         />
       </div>
@@ -157,8 +159,8 @@ export function ContactsView(): React.ReactElement {
           <div className="col-span-full">
             <EmptyStateIllustration
               type="contacts"
-              title="No contacts found"
-              description="Add maintenance contacts to manage your contractor network"
+              title={t("emptyTitle")}
+              description={t("emptyDescription")}
             />
           </div>
         ) : (

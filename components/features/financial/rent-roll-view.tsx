@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -29,6 +30,8 @@ function getMonthOptions() {
 }
 
 export function RentRollView() {
+  const t = useTranslations("financial.rentRoll");
+  const tForms = useTranslations("forms");
   const { state } = useApp();
   const { leases, receipts, properties, tenants } = state;
   const { formatCurrency } = useCurrency();
@@ -116,7 +119,7 @@ export function RentRollView() {
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-[var(--color-foreground)] flex items-center gap-2">
           <DollarSign className="h-5 w-5" />
-          Rent Roll
+          {t("heading")}
         </CardTitle>
         <Select value={selectedMonth} onValueChange={setSelectedMonth}>
           <SelectTrigger className="w-48">
@@ -133,9 +136,7 @@ export function RentRollView() {
       </CardHeader>
       <CardContent>
         {rentRoll.length === 0 ? (
-          <p className="text-center text-[var(--color-muted-foreground)] py-8">
-            No active leases for this period.
-          </p>
+          <p className="text-center text-[var(--color-muted-foreground)] py-8">{t("empty")}</p>
         ) : (
           <div className="space-y-3">
             <RenderTable
@@ -158,19 +159,19 @@ export function RentRollView() {
                   </div>
                   <dl className="mt-2 grid grid-cols-3 gap-2 text-sm">
                     <div>
-                      <dt className="mono-label">Expected</dt>
+                      <dt className="mono-label">{t("expected")}</dt>
                       <dd className="tabular-nums text-[var(--color-muted-foreground)]">
                         {formatCurrency(row.expected)}
                       </dd>
                     </div>
                     <div>
-                      <dt className="mono-label">Received</dt>
+                      <dt className="mono-label">{t("received")}</dt>
                       <dd className="tabular-nums text-[var(--color-foreground)]">
                         {formatCurrency(row.received)}
                       </dd>
                     </div>
                     <div>
-                      <dt className="mono-label">Delta</dt>
+                      <dt className="mono-label">{t("delta")}</dt>
                       <dd
                         className={`font-medium tabular-nums ${row.delta >= 0 ? "text-emerald-400" : "text-red-400"}`}
                       >
@@ -184,33 +185,33 @@ export function RentRollView() {
               columns={[
                 {
                   key: "property",
-                  header: "Property",
+                  header: tForms("property"),
                   cell: (row) => row.propertyName,
                   cellClassName: "text-sm font-medium text-[var(--color-foreground)]",
                 },
                 {
                   key: "tenant",
-                  header: "Tenant",
+                  header: tForms("tenant"),
                   cell: (row) => row.tenantName,
                   cellClassName: "text-sm text-[var(--color-muted-foreground)]",
                 },
                 {
                   key: "expected",
-                  header: "Expected",
+                  header: t("expected"),
                   headerClassName: "text-right",
                   cell: (row) => formatCurrency(row.expected),
                   cellClassName: "text-sm text-[var(--color-muted-foreground)] text-right",
                 },
                 {
                   key: "received",
-                  header: "Received",
+                  header: t("received"),
                   headerClassName: "text-right",
                   cell: (row) => formatCurrency(row.received),
                   cellClassName: "text-sm text-[var(--color-foreground)] text-right",
                 },
                 {
                   key: "delta",
-                  header: "Delta",
+                  header: t("delta"),
                   headerClassName: "text-right",
                   cell: (row) => (
                     <span className={row.delta >= 0 ? "text-emerald-400" : "text-red-400"}>
@@ -220,14 +221,14 @@ export function RentRollView() {
                   ),
                   cellClassName: "text-sm text-right font-medium",
                 },
-                { key: "status", header: "Status", cell: (row) => statusBadge(row.status) },
+                { key: "status", header: tForms("status"), cell: (row) => statusBadge(row.status) },
               ]}
             />
 
             {/* Totals live beside the table rather than inside it: `RenderTable` has no footer
                 row, and a totals row appended to a card list reads as one more record. */}
             <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm font-semibold">
-              <span className="text-[var(--color-foreground)]">Totals</span>
+              <span className="text-[var(--color-foreground)]">{t("totals")}</span>
               <span className="flex flex-wrap items-center gap-x-5 tabular-nums">
                 <span className="text-[var(--color-muted-foreground)]">
                   {formatCurrency(totals.expected)}

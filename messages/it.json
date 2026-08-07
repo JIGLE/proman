@@ -68,7 +68,24 @@
     "ificiStatus": "Regime IFICI (nuovo NHR dal 2024)",
     "ificiStatusHelp": "L'IFICI ha sostituito il regime NHR per i nuovi richiedenti dal 2024. Aliquota fissa del 20%.",
     "ificiYear": "Anno di concessione",
-    "taxRegimeMutuallyExclusive": "NHR e IFICI si escludono a vicenda — solo uno può essere attivo contemporaneamente."
+    "taxRegimeMutuallyExclusive": "NHR e IFICI si escludono a vicenda — solo uno può essere attivo contemporaneamente.",
+    "nav": {
+      "account": "Account",
+      "taxRegion": "Fisco e area",
+      "notifications": "Notifiche",
+      "security": "Sicurezza",
+      "integrations": "Integrazioni",
+      "system": "Sistema",
+      "billing": "Fatturazione",
+      "heading": "Impostazioni",
+      "subtitle": "Gestisci le tue preferenze e l'account",
+      "sectionsLabel": "Sezioni delle impostazioni",
+      "toastSaved": "Impostazioni salvate",
+      "toastSubscription": "Abbonamento aggiornato — grazie.",
+      "loadFailed": "Impossibile caricare le impostazioni.",
+      "toastCanceled": "Pagamento annullato",
+      "toastSaveFailed": "Impossibile salvare le impostazioni."
+    }
   },
   "gdpr": {
     "title": "I tuoi diritti sui dati (GDPR)",
@@ -1300,7 +1317,15 @@
     "bulkGenerateSuccess": "Generate {count} ricevute. {skipped} già esistenti.",
     "bulkGenerateEmpty": "Tutte le ricevute di questo mese esistono già.",
     "expense": "Spesa",
-    "paymentReceived": "Pagamento ricevuto"
+    "paymentReceived": "Pagamento ricevuto",
+    "rentRoll": {
+      "heading": "Prospetto canoni",
+      "empty": "Nessun contratto attivo in questo periodo.",
+      "expected": "Previsto",
+      "received": "Ricevuto",
+      "delta": "Differenza",
+      "totals": "Totali"
+    }
   },
   "propertyDetail": {
     "tabs": {
@@ -1907,5 +1932,42 @@
       "description": "{count, plural, one {# inquilino sarà rimosso} other {# inquilini saranno rimossi}} definitivamente. L'azione non può essere annullata.",
       "confirmLabel": "Elimina tutti"
     }
+  },
+  "contacts": {
+    "addVendor": "Aggiungi fornitore",
+    "searchPlaceholder": "Cerca per nome, azienda o specializzazione…",
+    "all": "Tutti",
+    "contractors": "Imprese",
+    "vendors": "Fornitori",
+    "internal": "Interno",
+    "emptyTitle": "Nessun contatto trovato",
+    "emptyDescription": "Aggiungi contatti di manutenzione per gestire la tua rete di fornitori",
+    "loadFailed": "Impossibile caricare i contatti."
+  },
+  "account": {
+    "title": "Account",
+    "subtitle": "Il tuo account",
+    "profile": "Profilo",
+    "profileDescription": "Come appari su Situs.",
+    "security": "Sicurezza",
+    "securityDescription": "Password e autenticazione a due fattori.",
+    "twoFactor": "Autenticazione a due fattori",
+    "manageInSettings": "Gestisci nelle impostazioni",
+    "sessions": "Sessioni",
+    "sessionsDescription": "Dispositivi con accesso al tuo account.",
+    "thisDevice": "Questo dispositivo",
+    "currentSession": "Sessione corrente",
+    "sessionsSoon": "Lo storico completo delle sessioni e la disconnessione remota arriveranno presto.",
+    "apiTokens": "Token API",
+    "apiTokensDescription": "Accesso programmatico ai tuoi dati Situs.",
+    "noTokens": "Ancora nessun token API.",
+    "activity": "Attività dell'account",
+    "portalUser": "Utente del portale",
+    "mfaManaged": "Gestita con un'app di autenticazione (TOTP).",
+    "mfaEnabled": "Attiva — i codici sono richiesti all'accesso.",
+    "mfaDisabled": "Non attiva — aggiungi un secondo fattore per proteggere il tuo account.",
+    "on": "Attiva",
+    "off": "Non attiva",
+    "auditEmpty": "Accessi, esportazioni e modifiche alle impostazioni del tuo account appariranno qui."
   }
 }

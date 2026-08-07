@@ -68,7 +68,24 @@
     "ificiStatus": "Régimen IFICI — Portugal (nuevo RNH desde 2024)",
     "ificiStatusHelp": "El IFICI sustituyó al RNH para nuevos solicitantes a partir de 2024. Tasa plana del 20%.",
     "ificiYear": "Año de concesión",
-    "taxRegimeMutuallyExclusive": "RNH e IFICI son mutuamente excluyentes — solo uno puede estar activo a la vez."
+    "taxRegimeMutuallyExclusive": "RNH e IFICI son mutuamente excluyentes — solo uno puede estar activo a la vez.",
+    "nav": {
+      "account": "Cuenta",
+      "taxRegion": "Fiscalidad y región",
+      "notifications": "Notificaciones",
+      "security": "Seguridad",
+      "integrations": "Integraciones",
+      "system": "Sistema",
+      "billing": "Facturación",
+      "heading": "Ajustes",
+      "subtitle": "Gestiona tus preferencias y los ajustes de la cuenta",
+      "sectionsLabel": "Secciones de ajustes",
+      "toastSaved": "Ajustes guardados",
+      "toastSubscription": "Suscripción actualizada — gracias.",
+      "loadFailed": "No se han podido cargar los ajustes.",
+      "toastCanceled": "Pago cancelado",
+      "toastSaveFailed": "No se han podido guardar los ajustes."
+    }
   },
   "gdpr": {
     "title": "Tus Derechos de Datos (RGPD)",
@@ -1300,7 +1317,15 @@
     "bulkGenerateSuccess": "Generados {count} recibos. {skipped} ya existían.",
     "bulkGenerateEmpty": "Todos los recibos de este mes ya existen.",
     "expense": "Gasto",
-    "paymentReceived": "Pago recibido"
+    "paymentReceived": "Pago recibido",
+    "rentRoll": {
+      "heading": "Cuadro de alquileres",
+      "empty": "Sin contratos activos en este periodo.",
+      "expected": "Previsto",
+      "received": "Recibido",
+      "delta": "Diferencia",
+      "totals": "Totales"
+    }
   },
   "propertyDetail": {
     "tabs": {
@@ -1907,5 +1932,42 @@
       "description": "{count, plural, one {# inquilino se eliminará} other {# inquilinos se eliminarán}} de forma permanente. Esta acción no se puede deshacer.",
       "confirmLabel": "Eliminar todos"
     }
+  },
+  "contacts": {
+    "addVendor": "Añadir proveedor",
+    "searchPlaceholder": "Buscar por nombre, empresa o especialidad…",
+    "all": "Todos",
+    "contractors": "Contratistas",
+    "vendors": "Proveedores",
+    "internal": "Interno",
+    "emptyTitle": "No se han encontrado contactos",
+    "emptyDescription": "Añade contactos de mantenimiento para gestionar tu red de proveedores",
+    "loadFailed": "No se han podido cargar los contactos."
+  },
+  "account": {
+    "title": "Cuenta",
+    "subtitle": "Tu cuenta",
+    "profile": "Perfil",
+    "profileDescription": "Cómo apareces en Situs.",
+    "security": "Seguridad",
+    "securityDescription": "Contraseña y autenticación en dos pasos.",
+    "twoFactor": "Autenticación en dos pasos",
+    "manageInSettings": "Gestionar en ajustes",
+    "sessions": "Sesiones",
+    "sessionsDescription": "Dispositivos con sesión iniciada en tu cuenta.",
+    "thisDevice": "Este dispositivo",
+    "currentSession": "Sesión actual",
+    "sessionsSoon": "El historial completo de sesiones y el cierre remoto llegarán pronto.",
+    "apiTokens": "Tokens de API",
+    "apiTokensDescription": "Acceso programático a tus datos de Situs.",
+    "noTokens": "Aún no hay tokens de API.",
+    "activity": "Actividad de la cuenta",
+    "portalUser": "Usuario del portal",
+    "mfaManaged": "Gestionada con una app de autenticación (TOTP).",
+    "mfaEnabled": "Activada — se piden códigos al iniciar sesión.",
+    "mfaDisabled": "No activada — añade un segundo factor para proteger tu cuenta.",
+    "on": "Activada",
+    "off": "Desactivada",
+    "auditEmpty": "Los inicios de sesión, exportaciones y cambios de ajustes de tu cuenta aparecerán aquí."
   }
 }

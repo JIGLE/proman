@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
@@ -19,6 +20,8 @@ import { AuditTrail } from "@/components/shared/audit-trail";
  * Sessions and API tokens are placeholders until their backends are wired.
  */
 export function AccountView(): React.ReactElement {
+  const t = useTranslations("account");
+  const tStatus = useTranslations("status");
   const { data: session } = useSession();
   const pathname = usePathname();
   const locale = pathname.split("/")[1] || "pt";
@@ -52,8 +55,8 @@ export function AccountView(): React.ReactElement {
   return (
     <div className="mx-auto max-w-3xl space-y-6 p-4 sm:p-6">
       <div>
-        <p className="mono-label">Account</p>
-        <h1 className="mt-1 text-2xl font-normal tracking-tight">Your account</h1>
+        <p className="mono-label">{t("title")}</p>
+        <h1 className="mt-1 text-2xl font-normal tracking-tight">{t("subtitle")}</h1>
       </div>
 
       {/* Profile */}
@@ -61,9 +64,9 @@ export function AccountView(): React.ReactElement {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserCircle className="h-5 w-5" />
-            Profile
+            {t("profile")}
           </CardTitle>
-          <CardDescription>How you appear across Situs.</CardDescription>
+          <CardDescription>{t("profileDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
@@ -71,7 +74,7 @@ export function AccountView(): React.ReactElement {
               {initials}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium">{user?.name || "Portal user"}</p>
+              <p className="truncate text-sm font-medium">{user?.name || t("portalUser")}</p>
               <p className="truncate text-sm text-muted-foreground">{user?.email || "—"}</p>
             </div>
           </div>
@@ -83,30 +86,30 @@ export function AccountView(): React.ReactElement {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5" />
-            Security
+            {t("security")}
           </CardTitle>
-          <CardDescription>Password and two-factor authentication.</CardDescription>
+          <CardDescription>{t("securityDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between gap-4">
             <div>
-              <p className="text-sm font-medium">Two-factor authentication</p>
+              <p className="text-sm font-medium">{t("twoFactor")}</p>
               <p className="text-sm text-muted-foreground">
                 {mfaEnabled === null
-                  ? "Managed with an authenticator app (TOTP)."
+                  ? t("mfaManaged")
                   : mfaEnabled
-                    ? "Enabled — codes required at sign-in."
-                    : "Not enabled — add a second factor to protect your account."}
+                    ? t("mfaEnabled")
+                    : t("mfaDisabled")}
               </p>
             </div>
             {mfaEnabled !== null && (
               <Badge variant={mfaEnabled ? "status-success" : "status"}>
-                {mfaEnabled ? "On" : "Off"}
+                {mfaEnabled ? t("on") : t("off")}
               </Badge>
             )}
           </div>
           <Button asChild variant="outline" size="sm" className="rounded-none">
-            <Link href={`/${locale}/settings?tab=security`}>Manage in Settings</Link>
+            <Link href={`/${locale}/settings?tab=security`}>{t("manageInSettings")}</Link>
           </Button>
         </CardContent>
       </Card>
@@ -116,21 +119,19 @@ export function AccountView(): React.ReactElement {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MonitorSmartphone className="h-5 w-5" />
-            Sessions
+            {t("sessions")}
           </CardTitle>
-          <CardDescription>Devices signed in to your account.</CardDescription>
+          <CardDescription>{t("sessionsDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between gap-4 border border-[var(--color-border)] p-3">
             <div>
-              <p className="text-sm font-medium">This device</p>
-              <p className="mono-label mt-1">Current session</p>
+              <p className="text-sm font-medium">{t("thisDevice")}</p>
+              <p className="mono-label mt-1">{t("currentSession")}</p>
             </div>
-            <Badge variant="status-success">Active</Badge>
+            <Badge variant="status-success">{tStatus("active")}</Badge>
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Full session history and remote sign-out are coming soon.
-          </p>
+          <p className="mt-3 text-xs text-muted-foreground">{t("sessionsSoon")}</p>
         </CardContent>
       </Card>
 
@@ -139,19 +140,19 @@ export function AccountView(): React.ReactElement {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <KeyRound className="h-5 w-5" />
-            API tokens
+            {t("apiTokens")}
           </CardTitle>
-          <CardDescription>Programmatic access to your Situs data.</CardDescription>
+          <CardDescription>{t("apiTokensDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">No API tokens yet.</p>
+          <p className="text-sm text-muted-foreground">{t("noTokens")}</p>
         </CardContent>
       </Card>
 
       {/* Account-wide audit trail */}
       <div>
-        <p className="mono-label mb-2">Account activity</p>
-        <AuditTrail emptyDescription="Sign-ins, exports, and settings changes for your account will appear here." />
+        <p className="mono-label mb-2">{t("activity")}</p>
+        <AuditTrail emptyDescription={t("auditEmpty")} />
       </div>
     </div>
   );

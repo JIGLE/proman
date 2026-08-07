@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { Save, Settings } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -25,20 +26,24 @@ import { SettingsIntegrations } from "./settings-integrations";
 import { SettingsBilling } from "./settings-billing";
 import { defaultSettings, type BillingInfo, type UserSettings } from "./settings-types";
 
+/** Section ids only — labels resolve against `settings.nav` at render. */
 const CORE_SECTIONS = [
-  { value: "account", label: "Account" },
-  { value: "tax", label: "Tax & Region" },
-  { value: "notifications", label: "Notifications" },
-  { value: "security", label: "Security" },
-  { value: "integrations", label: "Integrations" },
-  { value: "system", label: "System" },
+  "account",
+  "tax",
+  "notifications",
+  "security",
+  "integrations",
+  "system",
 ] as const;
 
-type SectionValue = (typeof CORE_SECTIONS)[number]["value"] | "billing";
+type SectionValue = (typeof CORE_SECTIONS)[number] | "billing";
 
 export function SettingsView(): React.ReactElement {
   const { data: session } = useSession();
   const { success, error: showError } = useToast();
+  const t = useTranslations("settings.nav");
+  const tForms = useTranslations("forms");
+  const tActions = useTranslations("actions");
   const { token: csrfToken } = useCsrf();
   const { setTheme } = useTheme();
   const searchParams = useSearchParams();
@@ -58,9 +63,12 @@ export function SettingsView(): React.ReactElement {
   const [activeSection, setActiveSection] = useState<SectionValue>(
     (searchParams.get("tab") as SectionValue | null) ?? "account",
   );
-  const sections = showBilling
-    ? [...CORE_SECTIONS, { value: "billing" as const, label: "Billing" }]
+  const sections: readonly SectionValue[] = showBilling
+    ? [...CORE_SECTIONS, "billing" as const]
     : CORE_SECTIONS;
+  /** `tax` is the section id; its label lives under a different key. */
+  const sectionLabel = (value: SectionValue) =>
+    value === "tax" ? t("taxRegion") : t(value as Exclude<SectionValue, "tax">);
 
   useEffect(() => {
     loadSettings();
@@ -75,9 +83,9 @@ export function SettingsView(): React.ReactElement {
   useEffect(() => {
     const checkout = searchParams.get("checkout");
     if (checkout === "success") {
-      success("Subscription updated — thank you!");
+      success(t("toastSubscription"));
     } else if (checkout === "canceled") {
-      showError("Checkout was canceled");
+      showError(t("toastCanceled"));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
@@ -131,14 +139,14 @@ export function SettingsView(): React.ReactElement {
       });
 
       if (response.ok) {
-        success("Settings saved successfully");
+        success(t("toastSaved"));
         setHasChanges(false);
         setTheme(settings.theme);
       } else {
-        showError("Failed to save settings");
+        showError(t("toastSaveFailed"));
       }
     } catch {
-      showError("Failed to save settings");
+      showError(t("toastSaveFailed"));
     } finally {
       setSaving(false);
     }
@@ -159,16 +167,14 @@ export function SettingsView(): React.ReactElement {
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-foreground)] flex items-center gap-2">
             <Settings className="h-6 w-6" />
-            Settings
+            {t("heading")}
           </h1>
-          <p className="text-sm text-[var(--color-muted-foreground)]">
-            Manage your preferences and account settings
-          </p>
+          <p className="text-sm text-[var(--color-muted-foreground)]">{t("subtitle")}</p>
         </div>
         {hasChanges && (
           <Button onClick={saveSettings} disabled={saving}>
             <Save className="h-4 w-4 mr-2" />
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? tForms("saving") : tActions("save")}
           </Button>
         )}
       </div>
@@ -177,22 +183,22 @@ export function SettingsView(): React.ReactElement {
         {/* Desktop vertical section nav — same left-border-accent language as
             the main sidebar, so Settings reads as its own mini nav rather
             than a page of tabs. */}
-        <nav aria-label="Settings sections" className="hidden md:block">
+        <nav aria-label={t("sectionsLabel")} className="hidden md:block">
           <div className="space-y-0.5">
             {sections.map((section) => (
               <button
-                key={section.value}
+                key={section}
                 type="button"
-                onClick={() => setActiveSection(section.value)}
-                aria-current={activeSection === section.value ? "page" : undefined}
+                onClick={() => setActiveSection(section)}
+                aria-current={activeSection === section ? "page" : undefined}
                 className={cn(
                   "flex w-full items-center border-l-2 px-3 py-2 text-left text-sm transition-colors",
-                  activeSection === section.value
+                  activeSection === section
                     ? "border-[var(--country-highlight-readable)] bg-[var(--color-hover)] font-medium text-[var(--country-highlight-readable)]"
                     : "border-transparent text-[var(--color-muted-foreground)] hover:bg-[var(--color-hover)] hover:text-[var(--color-foreground)]",
                 )}
               >
-                {section.label}
+                {sectionLabel(section)}
               </button>
             ))}
           </div>
@@ -209,8 +215,8 @@ export function SettingsView(): React.ReactElement {
             </SelectTrigger>
             <SelectContent>
               {sections.map((section) => (
-                <SelectItem key={section.value} value={section.value}>
-                  {section.label}
+                <SelectItem key={section} value={section}>
+                  {sectionLabel(section)}
                 </SelectItem>
               ))}
             </SelectContent>

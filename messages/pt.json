@@ -68,7 +68,24 @@
     "ificiStatus": "Regime IFICI (novo RNH desde 2024)",
     "ificiStatusHelp": "O IFICI (Incentivo Fiscal à Investigação Científica e Inovação) substituiu o RNH para novos requerentes a partir de 2024. Taxa flat de 20%.",
     "ificiYear": "Ano de concessão",
-    "taxRegimeMutuallyExclusive": "RNH e IFICI são mutuamente exclusivos — apenas um pode estar ativo de cada vez."
+    "taxRegimeMutuallyExclusive": "RNH e IFICI são mutuamente exclusivos — apenas um pode estar ativo de cada vez.",
+    "nav": {
+      "account": "Conta",
+      "taxRegion": "Fiscalidade e região",
+      "notifications": "Notificações",
+      "security": "Segurança",
+      "integrations": "Integrações",
+      "system": "Sistema",
+      "billing": "Faturação",
+      "heading": "Definições",
+      "subtitle": "Faça a gestão das suas preferências e da conta",
+      "sectionsLabel": "Secções das definições",
+      "toastSaved": "Definições guardadas",
+      "toastSubscription": "Subscrição atualizada — obrigado.",
+      "loadFailed": "Não foi possível carregar as definições.",
+      "toastCanceled": "Pagamento cancelado",
+      "toastSaveFailed": "Não foi possível guardar as definições."
+    }
   },
   "gdpr": {
     "title": "Seus Direitos de Dados (GDPR)",
@@ -1300,7 +1317,15 @@
     "bulkGenerateSuccess": "Gerados {count} recibos. {skipped} já existiam.",
     "bulkGenerateEmpty": "Todos os recibos deste mês já existem.",
     "expense": "Despesa",
-    "paymentReceived": "Pagamento recebido"
+    "paymentReceived": "Pagamento recebido",
+    "rentRoll": {
+      "heading": "Mapa de rendas",
+      "empty": "Sem contratos ativos neste período.",
+      "expected": "Previsto",
+      "received": "Recebido",
+      "delta": "Diferença",
+      "totals": "Totais"
+    }
   },
   "propertyDetail": {
     "tabs": {
@@ -1907,5 +1932,42 @@
       "description": "{count, plural, one {# inquilino será removido} other {# inquilinos serão removidos}} definitivamente. Esta ação não pode ser anulada.",
       "confirmLabel": "Eliminar todos"
     }
+  },
+  "contacts": {
+    "addVendor": "Adicionar fornecedor",
+    "searchPlaceholder": "Procurar por nome, empresa ou especialidade…",
+    "all": "Todos",
+    "contractors": "Empreiteiros",
+    "vendors": "Fornecedores",
+    "internal": "Interno",
+    "emptyTitle": "Nenhum contacto encontrado",
+    "emptyDescription": "Adicione contactos de manutenção para gerir a sua rede de prestadores",
+    "loadFailed": "Não foi possível carregar os contactos."
+  },
+  "account": {
+    "title": "Conta",
+    "subtitle": "A sua conta",
+    "profile": "Perfil",
+    "profileDescription": "Como aparece no Situs.",
+    "security": "Segurança",
+    "securityDescription": "Palavra-passe e autenticação de dois fatores.",
+    "twoFactor": "Autenticação de dois fatores",
+    "manageInSettings": "Gerir nas definições",
+    "sessions": "Sessões",
+    "sessionsDescription": "Dispositivos com sessão iniciada na sua conta.",
+    "thisDevice": "Este dispositivo",
+    "currentSession": "Sessão atual",
+    "sessionsSoon": "O histórico completo de sessões e o encerramento remoto estão para breve.",
+    "apiTokens": "Tokens de API",
+    "apiTokensDescription": "Acesso programático aos seus dados Situs.",
+    "noTokens": "Ainda sem tokens de API.",
+    "activity": "Atividade da conta",
+    "portalUser": "Utilizador do portal",
+    "mfaManaged": "Gerida com uma aplicação autenticadora (TOTP).",
+    "mfaEnabled": "Ativada — são pedidos códigos ao iniciar sessão.",
+    "mfaDisabled": "Não ativada — adicione um segundo fator para proteger a sua conta.",
+    "on": "Ligada",
+    "off": "Desligada",
+    "auditEmpty": "Os inícios de sessão, exportações e alterações às definições da sua conta aparecerão aqui."
   }
 }
