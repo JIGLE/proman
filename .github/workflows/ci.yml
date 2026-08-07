@@ -280,6 +280,9 @@ jobs:
           # to act on; the delete-confirmation specs skip themselves against an empty database.
           ALLOW_DEMO_MODE: "true"
           ENABLE_DEMO_LOGIN: "true"
+          # ~90 tests from a single IP against a 100-req/min API limit: the tail of the run
+          # otherwise fails with 429s that read as product bugs. See lib/middleware/rate-limit.ts.
+          E2E_DISABLE_RATE_LIMIT: "true"
           NODE_ENV: production
           PORT: 3000
           HOSTNAME: 0.0.0.0

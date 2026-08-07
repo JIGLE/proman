@@ -21,9 +21,13 @@ test.describe("Tenant Self-Service Portal — invalid token handling", () => {
     await settle(page);
 
     await expect(page.locator("body")).not.toContainText("Application error");
-    const title = page.locator("h1, h2, [role='heading']").first();
-    // Some heading must exist — either an error heading or a portal heading
-    await expect(title).toBeVisible({ timeout: 5000 });
+
+    // Some heading must exist — either an error heading or a portal heading. This used to be
+    // `page.locator("h1, h2, [role='heading']")`, which could never match: the page does render
+    // a heading, but it is `CardTitle`, an `<h3>` (components/ui/card.tsx:32), and
+    // `[role='heading']` is a CSS attribute selector — it matches a literal `role=` attribute,
+    // never an implicit role. `getByRole` reads the accessibility tree instead.
+    await expect(page.getByRole("heading").first()).toBeVisible({ timeout: 5000 });
   });
 });
 
@@ -105,8 +109,12 @@ test.describe("Tenant Portal — full flow with real token", () => {
   });
 });
 
-// SearchFilter dropdown smoke test (unauthenticated)
+// SearchFilter dropdown smoke test. This was labelled "(unauthenticated)" and had no
+// storageState, so it loaded /en/people signed out, got redirected to sign-in, and waited out
+// the timeout on a filter that was never rendered. The People page requires a session.
 test.describe("Tenants page — status filter", () => {
+  test.use({ storageState: "playwright/.auth/user.json" });
+
   test("status filter should open and select Active", async ({ page }) => {
     await page.goto("/en/people");
     await settle(page);

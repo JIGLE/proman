@@ -55,6 +55,13 @@ export function _setRateLimitForIP(ip: string, count: number, ttlMs?: number): v
 }
 
 export function checkRateLimit(request: Request): Response | null {
+  // Same E2E opt-out as lib/middleware/rate-limit.ts. There are two independent rate limiters in
+  // this codebase and they guard different routes, so gating only one leaves the suite still
+  // hitting 429s — which is exactly what happened on the first attempt.
+  if (process.env.E2E_DISABLE_RATE_LIMIT === "true") {
+    return null;
+  }
+
   const clientIP = getClientIP(request);
 
   if (isRateLimited(clientIP)) {

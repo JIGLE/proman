@@ -89,6 +89,18 @@ export async function rateLimit(
   request: Request,
   config: RateLimitConfig,
 ): Promise<Response | null> {
+  // Opt-out for the E2E suite only.
+  //
+  // The general API limit is 100 requests per minute per IP, and the whole Playwright suite runs
+  // from one address: ~90 tests, each loading pages that fan out to several endpoints. It blows
+  // through the window partway and the tail of the run fails with 429s that look like product
+  // bugs — a POST /api/properties returning 429 instead of 201, a Select rendering no options.
+  // Deliberately named for its only caller so it cannot be mistaken for a general kill switch,
+  // and set nowhere but the E2E job in .github/workflows/ci.yml.
+  if (process.env.E2E_DISABLE_RATE_LIMIT === "true") {
+    return null;
+  }
+
   // Check if we should skip rate limiting
   if (config.skip && config.skip(request)) {
     return null;
