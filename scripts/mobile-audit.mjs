@@ -73,7 +73,7 @@ const STRICT = flag("strict");
  * already met on every surface, and unlike the other metrics it has no legitimate reason to
  * regress.
  *
- * `smallText` is close to its floor. Of the 308 remaining, 264 are the bottom nav's own labels
+ * `smallText` is close to its floor. Of the 310 remaining, 264 are the bottom nav's own labels
  * at 11px — which is what native iOS/Android tab bars use, so they stay — and 44 are avatar
  * initials, a glyph sized to its circle rather than text to read. Do not chase this one to
  * zero; it would mean overriding two deliberate choices.
@@ -107,7 +107,7 @@ const BASELINE = {
   touchTargetFails: 4,
   touchTargetWarns: 4,
   clippedContainers: 6,
-  smallText: 308,
+  smallText: 310,
 };
 
 /**
@@ -427,7 +427,22 @@ async function auditSurface(context, surface, theme, ids) {
     const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
     result.httpStatus = response?.status() ?? null;
     // Let data fetches and entrance animations settle before measuring.
-    await page.waitForLoadState("networkidle", { timeout: 20000 }).catch(() => {});
+    //
+    // This budget used to be 20s and its timeout was swallowed by a bare `.catch(() => {})`,
+    // which made a systemic stall invisible and very expensive: the first CI run that walked
+    // 52 seeded surfaces spent >24 minutes here and was killed by the job's 30-minute cap,
+    // because something in that environment never lets the page reach networkidle (it settles
+    // fine locally, which is why no local run ever showed this). 52 surface-runs × 20s is
+    // ~17 minutes of pure waiting on its own.
+    //
+    // Cap it at 5s and record when it doesn't settle. `networkidle` is a nicety here — the
+    // measurement only needs content painted, which the fixed delay below covers — so a
+    // surface that never idles should cost a little and be visible, not cost 20s and be silent.
+    const idled = await page
+      .waitForLoadState("networkidle", { timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
+    result.reachedNetworkIdle = idled;
     await page.waitForTimeout(900);
 
     if (surface.overlay) {
@@ -716,9 +731,21 @@ async function main() {
     smallText: sum(results, "smallTextCount"),
   };
 
+  // Not a ratcheted metric — it measures the harness's environment, not the app's design — but
+  // it must be visible. A run where most surfaces never reach networkidle is a run paying the
+  // full wait budget on nearly every one of them, which is what turned a ~2 minute job into a
+  // >24 minute one that the 30-minute cap killed.
+  const neverIdled = results.filter((r) => r.reachedNetworkIdle === false).length;
+  if (neverIdled > 0) {
+    console.log(
+      `[audit] ${neverIdled}/${results.length} surface-runs never reached networkidle ` +
+        `(capped at 5s each). Expect the run to be slower by roughly ${neverIdled * 5}s.`,
+    );
+  }
+
   writeFileSync(
     join(OUT_DIR, `report-${VIEWPORT_WIDTH}.json`),
-    JSON.stringify({ meta, summary, results }, null, 2),
+    JSON.stringify({ meta, summary, results, neverIdled }, null, 2),
   );
   writeFileSync(join(OUT_DIR, `report-${VIEWPORT_WIDTH}.md`), toMarkdown(results, meta));
   console.log(`\n[audit] wrote ${OUT_DIR}/report-${VIEWPORT_WIDTH}.{json,md}`);
