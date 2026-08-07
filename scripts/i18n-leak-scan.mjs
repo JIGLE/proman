@@ -37,9 +37,12 @@ if (paths.length === 0) {
 const NAMESPACES = Object.keys(
   JSON.parse(await (await import("node:fs/promises")).readFile("messages/en.json", "utf8")),
 );
+// Case-insensitive on purpose. `innerText` reflects `text-transform`, and the Situs tab
+// triggers and mono-labels are uppercase — a case-sensitive match read a leaked
+// `reports.tabFinancial` as `REPORTS.TABFINANCIAL` and reported the surface clean.
 const LEAK = new RegExp(
   `\\b(${NAMESPACES.join("|")})\\.[A-Za-z][A-Za-z0-9]*(\\.[A-Za-z][A-Za-z0-9]*)*\\b`,
-  "g",
+  "gi",
 );
 
 const browser = await chromium.launch({ executablePath: EXECUTABLE });
@@ -55,7 +58,7 @@ await page.waitForURL(/\/(en|pt|es|it)(\/|$|\?)/, { timeout: 20000 });
 
 async function collect(into) {
   for (const m of (await page.evaluate(() => document.body.innerText)).match(LEAK) || [])
-    into.add(m);
+    into.add(m.toLowerCase());
 }
 
 /** Open the states a plain page load leaves closed: the other view mode, tabs, dialogs. */
@@ -75,10 +78,25 @@ async function exercise(into) {
       }
     }
   }
-  for (const tab of await page.locator('[role="tab"]').all()) {
-    await tab.click().catch(() => {});
-    await page.waitForTimeout(500);
-    await collect(into);
+  // Re-query between clicks: activating a tab can mount a nested tab bar that did not exist
+  // when the list was first captured, and a stale handle would skip it. Collect twice per
+  // click so a panel that renders a frame late is still seen.
+  const clicked = new Set();
+  for (let pass = 0; pass < 3; pass++) {
+    const tabs = await page.locator('[role="tab"]').all();
+    let progressed = false;
+    for (let i = 0; i < tabs.length; i++) {
+      const id = `${pass === 0 ? "" : "n"}${await tabs[i].innerText().catch(() => i)}`;
+      if (clicked.has(id)) continue;
+      clicked.add(id);
+      progressed = true;
+      await tabs[i].click().catch(() => {});
+      await page.waitForTimeout(600);
+      await collect(into);
+      await page.waitForTimeout(600);
+      await collect(into);
+    }
+    if (!progressed) break;
   }
 }
 

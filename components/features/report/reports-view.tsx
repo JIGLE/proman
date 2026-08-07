@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Download, Building2, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,8 @@ interface RentRollData {
 
 export function ReportsView(): React.ReactElement {
   const { success, error } = useToast();
+  const t = useTranslations("reports");
+  const tStatus = useTranslations("status");
   const { formatCurrency } = useCurrency();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -110,11 +113,11 @@ export function ReportsView(): React.ReactElement {
             break;
         }
       } else {
-        error("Failed to load report");
+        error(t("toastLoadFailed"));
       }
     } catch (err) {
       console.error("Failed to fetch report:", err);
-      error("Failed to load report");
+      error(t("toastLoadFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -136,13 +139,13 @@ export function ReportsView(): React.ReactElement {
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(downloadUrl);
-        success("Report downloaded");
+        success(t("toastDownloaded"));
       } else {
-        error("Failed to download report");
+        error(t("toastDownloadFailed"));
       }
     } catch (err) {
       console.error("Failed to download:", err);
-      error("Failed to download report");
+      error(t("toastDownloadFailed"));
     }
   };
 
@@ -160,20 +163,18 @@ export function ReportsView(): React.ReactElement {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
-            Financial Reports
+            {t("heading")}
           </h2>
-          <p className="text-[var(--color-muted-foreground)]">
-            Generate and export financial summaries
-          </p>
+          <p className="text-[var(--color-muted-foreground)]">{t("subtitle")}</p>
         </div>
       </div>
 
       {/* Report Type Tabs */}
       <Tabs value={reportType} onValueChange={(v) => setReportType(v as typeof reportType)}>
         <TabsList className="grid w-full grid-cols-3 max-w-md">
-          <TabsTrigger value="financial">Financial</TabsTrigger>
-          <TabsTrigger value="tax">Tax Report</TabsTrigger>
-          <TabsTrigger value="rent-roll">Rent Roll</TabsTrigger>
+          <TabsTrigger value="financial">{t("tabFinancial")}</TabsTrigger>
+          <TabsTrigger value="tax">{t("tabTax")}</TabsTrigger>
+          <TabsTrigger value="rent-roll">{t("tabRentRoll")}</TabsTrigger>
         </TabsList>
 
         {/* Financial Report */}
@@ -183,7 +184,7 @@ export function ReportsView(): React.ReactElement {
             <CardContent className="pt-6">
               <div className="flex flex-wrap items-end gap-4">
                 <div className="space-y-2">
-                  <Label>Start Date</Label>
+                  <Label>{t("startDate")}</Label>
                   <Input
                     type="date"
                     value={startDate}
@@ -192,7 +193,7 @@ export function ReportsView(): React.ReactElement {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>End Date</Label>
+                  <Label>{t("endDate")}</Label>
                   <Input
                     type="date"
                     value={endDate}
@@ -202,11 +203,11 @@ export function ReportsView(): React.ReactElement {
                 </div>
                 <Button onClick={handleGenerateReport} disabled={isLoading}>
                   <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
-                  Generate
+                  {t("generate")}
                 </Button>
                 <Button variant="outline" onClick={downloadCSV}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export CSV
+                  {t("exportCsv")}
                 </Button>
               </div>
             </CardContent>
@@ -219,7 +220,7 @@ export function ReportsView(): React.ReactElement {
                 <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-                      Total Income
+                      {t("totalIncome")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -232,7 +233,7 @@ export function ReportsView(): React.ReactElement {
                 <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-                      Total Expenses
+                      {t("totalExpenses")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -245,7 +246,7 @@ export function ReportsView(): React.ReactElement {
                 <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-                      Net Income
+                      {t("netIncome")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -265,7 +266,7 @@ export function ReportsView(): React.ReactElement {
                 <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-                      Profit Margin
+                      {t("profitMargin")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -288,32 +289,34 @@ export function ReportsView(): React.ReactElement {
                 <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader>
                     <CardTitle className="text-[var(--color-foreground)]">
-                      Income Breakdown
+                      {t("incomeBreakdown")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-[var(--color-muted-foreground)]">Rent</span>
+                        <span className="text-[var(--color-muted-foreground)]">{t("rent")}</span>
                         <span className="font-medium text-[var(--color-foreground)]">
                           {formatCurrency(report.income.totalRent)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-[var(--color-muted-foreground)]">Deposits</span>
+                        <span className="text-[var(--color-muted-foreground)]">
+                          {t("deposits")}
+                        </span>
                         <span className="font-medium text-[var(--color-foreground)]">
                           {formatCurrency(report.income.totalDeposits)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-[var(--color-muted-foreground)]">Other</span>
+                        <span className="text-[var(--color-muted-foreground)]">{t("other")}</span>
                         <span className="font-medium text-[var(--color-foreground)]">
                           {formatCurrency(report.income.totalOther)}
                         </span>
                       </div>
                       <div className="border-t border-[var(--color-border)] pt-3 flex justify-between items-center">
                         <span className="font-medium text-[var(--color-muted-foreground)]">
-                          Total
+                          {t("total")}
                         </span>
                         <span className="font-bold text-[var(--color-success)]">
                           {formatCurrency(report.income.total)}
@@ -326,7 +329,7 @@ export function ReportsView(): React.ReactElement {
                 <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader>
                     <CardTitle className="text-[var(--color-foreground)]">
-                      Expenses by Category
+                      {t("expensesByCategory")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -348,12 +351,12 @@ export function ReportsView(): React.ReactElement {
                       ))}
                       {report.expenses.byCategory.length === 0 && (
                         <p className="text-[var(--color-muted-foreground)] text-sm">
-                          No expenses recorded
+                          {t("noExpenses")}
                         </p>
                       )}
                       <div className="border-t border-[var(--color-border)] pt-3 flex justify-between items-center">
                         <span className="font-medium text-[var(--color-muted-foreground)]">
-                          Total
+                          {t("total")}
                         </span>
                         <span className="font-bold text-[var(--color-destructive)]">
                           {formatCurrency(report.expenses.total)}
@@ -369,7 +372,7 @@ export function ReportsView(): React.ReactElement {
                 <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader>
                     <CardTitle className="text-[var(--color-foreground)]">
-                      Income by Property
+                      {t("incomeByProperty")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -403,7 +406,9 @@ export function ReportsView(): React.ReactElement {
               {/* Invoice Summary */}
               <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-[var(--color-foreground)]">Invoice Summary</CardTitle>
+                  <CardTitle className="text-[var(--color-foreground)]">
+                    {t("invoiceSummary")}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-4">
@@ -411,7 +416,9 @@ export function ReportsView(): React.ReactElement {
                       <div className="text-2xl font-bold text-[var(--color-warning)]">
                         {report.invoices.summary.invoiceCount.pending}
                       </div>
-                      <div className="text-sm text-[var(--color-muted-foreground)]">Pending</div>
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
+                        {tStatus("pending")}
+                      </div>
                       <div className="text-sm text-[var(--color-muted-foreground)]">
                         {formatCurrency(report.invoices.summary.totalPending)}
                       </div>
@@ -420,7 +427,9 @@ export function ReportsView(): React.ReactElement {
                       <div className="text-2xl font-bold text-[var(--color-success)]">
                         {report.invoices.summary.invoiceCount.paid}
                       </div>
-                      <div className="text-sm text-[var(--color-muted-foreground)]">Paid</div>
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
+                        {tStatus("paid")}
+                      </div>
                       <div className="text-sm text-[var(--color-muted-foreground)]">
                         {formatCurrency(report.invoices.summary.totalPaid)}
                       </div>
@@ -429,7 +438,9 @@ export function ReportsView(): React.ReactElement {
                       <div className="text-2xl font-bold text-[var(--color-destructive)]">
                         {report.invoices.summary.invoiceCount.overdue}
                       </div>
-                      <div className="text-sm text-[var(--color-muted-foreground)]">Overdue</div>
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
+                        {tStatus("overdue")}
+                      </div>
                       <div className="text-sm text-[var(--color-muted-foreground)]">
                         {formatCurrency(report.invoices.summary.totalOverdue)}
                       </div>
@@ -438,8 +449,12 @@ export function ReportsView(): React.ReactElement {
                       <div className="text-2xl font-bold text-[var(--color-warning)]">
                         {formatCurrency(report.invoices.summary.totalLateFees)}
                       </div>
-                      <div className="text-sm text-[var(--color-muted-foreground)]">Late Fees</div>
-                      <div className="text-sm text-[var(--color-muted-foreground)]">Collected</div>
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
+                        {t("lateFees")}
+                      </div>
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
+                        {t("collected")}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -454,7 +469,7 @@ export function ReportsView(): React.ReactElement {
             <CardContent className="pt-6">
               <div className="flex items-end gap-4">
                 <div className="space-y-2">
-                  <Label>Tax Year</Label>
+                  <Label>{t("taxYear")}</Label>
                   <Select value={taxYear.toString()} onValueChange={(v) => setTaxYear(parseInt(v))}>
                     <SelectTrigger className="w-[120px]">
                       <SelectValue />
@@ -470,7 +485,7 @@ export function ReportsView(): React.ReactElement {
                 </div>
                 <Button onClick={handleGenerateReport} disabled={isLoading}>
                   <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
-                  Generate
+                  {t("generate")}
                 </Button>
               </div>
             </CardContent>
@@ -489,14 +504,16 @@ export function ReportsView(): React.ReactElement {
                     <div className="text-2xl font-bold text-[var(--color-success)]">
                       {formatCurrency(taxReport.grossIncome)}
                     </div>
-                    <div className="text-sm text-[var(--color-muted-foreground)]">Gross Income</div>
+                    <div className="text-sm text-[var(--color-muted-foreground)]">
+                      {t("grossIncome")}
+                    </div>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-[var(--color-surface)]">
                     <div className="text-2xl font-bold text-[var(--color-destructive)]">
                       {formatCurrency(taxReport.totalExpenses)}
                     </div>
                     <div className="text-sm text-[var(--color-muted-foreground)]">
-                      Deductible Expenses
+                      {t("deductibleExpenses")}
                     </div>
                   </div>
                   <div className="text-center p-4 rounded-lg bg-[var(--color-surface)]">
@@ -504,13 +521,13 @@ export function ReportsView(): React.ReactElement {
                       {formatCurrency(taxReport.netIncome)}
                     </div>
                     <div className="text-sm text-[var(--color-muted-foreground)]">
-                      Taxable Income
+                      {t("taxableIncome")}
                     </div>
                   </div>
                 </div>
 
                 <h4 className="font-medium text-[var(--color-muted-foreground)] mb-3">
-                  Quarterly Breakdown
+                  {t("quarterlyBreakdown")}
                 </h4>
                 <div className="grid gap-3 md:grid-cols-4">
                   {(taxReport.quarterlyBreakdown || []).map((q) => (
@@ -523,19 +540,23 @@ export function ReportsView(): React.ReactElement {
                       </div>
                       <div className="text-sm space-y-1">
                         <div className="flex justify-between">
-                          <span className="text-[var(--color-muted-foreground)]">Income</span>
+                          <span className="text-[var(--color-muted-foreground)]">
+                            {t("income")}
+                          </span>
                           <span className="text-[var(--color-success)]">
                             {formatCurrency(q.income)}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-[var(--color-muted-foreground)]">Expenses</span>
+                          <span className="text-[var(--color-muted-foreground)]">
+                            {t("expenses")}
+                          </span>
                           <span className="text-[var(--color-destructive)]">
                             {formatCurrency(q.expenses)}
                           </span>
                         </div>
                         <div className="flex justify-between border-t border-[var(--color-border)] pt-1">
-                          <span className="text-[var(--color-muted-foreground)]">Net</span>
+                          <span className="text-[var(--color-muted-foreground)]">{t("net")}</span>
                           <span className="text-[var(--color-foreground)]">
                             {formatCurrency(q.net)}
                           </span>
@@ -555,7 +576,7 @@ export function ReportsView(): React.ReactElement {
             <CardContent className="pt-6">
               <Button onClick={handleGenerateReport} disabled={isLoading}>
                 <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
-                Refresh Rent Roll
+                {t("refreshRentRoll")}
               </Button>
             </CardContent>
           </Card>
@@ -566,7 +587,7 @@ export function ReportsView(): React.ReactElement {
                 <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-                      Monthly Rent
+                      {t("monthlyRent")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -579,7 +600,7 @@ export function ReportsView(): React.ReactElement {
                 <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-                      Annual Rent
+                      {t("annualRent")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -592,7 +613,7 @@ export function ReportsView(): React.ReactElement {
                 <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
-                      Occupancy Rate
+                      {t("occupancyRate")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -605,7 +626,9 @@ export function ReportsView(): React.ReactElement {
 
               <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-[var(--color-foreground)]">Property Details</CardTitle>
+                  <CardTitle className="text-[var(--color-foreground)]">
+                    {t("propertyDetails")}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
