@@ -73,12 +73,18 @@ const STRICT = flag("strict");
  * already met on every surface, and unlike the other metrics it has no legitimate reason to
  * regress.
  *
- * `smallText` is close to its floor. Of the 310 remaining, 264 are the bottom nav's own labels
+ * `smallText` is close to its floor. Of the 308 remaining, 264 are the bottom nav's own labels
  * at 11px — which is what native iOS/Android tab bars use, so they stay — and 44 are avatar
- * initials, a glyph sized to its circle rather than text to read. Roughly a dozen genuine ones
- * are left. Do not chase this one to zero; it would mean overriding two deliberate choices.
+ * initials, a glyph sized to its circle rather than text to read. Do not chase this one to
+ * zero; it would mean overriding two deliberate choices.
  *
- * These come from a **seeded** run (`--seed --strict`, 50 surface-runs). An unseeded run walks
+ * `touchTargetFails: 4` is two links, each counted once per theme: "Política de Privacidade"
+ * (188×16) and "Termos de Serviço" (139×16) in the landing footer. Both are text links in
+ * prose, which the doctrine's rule 2 exempts only with explicit design review — so this is
+ * recorded debt, not an accepted floor. It is also the whole of the metric: every other touch
+ * target in the app now clears 44px below `md`.
+ *
+ * These come from a **seeded** run (`--seed --strict`, 52 surface-runs). An unseeded run walks
  * empty screens — a table with no rows cannot overflow — so its numbers are meaningless as a
  * baseline and `--strict` refuses to compare against them.
  *
@@ -87,17 +93,21 @@ const STRICT = flag("strict");
  * every run (634 → 654 across two identical runs; 494 once the seed became idempotent). A
  * ratchet against a drifting fixture is worse than no ratchet.
  *
- * CI runs a production build against a fresh database, so its numbers may still differ from a
- * local dev run. That is why the workflow step keeps `continue-on-error: true` for now — once a
- * few runs show the seeded figures are stable in CI, tighten these to what CI reports and drop
- * the flag.
+ * These figures now come from a **production standalone build against a freshly pushed
+ * database** — the shape CI actually runs — rather than a dev server against a long-lived dev
+ * DB. That distinction mattered more than expected: the first such run reported
+ * `touchTargetFails: 27`, because a toast's dismiss glyph measured 9×26 and a toast can appear
+ * over any screen (23 of 52 surface-runs). Every dev-server run had reported 2 and missed it.
+ *
+ * `surfaceRuns` must be 52. Anything lower means detail overlays were skipped for want of a
+ * record id, and the totals are not comparable to these.
  */
 const BASELINE = {
   pageOverflow: 0,
-  touchTargetFails: 2,
+  touchTargetFails: 4,
   touchTargetWarns: 4,
   clippedContainers: 6,
-  smallText: 310,
+  smallText: 308,
 };
 
 /**
@@ -333,15 +343,30 @@ async function login(page) {
 
 /** Pull real record ids so the `?modal=` overlays are measured with genuine content. */
 async function resolveIds(page) {
+  // Every branch here used to return a bare `null`, so a 500 from an endpoint and an
+  // empty-but-healthy list were indistinguishable — the run just reported "no propertyId" and
+  // skipped the overlay. Say which of the two it was: they need opposite fixes, and a skipped
+  // surface silently shrinks `surfaceRuns` below the 52 the baseline was measured at.
   const get = async (path, pick) => {
     try {
       const res = await page.request.get(`${BASE}${path}`);
-      if (!res.ok()) return null;
+      if (!res.ok()) {
+        console.warn(`[audit] ${path} → ${res.status()} ${(await res.text()).slice(0, 200)}`);
+        return null;
+      }
       const body = await res.json();
       const list = Array.isArray(body) ? body : (body.data ?? body.properties ?? body.tenants);
-      if (!Array.isArray(list) || list.length === 0) return null;
+      if (!Array.isArray(list)) {
+        console.warn(`[audit] ${path} → no array in ${JSON.stringify(body).slice(0, 200)}`);
+        return null;
+      }
+      if (list.length === 0) {
+        console.warn(`[audit] ${path} → empty list (seed produced no rows for this user?)`);
+        return null;
+      }
       return pick(list[0]);
-    } catch {
+    } catch (err) {
+      console.warn(`[audit] ${path} → threw ${err instanceof Error ? err.message : String(err)}`);
       return null;
     }
   };
@@ -601,10 +626,22 @@ async function main() {
         `Seeding failed (${res.status()}). The audit's numbers describe empty screens without it.`,
       );
     }
-    await bootstrap.waitForTimeout(2500);
   }
 
-  const ids = await resolveIds(bootstrap);
+  // Resolve with a short poll rather than a blind sleep. The fixed 2500ms wait that used to sit
+  // after the seed was sometimes not enough: three consecutive local runs resolved `documentId`
+  // (fetched last) but not `tenantId`/`propertyId`/`leaseId` (fetched first), which is the
+  // signature of reading while the seed's deleteMany-then-recreate is still in flight. That
+  // silently produced 44 surface-runs instead of 52 — a smaller, quietly incomparable run.
+  // `--strict` does treat a skip as a failure, so this never corrupted a baseline, but it did
+  // make the gate flaky, and a flaky gate gets ignored.
+  let ids = await resolveIds(bootstrap);
+  const complete = (v) => Object.values(v).every(Boolean);
+  for (let attempt = 1; attempt <= 6 && !complete(ids); attempt++) {
+    console.log(`[audit] incomplete ids, retrying (${attempt}/6)`);
+    await bootstrap.waitForTimeout(1000);
+    ids = await resolveIds(bootstrap);
+  }
   console.log("[audit] resolved ids:", JSON.stringify(ids));
   // Same reasoning: if the seed reported success but no records came back, something upstream is
   // wrong and every detail-overlay surface is about to be skipped. Say so with the detail.

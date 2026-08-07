@@ -104,9 +104,15 @@ const AnimatedToast = ({
 
           <div className="flex-1 text-sm font-medium leading-tight">{message}</div>
 
+          {/* The dismiss glyph carries no box of its own, so it measured 9×26 — the single
+              worst touch target in the app, and the most frequent, since a toast can appear
+              over any screen. The first mobile-audit run that actually reached a seeded CI
+              build reported it on 23 of 52 surface-runs. Floor the hit area to 44×44 below
+              `md` the way `Button` does, and centre the glyph inside it so nothing moves
+              visually on desktop. */}
           <motion.button
             onClick={() => toast.dismiss(t.id)}
-            className="flex-shrink-0 text-current/60 hover:text-current transition-colors"
+            className="inline-flex flex-shrink-0 items-center justify-center text-current/60 transition-colors hover:text-current max-md:min-h-11 max-md:min-w-11"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             aria-label="Close notification"

@@ -114,7 +114,9 @@ jobs:
           nohup node .next/standalone/server.js > app.log 2>&1 &
           echo $! > .app.pid
         env:
-          DATABASE_URL: file:./ci-smoke.db
+          # Absolute: standalone `server.js` chdirs to its own directory, so a relative path
+          # would land in `.next/standalone/`. See the Mobile Audit job for the full account.
+          DATABASE_URL: file:${{ github.workspace }}/ci-smoke.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: ci-test-secret-minimum-32-characters
           GOOGLE_CLIENT_ID: ci-placeholder
@@ -169,6 +171,14 @@ jobs:
           name: nextjs-build
           path: .next/
 
+      # This job never created a schema either, so every DB-backed route answered 500 and the
+      # suite stayed green regardless — the same false-green the mobile audit was in. Create the
+      # tables so the smoke run exercises the app rather than its error paths.
+      - name: Create database schema
+        run: npx prisma db push
+        env:
+          DATABASE_URL: file:${{ github.workspace }}/e2e-smoke.db
+
       - name: Start built application in background
         run: |
           cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
@@ -176,7 +186,7 @@ jobs:
           nohup node .next/standalone/server.js > app.log 2>&1 &
           echo $! > .app.pid
         env:
-          DATABASE_URL: file:./e2e-smoke.db
+          DATABASE_URL: file:${{ github.workspace }}/e2e-smoke.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
           GOOGLE_CLIENT_ID: e2e-placeholder
@@ -191,7 +201,7 @@ jobs:
       - name: Run Playwright smoke tests
         run: npx playwright test e2e/smoke.spec.ts --project=chromium
         env:
-          DATABASE_URL: file:./e2e-smoke.db
+          DATABASE_URL: file:${{ github.workspace }}/e2e-smoke.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
 
@@ -238,6 +248,14 @@ jobs:
           name: nextjs-build
           path: .next/
 
+      # See the E2E Smoke job: no schema meant every DB-backed route 500'd and the suite passed
+      # anyway. Combined with the `if (await link.isVisible())` guards throughout these specs,
+      # that is two independent reasons this job could go green without testing anything.
+      - name: Create database schema
+        run: npx prisma db push
+        env:
+          DATABASE_URL: file:${{ github.workspace }}/e2e-test.db
+
       - name: Start built application in background
         run: |
           cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
@@ -245,7 +263,7 @@ jobs:
           nohup node .next/standalone/server.js > app.log 2>&1 &
           echo $! > .app.pid
         env:
-          DATABASE_URL: file:./e2e-test.db
+          DATABASE_URL: file:${{ github.workspace }}/e2e-test.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
           GOOGLE_CLIENT_ID: e2e-placeholder
@@ -260,7 +278,7 @@ jobs:
       - name: Run Playwright tests
         run: npx playwright test --project=chromium
         env:
-          DATABASE_URL: file:./e2e-test.db
+          DATABASE_URL: file:${{ github.workspace }}/e2e-test.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
 
@@ -272,7 +290,7 @@ jobs:
         run: npx playwright test --project=mobile-chrome
         continue-on-error: true
         env:
-          DATABASE_URL: file:./e2e-test.db
+          DATABASE_URL: file:${{ github.workspace }}/e2e-test.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
 
@@ -321,10 +339,20 @@ jobs:
       # SQLite file with no tables. `--seed` then failed silently, `resolveIds` returned nulls,
       # and all ten detail-overlay surfaces skipped — which is why the first completed CI run
       # reported 42 surface-runs of empty screens instead of 52 of real ones.
+      #
+      # The path must be ABSOLUTE. Next.js's standalone `server.js` starts with
+      # `process.chdir(__dirname)`, so a relative `file:./x.db` resolves to
+      # `.next/standalone/x.db` for the server while `prisma db push` (run from the repo root)
+      # writes to `<root>/x.db` — two different files. Adding the schema step above was
+      # necessary but not sufficient for exactly this reason: the server kept looking in
+      # `.next/standalone/` and reported "SQLite DB file does not exist", the seed 500'd, and
+      # every detail overlay skipped. This is easy to miss locally, where a stale `.db` at the
+      # repo root gets traced into `.next/standalone/` by `next build` and the run works by
+      # accident; in CI the build happens in a separate job before the file exists.
       - name: Create database schema
         run: npx prisma db push
         env:
-          DATABASE_URL: file:./mobile-audit.db
+          DATABASE_URL: file:${{ github.workspace }}/mobile-audit.db
 
       - name: Start built application in background
         run: |
@@ -333,7 +361,7 @@ jobs:
           nohup node .next/standalone/server.js > app.log 2>&1 &
           echo $! > .app.pid
         env:
-          DATABASE_URL: file:./mobile-audit.db
+          DATABASE_URL: file:${{ github.workspace }}/mobile-audit.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: mobile-audit-secret-minimum-32-characters
           GOOGLE_CLIENT_ID: ci-placeholder
