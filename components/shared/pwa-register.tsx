@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Download, X } from "lucide-react";
 
 /** Minimal shape of the (non-standard) beforeinstallprompt event. */
@@ -17,6 +18,7 @@ const DISMISS_KEY = "lares.pwa.install-dismissed";
  * Chrome/Edge). Hidden once installed or dismissed.
  */
 export function PwaRegister(): React.ReactElement | null {
+  const t = useTranslations("pwa");
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [dismissed, setDismissed] = useState(true);
 
@@ -76,27 +78,25 @@ export function PwaRegister(): React.ReactElement | null {
   return (
     <div
       role="dialog"
-      aria-label="Install Situs"
+      aria-label={t("install")}
       className="fixed inset-x-3 bottom-[5.5rem] z-[var(--z-toast)] mx-auto flex max-w-sm items-center gap-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-surface-elevated)] p-3 shadow-[var(--shadow-modal)] backdrop-blur-md md:inset-x-auto md:right-4 md:bottom-4 md:left-auto"
     >
       <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[color-mix(in_oklab,var(--color-primary)_15%,transparent)] text-[var(--color-primary)]">
         <Download className="h-5 w-5" />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-[var(--color-foreground)]">Install Situs</p>
-        <p className="truncate text-xs text-[var(--color-muted-foreground)]">
-          Add to your home screen for a faster, app-like experience.
-        </p>
+        <p className="text-sm font-semibold text-[var(--color-foreground)]">{t("install")}</p>
+        <p className="truncate text-xs text-[var(--color-muted-foreground)]">{t("help")}</p>
       </div>
       <button
         onClick={handleInstall}
         className="shrink-0 rounded-lg bg-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-[var(--color-primary-foreground)] transition-[filter] hover:brightness-110"
       >
-        Install
+        {t("installAction")}
       </button>
       <button
         onClick={handleDismiss}
-        aria-label="Dismiss"
+        aria-label={t("dismiss")}
         className="shrink-0 rounded-md p-1 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)]"
       >
         <X className="h-4 w-4" />

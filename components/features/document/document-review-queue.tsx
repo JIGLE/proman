@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,8 @@ const DOCUMENT_TYPE_OPTIONS = [
 ] as const;
 
 export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): React.ReactElement {
+  const t = useTranslations("common");
+  const tActions = useTranslations("actions");
   const [rows, setRows] = useState<QueueRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -206,7 +209,7 @@ export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): R
                           onClick={() => void accept(row.documentId)}
                           disabled={busyId === row.documentId}
                         >
-                          Accept
+                          {t("accept")}
                         </Button>
                         <Select
                           onValueChange={(value) =>
@@ -214,7 +217,7 @@ export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): R
                           }
                         >
                           <SelectTrigger className="h-7 w-[120px] rounded-none text-xs">
-                            <SelectValue placeholder="Correct…" />
+                            <SelectValue placeholder={t("correct")} />
                           </SelectTrigger>
                           <SelectContent>
                             {DOCUMENT_TYPE_OPTIONS.map((t) => (
@@ -231,7 +234,7 @@ export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): R
                             onClick={() => void correct(row.documentId)}
                             disabled={busyId === row.documentId}
                           >
-                            Save
+                            {tActions("save")}
                           </Button>
                         ) : null}
                       </div>

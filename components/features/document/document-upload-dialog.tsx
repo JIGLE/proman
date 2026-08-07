@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { apiFetch } from "@/lib/utils/api-client";
 import { Button } from "@/components/ui/button";
 import {
@@ -46,6 +47,9 @@ const emptyForm = {
 };
 
 export function DocumentUploadDialog({ csrfToken, properties, tenants, owners, onSuccess }: Props) {
+  const t = useTranslations("documents");
+  const tForms = useTranslations("forms");
+  const tActions = useTranslations("actions");
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [uploading, setUploading] = useState(false);
@@ -95,17 +99,17 @@ export function DocumentUploadDialog({ csrfToken, properties, tenants, owners, o
       <DialogTrigger asChild>
         <Button>
           <Upload className="mr-2 h-4 w-4" />
-          Upload
+          {t("upload")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Upload Document</DialogTitle>
-          <DialogDescription>Upload a new document to your library</DialogDescription>
+          <DialogTitle>{t("uploadTitle")}</DialogTitle>
+          <DialogDescription>{t("uploadDescription")}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="file">File</Label>
+            <Label htmlFor="file">{t("file")}</Label>
             <Input
               id="file"
               type="file"
@@ -114,16 +118,16 @@ export function DocumentUploadDialog({ csrfToken, properties, tenants, owners, o
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="name">{tForms("fullName")}</Label>
             <Input
               id="name"
               value={form.name}
               onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-              placeholder="Document name"
+              placeholder={t("namePlaceholder")}
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="type">Type</Label>
+            <Label htmlFor="type">{tForms("type")}</Label>
             <Select
               value={form.type}
               onValueChange={(v) => setForm((prev) => ({ ...prev, type: v as DocumentType }))}
@@ -141,17 +145,17 @@ export function DocumentUploadDialog({ csrfToken, properties, tenants, owners, o
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="description">Description (optional)</Label>
+            <Label htmlFor="description">{t("descriptionPlaceholder")}</Label>
             <Textarea
               id="description"
               value={form.description}
               onChange={(e) => setForm((prev) => ({ ...prev, description: e.target.value }))}
-              placeholder="Brief description"
+              placeholder={t("descriptionPlaceholder")}
               rows={2}
             />
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="expiresAt">Expiry date (optional)</Label>
+            <Label htmlFor="expiresAt">{t("expiryOptional")}</Label>
             <Input
               id="expiresAt"
               type="date"
@@ -160,17 +164,17 @@ export function DocumentUploadDialog({ csrfToken, properties, tenants, owners, o
             />
           </div>
           <div className="grid gap-2">
-            <Label>Link to (optional)</Label>
+            <Label>{t("linkTo")}</Label>
             <div className="grid grid-cols-3 gap-2">
               <Select
                 value={form.propertyId}
                 onValueChange={(v) => setForm((prev) => ({ ...prev, propertyId: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Property" />
+                  <SelectValue placeholder={tForms("property")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="">{t("none")}</SelectItem>
                   {properties.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       {p.name}
@@ -183,10 +187,10 @@ export function DocumentUploadDialog({ csrfToken, properties, tenants, owners, o
                 onValueChange={(v) => setForm((prev) => ({ ...prev, tenantId: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Tenant" />
+                  <SelectValue placeholder={tForms("tenant")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="">{t("none")}</SelectItem>
                   {tenants.map((t) => (
                     <SelectItem key={t.id} value={t.id}>
                       {t.name}
@@ -199,10 +203,10 @@ export function DocumentUploadDialog({ csrfToken, properties, tenants, owners, o
                 onValueChange={(v) => setForm((prev) => ({ ...prev, ownerId: v }))}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Owner" />
+                  <SelectValue placeholder={t("owner")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">None</SelectItem>
+                  <SelectItem value="">{t("none")}</SelectItem>
                   {owners.map((o) => (
                     <SelectItem key={o.id} value={o.id}>
                       {o.name}
@@ -215,7 +219,7 @@ export function DocumentUploadDialog({ csrfToken, properties, tenants, owners, o
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setOpen(false)}>
-            Cancel
+            {tActions("cancel")}
           </Button>
           <Button onClick={handleUpload} disabled={uploading || !form.file || !form.name}>
             {uploading ? "Uploading..." : "Upload"}

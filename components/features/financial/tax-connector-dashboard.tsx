@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 /**
@@ -45,6 +46,7 @@ const LOG_STATUS_STYLES: Record<string, string> = {
 };
 
 export function TaxConnectorDashboard(): React.ReactElement | null {
+  const t = useTranslations("common");
   const [connectors, setConnectors] = useState<Connector[]>([]);
   const [logsByConnector, setLogsByConnector] = useState<Record<string, SubmissionLog[]>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -132,7 +134,7 @@ export function TaxConnectorDashboard(): React.ReactElement | null {
                   <div className="border-t border-[var(--color-border)] bg-[var(--color-hover)] px-4 py-2">
                     {logs.length === 0 ? (
                       <p className="py-2 text-xs text-[var(--color-muted-foreground)]">
-                        No submission log entries yet.
+                        {t("noSubmissionLog")}
                       </p>
                     ) : (
                       <div className="space-y-1 py-2">

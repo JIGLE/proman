@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -78,6 +79,12 @@ function transformToCalendarEvents(leases: LeaseExpiration[]) {
 }
 
 export function AnalyticsDashboard(): React.ReactElement {
+  const t = useTranslations("analytics");
+  const tActions = useTranslations("actions");
+  const tNav = useTranslations("navigation");
+  const tDash = useTranslations("dashboard");
+  const tCharts = useTranslations("charts");
+  const tInsights = useTranslations("insights");
   const { state } = useApp();
   const { properties, tenants, receipts, leases, expenses } = state;
   const { formatCurrency } = useCurrency();
@@ -353,28 +360,26 @@ export function AnalyticsDashboard(): React.ReactElement {
             <Home className="h-4 w-4" />
             <span>Situs</span>
             <span>/</span>
-            <span className="text-[var(--color-foreground)]">Analytics</span>
+            <span className="text-[var(--color-foreground)]">{tNav("analytics")}</span>
           </div>
           <h2 className="text-2xl font-bold tracking-tight text-[var(--color-foreground)]">
-            Portfolio analytics
+            {t("heading")}
           </h2>
-          <p className="text-sm text-[var(--color-muted-foreground)] mt-1">
-            Track rent income, occupancy, and lease health across your properties.
-          </p>
+          <p className="text-sm text-[var(--color-muted-foreground)] mt-1">{t("subtitle")}</p>
         </div>
 
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`} />
-            Refresh
+            {tActions("refresh")}
           </Button>
           <Button variant="outline" size="sm">
             <Download className="h-4 w-4 mr-2" />
-            Export
+            {t("export")}
           </Button>
           <Button variant="primary" size="sm">
             <FileText className="h-4 w-4 mr-2" />
-            Generate Report
+            {t("generateReport")}
           </Button>
         </div>
       </div>
@@ -383,25 +388,25 @@ export function AnalyticsDashboard(): React.ReactElement {
       <QuickStatsRow
         stats={[
           {
-            label: "Collection Rate",
+            label: t("collectionRate"),
             value: `${kpis.collectionRate.toFixed(0)}%`,
             icon: <Receipt className="h-4 w-4 text-green-400" />,
             color: "bg-green-500/10",
           },
           {
-            label: "Avg. Rent",
+            label: tInsights("kpiAvgRent"),
             value: formatCurrency(kpis.averageRent),
             icon: <Wallet className="h-4 w-4 text-blue-400" />,
             color: "bg-blue-500/10",
           },
           {
-            label: "Overdue",
+            label: t("overdue"),
             value: kpis.overduePayments,
             icon: <Clock className="h-4 w-4 text-red-400" />,
             color: "bg-red-500/10",
           },
           {
-            label: "Active Tenants",
+            label: tInsights("kpiActiveTenants"),
             value: kpis.activeTenants,
             icon: <Users className="h-4 w-4 text-purple-400" />,
             color: "bg-purple-500/10",
@@ -414,19 +419,19 @@ export function AnalyticsDashboard(): React.ReactElement {
         <TabsList className="mb-4">
           <TabsTrigger value="overview" className="gap-2">
             <PieChart className="h-4 w-4" />
-            Overview
+            {t("tabOverview")}
           </TabsTrigger>
           <TabsTrigger value="financial" className="gap-2">
             <DollarSign className="h-4 w-4" />
-            Financial
+            {t("tabFinancial")}
           </TabsTrigger>
           <TabsTrigger value="leases" className="gap-2">
             <Calendar className="h-4 w-4" />
-            Leases
+            {t("tabLeases")}
           </TabsTrigger>
           <TabsTrigger value="properties" className="gap-2">
             <Building2 className="h-4 w-4" />
-            Properties
+            {t("tabProperties")}
           </TabsTrigger>
         </TabsList>
 
@@ -435,7 +440,7 @@ export function AnalyticsDashboard(): React.ReactElement {
           {/* KPI Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <KPICard
-              title="Total Properties"
+              title={tDash("totalProperties")}
               value={kpis.totalProperties}
               change={5.2}
               changeLabel="vs last month"
@@ -443,7 +448,7 @@ export function AnalyticsDashboard(): React.ReactElement {
               icon={<Building2 className="h-5 w-5 text-blue-400" />}
             />
             <KPICard
-              title="Monthly Revenue"
+              title={tDash("monthlyRevenue")}
               value={formatCurrency(kpis.monthlyRevenue)}
               change={8.3}
               changeLabel="vs last month"
@@ -452,7 +457,7 @@ export function AnalyticsDashboard(): React.ReactElement {
               icon={<DollarSign className="h-5 w-5 text-green-400" />}
             />
             <KPICard
-              title="Net Income (YTD)"
+              title={t("netIncomeYtd")}
               value={formatCurrency(kpis.netIncome)}
               change={kpis.netIncome > 0 ? 12.5 : -5.2}
               changeLabel="vs last year"
@@ -461,7 +466,7 @@ export function AnalyticsDashboard(): React.ReactElement {
               icon={<TrendingUp className="h-5 w-5 text-emerald-400" />}
             />
             <KPICard
-              title="Overdue Amount"
+              title={t("overdueAmount")}
               value={formatCurrency(kpis.overdueAmount)}
               subtitle={`${kpis.overduePayments} payments`}
               variant={kpis.overduePayments > 0 ? "danger" : "default"}
@@ -482,8 +487,8 @@ export function AnalyticsDashboard(): React.ReactElement {
             {/* Revenue Trend */}
             <div className="lg:col-span-2">
               <ChartWidget
-                title="Revenue Trend"
-                subtitle="Monthly revenue for the last 6 months"
+                title={tCharts("revenueTrend")}
+                subtitle={t("revenueLast6")}
                 chart={<LineChart data={revenueChartData} height={200} showValues={false} />}
                 onRefresh={handleRefresh}
               />
@@ -503,8 +508,8 @@ export function AnalyticsDashboard(): React.ReactElement {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
               <ListWidget
-                title="Recent Activities"
-                subtitle="Latest updates across your portfolio"
+                title={tDash("recentActivities")}
+                subtitle={t("latestUpdates")}
                 items={recentActivities}
                 renderItem={(activity) => (
                   <div className="flex items-center justify-between py-2">
@@ -525,7 +530,7 @@ export function AnalyticsDashboard(): React.ReactElement {
                     </span>
                   </div>
                 )}
-                emptyMessage="No recent activities"
+                emptyMessage={t("noActivities")}
               />
             </div>
 
@@ -534,7 +539,7 @@ export function AnalyticsDashboard(): React.ReactElement {
               <CardHeader className="p-0 pb-4">
                 <CardTitle className="text-lg font-semibold text-[var(--color-foreground)] flex items-center gap-2">
                   <PieChart className="h-5 w-5 text-indigo-400" />
-                  Portfolio Mix
+                  {t("portfolioMix")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-0">
@@ -542,7 +547,7 @@ export function AnalyticsDashboard(): React.ReactElement {
                   <DonutChart data={propertyTypeChartData} height={180} />
                 ) : (
                   <div className="flex items-center justify-center h-[180px] text-[var(--color-muted-foreground)]">
-                    <p className="text-sm">No property data</p>
+                    <p className="text-sm">{t("noPropertyData")}</p>
                   </div>
                 )}
               </CardContent>
@@ -554,7 +559,7 @@ export function AnalyticsDashboard(): React.ReactElement {
         <TabsContent value="financial" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <KPICard
-              title="Total Revenue (YTD)"
+              title={t("totalRevenueYtd")}
               value={formatCurrency(kpis.yearlyRevenue)}
               change={15.3}
               changeLabel="vs last year"
@@ -563,7 +568,7 @@ export function AnalyticsDashboard(): React.ReactElement {
               icon={<DollarSign className="h-5 w-5 text-green-400" />}
             />
             <KPICard
-              title="Total Expenses (YTD)"
+              title={t("totalExpensesYtd")}
               value={formatCurrency(kpis.totalExpenses)}
               change={-3.2}
               changeLabel="vs last year"
@@ -571,7 +576,7 @@ export function AnalyticsDashboard(): React.ReactElement {
               icon={<ArrowDownRight className="h-5 w-5 text-red-400" />}
             />
             <KPICard
-              title="Net Income (YTD)"
+              title={t("netIncomeYtd")}
               value={formatCurrency(kpis.netIncome)}
               change={22.1}
               changeLabel="vs last year"
@@ -583,13 +588,13 @@ export function AnalyticsDashboard(): React.ReactElement {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <ChartWidget
-              title="Revenue vs Expenses"
-              subtitle="Monthly comparison for the last 6 months"
+              title={t("revenueVsExpenses")}
+              subtitle={t("monthlyComparison")}
               chart={<BarChart data={revenueChartData} height={250} showTrend={false} />}
             />
             <ChartWidget
-              title="Net Income Trend"
-              subtitle="Monthly net income"
+              title={t("netIncomeTrend")}
+              subtitle={t("monthlyNetIncome")}
               chart={<AreaChart data={netIncomeChartData} height={250} />}
             />
           </div>
@@ -599,12 +604,12 @@ export function AnalyticsDashboard(): React.ReactElement {
         <TabsContent value="leases" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <KPICard
-              title="Active Leases"
+              title={t("activeLeases")}
               value={leases?.filter((l) => l.status === "active").length || 0}
               icon={<FileText className="h-5 w-5 text-blue-400" />}
             />
             <KPICard
-              title="Expiring (30 days)"
+              title={t("expiring30")}
               value={leaseExpirations.filter((l) => l.status === "critical").length}
               variant={
                 leaseExpirations.filter((l) => l.status === "critical").length > 0
@@ -614,12 +619,12 @@ export function AnalyticsDashboard(): React.ReactElement {
               icon={<Clock className="h-5 w-5 text-orange-400" />}
             />
             <KPICard
-              title="Expiring (60 days)"
+              title={t("expiring60")}
               value={leaseExpirations.filter((l) => l.status === "warning").length}
               icon={<Calendar className="h-5 w-5 text-yellow-400" />}
             />
             <KPICard
-              title="Expired"
+              title={t("expired")}
               value={leaseExpirations.filter((l) => l.status === "expired").length}
               variant={
                 leaseExpirations.filter((l) => l.status === "expired").length > 0
@@ -637,23 +642,23 @@ export function AnalyticsDashboard(): React.ReactElement {
         <TabsContent value="properties" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <KPICard
-              title="Total Properties"
+              title={tDash("totalProperties")}
               value={kpis.totalProperties}
               icon={<Building2 className="h-5 w-5 text-blue-400" />}
             />
             <KPICard
-              title="Total Units"
+              title={t("totalUnits")}
               value={kpis.totalUnits}
               icon={<Home className="h-5 w-5 text-cyan-400" />}
             />
             <KPICard
-              title="Occupied"
+              title={t("occupied")}
               value={kpis.occupiedUnits}
               variant="success"
               icon={<Users className="h-5 w-5 text-green-400" />}
             />
             <KPICard
-              title="Vacant"
+              title={t("vacant")}
               value={kpis.vacantUnits}
               variant={kpis.vacantUnits > 0 ? "warning" : "default"}
               icon={<Building2 className="h-5 w-5 text-yellow-400" />}

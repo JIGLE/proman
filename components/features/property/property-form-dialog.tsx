@@ -1,6 +1,7 @@
 "use client";
 
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronDown } from "lucide-react";
 import {
   Dialog,
@@ -70,6 +71,11 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
   function PropertyFormDialog(_props, ref) {
     const { addProperty, updateProperty } = useApp();
     const { currencySymbol } = useCurrency();
+    const t = useTranslations("properties");
+    const tForms = useTranslations("forms");
+    const tActions = useTranslations("actions");
+    const tStatus = useTranslations("status");
+    const tMaint = useTranslations("maintenance");
 
     // Form UI state — collapsible sections
     const [showManualFields, setShowManualFields] = useState(false);
@@ -176,10 +182,10 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
             <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Property Name</Label>
+                  <Label htmlFor="name">{t("fields.name")}</Label>
                   <Input
                     id="name"
-                    placeholder="e.g. Apt 4B, Garden Flat, Unit 12"
+                    placeholder={t("namePlaceholder")}
                     value={dialog.formData.name}
                     onChange={(e) => dialog.updateFormData({ name: e.target.value })}
                     className={dialog.formErrors.name ? "border-[var(--color-destructive)]" : ""}
@@ -189,7 +195,7 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="type">Property Type</Label>
+                  <Label htmlFor="type">{t("fields.type")}</Label>
                   <Select
                     value={dialog.formData.type}
                     onValueChange={(value: PropertyFormData["type"]) =>
@@ -199,15 +205,15 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
                     <SelectTrigger
                       className={dialog.formErrors.type ? "border-[var(--color-destructive)]" : ""}
                     >
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder={t("fields.selectType")} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="apartment">Apartment</SelectItem>
-                      <SelectItem value="house">House</SelectItem>
-                      <SelectItem value="condo">Condo</SelectItem>
-                      <SelectItem value="townhouse">Townhouse</SelectItem>
-                      <SelectItem value="commercial">Commercial</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      <SelectItem value="apartment">{t("types.apartment")}</SelectItem>
+                      <SelectItem value="house">{t("types.house")}</SelectItem>
+                      <SelectItem value="condo">{t("types.condo")}</SelectItem>
+                      <SelectItem value="townhouse">{t("types.townhouse")}</SelectItem>
+                      <SelectItem value="commercial">{t("types.commercial")}</SelectItem>
+                      <SelectItem value="other">{t("types.other")}</SelectItem>
                     </SelectContent>
                   </Select>
                   {dialog.formErrors.type && (
@@ -239,7 +245,7 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
                   <div className="relative">
                     <Input
                       id="address"
-                      placeholder="Start typing to search addresses..."
+                      placeholder={t("addressPlaceholder")}
                       value={dialog.formData.address}
                       onFocus={(e) =>
                         e.target.scrollIntoView({ behavior: "smooth", block: "center" })
@@ -284,7 +290,7 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
                   <div className="space-y-3 rounded-md border border-[var(--color-border)] bg-[var(--color-muted)]/30 p-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label htmlFor="country">Country</Label>
+                        <Label htmlFor="country">{tForms("country")}</Label>
                         <Select
                           value={dialog.formData.country}
                           onValueChange={(value) =>
@@ -297,14 +303,14 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="PT">Portugal</SelectItem>
-                            <SelectItem value="ES">Spain</SelectItem>
+                            <SelectItem value="PT">{t("country.portugal")}</SelectItem>
+                            <SelectItem value="ES">{t("country.spain")}</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="zipCode">Postal Code</Label>
+                        <Label htmlFor="zipCode">{t("postalCode")}</Label>
                         <Input
                           id="zipCode"
                           placeholder={dialog.formData.country === "PT" ? "1234-567" : "12345"}
@@ -322,7 +328,7 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label htmlFor="city">City</Label>
+                        <Label htmlFor="city">{tForms("city")}</Label>
                         <Input
                           id="city"
                           value={dialog.formData.city || ""}
@@ -337,7 +343,7 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="streetAddress">Street Address</Label>
+                        <Label htmlFor="streetAddress">{t("streetAddress")}</Label>
                         <Input
                           id="streetAddress"
                           value={dialog.formData.streetAddress || ""}
@@ -364,10 +370,10 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
 
                 {dialog.formData.buildingId && (
                   <div className="space-y-2">
-                    <Label htmlFor="buildingName">Building Name (Optional)</Label>
+                    <Label htmlFor="buildingName">{t("buildingName")}</Label>
                     <Input
                       id="buildingName"
-                      placeholder="e.g., Downtown Apartments"
+                      placeholder={t("buildingPlaceholder")}
                       value={dialog.formData.buildingName || ""}
                       onChange={(e) =>
                         dialog.updateFormData({
@@ -400,7 +406,7 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
+                  <Label htmlFor="status">{tForms("status")}</Label>
                   <Select
                     value={dialog.formData.status}
                     onValueChange={(value: PropertyFormData["status"]) =>
@@ -415,12 +421,12 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="vacant">Vacant</SelectItem>
+                      <SelectItem value="vacant">{tStatus("vacant")}</SelectItem>
                       <SelectItem value="occupied">
                         {dialog.editingItem ? "Occupied" : "Occupied — I'll add the tenant next"}
                       </SelectItem>
                       {dialog.editingItem && (
-                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                        <SelectItem value="maintenance">{tMaint("title")}</SelectItem>
                       )}
                     </SelectContent>
                   </Select>
@@ -450,7 +456,7 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
                   <div className="mt-3 space-y-3 rounded-md border border-[var(--color-border)] bg-[var(--color-muted)]/30 p-3">
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-2">
-                        <Label htmlFor="bedrooms">Bedrooms</Label>
+                        <Label htmlFor="bedrooms">{t("fields.bedrooms")}</Label>
                         <Input
                           id="bedrooms"
                           type="number"
@@ -471,7 +477,7 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="bathrooms">Bathrooms</Label>
+                        <Label htmlFor="bathrooms">{t("fields.bathrooms")}</Label>
                         <Input
                           id="bathrooms"
                           type="number"
@@ -494,7 +500,7 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
                       </div>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="description">Description</Label>
+                      <Label htmlFor="description">{tForms("description")}</Label>
                       <Textarea
                         id="description"
                         value={dialog.formData.description}
@@ -521,7 +527,7 @@ export const PropertyFormDialog = forwardRef<PropertyFormDialogRef>(
                 disabled={dialog.isSubmitting}
                 className="w-full sm:w-auto"
               >
-                Cancel
+                {tActions("cancel")}
               </Button>
               <Button type="submit" loading={dialog.isSubmitting} className="w-full sm:w-auto">
                 {dialog.editingItem ? "Update Property" : "Create Property"}

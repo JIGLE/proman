@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -39,6 +40,7 @@ const LIFECYCLE_STYLES: Record<string, string> = {
 };
 
 export function ReceiptAutomationQueue(): React.ReactElement | null {
+  const t = useTranslations("common");
   const [rows, setRows] = useState<QueueRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -230,7 +232,7 @@ export function ReceiptAutomationQueue(): React.ReactElement | null {
                           onClick={() => void emit(row.id)}
                           disabled={busyId === row.id}
                         >
-                          Emit
+                          {t("emit")}
                         </Button>
                       ) : null}
                     </td>

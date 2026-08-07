@@ -553,6 +553,13 @@
       "description": "An unexpected error occurred while loading this page.",
       "fallbackMessage": "Please try refreshing the page or contact support if the problem persists.",
       "tryAgain": "Try again"
+    },
+    "boundary": {
+      "title": "Something went wrong",
+      "description": "An unexpected error occurred. Try refreshing the page.",
+      "tryAgain": "Try again",
+      "refresh": "Refresh page",
+      "errorId": "Error ID: {id}"
     }
   },
   "compliance": {
@@ -1044,7 +1051,7 @@
   },
   "documents": {
     "title": "Documents",
-    "upload": "Upload Document",
+    "upload": "Upload",
     "type": "Document Type",
     "contract": "Contract",
     "invoice": "Invoice",
@@ -1084,7 +1091,31 @@
     "deleteTitle": "Delete document",
     "deleteConfirm": "Delete “{name}”? This cannot be undone.",
     "showLess": "Show less",
-    "showAllIn": "Show all {count} in {group}"
+    "showAllIn": "Show all {count} in {group}",
+    "uploadTitle": "Upload document",
+    "uploadDescription": "Add a new document to your library",
+    "file": "File",
+    "namePlaceholder": "Document name",
+    "descriptionPlaceholder": "Brief description",
+    "expiryOptional": "Expiry date (optional)",
+    "linkTo": "Link to (optional)",
+    "none": "None",
+    "generate": "Generate",
+    "generateTitle": "Generate document",
+    "generateDescription": "Create a document from a template",
+    "templateType": "Template type",
+    "leaseAgreement": "Lease agreement",
+    "rentReceipt": "Rent receipt",
+    "noticeLetter": "Notice letter",
+    "sampleNotice": "This is a sample notice, for demonstration only.",
+    "sampleWarning": "This generates a sample document. For production use, connect it to your real template source.",
+    "previewHtml": "Preview HTML",
+    "downloadPdf": "Download PDF",
+    "panel": {
+      "size": "Size",
+      "uploaded": "Uploaded",
+      "linkedTo": "Linked to"
+    }
   },
   "notifications": {
     "title": "Notifications",
@@ -1375,7 +1406,35 @@
       "house": "House",
       "condo": "Condo",
       "townhouse": "Townhouse",
-      "other": "Other"
+      "other": "Other",
+      "commercial": "Commercial"
+    },
+    "namePlaceholder": "e.g. Apt 4B, Garden Flat, Unit 12",
+    "addressPlaceholder": "Start typing to search addresses…",
+    "buildingName": "Building name (optional)",
+    "buildingPlaceholder": "e.g. Downtown Apartments",
+    "streetAddress": "Street address",
+    "postalCode": "Postal code",
+    "commercial": "Commercial",
+    "addressSearchFailed": "Address search failed.",
+    "country": {
+      "portugal": "Portugal",
+      "spain": "Spain"
+    },
+    "map": {
+      "mapped": "Mapped properties",
+      "missingCoords": "Missing coordinates",
+      "source": "Map source",
+      "empty": "No properties with coordinates",
+      "emptyHelp": "Verify the property address, or save a latitude and longitude to place it on the map.",
+      "openDetails": "Open details"
+    },
+    "portfolio": {
+      "subtitle": "Manage your properties, occupancy and rent coverage.",
+      "filterAssets": "Filter assets…",
+      "filterAssetsLabel": "Filter assets by name or address",
+      "attentionOnly": "Show only assets needing attention",
+      "selectAsset": "Select an asset from the tree to open its command workspace."
     }
   },
   "financial": {
@@ -1506,6 +1565,26 @@
       "received": "Received",
       "delta": "Delta",
       "totals": "Totals"
+    },
+    "bank": {
+      "allMovements": "All movements",
+      "needsReview": "Needs review",
+      "autoMatched": "Auto-matched",
+      "confirmed": "Confirmed",
+      "ignored": "Ignored",
+      "noSuggestion": "No suggestion",
+      "assignToLease": "Assign to lease…",
+      "cancelReassign": "Cancel reassign",
+      "confirm": "Confirm",
+      "assign": "Assign",
+      "ignore": "Ignore",
+      "importCsv": "Import CSV",
+      "importTitle": "Import bank movements",
+      "booked": "Booked",
+      "counterparty": "Counterparty",
+      "reference": "Reference",
+      "amount": "Amount",
+      "match": "Match"
     }
   },
   "propertyDetail": {
@@ -1997,7 +2076,9 @@
   },
   "language": {
     "label": "Language",
-    "change": "Change language"
+    "change": "Change language",
+    "chooseTitle": "Choose your language",
+    "chooseHelp": "Pick a language to continue. You can change it later."
   },
   "auth": {
     "loading": "Loading…",
@@ -2130,6 +2211,13 @@
       "activeLease": "Active lease",
       "noPayments": "No payment records",
       "editTenant": "Edit tenant"
+    },
+    "relationship": {
+      "lease": "Lease",
+      "rentPeriods": "Rent periods",
+      "bankMovements": "Bank movements",
+      "receipts": "Receipts",
+      "taxLog": "Tax log"
     }
   },
   "contacts": {
@@ -2168,5 +2256,83 @@
     "on": "On",
     "off": "Off",
     "auditEmpty": "Sign-ins, exports, and settings changes for your account will appear here."
+  },
+  "analytics": {
+    "heading": "Portfolio analytics",
+    "subtitle": "Track rent income, occupancy and lease health across your properties.",
+    "export": "Export",
+    "generateReport": "Generate report",
+    "collectionRate": "Collection rate",
+    "overdue": "Overdue",
+    "tabOverview": "Overview",
+    "tabFinancial": "Financial",
+    "tabLeases": "Leases",
+    "tabProperties": "Properties",
+    "netIncomeYtd": "Net income (YTD)",
+    "overdueAmount": "Overdue amount",
+    "revenueLast6": "Monthly revenue for the last 6 months",
+    "latestUpdates": "Latest updates across your portfolio",
+    "noActivities": "No recent activities",
+    "portfolioMix": "Portfolio mix",
+    "noPropertyData": "No property data",
+    "totalRevenueYtd": "Total revenue (YTD)",
+    "totalExpensesYtd": "Total expenses (YTD)",
+    "revenueVsExpenses": "Revenue vs expenses",
+    "monthlyComparison": "Monthly comparison for the last 6 months",
+    "netIncomeTrend": "Net income trend",
+    "monthlyNetIncome": "Monthly net income",
+    "activeLeases": "Active leases",
+    "expiring30": "Expiring (30 days)",
+    "expiring60": "Expiring (60 days)",
+    "expired": "Expired",
+    "totalUnits": "Total units",
+    "occupied": "Occupied",
+    "vacant": "Vacant"
+  },
+  "palette": {
+    "addProperty": "Add property",
+    "addPropertyHelp": "Create a new property listing",
+    "addPerson": "Add person",
+    "addPersonHelp": "Open People to add a tenant, owner or contact",
+    "recordPayment": "Record payment",
+    "recordPaymentHelp": "Open the payment queue and receipt flow",
+    "reviewDocuments": "Review documents",
+    "reviewDocumentsHelp": "Open contracts, receipts and notices",
+    "placeholder": "Search or type a command…",
+    "noResults": "No results found"
+  },
+  "pwa": {
+    "install": "Install Situs",
+    "help": "Add it to your home screen for a faster, app-like experience.",
+    "installAction": "Install",
+    "dismiss": "Dismiss"
+  },
+  "common": {
+    "dismiss": "Dismiss",
+    "close": "Close",
+    "openFullPage": "Open full page",
+    "processing": "Processing…",
+    "previousYear": "Previous year",
+    "nextYear": "Next year",
+    "previousMonth": "Previous month",
+    "nextMonth": "Next month",
+    "breadcrumb": "Breadcrumb",
+    "viewReleaseNotes": "View release notes",
+    "upgradeDocs": "Upgrade docs",
+    "relatedEntities": "Related entities",
+    "auditTrail": "Audit trail",
+    "required": "Required",
+    "accept": "Accept",
+    "correct": "Correct…",
+    "emit": "Emit",
+    "contract": "Contract",
+    "noSubmissionLog": "No submission log entries yet.",
+    "noScheduledWork": "No scheduled or due maintenance work.",
+    "noTickets": "No maintenance tickets yet",
+    "runScenario": "Run demo scenario",
+    "runScenarioHelp": "Watch a realistic workflow unfold",
+    "runningScenario": "Running scenario…",
+    "scenarioComplete": "Scenario complete",
+    "scenarioRefreshing": "Refreshing to show the updated data…"
   }
 }

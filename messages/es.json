@@ -553,6 +553,13 @@
       "description": "Ocurrió un error inesperado al cargar esta página.",
       "fallbackMessage": "Intenta actualizar la página o contacta al soporte si el problema persiste.",
       "tryAgain": "Intentar de nuevo"
+    },
+    "boundary": {
+      "title": "Algo ha salido mal",
+      "description": "Se ha producido un error inesperado. Prueba a actualizar la página.",
+      "tryAgain": "Reintentar",
+      "refresh": "Actualizar página",
+      "errorId": "ID del error: {id}"
     }
   },
   "compliance": {
@@ -1044,7 +1051,7 @@
   },
   "documents": {
     "title": "Documentos",
-    "upload": "Subir Documento",
+    "upload": "Subir",
     "type": "Tipo de Documento",
     "contract": "Contrato",
     "invoice": "Factura",
@@ -1084,7 +1091,31 @@
     "deleteTitle": "Eliminar documento",
     "deleteConfirm": "¿Eliminar «{name}»? Esta acción no se puede deshacer.",
     "showLess": "Mostrar menos",
-    "showAllIn": "Ver los {count} de {group}"
+    "showAllIn": "Ver los {count} de {group}",
+    "uploadTitle": "Subir documento",
+    "uploadDescription": "Añade un nuevo documento a tu biblioteca",
+    "file": "Archivo",
+    "namePlaceholder": "Nombre del documento",
+    "descriptionPlaceholder": "Breve descripción",
+    "expiryOptional": "Fecha de caducidad (opcional)",
+    "linkTo": "Vincular a (opcional)",
+    "none": "Ninguno",
+    "generate": "Generar",
+    "generateTitle": "Generar documento",
+    "generateDescription": "Crea un documento a partir de una plantilla",
+    "templateType": "Tipo de plantilla",
+    "leaseAgreement": "Contrato de alquiler",
+    "rentReceipt": "Recibo de alquiler",
+    "noticeLetter": "Carta de notificación",
+    "sampleNotice": "Este es un aviso de ejemplo, solo para demostración.",
+    "sampleWarning": "Esto genera un documento de ejemplo. Para uso en producción, conéctalo a tu fuente de plantillas real.",
+    "previewHtml": "Vista previa HTML",
+    "downloadPdf": "Descargar PDF",
+    "panel": {
+      "size": "Tamaño",
+      "uploaded": "Subido",
+      "linkedTo": "Vinculado a"
+    }
   },
   "notifications": {
     "title": "Notificaciones",
@@ -1375,7 +1406,35 @@
       "house": "Casa",
       "condo": "Condominio",
       "townhouse": "Casa Adosada",
-      "other": "Otro"
+      "other": "Otro",
+      "commercial": "Comercial"
+    },
+    "namePlaceholder": "p. ej. Piso 4B, Bajo con jardín, Unidad 12",
+    "addressPlaceholder": "Empieza a escribir para buscar direcciones…",
+    "buildingName": "Nombre del edificio (opcional)",
+    "buildingPlaceholder": "p. ej. Edificio Centro",
+    "streetAddress": "Dirección",
+    "postalCode": "Código postal",
+    "commercial": "Comercial",
+    "addressSearchFailed": "La búsqueda de dirección ha fallado.",
+    "country": {
+      "portugal": "Portugal",
+      "spain": "España"
+    },
+    "map": {
+      "mapped": "Inmuebles en el mapa",
+      "missingCoords": "Sin coordenadas",
+      "source": "Fuente del mapa",
+      "empty": "Sin inmuebles con coordenadas",
+      "emptyHelp": "Verifica la dirección del inmueble o guarda la latitud y longitud para situarlo en el mapa.",
+      "openDetails": "Abrir detalle"
+    },
+    "portfolio": {
+      "subtitle": "Gestiona tus inmuebles, la ocupación y la cobertura de alquileres.",
+      "filterAssets": "Filtrar activos…",
+      "filterAssetsLabel": "Filtrar activos por nombre o dirección",
+      "attentionOnly": "Mostrar solo activos que requieren atención",
+      "selectAsset": "Selecciona un activo del árbol para abrir su espacio de trabajo."
     }
   },
   "financial": {
@@ -1506,6 +1565,26 @@
       "received": "Recibido",
       "delta": "Diferencia",
       "totals": "Totales"
+    },
+    "bank": {
+      "allMovements": "Todos los movimientos",
+      "needsReview": "Requiere revisión",
+      "autoMatched": "Conciliado automáticamente",
+      "confirmed": "Confirmado",
+      "ignored": "Ignorado",
+      "noSuggestion": "Sin sugerencia",
+      "assignToLease": "Asignar a contrato…",
+      "cancelReassign": "Cancelar reasignación",
+      "confirm": "Confirmar",
+      "assign": "Asignar",
+      "ignore": "Ignorar",
+      "importCsv": "Importar CSV",
+      "importTitle": "Importar movimientos bancarios",
+      "booked": "Fecha valor",
+      "counterparty": "Contraparte",
+      "reference": "Referencia",
+      "amount": "Importe",
+      "match": "Coincidencia"
     }
   },
   "propertyDetail": {
@@ -1997,7 +2076,9 @@
   },
   "language": {
     "label": "Idioma",
-    "change": "Cambiar de idioma"
+    "change": "Cambiar de idioma",
+    "chooseTitle": "Elige tu idioma",
+    "chooseHelp": "Elige un idioma para continuar. Puedes cambiarlo más tarde."
   },
   "auth": {
     "loading": "Cargando…",
@@ -2130,6 +2211,13 @@
       "activeLease": "Contrato activo",
       "noPayments": "Sin registros de pago",
       "editTenant": "Editar inquilino"
+    },
+    "relationship": {
+      "lease": "Contrato",
+      "rentPeriods": "Periodos de alquiler",
+      "bankMovements": "Movimientos bancarios",
+      "receipts": "Recibos",
+      "taxLog": "Registro fiscal"
     }
   },
   "contacts": {
@@ -2168,5 +2256,83 @@
     "on": "Activada",
     "off": "Desactivada",
     "auditEmpty": "Los inicios de sesión, exportaciones y cambios de ajustes de tu cuenta aparecerán aquí."
+  },
+  "analytics": {
+    "heading": "Análisis de la cartera",
+    "subtitle": "Sigue los ingresos por alquiler, la ocupación y la salud de los contratos de tus inmuebles.",
+    "export": "Exportar",
+    "generateReport": "Generar informe",
+    "collectionRate": "Tasa de cobro",
+    "overdue": "Vencido",
+    "tabOverview": "Resumen",
+    "tabFinancial": "Financiero",
+    "tabLeases": "Contratos",
+    "tabProperties": "Inmuebles",
+    "netIncomeYtd": "Ingresos netos (del año)",
+    "overdueAmount": "Importe vencido",
+    "revenueLast6": "Ingresos mensuales de los últimos 6 meses",
+    "latestUpdates": "Últimas novedades de tu cartera",
+    "noActivities": "Sin actividad reciente",
+    "portfolioMix": "Composición de la cartera",
+    "noPropertyData": "Sin datos de inmuebles",
+    "totalRevenueYtd": "Ingresos totales (del año)",
+    "totalExpensesYtd": "Gastos totales (del año)",
+    "revenueVsExpenses": "Ingresos frente a gastos",
+    "monthlyComparison": "Comparación mensual de los últimos 6 meses",
+    "netIncomeTrend": "Evolución de los ingresos netos",
+    "monthlyNetIncome": "Ingresos netos mensuales",
+    "activeLeases": "Contratos activos",
+    "expiring30": "Vencen (30 días)",
+    "expiring60": "Vencen (60 días)",
+    "expired": "Vencidos",
+    "totalUnits": "Total de unidades",
+    "occupied": "Ocupadas",
+    "vacant": "Vacías"
+  },
+  "palette": {
+    "addProperty": "Añadir inmueble",
+    "addPropertyHelp": "Crear un nuevo registro de inmueble",
+    "addPerson": "Añadir persona",
+    "addPersonHelp": "Abrir Personas para añadir un inquilino, propietario o contacto",
+    "recordPayment": "Registrar pago",
+    "recordPaymentHelp": "Abrir la cola de pagos y el flujo de recibos",
+    "reviewDocuments": "Revisar documentos",
+    "reviewDocumentsHelp": "Abrir contratos, recibos y notificaciones",
+    "placeholder": "Buscar o escribir un comando…",
+    "noResults": "Sin resultados"
+  },
+  "pwa": {
+    "install": "Instalar Situs",
+    "help": "Añádelo a tu pantalla de inicio para una experiencia más rápida.",
+    "installAction": "Instalar",
+    "dismiss": "Descartar"
+  },
+  "common": {
+    "dismiss": "Descartar",
+    "close": "Cerrar",
+    "openFullPage": "Abrir página completa",
+    "processing": "Procesando…",
+    "previousYear": "Año anterior",
+    "nextYear": "Año siguiente",
+    "previousMonth": "Mes anterior",
+    "nextMonth": "Mes siguiente",
+    "breadcrumb": "Ruta de navegación",
+    "viewReleaseNotes": "Ver notas de la versión",
+    "upgradeDocs": "Documentación de actualización",
+    "relatedEntities": "Entidades relacionadas",
+    "auditTrail": "Registro de auditoría",
+    "required": "Obligatorio",
+    "accept": "Aceptar",
+    "correct": "Corregir…",
+    "emit": "Emitir",
+    "contract": "Contrato",
+    "noSubmissionLog": "Aún no hay registros de envío.",
+    "noScheduledWork": "Sin trabajos de mantenimiento programados o pendientes.",
+    "noTickets": "Aún no hay incidencias de mantenimiento",
+    "runScenario": "Ejecutar escenario de demostración",
+    "runScenarioHelp": "Observa un flujo realista en marcha",
+    "runningScenario": "Ejecutando el escenario…",
+    "scenarioComplete": "Escenario completado",
+    "scenarioRefreshing": "Actualizando para mostrar los nuevos datos…"
   }
 }

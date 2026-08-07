@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Check, Upload, X } from "lucide-react";
 
@@ -77,12 +78,14 @@ const STATUS_CODES: Record<string, string> = {
   duplicate: "DUP",
 };
 
+/** Filter ids paired with their catalog key — the label resolves inside the component,
+ *  since a module constant can never be translated. */
 const FILTERS = [
-  { value: "all", label: "All movements" },
-  { value: "needs_review", label: "Needs review" },
-  { value: "auto_matched", label: "Auto-matched" },
-  { value: "matched_confirmed", label: "Confirmed" },
-  { value: "ignored", label: "Ignored" },
+  { value: "all", labelKey: "allMovements" },
+  { value: "needs_review", labelKey: "needsReview" },
+  { value: "auto_matched", labelKey: "autoMatched" },
+  { value: "matched_confirmed", labelKey: "confirmed" },
+  { value: "ignored", labelKey: "ignored" },
 ] as const;
 
 const CSV_PLACEHOLDER = `Date,Amount,Counterparty,IBAN,Reference
@@ -100,6 +103,8 @@ function formatReasons(raw: string | null): string {
 }
 
 export function BankMovementsInbox(): React.ReactElement {
+  const t = useTranslations("financial.bank");
+  const tForms = useTranslations("forms");
   const { state } = useApp();
   const [rows, setRows] = useState<InboxRow[]>([]);
   const [filter, setFilter] = useState<string>("all");
@@ -220,7 +225,7 @@ export function BankMovementsInbox(): React.ReactElement {
             ) : null}
           </span>
         ) : (
-          <span className="text-xs text-[var(--color-muted-foreground)]">No suggestion</span>
+          <span className="text-xs text-[var(--color-muted-foreground)]">{t("noSuggestion")}</span>
         )}
         {reasons ? (
           <span className="block text-[12px] md:text-[10px] text-[var(--color-muted-foreground)]">
@@ -242,7 +247,7 @@ export function BankMovementsInbox(): React.ReactElement {
             disabled={busyId === row.id}
           >
             <SelectTrigger className="h-7 w-[190px] rounded-none text-xs">
-              <SelectValue placeholder="Assign to lease…" />
+              <SelectValue placeholder={t("assignToLease")} />
             </SelectTrigger>
             <SelectContent>
               {leaseOptions.map((lease) => (
@@ -257,7 +262,7 @@ export function BankMovementsInbox(): React.ReactElement {
             size="sm"
             className="h-7 w-7 rounded-none p-0"
             onClick={() => setReassigningId(null)}
-            aria-label="Cancel reassign"
+            aria-label={t("cancelReassign")}
           >
             <X className="h-3.5 w-3.5" />
           </Button>
@@ -275,7 +280,7 @@ export function BankMovementsInbox(): React.ReactElement {
             disabled={busyId === row.id}
           >
             <Check className="mr-1 h-3 w-3" />
-            Confirm
+            {t("confirm")}
           </Button>
         ) : null}
         {row.amount > 0 ? (
@@ -286,7 +291,7 @@ export function BankMovementsInbox(): React.ReactElement {
             onClick={() => setReassigningId(row.id)}
             disabled={busyId === row.id}
           >
-            Assign
+            {t("assign")}
           </Button>
         ) : null}
         <Button
@@ -296,7 +301,7 @@ export function BankMovementsInbox(): React.ReactElement {
           onClick={() => void act(row.id, "ignore")}
           disabled={busyId === row.id}
         >
-          Ignore
+          {t("ignore")}
         </Button>
       </div>
     );
@@ -314,7 +319,7 @@ export function BankMovementsInbox(): React.ReactElement {
             <SelectContent>
               {FILTERS.map((f) => (
                 <SelectItem key={f.value} value={f.value}>
-                  {f.label}
+                  {t(f.labelKey)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -329,12 +334,12 @@ export function BankMovementsInbox(): React.ReactElement {
             <DialogTrigger asChild>
               <Button size="sm" className="h-8 rounded-none">
                 <Upload className="mr-1.5 h-3.5 w-3.5" />
-                Import CSV
+                {t("importCsv")}
               </Button>
             </DialogTrigger>
             <DialogContent className="rounded-none sm:max-w-xl">
               <DialogHeader>
-                <DialogTitle>Import bank movements</DialogTitle>
+                <DialogTitle>{t("importTitle")}</DialogTitle>
                 <DialogDescription>
                   Paste CSV rows exported from your bank. Recognized columns: date, amount,
                   counterparty, IBAN, reference — comma or semicolon separated. Exact duplicates are
@@ -435,13 +440,13 @@ export function BankMovementsInbox(): React.ReactElement {
           columns={[
             {
               key: "booked",
-              header: "Booked",
+              header: t("booked"),
               cell: (row) => row.bookingDate.slice(0, 10),
               cellClassName: "font-mono text-xs tabular-nums",
             },
             {
               key: "counterparty",
-              header: "Counterparty",
+              header: t("counterparty"),
               cell: (row) => (
                 <>
                   <span className="block max-w-[180px] truncate font-medium">
@@ -455,7 +460,7 @@ export function BankMovementsInbox(): React.ReactElement {
             },
             {
               key: "reference",
-              header: "Reference",
+              header: t("reference"),
               cell: (row) => (
                 <span className="block truncate text-xs text-[var(--color-muted-foreground)]">
                   {row.reference ?? "—"}
@@ -465,15 +470,15 @@ export function BankMovementsInbox(): React.ReactElement {
             },
             {
               key: "amount",
-              header: "Amount",
+              header: t("amount"),
               headerClassName: "text-right",
               cell: (row) => row.amount.toFixed(2),
               cellClassName: "text-right font-mono tabular-nums",
             },
-            { key: "match", header: "Match", cell: renderMatch },
+            { key: "match", header: t("match"), cell: renderMatch },
             {
               key: "status",
-              header: "Status",
+              header: tForms("status"),
               cell: (row) => (
                 <span
                   className={`inline-block px-1.5 py-0.5 font-mono text-[12px] md:text-[10px] uppercase tracking-[0.04em] ${

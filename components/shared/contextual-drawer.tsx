@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { X, ExternalLink } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils/utils";
@@ -23,6 +24,7 @@ export function ContextualDrawer({
   children,
   className,
 }: ContextualDrawerProps) {
+  const t = useTranslations("common");
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -68,7 +70,7 @@ export function ContextualDrawer({
               <Link href={href}>
                 <Button variant="outline" size="sm">
                   <ExternalLink className="h-4 w-4 mr-1" />
-                  Open Full Page
+                  {t("openFullPage")}
                 </Button>
               </Link>
             )}
@@ -77,7 +79,7 @@ export function ContextualDrawer({
               size="sm"
               onClick={onClose}
               className="h-8 w-8 p-0"
-              aria-label="Close"
+              aria-label={t("close")}
             >
               <X className="h-4 w-4" />
             </Button>

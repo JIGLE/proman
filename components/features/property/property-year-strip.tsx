@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type {
@@ -83,6 +84,7 @@ export function PropertyYearStrip({
   receiptLifecycle,
   onSelectMonth,
 }: PropertyYearStripProps) {
+  const t = useTranslations("common");
   const defaultYear = defaultYearStrip.year;
   const [year, setYear] = useState(defaultYear);
   const [strip, setStrip] = useState(defaultYearStrip);
@@ -123,7 +125,7 @@ export function PropertyYearStrip({
             size="icon-sm"
             className="rounded-none"
             onClick={() => setYear((y) => y - 1)}
-            aria-label="Previous year"
+            aria-label={t("previousYear")}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
@@ -133,7 +135,7 @@ export function PropertyYearStrip({
             size="icon-sm"
             className="rounded-none"
             onClick={() => setYear((y) => y + 1)}
-            aria-label="Next year"
+            aria-label={t("nextYear")}
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </Button>

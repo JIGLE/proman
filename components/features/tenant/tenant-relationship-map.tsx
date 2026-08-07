@@ -1,6 +1,7 @@
 "use client";
 
 import { FileText, Calendar, Landmark, Receipt as ReceiptIcon, ShieldCheck } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useTenantRelationship } from "@/lib/hooks/use-tenant-relationship";
 
 interface TenantRelationshipMapProps {
@@ -20,6 +21,7 @@ function formatDate(value: string | null): string {
  * exists post the Situs bank/receipt/tax-connector migrations.
  */
 export function TenantRelationshipMap({ tenantId }: TenantRelationshipMapProps) {
+  const t = useTranslations("tenants");
   const { data, loading, error } = useTenantRelationship(tenantId);
 
   if (loading) {
@@ -44,14 +46,14 @@ export function TenantRelationshipMap({ tenantId }: TenantRelationshipMapProps) 
     {
       key: "lease",
       icon: FileText,
-      label: "Lease",
+      label: t("relationship.lease"),
       value: `${data.leases.active}/${data.leases.total}`,
       detail: data.leases.active > 0 ? "active" : "none active",
     },
     {
       key: "periods",
       icon: Calendar,
-      label: "Rent periods",
+      label: t("relationship.rentPeriods"),
       value: data.periods.current
         ? `${String(data.periods.current.month).padStart(2, "0")}/${data.periods.current.year}`
         : "—",
@@ -61,7 +63,7 @@ export function TenantRelationshipMap({ tenantId }: TenantRelationshipMapProps) 
     {
       key: "bank",
       icon: Landmark,
-      label: "Bank movements",
+      label: t("relationship.bankMovements"),
       value: String(data.bankMovements.matched),
       detail: data.bankMovements.lastMatchedAt
         ? `last ${formatDate(data.bankMovements.lastMatchedAt)}`
@@ -70,7 +72,7 @@ export function TenantRelationshipMap({ tenantId }: TenantRelationshipMapProps) 
     {
       key: "receipts",
       icon: ReceiptIcon,
-      label: "Receipts",
+      label: t("relationship.receipts"),
       value: String(data.receipts.total),
       detail: data.receipts.lastLifecycle
         ? data.receipts.lastLifecycle.replace(/_/g, " ")
@@ -79,7 +81,7 @@ export function TenantRelationshipMap({ tenantId }: TenantRelationshipMapProps) 
     {
       key: "tax",
       icon: ShieldCheck,
-      label: "Tax log",
+      label: t("relationship.taxLog"),
       value: String(data.taxSubmissions.total),
       detail: data.taxSubmissions.lastStatus
         ? `${data.taxSubmissions.lastAction ?? "—"} · ${data.taxSubmissions.lastStatus}`

@@ -10,6 +10,7 @@ import {
   useImperativeHandle,
 } from "react";
 import { Search } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useRouter, usePathname } from "next/navigation";
 import { DataViewMode } from "@/components/ui/data-view-toggle";
 import { Input } from "@/components/ui/input";
@@ -76,6 +77,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
 
     // The Portfolio commits to the tree + workspace (mockup-faithful) — no view
     // toggle. `viewMode="map"` remains for the standalone map embed used elsewhere.
+    const t = useTranslations("properties");
+    const tNav = useTranslations("navigation");
     const [dataViewMode] = useState<DataViewMode>(viewMode === "map" ? "map" : "tree");
     // The asset whose command workspace is open in the tree split (desktop only).
     const [workspacePropertyId, setWorkspacePropertyId] = useState<string | null>(null);
@@ -231,10 +234,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
         ) : (
           <div className="space-y-6">
             {showPageHeader && (
-              <PageHeader
-                title="Properties"
-                description="Manage your properties, occupancy, and rent coverage."
-              />
+              <PageHeader title={tNav("properties")} description={t("portfolio.subtitle")} />
             )}
             {/* Property create/edit form — shared component, own instance */}
             <PropertyFormDialog ref={formDialogRef} />
@@ -294,8 +294,8 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           <Input
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            placeholder="Filter assets…"
-                            aria-label="Filter assets by name or address"
+                            placeholder={t("portfolio.filterAssets")}
+                            aria-label={t("portfolio.filterAssetsLabel")}
                             className="h-8 pl-8 text-sm"
                           />
                         </div>
@@ -303,7 +303,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                           type="button"
                           onClick={() => setAttentionOnly((v) => !v)}
                           aria-pressed={attentionOnly}
-                          title="Show only assets needing attention"
+                          title={t("portfolio.attentionOnly")}
                           className={cn(
                             "inline-flex h-8 shrink-0 items-center justify-center gap-1.5 border px-2.5 font-mono text-[12px] md:text-[10px] uppercase tracking-[0.06em] transition-colors max-md:min-h-11 max-md:min-w-11",
                             attentionOnly
@@ -340,7 +340,7 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                     ) : (
                       <div className="flex min-h-[440px] items-center justify-center border border-dashed border-[var(--color-border)] p-12 text-center">
                         <p className="mono-label max-w-[26ch] leading-relaxed">
-                          Select an asset from the tree to open its command workspace.
+                          {t("portfolio.selectAsset")}
                         </p>
                       </div>
                     )}

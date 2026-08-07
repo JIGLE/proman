@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -27,7 +28,7 @@ interface Props {
   csrfToken: string | null;
 }
 
-function getTemplateData(type: TemplateType) {
+function getTemplateData(type: TemplateType, sampleNotice: string) {
   switch (type) {
     case "lease":
       return {
@@ -62,7 +63,7 @@ function getTemplateData(type: TemplateType) {
         recipientAddress: "123 Main Street, Unit 1, City, State 12345",
         propertyAddress: "123 Main Street, City, State 12345",
         issueDate: new Date().toISOString().split("T")[0],
-        description: "This is a sample notice for demonstration purposes.",
+        description: sampleNotice,
         senderName: "Property Management",
         senderTitle: "Property Manager",
       };
@@ -70,6 +71,7 @@ function getTemplateData(type: TemplateType) {
 }
 
 export function DocumentTemplateDialog({ csrfToken }: Props) {
+  const t = useTranslations("documents");
   const [open, setOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateType>("lease");
   const [generating, setGenerating] = useState(false);
@@ -86,7 +88,7 @@ export function DocumentTemplateDialog({ csrfToken }: Props) {
         body: JSON.stringify({
           templateType: selectedTemplate,
           format,
-          data: getTemplateData(selectedTemplate),
+          data: getTemplateData(selectedTemplate, t("sampleNotice")),
         }),
       });
 
@@ -124,17 +126,17 @@ export function DocumentTemplateDialog({ csrfToken }: Props) {
       <DialogTrigger asChild>
         <Button variant="outline">
           <FilePlus className="mr-2 h-4 w-4" />
-          Generate
+          {t("generate")}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Generate Document</DialogTitle>
-          <DialogDescription>Create a document from a template</DialogDescription>
+          <DialogTitle>{t("generateTitle")}</DialogTitle>
+          <DialogDescription>{t("generateDescription")}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label>Template Type</Label>
+            <Label>{t("templateType")}</Label>
             <Select
               value={selectedTemplate}
               onValueChange={(v) => setSelectedTemplate(v as TemplateType)}
@@ -143,9 +145,9 @@ export function DocumentTemplateDialog({ csrfToken }: Props) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="lease">Lease Agreement</SelectItem>
-                <SelectItem value="receipt">Rent Receipt</SelectItem>
-                <SelectItem value="notice">Notice Letter</SelectItem>
+                <SelectItem value="lease">{t("leaseAgreement")}</SelectItem>
+                <SelectItem value="receipt">{t("rentReceipt")}</SelectItem>
+                <SelectItem value="notice">{t("noticeLetter")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -157,11 +159,11 @@ export function DocumentTemplateDialog({ csrfToken }: Props) {
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={() => handleGenerate("html")} disabled={generating}>
             <Eye className="mr-2 h-4 w-4" />
-            Preview HTML
+            {t("previewHtml")}
           </Button>
           <Button onClick={() => handleGenerate("pdf")} disabled={generating}>
             <Download className="mr-2 h-4 w-4" />
-            Download PDF
+            {t("downloadPdf")}
           </Button>
         </DialogFooter>
       </DialogContent>

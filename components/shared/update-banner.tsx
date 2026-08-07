@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
@@ -32,6 +33,7 @@ function compareVersions(a?: string, b?: string): number {
 }
 
 export function UpdateBanner(): React.ReactElement | null {
+  const t = useTranslations("common");
   const sess = useSession();
   const session = sess?.data;
   const [latest] = useState<ReleaseInfo | null>(null);
@@ -83,13 +85,13 @@ export function UpdateBanner(): React.ReactElement | null {
           <p className="text-sm mt-1">
             A new version of Situs is available.{" "}
             <a className="underline" href={latest.html_url || "#"} target="_blank" rel="noreferrer">
-              View release notes
+              {t("viewReleaseNotes")}
             </a>
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Link href="/docs/TRUENAS_DEPLOYMENT.md">
-            <a className="text-sm px-3 py-1 rounded bg-white/60 border">Upgrade docs</a>
+            <a className="text-sm px-3 py-1 rounded bg-white/60 border">{t("upgradeDocs")}</a>
           </Link>
           <button
             className="text-sm text-muted-foreground"
@@ -98,7 +100,7 @@ export function UpdateBanner(): React.ReactElement | null {
               setDismissedTag(latestTag);
             }}
           >
-            Dismiss
+            {t("dismiss")}
           </button>
         </div>
       </div>

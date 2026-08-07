@@ -6,6 +6,9 @@ import "./globals.css";
 import { getNonce } from "@/lib/utils/csp-nonce";
 import UpdateBannerClient from "@/components/shared/update-banner-client";
 import { PwaRegister } from "@/components/shared/pwa-register";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, setRequestLocale } from "next-intl/server";
+import { getPreferredLocale } from "@/lib/i18n/server-locale";
 import { DevAuthProvider } from "@/components/shared/dev-auth";
 import { defaultLocale } from "@/lib/i18n/config";
 
@@ -79,6 +82,11 @@ export default async function RootLayout({
   // Get CSP nonce for inline scripts/styles
   const nonce = await getNonce();
 
+  // Locale for the app chrome that renders outside the `[locale]` segment.
+  const chromeLocale = await getPreferredLocale();
+  setRequestLocale(chromeLocale);
+  const chromeMessages = await getMessages({ locale: chromeLocale });
+
   return (
     <html
       lang={defaultLocale}
@@ -91,10 +99,19 @@ export default async function RootLayout({
       <head>{nonce && <meta name="csp-nonce" content={nonce} />}</head>
       <body className={`${instrumentSans.className} antialiased`}>
         <DevAuthProvider>
-          {/* Update banner (admin-only) */}
-          <UpdateBannerClient />
+          {/* These two are siblings of `children`, so they sit outside the
+              `NextIntlClientProvider` that `app/[locale]/layout.tsx` mounts — calling
+              `useTranslations` inside them throws "context not found". Give them their own
+              provider resolved from the `proman-locale` cookie, the same way
+              `app/auth/layout.tsx` handles the routes that carry no `[locale]` segment. */}
+          <NextIntlClientProvider locale={chromeLocale} messages={chromeMessages}>
+            {/* Update banner (admin-only) */}
+            <UpdateBannerClient />
+          </NextIntlClientProvider>
           {children}
-          <PwaRegister />
+          <NextIntlClientProvider locale={chromeLocale} messages={chromeMessages}>
+            <PwaRegister />
+          </NextIntlClientProvider>
         </DevAuthProvider>
       </body>
     </html>
