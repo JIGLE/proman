@@ -61,7 +61,18 @@ test.describe("Tenant Portal — full flow with real token", () => {
     const today = new Date();
     const nextYear = new Date(today.getFullYear() + 1, today.getMonth(), today.getDate());
 
+    // Both POSTs below are CSRF-guarded: the proxy wants the `csrf-token` cookie echoed back in
+    // an `x-csrf-token` header. Without it they return 403, the `if (!res.ok()) return` guards
+    // bailed out, `portalUrl` stayed undefined and the test skipped itself — which is why this
+    // was the suite's last remaining skip, and why it looked like a data problem rather than a
+    // missing header. scripts/mobile-audit.mjs mints portal links the same way.
+    await request.get("/api/csrf-token");
+    const cookies = await request.storageState().then((s) => s.cookies);
+    const csrf = cookies.find((c) => c.name === "csrf-token")?.value;
+    const csrfHeaders: Record<string, string> = csrf ? { "x-csrf-token": csrf } : {};
+
     const tenantRes = await request.post("/api/tenants", {
+      headers: csrfHeaders,
       data: {
         name: `Portal Test Tenant ${Date.now()}`,
         email: `portal${Date.now()}@test.local`,
@@ -72,28 +83,33 @@ test.describe("Tenant Portal — full flow with real token", () => {
       },
     });
 
-    if (!tenantRes.ok()) return; // Skip gracefully if tenant creation is unavailable
+    if (!tenantRes.ok()) {
+      throw new Error(`Could not create the portal test tenant (${tenantRes.status()}).`);
+    }
 
     const tenant = await tenantRes.json();
     const tenantId = tenant.id ?? tenant.data?.id;
-    if (!tenantId) return;
+    if (!tenantId) throw new Error("Tenant created but no id came back.");
 
     // 2. Generate the portal link
     const linkRes = await request.post(`/api/tenants/${tenantId}/portal-link`, {
+      headers: csrfHeaders,
       data: { sendEmail: false },
     });
 
-    if (!linkRes.ok()) return;
+    if (!linkRes.ok()) {
+      throw new Error(
+        `Could not mint a portal link (${linkRes.status()}): ${await linkRes.text()}. ` +
+          `The authenticated portal test cannot run without one.`,
+      );
+    }
 
     const linkBody = await linkRes.json();
     portalUrl = linkBody.portalLink ?? linkBody.data?.portalLink;
   });
 
   test("portal with valid token should render tenant details", async ({ page }) => {
-    if (!portalUrl) {
-      test.skip(true, "Portal URL could not be generated — skipping authenticated portal test");
-      return;
-    }
+    expect(portalUrl, "beforeAll should have minted a portal link").toBeTruthy();
 
     // Navigate to the portal using the real token
     await page.goto(portalUrl);

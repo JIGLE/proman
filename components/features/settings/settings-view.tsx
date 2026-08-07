@@ -228,7 +228,12 @@ export function SettingsView(): React.ReactElement {
             value={visibleSection}
             onValueChange={(value: string) => setActiveSection(value as SectionValue)}
           >
-            <SelectTrigger>
+            {/* The desktop rail above is a labelled <nav>; this is its below-`md` substitute and
+                needs its own name. Without one it announced nothing at all — `SelectValue` is the
+                trigger's only content and it renders no accessible text until a value resolves,
+                so the primary way to move around Settings on a phone was anonymous. Found by the
+                first run of the mobile-chrome Playwright project. */}
+            <SelectTrigger aria-label={t("sectionsLabel")}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
