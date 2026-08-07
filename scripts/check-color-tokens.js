@@ -56,8 +56,11 @@ const ALLOWLIST = [
  * (+2, a real contrast fix) and the Leases selection chrome — the bulk-actions bar
  * and selected-row tint — dropping its dark-only indigo literals for the semantic
  * `--color-info` pair, which is the same dark-on-light bug one screen further in.
+ *
+ * 591 → 580: deleting the orphaned Contracts view, which nothing has rendered since
+ * `/contracts` became a redirect to `/leases`.
  */
-const BASELINE = 591;
+const BASELINE = 580;
 
 function walk(dir, acc) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
