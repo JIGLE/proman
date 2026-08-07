@@ -378,14 +378,20 @@ jobs:
       # `--seed` is not optional: without it the harness walks a bare database, and a table with
       # no rows cannot overflow. Every number this job produced before it was added described
       # empty screens. `--strict` ratchets against BASELINE in the harness.
+      #
+      # This is a real gate now. CI reported `✓ Mobile audit exactly at baseline` on a seeded
+      # 52-surface run — pageOverflow 0, touchTargetFails 4, touchTargetWarns 4,
+      # clippedContainers 6, smallText 310 — matching three consecutive local runs against a
+      # production standalone build and a fresh database. `continue-on-error` was the only
+      # thing keeping an unmeasured baseline from blocking a PR, and the baseline is now
+      # measured, so it comes off.
+      #
+      # If this fails: read the numbers before touching BASELINE. It may only ever go down.
       - name: Run mobile audit harness
         run: node scripts/mobile-audit.mjs --seed --strict
         env:
           AUDIT_BASE_URL: http://localhost:3000
           CI: "true"
-        # TODO: drop once two or three runs confirm the seeded numbers are stable in CI — that
-        # is the moment this stops being advisory and starts being a gate.
-        continue-on-error: true
 
       - name: Parse and report audit violations
         if: always()
@@ -393,11 +399,12 @@ jobs:
           set -euo pipefail
           REPORT=audit-report/report-390.json
 
-          # A harness that crashed is not the same as a harness that found violations. The
-          # violations are advisory (continue-on-error on the step above); a crash means the
-          # gate did not run at all, and that must be loud. It was not: the harness died at
-          # browser launch on every CI run and this step exited 0, so the job went green while
-          # measuring nothing.
+          # A harness that crashed is not the same as a harness that found violations. Both now
+          # fail the job, but they are different failures and the summary must say which: a
+          # regression is a design backlog item, a harness that never started is a broken gate.
+          # This step runs with `if: always()` so it still reports when the harness exits
+          # non-zero. It used to exit 0 on a missing report, which is how the job stayed green
+          # while the harness died at browser launch on every run.
           if [ ! -f "$REPORT" ]; then
             echo "## ❌ Mobile audit did not run" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
