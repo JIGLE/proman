@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { withEntityDetail } from "@/lib/utils/entity-detail-url";
 import { useSession } from "next-auth/react";
@@ -56,6 +57,7 @@ export interface DocumentsViewProps {
 }
 
 export function DocumentsView({ propertyId, embedded = false }: DocumentsViewProps = {}) {
+  const t = useTranslations("documents");
   const searchParams = useSearchParams();
   const { data: session } = useSession();
   const { token: csrfToken } = useCsrf();
@@ -99,27 +101,31 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
     searchTerm,
   });
 
-  const activeFilters = useMemo(() => {
-    const filters: string[] = [];
-    if (searchTerm) filters.push(`Search: ${searchTerm}`);
-    if (typeFilter !== "all") filters.push(`Type: ${documentTypeConfig[typeFilter].label}`);
-    if (!embedded && propertyFilter !== "all") {
-      const name = properties.find((p) => p.id === propertyFilter)?.name ?? "Property";
-      filters.push(`Property: ${name}`);
-    }
-    return filters;
-  }, [embedded, properties, propertyFilter, searchTerm, typeFilter]);
+  /**
+   * Every group rendered every document, so a 42-file archive was a 5,900px page — you scrolled
+   * past four properties' worth of files to reach the fifth. Each group now shows its first
+   * few and expands on request; the badge already carries the full count either way.
+   */
+  const GROUP_PREVIEW = 4;
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const toggleGroup = (name: string) =>
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
 
   const groupedDocuments = useMemo(() => {
     return documents.reduce<Record<string, typeof documents>>((acc, doc) => {
       const key = isOwnerPortal
-        ? doc.propertyName || doc.tenantName || "Unassigned"
-        : "Shared with you";
+        ? doc.propertyName || doc.tenantName || t("unassigned")
+        : t("sharedWithYou");
       if (!acc[key]) acc[key] = [];
       acc[key].push(doc);
       return acc;
     }, {});
-  }, [documents, isOwnerPortal]);
+  }, [documents, isOwnerPortal, t]);
 
   // Situs Inbox — uploads that still need entity triage (no property/tenant/
   // owner tagged). The OCR classifier proposes a link in the Review
@@ -132,7 +138,7 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
   if (!session && !isDemoMode) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Please sign in to view documents</p>
+        <p className="text-muted-foreground">{t("signInRequired")}</p>
       </div>
     );
   }
@@ -164,12 +170,26 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
             <h2 className="text-2xl font-bold tracking-tight">
-              {isOwnerPortal ? "Documents" : "My documents"}
+              {isOwnerPortal ? t("title") : t("titleTenant")}
             </h2>
+            {/* The four stat cards that used to sit inside the Archive tab said exactly this,
+                in four bordered panels 180px tall. None of the numbers is independently
+                actionable, so per density rule 4 they belong in the subtitle. */}
             <p className="text-muted-foreground">
-              {isOwnerPortal
-                ? "Manage contracts, receipts, and property files by entity instead of one flat list."
-                : "Review the documents shared with your tenancy and download what you need quickly."}
+              {stats ? (
+                <>
+                  {t("summary", {
+                    count: stats.totalDocuments,
+                    size: formatFileSize(stats.totalSize),
+                    contracts: stats.byType.contract || 0,
+                    photos: stats.byType.photo || 0,
+                  })}
+                </>
+              ) : isOwnerPortal ? (
+                t("subtitle")
+              ) : (
+                t("subtitleTenant")
+              )}
             </p>
           </div>
           {uploadActions && <div className="flex gap-2">{uploadActions}</div>}
@@ -182,7 +202,7 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
         <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-lg">
           {error}
           <button onClick={() => setError(null)} className="ml-2 underline">
-            Dismiss
+            {t("dismiss")}
           </button>
         </div>
       )}
@@ -190,17 +210,17 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
       <Tabs defaultValue="archive" className="space-y-6">
         {!embedded && isOwnerPortal && (
           <TabsList>
-            <TabsTrigger value="archive">Archive</TabsTrigger>
+            <TabsTrigger value="archive">{t("tabs.archive")}</TabsTrigger>
             <TabsTrigger value="inbox">
-              Inbox
+              {t("tabs.inbox")}
               {unassignedDocuments.length > 0 && (
                 <span className="ml-1.5 rounded-full bg-[var(--color-muted)] px-2 py-0.5 text-xs">
                   {unassignedDocuments.length}
                 </span>
               )}
             </TabsTrigger>
-            <TabsTrigger value="ocr-queue">OCR Queue</TabsTrigger>
-            <TabsTrigger value="review-required">Review Required</TabsTrigger>
+            <TabsTrigger value="ocr-queue">{t("tabs.ocrQueue")}</TabsTrigger>
+            <TabsTrigger value="review-required">{t("tabs.reviewRequired")}</TabsTrigger>
           </TabsList>
         )}
 
@@ -208,16 +228,15 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
           {unassignedDocuments.length === 0 ? (
             <Card>
               <CardContent className="py-10 text-center text-sm text-[var(--color-muted-foreground)]">
-                Every upload has a property, tenant, or owner attached — nothing waiting on triage.
+                {t("inboxEmpty")}
               </CardContent>
             </Card>
           ) : (
             <Card>
               <CardHeader>
-                <CardTitle>Unassigned uploads</CardTitle>
+                <CardTitle>{t("unassignedUploads")}</CardTitle>
                 <CardDescription>
-                  {unassignedDocuments.length} document{unassignedDocuments.length !== 1 ? "s" : ""}{" "}
-                  without a linked property, tenant, or owner
+                  {t("unassignedCount", { count: unassignedDocuments.length })}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -246,7 +265,7 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
                           e.stopPropagation();
                           handleDownload(doc);
                         }}
-                        aria-label="Download document"
+                        aria-label={t("download")}
                       >
                         <Download className="h-4 w-4" aria-hidden="true" />
                       </Button>
@@ -267,249 +286,194 @@ export function DocumentsView({ propertyId, embedded = false }: DocumentsViewPro
         </TabsContent>
 
         <TabsContent value="archive" className="mt-0 space-y-6">
-          {/* Stats Cards — portfolio-wide totals, not property-scoped, so hidden when embedded */}
-          {!embedded && stats && (
-            <div className="grid gap-4 md:grid-cols-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>Total Documents</CardDescription>
-                  <CardTitle className="text-3xl">{stats.totalDocuments}</CardTitle>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>Total Size</CardDescription>
-                  <CardTitle className="text-3xl">{formatFileSize(stats.totalSize)}</CardTitle>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>Contracts</CardDescription>
-                  <CardTitle className="text-3xl">{stats.byType.contract || 0}</CardTitle>
-                </CardHeader>
-              </Card>
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardDescription>Photos</CardDescription>
-                  <CardTitle className="text-3xl">{stats.byType.photo || 0}</CardTitle>
-                </CardHeader>
-              </Card>
+          {/* Utility row, not a bordered band. What stood here before: a 4-card stat row (now
+              the page subtitle), a "Document workspace" card whose entire content was a static
+              sentence of prose, and this filter set inside a third Card — three chrome bands
+              that pushed the first file 670px down the page. */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                placeholder={t("search")}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
             </div>
-          )}
-
-          <Card>
-            <CardContent className="flex flex-col gap-3 p-5 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-sm font-medium text-foreground">
-                  {isOwnerPortal ? "Document workspace" : "Shared document workspace"}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {isOwnerPortal
-                    ? "Group by property context, keep contracts and receipts close to the related entity, and export on demand."
-                    : "Everything here belongs to your lease, property, or payment history."}
-                </p>
-              </div>
-              {activeFilters.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {activeFilters.map((filter) => (
-                    <Badge key={filter} variant="outline">
-                      {filter}
-                    </Badge>
+            <Select
+              value={typeFilter}
+              onValueChange={(v) => setTypeFilter(v as DocumentType | "all")}
+            >
+              <SelectTrigger className="w-[180px]" aria-label={t("filterByType")}>
+                <Filter className="mr-2 h-4 w-4" />
+                <SelectValue placeholder={t("filterByType")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{t("allTypes")}</SelectItem>
+                {Object.entries(documentTypeConfig).map(([key, config]) => (
+                  <SelectItem key={key} value={key}>
+                    {config.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {!embedded && isOwnerPortal && (
+              <Select value={propertyFilter} onValueChange={setPropertyFilter}>
+                <SelectTrigger className="w-[180px]" aria-label={t("filterByProperty")}>
+                  <SelectValue placeholder={t("filterByProperty")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("allProperties")}</SelectItem>
+                  {properties.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
                   ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
 
-          {/* Filters */}
+          {/* Documents List — no card header: the tab label names the view, the group headings
+              name each section, and the total is in the page subtitle. */}
           <Card>
             <CardContent className="pt-6">
-              <div className="flex flex-col sm:flex-row gap-4">
-                <div className="flex-1">
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search documents..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                </div>
-                <Select
-                  value={typeFilter}
-                  onValueChange={(v) => setTypeFilter(v as DocumentType | "all")}
-                >
-                  <SelectTrigger className="w-[180px]">
-                    <Filter className="mr-2 h-4 w-4" />
-                    <SelectValue placeholder="Filter by type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
-                    {Object.entries(documentTypeConfig).map(([key, config]) => (
-                      <SelectItem key={key} value={key}>
-                        {config.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {!embedded && isOwnerPortal && (
-                  <Select value={propertyFilter} onValueChange={setPropertyFilter}>
-                    <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Filter by property" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Properties</SelectItem>
-                      {properties.map((p) => (
-                        <SelectItem key={p.id} value={p.id}>
-                          {p.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Documents List */}
-          <Card>
-            <CardHeader>
-              <CardTitle>{isOwnerPortal ? "Documents by entity" : "Shared with you"}</CardTitle>
-              <CardDescription>
-                {documents.length} document{documents.length !== 1 ? "s" : ""} found
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
               {documents.length === 0 ? (
                 <EmptyStateIllustration
                   type="documents"
-                  title="No documents"
-                  description={
-                    isOwnerPortal
-                      ? "Upload your first document to get started"
-                      : "No documents have been shared with this tenant yet"
-                  }
+                  title={t("empty")}
+                  description={isOwnerPortal ? t("emptyOwner") : t("emptyTenant")}
                 />
               ) : (
                 <div className="space-y-6">
-                  {Object.entries(groupedDocuments).map(([groupName, groupDocs]) => (
-                    <div key={groupName} className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div>
+                  {Object.entries(groupedDocuments).map(([groupName, groupDocs]) => {
+                    const expanded = expandedGroups.has(groupName);
+                    const visibleDocs = expanded ? groupDocs : groupDocs.slice(0, GROUP_PREVIEW);
+                    return (
+                      <div key={groupName} className="space-y-3">
+                        <div className="flex items-center justify-between">
                           <h3 className="font-medium text-foreground">{groupName}</h3>
-                          <p className="text-sm text-muted-foreground">
-                            {groupDocs.length} document{groupDocs.length !== 1 ? "s" : ""}
-                          </p>
+                          <Badge variant="outline">{groupDocs.length}</Badge>
                         </div>
-                        <Badge variant="outline">{groupDocs.length}</Badge>
-                      </div>
 
-                      <div className="space-y-4">
-                        {groupDocs.map((doc) => {
-                          const config = documentTypeConfig[doc.type];
-                          const Icon = config.icon;
-                          const expiry = getExpiryInfo(doc.expiresAt);
-                          return (
-                            <div
-                              key={doc.id}
-                              className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 transition-colors hover:bg-zinc-800/60 cursor-pointer"
-                              onClick={() => openDocumentOverlay(doc.id)}
-                            >
-                              <div className="flex items-center gap-4">
-                                <div className="rounded-lg bg-muted p-2">
-                                  <Icon className="h-6 w-6" />
-                                </div>
-                                <div>
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <h4 className="font-medium">{doc.name}</h4>
-                                    <Badge variant="secondary" className={config.color}>
-                                      {config.label}
-                                    </Badge>
-                                    {expiry && (
-                                      <Badge
-                                        variant={expiry.variant}
-                                        className="flex items-center gap-1"
-                                      >
-                                        <Clock className="h-3 w-3" />
-                                        {expiry.label}
+                        <div className="space-y-4">
+                          {visibleDocs.map((doc) => {
+                            const config = documentTypeConfig[doc.type];
+                            const Icon = config.icon;
+                            const expiry = getExpiryInfo(doc.expiresAt);
+                            return (
+                              <div
+                                key={doc.id}
+                                className="flex items-center justify-between rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-4 transition-colors hover:bg-[var(--color-surface-hover)] cursor-pointer"
+                                onClick={() => openDocumentOverlay(doc.id)}
+                              >
+                                <div className="flex items-center gap-4">
+                                  <div className="rounded-lg bg-muted p-2">
+                                    <Icon className="h-6 w-6" />
+                                  </div>
+                                  <div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <h4 className="font-medium">{doc.name}</h4>
+                                      <Badge variant="secondary" className={config.color}>
+                                        {config.label}
                                       </Badge>
+                                      {expiry && (
+                                        <Badge
+                                          variant={expiry.variant}
+                                          className="flex items-center gap-1"
+                                        >
+                                          <Clock className="h-3 w-3" />
+                                          {expiry.label}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                                      <span>{formatFileSize(doc.fileSize)}</span>
+                                      <span>•</span>
+                                      <span>{formatDocumentDate(doc.uploadedAt)}</span>
+                                      {doc.propertyName && (
+                                        <>
+                                          <span>•</span>
+                                          <span>{doc.propertyName}</span>
+                                        </>
+                                      )}
+                                      {doc.tenantName && (
+                                        <>
+                                          <span>•</span>
+                                          <span>{doc.tenantName}</span>
+                                        </>
+                                      )}
+                                    </div>
+                                    {doc.description && (
+                                      <p className="mt-1 text-sm text-muted-foreground">
+                                        {doc.description}
+                                      </p>
                                     )}
                                   </div>
-                                  <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                                    <span>{formatFileSize(doc.fileSize)}</span>
-                                    <span>•</span>
-                                    <span>{formatDocumentDate(doc.uploadedAt)}</span>
-                                    {doc.propertyName && (
-                                      <>
-                                        <span>•</span>
-                                        <span>{doc.propertyName}</span>
-                                      </>
-                                    )}
-                                    {doc.tenantName && (
-                                      <>
-                                        <span>•</span>
-                                        <span>{doc.tenantName}</span>
-                                      </>
-                                    )}
-                                  </div>
-                                  {doc.description && (
-                                    <p className="mt-1 text-sm text-muted-foreground">
-                                      {doc.description}
-                                    </p>
+                                </div>
+                                <div
+                                  className="flex items-center gap-2"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => handleDownload(doc)}
+                                    aria-label={t("download")}
+                                  >
+                                    <Download className="h-4 w-4" aria-hidden="true" />
+                                  </Button>
+                                  {isOwnerPortal && (
+                                    <AlertDialog>
+                                      <AlertDialogTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="icon"
+                                          aria-label={t("delete")}
+                                        >
+                                          <Trash2
+                                            className="h-4 w-4 text-destructive"
+                                            aria-hidden="true"
+                                          />
+                                        </Button>
+                                      </AlertDialogTrigger>
+                                      <AlertDialogContent>
+                                        <AlertDialogHeader>
+                                          <AlertDialogTitle>{t("deleteTitle")}</AlertDialogTitle>
+                                          <AlertDialogDescription>
+                                            {t("deleteConfirm", { name: doc.name })}
+                                          </AlertDialogDescription>
+                                        </AlertDialogHeader>
+                                        <AlertDialogFooter>
+                                          <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                                          <AlertDialogAction onClick={() => handleDelete(doc.id)}>
+                                            {t("delete")}
+                                          </AlertDialogAction>
+                                        </AlertDialogFooter>
+                                      </AlertDialogContent>
+                                    </AlertDialog>
                                   )}
                                 </div>
                               </div>
-                              <div
-                                className="flex items-center gap-2"
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  onClick={() => handleDownload(doc)}
-                                  aria-label="Download document"
-                                >
-                                  <Download className="h-4 w-4" aria-hidden="true" />
-                                </Button>
-                                {isOwnerPortal && (
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        aria-label="Delete document"
-                                      >
-                                        <Trash2
-                                          className="h-4 w-4 text-destructive"
-                                          aria-hidden="true"
-                                        />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Delete Document</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Are you sure you want to delete &quot;{doc.name}&quot;?
-                                          This action cannot be undone.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDelete(doc.id)}>
-                                          Delete
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
+                        </div>
+
+                        {groupDocs.length > GROUP_PREVIEW && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleGroup(groupName)}
+                            aria-expanded={expanded}
+                          >
+                            {expanded
+                              ? t("showLess")
+                              : t("showAllIn", { count: groupDocs.length, group: groupName })}
+                          </Button>
+                        )}
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </CardContent>

@@ -174,13 +174,18 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
     function onOrbitKeydown(e: KeyboardEvent) {
       if (e.key === "Enter" || e.key === " ") {
         e.preventDefault();
-        bloom();
+        // Keyboard must do what the click does, or the mark is a control with two meanings.
+        onJump();
       }
     }
     function onOrbitAnimEnd(e: AnimationEvent) {
       if (e.animationName === "dilate") orbitEl?.classList.remove(styles.orbitBlooming);
     }
-    orbitEl?.addEventListener("click", bloom);
+    // Clicking the mark skips to the end of the sequence — the obvious reading of "click the
+    // logo". The colour bloom it used to trigger moves to hover, where it survives as ambient
+    // polish without competing for the click.
+    orbitEl?.addEventListener("click", onJump);
+    orbitEl?.addEventListener("mouseenter", bloom);
     orbitEl?.addEventListener("keydown", onOrbitKeydown);
     orbitEl?.addEventListener("animationend", onOrbitAnimEnd);
 
@@ -209,7 +214,8 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
       root.removeEventListener("wheel", onWheel);
       root.removeEventListener("mousemove", onMouseMove);
       jumpEl?.removeEventListener("click", onJump);
-      orbitEl?.removeEventListener("click", bloom);
+      orbitEl?.removeEventListener("click", onJump);
+      orbitEl?.removeEventListener("mouseenter", bloom);
       orbitEl?.removeEventListener("keydown", onOrbitKeydown);
       orbitEl?.removeEventListener("animationend", onOrbitAnimEnd);
       ctaCleanups.forEach((fn) => fn());
@@ -239,8 +245,6 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
     );
   });
 
-  const currentFlag = LOCALE_FLAGS[locale as Locale] ?? LOCALE_FLAGS.en;
-
   return (
     <div
       ref={rootRef}
@@ -253,9 +257,11 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
           aria-haspopup="true"
           aria-expanded={menuOpen}
           onClick={() => setMenuOpen((v) => !v)}
-          className="inline-flex items-center gap-1.5 border border-[var(--color-border)] bg-[var(--color-canvas)] px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]"
+          className="inline-flex items-center gap-1.5 border border-[var(--color-border)] bg-[var(--color-canvas)] px-2.5 py-1.5 font-mono text-[12px] md:text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]"
         >
-          <span className="text-sm leading-none">{currentFlag}</span>
+          {/* No flag emoji here: Windows ships no country-flag glyphs, so `🇵🇹` falls back to
+              the regional-indicator letters and the trigger reads "PT PT". The code alone is
+              unambiguous; the menu below still pairs flags with full language names. */}
           {locale.toUpperCase()}
           <ChevronDown className="h-2.5 w-2.5 opacity-70" aria-hidden />
         </button>
@@ -463,14 +469,15 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
           ref={orbitRef}
           role="button"
           tabIndex={0}
-          aria-label={tLocaleCtrl("bloomAria")}
+          aria-label={tLocaleCtrl("jumpAria")}
           className={styles.orbit}
         >
           <span className={styles.glow} aria-hidden />
           <span ref={r1Ref} className={cn(styles.ring, styles.ringR1)} aria-hidden />
           <span ref={r2Ref} className={cn(styles.ring, styles.ringR2)} aria-hidden />
           <span className={styles.markScale}>
-            <SitusPortalMark size="sm" className="h-36 w-36" />
+            {/* Grows with the orbit's clamped size so the mark-to-ring proportion holds. */}
+            <SitusPortalMark size="sm" className="h-36 w-36 lg:h-44 lg:w-44" />
           </span>
         </div>
         <div className={styles.splashFooter}>

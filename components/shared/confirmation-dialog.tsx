@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,6 +19,7 @@ interface ConfirmationDialogProps {
 }
 
 export function ConfirmationDialog({ dialog }: ConfirmationDialogProps) {
+  const t = useTranslations("common");
   const { state, cancel, handleConfirm } = dialog;
   const isDestructive = state.variant === "destructive";
 
@@ -77,7 +79,7 @@ export function ConfirmationDialog({ dialog }: ConfirmationDialogProps) {
             {state.isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Processing...
+                {t("processing")}
               </>
             ) : (
               state.confirmLabel

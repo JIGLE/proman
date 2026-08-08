@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MaintenanceTicket } from "@/lib/types";
@@ -29,6 +30,7 @@ function dateKey(value: string): string {
  * lease-calendar.tsx visual pattern (month nav + day-cell grid) tailored to
  * MaintenanceTicket instead of lease events. */
 export function OperationsCalendar({ tickets, onTicketClick }: OperationsCalendarProps) {
+  const t = useTranslations("common");
   const [currentDate, setCurrentDate] = useState(new Date());
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -83,7 +85,7 @@ export function OperationsCalendar({ tickets, onTicketClick }: OperationsCalenda
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            aria-label="Previous month"
+            aria-label={t("previousMonth")}
             onClick={() => setCurrentDate(new Date(year, month - 1, 1))}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -92,7 +94,7 @@ export function OperationsCalendar({ tickets, onTicketClick }: OperationsCalenda
             variant="outline"
             size="icon"
             className="h-8 w-8"
-            aria-label="Next month"
+            aria-label={t("nextMonth")}
             onClick={() => setCurrentDate(new Date(year, month + 1, 1))}
           >
             <ChevronRight className="h-4 w-4" />
@@ -104,7 +106,7 @@ export function OperationsCalendar({ tickets, onTicketClick }: OperationsCalenda
         {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
           <div
             key={d}
-            className="bg-[var(--color-surface)] px-2 py-1.5 text-center text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]"
+            className="bg-[var(--color-surface)] px-2 py-1.5 text-center text-[12px] md:text-[10px] uppercase tracking-wide text-[var(--color-muted-foreground)]"
           >
             {d}
           </div>
@@ -126,14 +128,14 @@ export function OperationsCalendar({ tickets, onTicketClick }: OperationsCalenda
                     <button
                       key={`${entry.ticket.id}-${entry.kind}-${i}`}
                       onClick={() => onTicketClick?.(entry.ticket)}
-                      className="flex w-full items-center gap-1 truncate text-left text-[10px] text-[var(--color-foreground)] hover:underline"
+                      className="flex w-full items-center gap-1 truncate text-left text-[12px] md:text-[10px] text-[var(--color-foreground)] hover:underline"
                     >
                       <span className={KIND_DOT_CLASS[entry.kind]} />
                       <span className="truncate">{entry.ticket.title}</span>
                     </button>
                   ))}
                   {cell.entries.length > 3 && (
-                    <p className="text-[10px] text-[var(--color-muted-foreground)]">
+                    <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)]">
                       +{cell.entries.length - 3} more
                     </p>
                   )}
@@ -157,9 +159,7 @@ export function OperationsCalendar({ tickets, onTicketClick }: OperationsCalenda
       </div>
 
       {tickets.length === 0 && (
-        <p className="text-sm text-[var(--color-muted-foreground)]">
-          No scheduled or due maintenance work.
-        </p>
+        <p className="text-sm text-[var(--color-muted-foreground)]">{t("noScheduledWork")}</p>
       )}
     </div>
   );

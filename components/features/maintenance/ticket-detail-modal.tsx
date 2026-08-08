@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
   Building2,
@@ -33,6 +34,7 @@ import { useToast } from "@/lib/contexts/toast-context";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 import { useCurrency } from "@/lib/contexts/currency-context";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -52,11 +54,12 @@ const STATUS_COLORS: Record<string, string> = {
     "bg-[var(--color-info-muted)] text-[var(--color-info)] border-[var(--color-info)]/30",
   resolved:
     "bg-[var(--color-success-muted)] text-[var(--color-success)] border-[var(--color-success)]/30",
-  closed: "bg-zinc-500/10 text-zinc-400 border-zinc-500/30",
+  closed:
+    "bg-[var(--color-popover)] text-[var(--color-muted-foreground)] border-[var(--color-inner-border)]",
 };
 
 const PRIORITY_COLORS: Record<string, string> = {
-  low: "bg-zinc-500/10 text-zinc-400",
+  low: "bg-[var(--color-popover)] text-[var(--color-muted-foreground)]",
   medium: "bg-[var(--color-warning-muted)] text-[var(--color-warning)]",
   high: "bg-[var(--color-warning-muted)] text-[var(--color-warning)]",
   urgent: "bg-[var(--color-error-muted)] text-[var(--color-destructive)]",
@@ -79,6 +82,8 @@ export function TicketDetailModal({
 }: TicketDetailModalProps) {
   const { updateMaintenance, deleteMaintenance, addExpense } = useApp();
   const { success, error } = useToast();
+  const t = useTranslations("maintenance.ticket");
+  const tActions = useTranslations("actions");
   const { formatCurrency } = useCurrency();
   const confirmDialog = useConfirmDialog();
   const [activeTab, setActiveTab] = useState("overview");
@@ -102,6 +107,8 @@ export function TicketDetailModal({
         formData.append("file", file);
         const res = await fetch(`/api/maintenance/${ticket.id}/images`, {
           method: "POST",
+          // No Content-Type: the browser must set the multipart boundary itself.
+          headers: csrfHeaders(),
           body: formData,
         });
         if (!res.ok) {
@@ -111,7 +118,7 @@ export function TicketDetailModal({
         const data = (await res.json()) as { images: string[] };
         setImages(data.images);
         await updateMaintenance(ticket.id, { images: data.images });
-        success("Photo uploaded");
+        success(t("toastPhotoUploaded"));
       } catch (err) {
         error(err instanceof Error ? err.message : "Failed to upload photo");
       } finally {
@@ -119,7 +126,7 @@ export function TicketDetailModal({
         if (fileInputRef.current) fileInputRef.current.value = "";
       }
     },
-    [ticket, updateMaintenance, success, error],
+    [ticket, updateMaintenance, success, error, t],
   );
 
   const handleImageDelete = useCallback(
@@ -130,17 +137,18 @@ export function TicketDetailModal({
       try {
         const res = await fetch(`/api/maintenance/${ticket.id}/images/${filename}`, {
           method: "DELETE",
+          headers: csrfHeaders(),
         });
         if (!res.ok) throw new Error("Delete failed");
         const data = (await res.json()) as { images: string[] };
         setImages(data.images);
         await updateMaintenance(ticket.id, { images: data.images });
-        success("Photo removed");
+        success(t("toastPhotoRemoved"));
       } catch {
-        error("Failed to remove photo");
+        error(t("toastPhotoRemoveFailed"));
       }
     },
-    [ticket, updateMaintenance, success, error],
+    [ticket, updateMaintenance, success, error, t],
   );
 
   if (!ticket) return null;
@@ -158,13 +166,13 @@ export function TicketDetailModal({
   const primaryAction = (() => {
     if (ticket.status === "open") {
       return {
-        label: "Mark In Progress",
+        label: t("markInProgress"),
         onClick: async () => {
           try {
             await updateMaintenance(ticket.id, { status: "in_progress" });
-            success("Ticket moved to In Progress");
+            success(t("toastInProgress"));
           } catch {
-            error("Failed to update status");
+            error(t("toastStatusFailed"));
           }
         },
         variant: "default" as const,
@@ -172,7 +180,7 @@ export function TicketDetailModal({
     }
     if (ticket.status === "in_progress") {
       return {
-        label: "Mark Resolved",
+        label: t("markResolved"),
         onClick: async () => {
           try {
             await updateMaintenance(ticket.id, {
@@ -190,10 +198,10 @@ export function TicketDetailModal({
                 description: ticket.title,
               });
             }
-            success("Ticket resolved");
+            success(t("toastResolved"));
             onClose();
           } catch {
-            error("Failed to resolve ticket");
+            error(t("toastResolveFailed"));
           }
         },
         variant: "default" as const,
@@ -201,14 +209,14 @@ export function TicketDetailModal({
     }
     if (ticket.status === "resolved") {
       return {
-        label: "Close Ticket",
+        label: t("closeTicket"),
         onClick: async () => {
           try {
             await updateMaintenance(ticket.id, { status: "closed" });
-            success("Ticket closed");
+            success(t("toastClosed"));
             onClose();
           } catch {
-            error("Failed to close ticket");
+            error(t("toastCloseFailed"));
           }
         },
         variant: "secondary" as const,
@@ -232,7 +240,7 @@ export function TicketDetailModal({
       id: "no-vendor",
       icon: Wrench,
       color: "text-[var(--color-warning)]",
-      label: "No vendor assigned",
+      label: t("noVendor"),
     });
   }
   if (ticket.isTenantReport) {
@@ -240,7 +248,7 @@ export function TicketDetailModal({
       id: "tenant-report",
       icon: User,
       color: "text-[var(--color-info)]",
-      label: "Reported by tenant",
+      label: t("reportedByTenant"),
     });
   }
 
@@ -248,9 +256,9 @@ export function TicketDetailModal({
   const handleDelete = () => {
     confirmDialog.confirm(
       {
-        title: "Delete Ticket",
-        description: `"${ticket.title}" will be permanently removed. This action cannot be undone.`,
-        confirmLabel: "Delete",
+        title: t("deleteTitle"),
+        description: t("deleteDescription"),
+        confirmLabel: tActions("delete"),
         variant: "destructive",
       },
       async () => {
@@ -260,10 +268,10 @@ export function TicketDetailModal({
           } else {
             await deleteMaintenance(ticket.id);
           }
-          success("Ticket deleted");
+          success(t("toastDeleted"));
           onClose();
         } catch {
-          error("Failed to delete ticket");
+          error(t("toastDeleteFailed"));
         }
       },
     );
@@ -292,17 +300,17 @@ export function TicketDetailModal({
                   </DialogDescription>
                   <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                     <span
-                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${STATUS_COLORS[ticket.status] ?? STATUS_COLORS.open}`}
+                      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[12px] md:text-[10px] font-semibold uppercase tracking-wide ${STATUS_COLORS[ticket.status] ?? STATUS_COLORS.open}`}
                     >
                       {ticket.status.replace("_", " ")}
                     </span>
                     <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ${PRIORITY_COLORS[ticket.priority] ?? ""}`}
+                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[12px] md:text-[10px] font-semibold ${PRIORITY_COLORS[ticket.priority] ?? ""}`}
                     >
                       {ticket.priority}
                     </span>
                     {ticket.category && (
-                      <Badge variant="outline" className="text-[10px] py-0">
+                      <Badge variant="outline" className="text-[12px] md:text-[10px] py-0">
                         {ticket.category}
                       </Badge>
                     )}
@@ -367,12 +375,12 @@ export function TicketDetailModal({
           {/* Zone 4: Tabbed Info */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="w-full justify-start">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="costs">Costs</TabsTrigger>
+              <TabsTrigger value="overview">{t("tabOverview")}</TabsTrigger>
+              <TabsTrigger value="costs">{t("tabCosts")}</TabsTrigger>
               <TabsTrigger value="images">
                 Photos{images.length > 0 && ` (${images.length})`}
               </TabsTrigger>
-              <TabsTrigger value="activity">Activity</TabsTrigger>
+              <TabsTrigger value="activity">{t("tabActivity")}</TabsTrigger>
             </TabsList>
 
             {/* Overview tab */}
@@ -383,8 +391,8 @@ export function TicketDetailModal({
                   <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
                     <Building2 className="h-4 w-4 shrink-0 text-accent-primary" />
                     <div className="min-w-0">
-                      <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
-                        Property
+                      <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                        {t("property")}
                       </p>
                       <p className="text-sm font-medium truncate">{ticket.propertyName}</p>
                     </div>
@@ -394,8 +402,8 @@ export function TicketDetailModal({
                   <div className="flex items-center gap-2 rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
                     <User className="h-4 w-4 shrink-0 text-accent-primary" />
                     <div className="min-w-0">
-                      <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
-                        Tenant
+                      <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                        {t("tenant")}
                       </p>
                       <p className="text-sm font-medium truncate">{ticket.tenantName}</p>
                     </div>
@@ -405,8 +413,8 @@ export function TicketDetailModal({
 
               {/* Description */}
               <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
-                <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-1">
-                  Description
+                <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-1">
+                  {t("description")}
                 </p>
                 <p className="text-sm text-[var(--color-foreground)]">{ticket.description}</p>
               </div>
@@ -414,8 +422,8 @@ export function TicketDetailModal({
               {/* Vendor */}
               {vendorDisplay && (
                 <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
-                  <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
-                    Vendor / Contractor
+                  <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
+                    {t("vendor")}
                   </p>
                   <div className="flex items-center gap-2">
                     <Wrench className="h-4 w-4 text-[var(--color-muted-foreground)]" />
@@ -438,8 +446,8 @@ export function TicketDetailModal({
                   <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4 text-[var(--color-muted-foreground)]" />
                     <div>
-                      <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
-                        Scheduled
+                      <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                        {t("scheduled")}
                       </p>
                       <p className="font-medium">{formatDate(ticket.scheduledDate)}</p>
                     </div>
@@ -451,7 +459,7 @@ export function TicketDetailModal({
                       className={`h-4 w-4 ${isOverdue ? "text-[var(--color-destructive)]" : "text-[var(--color-muted-foreground)]"}`}
                     />
                     <div>
-                      <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                      <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
                         Due
                       </p>
                       <p
@@ -476,7 +484,7 @@ export function TicketDetailModal({
                           <div className="flex items-center gap-2">
                             <Receipt className="h-4 w-4 text-accent-primary" />
                             <span className="text-sm text-[var(--color-muted-foreground)]">
-                              Estimated Cost
+                              {t("estimatedCost")}
                             </span>
                           </div>
                           <span className="text-lg font-semibold text-[var(--color-foreground)]">
@@ -491,7 +499,7 @@ export function TicketDetailModal({
                           <div className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-[var(--color-success)]" />
                             <span className="text-sm text-[var(--color-muted-foreground)]">
-                              Actual Cost
+                              {t("actualCost")}
                             </span>
                           </div>
                           <span className="text-lg font-semibold text-[var(--color-success)]">
@@ -502,7 +510,9 @@ export function TicketDetailModal({
                     )}
                     {ticket.invoiceRef && (
                       <div className="flex items-center justify-between p-3 text-sm">
-                        <span className="text-[var(--color-muted-foreground)]">Invoice Ref</span>
+                        <span className="text-[var(--color-muted-foreground)]">
+                          {t("invoiceRef")}
+                        </span>
                         <span className="font-medium">{ticket.invoiceRef}</span>
                       </div>
                     )}
@@ -511,7 +521,7 @@ export function TicketDetailModal({
                   <div className="rounded-md border border-dashed border-[var(--color-border)] bg-transparent p-6 text-center">
                     <Receipt className="mx-auto h-8 w-8 text-[var(--color-muted-foreground)] mb-2 opacity-50" />
                     <p className="text-sm text-[var(--color-muted-foreground)]">
-                      No cost estimate recorded
+                      {t("noEstimate")}
                     </p>
                     {onEdit && (
                       <Button
@@ -520,7 +530,7 @@ export function TicketDetailModal({
                         className="mt-2"
                         onClick={() => onEdit(ticket)}
                       >
-                        Add estimate
+                        {t("addEstimate")}
                       </Button>
                     )}
                   </div>
@@ -542,7 +552,7 @@ export function TicketDetailModal({
                 <div className="rounded-md border border-dashed border-[var(--color-border)] p-8 text-center">
                   <Camera className="mx-auto h-8 w-8 text-[var(--color-muted-foreground)] mb-2 opacity-40" />
                   <p className="text-sm text-[var(--color-muted-foreground)] mb-3">
-                    No photos attached yet
+                    {t("noPhotos")}
                   </p>
                   <Button
                     variant="outline"
@@ -555,7 +565,7 @@ export function TicketDetailModal({
                     ) : (
                       <Plus className="h-3.5 w-3.5 mr-1.5" />
                     )}
-                    Add photo
+                    {t("addPhoto")}
                   </Button>
                 </div>
               ) : (
@@ -574,7 +584,7 @@ export function TicketDetailModal({
                         <button
                           onClick={() => handleImageDelete(url)}
                           className="absolute right-1 top-1 rounded-md bg-black/60 p-1 text-white opacity-0 transition-opacity group-hover:opacity-100 focus:opacity-100"
-                          aria-label="Remove photo"
+                          aria-label={t("removePhoto")}
                         >
                           <Trash2 className="h-3 w-3" />
                         </button>
@@ -594,7 +604,7 @@ export function TicketDetailModal({
                     ) : (
                       <>
                         <Plus className="h-3.5 w-3.5" />
-                        Add photo
+                        {t("addPhoto")}
                       </>
                     )}
                   </button>
@@ -611,7 +621,7 @@ export function TicketDetailModal({
                       <CheckCircle className="h-3.5 w-3.5 text-[var(--color-success)]" />
                     </div>
                     <div>
-                      <p className="font-medium text-[var(--color-foreground)]">Resolved</p>
+                      <p className="font-medium text-[var(--color-foreground)]">{t("resolved")}</p>
                       <p className="text-xs text-[var(--color-muted-foreground)]">
                         {formatDate(ticket.resolvedAt)}
                       </p>
@@ -620,11 +630,11 @@ export function TicketDetailModal({
                 )}
                 {ticket.status === "closed" && (
                   <div className="flex items-start gap-3 text-sm">
-                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-500/10">
-                      <XCircle className="h-3.5 w-3.5 text-zinc-400" />
+                    <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-popover)]">
+                      <XCircle className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" />
                     </div>
                     <div>
-                      <p className="font-medium text-[var(--color-foreground)]">Closed</p>
+                      <p className="font-medium text-[var(--color-foreground)]">{t("closed")}</p>
                       <p className="text-xs text-[var(--color-muted-foreground)]">
                         {formatDate(ticket.updatedAt)}
                       </p>
@@ -632,11 +642,11 @@ export function TicketDetailModal({
                   </div>
                 )}
                 <div className="flex items-start gap-3 text-sm">
-                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-zinc-500/10">
-                    <Wrench className="h-3.5 w-3.5 text-zinc-400" />
+                  <div className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[var(--color-popover)]">
+                    <Wrench className="h-3.5 w-3.5 text-[var(--color-muted-foreground)]" />
                   </div>
                   <div>
-                    <p className="font-medium text-[var(--color-foreground)]">Created</p>
+                    <p className="font-medium text-[var(--color-foreground)]">{t("created")}</p>
                     <p className="text-xs text-[var(--color-muted-foreground)]">
                       {formatDate(ticket.createdAt)}
                     </p>

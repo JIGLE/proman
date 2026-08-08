@@ -196,10 +196,15 @@ export function PaymentMatrixView(): React.ReactElement {
       {/* One utility row: the year summary as text (declutter rule 4), plus the
           status/year filters — no separate heading, no card grid. */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        {/* Scoped to the selected year, and labelled as such. Unlabelled it read as a second
+            account-level status row under the container's four panels — and its "outstanding"
+            (year to date) sat directly under their "Overdue rent" (right now) showing a
+            different number, so the two looked like they disagreed. Outstanding is dropped
+            here: the panel above is the one you can click through to act on. */}
         <p className="text-sm text-[var(--color-muted-foreground)]">
+          <span className="mono-label mr-2">{selectedYear}</span>
           {formatCurrency(yearSummary.expected)} {t("totalExpected").toLowerCase()} ·{" "}
           {formatCurrency(yearSummary.received)} {t("totalReceived").toLowerCase()} ·{" "}
-          {formatCurrency(yearSummary.outstanding)} {t("outstanding").toLowerCase()} ·{" "}
           {yearSummary.rate}% {t("collectionRate").toLowerCase()}
         </p>
         <div className="flex flex-wrap items-center gap-3">

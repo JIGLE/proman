@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, forwardRef, useImperativeHandle } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { Download, Plus, Phone, Mail, MapPin, Building2 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils/utils";
@@ -40,6 +41,11 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
     const { state, addOwner, updateOwner } = useApp();
     const { owners, properties, receipts, expenses, loading } = state;
     const { success, error } = useToast();
+    const t = useTranslations("owners");
+    const tActions = useTranslations("actions");
+    const tForms = useTranslations("forms");
+    const tStatus = useTranslations("status");
+    const locale = useLocale();
     const { formatCurrency } = useCurrency();
     const confirmDialog = useConfirmDialog();
     const compact = true; // Always compact
@@ -72,10 +78,10 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
       onSubmit: async (data, isEdit) => {
         if (isEdit && dialog.editingItem) {
           await updateOwner(dialog.editingItem.id, data);
-          success("Owner updated successfully");
+          success(t("toastUpdated"));
         } else {
           await addOwner(data);
-          success("Owner created successfully");
+          success(t("toastCreated"));
         }
       },
       onError: (errorMessage) => {
@@ -95,23 +101,23 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
         const doc = new jsPDF();
 
         doc.setFontSize(20);
-        doc.text("OWNER STATEMENT", 105, 20, { align: "center" });
+        doc.text(t("pdf.heading"), 105, 20, { align: "center" });
 
         doc.setFontSize(12);
-        doc.text(`Owner: ${owner.name}`, 20, 40);
-        doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 50);
+        doc.text(`${t("pdf.owner")}: ${owner.name}`, 20, 40);
+        doc.text(`${t("pdf.date")}: ${new Date().toLocaleDateString(locale)}`, 20, 50);
 
         doc.line(20, 60, 190, 60);
 
-        doc.text("Statement Period: Current Month", 20, 70);
-        doc.text("Ownership Summary:", 20, 85);
+        doc.text(t("pdf.period"), 20, 70);
+        doc.text(t("pdf.summary"), 20, 85);
 
         let yPos = 95;
         let totalNetIncome = 0;
 
         if (owner.properties && owner.properties.length > 0) {
           owner.properties.forEach((po) => {
-            const propName = po.property?.name || "Unknown Property";
+            const propName = po.property?.name || t("pdf.unknownProperty");
             const percentage = po.ownershipPercentage / 100;
 
             // Filter financials for this property (current month example)
@@ -136,14 +142,14 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
             doc.text(`- ${propName} (${po.ownershipPercentage}%)`, 25, yPos);
             yPos += 7;
             doc.setFontSize(10);
-            doc.text(`  Share of Income: ${formatCurrency(ownerIncome)}`, 30, yPos);
-            doc.text(`  Share of Expenses: ${formatCurrency(ownerExpenses)}`, 30, yPos);
-            doc.text(`  Net: ${formatCurrency(net)}`, 30, yPos);
+            doc.text(`  ${t("pdf.shareOfIncome")}: ${formatCurrency(ownerIncome)}`, 30, yPos);
+            doc.text(`  ${t("pdf.shareOfExpenses")}: ${formatCurrency(ownerExpenses)}`, 30, yPos);
+            doc.text(`  ${t("pdf.net")}: ${formatCurrency(net)}`, 30, yPos);
             yPos += 10;
             doc.setFontSize(12);
           });
         } else {
-          doc.text("No properties assigned.", 25, yPos);
+          doc.text(t("pdf.none"), 25, yPos);
           yPos += 10;
         }
 
@@ -151,15 +157,15 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
         doc.line(20, yPos, 190, yPos);
         yPos += 10;
         doc.setFontSize(14);
-        doc.text(`Total Net Income: ${formatCurrency(totalNetIncome)}`, 20, yPos);
+        doc.text(`${t("pdf.totalNet")}: ${formatCurrency(totalNetIncome)}`, 20, yPos);
 
         doc.save(
           `statement-${owner.name.replace(/\s+/g, "-")}-${new Date().toISOString().split("T")[0]}.pdf`,
         );
-        success("Statement generated!");
+        success(t("toastStatement"));
       } catch (err) {
         console.error("Error generating PDF:", err);
-        error("Failed to generate statement.");
+        error(t("toastStatementFailed"));
       } finally {
         setGeneratingPdf(null);
       }
@@ -201,10 +207,10 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
               <DialogTrigger asChild>
                 <Button onClick={dialog.openDialog} className="hidden">
                   <Plus className="w-4 h-4" />
-                  Add Owner
+                  {t("addOwner")}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-zinc-900 border-zinc-800 max-w-lg">
+              <DialogContent className="bg-[var(--color-card)] border-[var(--color-border)] max-w-lg">
                 <DialogHeader>
                   <DialogTitle className="text-[var(--color-foreground)]">
                     {dialog.editingItem ? "Edit Owner" : "Add New Owner"}
@@ -215,13 +221,13 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                 </DialogHeader>
                 <form onSubmit={dialog.handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name">Full Name</Label>
+                    <Label htmlFor="name">{tForms("fullName")}</Label>
                     <Input
                       id="name"
                       value={dialog.formData.name}
                       onChange={(e) => dialog.updateFormData({ name: e.target.value })}
                       className={dialog.formErrors.name ? "border-red-500" : ""}
-                      placeholder="John Doe"
+                      placeholder={t("namePlaceholder")}
                     />
                     {dialog.formErrors.name && (
                       <p className="text-sm text-red-500">{dialog.formErrors.name}</p>
@@ -230,27 +236,27 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email">{tForms("email")}</Label>
                       <Input
                         id="email"
                         type="email"
                         value={dialog.formData.email}
                         onChange={(e) => dialog.updateFormData({ email: e.target.value })}
                         className={dialog.formErrors.email ? "border-red-500" : ""}
-                        placeholder="john@example.com"
+                        placeholder={t("emailPlaceholder")}
                       />
                       {dialog.formErrors.email && (
                         <p className="text-sm text-red-500">{dialog.formErrors.email}</p>
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="phone">Phone</Label>
+                      <Label htmlFor="phone">{tForms("phone")}</Label>
                       <Input
                         id="phone"
                         value={dialog.formData.phone}
                         onChange={(e) => dialog.updateFormData({ phone: e.target.value })}
                         className={dialog.formErrors.phone ? "border-red-500" : ""}
-                        placeholder="+1 234 567 8900"
+                        placeholder={t("phonePlaceholder")}
                       />
                       {dialog.formErrors.phone && (
                         <p className="text-sm text-red-500">{dialog.formErrors.phone}</p>
@@ -259,13 +265,13 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="address">{tForms("address")}</Label>
                     <Input
                       id="address"
                       value={dialog.formData.address}
                       onChange={(e) => dialog.updateFormData({ address: e.target.value })}
                       className={dialog.formErrors.address ? "border-red-500" : ""}
-                      placeholder="123 Main St, City, Country"
+                      placeholder={t("addressPlaceholder")}
                     />
                     {dialog.formErrors.address && (
                       <p className="text-sm text-red-500">{dialog.formErrors.address}</p>
@@ -273,13 +279,13 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="notes">Notes</Label>
+                    <Label htmlFor="notes">{tForms("notes")}</Label>
                     <Textarea
                       id="notes"
                       value={dialog.formData.notes}
                       onChange={(e) => dialog.updateFormData({ notes: e.target.value })}
                       className={dialog.formErrors.notes ? "border-red-500" : ""}
-                      placeholder="Additional information..."
+                      placeholder={t("notesPlaceholder")}
                       rows={3}
                     />
                     {dialog.formErrors.notes && (
@@ -289,14 +295,14 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
 
                   <div className="flex justify-end gap-2">
                     <Button type="button" variant="outline" onClick={dialog.closeDialog}>
-                      Cancel
+                      {tActions("cancel")}
                     </Button>
                     <Button type="submit" disabled={dialog.isSubmitting}>
                       {dialog.isSubmitting
-                        ? "Saving..."
+                        ? tForms("saving")
                         : dialog.editingItem
-                          ? "Update Owner"
-                          : "Create Owner"}
+                          ? t("submitUpdate")
+                          : t("submitCreate")}
                     </Button>
                   </div>
                 </form>
@@ -314,9 +320,9 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
               filters={[
                 {
                   key: "property",
-                  label: "Property",
+                  label: tForms("property"),
                   options: [
-                    { label: "All Properties", value: "all" },
+                    { label: tForms("allProperties"), value: "all" },
                     ...properties.map((property) => ({
                       label: property.name,
                       value: property.id,
@@ -326,11 +332,11 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                 },
                 {
                   key: "status",
-                  label: "Status",
+                  label: tForms("status"),
                   options: [
-                    { label: "All", value: "all" },
-                    { label: "Active", value: "active" },
-                    { label: "Inactive", value: "inactive" },
+                    { label: tStatus("all"), value: "all" },
+                    { label: tStatus("active"), value: "active" },
+                    { label: tStatus("inactive"), value: "inactive" },
                   ],
                   defaultValue: "all",
                 },
@@ -361,7 +367,7 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                 filteredOwners.map((owner) => (
                   <Card
                     key={owner.id}
-                    className="bg-zinc-900 border-zinc-800 cursor-pointer hover:border-[var(--color-accent-primary)]/40 hover:shadow-lg transition-all duration-200"
+                    className="bg-[var(--color-card)] border-[var(--color-border)] cursor-pointer hover:border-[var(--color-accent-primary)]/40 hover:shadow-lg transition-all duration-200"
                     onClick={() => openOwnerOverlay(owner.id)}
                   >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -377,38 +383,41 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3 mt-2">
-                        <div className="flex items-center gap-2 text-sm text-zinc-400">
+                        <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
                           <Mail className="w-4 h-4" />
                           <span>{owner.email}</span>
                         </div>
                         {owner.phone && (
-                          <div className="flex items-center gap-2 text-sm text-zinc-400">
+                          <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
                             <Phone className="w-4 h-4" />
                             <span>{owner.phone}</span>
                           </div>
                         )}
                         {owner.address && (
-                          <div className="flex items-center gap-2 text-sm text-zinc-400">
+                          <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
                             <MapPin className="w-4 h-4" />
                             <span>{owner.address}</span>
                           </div>
                         )}
 
-                        <div className="pt-2 border-t border-zinc-800 min-h-[60px]">
-                          <div className="flex items-center gap-2 text-sm font-medium text-zinc-300 mb-1">
+                        <div className="pt-2 border-t border-[var(--color-border)] min-h-[60px]">
+                          <div className="flex items-center gap-2 text-sm font-medium text-[var(--color-muted-foreground)] mb-1">
                             <Building2 className="w-4 h-4" />
-                            <span>Properties Owned</span>
+                            <span>{t("propertiesOwned")}</span>
                           </div>
                           {owner.properties && owner.properties.length > 0 ? (
-                            <ul className="text-xs text-zinc-400 space-y-1">
+                            <ul className="text-xs text-[var(--color-muted-foreground)] space-y-1">
                               {owner.properties.map((p) => (
                                 <li key={p.id}>
-                                  {p.property?.name ?? "Property"} &mdash; {p.ownershipPercentage}%
+                                  {p.property?.name ?? t("property")} &mdash;{" "}
+                                  {p.ownershipPercentage}%
                                 </li>
                               ))}
                             </ul>
                           ) : (
-                            <p className="text-xs text-zinc-500 italic">No properties assigned</p>
+                            <p className="text-xs text-[var(--color-muted-foreground)] italic">
+                              {t("noProperties")}
+                            </p>
                           )}
                         </div>
 
@@ -432,15 +441,19 @@ export const OwnersView = forwardRef<OwnersViewRef, { density?: "comfortable" | 
                             }, 0);
                             const net = ownerIncome - ownerExpenses;
                             return (
-                              <div className="pt-2 border-t border-zinc-800 grid grid-cols-2 gap-2 text-xs">
+                              <div className="pt-2 border-t border-[var(--color-border)] grid grid-cols-2 gap-2 text-xs">
                                 <div>
-                                  <p className="text-zinc-500">Income share</p>
+                                  <p className="text-[var(--color-muted-foreground)]">
+                                    {t("incomeShare")}
+                                  </p>
                                   <p className="font-semibold text-green-400">
                                     {formatCurrency(ownerIncome)}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-zinc-500">Net share</p>
+                                  <p className="text-[var(--color-muted-foreground)]">
+                                    {t("netShare")}
+                                  </p>
                                   <p
                                     className={cn(
                                       "font-semibold",

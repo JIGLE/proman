@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import { ChevronRight, Home } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
@@ -45,6 +46,8 @@ interface BreadcrumbsProps {
 }
 
 export function Breadcrumbs({ overrides, className }: BreadcrumbsProps) {
+  const t = useTranslations("common");
+  const tNav = useTranslations("navigation");
   const pathname = usePathname();
   const { state } = useApp();
 
@@ -88,12 +91,15 @@ export function Breadcrumbs({ overrides, className }: BreadcrumbsProps) {
   });
 
   return (
-    <nav aria-label="Breadcrumb" className={cn("flex items-center gap-1.5 text-sm", className)}>
+    <nav
+      aria-label={t("breadcrumb")}
+      className={cn("flex items-center gap-1.5 text-sm", className)}
+    >
       {/* Home icon linking to dashboard */}
       <Link
         href={`/${locale}/dashboard`}
         className="text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors"
-        aria-label="Dashboard"
+        aria-label={tNav("dashboard")}
       >
         <Home className="h-4 w-4" />
       </Link>

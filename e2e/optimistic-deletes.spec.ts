@@ -1,7 +1,13 @@
 import { test, expect } from "@playwright/test";
+import { settle } from "./helpers/wait";
 
 /**
  * Phase 2 – Optimistic Delete & UI Feedback Tests
+ *
+ * The navigation in these tests used to be wrapped in `if (await navLink.isVisible())`. The final
+ * assertion still ran, so they passed — but against `/en`, never the page in the title. "portfolio
+ * page loads without rendering errors" never visited the portfolio page. Navigation is asserted
+ * now, and the URL is checked, so each test measures the surface it names.
  *
  * Validates that delete operations show proper confirmation,
  * the UI updates immediately (optimistic), and error states
@@ -41,27 +47,17 @@ test.describe("No Native confirm() Calls", () => {
       dialog.dismiss();
     });
 
-    await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/en/dashboard");
+    await settle(page);
 
     const navLink = page.getByRole("link", { name: /portfolio/i }).first();
-    if (await navLink.isVisible().catch(() => false)) {
-      await navLink.click();
-      await page.waitForLoadState("networkidle");
+    await expect(navLink).toBeVisible();
+    await navLink.click();
+    await expect(page).toHaveURL(/\/en\/portfolio/);
+    await settle(page);
 
-      // Try to trigger a delete
-      const deleteBtn = page
-        .getByRole("button", { name: /delete/i })
-        .first()
-        .or(page.locator("button:has(svg.lucide-trash-2)").first());
-
-      if (await deleteBtn.isVisible().catch(() => false)) {
-        await deleteBtn.click();
-        await page.waitForTimeout(1000);
-      }
-    }
-
-    // Native confirm() should NEVER appear – we use AlertDialog
+    // Native confirm() should NEVER appear – we use AlertDialog. (Portfolio has no delete
+    // affordance of its own; the destructive path is covered by crud-confirmation-dialogs.)
     expect(nativeDialogAppeared).toBe(false);
   });
 
@@ -72,24 +68,22 @@ test.describe("No Native confirm() Calls", () => {
       dialog.dismiss();
     });
 
-    await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/en/dashboard");
+    await settle(page);
 
     const navLink = page.getByRole("link", { name: /people/i }).first();
-    if (await navLink.isVisible().catch(() => false)) {
-      await navLink.click();
-      await page.waitForLoadState("networkidle");
+    await expect(navLink).toBeVisible();
+    await navLink.click();
+    await expect(page).toHaveURL(/\/en\/people/);
+    await settle(page);
 
-      const deleteBtn = page
-        .getByRole("button", { name: /delete/i })
-        .first()
-        .or(page.locator("button:has(svg.lucide-trash-2)").first());
-
-      if (await deleteBtn.isVisible().catch(() => false)) {
-        await deleteBtn.click();
-        await page.waitForTimeout(1000);
-      }
-    }
+    // Actually trigger the destructive path, which is what makes this assertion mean anything:
+    // deletion lives behind a per-row "<Name> options" menu.
+    const rowMenu = page.getByRole("button", { name: /options$/i }).first();
+    await expect(rowMenu).toBeVisible();
+    await rowMenu.click();
+    await page.getByRole("menuitem", { name: /delete/i }).click();
+    await expect(page.getByRole("alertdialog")).toBeVisible({ timeout: 5000 });
 
     expect(nativeDialogAppeared).toBe(false);
   });
@@ -102,8 +96,8 @@ test.describe("Page Skeletons", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/en/dashboard");
+    await settle(page);
 
     // Page should load successfully
     const title = await page.title();
@@ -117,14 +111,14 @@ test.describe("Page Skeletons", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/en/dashboard");
+    await settle(page);
 
     const navLink = page.getByRole("link", { name: /portfolio/i }).first();
-    if (await navLink.isVisible().catch(() => false)) {
-      await navLink.click();
-      await page.waitForLoadState("networkidle");
-    }
+    await expect(navLink).toBeVisible();
+    await navLink.click();
+    await expect(page).toHaveURL(/\/en\/portfolio/);
+    await settle(page);
 
     expect(errors).toHaveLength(0);
   });
@@ -133,14 +127,14 @@ test.describe("Page Skeletons", () => {
     const errors: string[] = [];
     page.on("pageerror", (err) => errors.push(err.message));
 
-    await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+    await page.goto("/en/dashboard");
+    await settle(page);
 
     const navLink = page.getByRole("link", { name: /people/i }).first();
-    if (await navLink.isVisible().catch(() => false)) {
-      await navLink.click();
-      await page.waitForLoadState("networkidle");
-    }
+    await expect(navLink).toBeVisible();
+    await navLink.click();
+    await expect(page).toHaveURL(/\/en\/people/);
+    await settle(page);
 
     expect(errors).toHaveLength(0);
   });

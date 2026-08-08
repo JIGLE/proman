@@ -1,17 +1,11 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { useApp } from "@/lib/contexts/app-context";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { RenderTable } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -36,6 +30,8 @@ function getMonthOptions() {
 }
 
 export function RentRollView() {
+  const t = useTranslations("financial.rentRoll");
+  const tForms = useTranslations("forms");
   const { state } = useApp();
   const { leases, receipts, properties, tenants } = state;
   const { formatCurrency } = useCurrency();
@@ -119,11 +115,11 @@ export function RentRollView() {
   };
 
   return (
-    <Card className="bg-zinc-900 border-zinc-800">
+    <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-[var(--color-foreground)] flex items-center gap-2">
           <DollarSign className="h-5 w-5" />
-          Rent Roll
+          {t("heading")}
         </CardTitle>
         <Select value={selectedMonth} onValueChange={setSelectedMonth}>
           <SelectTrigger className="w-48">
@@ -140,62 +136,112 @@ export function RentRollView() {
       </CardHeader>
       <CardContent>
         {rentRoll.length === 0 ? (
-          <p className="text-center text-zinc-400 py-8">No active leases for this period.</p>
+          <p className="text-center text-[var(--color-muted-foreground)] py-8">{t("empty")}</p>
         ) : (
-          <div className="rounded-lg border border-zinc-800">
-            <Table>
-              <TableHeader>
-                <TableRow className="border-zinc-800 hover:bg-transparent">
-                  <TableHead className="text-zinc-400">Property</TableHead>
-                  <TableHead className="text-zinc-400">Tenant</TableHead>
-                  <TableHead className="text-zinc-400 text-right">Expected</TableHead>
-                  <TableHead className="text-zinc-400 text-right">Received</TableHead>
-                  <TableHead className="text-zinc-400 text-right">Delta</TableHead>
-                  <TableHead className="text-zinc-400">Status</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {rentRoll.map((row) => (
-                  <TableRow key={row.leaseId} className="border-zinc-800">
-                    <TableCell className="text-sm font-medium text-zinc-100">
-                      {row.propertyName}
-                    </TableCell>
-                    <TableCell className="text-sm text-zinc-300">{row.tenantName}</TableCell>
-                    <TableCell className="text-sm text-zinc-300 text-right">
-                      {formatCurrency(row.expected)}
-                    </TableCell>
-                    <TableCell className="text-sm text-zinc-100 text-right">
-                      {formatCurrency(row.received)}
-                    </TableCell>
-                    <TableCell
-                      className={`text-sm text-right font-medium ${row.delta >= 0 ? "text-emerald-400" : "text-red-400"}`}
-                    >
+          <div className="space-y-3">
+            <RenderTable
+              data={rentRoll}
+              rowKey={(row) => row.leaseId}
+              className="rounded-lg border border-[var(--color-border)]"
+              cardMode
+              renderCard={(row) => (
+                <div className="rounded-lg border border-[var(--color-border)] p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-[var(--color-foreground)]">
+                        {row.propertyName}
+                      </p>
+                      <p className="truncate text-xs text-[var(--color-muted-foreground)]">
+                        {row.tenantName}
+                      </p>
+                    </div>
+                    {statusBadge(row.status)}
+                  </div>
+                  <dl className="mt-2 grid grid-cols-3 gap-2 text-sm">
+                    <div>
+                      <dt className="mono-label">{t("expected")}</dt>
+                      <dd className="tabular-nums text-[var(--color-muted-foreground)]">
+                        {formatCurrency(row.expected)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="mono-label">{t("received")}</dt>
+                      <dd className="tabular-nums text-[var(--color-foreground)]">
+                        {formatCurrency(row.received)}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="mono-label">{t("delta")}</dt>
+                      <dd
+                        className={`font-medium tabular-nums ${row.delta >= 0 ? "text-emerald-400" : "text-red-400"}`}
+                      >
+                        {row.delta >= 0 ? "+" : ""}
+                        {formatCurrency(row.delta)}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
+              )}
+              columns={[
+                {
+                  key: "property",
+                  header: tForms("property"),
+                  cell: (row) => row.propertyName,
+                  cellClassName: "text-sm font-medium text-[var(--color-foreground)]",
+                },
+                {
+                  key: "tenant",
+                  header: tForms("tenant"),
+                  cell: (row) => row.tenantName,
+                  cellClassName: "text-sm text-[var(--color-muted-foreground)]",
+                },
+                {
+                  key: "expected",
+                  header: t("expected"),
+                  headerClassName: "text-right",
+                  cell: (row) => formatCurrency(row.expected),
+                  cellClassName: "text-sm text-[var(--color-muted-foreground)] text-right",
+                },
+                {
+                  key: "received",
+                  header: t("received"),
+                  headerClassName: "text-right",
+                  cell: (row) => formatCurrency(row.received),
+                  cellClassName: "text-sm text-[var(--color-foreground)] text-right",
+                },
+                {
+                  key: "delta",
+                  header: t("delta"),
+                  headerClassName: "text-right",
+                  cell: (row) => (
+                    <span className={row.delta >= 0 ? "text-emerald-400" : "text-red-400"}>
                       {row.delta >= 0 ? "+" : ""}
                       {formatCurrency(row.delta)}
-                    </TableCell>
-                    <TableCell>{statusBadge(row.status)}</TableCell>
-                  </TableRow>
-                ))}
-                <TableRow className="border-zinc-800 bg-zinc-800/30 font-semibold">
-                  <TableCell className="text-sm text-zinc-100" colSpan={2}>
-                    Totals
-                  </TableCell>
-                  <TableCell className="text-sm text-zinc-100 text-right">
-                    {formatCurrency(totals.expected)}
-                  </TableCell>
-                  <TableCell className="text-sm text-zinc-100 text-right">
-                    {formatCurrency(totals.received)}
-                  </TableCell>
-                  <TableCell
-                    className={`text-sm text-right font-medium ${totals.delta >= 0 ? "text-emerald-400" : "text-red-400"}`}
-                  >
-                    {totals.delta >= 0 ? "+" : ""}
-                    {formatCurrency(totals.delta)}
-                  </TableCell>
-                  <TableCell />
-                </TableRow>
-              </TableBody>
-            </Table>
+                    </span>
+                  ),
+                  cellClassName: "text-sm text-right font-medium",
+                },
+                { key: "status", header: tForms("status"), cell: (row) => statusBadge(row.status) },
+              ]}
+            />
+
+            {/* Totals live beside the table rather than inside it: `RenderTable` has no footer
+                row, and a totals row appended to a card list reads as one more record. */}
+            <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-1 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3 text-sm font-semibold">
+              <span className="text-[var(--color-foreground)]">{t("totals")}</span>
+              <span className="flex flex-wrap items-center gap-x-5 tabular-nums">
+                <span className="text-[var(--color-muted-foreground)]">
+                  {formatCurrency(totals.expected)}
+                </span>
+                <span className="text-[var(--color-foreground)]">
+                  {formatCurrency(totals.received)}
+                </span>
+                <span className={totals.delta >= 0 ? "text-emerald-400" : "text-red-400"}>
+                  {totals.delta >= 0 ? "+" : ""}
+                  {formatCurrency(totals.delta)}
+                </span>
+              </span>
+            </div>
           </div>
         )}
       </CardContent>

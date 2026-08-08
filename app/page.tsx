@@ -1,12 +1,5 @@
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
-import { defaultLocale, locales } from "@/lib/i18n/config";
-
-async function getPreferredLocale(): Promise<string> {
-  const cookieStore = await cookies();
-  const saved = cookieStore.get("proman-locale")?.value;
-  return saved && (locales as readonly string[]).includes(saved) ? saved : defaultLocale;
-}
+import { getPreferredLocale } from "@/lib/i18n/server-locale";
 
 export default async function Home() {
   const locale = await getPreferredLocale();

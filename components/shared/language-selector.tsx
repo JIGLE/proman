@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { locales, localeNames, type Locale } from "@/lib/i18n/config";
 import { cn } from "@/lib/utils/utils";
 import { Globe } from "lucide-react";
@@ -35,12 +36,12 @@ interface LanguageSelectorProps {
 export function LanguageSelector({ compact = false, className }: LanguageSelectorProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations("language");
 
-  // Extract current locale from the pathname (e.g. /pt/overview → pt)
-  const segments = pathname.split("/");
-  const currentLocale = (locales as readonly string[]).includes(segments[1])
-    ? (segments[1] as Locale)
-    : "pt";
+  // Read the active locale from the provider rather than the URL: the auth pages sit outside
+  // the `[locale]` segment and resolve their locale from the cookie, so there is nothing in
+  // the path to parse there.
+  const currentLocale = useLocale() as Locale;
 
   const switchLocale = (newLocale: Locale) => {
     if (newLocale === currentLocale) return;
@@ -48,10 +49,18 @@ export function LanguageSelector({ compact = false, className }: LanguageSelecto
     if (typeof document !== "undefined") {
       document.cookie = `proman-locale=${newLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
     }
-    // Replace the locale segment in the URL
-    const newSegments = [...segments];
-    newSegments[1] = newLocale;
-    router.push(newSegments.join("/") || `/${newLocale}`);
+
+    const segments = pathname.split("/");
+    // Routes outside `[locale]` (e.g. `/auth/signin`) have no locale segment to swap —
+    // rewriting segments[1] there would navigate to `/pt/signin`, which does not exist. Their
+    // layout reads the cookie set above, so re-rendering is enough to switch language.
+    if (!(locales as readonly string[]).includes(segments[1])) {
+      router.refresh();
+      return;
+    }
+
+    segments[1] = newLocale;
+    router.push(segments.join("/") || `/${newLocale}`);
   };
 
   return (
@@ -63,12 +72,12 @@ export function LanguageSelector({ compact = false, className }: LanguageSelecto
           // `h-9 w-9` only ever picked up the height one, leaving this trigger 36px wide.
           size={compact ? "icon" : "sm"}
           className={cn(
-            "gap-1.5 text-zinc-400 hover:text-zinc-100 hover:bg-white/5",
+            "gap-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] hover:bg-white/5",
             compact ? "" : "h-9 px-2.5",
             className,
           )}
-          title="Language"
-          aria-label="Change language"
+          title={t("label")}
+          aria-label={t("change")}
         >
           {compact ? (
             <Globe className="h-4 w-4" />

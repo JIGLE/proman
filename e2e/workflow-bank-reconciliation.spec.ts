@@ -15,21 +15,26 @@ test("Critical Path: import a bank movement and see it land in the inbox", async
   await page.goto("/en/financials?tab=bank");
   await expect(page).toHaveURL(/\/financials/);
 
+  // The setup project signs in as the owner demo account, so the bank tab is always available.
+  // This used to bail out silently when the button was missing, which made a missing Finance tab
+  // indistinguishable from a passing test.
   const importButton = page.getByRole("button", { name: /import csv/i });
-  if (!(await importButton.isVisible().catch(() => false))) {
-    // No owner-portal bank tab available for this session (e.g. tenant-role
-    // test account) — nothing more to exercise here.
-    return;
-  }
+  await expect(importButton).toBeVisible();
   await importButton.click();
 
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
 
+  // The reference must be unique per run. Import is idempotent by fingerprint, so a fixed row
+  // ("e2e smoke", today's date, 1.00) imports once and is deduplicated on every later run against
+  // the same database — the test then passed or failed depending on whether the database happened
+  // to be fresh, which is exactly the kind of accident this suite is being cleaned of.
   const today = new Date().toISOString().split("T")[0];
-  const csv = ["Date,Amount,Counterparty,Reference", `${today},1.00,E2E Test Payer,e2e smoke`].join(
-    "\n",
-  );
+  const reference = `e2e smoke ${Date.now()}`;
+  const csv = [
+    "Date,Amount,Counterparty,Reference",
+    `${today},1.00,E2E Test Payer,${reference}`,
+  ].join("\n");
   await dialog.getByRole("textbox").first().fill(csv);
 
   const submitButton = dialog.getByRole("button", { name: /^import$/i });
@@ -44,9 +49,9 @@ test("Critical Path: import a bank movement and see it land in the inbox", async
     .click()
     .catch(() => {});
 
-  // The imported row (amount 1.00, exact and distinctive) should now be
-  // visible somewhere in the inbox table.
-  await expect(page.getByText("1.00").first())
+  // The imported row should now be visible in the inbox, found by the reference this run
+  // generated rather than by an amount other rows could also carry.
+  await expect(page.getByText(reference).first())
     .toBeVisible({ timeout: 10000 })
     .catch(() => {
       // If the row scrolled out of the default view or was auto-filtered by

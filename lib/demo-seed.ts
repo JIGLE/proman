@@ -33,6 +33,22 @@ export async function seedDemoData(userId: string): Promise<void> {
     "maintenanceTickets",
   );
   await safeDelete(() => prisma.correspondence.deleteMany({ where: { userId } }), "correspondence");
+  // Documents and the bank graph are created below but were never cleared, so re-seeding stacked
+  // a fresh copy on top of the last one: measured across a single seed call, documents went
+  // 54 → 60 and bank transactions 90 → 100 while every other table held steady. That made the
+  // seeder non-idempotent and any count-based baseline (see `scripts/mobile-audit.mjs`) drift
+  // upward on every run. Bank rows go child-first — transactions reference accounts reference
+  // connections. Units and rent periods are absent by design: they cascade from property/lease.
+  await safeDelete(() => prisma.document.deleteMany({ where: { userId } }), "documents");
+  await safeDelete(
+    () => prisma.bankTransaction.deleteMany({ where: { userId } }),
+    "bankTransactions",
+  );
+  await safeDelete(() => prisma.bankAccount.deleteMany({ where: { userId } }), "bankAccounts");
+  await safeDelete(
+    () => prisma.bankConnection.deleteMany({ where: { userId } }),
+    "bankConnections",
+  );
   await safeDelete(
     () => prisma.propertyOwner.deleteMany({ where: { property: { userId } } }),
     "propertyOwners",

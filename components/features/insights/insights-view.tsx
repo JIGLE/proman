@@ -11,8 +11,6 @@ import {
   Clock,
   ArrowRight,
   RefreshCw,
-  Lightbulb,
-  FileText,
   BarChart3,
   Percent,
 } from "lucide-react";
@@ -146,16 +144,12 @@ export function InsightsView(): React.ReactElement {
   // ── Render ───────────────────────────────────────────────────────
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
-            <Lightbulb className="h-7 w-7 text-amber-400" />
-            {t("title")}
-          </h1>
-          <p className="text-sm text-[var(--color-muted-foreground)] mt-1">{t("subtitle")}</p>
-        </div>
-        <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2 self-start">
+      {/* No heading of its own: the Intelligence container above already titles the page and
+          the tab labels name each view, so an h1 here was the second <h1> on the screen — in a
+          different language, since this view was translated and the container was not.
+          Refresh is the only thing that band carried, so it moves inline. */}
+      <div className="-mb-4 flex justify-end">
+        <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-2">
           <RefreshCw className="h-4 w-4" />
           {t("refresh")}
         </Button>
@@ -290,22 +284,6 @@ export function InsightsView(): React.ReactElement {
           </CardContent>
         </Card>
       )}
-
-      {/* ── Quick Links ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <QuickLink
-          icon={<BarChart3 className="h-5 w-5 text-indigo-400" />}
-          title={t("analyticsDashboard")}
-          description={t("analyticsDashboardDesc")}
-          onClick={() => router.push(`/${locale}/intelligence?view=analytics`)}
-        />
-        <QuickLink
-          icon={<FileText className="h-5 w-5 text-emerald-400" />}
-          title={t("financialReports")}
-          description={t("financialReportsDesc")}
-          onClick={() => router.push(`/${locale}/intelligence?view=reports`)}
-        />
-      </div>
     </div>
   );
 }
@@ -354,36 +332,6 @@ function KPITile({
         {sub && <p className="text-xs text-[var(--color-muted-foreground)] mt-1">{sub}</p>}
       </CardContent>
     </Card>
-  );
-}
-
-function QuickLink({
-  icon,
-  title,
-  description,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="group flex items-start gap-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-card)] p-5 text-left transition-all hover:border-[var(--color-primary)] hover:shadow-md"
-    >
-      <div className="rounded-lg bg-[var(--color-muted)]/30 p-2.5 transition-colors group-hover:bg-[var(--color-primary)]/10">
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <h3 className="text-sm font-semibold mb-0.5 flex items-center gap-2">
-          {title}
-          <ArrowRight className="h-3.5 w-3.5 opacity-0 -translate-x-1 transition-all group-hover:opacity-70 group-hover:translate-x-0" />
-        </h3>
-        <p className="text-xs text-[var(--color-muted-foreground)] line-clamp-2">{description}</p>
-      </div>
-    </button>
   );
 }
 

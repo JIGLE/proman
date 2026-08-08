@@ -1,9 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 /**
  * Situs ReceiptAutomationQueue — the receipts still moving through the
@@ -38,6 +40,7 @@ const LIFECYCLE_STYLES: Record<string, string> = {
 };
 
 export function ReceiptAutomationQueue(): React.ReactElement | null {
+  const t = useTranslations("common");
   const [rows, setRows] = useState<QueueRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -74,7 +77,7 @@ export function ReceiptAutomationQueue(): React.ReactElement | null {
         const res = await fetch(`/api/receipts/${id}/lifecycle`, {
           method: "PUT",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: csrfHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({ to: "emitted" }),
         });
         if (!res.ok) {
@@ -100,7 +103,7 @@ export function ReceiptAutomationQueue(): React.ReactElement | null {
       const res = await fetch(`/api/receipts/${id}/lifecycle`, {
         method: "PUT",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ to: "emitted" }),
       }).catch(() => null);
       if (!res || !res.ok) failures.push(id);
@@ -210,7 +213,7 @@ export function ReceiptAutomationQueue(): React.ReactElement | null {
                     </td>
                     <td className="border-b border-[var(--color-border)] px-3 py-2.5">
                       <span
-                        className={`inline-block px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-[0.04em] ${
+                        className={`inline-block px-1.5 py-0.5 font-mono text-[12px] md:text-[10px] uppercase tracking-[0.04em] ${
                           LIFECYCLE_STYLES[row.lifecycle] ?? ""
                         }`}
                       >
@@ -229,7 +232,7 @@ export function ReceiptAutomationQueue(): React.ReactElement | null {
                           onClick={() => void emit(row.id)}
                           disabled={busyId === row.id}
                         >
-                          Emit
+                          {t("emit")}
                         </Button>
                       ) : null}
                     </td>

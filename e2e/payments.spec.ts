@@ -44,8 +44,16 @@ test.describe("Stripe Webhook", () => {
       },
     });
 
-    // Should reject without proper Stripe signature
-    expect([400, 401, 403].includes(response.status())).toBeTruthy();
+    // Should reject without proper Stripe signature.
+    //
+    // 404 counts as a rejection here: the handler short-circuits with "Stripe integration
+    // disabled" before it ever looks at the signature when STRIPE_SECRET_KEY is unset
+    // (app/api/webhooks/stripe/route.ts), which is the case in CI and in any self-hosted
+    // instance without billing. The signature check itself is correct — a missing
+    // `stripe-signature` header returns 400 once Stripe is enabled — so this was the test
+    // being too narrow, not the endpoint being permissive. The sibling test above already
+    // allows 404 for the same reason.
+    expect([400, 401, 403, 404].includes(response.status())).toBeTruthy();
   });
 });
 

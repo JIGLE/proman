@@ -29,7 +29,7 @@ const ENTITY_CONFIG: Record<
   tenant: { icon: Users, overlay: true, color: "text-emerald-500" },
   owner: { icon: UserCircle, overlay: true, color: "text-sky-500" },
   lease: { icon: FileText, overlay: true, color: "text-violet-500" },
-  document: { icon: FileIcon, overlay: true, color: "text-zinc-400" },
+  document: { icon: FileIcon, overlay: true, color: "text-[var(--color-muted-foreground)]" },
   maintenance: { icon: Wrench, basePath: "/operations", color: "text-amber-500" },
   receipt: { icon: Receipt, basePath: "/financials", color: "text-green-500" },
 };

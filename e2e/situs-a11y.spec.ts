@@ -1,5 +1,6 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
+import { settle } from "./helpers/wait";
 
 /**
  * Accessibility pass over the Situs surfaces added in this rebranding
@@ -28,7 +29,7 @@ async function scanForSeriousViolations(page: import("@playwright/test").Page) {
 test.describe("Situs surfaces — accessibility (WCAG2A/AA)", () => {
   test("Finance › Bank Movements inbox has no critical/serious violations", async ({ page }) => {
     await page.goto("/en/financials?tab=bank");
-    await page.waitForLoadState("networkidle").catch(() => {});
+    await settle(page);
     const { blocking } = await scanForSeriousViolations(page);
     expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
   });
@@ -37,7 +38,7 @@ test.describe("Situs surfaces — accessibility (WCAG2A/AA)", () => {
     page,
   }) => {
     await page.goto("/en/financials?tab=receipts");
-    await page.waitForLoadState("networkidle").catch(() => {});
+    await settle(page);
     const { blocking } = await scanForSeriousViolations(page);
     expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
   });
@@ -46,21 +47,21 @@ test.describe("Situs surfaces — accessibility (WCAG2A/AA)", () => {
     page,
   }) => {
     await page.goto("/en/financials?tab=tax");
-    await page.waitForLoadState("networkidle").catch(() => {});
+    await settle(page);
     const { blocking } = await scanForSeriousViolations(page);
     expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
   });
 
   test("Documents view has no critical/serious violations", async ({ page }) => {
     await page.goto("/en/documents");
-    await page.waitForLoadState("networkidle").catch(() => {});
+    await settle(page);
     const { blocking } = await scanForSeriousViolations(page);
     expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
   });
 
   test("Account page (audit trail) has no critical/serious violations", async ({ page }) => {
     await page.goto("/en/account");
-    await page.waitForLoadState("networkidle").catch(() => {});
+    await settle(page);
     const { blocking } = await scanForSeriousViolations(page);
     expect(blocking, JSON.stringify(blocking, null, 2)).toEqual([]);
   });

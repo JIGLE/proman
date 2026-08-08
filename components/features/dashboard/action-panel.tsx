@@ -55,8 +55,12 @@ function AlertRow({ alert, locale }: { alert: ActionAlert; readonly locale: stri
     >
       <div className="flex min-w-0 items-center gap-3">
         <Icon className={cn("h-4 w-4 shrink-0", severityAccent[alert.severity])} />
+        {/* This is the home screen's primary attention line, and at 390px it was cut mid-word.
+            `title` does not rescue it — a tooltip needs hover, which a phone has not got, so on
+            touch the rest of the sentence was simply unavailable. Wrap to two lines below `md`
+            where there is no room; keep the single truncated line once there is. */}
         <span
-          className="truncate text-sm font-medium text-[var(--color-foreground)]"
+          className="text-sm font-medium text-[var(--color-foreground)] max-md:line-clamp-2 md:truncate"
           title={alert.message}
         >
           {alert.message}

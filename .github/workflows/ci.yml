@@ -65,6 +65,15 @@ jobs:
           NEXTAUTH_SECRET: ci-test-secret-minimum-32-characters
           GOOGLE_CLIENT_ID: ci-placeholder
           GOOGLE_CLIENT_SECRET: ci-placeholder
+          # `NEXT_PUBLIC_*` is inlined at build time, so this has to be set here rather than on
+          # the jobs that consume the artifact. Without it the sign-in page ships no credentials
+          # form in a production build and the audit harness cannot authenticate — which is what
+          # it hit the first time it actually reached the browser.
+          #
+          # This only reveals the form. The credentials provider itself is gated separately on
+          # the server by ENABLE_DEMO_LOGIN, set per-job below, so a build that leaked out of CI
+          # still has no working demo login unless the runtime flag is also set.
+          NEXT_PUBLIC_ENABLE_DEMO_LOGIN: "true"
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v7
@@ -105,7 +114,9 @@ jobs:
           nohup node .next/standalone/server.js > app.log 2>&1 &
           echo $! > .app.pid
         env:
-          DATABASE_URL: file:./ci-smoke.db
+          # Absolute: standalone `server.js` chdirs to its own directory, so a relative path
+          # would land in `.next/standalone/`. See the Mobile Audit job for the full account.
+          DATABASE_URL: file:${{ github.workspace }}/ci-smoke.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: ci-test-secret-minimum-32-characters
           GOOGLE_CLIENT_ID: ci-placeholder
@@ -160,6 +171,14 @@ jobs:
           name: nextjs-build
           path: .next/
 
+      # This job never created a schema either, so every DB-backed route answered 500 and the
+      # suite stayed green regardless — the same false-green the mobile audit was in. Create the
+      # tables so the smoke run exercises the app rather than its error paths.
+      - name: Create database schema
+        run: npx prisma db push
+        env:
+          DATABASE_URL: file:${{ github.workspace }}/e2e-smoke.db
+
       - name: Start built application in background
         run: |
           cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
@@ -167,11 +186,17 @@ jobs:
           nohup node .next/standalone/server.js > app.log 2>&1 &
           echo $! > .app.pid
         env:
-          DATABASE_URL: file:./e2e-smoke.db
+          DATABASE_URL: file:${{ github.workspace }}/e2e-smoke.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
           GOOGLE_CLIENT_ID: e2e-placeholder
           GOOGLE_CLIENT_SECRET: e2e-placeholder
+          # Needed even though every test in smoke.spec.ts is unauthenticated: both Playwright
+          # projects declare `dependencies: ["setup"]`, so `auth.setup.ts` runs here too, and it
+          # now fails loudly instead of silently writing an empty session. No ALLOW_DEMO_MODE and
+          # no E2E_SEED — this job must keep a signed-out `request` fixture, because one of its
+          # tests asserts that unauthenticated API calls never return data.
+          ENABLE_DEMO_LOGIN: "true"
           NODE_ENV: production
           PORT: 3000
           HOSTNAME: 0.0.0.0
@@ -182,7 +207,7 @@ jobs:
       - name: Run Playwright smoke tests
         run: npx playwright test e2e/smoke.spec.ts --project=chromium
         env:
-          DATABASE_URL: file:./e2e-smoke.db
+          DATABASE_URL: file:${{ github.workspace }}/e2e-smoke.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
 
@@ -229,6 +254,14 @@ jobs:
           name: nextjs-build
           path: .next/
 
+      # See the E2E Smoke job: no schema meant every DB-backed route 500'd and the suite passed
+      # anyway. Combined with the `if (await link.isVisible())` guards throughout these specs,
+      # that is two independent reasons this job could go green without testing anything.
+      - name: Create database schema
+        run: npx prisma db push
+        env:
+          DATABASE_URL: file:${{ github.workspace }}/e2e-test.db
+
       - name: Start built application in background
         run: |
           cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
@@ -236,11 +269,20 @@ jobs:
           nohup node .next/standalone/server.js > app.log 2>&1 &
           echo $! > .app.pid
         env:
-          DATABASE_URL: file:./e2e-test.db
+          DATABASE_URL: file:${{ github.workspace }}/e2e-test.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
           GOOGLE_CLIENT_ID: e2e-placeholder
           GOOGLE_CLIENT_SECRET: e2e-placeholder
+          # Without these, `auth.setup.ts` cannot sign in and every spec that declares
+          # `test.use({ storageState })` runs signed out — which is what it silently did until
+          # now. ALLOW_DEMO_MODE additionally opens /api/debug/db/seed so the suite has records
+          # to act on; the delete-confirmation specs skip themselves against an empty database.
+          ALLOW_DEMO_MODE: "true"
+          ENABLE_DEMO_LOGIN: "true"
+          # ~90 tests from a single IP against a 100-req/min API limit: the tail of the run
+          # otherwise fails with 429s that read as product bugs. See lib/middleware/rate-limit.ts.
+          E2E_DISABLE_RATE_LIMIT: "true"
           NODE_ENV: production
           PORT: 3000
           HOSTNAME: 0.0.0.0
@@ -251,9 +293,30 @@ jobs:
       - name: Run Playwright tests
         run: npx playwright test --project=chromium
         env:
-          DATABASE_URL: file:./e2e-test.db
+          DATABASE_URL: file:${{ github.workspace }}/e2e-test.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
+          # Opt in to seeding. `seedDemoData` deletes and recreates the demo user's records, so
+          # `auth.setup.ts` only runs it when asked — never against a developer's dev.db.
+          E2E_SEED: "true"
+
+      # The mobile-chrome project (Pixel 5) was defined in playwright.config.ts but had never
+      # executed anywhere — both jobs hardcoded --project=chromium, and the runner itself was
+      # not running test bodies. Its first real run reported `90 passed (1.1m)` in CI, matching
+      # chromium exactly, and caught one genuine defect the desktop project could not see: the
+      # Settings mobile section picker had no accessible name, so the only way to navigate
+      # Settings on a phone was anonymous to a screen reader.
+      #
+      # No longer advisory. A regression at phone width now fails the job.
+      - name: Run Playwright tests (mobile viewport)
+        run: npx playwright test --project=mobile-chrome
+        env:
+          DATABASE_URL: file:${{ github.workspace }}/e2e-test.db
+          NEXTAUTH_URL: http://localhost:3000
+          NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
+          # Re-seed rather than inherit the chromium step's state. The seed is idempotent, and
+          # this step should not silently depend on the one above having run first.
+          E2E_SEED: "true"
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v7
@@ -296,6 +359,25 @@ jobs:
           name: nextjs-build
           path: .next/
 
+      # Nothing in this workflow had ever created a schema, so `mobile-audit.db` was an empty
+      # SQLite file with no tables. `--seed` then failed silently, `resolveIds` returned nulls,
+      # and all ten detail-overlay surfaces skipped — which is why the first completed CI run
+      # reported 42 surface-runs of empty screens instead of 52 of real ones.
+      #
+      # The path must be ABSOLUTE. Next.js's standalone `server.js` starts with
+      # `process.chdir(__dirname)`, so a relative `file:./x.db` resolves to
+      # `.next/standalone/x.db` for the server while `prisma db push` (run from the repo root)
+      # writes to `<root>/x.db` — two different files. Adding the schema step above was
+      # necessary but not sufficient for exactly this reason: the server kept looking in
+      # `.next/standalone/` and reported "SQLite DB file does not exist", the seed 500'd, and
+      # every detail overlay skipped. This is easy to miss locally, where a stale `.db` at the
+      # repo root gets traced into `.next/standalone/` by `next build` and the run works by
+      # accident; in CI the build happens in a separate job before the file exists.
+      - name: Create database schema
+        run: npx prisma db push
+        env:
+          DATABASE_URL: file:${{ github.workspace }}/mobile-audit.db
+
       - name: Start built application in background
         run: |
           cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
@@ -303,12 +385,13 @@ jobs:
           nohup node .next/standalone/server.js > app.log 2>&1 &
           echo $! > .app.pid
         env:
-          DATABASE_URL: file:./mobile-audit.db
+          DATABASE_URL: file:${{ github.workspace }}/mobile-audit.db
           NEXTAUTH_URL: http://localhost:3000
           NEXTAUTH_SECRET: mobile-audit-secret-minimum-32-characters
           GOOGLE_CLIENT_ID: ci-placeholder
           GOOGLE_CLIENT_SECRET: ci-placeholder
           ALLOW_DEMO_MODE: "true"
+          ENABLE_DEMO_LOGIN: "true"
           NODE_ENV: production
           PORT: 3000
           HOSTNAME: 0.0.0.0
@@ -316,37 +399,74 @@ jobs:
       - name: Wait for app to become healthy
         run: npx wait-on http://localhost:3000 --timeout 120000
 
+      # `--seed` is not optional: without it the harness walks a bare database, and a table with
+      # no rows cannot overflow. Every number this job produced before it was added described
+      # empty screens. `--strict` ratchets against BASELINE in the harness.
+      #
+      # This is a real gate now. CI reported `✓ Mobile audit exactly at baseline` on a seeded
+      # 52-surface run — pageOverflow 0, touchTargetFails 4, touchTargetWarns 4,
+      # clippedContainers 6, smallText 310 — matching three consecutive local runs against a
+      # production standalone build and a fresh database. `continue-on-error` was the only
+      # thing keeping an unmeasured baseline from blocking a PR, and the baseline is now
+      # measured, so it comes off.
+      #
+      # If this fails: read the numbers before touching BASELINE. It may only ever go down.
       - name: Run mobile audit harness
-        run: node scripts/mobile-audit.mjs
+        run: node scripts/mobile-audit.mjs --seed --strict
         env:
           AUDIT_BASE_URL: http://localhost:3000
           CI: "true"
-        continue-on-error: true
 
       - name: Parse and report audit violations
         if: always()
         run: |
-          if [ -f audit-report/report-390.json ]; then
-            echo "## 📱 Mobile Audit Report (390px)" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
+          set -euo pipefail
+          REPORT=audit-report/report-390.json
 
-            # Extract violation counts
-            TOTAL_SURFACES=$(jq '.surfaces | length' audit-report/report-390.json || echo "0")
-            OVERFLOW_VIOLATIONS=$(jq '[.surfaces[] | select(.horizontalOverflow.exceeded == true)] | length' audit-report/report-390.json || echo "0")
-            TOUCH_TARGET_VIOLATIONS=$(jq '[.surfaces[] | select(.touchTargets.violations[0] != null)] | length' audit-report/report-390.json || echo "0")
-
-            echo "Scanned **$TOTAL_SURFACES surfaces** at 390×844 (Pixel 5)" >> $GITHUB_STEP_SUMMARY
+          # A harness that crashed is not the same as a harness that found violations. Both now
+          # fail the job, but they are different failures and the summary must say which: a
+          # regression is a design backlog item, a harness that never started is a broken gate.
+          # This step runs with `if: always()` so it still reports when the harness exits
+          # non-zero. It used to exit 0 on a missing report, which is how the job stayed green
+          # while the harness died at browser launch on every run.
+          if [ ! -f "$REPORT" ]; then
+            echo "## ❌ Mobile audit did not run" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "| Metric | Count |" >> $GITHUB_STEP_SUMMARY
-            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-            echo "| Surfaces with horizontal overflow | $OVERFLOW_VIOLATIONS |" >> $GITHUB_STEP_SUMMARY
-            echo "| Surfaces with sub-44px touch targets | $TOUCH_TARGET_VIOLATIONS |" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "See audit-report/report-390.md for details." >> $GITHUB_STEP_SUMMARY
-          else
-            echo "## ⚠️ Mobile Audit Failed" >> $GITHUB_STEP_SUMMARY
-            echo "The audit harness did not complete. Check the logs above." >> $GITHUB_STEP_SUMMARY
+            echo "The harness exited before writing \`$REPORT\`. This is a broken gate, not a" >> $GITHUB_STEP_SUMMARY
+            echo "responsive-design regression — check the harness logs above." >> $GITHUB_STEP_SUMMARY
+            exit 1
           fi
+
+          # Read the harness's own pre-aggregated `summary` object. The previous version of this
+          # step reduced over a `.surfaces[]` array that has never existed on this report (the
+          # root keys are meta/summary/results), so every query yielded nothing and `|| echo 0`
+          # turned that into a clean bill of health. `-e` makes a missing key fail the step
+          # instead of silently printing a zero.
+          jq -e '.summary' "$REPORT" > /dev/null
+
+          SEEDED=$(jq -r '.meta.seeded' "$REPORT")
+          read -r RUNS FAILED OVERFLOW TFAIL TWARN CLIPPED SMALLTEXT < <(
+            jq -r '.summary | "\(.surfaceRuns) \(.failedToLoad) \(.pageOverflow) \(.touchTargetFails) \(.touchTargetWarns) \(.clippedContainers) \(.smallText)"' "$REPORT"
+          )
+
+          {
+            echo "## 📱 Mobile Audit Report (390×844)"
+            echo ""
+            echo "Scanned **$RUNS surface-runs** (each surface in both themes) · seeded: \`$SEEDED\`"
+            [ "$SEEDED" = "true" ] || echo ""
+            [ "$SEEDED" = "true" ] || echo "> ⚠️ Unseeded run — these counts describe empty screens and mean little."
+            echo ""
+            echo "| Metric | Count |"
+            echo "|--------|-------|"
+            echo "| Surfaces failing to load | $FAILED |"
+            echo "| **Surface-runs with page-level horizontal overflow** | **$OVERFLOW** |"
+            echo "| Touch targets under 24px (WCAG 2.2 AA fail) | $TFAIL |"
+            echo "| Touch targets under 44px | $TWARN |"
+            echo "| Containers clipping content (unreachable) | $CLIPPED |"
+            echo "| Text under 12px | $SMALLTEXT |"
+            echo ""
+            echo "See \`audit-report/report-390.md\` in the artifact for the per-surface breakdown."
+          } >> $GITHUB_STEP_SUMMARY
 
       - name: Upload mobile audit report
         uses: actions/upload-artifact@v7

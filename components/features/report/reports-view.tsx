@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Download, Building2, RefreshCw } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,8 @@ interface RentRollData {
 
 export function ReportsView(): React.ReactElement {
   const { success, error } = useToast();
+  const t = useTranslations("reports");
+  const tStatus = useTranslations("status");
   const { formatCurrency } = useCurrency();
 
   const [isLoading, setIsLoading] = useState(false);
@@ -110,11 +113,11 @@ export function ReportsView(): React.ReactElement {
             break;
         }
       } else {
-        error("Failed to load report");
+        error(t("toastLoadFailed"));
       }
     } catch (err) {
       console.error("Failed to fetch report:", err);
-      error("Failed to load report");
+      error(t("toastLoadFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -136,13 +139,13 @@ export function ReportsView(): React.ReactElement {
         a.click();
         document.body.removeChild(a);
         window.URL.revokeObjectURL(downloadUrl);
-        success("Report downloaded");
+        success(t("toastDownloaded"));
       } else {
-        error("Failed to download report");
+        error(t("toastDownloadFailed"));
       }
     } catch (err) {
       console.error("Failed to download:", err);
-      error("Failed to download report");
+      error(t("toastDownloadFailed"));
     }
   };
 
@@ -159,27 +162,29 @@ export function ReportsView(): React.ReactElement {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-zinc-50">Financial Reports</h2>
-          <p className="text-zinc-400">Generate and export financial summaries</p>
+          <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
+            {t("heading")}
+          </h2>
+          <p className="text-[var(--color-muted-foreground)]">{t("subtitle")}</p>
         </div>
       </div>
 
       {/* Report Type Tabs */}
       <Tabs value={reportType} onValueChange={(v) => setReportType(v as typeof reportType)}>
         <TabsList className="grid w-full grid-cols-3 max-w-md">
-          <TabsTrigger value="financial">Financial</TabsTrigger>
-          <TabsTrigger value="tax">Tax Report</TabsTrigger>
-          <TabsTrigger value="rent-roll">Rent Roll</TabsTrigger>
+          <TabsTrigger value="financial">{t("tabFinancial")}</TabsTrigger>
+          <TabsTrigger value="tax">{t("tabTax")}</TabsTrigger>
+          <TabsTrigger value="rent-roll">{t("tabRentRoll")}</TabsTrigger>
         </TabsList>
 
         {/* Financial Report */}
         <TabsContent value="financial" className="space-y-6">
           {/* Controls */}
-          <Card className="bg-zinc-900/50 border-zinc-800">
+          <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
             <CardContent className="pt-6">
               <div className="flex flex-wrap items-end gap-4">
                 <div className="space-y-2">
-                  <Label>Start Date</Label>
+                  <Label>{t("startDate")}</Label>
                   <Input
                     type="date"
                     value={startDate}
@@ -188,7 +193,7 @@ export function ReportsView(): React.ReactElement {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>End Date</Label>
+                  <Label>{t("endDate")}</Label>
                   <Input
                     type="date"
                     value={endDate}
@@ -198,11 +203,11 @@ export function ReportsView(): React.ReactElement {
                 </div>
                 <Button onClick={handleGenerateReport} disabled={isLoading}>
                   <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
-                  Generate
+                  {t("generate")}
                 </Button>
                 <Button variant="outline" onClick={downloadCSV}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export CSV
+                  {t("exportCsv")}
                 </Button>
               </div>
             </CardContent>
@@ -212,10 +217,10 @@ export function ReportsView(): React.ReactElement {
             <>
               {/* Summary Cards */}
               <div className="grid gap-4 md:grid-cols-4">
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">
-                      Total Income
+                    <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                      {t("totalIncome")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -225,10 +230,10 @@ export function ReportsView(): React.ReactElement {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">
-                      Total Expenses
+                    <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                      {t("totalExpenses")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -238,9 +243,11 @@ export function ReportsView(): React.ReactElement {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">Net Income</CardTitle>
+                    <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                      {t("netIncome")}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div
@@ -256,10 +263,10 @@ export function ReportsView(): React.ReactElement {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">
-                      Profit Margin
+                    <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                      {t("profitMargin")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -279,32 +286,38 @@ export function ReportsView(): React.ReactElement {
 
               {/* Income Breakdown */}
               <div className="grid gap-4 md:grid-cols-2">
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader>
-                    <CardTitle className="text-zinc-50">Income Breakdown</CardTitle>
+                    <CardTitle className="text-[var(--color-foreground)]">
+                      {t("incomeBreakdown")}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       <div className="flex justify-between items-center">
-                        <span className="text-zinc-400">Rent</span>
-                        <span className="font-medium text-zinc-50">
+                        <span className="text-[var(--color-muted-foreground)]">{t("rent")}</span>
+                        <span className="font-medium text-[var(--color-foreground)]">
                           {formatCurrency(report.income.totalRent)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-zinc-400">Deposits</span>
-                        <span className="font-medium text-zinc-50">
+                        <span className="text-[var(--color-muted-foreground)]">
+                          {t("deposits")}
+                        </span>
+                        <span className="font-medium text-[var(--color-foreground)]">
                           {formatCurrency(report.income.totalDeposits)}
                         </span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-zinc-400">Other</span>
-                        <span className="font-medium text-zinc-50">
+                        <span className="text-[var(--color-muted-foreground)]">{t("other")}</span>
+                        <span className="font-medium text-[var(--color-foreground)]">
                           {formatCurrency(report.income.totalOther)}
                         </span>
                       </div>
-                      <div className="border-t border-zinc-700 pt-3 flex justify-between items-center">
-                        <span className="font-medium text-zinc-300">Total</span>
+                      <div className="border-t border-[var(--color-border)] pt-3 flex justify-between items-center">
+                        <span className="font-medium text-[var(--color-muted-foreground)]">
+                          {t("total")}
+                        </span>
                         <span className="font-bold text-[var(--color-success)]">
                           {formatCurrency(report.income.total)}
                         </span>
@@ -313,28 +326,38 @@ export function ReportsView(): React.ReactElement {
                   </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader>
-                    <CardTitle className="text-zinc-50">Expenses by Category</CardTitle>
+                    <CardTitle className="text-[var(--color-foreground)]">
+                      {t("expensesByCategory")}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       {report.expenses.byCategory.map((cat) => (
                         <div key={cat.category} className="flex justify-between items-center">
                           <div className="flex items-center gap-2">
-                            <span className="text-zinc-400">{cat.category}</span>
-                            <span className="text-xs text-zinc-500">({cat.percentage}%)</span>
+                            <span className="text-[var(--color-muted-foreground)]">
+                              {cat.category}
+                            </span>
+                            <span className="text-xs text-[var(--color-muted-foreground)]">
+                              ({cat.percentage}%)
+                            </span>
                           </div>
-                          <span className="font-medium text-zinc-50">
+                          <span className="font-medium text-[var(--color-foreground)]">
                             {formatCurrency(cat.amount)}
                           </span>
                         </div>
                       ))}
                       {report.expenses.byCategory.length === 0 && (
-                        <p className="text-zinc-500 text-sm">No expenses recorded</p>
+                        <p className="text-[var(--color-muted-foreground)] text-sm">
+                          {t("noExpenses")}
+                        </p>
                       )}
-                      <div className="border-t border-zinc-700 pt-3 flex justify-between items-center">
-                        <span className="font-medium text-zinc-300">Total</span>
+                      <div className="border-t border-[var(--color-border)] pt-3 flex justify-between items-center">
+                        <span className="font-medium text-[var(--color-muted-foreground)]">
+                          {t("total")}
+                        </span>
                         <span className="font-bold text-[var(--color-destructive)]">
                           {formatCurrency(report.expenses.total)}
                         </span>
@@ -346,26 +369,30 @@ export function ReportsView(): React.ReactElement {
 
               {/* Income by Property */}
               {report.income.byProperty.length > 0 && (
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader>
-                    <CardTitle className="text-zinc-50">Income by Property</CardTitle>
+                    <CardTitle className="text-[var(--color-foreground)]">
+                      {t("incomeByProperty")}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
                       {report.income.byProperty.map((prop) => (
                         <div
                           key={prop.propertyId}
-                          className="flex items-center justify-between p-3 rounded-lg bg-zinc-800/50"
+                          className="flex items-center justify-between p-3 rounded-lg bg-[var(--color-surface)]"
                         >
                           <div className="flex items-center gap-3">
-                            <Building2 className="h-5 w-5 text-zinc-500" />
-                            <span className="text-zinc-50">{prop.propertyName}</span>
+                            <Building2 className="h-5 w-5 text-[var(--color-muted-foreground)]" />
+                            <span className="text-[var(--color-foreground)]">
+                              {prop.propertyName}
+                            </span>
                           </div>
                           <div className="text-right">
-                            <div className="font-semibold text-zinc-50">
+                            <div className="font-semibold text-[var(--color-foreground)]">
                               {formatCurrency(prop.total)}
                             </div>
-                            <div className="text-xs text-zinc-500">
+                            <div className="text-xs text-[var(--color-muted-foreground)]">
                               Rent: {formatCurrency(prop.rent)}
                             </div>
                           </div>
@@ -377,9 +404,11 @@ export function ReportsView(): React.ReactElement {
               )}
 
               {/* Invoice Summary */}
-              <Card className="bg-zinc-900/50 border-zinc-800">
+              <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-zinc-50">Invoice Summary</CardTitle>
+                  <CardTitle className="text-[var(--color-foreground)]">
+                    {t("invoiceSummary")}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-4">
@@ -387,8 +416,10 @@ export function ReportsView(): React.ReactElement {
                       <div className="text-2xl font-bold text-[var(--color-warning)]">
                         {report.invoices.summary.invoiceCount.pending}
                       </div>
-                      <div className="text-sm text-zinc-400">Pending</div>
-                      <div className="text-sm text-zinc-500">
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
+                        {tStatus("pending")}
+                      </div>
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
                         {formatCurrency(report.invoices.summary.totalPending)}
                       </div>
                     </div>
@@ -396,8 +427,10 @@ export function ReportsView(): React.ReactElement {
                       <div className="text-2xl font-bold text-[var(--color-success)]">
                         {report.invoices.summary.invoiceCount.paid}
                       </div>
-                      <div className="text-sm text-zinc-400">Paid</div>
-                      <div className="text-sm text-zinc-500">
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
+                        {tStatus("paid")}
+                      </div>
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
                         {formatCurrency(report.invoices.summary.totalPaid)}
                       </div>
                     </div>
@@ -405,8 +438,10 @@ export function ReportsView(): React.ReactElement {
                       <div className="text-2xl font-bold text-[var(--color-destructive)]">
                         {report.invoices.summary.invoiceCount.overdue}
                       </div>
-                      <div className="text-sm text-zinc-400">Overdue</div>
-                      <div className="text-sm text-zinc-500">
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
+                        {tStatus("overdue")}
+                      </div>
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
                         {formatCurrency(report.invoices.summary.totalOverdue)}
                       </div>
                     </div>
@@ -414,8 +449,12 @@ export function ReportsView(): React.ReactElement {
                       <div className="text-2xl font-bold text-[var(--color-warning)]">
                         {formatCurrency(report.invoices.summary.totalLateFees)}
                       </div>
-                      <div className="text-sm text-zinc-400">Late Fees</div>
-                      <div className="text-sm text-zinc-500">Collected</div>
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
+                        {t("lateFees")}
+                      </div>
+                      <div className="text-sm text-[var(--color-muted-foreground)]">
+                        {t("collected")}
+                      </div>
                     </div>
                   </div>
                 </CardContent>
@@ -426,11 +465,11 @@ export function ReportsView(): React.ReactElement {
 
         {/* Tax Report */}
         <TabsContent value="tax" className="space-y-6">
-          <Card className="bg-zinc-900/50 border-zinc-800">
+          <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
             <CardContent className="pt-6">
               <div className="flex items-end gap-4">
                 <div className="space-y-2">
-                  <Label>Tax Year</Label>
+                  <Label>{t("taxYear")}</Label>
                   <Select value={taxYear.toString()} onValueChange={(v) => setTaxYear(parseInt(v))}>
                     <SelectTrigger className="w-[120px]">
                       <SelectValue />
@@ -446,63 +485,81 @@ export function ReportsView(): React.ReactElement {
                 </div>
                 <Button onClick={handleGenerateReport} disabled={isLoading}>
                   <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
-                  Generate
+                  {t("generate")}
                 </Button>
               </div>
             </CardContent>
           </Card>
 
           {taxReport && (
-            <Card className="bg-zinc-900/50 border-zinc-800">
+            <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
               <CardHeader>
-                <CardTitle className="text-zinc-50">Tax Year {taxReport.year}</CardTitle>
+                <CardTitle className="text-[var(--color-foreground)]">
+                  Tax Year {taxReport.year}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid gap-4 md:grid-cols-3 mb-6">
-                  <div className="text-center p-4 rounded-lg bg-zinc-800/50">
+                  <div className="text-center p-4 rounded-lg bg-[var(--color-surface)]">
                     <div className="text-2xl font-bold text-[var(--color-success)]">
                       {formatCurrency(taxReport.grossIncome)}
                     </div>
-                    <div className="text-sm text-zinc-400">Gross Income</div>
+                    <div className="text-sm text-[var(--color-muted-foreground)]">
+                      {t("grossIncome")}
+                    </div>
                   </div>
-                  <div className="text-center p-4 rounded-lg bg-zinc-800/50">
+                  <div className="text-center p-4 rounded-lg bg-[var(--color-surface)]">
                     <div className="text-2xl font-bold text-[var(--color-destructive)]">
                       {formatCurrency(taxReport.totalExpenses)}
                     </div>
-                    <div className="text-sm text-zinc-400">Deductible Expenses</div>
+                    <div className="text-sm text-[var(--color-muted-foreground)]">
+                      {t("deductibleExpenses")}
+                    </div>
                   </div>
-                  <div className="text-center p-4 rounded-lg bg-zinc-800/50">
-                    <div className="text-2xl font-bold text-zinc-50">
+                  <div className="text-center p-4 rounded-lg bg-[var(--color-surface)]">
+                    <div className="text-2xl font-bold text-[var(--color-foreground)]">
                       {formatCurrency(taxReport.netIncome)}
                     </div>
-                    <div className="text-sm text-zinc-400">Taxable Income</div>
+                    <div className="text-sm text-[var(--color-muted-foreground)]">
+                      {t("taxableIncome")}
+                    </div>
                   </div>
                 </div>
 
-                <h4 className="font-medium text-zinc-300 mb-3">Quarterly Breakdown</h4>
+                <h4 className="font-medium text-[var(--color-muted-foreground)] mb-3">
+                  {t("quarterlyBreakdown")}
+                </h4>
                 <div className="grid gap-3 md:grid-cols-4">
                   {(taxReport.quarterlyBreakdown || []).map((q) => (
                     <div
                       key={q.quarter}
-                      className="p-3 rounded-lg bg-zinc-800/30 border border-zinc-700/50"
+                      className="p-3 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)]"
                     >
-                      <div className="font-medium text-zinc-50 mb-2">{q.quarter}</div>
+                      <div className="font-medium text-[var(--color-foreground)] mb-2">
+                        {q.quarter}
+                      </div>
                       <div className="text-sm space-y-1">
                         <div className="flex justify-between">
-                          <span className="text-zinc-500">Income</span>
+                          <span className="text-[var(--color-muted-foreground)]">
+                            {t("income")}
+                          </span>
                           <span className="text-[var(--color-success)]">
                             {formatCurrency(q.income)}
                           </span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-zinc-500">Expenses</span>
+                          <span className="text-[var(--color-muted-foreground)]">
+                            {t("expenses")}
+                          </span>
                           <span className="text-[var(--color-destructive)]">
                             {formatCurrency(q.expenses)}
                           </span>
                         </div>
-                        <div className="flex justify-between border-t border-zinc-700 pt-1">
-                          <span className="text-zinc-400">Net</span>
-                          <span className="text-zinc-50">{formatCurrency(q.net)}</span>
+                        <div className="flex justify-between border-t border-[var(--color-border)] pt-1">
+                          <span className="text-[var(--color-muted-foreground)]">{t("net")}</span>
+                          <span className="text-[var(--color-foreground)]">
+                            {formatCurrency(q.net)}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -515,11 +572,11 @@ export function ReportsView(): React.ReactElement {
 
         {/* Rent Roll */}
         <TabsContent value="rent-roll" className="space-y-6">
-          <Card className="bg-zinc-900/50 border-zinc-800">
+          <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
             <CardContent className="pt-6">
               <Button onClick={handleGenerateReport} disabled={isLoading}>
                 <RefreshCw className={cn("h-4 w-4 mr-2", isLoading && "animate-spin")} />
-                Refresh Rent Roll
+                {t("refreshRentRoll")}
               </Button>
             </CardContent>
           </Card>
@@ -527,64 +584,74 @@ export function ReportsView(): React.ReactElement {
           {rentRoll && (
             <>
               <div className="grid gap-4 md:grid-cols-3">
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">
-                      Monthly Rent
+                    <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                      {t("monthlyRent")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-zinc-50">
+                    <div className="text-2xl font-bold text-[var(--color-foreground)]">
                       {formatCurrency(rentRoll.totalMonthlyRent)}
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">Annual Rent</CardTitle>
+                    <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                      {t("annualRent")}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-zinc-50">
+                    <div className="text-2xl font-bold text-[var(--color-foreground)]">
                       {formatCurrency(rentRoll.totalAnnualRent)}
                     </div>
                   </CardContent>
                 </Card>
 
-                <Card className="bg-zinc-900/50 border-zinc-800">
+                <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                   <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium text-zinc-400">
-                      Occupancy Rate
+                    <CardTitle className="text-sm font-medium text-[var(--color-muted-foreground)]">
+                      {t("occupancyRate")}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-zinc-50">{rentRoll.occupancyRate}%</div>
+                    <div className="text-2xl font-bold text-[var(--color-foreground)]">
+                      {rentRoll.occupancyRate}%
+                    </div>
                   </CardContent>
                 </Card>
               </div>
 
-              <Card className="bg-zinc-900/50 border-zinc-800">
+              <Card className="bg-[var(--color-card)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-zinc-50">Property Details</CardTitle>
+                  <CardTitle className="text-[var(--color-foreground)]">
+                    {t("propertyDetails")}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
                     {(rentRoll.properties || []).map((prop) => (
                       <div
                         key={prop.propertyId}
-                        className="flex items-center justify-between p-4 rounded-lg bg-zinc-800/50 border border-zinc-700/50"
+                        className="flex items-center justify-between p-4 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)]"
                       >
                         <div className="flex items-center gap-3">
-                          <Building2 className="h-5 w-5 text-zinc-500" />
+                          <Building2 className="h-5 w-5 text-[var(--color-muted-foreground)]" />
                           <div>
-                            <div className="font-medium text-zinc-50">{prop.propertyName}</div>
+                            <div className="font-medium text-[var(--color-foreground)]">
+                              {prop.propertyName}
+                            </div>
                             {prop.tenantName && (
-                              <div className="text-sm text-zinc-400">Tenant: {prop.tenantName}</div>
+                              <div className="text-sm text-[var(--color-muted-foreground)]">
+                                Tenant: {prop.tenantName}
+                              </div>
                             )}
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold text-zinc-50">
+                          <div className="font-semibold text-[var(--color-foreground)]">
                             {formatCurrency(prop.monthlyRent)}/mo
                           </div>
                           <div
@@ -600,7 +667,7 @@ export function ReportsView(): React.ReactElement {
                             {prop.status.charAt(0).toUpperCase() + prop.status.slice(1)}
                           </div>
                           {prop.leaseEnd && (
-                            <div className="text-xs text-zinc-500">
+                            <div className="text-xs text-[var(--color-muted-foreground)]">
                               Lease ends: {new Date(prop.leaseEnd).toLocaleDateString()}
                             </div>
                           )}

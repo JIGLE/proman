@@ -39,6 +39,7 @@ describe("PropertiesView", () => {
   it("renders the portfolio view when there are no properties", () => {
     render(<PropertiesView />);
     // Tree is the default view; its compact asset filter renders above the tree.
-    expect(screen.getByPlaceholderText(/filter assets/i)).toBeDefined();
+    // The next-intl mock returns the key, so assert the key rather than the English copy.
+    expect(screen.getByPlaceholderText("portfolio.filterAssets")).toBeDefined();
   });
 });

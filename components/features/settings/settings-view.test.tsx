@@ -130,7 +130,8 @@ describe("SettingsView", () => {
       expect(fetchMock).toHaveBeenCalledWith("/api/billing/subscription");
     });
     await waitFor(() => {
-      expect(screen.getByRole("button", { name: "Billing" })).toBeDefined();
+      // The next-intl mock returns the key, so the section label renders as "billing".
+      expect(screen.getByRole("button", { name: "billing" })).toBeDefined();
     });
   });
 
@@ -141,6 +142,6 @@ describe("SettingsView", () => {
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith("/api/billing/subscription");
     });
-    expect(screen.queryByRole("button", { name: "Billing" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "billing" })).toBeNull();
   });
 });

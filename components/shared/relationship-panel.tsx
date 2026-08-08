@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
 import { EntityLink, EntityLinkProps } from "./entity-link";
@@ -17,6 +18,7 @@ interface RelationshipPanelProps {
 }
 
 export function RelationshipPanel({ sections, className }: RelationshipPanelProps) {
+  const t = useTranslations("common");
   const [openSections, setOpenSections] = useState<Set<string>>(
     new Set(sections.filter((s) => s.defaultOpen !== false).map((s) => s.title)),
   );
@@ -42,7 +44,7 @@ export function RelationshipPanel({ sections, className }: RelationshipPanelProp
   return (
     <div className={cn("space-y-3", className)}>
       <h3 className="text-sm font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
-        Related Entities
+        {t("relatedEntities")}
       </h3>
       {nonEmptySections.map((section) => {
         const isOpen = openSections.has(section.title);

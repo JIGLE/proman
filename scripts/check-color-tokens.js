@@ -44,8 +44,24 @@ const ALLOWLIST = [
  * Raised from 639 (semantic-only) to 1192 when neutral families were added to the
  * scan, net of the flagship-screen migration (property list/detail/sheet,
  * financials). Every token migration should drive this number DOWN.
+ *
+ * 1192 → 596: the dark-palette neutrals (`bg-zinc-900`, `text-zinc-400`,
+ * `border-zinc-800`…) were not merely unidiomatic, they rendered dark-on-light —
+ * Intelligence › Reports was white text on a cream page. Mapped to the semantic
+ * tokens across `components/**`, skipping lines that already carry a `dark:` pair
+ * and the two surfaces whose dark ground is deliberate (the locale overlay on the
+ * landing hero, and the map's own tiles).
+ *
+ * 596 → 591: net of the Documents category chips gaining explicit `dark:` pairs
+ * (+2, a real contrast fix) and the Leases selection chrome — the bulk-actions bar
+ * and selected-row tint — dropping its dark-only indigo literals for the semantic
+ * `--color-info` pair, which is the same dark-on-light bug one screen further in.
+ *
+ * 591 → 571: deleting the three views orphaned by d5d01d9 (the portfolio restructure)
+ * and never removed — Contracts, Buildings and Invoices. None had an importer; the
+ * first two sat behind routes that redirect elsewhere.
  */
-const BASELINE = 1192;
+const BASELINE = 571;
 
 function walk(dir, acc) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {

@@ -9,6 +9,14 @@
 
 .root {
   position: relative;
+  /* .heroVisual is `inset: 0` here and then `scale(1.32)` at rest, so it renders ~32% wider
+     than this box and dragged the whole page into horizontal scroll between ~1150px and
+     ~1700px wide (151px at 1440). It is pointer-events: none and almost entirely empty space
+     around a centred orbit, so clipping at the root's bounds removes the scrollbar without
+     hiding anything. `clip` rather than `hidden`: it must not become a scroll container, and
+     unlike `hidden` it does not trap the position:fixed locale control.
+     Desktop-only bug — the mobile audit measures 390px, where the visual is display:none. */
+  overflow-x: clip;
   --p: 0;
   --mx: 0px;
   --my: 0px;
@@ -37,7 +45,11 @@
 .localeControl {
   position: fixed;
   top: 24px;
-  right: 24px;
+  /* Track the page's content container rather than the raw viewport corner. Pinned to the far
+     right of a wide desktop it sat well outside the reading column — a first-time visitor never
+     looked there. Stays `fixed` (not absolute) because the --t opacity math below ties it to the
+     scroll sequence. Mirrors the --page-max container on the landing <main>. */
+  right: max(24px, calc((100vw - var(--page-max, 1400px)) / 2 + 24px));
   z-index: 20;
   --t: clamp(0, calc((var(--p) - 0.5) * 8.33), 1);
   opacity: var(--t);
@@ -173,6 +185,9 @@
   display: none;
   align-items: center;
   justify-content: center;
+  /* Single source of truth for the orbit's diameter: .orbit sizes itself from it and
+     .splashFooter positions itself below it from the same value. */
+  --orbit-size: 340px;
   transform: translate(calc((26.25% + 11.4px) * var(--v)), calc(-18px * (1 - var(--v))))
     scale(calc(1 + 0.32 * (1 - var(--v))));
   transition: transform 100ms linear;
@@ -181,12 +196,18 @@
 @media (min-width: 1024px) {
   .heroVisual {
     display: flex;
+    --orbit-size: clamp(340px, 27vw, 460px);
   }
 }
 .orbit {
   position: relative;
-  width: 340px;
-  height: 340px;
+  /* Sized off the viewport from lg up: at 340px flat it read as a small motif marooned in the
+     right-hand column on a wide desktop. Clamped so it never outgrows the grid track. The
+     inner offsets below are percentages, not pixels, so they scale with it.
+     --orbit-size is declared on .heroVisual so .splashFooter can sit itself relative to the
+     orbit's real radius instead of a hardcoded number that silently goes stale. */
+  width: var(--orbit-size);
+  height: var(--orbit-size);
   display: grid;
   place-items: center;
   pointer-events: auto;
@@ -197,7 +218,8 @@
 }
 .glow {
   position: absolute;
-  inset: 40px;
+  /* 40/340 — proportional so it tracks the orbit's clamped size instead of drifting inward. */
+  inset: 11.8%;
   border-radius: 50%;
   filter: blur(22px);
   opacity: 0.85;
@@ -211,13 +233,17 @@
      resolves, so this stays a quiet pre-scroll cue rather than competing with settled content. */
   translate: calc(var(--mx) * (1 - var(--v))) calc(var(--my) * (1 - var(--v)));
 }
-/* Ring rotation is fully JS-driven per frame (see component) so it can accelerate on scroll and
-   ease back to its resting speed when idle. The keyline halo is the same trick the mark itself
-   uses: some countries' primary colour (Germany's black) sits close to the dark-canvas colour,
-   so relying on the flag colour alone for contrast would make the ring — and its point —
-   disappear. Border-colour leans heavily toward the flag colour (not a 50/50 mix with
-   --color-border) because the light theme's border token is a pale, low-contrast tan — a light
-   mix of it washes the ring out against the equally pale canvas. */
+/* Colour roles here read as an orrery: the orbital PATH takes the flag's tertiary colour, and
+   the two planets travelling it take the primary (outer) and secondary (inner).
+   The path uses the contrast-corrected --logo-accent-readable, because a raw accent like
+   Portugal's #FFFF00 vanishes on the light theme's cream canvas. The planets stay raw flag
+   colours — they are logo roles, and the keyline halo is what carries them on either canvas,
+   the same trick the mark itself uses (Germany's black primary would otherwise disappear into
+   a dark canvas). Border mixes lean heavily toward the accent rather than a 50/50 blend with
+   --color-border: that token is a pale, low-contrast tan in the light theme, and a lighter mix
+   washes an already-corrected colour out against the equally pale canvas.
+   Ring rotation is fully JS-driven per frame (see component) so it can accelerate on scroll and
+   ease back to its resting speed when idle. */
 .ring {
   position: absolute;
   border-radius: 50%;
@@ -227,11 +253,15 @@
 }
 .ringR1 {
   inset: 0;
-  border-color: color-mix(in srgb, var(--logo-primary) 72%, var(--color-border));
+  /* Leans harder on the accent than the old primary-based mix did (72%). That mix existed to
+     rescue flag colours sitting close to the canvas; --logo-accent-readable is already
+     contrast-corrected, so diluting it toward the pale light-theme border only washed it out. */
+  border-color: color-mix(in srgb, var(--logo-accent-readable) 88%, var(--color-border));
 }
 .ringR2 {
-  inset: 46px;
-  border-color: color-mix(in srgb, var(--logo-secondary) 66%, var(--color-border));
+  /* 46/340 — proportional, so the gap between the rings scales with the orbit. */
+  inset: 13.5%;
+  border-color: color-mix(in srgb, var(--logo-accent-readable) 82%, var(--color-border));
 }
 .ringR1::after {
   content: "";
@@ -242,6 +272,9 @@
   width: 7px;
   height: 7px;
   border-radius: 50%;
+  /* The planets carry the raw flag colours — primary on the outer orbit, secondary on the
+     inner — against the tertiary path. Raw, not contrast-corrected: these are logo-role
+     colours, and the keyline halo below is what keeps them visible on either canvas. */
   background: var(--logo-primary);
   box-shadow:
     0 0 0 1px var(--logo-keyline),
@@ -330,7 +363,11 @@
 .splashFooter {
   position: absolute;
   left: 50%;
-  top: calc(50% + 184px); /* orbit radius (170px) + the 14px gap the layout already used */
+  /* Derived from the orbit's actual radius, not a fixed number. It used to be a hardcoded
+     184px (half of the old flat 340px orbit, plus a 14px gap); once the orbit started scaling
+     with the viewport that number went stale and the wordmark and scroll arrow ended up
+     sitting inside the outer ring — 61px inside it at 1920px. */
+  top: calc(50% + var(--orbit-size) / 2 + 22px);
   transform: translateX(-50%);
   display: flex;
   flex-direction: column;
@@ -438,12 +475,12 @@
 }
 .mobileRingR1 {
   inset: 0;
-  border-color: color-mix(in srgb, var(--logo-primary) 72%, var(--color-border));
+  border-color: color-mix(in srgb, var(--logo-accent-readable) 88%, var(--color-border));
   animation: mobileSpinCW 22s linear infinite;
 }
 .mobileRingR2 {
   inset: 26px;
-  border-color: color-mix(in srgb, var(--logo-secondary) 66%, var(--color-border));
+  border-color: color-mix(in srgb, var(--logo-accent-readable) 82%, var(--color-border));
   animation: mobileSpinCCW 16s linear infinite;
 }
 .mobileRingR1::after {

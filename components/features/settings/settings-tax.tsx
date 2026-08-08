@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Globe, Landmark, Save } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -34,28 +35,11 @@ const defaultFiscalProfile: FiscalProfile = {
   ificiYear: null,
 };
 
-const currencies = [
-  { value: "EUR", label: "Euro (€)", symbol: "€" },
-  { value: "DKK", label: "Danish Krone (kr)", symbol: "kr" },
-  { value: "USD", label: "US Dollar ($)", symbol: "$" },
-  { value: "GBP", label: "British Pound (£)", symbol: "£" },
-];
-
-const countries = [
-  { value: "PT", label: "Portugal" },
-  { value: "ES", label: "Spain" },
-  { value: "DK", label: "Denmark" },
-];
-
-const fiscalResidencyOptions = [
-  { value: "PT", label: "Portugal" },
-  { value: "ES", label: "Spain" },
-  { value: "FR", label: "France" },
-  { value: "DE", label: "Germany" },
-  { value: "IT", label: "Italy" },
-  { value: "GB", label: "United Kingdom" },
-  { value: "OTHER", label: "Other" },
-];
+/** Codes only — the display names resolve against `settings.panel` at render, since country
+ *  and currency names differ per locale ("Spain" / "España" / "Spagna"). */
+const CURRENCIES = ["EUR", "DKK", "USD", "GBP"] as const;
+const TAX_COUNTRIES = ["PT", "ES", "DK"] as const;
+const FISCAL_RESIDENCIES = ["PT", "ES", "FR", "DE", "IT", "GB", "OTHER"] as const;
 
 interface SettingsTaxProps {
   settings: UserSettings;
@@ -63,6 +47,8 @@ interface SettingsTaxProps {
 }
 
 export function SettingsTax({ settings, updateSetting }: SettingsTaxProps) {
+  const t = useTranslations("settings.panel");
+  const tSettings = useTranslations("settings");
   const { success, error: showError } = useToast();
   const { token: csrfToken } = useCsrf();
 
@@ -123,7 +109,7 @@ export function SettingsTax({ settings, updateSetting }: SettingsTaxProps) {
       });
 
       if (response.ok) {
-        success("Tax profile saved successfully");
+        success(t("toastTaxSaved"));
         setFiscalHasChanges(false);
       } else {
         const errBody = await response.json().catch(() => ({}));
@@ -144,13 +130,13 @@ export function SettingsTax({ settings, updateSetting }: SettingsTaxProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Globe className="h-5 w-5" />
-            Regional Settings
+            {t("regional")}
           </CardTitle>
-          <CardDescription>Currency and tax configuration for your portfolio</CardDescription>
+          <CardDescription>{t("regionalDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="max-w-sm space-y-4">
           <div className="space-y-2">
-            <Label>Default Currency</Label>
+            <Label>{t("defaultCurrency")}</Label>
             <Select
               value={settings.defaultCurrency}
               onValueChange={(value) =>
@@ -158,12 +144,12 @@ export function SettingsTax({ settings, updateSetting }: SettingsTaxProps) {
               }
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select currency" />
+                <SelectValue placeholder={t("selectCurrency")} />
               </SelectTrigger>
               <SelectContent>
-                {currencies.map((currency) => (
-                  <SelectItem key={currency.value} value={currency.value}>
-                    {currency.label}
+                {CURRENCIES.map((code) => (
+                  <SelectItem key={code} value={code}>
+                    {t(`currency${code}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -171,25 +157,23 @@ export function SettingsTax({ settings, updateSetting }: SettingsTaxProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Default Tax Country</Label>
+            <Label>{t("defaultTaxCountry")}</Label>
             <Select
               value={settings.defaultTaxCountry || ""}
               onValueChange={(value) => updateSetting("defaultTaxCountry", value || null)}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select country" />
+                <SelectValue placeholder={t("selectCountry")} />
               </SelectTrigger>
               <SelectContent>
-                {countries.map((country) => (
-                  <SelectItem key={country.value} value={country.value}>
-                    {country.label}
+                {TAX_COUNTRIES.map((code) => (
+                  <SelectItem key={code} value={code}>
+                    {t(`country${code}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">
-              Used as the default for tax calculations on new properties
-            </p>
+            <p className="text-xs text-muted-foreground">{t("taxCountryHelp")}</p>
           </div>
         </CardContent>
       </Card>
@@ -214,18 +198,18 @@ export function SettingsTax({ settings, updateSetting }: SettingsTaxProps) {
             <>
               {/* Fiscal Residency */}
               <div className="space-y-2">
-                <Label htmlFor="fiscal-residency">Fiscal residency country</Label>
+                <Label htmlFor="fiscal-residency">{tSettings("fiscalResidency")}</Label>
                 <Select
                   value={fiscalProfile.fiscalResidency ?? ""}
                   onValueChange={(v) => updateFiscalProfile("fiscalResidency", v || null)}
                 >
                   <SelectTrigger id="fiscal-residency" className="max-w-xs">
-                    <SelectValue placeholder="Select country" />
+                    <SelectValue placeholder={t("selectCountry")} />
                   </SelectTrigger>
                   <SelectContent>
-                    {fiscalResidencyOptions.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
+                    {FISCAL_RESIDENCIES.map((code) => (
+                      <SelectItem key={code} value={code}>
+                        {t(`country${code}`)}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -241,10 +225,9 @@ export function SettingsTax({ settings, updateSetting }: SettingsTaxProps) {
                 <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1 flex-1">
-                      <Label htmlFor="nhr-status">Non-Habitual Resident (NHR) status</Label>
+                      <Label htmlFor="nhr-status">{tSettings("nhrStatus")}</Label>
                       <p className="text-xs text-[var(--color-muted-foreground)]">
-                        NHR grants a flat 20% tax rate on Portuguese-source income for 10 years.
-                        Only valid if granted before Jan 2024.
+                        {tSettings("nhrStatusHelp")}
                       </p>
                     </div>
                     <Switch
@@ -256,13 +239,13 @@ export function SettingsTax({ settings, updateSetting }: SettingsTaxProps) {
                   </div>
                   {fiscalProfile.nhrStatus && (
                     <div className="space-y-1.5">
-                      <Label htmlFor="nhr-year">Year granted</Label>
+                      <Label htmlFor="nhr-year">{tSettings("nhrYear")}</Label>
                       <Input
                         id="nhr-year"
                         type="number"
                         min={2009}
                         max={2024}
-                        placeholder="e.g. 2022"
+                        placeholder={t("yearPlaceholder", { year: 2022 })}
                         className="max-w-xs"
                         value={fiscalProfile.nhrYear ?? ""}
                         onChange={(e) => {
@@ -274,7 +257,7 @@ export function SettingsTax({ settings, updateSetting }: SettingsTaxProps) {
                   )}
                   {fiscalProfile.ificiStatus && (
                     <p className="text-xs text-amber-600 dark:text-amber-400">
-                      NHR is disabled because IFICI is active. NHR and IFICI are mutually exclusive.
+                      {t("nhrDisabledByIfici")}
                     </p>
                   )}
                 </div>
@@ -285,7 +268,7 @@ export function SettingsTax({ settings, updateSetting }: SettingsTaxProps) {
                 <div className="space-y-4 rounded-lg border border-[var(--color-border)] p-4">
                   <div className="flex items-start justify-between gap-4">
                     <div className="space-y-1 flex-1">
-                      <Label htmlFor="ifici-status">IFICI regime (new NHR from 2024)</Label>
+                      <Label htmlFor="ifici-status">{tSettings("ificiStatus")}</Label>
                       <p className="text-xs text-[var(--color-muted-foreground)]">
                         IFICI (Incentivo Fiscal à Investigação Científica e Inovação) replaced NHR
                         for new applicants from 2024. Flat 20% rate.
@@ -300,13 +283,13 @@ export function SettingsTax({ settings, updateSetting }: SettingsTaxProps) {
                   </div>
                   {fiscalProfile.ificiStatus && (
                     <div className="space-y-1.5">
-                      <Label htmlFor="ifici-year">Year granted</Label>
+                      <Label htmlFor="ifici-year">{tSettings("ificiYear")}</Label>
                       <Input
                         id="ifici-year"
                         type="number"
                         min={2024}
                         max={2030}
-                        placeholder="e.g. 2024"
+                        placeholder={t("yearPlaceholder", { year: 2024 })}
                         className="max-w-xs"
                         value={fiscalProfile.ificiYear ?? ""}
                         onChange={(e) => {
@@ -318,7 +301,7 @@ export function SettingsTax({ settings, updateSetting }: SettingsTaxProps) {
                   )}
                   {fiscalProfile.nhrStatus && (
                     <p className="text-xs text-amber-600 dark:text-amber-400">
-                      IFICI is disabled because NHR is active. NHR and IFICI are mutually exclusive.
+                      {t("ificiDisabledByNhr")}
                     </p>
                   )}
                 </div>

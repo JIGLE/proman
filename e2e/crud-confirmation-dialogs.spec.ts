@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { settle } from "./helpers/wait";
 
 /**
  * Phase 2 CRUD Integrity Tests
@@ -46,7 +47,7 @@ test.describe("Confirmation Dialog UI – Unauthenticated", () => {
     page.on("pageerror", (err) => errors.push(err.message));
 
     await page.goto("/auth/signin");
-    await page.waitForLoadState("networkidle");
+    await settle(page);
 
     // No uncaught JS errors
     expect(errors).toHaveLength(0);
@@ -56,164 +57,101 @@ test.describe("Confirmation Dialog UI – Unauthenticated", () => {
 test.describe("Confirmation Dialog UI – Authenticated", () => {
   test.use({ storageState: "playwright/.auth/user.json" });
 
-  test("property delete shows confirmation dialog", async ({ page }) => {
-    await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+  /**
+   * These tests used to call `test.skip(true, …)` on themselves whenever a nav link or a delete
+   * button was not visible — which, before the suite could authenticate at all, was always. They
+   * reported as skipped rather than failed, so they were honest, but they never ran once.
+   *
+   * Deletion is reached from a per-row menu ("<Name> options"), not a bare Delete button, and the
+   * confirmation is an `alertdialog`.
+   *
+   * NOTE: there is no property-delete test here because there is no property-delete UI. The route
+   * exists and is auth-guarded (see above), but `deleteProperty` is not wired to any component —
+   * only units have a delete affordance. The old test asserted against an affordance that does
+   * not exist, which is the other half of why it could only ever skip.
+   */
+  const openTenantDeleteConfirmation = async (page: import("@playwright/test").Page) => {
+    await page.goto("/en/people");
+    await settle(page);
 
-    // Navigate to portfolio
-    const navLink = page.getByRole("link", { name: /portfolio/i }).first();
-    if (!(await navLink.isVisible().catch(() => false))) {
-      test.skip(true, "Properties nav not visible – may require auth");
-      return;
-    }
-    await navLink.click();
-    await page.waitForLoadState("networkidle");
+    const rowMenu = page.getByRole("button", { name: /options$/i }).first();
+    await expect(rowMenu).toBeVisible();
+    await rowMenu.click();
 
-    // Look for a delete button (trash icon or "Delete" text)
-    const deleteBtn = page
-      .getByRole("button", { name: /delete/i })
-      .first()
-      .or(page.locator("button:has(svg.lucide-trash-2)").first());
-
-    if (!(await deleteBtn.isVisible().catch(() => false))) {
-      test.skip(true, "No properties available to delete");
-      return;
-    }
-
-    await deleteBtn.click();
-
-    // Confirmation dialog should appear (AlertDialog)
-    const dialog = page.getByRole("alertdialog");
-    await expect(dialog).toBeVisible({ timeout: 3000 });
-
-    // Should show destructive confirmation content
-    await expect(dialog.getByText(/permanently removed|cannot be undone/i)).toBeVisible();
-
-    // Cancel button should close without deleting
-    await dialog.getByRole("button", { name: /cancel/i }).click();
-    await expect(dialog).not.toBeVisible();
-  });
-
-  test("tenant delete shows confirmation dialog", async ({ page }) => {
-    await page.goto("/en");
-    await page.waitForLoadState("networkidle");
-
-    const navLink = page.getByRole("link", { name: /people/i }).first();
-    if (!(await navLink.isVisible().catch(() => false))) {
-      test.skip(true, "Tenants nav not visible – may require auth");
-      return;
-    }
-    await navLink.click();
-    await page.waitForLoadState("networkidle");
-
-    const deleteBtn = page
-      .getByRole("button", { name: /delete/i })
-      .first()
-      .or(page.locator("button:has(svg.lucide-trash-2)").first());
-
-    if (!(await deleteBtn.isVisible().catch(() => false))) {
-      test.skip(true, "No tenants available to delete");
-      return;
-    }
-
-    await deleteBtn.click();
+    const deleteItem = page.getByRole("menuitem", { name: /delete/i });
+    await expect(deleteItem).toBeVisible();
+    await deleteItem.click();
 
     const dialog = page.getByRole("alertdialog");
-    await expect(dialog).toBeVisible({ timeout: 3000 });
-    await expect(dialog.getByText(/permanently removed|cannot be undone/i)).toBeVisible();
+    await expect(dialog).toBeVisible({ timeout: 5000 });
+    return dialog;
+  };
 
-    // Cancel
-    await dialog.getByRole("button", { name: /cancel/i }).click();
-    await expect(dialog).not.toBeVisible();
+  test("tenant delete opens a confirmation dialog with destructive copy", async ({ page }) => {
+    const dialog = await openTenantDeleteConfirmation(page);
+
+    await expect(dialog).toContainText(/permanently removed|cannot be undone/i);
+    await expect(dialog.getByRole("button", { name: /cancel/i })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /^delete$/i })).toBeVisible();
   });
 
-  test("confirmation dialog has glass styling", async ({ page }) => {
-    await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+  test("confirmation dialog carries the glass-modal treatment", async ({ page }) => {
+    const dialog = await openTenantDeleteConfirmation(page);
 
-    // Navigate to any section with data
-    const sections = ["properties", "tenants", "owners", "leases"];
-    let dialogOpened = false;
+    // `glass-modal` sits on AlertDialogContent itself (components/ui/alert-dialog.tsx:67). The
+    // old test looked for it as a *descendant* of the dialog, so it matched nothing even when the
+    // styling was correctly applied.
+    await expect(dialog).toHaveClass(/glass-modal/);
+  });
 
-    for (const section of sections) {
-      const link = page.getByRole("link", { name: new RegExp(section, "i") }).first();
-      if (!(await link.isVisible().catch(() => false))) continue;
+  test("cancelling the confirmation leaves the tenant in place", async ({ page }) => {
+    await page.goto("/en/people");
+    await settle(page);
 
-      await link.click();
-      await page.waitForLoadState("networkidle");
+    const firstRowMenu = page.getByRole("button", { name: /options$/i }).first();
+    await expect(firstRowMenu).toBeVisible();
+    // The menu is labelled "<Tenant name> options" — recover the name so we can assert the row
+    // survives, which is the behaviour that actually matters about a cancel.
+    const label = (await firstRowMenu.getAttribute("aria-label")) ?? "";
+    const tenantName = label.replace(/\s*options$/i, "").trim();
+    expect(tenantName.length).toBeGreaterThan(0);
 
-      const deleteBtn = page
-        .getByRole("button", { name: /delete/i })
-        .first()
-        .or(page.locator("button:has(svg.lucide-trash-2)").first());
+    await firstRowMenu.click();
+    await page.getByRole("menuitem", { name: /delete/i }).click();
+    const dialog = page.getByRole("alertdialog");
+    await expect(dialog).toBeVisible({ timeout: 5000 });
 
-      if (!(await deleteBtn.isVisible().catch(() => false))) continue;
-
-      await deleteBtn.click();
-      const dialog = page.getByRole("alertdialog");
-      if (await dialog.isVisible().catch(() => false)) {
-        dialogOpened = true;
-
-        // Verify glass-modal class is applied
-        const content = dialog.locator(".glass-modal");
-        await expect(content).toBeVisible();
-
-        // Clean up
-        await dialog.getByRole("button", { name: /cancel/i }).click();
-        break;
-      }
-    }
-
-    if (!dialogOpened) {
-      test.skip(true, "No data available to trigger confirmation dialog");
-    }
+    await dialog.getByRole("button", { name: /cancel/i }).click();
+    await expect(dialog).toBeHidden();
+    await expect(page.getByText(tenantName).first()).toBeVisible();
   });
 });
 
 test.describe("Form Validation – Authenticated", () => {
   test.use({ storageState: "playwright/.auth/user.json" });
 
-  test("property form validates required fields on change", async ({ page }) => {
-    await page.goto("/en");
-    await page.waitForLoadState("networkidle");
+  test("property form reports a required field once it is cleared", async ({ page }) => {
+    await page.goto("/en/portfolio?view=properties");
+    await settle(page);
 
-    const navLink = page.getByRole("link", { name: /portfolio/i }).first();
-    if (!(await navLink.isVisible().catch(() => false))) {
-      test.skip(true, "Portfolio nav not visible");
-      return;
-    }
-    await navLink.click();
-    await page.waitForLoadState("networkidle");
+    // Create is a "New asset" dropdown → "New property" item; see workflow-property.spec.ts.
+    await page
+      .getByRole("button", { name: /new asset/i })
+      .first()
+      .click();
+    await page.getByRole("menuitem", { name: /new property/i }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
 
-    // Open add property dialog
-    const addBtn = page.getByRole("button", { name: /add property/i }).first();
-    if (!(await addBtn.isVisible().catch(() => false))) {
-      test.skip(true, "Add Property button not visible");
-      return;
-    }
-    await addBtn.click();
-    await expect(page.getByRole("dialog")).toBeVisible();
+    // The old test filled, cleared, waited, then only `console.log`ed whether an error appeared —
+    // it asserted nothing at all. Submitting with the name cleared must surface a message.
+    const nameInput = page.getByLabel("Property Name");
+    await nameInput.fill("Temporary");
+    await nameInput.clear();
+    await dialog.getByRole("button", { name: /create property/i }).click();
 
-    // Type and clear a required field to trigger validateOnChange
-    const nameInput = page.getByLabel(/property name/i);
-    if (await nameInput.isVisible().catch(() => false)) {
-      await nameInput.fill("Test");
-      await nameInput.clear();
-      // Wait for debounced validation (300ms)
-      await page.waitForTimeout(500);
-
-      // Look for validation error
-      const errorText = page.locator('.text-red-400, .text-destructive, [role="alert"]');
-      // Error should appear after clearing required field
-      const hasError = (await errorText.count()) > 0;
-      // Note: validation behavior depends on schema config
-      console.log("Validation errors shown:", hasError);
-    }
-
-    // Close dialog
-    const cancelBtn = page.getByRole("button", { name: /cancel/i });
-    if (await cancelBtn.isVisible().catch(() => false)) {
-      await cancelBtn.click();
-    }
+    await expect(dialog.locator(".text-destructive, [role='alert']").first()).toBeVisible({
+      timeout: 5000,
+    });
   });
 });

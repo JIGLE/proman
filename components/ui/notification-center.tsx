@@ -18,6 +18,7 @@ import {
   Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils/utils";
+import { csrfHeaders } from "@/lib/utils/api-client";
 import { Button } from "./button";
 import { Badge } from "./badge";
 import * as Popover from "@/components/ui/popover";
@@ -45,7 +46,7 @@ export type NotificationPriority = "low" | "medium" | "high" | "urgent";
 function trackReminderClicked(notification: Notification): void {
   fetch("/api/events", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: csrfHeaders({ "Content-Type": "application/json" }),
     body: JSON.stringify({
       name: "reminder_clicked",
       metadata: { type: notification.type },
@@ -98,12 +99,12 @@ const notificationColors: Record<NotificationType, string> = {
   lease_expired: "text-red-400 bg-red-400/10",
   tenant_added: "text-purple-400 bg-purple-400/10",
   document_uploaded: "text-blue-400 bg-blue-400/10",
-  system: "text-zinc-400 bg-zinc-400/10",
+  system: "text-[var(--color-muted-foreground)] bg-[var(--color-popover)]",
 };
 
 // Priority badge colors
 const priorityColors: Record<NotificationPriority, string> = {
-  low: "bg-zinc-500/20 text-zinc-400",
+  low: "bg-[var(--color-popover)] text-[var(--color-muted-foreground)]",
   medium: "bg-blue-500/20 text-blue-400",
   high: "bg-orange-500/20 text-orange-400",
   urgent: "bg-red-500/20 text-red-400",
@@ -183,7 +184,12 @@ function NotificationItem({
             {notification.title}
           </p>
           {notification.priority !== "low" && (
-            <Badge className={cn("text-[10px] px-1.5 py-0", priorityColors[notification.priority])}>
+            <Badge
+              className={cn(
+                "text-[12px] md:text-[10px] px-1.5 py-0",
+                priorityColors[notification.priority],
+              )}
+            >
               {t(`priority.${notification.priority}`)}
             </Badge>
           )}
@@ -191,7 +197,7 @@ function NotificationItem({
         <p className="text-xs text-[var(--color-muted-foreground)] line-clamp-2">
           {notification.message}
         </p>
-        <p className="text-[10px] text-[var(--color-muted-foreground)]">
+        <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)]">
           {formatRelativeTime(notification.timestamp, t)}
         </p>
       </div>
@@ -276,7 +282,7 @@ export function NotificationCenter({
         >
           <Bell className="h-4 w-4" />
           {unreadCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
+            <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[12px] md:text-[10px] font-bold text-destructive-foreground">
               {unreadCount > 99 ? "99+" : unreadCount}
             </span>
           )}
@@ -509,7 +515,7 @@ export function useNotifications() {
       try {
         const res = await fetch("/api/notifications", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: csrfHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({
             type:
               Object.entries(dbTypeToUiType).find(([, v]) => v === notification.type)?.[0] ??
@@ -536,19 +542,22 @@ export function useNotifications() {
     // Fire and forget API call
     fetch(`/api/notifications/${id}`, {
       method: "PUT",
-      headers: { "Content-Type": "application/json" },
+      headers: csrfHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ read: true }),
     }).catch(() => {});
   }, []);
 
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-    fetch("/api/notifications/mark-all-read", { method: "PUT" }).catch(() => {});
+    fetch("/api/notifications/mark-all-read", {
+      method: "PUT",
+      headers: csrfHeaders(),
+    }).catch(() => {});
   }, []);
 
   const deleteNotification = useCallback((id: string) => {
     setNotifications((prev) => prev.filter((n) => n.id !== id));
-    fetch(`/api/notifications/${id}`, { method: "DELETE" }).catch(() => {});
+    fetch(`/api/notifications/${id}`, { method: "DELETE", headers: csrfHeaders() }).catch(() => {});
   }, []);
 
   const clearAll = useCallback(() => {
@@ -556,7 +565,9 @@ export function useNotifications() {
     setNotifications([]);
     // Delete all in background
     Promise.allSettled(
-      ids.map((id) => fetch(`/api/notifications/${id}`, { method: "DELETE" })),
+      ids.map((id) =>
+        fetch(`/api/notifications/${id}`, { method: "DELETE", headers: csrfHeaders() }),
+      ),
     ).catch(() => {});
   }, [notifications]);
 

@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useTranslations } from "next-intl";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -78,32 +79,42 @@ function DefaultErrorFallback({
   errorId?: string;
   resetError: () => void;
 }): React.ReactElement {
+  // Safe to call here: the boundary is mounted inside NextIntlClientProvider, so the fallback
+  // always has a provider above it even when the tree below has thrown.
+  const t = useTranslations("errors.boundary");
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-950 p-4">
-      <Card className="w-full max-w-md bg-zinc-900 border-zinc-800">
+    <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)] p-4">
+      <Card className="w-full max-w-md bg-[var(--color-card)] border-[var(--color-border)]">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 w-12 h-12 bg-red-600/20 rounded-full flex items-center justify-center">
             <AlertTriangle className="w-6 h-6 text-red-400" />
           </div>
-          <CardTitle className="text-zinc-50">Something went wrong</CardTitle>
-          <CardDescription className="text-zinc-400">
-            An unexpected error occurred. Please try refreshing the page.
+          <CardTitle className="text-[var(--color-foreground)]">{t("title")}</CardTitle>
+          <CardDescription className="text-[var(--color-muted-foreground)]">
+            {t("description")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {error && (
-            <div className="bg-zinc-800 rounded-lg p-3 space-y-2">
-              <p className="text-sm text-zinc-300 font-mono break-all">{error.message}</p>
-              {errorId && <p className="text-xs text-zinc-500">Error ID: {errorId}</p>}
+            <div className="bg-[var(--color-surface)] rounded-lg p-3 space-y-2">
+              <p className="text-sm text-[var(--color-muted-foreground)] font-mono break-all">
+                {error.message}
+              </p>
+              {errorId && (
+                <p className="text-xs text-[var(--color-muted-foreground)]">
+                  {t("errorId", { id: errorId })}
+                </p>
+              )}
             </div>
           )}
           <div className="flex gap-2">
             <Button onClick={resetError} className="flex-1">
               <RefreshCw className="w-4 h-4 mr-2" />
-              Try Again
+              {t("tryAgain")}
             </Button>
             <Button variant="outline" onClick={() => window.location.reload()} className="flex-1">
-              Refresh Page
+              {t("refresh")}
             </Button>
           </div>
         </CardContent>

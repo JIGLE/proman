@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useToast } from "@/lib/toast-context";
 import { useTranslation } from "react-i18next";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 export function LeaseDocumentUploader({
   tenantId,
@@ -26,6 +27,8 @@ export function LeaseDocumentUploader({
       // Use leases alias route
       const res = await fetch(`/api/leases/${tenantId}/documents`, {
         method: "POST",
+        // No Content-Type: the browser must set the multipart boundary itself.
+        headers: csrfHeaders(),
         body: fd,
         credentials: "include",
       });
@@ -48,7 +51,7 @@ export function LeaseDocumentUploader({
         <input
           type="file"
           onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          className="text-xs text-zinc-300 file:rounded-md file:border-0 file:bg-zinc-800 file:px-3 file:py-2 file:text-zinc-100"
+          className="text-xs text-[var(--color-muted-foreground)] file:rounded-md file:border-0 file:bg-zinc-800 file:px-3 file:py-2 file:text-zinc-100"
         />
         <button
           onClick={upload}

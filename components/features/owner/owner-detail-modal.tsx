@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Mail, Phone, MapPin, Building2, Edit, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,6 +23,9 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
   const { state, updateOwner, deleteOwner } = useApp();
   const owner = state.owners.find((o) => o.id === ownerId) ?? null;
   const { success, error } = useToast();
+  const t = useTranslations("owners");
+  const tForms = useTranslations("forms");
+  const tActions = useTranslations("actions");
   const confirmDialog = useConfirmDialog();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<OwnerFormData>({
@@ -48,7 +52,7 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
   if (!owner) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2">
-        <p className="text-sm text-zinc-400">Owner not found</p>
+        <p className="text-sm text-[var(--color-muted-foreground)]">{t("notFound")}</p>
       </div>
     );
   }
@@ -57,13 +61,13 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
     try {
       const validated = ownerSchema.parse(formData);
       await updateOwner(owner.id, validated);
-      success("Owner updated successfully");
+      success(t("toastUpdated"));
       setIsEditing(false);
     } catch (err) {
       if (err instanceof Error) {
         error(err.message);
       } else {
-        error("Failed to update owner");
+        error(t("toastUpdateFailed"));
       }
     }
   };
@@ -71,14 +75,14 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
   const handleDelete = () => {
     confirmDialog.confirm(
       {
-        title: "Delete Owner",
-        description: "This owner will be permanently removed. This action cannot be undone.",
-        confirmLabel: "Delete Owner",
+        title: t("deleteOwner"),
+        description: t("deleteDescription"),
+        confirmLabel: t("deleteOwner"),
         variant: "destructive",
       },
       async () => {
         await deleteOwner(owner.id);
-        success("Owner deleted successfully");
+        success(t("toastDeleted"));
         onClose();
       },
     );
@@ -135,7 +139,7 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
           // Edit Mode
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{tForms("fullName")}</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -144,13 +148,15 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Card className="bg-zinc-800 border-zinc-700">
+              <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">Owner Info</CardTitle>
+                  <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                    {t("ownerInfo")}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="email">{tForms("email")}</Label>
                     <Input
                       id="email"
                       type="email"
@@ -159,7 +165,7 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="phone">Phone</Label>
+                    <Label htmlFor="phone">{tForms("phone")}</Label>
                     <Input
                       id="phone"
                       value={formData.phone}
@@ -169,13 +175,15 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
                 </CardContent>
               </Card>
 
-              <Card className="bg-zinc-800 border-zinc-700">
+              <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">Address</CardTitle>
+                  <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                    {tForms("address")}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2">
                   <div className="space-y-2">
-                    <Label htmlFor="address">Address</Label>
+                    <Label htmlFor="address">{tForms("address")}</Label>
                     <Input
                       id="address"
                       value={formData.address}
@@ -187,9 +195,11 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
             </div>
 
             <div className="space-y-2">
-              <Card className="bg-zinc-800 border-zinc-700">
+              <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">Notes</CardTitle>
+                  <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                    {tForms("notes")}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <Textarea
@@ -204,21 +214,23 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
 
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={handleCancel}>
-                Cancel
+                {tActions("cancel")}
               </Button>
-              <Button onClick={handleSave}>Save Changes</Button>
+              <Button onClick={handleSave}>{tActions("save")}</Button>
             </div>
           </div>
         ) : (
           <div className="space-y-4">
             {owner.address && (
-              <Card className="bg-zinc-800 border-zinc-700">
+              <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">Address</CardTitle>
+                  <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                    {tForms("address")}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex items-start gap-2">
-                    <MapPin className="h-4 w-4 text-zinc-500 mt-1" />
+                    <MapPin className="h-4 w-4 text-[var(--color-muted-foreground)] mt-1" />
                     <div className="text-sm">
                       <p className="text-[var(--color-foreground)]">{owner.address}</p>
                     </div>
@@ -229,9 +241,9 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
 
             {/* Properties Owned */}
             {owner.properties && owner.properties.length > 0 && (
-              <Card className="bg-zinc-800 border-zinc-700">
+              <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400 flex items-center gap-2">
+                  <CardTitle className="text-sm text-[var(--color-muted-foreground)] flex items-center gap-2">
                     <Building2 className="h-4 w-4" />
                     Properties Owned ({owner.properties.length})
                   </CardTitle>
@@ -241,12 +253,12 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
                     {owner.properties.map((po) => (
                       <div
                         key={po.id}
-                        className="flex items-center justify-between p-2 bg-zinc-900 rounded"
+                        className="flex items-center justify-between p-2 bg-[var(--color-card)] rounded"
                       >
                         <span className="text-sm text-[var(--color-foreground)]">
                           {po.property?.name || "Unknown Property"}
                         </span>
-                        <span className="text-xs text-zinc-400">
+                        <span className="text-xs text-[var(--color-muted-foreground)]">
                           {po.ownershipPercentage}% ownership
                         </span>
                       </div>
@@ -258,9 +270,11 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
 
             {/* Notes */}
             {owner.notes && (
-              <Card className="bg-zinc-800 border-zinc-700">
+              <Card className="bg-[var(--color-surface)] border-[var(--color-border)]">
                 <CardHeader>
-                  <CardTitle className="text-sm text-zinc-400">Notes</CardTitle>
+                  <CardTitle className="text-sm text-[var(--color-muted-foreground)]">
+                    {tForms("notes")}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-[var(--color-foreground)]">{owner.notes}</p>
@@ -269,18 +283,18 @@ export function OwnerDetailModal({ ownerId, onClose }: OwnerDetailModalProps) {
             )}
 
             {/* Action Buttons */}
-            <div className="flex justify-between gap-2 pt-4 border-t border-zinc-800">
+            <div className="flex justify-between gap-2 pt-4 border-t border-[var(--color-border)]">
               <Button
                 variant="destructive"
                 onClick={handleDelete}
                 className="flex items-center gap-1"
               >
                 <Trash2 className="w-4 h-4" />
-                Delete Owner
+                {t("deleteOwner")}
               </Button>
               <Button onClick={() => setIsEditing(true)} className="flex items-center gap-1">
                 <Edit className="w-4 h-4" />
-                Edit Owner
+                {t("editOwner")}
               </Button>
             </div>
           </div>

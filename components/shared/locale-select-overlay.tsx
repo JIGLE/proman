@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,9 +26,18 @@ const LOCALES = [
     name: "Español",
     greeting: "Bienvenido",
   },
+  // Italian was missing here and in the Settings language selector, so `it` users could see
+  // the app in Italian but never choose it. The names stay in their own language by design.
+  {
+    code: "it",
+    flag: "🇮🇹",
+    name: "Italiano",
+    greeting: "Benvenuto",
+  },
 ] as const;
 
 export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }) {
+  const t = useTranslations("language");
   const [visible, setVisible] = useState(false);
   const [selecting, setSelecting] = useState<string | null>(null);
   const router = useRouter();
@@ -86,10 +96,8 @@ export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }
             {/* Logo / brand mark */}
             <div className="text-center">
               <p className="text-xs uppercase tracking-[0.3em] text-zinc-500">Situs</p>
-              <h1 className="mt-2 text-2xl font-semibold text-zinc-50">Choose your language</h1>
-              <p className="mt-1.5 text-sm text-zinc-400">
-                Select a language to continue. You can change it later.
-              </p>
+              <h1 className="mt-2 text-2xl font-semibold text-zinc-50">{t("chooseTitle")}</h1>
+              <p className="mt-1.5 text-sm text-zinc-400">{t("chooseHelp")}</p>
             </div>
 
             {/* Language cards */}
@@ -111,7 +119,7 @@ export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }
                 >
                   <span className="text-3xl leading-none">{locale.flag}</span>
                   <span className="text-xs font-semibold text-zinc-50">{locale.name}</span>
-                  <span className="text-[10px] text-zinc-400 group-hover:text-zinc-300">
+                  <span className="text-[12px] md:text-[10px] text-zinc-400 group-hover:text-zinc-300">
                     {locale.greeting}
                   </span>
                 </motion.button>

@@ -3,6 +3,8 @@
 import * as React from "react";
 import { useMemo } from "react";
 
+import { useTranslations } from "next-intl";
+
 import { cn } from "@/lib/utils/utils";
 import type { MaintenanceTicket } from "@/lib/types";
 
@@ -27,6 +29,7 @@ export function OperationsKpiRow({
 }: {
   tickets: MaintenanceTicket[];
 }): React.ReactElement {
+  const t = useTranslations("maintenance");
   const { open, urgent, scheduled, evidenceRequired } = useMemo(() => {
     const openTickets = tickets.filter((t) => t.status === "open" || t.status === "in_progress");
     return {
@@ -39,7 +42,7 @@ export function OperationsKpiRow({
 
   return (
     <p className="text-sm text-[var(--color-muted-foreground)]">
-      <span className="font-medium text-[var(--color-foreground)]">{open}</span> open ·{" "}
+      <span className="font-medium text-[var(--color-foreground)]">{open}</span> {t("kpiOpen")} ·{" "}
       <span
         className={cn(
           "font-medium",
@@ -48,8 +51,9 @@ export function OperationsKpiRow({
       >
         {urgent}
       </span>{" "}
-      urgent · <span className="font-medium text-[var(--color-foreground)]">{scheduled}</span>{" "}
-      scheduled (next 14 days) ·{" "}
+      {t("kpiUrgent")} ·{" "}
+      <span className="font-medium text-[var(--color-foreground)]">{scheduled}</span>{" "}
+      {t("kpiScheduled")} ·{" "}
       <span
         className={cn(
           "font-medium",
@@ -60,7 +64,7 @@ export function OperationsKpiRow({
       >
         {evidenceRequired}
       </span>{" "}
-      evidence required
+      {t("kpiEvidence")}
     </p>
   );
 }

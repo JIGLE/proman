@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -61,6 +62,7 @@ const CELL_CODES: Record<string, string> = {
 };
 
 export function YearlyRentMatrix(): React.ReactElement {
+  const t = useTranslations("common");
   const [year, setYear] = useState(() => new Date().getUTCFullYear());
   const [rows, setRows] = useState<MatrixRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -96,7 +98,7 @@ export function YearlyRentMatrix(): React.ReactElement {
             size="sm"
             className="h-7 w-7 rounded-none p-0"
             onClick={() => setYear((y) => y - 1)}
-            aria-label="Previous year"
+            aria-label={t("previousYear")}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
@@ -106,7 +108,7 @@ export function YearlyRentMatrix(): React.ReactElement {
             size="sm"
             className="h-7 w-7 rounded-none p-0"
             onClick={() => setYear((y) => y + 1)}
-            aria-label="Next year"
+            aria-label={t("nextYear")}
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </Button>
@@ -128,7 +130,7 @@ export function YearlyRentMatrix(): React.ReactElement {
             <thead>
               <tr>
                 <th className="mono-label border-b border-[var(--color-border)] px-4 py-2 text-left font-normal">
-                  Contract
+                  {t("contract")}
                 </th>
                 {MONTH_LABELS.map((m) => (
                   <th
@@ -162,7 +164,7 @@ export function YearlyRentMatrix(): React.ReactElement {
                         }
                       >
                         <span
-                          className={`inline-block min-w-[42px] px-1 py-0.5 font-mono text-[10px] uppercase tracking-[0.04em] ${
+                          className={`inline-block min-w-[42px] px-1 py-0.5 font-mono text-[12px] md:text-[10px] uppercase tracking-[0.04em] ${
                             cell
                               ? (CELL_STYLES[cell.status] ?? "")
                               : "text-[var(--color-muted-foreground)]"

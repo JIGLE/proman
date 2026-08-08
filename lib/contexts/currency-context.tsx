@@ -9,6 +9,7 @@ import {
   CURRENCY_SYMBOLS,
 } from "@/lib/utils/currency";
 import { isPublicPagePath } from "@/lib/utils/public-route";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 interface CurrencyContextType {
   currency: Currency;
@@ -93,7 +94,7 @@ export function CurrencyProvider({
     try {
       await fetch("/api/settings", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ defaultCurrency: newCurrency }),
       });
     } catch (error) {

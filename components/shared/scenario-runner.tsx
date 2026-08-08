@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Play, X, ChevronDown, CheckCircle2, Loader2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useDemoMode } from "@/lib/contexts/demo-context";
@@ -12,6 +13,7 @@ import {
 } from "@/lib/demo/demo-scenarios";
 
 export function ScenarioRunner() {
+  const t = useTranslations("common");
   const { isDemoMode } = useDemoMode();
   const [isOpen, setIsOpen] = useState(false);
   const [progress, setProgress] = useState<ScenarioProgress | null>(null);
@@ -48,8 +50,10 @@ export function ScenarioRunner() {
 
   if (!isDemoMode) return null;
 
+  // `bottom-20` (80px) cleared the 64px nav only where the safe-area inset is 0; on a device
+  // with a home indicator the nav grows to ~98px and swallowed the FAB.
   return (
-    <div className="fixed bottom-20 right-4 z-[100] md:bottom-6">
+    <div className="fixed right-4 z-[100] max-md:bottom-[calc(5rem+env(safe-area-inset-bottom,0px))] md:bottom-6">
       <AnimatePresence>
         {/* Scenario Menu */}
         {isOpen && !progress?.isRunning && (
@@ -61,10 +65,10 @@ export function ScenarioRunner() {
           >
             <div className="px-4 py-3 border-b border-[var(--color-border)]">
               <h3 className="text-sm font-semibold text-[var(--color-text-primary)]">
-                Run Demo Scenario
+                {t("runScenario")}
               </h3>
               <p className="text-xs text-[var(--color-text-muted)] mt-0.5">
-                Watch a realistic workflow unfold
+                {t("runScenarioHelp")}
               </p>
             </div>
             <div className="p-2">
@@ -99,7 +103,7 @@ export function ScenarioRunner() {
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-[var(--color-text-primary)]">
-                Running scenario...
+                {t("runningScenario")}
               </span>
               <button
                 onClick={handleCancel}
@@ -125,7 +129,7 @@ export function ScenarioRunner() {
                 transition={{ duration: 0.3 }}
               />
             </div>
-            <span className="text-[10px] text-[var(--color-text-muted)] mt-1 block">
+            <span className="text-[12px] md:text-[10px] text-[var(--color-text-muted)] mt-1 block">
               Step {progress.currentStep + 1} of {progress.totalSteps}
             </span>
           </motion.div>
@@ -141,9 +145,9 @@ export function ScenarioRunner() {
           >
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-4 w-4 text-green-400 shrink-0" />
-              <span className="text-sm font-medium text-green-200">Scenario complete!</span>
+              <span className="text-sm font-medium text-green-200">{t("scenarioComplete")}</span>
             </div>
-            <p className="text-xs text-green-300/70 mt-1">Refreshing to show updated data...</p>
+            <p className="text-xs text-green-300/70 mt-1">{t("scenarioRefreshing")}</p>
           </motion.div>
         )}
       </AnimatePresence>

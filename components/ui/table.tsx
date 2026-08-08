@@ -111,6 +111,14 @@ interface RenderTableProps<T> {
    * `stickyFirstColumn`, which targets matrices instead. */
   cardMode?: boolean;
   renderCard?: (row: T) => React.ReactNode;
+  /** Opening the record by clicking its row is the norm for these lists, so it belongs here
+   * rather than being re-implemented per cell. Applies to the table only — `renderCard` owns
+   * its own affordances, since a card usually wants a visible control rather than a click
+   * target the size of a paragraph. */
+  onRowClick?: (row: T) => void;
+  /** Per-row styling driven by row state (selection, severity). Table only — `renderCard`
+   * already receives the row and can style its own container. */
+  rowClassName?: (row: T) => string | undefined;
 }
 
 /**
@@ -127,6 +135,8 @@ function RenderTable<T>({
   stickyFirstColumn = false,
   cardMode = false,
   renderCard,
+  onRowClick,
+  rowClassName,
 }: RenderTableProps<T>): React.ReactElement {
   if (data.length === 0 && emptyState) {
     return <>{emptyState}</>;
@@ -157,7 +167,11 @@ function RenderTable<T>({
           </TableHeader>
           <TableBody>
             {data.map((row) => (
-              <TableRow key={rowKey(row)}>
+              <TableRow
+                key={rowKey(row)}
+                onClick={onRowClick ? () => onRowClick(row) : undefined}
+                className={cn(onRowClick && "cursor-pointer", rowClassName?.(row))}
+              >
                 {columns.map((col, i) => (
                   <TableCell
                     key={col.key}

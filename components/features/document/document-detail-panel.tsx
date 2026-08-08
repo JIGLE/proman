@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Download, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +17,8 @@ import {
 } from "./document-types";
 
 export function DocumentDetailPanel({ documentId }: { documentId: string }) {
+  const t = useTranslations("documents");
+  const tForms = useTranslations("forms");
   const { token: csrfToken } = useCsrf();
   const [doc, setDoc] = useState<Document | null>(null);
   const [loading, setLoading] = useState(true);
@@ -112,14 +115,14 @@ export function DocumentDetailPanel({ documentId }: { documentId: string }) {
 
       <div className="grid grid-cols-2 gap-3 text-sm">
         <div>
-          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
-            Size
+          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+            {t("panel.size")}
           </p>
           <p className="mt-0.5 text-[var(--color-foreground)]">{formatFileSize(doc.fileSize)}</p>
         </div>
         <div>
-          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
-            Uploaded
+          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+            {t("panel.uploaded")}
           </p>
           <p className="mt-0.5 text-[var(--color-foreground)]">
             {formatDocumentDate(doc.uploadedAt)}
@@ -129,8 +132,8 @@ export function DocumentDetailPanel({ documentId }: { documentId: string }) {
 
       {doc.description && (
         <div>
-          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-1">
-            Description
+          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-1">
+            {tForms("description")}
           </p>
           <p className="text-sm text-[var(--color-foreground)]">{doc.description}</p>
         </div>
@@ -138,8 +141,8 @@ export function DocumentDetailPanel({ documentId }: { documentId: string }) {
 
       {(doc.propertyId || doc.tenantId || doc.ownerId) && (
         <div>
-          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
-            Linked to
+          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
+            {t("panel.linkedTo")}
           </p>
           <div className="grid gap-2 sm:grid-cols-2">
             {doc.propertyId && (

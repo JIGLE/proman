@@ -29,5 +29,19 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "maskable",
       },
     ],
+    /**
+     * Long-press actions on the installed icon. Deliberately locale-less: `proxy.ts` resolves a
+     * path with no `[locale]` segment from the `proman-locale` cookie, then `Accept-Language`,
+     * so a shortcut opens in the language the visitor actually chose. Hardcoding `/pt/...` here
+     * would pin every install to Portuguese.
+     *
+     * The manifest is static, so these cannot be translated per user — the labels stay English,
+     * which is also what the OS shows for most installed apps' shortcut menus.
+     */
+    shortcuts: [
+      { name: "Portfolio", short_name: "Portfolio", url: "/portfolio" },
+      { name: "Finance", short_name: "Finance", url: "/financials" },
+      { name: "Operations", short_name: "Operations", url: "/operations" },
+    ],
   };
 }

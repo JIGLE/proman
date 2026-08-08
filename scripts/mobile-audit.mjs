@@ -18,6 +18,7 @@
  * Usage:
  *   node scripts/mobile-audit.mjs                  # audit at 390x844, both themes
  *   node scripts/mobile-audit.mjs --seed           # (re)seed demo data first
+ *   node scripts/mobile-audit.mjs --seed --strict  # ratchet: non-zero exit past BASELINE
  *   node scripts/mobile-audit.mjs --width 1440     # desktop regression pass
  *   node scripts/mobile-audit.mjs --only portfolio # filter surfaces by id substring
  */
@@ -30,7 +31,18 @@ const BASE = process.env.AUDIT_BASE_URL ?? "http://localhost:3000";
 const EMAIL = process.env.E2E_USER_EMAIL ?? "demo@proman.local";
 const PASSWORD = process.env.E2E_USER_PASSWORD ?? "demo123";
 const OUT_DIR = process.env.AUDIT_OUT_DIR ?? "audit-report";
-const EXECUTABLE = process.env.PLAYWRIGHT_CHROMIUM ?? "/opt/pw-browsers/chromium";
+/**
+ * Browser to drive. Empty means "let Playwright resolve its own install", which is what CI
+ * needs — the workflow runs `npx playwright install --with-deps chromium` and the binary lands
+ * wherever Playwright expects it.
+ *
+ * This used to default to `/opt/pw-browsers/chromium`, a path that only exists in the sandbox
+ * this harness was written in. On a GitHub runner it does not, so every CI run died at
+ * `browserType.launch` — and because the step carries `continue-on-error`, the job still
+ * reported success. The ratchet had therefore never once executed in CI. Set
+ * `PLAYWRIGHT_CHROMIUM` to override when a specific binary is needed.
+ */
+const EXECUTABLE = process.env.PLAYWRIGHT_CHROMIUM ?? "";
 
 /** WCAG 2.2 AA "Target Size (Minimum)" is 24x24 CSS px; 44 is the comfortable mobile target. */
 const TOUCH_FAIL = 24;
@@ -51,6 +63,52 @@ const VIEWPORT_WIDTH = Number(opt("width", 390));
 const VIEWPORT_HEIGHT = Number(opt("height", 844));
 const ONLY = opt("only", null);
 const THEMES = opt("theme", "dark,light").split(",");
+const STRICT = flag("strict");
+
+/**
+ * Ratchet ceilings for `--strict`, in the spirit of `scripts/check-color-tokens.js`: a number
+ * that may only ever go down. A run that exceeds any of these exits non-zero.
+ *
+ * `pageOverflow` is pinned at 0 and must stay there — it is the doctrine's first rule, it is
+ * already met on every surface, and unlike the other metrics it has no legitimate reason to
+ * regress.
+ *
+ * `smallText` is close to its floor. Of the 310 remaining, 264 are the bottom nav's own labels
+ * at 11px — which is what native iOS/Android tab bars use, so they stay — and 44 are avatar
+ * initials, a glyph sized to its circle rather than text to read. Do not chase this one to
+ * zero; it would mean overriding two deliberate choices.
+ *
+ * `touchTargetFails: 4` is two links, each counted once per theme: "Política de Privacidade"
+ * (188×16) and "Termos de Serviço" (139×16) in the landing footer. Both are text links in
+ * prose, which the doctrine's rule 2 exempts only with explicit design review — so this is
+ * recorded debt, not an accepted floor. It is also the whole of the metric: every other touch
+ * target in the app now clears 44px below `md`.
+ *
+ * These come from a **seeded** run (`--seed --strict`, 52 surface-runs). An unseeded run walks
+ * empty screens — a table with no rows cannot overflow — so its numbers are meaningless as a
+ * baseline and `--strict` refuses to compare against them.
+ *
+ * Getting a trustworthy number here required fixing `lib/demo-seed.ts` first: it never deleted
+ * documents or the bank graph, so each re-seed stacked another copy and the counts climbed on
+ * every run (634 → 654 across two identical runs; 494 once the seed became idempotent). A
+ * ratchet against a drifting fixture is worse than no ratchet.
+ *
+ * These figures now come from a **production standalone build against a freshly pushed
+ * database** — the shape CI actually runs — rather than a dev server against a long-lived dev
+ * DB. That distinction mattered more than expected: the first such run reported
+ * `touchTargetFails: 27`, because a toast's dismiss glyph measured 9×26 and a toast can appear
+ * over any screen (23 of 52 surface-runs). Every dev-server run had reported 2 and missed it.
+ *
+ * `surfaceRuns` must be 52. Anything lower means detail overlays were skipped for want of a
+ * record id, and the totals are not comparable to these.
+ */
+const BASELINE = {
+  pageOverflow: 0,
+  touchTargetFails: 4,
+  touchTargetWarns: 4,
+  clippedContainers: 6,
+  smallText: 310,
+};
 
 /**
  * Surfaces to audit. `modal` entries resolve a real record id at runtime (see resolveIds)
@@ -80,7 +138,9 @@ const SURFACES = [
   { id: "contacts", path: "/en/contacts" },
   { id: "contracts", path: "/en/contracts" },
   { id: "settings", path: "/en/settings" },
-  { id: "account", path: "/en/account" },
+  // Account is a Settings section now; measure it where it lives rather than through the
+  // /account redirect, so the surface id matches the URL that renders.
+  { id: "account", path: "/en/settings?tab=account" },
   { id: "compliance-tax-filing", path: "/en/compliance/tax-filing" },
   { id: "compliance-modelo179", path: "/en/compliance/modelo179" },
   // Tenant portal: token-gated, so the whole path (not just an id) is substituted — the token
@@ -275,21 +335,38 @@ async function login(page) {
   }
   await emailInput.fill(EMAIL);
   await page.locator('input[name="password"]').fill(PASSWORD);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  // Match the form's submit button structurally, not by label: the auth pages are localized
+  // and default to Portuguese, so a hardcoded "Sign in" stopped matching.
+  await page.locator('form button[type="submit"]').click();
   await page.waitForURL(/\/(en|pt|es|it)(\/|$|\?)/, { timeout: 20000 });
 }
 
 /** Pull real record ids so the `?modal=` overlays are measured with genuine content. */
 async function resolveIds(page) {
+  // Every branch here used to return a bare `null`, so a 500 from an endpoint and an
+  // empty-but-healthy list were indistinguishable — the run just reported "no propertyId" and
+  // skipped the overlay. Say which of the two it was: they need opposite fixes, and a skipped
+  // surface silently shrinks `surfaceRuns` below the 52 the baseline was measured at.
   const get = async (path, pick) => {
     try {
       const res = await page.request.get(`${BASE}${path}`);
-      if (!res.ok()) return null;
+      if (!res.ok()) {
+        console.warn(`[audit] ${path} → ${res.status()} ${(await res.text()).slice(0, 200)}`);
+        return null;
+      }
       const body = await res.json();
       const list = Array.isArray(body) ? body : (body.data ?? body.properties ?? body.tenants);
-      if (!Array.isArray(list) || list.length === 0) return null;
+      if (!Array.isArray(list)) {
+        console.warn(`[audit] ${path} → no array in ${JSON.stringify(body).slice(0, 200)}`);
+        return null;
+      }
+      if (list.length === 0) {
+        console.warn(`[audit] ${path} → empty list (seed produced no rows for this user?)`);
+        return null;
+      }
       return pick(list[0]);
-    } catch {
+    } catch (err) {
+      console.warn(`[audit] ${path} → threw ${err instanceof Error ? err.message : String(err)}`);
       return null;
     }
   };
@@ -350,7 +427,22 @@ async function auditSurface(context, surface, theme, ids) {
     const response = await page.goto(url, { waitUntil: "domcontentloaded", timeout: 45000 });
     result.httpStatus = response?.status() ?? null;
     // Let data fetches and entrance animations settle before measuring.
-    await page.waitForLoadState("networkidle", { timeout: 20000 }).catch(() => {});
+    //
+    // This budget used to be 20s and its timeout was swallowed by a bare `.catch(() => {})`,
+    // which made a systemic stall invisible and very expensive: the first CI run that walked
+    // 52 seeded surfaces spent >24 minutes here and was killed by the job's 30-minute cap,
+    // because something in that environment never lets the page reach networkidle (it settles
+    // fine locally, which is why no local run ever showed this). 52 surface-runs × 20s is
+    // ~17 minutes of pure waiting on its own.
+    //
+    // Cap it at 5s and record when it doesn't settle. `networkidle` is a nicety here — the
+    // measurement only needs content painted, which the fixed delay below covers — so a
+    // surface that never idles should cost a little and be visible, not cost 20s and be silent.
+    const idled = await page
+      .waitForLoadState("networkidle", { timeout: 5000 })
+      .then(() => true)
+      .catch(() => false);
+    result.reachedNetworkIdle = idled;
     await page.waitForTimeout(900);
 
     if (surface.overlay) {
@@ -503,7 +595,7 @@ function toMarkdown(results, meta) {
 
 async function main() {
   mkdirSync(OUT_DIR, { recursive: true });
-  const browser = await chromium.launch({ executablePath: EXECUTABLE });
+  const browser = await chromium.launch(EXECUTABLE ? { executablePath: EXECUTABLE } : {});
   const context = await browser.newContext({
     viewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
     deviceScaleFactor: 2,
@@ -541,21 +633,51 @@ async function main() {
       headers: csrf ? { "x-csrf-token": csrf } : {},
     });
     console.log(`[audit] seed → ${res.status()}${res.ok() ? "" : ` ${await res.text()}`}`);
-    await bootstrap.waitForTimeout(2500);
+    // A seed that silently no-ops is the difference between measuring the app and measuring its
+    // empty states, and the resulting numbers look plausible either way. Fail here rather than
+    // let a run that seeded nothing be mistaken for a baseline.
+    if (!res.ok()) {
+      throw new Error(
+        `Seeding failed (${res.status()}). The audit's numbers describe empty screens without it.`,
+      );
+    }
   }
 
-  const ids = await resolveIds(bootstrap);
-  console.log("[audit] resolved ids:", ids);
+  // Resolve with a short poll rather than a blind sleep. The fixed 2500ms wait that used to sit
+  // after the seed was sometimes not enough: three consecutive local runs resolved `documentId`
+  // (fetched last) but not `tenantId`/`propertyId`/`leaseId` (fetched first), which is the
+  // signature of reading while the seed's deleteMany-then-recreate is still in flight. That
+  // silently produced 44 surface-runs instead of 52 — a smaller, quietly incomparable run.
+  // `--strict` does treat a skip as a failure, so this never corrupted a baseline, but it did
+  // make the gate flaky, and a flaky gate gets ignored.
+  let ids = await resolveIds(bootstrap);
+  const complete = (v) => Object.values(v).every(Boolean);
+  for (let attempt = 1; attempt <= 6 && !complete(ids); attempt++) {
+    console.log(`[audit] incomplete ids, retrying (${attempt}/6)`);
+    await bootstrap.waitForTimeout(1000);
+    ids = await resolveIds(bootstrap);
+  }
+  console.log("[audit] resolved ids:", JSON.stringify(ids));
+  // Same reasoning: if the seed reported success but no records came back, something upstream is
+  // wrong and every detail-overlay surface is about to be skipped. Say so with the detail.
+  if (flag("seed") && Object.values(ids).every((v) => !v)) {
+    throw new Error(
+      "Seed reported success but no record ids could be resolved — every detail overlay would " +
+        "be skipped and the totals would not be comparable to the baseline.",
+    );
+  }
   await bootstrap.close();
 
   const surfaces = ONLY ? SURFACES.filter((s) => s.id.includes(ONLY)) : SURFACES;
   const results = [];
+  const skipped = [];
   for (const surface of surfaces) {
     for (const theme of THEMES) {
       if (surface.path.includes("{")) {
         const key = surface.path.match(/\{(\w+)\}/)?.[1];
         if (key && !ids[key]) {
           console.log(`[audit] skip ${surface.id} (${theme}) — no ${key} available`);
+          skipped.push(`${surface.id} (${theme}): no ${key}`);
           continue;
         }
       }
@@ -589,16 +711,91 @@ async function main() {
     when: new Date().toISOString(),
     viewport: `${VIEWPORT_WIDTH}×${VIEWPORT_HEIGHT}`,
     themes: THEMES,
+    seeded: flag("seed"),
   };
+
+  /**
+   * Pre-aggregated totals. CI reads these directly instead of reducing over `results` in jq —
+   * the previous workflow dug for `.surfaces[]`, `.horizontalOverflow.exceeded` and
+   * `.touchTargets.violations`, none of which have ever existed on this report, so every query
+   * resolved to nothing and the PR summary printed a row of zeroes no matter what was measured.
+   * One shallow, named object is far harder to silently mis-address.
+   */
+  const summary = {
+    surfaceRuns: results.length,
+    failedToLoad: results.filter((r) => r.status === "error").length,
+    pageOverflow: results.filter((r) => r.status !== "error" && r.pageOverflow > 0).length,
+    touchTargetFails: sum(results, "smallTargetFailCount"),
+    touchTargetWarns: sum(results, "smallTargetCount"),
+    clippedContainers: sum(results, "clippedContainerCount"),
+    smallText: sum(results, "smallTextCount"),
+  };
+
+  // Not a ratcheted metric — it measures the harness's environment, not the app's design — but
+  // it must be visible. A run where most surfaces never reach networkidle is a run paying the
+  // full wait budget on nearly every one of them, which is what turned a ~2 minute job into a
+  // >24 minute one that the 30-minute cap killed.
+  const neverIdled = results.filter((r) => r.reachedNetworkIdle === false).length;
+  if (neverIdled > 0) {
+    console.log(
+      `[audit] ${neverIdled}/${results.length} surface-runs never reached networkidle ` +
+        `(capped at 5s each). Expect the run to be slower by roughly ${neverIdled * 5}s.`,
+    );
+  }
+
   writeFileSync(
     join(OUT_DIR, `report-${VIEWPORT_WIDTH}.json`),
-    JSON.stringify({ meta, results }, null, 2),
+    JSON.stringify({ meta, summary, results, neverIdled }, null, 2),
   );
   writeFileSync(join(OUT_DIR, `report-${VIEWPORT_WIDTH}.md`), toMarkdown(results, meta));
   console.log(`\n[audit] wrote ${OUT_DIR}/report-${VIEWPORT_WIDTH}.{json,md}`);
+  console.log(`[audit] summary ${JSON.stringify(summary)}`);
 
-  const overflowing = results.filter((r) => r.status !== "error" && r.pageOverflow > 0);
-  console.log(`[audit] ${overflowing.length}/${results.length} surface-runs overflow horizontally`);
+  if (!STRICT) return;
+
+  if (!meta.seeded) {
+    console.error(
+      "\n✖ --strict requires --seed. Against an empty database the harness walks empty screens," +
+        " so every count is trivially low and passing the ratchet would prove nothing.",
+    );
+    process.exit(2);
+  }
+
+  // A skipped surface silently shrinks the denominator, so a run that audits fewer screens
+  // scores better on every total. Observed for real: `tenant-portal` needs a freshly minted
+  // token, and two consecutive runs skipped it while a third did not — moving `surfaceRuns`
+  // between 50 and 52 and taking its text nodes with it. Under `--strict` the surface set has
+  // to be fixed, so a skip is a failure rather than a quiet footnote.
+  if (skipped.length) {
+    console.error(`\n✖ ${skipped.length} surface-run(s) skipped, so the totals are not
+comparable to the baseline:\n  ${skipped.join("\n  ")}`);
+    process.exit(3);
+  }
+
+  const regressions = Object.entries(BASELINE)
+    .filter(([metric, ceiling]) => summary[metric] > ceiling)
+    .map(([metric, ceiling]) => `  ${metric}: ${summary[metric]} exceeds baseline ${ceiling}`);
+
+  if (regressions.length) {
+    console.error(`\n✖ Mobile audit regressed:\n${regressions.join("\n")}`);
+    console.error("\nFix the surface, or lower BASELINE in scripts/mobile-audit.mjs if a metric");
+    console.error("legitimately moved — never raise it to make a red run go green.");
+    process.exit(1);
+  }
+
+  const improved = Object.entries(BASELINE)
+    .filter(([metric, ceiling]) => summary[metric] < ceiling)
+    .map(([metric, ceiling]) => `${metric} ${summary[metric]} < ${ceiling}`);
+  console.log(
+    improved.length
+      ? `\n✓ Mobile audit within baseline — tighten it: ${improved.join(", ")}`
+      : "\n✓ Mobile audit exactly at baseline",
+  );
+}
+
+/** Total a numeric field across surface runs, tolerating surfaces that failed to load. */
+function sum(results, field) {
+  return results.reduce((acc, r) => acc + (r[field] ?? 0), 0);
 }
 
 main().catch((err) => {

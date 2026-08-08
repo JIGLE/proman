@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import {
   Plus,
   Pencil,
@@ -43,6 +44,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/lib/contexts/toast-context";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 interface TaxRule {
   id: string;
@@ -58,14 +60,14 @@ interface TaxRule {
   updatedAt: string;
 }
 
-type RuleType = "INCOME_BRACKET" | "DEDUCTIBLE_RATE" | "WITHHOLDING_RATE" | "FLAT_RATE";
+const RULE_TYPES = ["INCOME_BRACKET", "DEDUCTIBLE_RATE", "WITHHOLDING_RATE", "FLAT_RATE"] as const;
+type RuleType = (typeof RULE_TYPES)[number];
 
-const RULE_TYPE_LABELS: Record<RuleType, string> = {
-  INCOME_BRACKET: "Income Bracket",
-  DEDUCTIBLE_RATE: "Deductible Rate",
-  WITHHOLDING_RATE: "Withholding Rate",
-  FLAT_RATE: "Flat Rate",
-};
+/** The API can return a rule type this build doesn't know; fall back to the raw string
+ *  rather than rendering a `tax.rules.type.<unknown>` key path at the user. */
+function isRuleType(value: string): value is RuleType {
+  return (RULE_TYPES as readonly string[]).includes(value);
+}
 
 const RULE_TYPE_COLORS: Record<RuleType, string> = {
   INCOME_BRACKET: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
@@ -88,6 +90,9 @@ const emptyForm = {
 };
 
 export function TaxRulesView() {
+  const t = useTranslations("tax.rules");
+  const tActions = useTranslations("actions");
+  const locale = useLocale();
   const { success, error: showError } = useToast();
   const [rules, setRules] = useState<TaxRule[]>([]);
   const [loading, setLoading] = useState(true);
@@ -112,11 +117,11 @@ export function TaxRulesView() {
       const d = await res.json();
       setRules(d.data ?? []);
     } catch {
-      showError("Failed to load tax rules");
+      showError(t("toast.loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, [filterCountry, filterYear, showError]);
+  }, [filterCountry, filterYear, showError, t]);
 
   useEffect(() => {
     load();
@@ -170,21 +175,21 @@ export function TaxRulesView() {
       const method = editingRule ? "PUT" : "POST";
       const res = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify(body),
       });
 
       if (!res.ok) {
         const d = await res.json();
-        showError(typeof d.error === "string" ? d.error : "Save failed");
+        showError(typeof d.error === "string" ? d.error : t("toast.saveFailed"));
         return;
       }
 
-      success(editingRule ? "Tax rule updated" : "Tax rule created");
+      success(editingRule ? t("toast.updated") : t("toast.created"));
       setDialogOpen(false);
       await load();
     } catch {
-      showError("Save failed");
+      showError(t("toast.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -193,13 +198,16 @@ export function TaxRulesView() {
   async function handleDelete() {
     if (!deleteTarget) return;
     try {
-      const res = await fetch(`/api/tax-rules/${deleteTarget.id}`, { method: "DELETE" });
+      const res = await fetch(`/api/tax-rules/${deleteTarget.id}`, {
+        method: "DELETE",
+        headers: csrfHeaders(),
+      });
       if (!res.ok) throw new Error("Delete failed");
-      success("Tax rule deleted");
+      success(t("toast.deleted"));
       setDeleteTarget(null);
       await load();
     } catch {
-      showError("Delete failed");
+      showError(t("toast.deleteFailed"));
     }
   }
 
@@ -220,20 +228,18 @@ export function TaxRulesView() {
         <div>
           <h1 className="text-2xl font-semibold flex items-center gap-2">
             <Landmark className="h-6 w-6" />
-            Tax Rules
+            {t("heading")}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage tax brackets, withholding rates, and deductible rates by country and year.
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">{t("subtitle")}</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            {t("refresh")}
           </Button>
           <Button size="sm" onClick={openCreate}>
             <Plus className="h-4 w-4 mr-1.5" />
-            Add Rule
+            {t("addRule")}
           </Button>
         </div>
       </div>
@@ -242,10 +248,10 @@ export function TaxRulesView() {
       <div className="flex gap-3 flex-wrap">
         <Select value={filterCountry} onValueChange={setFilterCountry}>
           <SelectTrigger className="w-36">
-            <SelectValue placeholder="All countries" />
+            <SelectValue placeholder={t("allCountries")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All countries</SelectItem>
+            <SelectItem value="">{t("allCountries")}</SelectItem>
             <SelectItem value="PT">🇵🇹 Portugal</SelectItem>
             <SelectItem value="ES">🇪🇸 Spain</SelectItem>
             <SelectItem value="IT">🇮🇹 Italy</SelectItem>
@@ -253,10 +259,10 @@ export function TaxRulesView() {
         </Select>
         <Select value={filterYear} onValueChange={setFilterYear}>
           <SelectTrigger className="w-28">
-            <SelectValue placeholder="All years" />
+            <SelectValue placeholder={t("allYears")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">All years</SelectItem>
+            <SelectItem value="">{t("allYears")}</SelectItem>
             {years.map((y) => (
               <SelectItem key={y} value={String(y)}>
                 {y}
@@ -273,22 +279,20 @@ export function TaxRulesView() {
               setFilterYear("");
             }}
           >
-            Clear
+            {t("clear")}
           </Button>
         )}
       </div>
 
       {/* Rules grouped by country */}
       {loading ? (
-        <div className="text-sm text-muted-foreground">Loading…</div>
+        <div className="text-sm text-muted-foreground">{t("loading")}</div>
       ) : rules.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <Landmark className="h-10 w-10 mx-auto text-muted-foreground/40 mb-3" />
-            <p className="text-sm text-muted-foreground">No tax rules found.</p>
-            <p className="text-xs text-muted-foreground mt-1">
-              Run the seed script or add rules manually.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("emptyTitle")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("emptyDescription")}</p>
           </CardContent>
         </Card>
       ) : (
@@ -335,7 +339,9 @@ export function TaxRulesView() {
                                 variant="outline"
                                 className={`text-xs ${RULE_TYPE_COLORS[rule.ruleType as RuleType] ?? ""}`}
                               >
-                                {RULE_TYPE_LABELS[rule.ruleType as RuleType] ?? rule.ruleType}
+                                {isRuleType(rule.ruleType)
+                                  ? t(`type.${rule.ruleType}`)
+                                  : rule.ruleType}
                               </Badge>
                             </div>
                             {rule.notes && (
@@ -381,18 +387,18 @@ export function TaxRulesView() {
                         {expandedId === rule.id && (
                           <div className="border-t border-border bg-muted/30 px-4 py-3">
                             <p className="text-xs font-medium text-muted-foreground mb-2">
-                              Payload
+                              {t("payload")}
                             </p>
                             <pre className="text-xs font-mono bg-background border border-border rounded p-3 overflow-auto max-h-64 whitespace-pre-wrap">
                               {JSON.stringify(JSON.parse(rule.payload), null, 2)}
                             </pre>
                             <div className="flex gap-4 mt-3 text-xs text-muted-foreground">
                               <span>
-                                Effective:{" "}
-                                {new Date(rule.effectiveDate).toLocaleDateString("en-GB")}
+                                {t("effective")}{" "}
+                                {new Date(rule.effectiveDate).toLocaleDateString(locale)}
                               </span>
                               <span>
-                                Updated: {new Date(rule.updatedAt).toLocaleDateString("en-GB")}
+                                {t("updated")} {new Date(rule.updatedAt).toLocaleDateString(locale)}
                               </span>
                             </div>
                           </div>
@@ -411,11 +417,9 @@ export function TaxRulesView() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingRule ? "Edit Tax Rule" : "Add Tax Rule"}</DialogTitle>
+            <DialogTitle>{editingRule ? t("editTitle") : t("addTitle")}</DialogTitle>
             <DialogDescription>
-              {editingRule
-                ? "Update the payload, notes, or source URL. Country, regime, type, and year are fixed."
-                : "Add a new tax rule. Country + regime + type + year must be unique."}
+              {editingRule ? t("editDescription") : t("addDescription")}
             </DialogDescription>
           </DialogHeader>
 
@@ -423,7 +427,7 @@ export function TaxRulesView() {
             {!editingRule && (
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <Label>Country</Label>
+                  <Label>{t("country")}</Label>
                   <Select
                     value={form.country}
                     onValueChange={(v) => setForm((f) => ({ ...f, country: v }))}
@@ -440,7 +444,7 @@ export function TaxRulesView() {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Year</Label>
+                  <Label>{t("year")}</Label>
                   <Input
                     type="number"
                     min={2020}
@@ -450,9 +454,9 @@ export function TaxRulesView() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Regime</Label>
+                  <Label>{t("regime")}</Label>
                   <Input
-                    placeholder="STANDARD, NHR, IFICI, AL…"
+                    placeholder={t("regimePlaceholder")}
                     value={form.regime}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, regime: e.target.value.toUpperCase() }))
@@ -460,7 +464,7 @@ export function TaxRulesView() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Rule Type</Label>
+                  <Label>{t("ruleType")}</Label>
                   <Select
                     value={form.ruleType}
                     onValueChange={(v) => setForm((f) => ({ ...f, ruleType: v as RuleType }))}
@@ -469,18 +473,16 @@ export function TaxRulesView() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      {(Object.entries(RULE_TYPE_LABELS) as [RuleType, string][]).map(
-                        ([val, label]) => (
-                          <SelectItem key={val} value={val}>
-                            {label}
-                          </SelectItem>
-                        ),
-                      )}
+                      {RULE_TYPES.map((val) => (
+                        <SelectItem key={val} value={val}>
+                          {t(`type.${val}`)}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div className="space-y-1.5 col-span-2">
-                  <Label>Effective Date</Label>
+                  <Label>{t("effectiveDate")}</Label>
                   <Input
                     type="date"
                     value={form.effectiveDate.substring(0, 10)}
@@ -498,19 +500,21 @@ export function TaxRulesView() {
             {editingRule && (
               <div className="rounded-lg bg-muted px-4 py-3 text-sm space-y-1">
                 <p>
-                  <span className="text-muted-foreground">Country / Year:</span>{" "}
+                  <span className="text-muted-foreground">{t("countryYear")}</span>{" "}
                   <strong>
                     {editingRule.country} {editingRule.year}
                   </strong>
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Regime:</span>{" "}
+                  <span className="text-muted-foreground">{t("regimeLabel")}</span>{" "}
                   <strong>{editingRule.regime}</strong>
                 </p>
                 <p>
-                  <span className="text-muted-foreground">Type:</span>{" "}
+                  <span className="text-muted-foreground">{t("typeLabel")}</span>{" "}
                   <strong>
-                    {RULE_TYPE_LABELS[editingRule.ruleType as RuleType] ?? editingRule.ruleType}
+                    {isRuleType(editingRule.ruleType)
+                      ? t(`type.${editingRule.ruleType}`)
+                      : editingRule.ruleType}
                   </strong>
                 </p>
               </div>
@@ -518,7 +522,10 @@ export function TaxRulesView() {
 
             <div className="space-y-1.5">
               <Label>
-                Payload <span className="text-muted-foreground font-normal text-xs">(JSON)</span>
+                {t("payload")}{" "}
+                <span className="text-muted-foreground font-normal text-xs">
+                  {t("payloadJson")}
+                </span>
               </Label>
               <Textarea
                 value={form.payload}
@@ -530,7 +537,7 @@ export function TaxRulesView() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Source URL</Label>
+              <Label>{t("sourceUrl")}</Label>
               <Input
                 type="url"
                 placeholder="https://diariodarepublica.pt/…"
@@ -540,9 +547,9 @@ export function TaxRulesView() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Notes</Label>
+              <Label>{t("notes")}</Label>
               <Textarea
-                placeholder="Brief description of the rule…"
+                placeholder={t("notesPlaceholder")}
                 value={form.notes}
                 onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
                 className="min-h-[80px]"
@@ -552,10 +559,10 @@ export function TaxRulesView() {
 
           <DialogFooter>
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
-              Cancel
+              {tActions("cancel")}
             </Button>
             <Button onClick={handleSave} disabled={saving || !!jsonError}>
-              {saving ? "Saving…" : editingRule ? "Save Changes" : "Create Rule"}
+              {saving ? t("saving") : editingRule ? t("saveChanges") : t("createRule")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -565,7 +572,7 @@ export function TaxRulesView() {
       <AlertDialog open={!!deleteTarget} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete tax rule?</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
               {deleteTarget && (
                 <>
@@ -574,16 +581,16 @@ export function TaxRulesView() {
                 </>
               )}
               <br />
-              This cannot be undone.
+              {t("deleteWarning")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{tActions("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {tActions("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

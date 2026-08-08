@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useTranslations } from "next-intl";
 import {
   Search,
   Building2,
@@ -28,6 +29,7 @@ interface CommandItem {
 }
 
 export function CommandPalette() {
+  const t = useTranslations("palette");
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -71,32 +73,32 @@ export function CommandPalette() {
         ? [
             {
               id: "add-property",
-              label: "Add Property",
-              description: "Create a new property listing",
+              label: t("addProperty"),
+              description: t("addPropertyHelp"),
               icon: Plus,
               category: "action",
               href: `/${locale}/portfolio`,
             },
             {
               id: "add-tenant",
-              label: "Add Person",
-              description: "Open people to add a tenant, owner, or contact",
+              label: t("addPerson"),
+              description: t("addPersonHelp"),
               icon: Plus,
               category: "action",
               href: `/${locale}/people`,
             },
             {
               id: "record-payment",
-              label: "Record Payment",
-              description: "Open the payment queue and receipt flow",
+              label: t("recordPayment"),
+              description: t("recordPaymentHelp"),
               icon: DollarSign,
               category: "action",
               href: `/${locale}/financials?tab=receipts`,
             },
             {
               id: "review-documents",
-              label: "Review Documents",
-              description: "Open contracts, receipts, and notices",
+              label: t("reviewDocuments"),
+              description: t("reviewDocumentsHelp"),
               icon: FileText,
               category: "action",
               href: `/${locale}/documents`,
@@ -152,6 +154,7 @@ export function CommandPalette() {
     locale,
     pathname,
     searchParams,
+    t,
   ]);
 
   // Filter
@@ -242,10 +245,10 @@ export function CommandPalette() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Search or type a command..."
+              placeholder={t("placeholder")}
               className="flex-1 bg-transparent text-sm text-[var(--color-foreground)] placeholder-[var(--color-muted-foreground)] outline-none"
             />
-            <kbd className="hidden sm:inline-flex items-center px-2 py-0.5 rounded bg-[var(--color-muted)] text-[10px] font-mono text-[var(--color-muted-foreground)]">
+            <kbd className="hidden sm:inline-flex items-center px-2 py-0.5 rounded bg-[var(--color-muted)] text-[12px] md:text-[10px] font-mono text-[var(--color-muted-foreground)]">
               ESC
             </kbd>
           </div>
@@ -254,14 +257,14 @@ export function CommandPalette() {
           <div ref={listRef} className="max-h-80 overflow-y-auto py-2">
             {filtered.length === 0 && (
               <p className="px-4 py-8 text-center text-sm text-[var(--color-muted-foreground)]">
-                No results found
+                {t("noResults")}
               </p>
             )}
 
             {Object.entries(grouped).map(([category, categoryItems]) => (
               <div key={category}>
                 <div className="px-4 py-1.5">
-                  <span className="text-[10px] font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
+                  <span className="text-[12px] md:text-[10px] font-semibold text-[var(--color-muted-foreground)] uppercase tracking-wider">
                     {categoryLabels[category] || category}
                   </span>
                 </div>
@@ -300,7 +303,7 @@ export function CommandPalette() {
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-4 py-2 border-t border-[var(--color-border)] text-[10px] text-[var(--color-muted-foreground)]">
+          <div className="flex items-center justify-between px-4 py-2 border-t border-[var(--color-border)] text-[12px] md:text-[10px] text-[var(--color-muted-foreground)]">
             <span>↑↓ navigate · ↵ select · esc close</span>
             <span>⌘K to toggle</span>
           </div>

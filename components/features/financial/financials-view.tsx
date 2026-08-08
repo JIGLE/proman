@@ -49,6 +49,7 @@ import { LoadingState } from "@/components/ui/loading-state";
 import { EmptyStateIllustration } from "@/components/ui/empty-state-illustrations";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { PageHeader } from "@/components/shared/page-header";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 export function FinancialsView(): React.ReactElement {
   const { state, addExpense, addReceipt } = useApp();
@@ -256,7 +257,7 @@ export function FinancialsView(): React.ReactElement {
     try {
       const res = await fetch("/api/receipts/bulk", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: csrfHeaders({ "Content-Type": "application/json" }),
         body: JSON.stringify({ month }),
       });
       if (!res.ok) {
@@ -301,9 +302,9 @@ export function FinancialsView(): React.ReactElement {
         <div className="space-y-6">
           <PageHeader title="Accounts" description="Track income, expenses, and cash flow">
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[150px]">
+              <SelectTrigger className="w-[150px]" aria-label={t("timeRange")}>
                 <CalendarIcon className="w-4 h-4 mr-2" />
-                <SelectValue placeholder="Time Range" />
+                <SelectValue placeholder={t("timeRange")} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Time</SelectItem>
@@ -621,7 +622,7 @@ export function FinancialsView(): React.ReactElement {
                     value={selectedCountry}
                     onValueChange={(value: "PT" | "ES") => setSelectedCountry(value)}
                   >
-                    <SelectTrigger className="w-32">
+                    <SelectTrigger className="w-32" aria-label={t("filterCountry")}>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -729,8 +730,8 @@ export function FinancialsView(): React.ReactElement {
                   value={receiptStatusFilter}
                   onValueChange={(v) => setReceiptStatusFilter(v as "all" | "paid" | "pending")}
                 >
-                  <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Status" />
+                  <SelectTrigger className="w-32" aria-label={t("filterReceiptStatus")}>
+                    <SelectValue placeholder={t("filterReceiptStatus")} />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All</SelectItem>

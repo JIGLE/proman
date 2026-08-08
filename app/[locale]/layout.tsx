@@ -4,6 +4,7 @@ import { CurrencyProvider } from "@/lib/contexts/currency-context";
 import { NextIntlClientProvider, hasLocale } from "next-intl";
 import { getMessages, setRequestLocale } from "next-intl/server";
 import { locales, defaultLocale } from "@/lib/i18n/config";
+import { HtmlLangSync } from "@/components/shared/html-lang-sync";
 
 // Generate static params for all supported locales
 export function generateStaticParams() {
@@ -25,12 +26,15 @@ export default async function Layout({
   // Enable static rendering for this locale
   setRequestLocale(locale);
 
-  // Providing all messages to the client
-  // side is the easiest way to get started
-  const messages = await getMessages();
+  // Pass `locale` explicitly. `setRequestLocale` alone was not enough here: the app has no
+  // next-intl middleware, and the pages under `(main)` are `force-dynamic`, so `getMessages()`
+  // resolved through `getRequestConfig`'s `requestLocale` fallback and shipped `defaultLocale`
+  // (Portuguese) to the client provider for every locale — /en/leases served PT strings.
+  const messages = await getMessages({ locale });
 
   return (
     <NextIntlClientProvider locale={locale} messages={messages}>
+      <HtmlLangSync locale={locale} />
       <CurrencyProvider initialLocale={locale}>
         <ClientProviders>
           {children}

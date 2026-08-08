@@ -1,9 +1,11 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { csrfHeaders } from "@/lib/utils/api-client";
 import {
   Select,
   SelectContent,
@@ -44,6 +46,8 @@ const DOCUMENT_TYPE_OPTIONS = [
 ] as const;
 
 export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): React.ReactElement {
+  const t = useTranslations("common");
+  const tActions = useTranslations("actions");
   const [rows, setRows] = useState<QueueRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +83,7 @@ export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): R
         const res = await fetch(`/api/documents/${documentId}/extraction`, {
           method: "PUT",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: csrfHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({ accept: true }),
         });
         if (!res.ok) {
@@ -106,7 +110,7 @@ export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): R
         const res = await fetch(`/api/documents/${documentId}/extraction`, {
           method: "PUT",
           credentials: "include",
-          headers: { "Content-Type": "application/json" },
+          headers: csrfHeaders({ "Content-Type": "application/json" }),
           body: JSON.stringify({ accept: false, type }),
         });
         if (!res.ok) {
@@ -191,7 +195,7 @@ export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): R
                     {row.linkedEntityType ?? "unassigned"}
                   </td>
                   <td className="border-b border-[var(--color-border)] px-3 py-2.5">
-                    <span className="font-mono text-[10px] uppercase tracking-[0.04em] text-[var(--color-muted-foreground)]">
+                    <span className="font-mono text-[12px] md:text-[10px] uppercase tracking-[0.04em] text-[var(--color-muted-foreground)]">
                       {row.status.replace(/_/g, " ")}
                     </span>
                   </td>
@@ -205,7 +209,7 @@ export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): R
                           onClick={() => void accept(row.documentId)}
                           disabled={busyId === row.documentId}
                         >
-                          Accept
+                          {t("accept")}
                         </Button>
                         <Select
                           onValueChange={(value) =>
@@ -213,7 +217,7 @@ export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): R
                           }
                         >
                           <SelectTrigger className="h-7 w-[120px] rounded-none text-xs">
-                            <SelectValue placeholder="Correct…" />
+                            <SelectValue placeholder={t("correct")} />
                           </SelectTrigger>
                           <SelectContent>
                             {DOCUMENT_TYPE_OPTIONS.map((t) => (
@@ -230,7 +234,7 @@ export function DocumentReviewQueue({ scope }: { scope: "queue" | "review" }): R
                             onClick={() => void correct(row.documentId)}
                             disabled={busyId === row.documentId}
                           >
-                            Save
+                            {tActions("save")}
                           </Button>
                         ) : null}
                       </div>

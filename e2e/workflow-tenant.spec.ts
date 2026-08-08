@@ -40,9 +40,14 @@ test.describe("Critical Path: Tenant management", () => {
     const dialog = page.getByRole("dialog");
     await expect(dialog).toBeVisible();
 
-    // Fill required fields
+    // Fill required fields. Only Full Name and Email are visible on the create form — phone,
+    // property, rent and the lease dates sit behind a progressive-disclosure section
+    // (`showMore` in components/features/tenant/tenants-view.tsx:80,139), collapsed unless the
+    // dialog is editing an existing tenant. Open it before reaching for those fields.
     await page.getByLabel("Full Name").fill(tenantName);
     await page.getByLabel("Email").fill(tenantEmail);
+    await dialog.getByRole("button", { name: /add lease & contact details/i }).click();
+    await expect(page.getByLabel("Phone")).toBeVisible();
     await page.getByLabel("Phone").fill("+351 912 345 678");
 
     // Lease dates
@@ -93,10 +98,15 @@ test.describe("Critical Path: Tenant management", () => {
     // Submit empty form
     await dialog.getByRole("button", { name: /add tenant|create/i }).click();
 
-    // Dialog stays open with validation messages
+    // This form validates natively: Name and Email carry `required`, so the browser blocks
+    // submission and `dialog.handleSubmit` never runs — which means no React `formErrors` are
+    // set and no `.text-destructive` element is ever rendered. The old assertion looked for that
+    // element and could only ever fail. Assert the behaviour that actually exists: the dialog
+    // stays open, and the first required field reports itself invalid.
     await expect(dialog).toBeVisible();
-    const errors = dialog.locator("[role='alert'], .text-destructive, .text-red-400");
-    await expect(errors.first()).toBeVisible({ timeout: 3000 });
+    const nameInput = page.getByLabel("Full Name");
+    await expect(nameInput).toHaveJSProperty("validity.valid", false);
+    await expect(nameInput).toHaveJSProperty("validity.valueMissing", true);
   });
 
   test("should close dialog when cancel is clicked", async ({ page }) => {

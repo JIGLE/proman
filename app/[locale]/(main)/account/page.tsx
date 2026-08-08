@@ -1,17 +1,18 @@
-import { Suspense } from "react";
-
-import { AccountView } from "@/components/features/account/account-view";
-import { GenericPageSkeleton } from "@/components/ui/page-skeletons";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
-export const runtime = "nodejs";
 
-export default function AccountPage() {
-  return (
-    <Suspense fallback={<GenericPageSkeleton />}>
-      <div className="h-full">
-        <AccountView />
-      </div>
-    </Suspense>
-  );
+/**
+ * Account is now the first section of Settings rather than a page of its own.
+ *
+ * It had been a read-only shadow of what Settings already owned — its Security card showed the
+ * 2FA state and then linked to `/settings?tab=security` for the actual control. Only the audit
+ * trail was unique, and that moved across with it.
+ *
+ * `normalizePortalPath` maps `/account` → `/settings` so `canAccessPortalPath` still permits
+ * this URL for both roles; the redirect below is what a visitor actually follows.
+ */
+export default async function AccountPage({ params }: { params: Promise<{ locale: string }> }) {
+  const { locale } = await params;
+  redirect(`/${locale}/settings?tab=account`);
 }

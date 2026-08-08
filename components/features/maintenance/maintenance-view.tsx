@@ -1,16 +1,10 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Plus, AlertCircle, Clock, CheckCircle, XCircle, MoreVertical, User } from "lucide-react";
 import { SortableHeader } from "@/components/ui/sortable-header";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { RenderTable } from "@/components/ui/table";
 import { useCurrency } from "@/lib/contexts/currency-context";
 import { Button } from "@/components/ui/button";
 import {
@@ -52,7 +46,6 @@ import { MaintenanceTicket } from "@/lib/types";
 import { useToast } from "@/lib/contexts/toast-context";
 import { useFormDialog } from "@/lib/hooks/use-form-dialog";
 import { useSortableData } from "@/lib/hooks/use-sortable-data";
-import { cn } from "@/lib/utils/utils";
 import { MaintenanceStatus, MaintenancePriority } from "@/lib/types";
 import { useConfirmDialog } from "@/lib/hooks/use-confirm-dialog";
 import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
@@ -62,11 +55,113 @@ import { OperationsKpiRow } from "./operations-kpi-row";
 import { OperationsCalendar } from "./operations-calendar";
 import { OperationsEvidence } from "./operations-evidence";
 import { ContactsView } from "@/components/features/contacts/contacts-view";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsMobileSelect, TabsTrigger } from "@/components/ui/tabs";
 import { useTabPersistence } from "@/lib/hooks/use-tab-persistence";
 import { ListChecks, CalendarDays, Wrench as WrenchIcon, Camera } from "lucide-react";
 
+/** Ticket status is stored snake_case; the catalog keys it camelCase under `maintenance`. */
+const STATUS_LABEL_KEY = {
+  open: "statusOpen",
+  in_progress: "statusInProgress",
+  resolved: "statusResolved",
+  closed: "statusClosed",
+} as const;
+
+/**
+ * Mobile fallback for a ticket row (doctrine rule 3, card strategy). The table's eight columns
+ * were 437px wider than the phone could show, so vendor and scheduled date sat off the right
+ * edge behind a scroll nobody looks for. The card keeps the same fields but stacks them, and
+ * drops the ones that are usually empty ("—") rather than reserving space for a dash.
+ */
+function TicketCard({
+  ticket,
+  onOpen,
+  actions,
+  priorityLabel,
+  priorityClass,
+  statusLabel,
+  statusIcon,
+  propertyLabel,
+  createdLabel,
+  vendorLabel,
+  scheduledLabel,
+}: {
+  ticket: MaintenanceTicket;
+  onOpen: () => void;
+  actions: React.ReactNode;
+  priorityLabel: string;
+  priorityClass: string;
+  statusLabel: string;
+  statusIcon: React.ReactNode;
+  propertyLabel: string;
+  createdLabel: string;
+  vendorLabel: string;
+  scheduledLabel: string;
+}): React.ReactElement {
+  const vendor = ticket.vendorName || ticket.assignedTo;
+  return (
+    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)] p-4">
+      <div className="flex items-start justify-between gap-2">
+        {/* The whole card is not the tap target — a button around the title keeps the hit area
+            explicit and leaves the menu beside it clickable without event juggling.
+
+            `py-3 -my-3` is the hit area, not spacing: one line of 14px text is a 20px button,
+            which fails the 24px WCAG floor and is nowhere near the 44px comfortable target.
+            The padding takes the border box to 44px and the equal negative margin gives the
+            space back to the layout, so the card looks identical and the target is real. */}
+        <button
+          type="button"
+          onClick={onOpen}
+          className="-my-3 min-w-0 flex-1 py-3 text-left text-sm font-medium text-[var(--color-foreground)]"
+        >
+          {ticket.title}
+        </button>
+        <div className="shrink-0">{actions}</div>
+      </div>
+
+      {/* The property names the ticket as much as the title does, so it reads as a subtitle
+          rather than as one more labelled field below. */}
+      <p className="mt-0.5 text-sm text-[var(--color-muted-foreground)]">{propertyLabel}</p>
+
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <Badge variant="outline" className={priorityClass}>
+          {priorityLabel}
+        </Badge>
+        <span className="flex items-center gap-1.5 text-sm text-[var(--color-muted-foreground)]">
+          {statusIcon}
+          {statusLabel}
+        </span>
+      </div>
+
+      <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm">
+        <dt className="mono-label self-center">{createdLabel}</dt>
+        <dd className="text-[var(--color-muted-foreground)]">
+          <span className="inline-flex items-center gap-1">
+            {ticket.isTenantReport && <User className="h-3.5 w-3.5 text-[var(--color-info)]" />}
+            {new Date(ticket.createdAt).toLocaleDateString()}
+          </span>
+        </dd>
+        {vendor && (
+          <>
+            <dt className="mono-label self-center">{vendorLabel}</dt>
+            <dd className="text-[var(--color-muted-foreground)]">{vendor}</dd>
+          </>
+        )}
+        {ticket.scheduledDate && (
+          <>
+            <dt className="mono-label self-center">{scheduledLabel}</dt>
+            <dd className="text-[var(--color-muted-foreground)]">
+              {new Date(ticket.scheduledDate).toLocaleDateString()}
+            </dd>
+          </>
+        )}
+      </dl>
+    </div>
+  );
+}
+
 export function MaintenanceView(): React.ReactElement {
+  const t = useTranslations("maintenance");
   const { state, addMaintenance, updateMaintenance, deleteMaintenance } = useApp();
   const { properties, maintenance, loading } = state;
   const { success, error } = useToast();
@@ -121,10 +216,10 @@ export function MaintenanceView(): React.ReactElement {
     onSubmit: async (data, isEdit) => {
       if (isEdit && dialog.editingItem) {
         await updateMaintenance(dialog.editingItem.id, data);
-        success("Maintenance ticket updated successfully");
+        success(t("toastUpdated"));
       } else {
         await addMaintenance(data);
-        success("Maintenance ticket created successfully");
+        success(t("toastCreated"));
       }
     },
     onError: (errorMessage) => {
@@ -198,18 +293,18 @@ export function MaintenanceView(): React.ReactElement {
     async (ticket: MaintenanceTicket) => {
       confirmDialog.confirm(
         {
-          title: "Delete Ticket",
-          description: `"${ticket.title}" will be permanently removed. This action cannot be undone.`,
-          confirmLabel: "Delete",
+          title: t("deleteTitle"),
+          description: t("deleteConfirm", { title: ticket.title }),
+          confirmLabel: t("delete"),
           variant: "destructive",
         },
         async () => {
           await deleteMaintenance(ticket.id);
-          success(`Ticket "${ticket.title}" deleted`);
+          success(t("toastDeleted", { title: ticket.title }));
         },
       );
     },
-    [deleteMaintenance, success, confirmDialog],
+    [deleteMaintenance, success, confirmDialog, t],
   );
 
   const handleUpdateStatus = useCallback(
@@ -218,6 +313,54 @@ export function MaintenanceView(): React.ReactElement {
       success(`Ticket status updated to "${newStatus.replace("_", " ")}"`);
     },
     [updateMaintenance, success],
+  );
+
+  /**
+   * The row menu, shared by the table row and its mobile card so the two can't offer different
+   * actions. `stopPropagation` on the trigger keeps a menu click from also firing the row's
+   * open-detail handler.
+   */
+  const renderTicketActions = (ticket: MaintenanceTicket) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+        <Button variant="ghost" size="icon" className="h-8 w-8" aria-label={t("ticketOptions")}>
+          <MoreVertical className="w-4 h-4" aria-hidden="true" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem
+          className="focus:bg-[var(--color-surface-hover)] cursor-pointer"
+          onClick={() => handleEdit(ticket)}
+        >
+          {t("editDetails")}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="focus:bg-[var(--color-surface-hover)] cursor-pointer p-0"
+          onSelect={(e) => e.preventDefault()}
+        >
+          <Select
+            value={ticket.status}
+            onValueChange={(value) => handleUpdateStatus(ticket, value as MaintenanceStatus)}
+          >
+            <SelectTrigger className="border-0 bg-transparent h-auto px-2 py-1.5 text-[var(--color-foreground)] shadow-none focus:ring-0">
+              <SelectValue placeholder={t("updateStatus")} />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="open">{t("statusOpen")}</SelectItem>
+              <SelectItem value="in_progress">{t("statusInProgress")}</SelectItem>
+              <SelectItem value="resolved">{t("statusResolved")}</SelectItem>
+              <SelectItem value="closed">{t("statusClosed")}</SelectItem>
+            </SelectContent>
+          </Select>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          className="text-[var(--color-destructive)] focus:bg-[var(--color-surface-hover)] cursor-pointer"
+          onClick={() => handleDelete(ticket)}
+        >
+          {t("delete")}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 
   // A clear low->urgent escalation ramp: info, neutral, warning, error —
@@ -257,54 +400,55 @@ export function MaintenanceView(): React.ReactElement {
         <LoadingState variant="cards" count={6} />
       ) : (
         <div className="space-y-6">
-          <PageHeader
-            title="Operations"
-            description="Work orders, inspections, and contractor management"
-          >
+          <PageHeader title={t("operationsTitle")} description={t("operationsSubtitle")}>
             <ExportButton
               data={sortedTickets}
               filename="maintenance"
               columns={[
-                { key: "title", label: "Title" },
-                { key: "description", label: "Description" },
+                { key: "title", label: t("fieldTitle") },
+                { key: "description", label: t("fieldDescription") },
                 {
                   key: "propertyId",
-                  label: "Property",
-                  format: (value) => properties.find((p) => p.id === value)?.name || "Unknown",
+                  label: t("fieldProperty"),
+                  format: (value) => properties.find((p) => p.id === value)?.name || t("unknown"),
                 },
-                { key: "status", label: "Status" },
-                { key: "priority", label: "Priority" },
+                { key: "status", label: t("fieldStatus") },
+                { key: "priority", label: t("priority") },
                 {
                   key: "cost",
-                  label: "Cost",
-                  format: (value) => (value ? formatCurrency(value as number) : "Not set"),
+                  label: t("fieldCost"),
+                  format: (value) => (value ? formatCurrency(value as number) : t("notSet")),
                 },
-                { key: "vendorName", label: "Vendor", format: (value) => (value as string) || "—" },
+                {
+                  key: "vendorName",
+                  label: t("fieldVendor"),
+                  format: (value) => (value as string) || "—",
+                },
               ]}
             />
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogTrigger asChild>
                 <Button onClick={dialog.openDialog} className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
-                  New Ticket
+                  {t("newTicket")}
                 </Button>
               </DialogTrigger>
               <DialogContent className="sm:max-w-[600px]">
                 <DialogHeader>
                   <DialogTitle>
-                    {dialog.editingItem ? "Edit Maintenance Ticket" : "Create Maintenance Ticket"}
+                    {dialog.editingItem ? t("editTicket") : t("createTicket")}
                   </DialogTitle>
-                  <DialogDescription>Submit a new maintenance request</DialogDescription>
+                  <DialogDescription>{t("dialogDescription")}</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={dialog.handleSubmit} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="title">Title</Label>
+                    <Label htmlFor="title">{t("fieldTitle")}</Label>
                     <Input
                       id="title"
                       value={dialog.formData.title}
                       onChange={(e) => dialog.updateFormData({ title: e.target.value })}
                       className={dialog.formErrors.title ? "border-red-500" : ""}
-                      placeholder="e.g. Leaking faucet"
+                      placeholder={t("titlePlaceholder")}
                     />
                     {dialog.formErrors.title && (
                       <p className="text-sm text-destructive">{dialog.formErrors.title}</p>
@@ -313,7 +457,7 @@ export function MaintenanceView(): React.ReactElement {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="property">Property</Label>
+                      <Label htmlFor="property">{t("fieldProperty")}</Label>
                       <Select
                         value={dialog.formData.propertyId}
                         onValueChange={(val) => dialog.updateFormData({ propertyId: val })}
@@ -322,7 +466,7 @@ export function MaintenanceView(): React.ReactElement {
                           id="property"
                           className={dialog.formErrors.propertyId ? "border-red-500" : ""}
                         >
-                          <SelectValue placeholder="Select property" />
+                          <SelectValue placeholder={t("selectProperty")} />
                         </SelectTrigger>
                         <SelectContent>
                           {properties.map((p) => (
@@ -337,7 +481,7 @@ export function MaintenanceView(): React.ReactElement {
                       )}
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="priority">Priority</Label>
+                      <Label htmlFor="priority">{t("priority")}</Label>
                       <Select
                         value={dialog.formData.priority}
                         onValueChange={(val) =>
@@ -347,20 +491,20 @@ export function MaintenanceView(): React.ReactElement {
                         }
                       >
                         <SelectTrigger id="priority">
-                          <SelectValue placeholder="Priority" />
+                          <SelectValue placeholder={t("priority")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="low">Low</SelectItem>
-                          <SelectItem value="medium">Medium</SelectItem>
-                          <SelectItem value="high">High</SelectItem>
-                          <SelectItem value="urgent">Urgent</SelectItem>
+                          <SelectItem value="low">{t("low")}</SelectItem>
+                          <SelectItem value="medium">{t("medium")}</SelectItem>
+                          <SelectItem value="high">{t("high")}</SelectItem>
+                          <SelectItem value="urgent">{t("urgent")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="category">Category</Label>
+                    <Label htmlFor="category">{t("category")}</Label>
                     <Select
                       value={dialog.formData.category ?? ""}
                       onValueChange={(val) =>
@@ -370,7 +514,7 @@ export function MaintenanceView(): React.ReactElement {
                       }
                     >
                       <SelectTrigger id="category">
-                        <SelectValue placeholder="Select category (optional)" />
+                        <SelectValue placeholder={t("selectCategory")} />
                       </SelectTrigger>
                       <SelectContent>
                         {MAINTENANCE_CATEGORIES.map((cat) => (
@@ -383,13 +527,13 @@ export function MaintenanceView(): React.ReactElement {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">Description</Label>
+                    <Label htmlFor="description">{t("fieldDescription")}</Label>
                     <Textarea
                       id="description"
                       value={dialog.formData.description}
                       onChange={(e) => dialog.updateFormData({ description: e.target.value })}
                       className={dialog.formErrors.description ? "border-red-500" : ""}
-                      placeholder="Detailed description of the issue..."
+                      placeholder={t("descriptionPlaceholder")}
                       rows={4}
                     />
                     {dialog.formErrors.description && (
@@ -399,18 +543,18 @@ export function MaintenanceView(): React.ReactElement {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="vendorName">Vendor / Contractor</Label>
+                      <Label htmlFor="vendorName">{t("vendorContractor")}</Label>
                       <Input
                         id="vendorName"
                         value={dialog.formData.vendorName || ""}
                         onChange={(e) =>
                           dialog.updateFormData({ vendorName: e.target.value || undefined })
                         }
-                        placeholder="Contractor or staff name"
+                        placeholder={t("vendorPlaceholder")}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="vendorPhone">Vendor Phone</Label>
+                      <Label htmlFor="vendorPhone">{t("vendorPhone")}</Label>
                       <Input
                         id="vendorPhone"
                         value={dialog.formData.vendorPhone || ""}
@@ -439,7 +583,7 @@ export function MaintenanceView(): React.ReactElement {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="invoiceRef">Invoice Ref</Label>
+                      <Label htmlFor="invoiceRef">{t("invoiceRef")}</Label>
                       <Input
                         id="invoiceRef"
                         value={dialog.formData.invoiceRef || ""}
@@ -453,7 +597,7 @@ export function MaintenanceView(): React.ReactElement {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="scheduledDate">Scheduled Date</Label>
+                      <Label htmlFor="scheduledDate">{t("scheduledDate")}</Label>
                       <Input
                         id="scheduledDate"
                         type="date"
@@ -464,7 +608,7 @@ export function MaintenanceView(): React.ReactElement {
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="dueDate">Due Date</Label>
+                      <Label htmlFor="dueDate">{t("dueDate")}</Label>
                       <Input
                         id="dueDate"
                         type="date"
@@ -481,7 +625,7 @@ export function MaintenanceView(): React.ReactElement {
                       Cancel
                     </Button>
                     <Button type="submit" loading={dialog.isSubmitting}>
-                      {dialog.editingItem ? "Update Ticket" : "Create Ticket"}
+                      {dialog.editingItem ? t("updateTicket") : t("createTicket")}
                     </Button>
                   </div>
                 </form>
@@ -494,22 +638,34 @@ export function MaintenanceView(): React.ReactElement {
           {maintenance.length > 0 && <OperationsKpiRow tickets={maintenance} />}
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="overflow-x-auto">
+            <TabsMobileSelect
+              className="md:hidden"
+              value={activeTab}
+              onValueChange={setActiveTab}
+              aria-label={t("operationsTitle")}
+              items={[
+                { value: "queue", label: t("tabs.queue") },
+                { value: "calendar", label: t("tabs.calendar") },
+                { value: "contractors", label: t("tabs.contractors") },
+                { value: "evidence", label: t("tabs.evidence") },
+              ]}
+            />
+            <TabsList className="overflow-x-auto max-md:hidden">
               <TabsTrigger value="queue" className="flex items-center gap-1.5">
                 <ListChecks className="h-3.5 w-3.5" />
-                Task Queue
+                {t("tabs.queue")}
               </TabsTrigger>
               <TabsTrigger value="calendar" className="flex items-center gap-1.5">
                 <CalendarDays className="h-3.5 w-3.5" />
-                Calendar
+                {t("tabs.calendar")}
               </TabsTrigger>
               <TabsTrigger value="contractors" className="flex items-center gap-1.5">
                 <WrenchIcon className="h-3.5 w-3.5" />
-                Contractors
+                {t("tabs.contractors")}
               </TabsTrigger>
               <TabsTrigger value="evidence" className="flex items-center gap-1.5">
                 <Camera className="h-3.5 w-3.5" />
-                Evidence
+                {t("tabs.evidence")}
               </TabsTrigger>
             </TabsList>
 
@@ -530,236 +686,206 @@ export function MaintenanceView(): React.ReactElement {
             </TabsContent>
 
             <TabsContent value="queue" className="mt-0 space-y-6">
-              {/* Search and Filter */}
-              <SearchFilter
-                searchPlaceholder="Search by title, description, or assignee..."
-                onSearchChange={setSearchQuery}
-                onFilterChange={(key, value) => {
-                  if (key === "status") setStatusFilter(value);
-                  if (key === "priority") setPriorityFilter(value);
-                  if (key === "category") setCategoryFilter(value);
-                }}
-                filters={[
-                  {
-                    key: "status",
-                    label: "Status",
-                    options: [
-                      { label: "All Statuses", value: "all" },
-                      { label: "Open", value: "open" },
-                      { label: "In Progress", value: "in_progress" },
-                      { label: "Resolved", value: "resolved" },
-                      { label: "Closed", value: "closed" },
-                    ],
-                    defaultValue: "all",
-                  },
-                  {
-                    key: "priority",
-                    label: "Priority",
-                    options: [
-                      { label: "All Priorities", value: "all" },
-                      { label: "Low", value: "low" },
-                      { label: "Medium", value: "medium" },
-                      { label: "High", value: "high" },
-                      { label: "Urgent", value: "urgent" },
-                    ],
-                    defaultValue: "all",
-                  },
-                  {
-                    key: "category",
-                    label: "Category",
-                    options: [
-                      { label: "All Categories", value: "all" },
-                      ...MAINTENANCE_CATEGORIES.map((cat) => ({
-                        label: cat.charAt(0).toUpperCase() + cat.slice(1),
-                        value: cat,
-                      })),
-                    ],
-                    defaultValue: "all",
-                  },
-                ]}
-              />
+              {/* Search, filters and the result count share one utility row. The count used to
+                  sit in a band of its own between the filters and the list — a third strip of
+                  chrome to say a number that belongs beside the control that changes it. */}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <SearchFilter
+                  className="flex-1"
+                  searchPlaceholder={t("searchPlaceholder")}
+                  onSearchChange={setSearchQuery}
+                  onFilterChange={(key, value) => {
+                    if (key === "status") setStatusFilter(value);
+                    if (key === "priority") setPriorityFilter(value);
+                    if (key === "category") setCategoryFilter(value);
+                  }}
+                  filters={[
+                    {
+                      key: "status",
+                      label: t("fieldStatus"),
+                      options: [
+                        { label: t("allStatuses"), value: "all" },
+                        { label: t("statusOpen"), value: "open" },
+                        { label: t("statusInProgress"), value: "in_progress" },
+                        { label: t("statusResolved"), value: "resolved" },
+                        { label: t("statusClosed"), value: "closed" },
+                      ],
+                      defaultValue: "all",
+                    },
+                    {
+                      key: "priority",
+                      label: t("priority"),
+                      options: [
+                        { label: t("allPriorities"), value: "all" },
+                        { label: t("low"), value: "low" },
+                        { label: t("medium"), value: "medium" },
+                        { label: t("high"), value: "high" },
+                        { label: t("urgent"), value: "urgent" },
+                      ],
+                      defaultValue: "all",
+                    },
+                    {
+                      key: "category",
+                      label: t("category"),
+                      options: [
+                        { label: t("allCategories"), value: "all" },
+                        ...MAINTENANCE_CATEGORIES.map((cat) => ({
+                          label: cat.charAt(0).toUpperCase() + cat.slice(1),
+                          value: cat,
+                        })),
+                      ],
+                      defaultValue: "all",
+                    },
+                  ]}
+                />
 
-              {/* Ticket count matches what the list below actually shows (any
-                  status, per the Status filter) — "Est. cost" stays scoped to
-                  open/in-progress work, so its label says so explicitly. */}
-              {filteredTickets.length > 0 && (
-                <div className="flex flex-wrap items-center gap-4 text-sm">
-                  <span className="text-[var(--color-muted-foreground)]">
+                {/* Count matches what the list below actually shows (any status, per the Status
+                    filter) — "Est. cost" stays scoped to open/in-progress work, so its label
+                    says so explicitly. */}
+                {filteredTickets.length > 0 && (
+                  <p className="shrink-0 text-sm text-[var(--color-muted-foreground)]">
                     <span className="font-medium text-[var(--color-foreground)]">
                       {filteredTickets.length}
                     </span>{" "}
-                    ticket
-                    {filteredTickets.length !== 1 ? "s" : ""}
-                  </span>
-                  {costSummary.withCost > 0 && (
-                    <span className="text-[var(--color-muted-foreground)]">
-                      Est. cost (open):{" "}
-                      <span className="font-medium text-[var(--color-foreground)]">
-                        {formatCurrency(costSummary.total)}
-                      </span>
-                      {costSummary.withCost < costSummary.count && (
-                        <span className="ml-1 text-xs">
-                          ({costSummary.count - costSummary.withCost} without estimate)
+                    {t("ticketCountLabel", { count: filteredTickets.length })}
+                    {costSummary.withCost > 0 && (
+                      <>
+                        {" · "}
+                        {t("estCostOpen")}{" "}
+                        <span className="font-medium text-[var(--color-foreground)]">
+                          {formatCurrency(costSummary.total)}
                         </span>
-                      )}
-                    </span>
-                  )}
-                </div>
-              )}
+                        {costSummary.withCost < costSummary.count && (
+                          <span className="ml-1 text-xs">
+                            {t("withoutEstimate", {
+                              count: costSummary.count - costSummary.withCost,
+                            })}
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </p>
+                )}
+              </div>
 
               {filteredTickets.length === 0 ? (
                 <EmptyStateIllustration
                   type={maintenance.length === 0 ? "maintenance" : "generic"}
-                  title={maintenance.length === 0 ? undefined : "No tickets found"}
-                  description={
-                    maintenance.length === 0 ? undefined : "Try adjusting your search or filters"
-                  }
+                  title={maintenance.length === 0 ? undefined : t("emptyFiltered")}
+                  description={maintenance.length === 0 ? undefined : t("emptyFilteredHint")}
                   onAction={maintenance.length === 0 ? dialog.openDialog : undefined}
                 />
               ) : (
-                <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]">
-                  <Table>
-                    <TableHeader>
-                      <TableRow className="border-[var(--color-border)] hover:bg-transparent">
-                        <TableHead className="text-[var(--color-muted-foreground)]">
-                          <SortableHeader
-                            sortKey="title"
-                            label="Title"
-                            currentSort={getSortDirection("title")}
-                            onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
-                          />
-                        </TableHead>
-                        <TableHead className="text-[var(--color-muted-foreground)]">
-                          Property
-                        </TableHead>
-                        <TableHead className="text-[var(--color-muted-foreground)]">
-                          <SortableHeader
-                            sortKey="priority"
-                            label="Priority"
-                            currentSort={getSortDirection("priority")}
-                            onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
-                          />
-                        </TableHead>
-                        <TableHead className="text-[var(--color-muted-foreground)]">
-                          <SortableHeader
-                            sortKey="status"
-                            label="Status"
-                            currentSort={getSortDirection("status")}
-                            onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
-                          />
-                        </TableHead>
-                        <TableHead className="text-[var(--color-muted-foreground)]">
-                          Created
-                        </TableHead>
-                        <TableHead className="text-[var(--color-muted-foreground)]">
-                          Vendor
-                        </TableHead>
-                        <TableHead className="text-[var(--color-muted-foreground)]">
-                          Scheduled
-                        </TableHead>
-                        <TableHead className="text-[var(--color-muted-foreground)] w-10"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {sortedTickets.map((ticket) => (
-                        <TableRow
-                          key={ticket.id}
-                          className="border-[var(--color-border)] hover:bg-[var(--color-surface-hover)] cursor-pointer"
-                          onClick={() => {
-                            setSelectedTicket(ticket);
-                            setIsDetailOpen(true);
-                          }}
-                        >
-                          <TableCell className="text-sm font-medium text-[var(--color-foreground)]">
-                            {ticket.title}
-                          </TableCell>
-                          <TableCell className="text-sm text-[var(--color-muted-foreground)]">
-                            {ticket.propertyName || "Unknown"}
-                          </TableCell>
-                          <TableCell>
-                            <Badge
-                              variant="outline"
-                              className={cn("capitalize", getPriorityColor(ticket.priority))}
-                            >
-                              {ticket.priority}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
-                              {getStatusIcon(ticket.status)}
-                              <span className="capitalize">{ticket.status.replace("_", " ")}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-sm text-[var(--color-muted-foreground)]">
-                            <div className="flex items-center gap-1">
-                              {ticket.isTenantReport && (
-                                <User className="h-3.5 w-3.5 text-blue-400" />
-                              )}
-                              {new Date(ticket.createdAt).toLocaleDateString()}
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-sm text-[var(--color-muted-foreground)]">
-                            {ticket.vendorName || ticket.assignedTo || "—"}
-                          </TableCell>
-                          <TableCell className="text-sm text-[var(--color-muted-foreground)]">
-                            {ticket.scheduledDate
-                              ? new Date(ticket.scheduledDate).toLocaleDateString()
-                              : "—"}
-                          </TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  aria-label="Ticket options"
-                                >
-                                  <MoreVertical className="w-4 h-4" aria-hidden="true" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="">
-                                <DropdownMenuItem
-                                  className="focus:bg-[var(--color-surface-hover)] cursor-pointer"
-                                  onClick={() => handleEdit(ticket)}
-                                >
-                                  Edit Details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="focus:bg-[var(--color-surface-hover)] cursor-pointer p-0"
-                                  onSelect={(e) => e.preventDefault()}
-                                >
-                                  <Select
-                                    value={ticket.status}
-                                    onValueChange={(value) =>
-                                      handleUpdateStatus(ticket, value as MaintenanceStatus)
-                                    }
-                                  >
-                                    <SelectTrigger className="border-0 bg-transparent h-auto px-2 py-1.5 text-[var(--color-foreground)] shadow-none focus:ring-0">
-                                      <SelectValue placeholder="Update Status" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="open">Open</SelectItem>
-                                      <SelectItem value="in_progress">In Progress</SelectItem>
-                                      <SelectItem value="resolved">Resolved</SelectItem>
-                                      <SelectItem value="closed">Closed</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  className="text-[var(--color-destructive)] focus:bg-[var(--color-surface-hover)] cursor-pointer"
-                                  onClick={() => handleDelete(ticket)}
-                                >
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                <RenderTable
+                  data={sortedTickets}
+                  rowKey={(ticket) => ticket.id}
+                  onRowClick={openTicketDetail}
+                  className="rounded-lg border border-[var(--color-border)] bg-[var(--color-card)]"
+                  cardMode
+                  renderCard={(ticket) => (
+                    <TicketCard
+                      ticket={ticket}
+                      onOpen={() => openTicketDetail(ticket)}
+                      actions={renderTicketActions(ticket)}
+                      priorityLabel={t(ticket.priority)}
+                      priorityClass={getPriorityColor(ticket.priority)}
+                      statusLabel={t(STATUS_LABEL_KEY[ticket.status])}
+                      statusIcon={getStatusIcon(ticket.status)}
+                      propertyLabel={ticket.propertyName || t("unknown")}
+                      createdLabel={t("fieldCreated")}
+                      vendorLabel={t("fieldVendor")}
+                      scheduledLabel={t("fieldScheduled")}
+                    />
+                  )}
+                  columns={[
+                    {
+                      key: "title",
+                      header: (
+                        <SortableHeader
+                          sortKey="title"
+                          label={t("fieldTitle")}
+                          currentSort={getSortDirection("title")}
+                          onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
+                        />
+                      ),
+                      cell: (ticket) => ticket.title,
+                      cellClassName: "text-sm font-medium text-[var(--color-foreground)]",
+                    },
+                    {
+                      key: "property",
+                      header: t("fieldProperty"),
+                      cell: (ticket) => ticket.propertyName || t("unknown"),
+                      cellClassName: "text-sm text-[var(--color-muted-foreground)]",
+                    },
+                    {
+                      key: "priority",
+                      header: (
+                        <SortableHeader
+                          sortKey="priority"
+                          label={t("priority")}
+                          currentSort={getSortDirection("priority")}
+                          onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
+                        />
+                      ),
+                      cell: (ticket) => (
+                        <Badge variant="outline" className={getPriorityColor(ticket.priority)}>
+                          {t(ticket.priority)}
+                        </Badge>
+                      ),
+                    },
+                    {
+                      key: "status",
+                      header: (
+                        <SortableHeader
+                          sortKey="status"
+                          label={t("fieldStatus")}
+                          currentSort={getSortDirection("status")}
+                          onSort={(key) => requestSort(key as keyof MaintenanceTicket)}
+                        />
+                      ),
+                      cell: (ticket) => (
+                        <div className="flex items-center gap-2 text-sm text-[var(--color-muted-foreground)]">
+                          {getStatusIcon(ticket.status)}
+                          <span>{t(STATUS_LABEL_KEY[ticket.status])}</span>
+                        </div>
+                      ),
+                    },
+                    {
+                      key: "created",
+                      header: t("fieldCreated"),
+                      cell: (ticket) => (
+                        <div className="flex items-center gap-1">
+                          {ticket.isTenantReport && (
+                            <User className="h-3.5 w-3.5 text-[var(--color-info)]" />
+                          )}
+                          {new Date(ticket.createdAt).toLocaleDateString()}
+                        </div>
+                      ),
+                      cellClassName: "text-sm text-[var(--color-muted-foreground)]",
+                    },
+                    {
+                      key: "vendor",
+                      header: t("fieldVendor"),
+                      cell: (ticket) => ticket.vendorName || ticket.assignedTo || "—",
+                      cellClassName: "text-sm text-[var(--color-muted-foreground)]",
+                    },
+                    {
+                      key: "scheduled",
+                      header: t("fieldScheduled"),
+                      cell: (ticket) =>
+                        ticket.scheduledDate
+                          ? new Date(ticket.scheduledDate).toLocaleDateString()
+                          : "—",
+                      cellClassName: "text-sm text-[var(--color-muted-foreground)]",
+                    },
+                    {
+                      key: "actions",
+                      header: "",
+                      headerClassName: "w-10",
+                      cell: (ticket) => renderTicketActions(ticket),
+                    },
+                  ]}
+                />
               )}
             </TabsContent>
           </Tabs>

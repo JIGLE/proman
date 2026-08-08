@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 import { History } from "lucide-react";
 
@@ -33,6 +34,7 @@ export function AuditTrail({
   emptyTitle = "Audit trail",
   emptyDescription = "Activity — payment allocations, receipt emissions, document changes and manual overrides — will appear here.",
 }: AuditTrailProps): React.ReactElement {
+  const t = useTranslations("common");
   const [entries, setEntries] = useState<AuditEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -108,7 +110,7 @@ export function AuditTrail({
   return (
     <div className="border border-[var(--color-border)] bg-[var(--color-surface)]">
       <div className="border-b border-[var(--color-border)] px-4 py-3">
-        <p className="mono-label">Audit trail</p>
+        <p className="mono-label">{t("auditTrail")}</p>
       </div>
       <div className="divide-y divide-[var(--color-border)]">
         {entries.map((entry) => (

@@ -1,6 +1,25 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 
 test.use({ storageState: "playwright/.auth/user.json" });
+
+/**
+ * Open the create-property dialog.
+ *
+ * There is no "Add Property" button any more. The Portfolio tree rebrand replaced it with a
+ * "New asset" dropdown whose first item is "New property"
+ * (components/features/assets/assets-view.tsx:295-301) — the in-view `DialogTrigger` that used to
+ * carry the label still exists but is `className="hidden"`, so it can never be clicked.
+ */
+async function openCreatePropertyDialog(page: Page) {
+  await page
+    .getByRole("button", { name: /new asset/i })
+    .first()
+    .click();
+  await page.getByRole("menuitem", { name: /new property/i }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  return dialog;
+}
 
 test.describe("Critical Path: Property management", () => {
   test("should create a new property and show it in the list", async ({ page }) => {
@@ -15,33 +34,23 @@ test.describe("Critical Path: Property management", () => {
     await page.goto("/en/portfolio?view=properties");
     await expect(page).toHaveURL(/\/portfolio/);
 
-    // Open dialog
-    await page.getByRole("button", { name: "Add Property" }).click();
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
+    const dialog = await openCreatePropertyDialog(page);
 
-    // Fill form
+    // Fill form. "Full Address Search" is now just "Address", with Country / Postal code / City
+    // as separate inputs beneath it. Postal code is format-validated ("Invalid postal code
+    // format") so it cannot be skipped. Bedrooms and bathrooms moved behind an "Add details"
+    // disclosure and are not required to create a property, so they are left out.
     await page.getByLabel("Property Name").fill(propertyName);
-
-    await page
-      .locator("div.space-y-2")
-      .filter({ hasText: "Property Type" })
-      .getByRole("combobox")
-      .click();
-    await page.getByRole("option", { name: "Apartment" }).click();
-
-    await page.getByLabel("Full Address Search").fill("123 Test St");
+    await page.getByLabel(/^address/i).fill("123 Test St");
+    await page.getByLabel("Postal code").fill("1000-001");
     await page.getByLabel("City").fill("Lisbon");
-    await page.getByLabel("Postal Code").fill("1000-001");
-    await page.getByLabel("Monthly Rent").fill("1500");
-    await page.getByLabel("Bedrooms").fill("2");
-    await page.getByLabel("Bathrooms").fill("1");
+    await page.getByLabel(/monthly rent/i).fill("1500");
 
     // Submit and wait for the API call to complete
     const responsePromise = page.waitForResponse(
       (res) => res.url().includes("/api/properties") && res.request().method() === "POST",
     );
-    await dialog.getByRole("button", { name: "Add Property" }).click();
+    await dialog.getByRole("button", { name: /create property/i }).click();
 
     const response = await responsePromise;
     expect(response.status()).toBe(201);
@@ -53,12 +62,11 @@ test.describe("Critical Path: Property management", () => {
 
   test("should show validation errors when required fields are missing", async ({ page }) => {
     await page.goto("/en/portfolio?view=properties");
-    await page.getByRole("button", { name: "Add Property" }).click();
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
+    const dialog = await openCreatePropertyDialog(page);
 
-    // Submit without filling anything
-    await dialog.getByRole("button", { name: "Add Property" }).click();
+    // Submit without filling anything. Unlike the tenant form, none of these inputs carry the
+    // native `required` attribute, so submission reaches the schema and renders real messages.
+    await dialog.getByRole("button", { name: /create property/i }).click();
 
     // Form should stay open with validation feedback
     await expect(dialog).toBeVisible();
@@ -69,9 +77,7 @@ test.describe("Critical Path: Property management", () => {
 
   test("should cancel the dialog without creating a property", async ({ page }) => {
     await page.goto("/en/portfolio?view=properties");
-    await page.getByRole("button", { name: "Add Property" }).click();
-    const dialog = page.getByRole("dialog");
-    await expect(dialog).toBeVisible();
+    const dialog = await openCreatePropertyDialog(page);
 
     await page.getByLabel("Property Name").fill("Should not be created");
 

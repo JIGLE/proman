@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { useLocale, useTranslations } from "next-intl";
 import { FileText, Plus, Edit, Trash2, Send } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,14 +39,16 @@ import { ConfirmationDialog } from "@/components/shared/confirmation-dialog";
 
 export type CorrespondenceViewProps = Record<string, never>;
 
+/** The placeholders a template can carry. `labelKey` resolves against `correspondence.variable`
+ *  — the `{{…}}` token itself is part of the stored template and never translated. */
 const TEMPLATE_VARIABLES = [
-  { key: "{{tenant_name}}", label: "Tenant name" },
-  { key: "{{property_name}}", label: "Property" },
-  { key: "{{property_address}}", label: "Address" },
-  { key: "{{rent_amount}}", label: "Rent amount" },
-  { key: "{{due_date}}", label: "Due date" },
-  { key: "{{lease_start}}", label: "Lease start" },
-  { key: "{{lease_end}}", label: "Lease end" },
+  { key: "{{tenant_name}}", labelKey: "tenantName" },
+  { key: "{{property_name}}", labelKey: "propertyName" },
+  { key: "{{property_address}}", labelKey: "propertyAddress" },
+  { key: "{{rent_amount}}", labelKey: "rentAmount" },
+  { key: "{{due_date}}", labelKey: "dueDate" },
+  { key: "{{lease_start}}", labelKey: "leaseStart" },
+  { key: "{{lease_end}}", labelKey: "leaseEnd" },
 ] as const;
 
 export function CorrespondenceView(): React.ReactElement {
@@ -53,6 +56,10 @@ export function CorrespondenceView(): React.ReactElement {
   const { templates, correspondence: _correspondence, tenants, loading } = state;
   const { success, error } = useToast();
   const confirmDialog = useConfirmDialog();
+  const t = useTranslations("correspondence");
+  const tActions = useTranslations("actions");
+  const tForms = useTranslations("forms");
+  const locale = useLocale();
   const [isComposeOpen, setIsComposeOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<CorrespondenceTemplate | null>(null);
   const [composeData, setComposeData] = useState({
@@ -101,10 +108,10 @@ export function CorrespondenceView(): React.ReactElement {
 
       if (isEdit && dialog.editingItem) {
         await updateTemplate(dialog.editingItem.id, templateData);
-        success("Template updated successfully");
+        success(t("toast.templateUpdated"));
       } else {
         await addTemplate(templateData);
-        success("Template created successfully");
+        success(t("toast.templateCreated"));
       }
     },
     onError: (errorMessage) => {
@@ -137,11 +144,11 @@ export function CorrespondenceView(): React.ReactElement {
 
   const generateBatchPDF = async () => {
     if (!selectedTemplate) {
-      error("Please select a template.");
+      error(t("toast.selectTemplate"));
       return;
     }
     if (selectedRecipientIds.length === 0) {
-      error("Please select at least one recipient.");
+      error(t("toast.selectRecipient"));
       return;
     }
 
@@ -157,7 +164,7 @@ export function CorrespondenceView(): React.ReactElement {
 
         // Header
         doc.setFontSize(20);
-        doc.text(selectedTemplate.subject || "Correspondence", 105, 20, {
+        doc.text(selectedTemplate.subject || t("heading"), 105, 20, {
           align: "center",
         });
 
@@ -168,19 +175,19 @@ export function CorrespondenceView(): React.ReactElement {
 
         // Footer
         doc.setFontSize(10);
-        doc.text(`Generated on ${new Date().toLocaleDateString()}`, 20, 280);
-        doc.text(`Page ${index + 1} of ${recipients.length}`, 180, 280);
+        doc.text(`${t("heading")} · ${new Date().toLocaleDateString(locale)}`, 20, 280);
+        doc.text(`${index + 1} / ${recipients.length}`, 180, 280);
       });
 
       const fileName = selectedTemplate.name
         ? selectedTemplate.name.replace(/\s+/g, "-")
         : "correspondence";
       doc.save(`batch-${fileName}.pdf`);
-      success(`Generated PDF for ${recipients.length} recipients.`);
+      success(t("toast.batchGenerated", { count: recipients.length }));
       setIsBatchOpen(false);
     } catch (err) {
       console.error("Batch generation error:", err);
-      error("Failed to generate batch PDF.");
+      error(t("toast.batchFailed"));
     } finally {
       setGeneratingBatch(false);
     }
@@ -193,7 +200,7 @@ export function CorrespondenceView(): React.ReactElement {
 
     const selectedTenant = tenants.find((t) => t.id === composeData.tenantId);
     if (!selectedTenant) {
-      error("Please select a tenant.");
+      error(t("toast.selectOneTenant"));
       return;
     }
 
@@ -214,9 +221,9 @@ export function CorrespondenceView(): React.ReactElement {
 
       setIsComposeOpen(false);
       setSelectedTemplate(null);
-      success("Correspondence sent successfully!");
+      success(t("toast.sent"));
     } catch (err) {
-      error("Failed to send correspondence. Please try again.");
+      error(t("toast.sendFailed"));
       console.error("Correspondence send error:", err);
     }
   };
@@ -233,14 +240,14 @@ export function CorrespondenceView(): React.ReactElement {
   const handleDelete = (id: string) => {
     confirmDialog.confirm(
       {
-        title: "Delete Template",
-        description: "This template will be permanently removed. This action cannot be undone.",
-        confirmLabel: "Delete Template",
+        title: t("deleteDialog.title"),
+        description: t("deleteDialog.description"),
+        confirmLabel: t("deleteDialog.confirmLabel"),
         variant: "destructive",
       },
       async () => {
         await deleteTemplate(id);
-        success("Template deleted successfully!");
+        success(t("toast.templateDeleted"));
       },
     );
   };
@@ -278,7 +285,7 @@ export function CorrespondenceView(): React.ReactElement {
       eviction_notice: "bg-[var(--color-error-muted)] text-[var(--color-error)]",
       maintenance_request: "bg-[var(--color-info-muted)] text-[var(--color-info)]",
       lease_renewal: "bg-purple-600/20 text-purple-400",
-      custom: "bg-gray-600/20 text-gray-400",
+      custom: "bg-[var(--color-popover)] text-[var(--color-muted-foreground)]",
     };
     return (
       <Badge className={colors[type]}>
@@ -295,50 +302,47 @@ export function CorrespondenceView(): React.ReactElement {
         <div className="space-y-6">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-3xl font-bold tracking-tight text-zinc-50">Correspondence</h2>
-              <p className="text-zinc-400">
-                Write notices, rent reminders, and lease renewals for your tenants.
-              </p>
+              <h2 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
+                {t("heading")}
+              </h2>
+              <p className="text-[var(--color-muted-foreground)]">{t("subtitle")}</p>
             </div>
             <Dialog open={dialog.isOpen} onOpenChange={(open) => !open && dialog.closeDialog()}>
               <DialogTrigger asChild>
                 <Button onClick={dialog.openDialog} className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
-                  Add Template
+                  {t("addTemplate")}
                 </Button>
               </DialogTrigger>
-              <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogContent className="bg-[var(--color-card)] border-[var(--color-border)] max-w-2xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle className="text-zinc-50">
-                    {dialog.editingItem ? "Edit Template" : "Create Template"}
+                  <DialogTitle className="text-[var(--color-foreground)]">
+                    {dialog.editingItem ? t("editTemplate") : t("createTemplate")}
                   </DialogTitle>
-                  <DialogDescription>
-                    Create a reusable template. Use the placeholders below to insert tenant and
-                    property details automatically.
-                  </DialogDescription>
+                  <DialogDescription>{t("templateDialogDescription")}</DialogDescription>
                 </DialogHeader>
                 <form onSubmit={dialog.handleSubmit} className="space-y-6">
                   <FormGrid columns={2} gap="md">
                     <FormField
-                      label="Template Name"
+                      label={t("templateName")}
                       required
                       error={dialog.formErrors.name}
-                      tooltip="Choose a descriptive name for this template"
+                      tooltip={t("templateNameTooltip")}
                     >
                       <EnhancedInput
                         id="name"
                         value={dialog.formData.name}
                         onChange={(e) => dialog.updateFormData({ name: e.target.value })}
-                        placeholder="Enter template name..."
+                        placeholder={t("templateNamePlaceholder")}
                         required
                       />
                     </FormField>
 
                     <FormField
-                      label="Template Type"
+                      label={t("templateType")}
                       required
                       error={dialog.formErrors.type}
-                      tooltip="Select the type of correspondence this template is for"
+                      tooltip={t("templateTypeTooltip")}
                     >
                       <Select
                         value={dialog.formData.type}
@@ -347,31 +351,35 @@ export function CorrespondenceView(): React.ReactElement {
                         }
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Select template type..." />
+                          <SelectValue placeholder={t("templateTypePlaceholder")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="welcome">Welcome Letter</SelectItem>
-                          <SelectItem value="rent_reminder">Rent Reminder</SelectItem>
-                          <SelectItem value="eviction_notice">Eviction Notice</SelectItem>
-                          <SelectItem value="maintenance_request">Maintenance Request</SelectItem>
-                          <SelectItem value="lease_renewal">Lease Renewal</SelectItem>
-                          <SelectItem value="custom">Custom</SelectItem>
+                          <SelectItem value="welcome">{t("welcomeLetter")}</SelectItem>
+                          <SelectItem value="rent_reminder">{t("types.rentReminder")}</SelectItem>
+                          <SelectItem value="eviction_notice">
+                            {t("types.evictionNotice")}
+                          </SelectItem>
+                          <SelectItem value="maintenance_request">
+                            {t("types.maintenanceRequest")}
+                          </SelectItem>
+                          <SelectItem value="lease_renewal">{t("types.leaseRenewal")}</SelectItem>
+                          <SelectItem value="custom">{t("types.custom")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </FormField>
                   </FormGrid>
 
                   <FormField
-                    label="Email Subject"
+                    label={t("emailSubject")}
                     required
                     error={dialog.formErrors.subject}
-                    tooltip="Subject line for the email (supports variables)"
+                    tooltip={t("emailSubjectTooltip")}
                   >
                     <EnhancedInput
                       id="subject"
                       value={dialog.formData.subject}
                       onChange={(e) => dialog.updateFormData({ subject: e.target.value })}
-                      placeholder="Enter email subject..."
+                      placeholder={t("emailSubjectPlaceholder")}
                       maxLength={200}
                       showCharCount
                       required
@@ -379,25 +387,25 @@ export function CorrespondenceView(): React.ReactElement {
                   </FormField>
 
                   <FormField
-                    label="Email Content"
+                    label={t("emailContent")}
                     required
                     error={dialog.formErrors.content}
-                    tooltip="Insert placeholders to personalise the message for each tenant"
+                    tooltip={t("emailContentTooltip")}
                   >
                     <div className="space-y-2">
                       <div>
-                        <p className="text-xs text-zinc-400 mb-1.5">
-                          Click to insert a placeholder:
+                        <p className="text-xs text-[var(--color-muted-foreground)] mb-1.5">
+                          {t("insertPlaceholder")}
                         </p>
                         <div className="flex flex-wrap gap-1.5">
-                          {TEMPLATE_VARIABLES.map(({ key, label }) => (
+                          {TEMPLATE_VARIABLES.map(({ key, labelKey }) => (
                             <button
                               key={key}
                               type="button"
                               onClick={() => insertVariable(key)}
-                              className="inline-flex items-center rounded border border-zinc-700 bg-zinc-800 px-2 py-0.5 text-xs text-zinc-300 hover:bg-zinc-700 hover:text-zinc-50 transition-colors font-mono"
+                              className="inline-flex items-center rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-2 py-0.5 text-xs text-[var(--color-muted-foreground)] hover:bg-[var(--color-surface-hover)] hover:text-[var(--color-foreground)] transition-colors font-mono"
                             >
-                              {label}
+                              {t(`variable.${labelKey}`)}
                             </button>
                           ))}
                         </div>
@@ -408,7 +416,7 @@ export function CorrespondenceView(): React.ReactElement {
                         value={dialog.formData.content}
                         onChange={(e) => dialog.updateFormData({ content: e.target.value })}
                         rows={8}
-                        placeholder="Write your message here. Click the placeholders above to insert tenant or property details."
+                        placeholder={t("contentPlaceholder")}
                         maxLength={5000}
                         showCharCount
                         autoResize
@@ -419,14 +427,14 @@ export function CorrespondenceView(): React.ReactElement {
 
                   <FormActions align="right">
                     <Button type="button" variant="outline" onClick={dialog.closeDialog}>
-                      Cancel
+                      {tActions("cancel")}
                     </Button>
                     <Button type="submit" disabled={dialog.isSubmitting}>
                       {dialog.isSubmitting
-                        ? "Saving..."
+                        ? tForms("saving")
                         : dialog.editingItem
-                          ? "Update Template"
-                          : "Create Template"}
+                          ? t("editTemplate")
+                          : t("createTemplate")}
                     </Button>
                   </FormActions>
                 </form>
@@ -438,23 +446,30 @@ export function CorrespondenceView(): React.ReactElement {
             {templates.length === 0 ? (
               <EmptyStateIllustration
                 type="correspondence"
-                title="No templates yet"
-                description="Create your first correspondence template"
+                title={t("emptyTitle")}
+                description={t("emptyDescription")}
                 onAction={dialog.openDialog}
-                actionLabel="Create Template"
+                actionLabel={t("createTemplate")}
               />
             ) : (
               templates.map((template) => (
-                <Card key={template.id} className="bg-zinc-900 border-zinc-800">
+                <Card
+                  key={template.id}
+                  className="bg-[var(--color-card)] border-[var(--color-border)]"
+                >
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-2">
-                          <h3 className="text-lg font-semibold text-zinc-50">{template.name}</h3>
+                          <h3 className="text-lg font-semibold text-[var(--color-foreground)]">
+                            {template.name}
+                          </h3>
                           {getTypeBadge(template.type)}
                         </div>
-                        <p className="text-sm font-medium text-zinc-50 mb-1">{template.subject}</p>
-                        <p className="text-sm text-zinc-400 line-clamp-2 mb-2">
+                        <p className="text-sm font-medium text-[var(--color-foreground)] mb-1">
+                          {template.subject}
+                        </p>
+                        <p className="text-sm text-[var(--color-muted-foreground)] line-clamp-2 mb-2">
                           {template.content.length > 150
                             ? `${template.content.substring(0, 150)}...`
                             : template.content}
@@ -477,7 +492,7 @@ export function CorrespondenceView(): React.ReactElement {
                           className="flex items-center gap-1"
                         >
                           <FileText className="w-3 h-3" />
-                          Batch PDF
+                          {t("batchPdf")}
                         </Button>
                         <Button
                           variant="outline"
@@ -486,7 +501,7 @@ export function CorrespondenceView(): React.ReactElement {
                           className="flex items-center gap-1"
                         >
                           <Send className="w-3 h-3" />
-                          Send
+                          {t("send")}
                         </Button>
                         <Button
                           variant="outline"
@@ -495,7 +510,7 @@ export function CorrespondenceView(): React.ReactElement {
                           className="flex items-center gap-1"
                         >
                           <Edit className="w-3 h-3" />
-                          Edit
+                          {tActions("edit")}
                         </Button>
                         <Button
                           variant="destructive"
@@ -504,7 +519,7 @@ export function CorrespondenceView(): React.ReactElement {
                           className="flex items-center gap-1"
                         >
                           <Trash2 className="w-3 h-3" />
-                          Delete
+                          {tActions("delete")}
                         </Button>
                       </div>
                     </div>
@@ -516,22 +531,22 @@ export function CorrespondenceView(): React.ReactElement {
 
           {/* Compose Dialog */}
           <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
-            <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="bg-[var(--color-card)] border-[var(--color-border)] max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-zinc-50">Send Correspondence</DialogTitle>
-                <DialogDescription>
-                  Compose and send a message using the selected template
-                </DialogDescription>
+                <DialogTitle className="text-[var(--color-foreground)]">
+                  {t("sendTitle")}
+                </DialogTitle>
+                <DialogDescription>{t("sendDescription")}</DialogDescription>
               </DialogHeader>
               <form onSubmit={handleSendCorrespondence} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="tenant">Select Tenant</Label>
+                  <Label htmlFor="tenant">{t("selectTenant")}</Label>
                   <Select
                     value={composeData.tenantId}
                     onValueChange={(value) => setComposeData({ ...composeData, tenantId: value })}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="Choose a tenant" />
+                      <SelectValue placeholder={t("chooseTenant")} />
                     </SelectTrigger>
                     <SelectContent>
                       {tenants.map((tenant) => (
@@ -544,7 +559,7 @@ export function CorrespondenceView(): React.ReactElement {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="compose-subject">Subject</Label>
+                  <Label htmlFor="compose-subject">{t("subject")}</Label>
                   <Input
                     id="compose-subject"
                     value={composeData.subject}
@@ -559,7 +574,7 @@ export function CorrespondenceView(): React.ReactElement {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="compose-content">Message</Label>
+                  <Label htmlFor="compose-content">{t("message")}</Label>
                   <Textarea
                     id="compose-content"
                     value={composeData.content}
@@ -576,11 +591,11 @@ export function CorrespondenceView(): React.ReactElement {
 
                 <div className="flex justify-end gap-2">
                   <Button type="button" variant="outline" onClick={() => setIsComposeOpen(false)}>
-                    Cancel
+                    {tActions("cancel")}
                   </Button>
                   <Button type="submit" className="flex items-center gap-2">
                     <Send className="w-4 h-4" />
-                    Send Message
+                    {t("sendMessage")}
                   </Button>
                 </div>
               </form>
@@ -589,63 +604,69 @@ export function CorrespondenceView(): React.ReactElement {
 
           {/* Batch Dialog */}
           <Dialog open={isBatchOpen} onOpenChange={setIsBatchOpen}>
-            <DialogContent className="bg-zinc-900 border-zinc-800 max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="bg-[var(--color-card)] border-[var(--color-border)] max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-zinc-50">Batch Generate PDF</DialogTitle>
+                <DialogTitle className="text-[var(--color-foreground)]">
+                  {t("batchTitle")}
+                </DialogTitle>
                 <DialogDescription>
-                  Select recipients to generate letters for: {selectedTemplate?.name}
+                  {t("batchSubtitle", { name: selectedTemplate?.name ?? "" })}
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4">
-                <div className="border border-zinc-800 rounded-md p-4 max-h-[300px] overflow-y-auto">
+                <div className="border border-[var(--color-border)] rounded-md p-4 max-h-[300px] overflow-y-auto">
                   <div className="flex items-center justify-between mb-2">
-                    <Label>Select Recipients</Label>
+                    <Label>{t("selectRecipients")}</Label>
                     <Button
                       variant="ghost"
                       size="sm"
                       onClick={() => setSelectedRecipientIds(tenants.map((t) => t.id))}
                     >
-                      Select All
+                      {t("selectAll")}
                     </Button>
                   </div>
                   <div className="space-y-2">
                     {tenants.map((tenant) => (
                       <div
                         key={tenant.id}
-                        className="flex items-center space-x-2 p-2 hover:bg-zinc-800 rounded"
+                        className="flex items-center space-x-2 p-2 hover:bg-[var(--color-surface-hover)] rounded"
                       >
                         <input
                           type="checkbox"
                           id={`batch-${tenant.id}`}
                           checked={selectedRecipientIds.includes(tenant.id)}
                           onChange={() => toggleRecipient(tenant.id)}
-                          className="rounded border-zinc-700 bg-zinc-800 text-blue-600 focus:ring-blue-600"
+                          className="rounded border-[var(--color-border)] bg-[var(--color-surface)] text-blue-600 focus:ring-blue-600"
                         />
                         <div className="flex-1">
                           <Label
                             htmlFor={`batch-${tenant.id}`}
-                            className="cursor-pointer font-medium text-zinc-200"
+                            className="cursor-pointer font-medium text-[var(--color-foreground)]"
                           >
                             {tenant.name}
                           </Label>
-                          <p className="text-xs text-zinc-500">{tenant.propertyName}</p>
+                          <p className="text-xs text-[var(--color-muted-foreground)]">
+                            {tenant.propertyName}
+                          </p>
                         </div>
                       </div>
                     ))}
                     {tenants.length === 0 && (
-                      <p className="text-sm text-zinc-500 text-center">No tenants found.</p>
+                      <p className="text-sm text-[var(--color-muted-foreground)] text-center">
+                        {t("noTenants")}
+                      </p>
                     )}
                   </div>
                 </div>
 
                 <div className="flex justify-end gap-2">
                   <Button variant="outline" onClick={() => setIsBatchOpen(false)}>
-                    Cancel
+                    {tActions("cancel")}
                   </Button>
                   <Button onClick={generateBatchPDF} disabled={generatingBatch}>
                     {generatingBatch
-                      ? "Generating..."
-                      : `Generate Batch (${selectedRecipientIds.length})`}
+                      ? t("generating")
+                      : t("generateBatch", { count: selectedRecipientIds.length })}
                   </Button>
                 </div>
               </div>

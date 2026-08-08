@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import { Camera, CheckCircle2, AlertTriangle } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ export function OperationsEvidence({
   onToggleRequired,
   onTicketClick,
 }: OperationsEvidenceProps) {
+  const t = useTranslations("common");
   const sorted = useMemo(() => {
     return [...tickets].sort((a, b) => {
       const aMissing = !!a.evidenceRequired && (a.images?.length ?? 0) === 0;
@@ -35,7 +37,7 @@ export function OperationsEvidence({
     return (
       <div className="rounded-md border border-dashed border-[var(--color-border)] p-6 text-center">
         <Camera className="mx-auto h-8 w-8 text-[var(--color-muted-foreground)] mb-2 opacity-50" />
-        <p className="text-sm text-[var(--color-muted-foreground)]">No maintenance tickets yet</p>
+        <p className="text-sm text-[var(--color-muted-foreground)]">{t("noTickets")}</p>
       </div>
     );
   }
@@ -82,7 +84,7 @@ export function OperationsEvidence({
                 </Badge>
               )}
               <label className="flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
-                Required
+                {t("required")}
                 <Switch
                   checked={!!ticket.evidenceRequired}
                   onCheckedChange={(checked) => onToggleRequired(ticket, checked)}

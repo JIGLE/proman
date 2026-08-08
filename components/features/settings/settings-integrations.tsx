@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Landmark, Layers, ScanLine } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -48,6 +49,7 @@ function formatDate(value: string | null): string {
  * out rather than duplicating that view.
  */
 export function SettingsIntegrations() {
+  const t = useTranslations("settings.panel");
   const [connections, setConnections] = useState<BankConnection[]>([]);
   const [connectors, setConnectors] = useState<TaxConnector[]>([]);
   const [loading, setLoading] = useState(true);
@@ -85,18 +87,15 @@ export function SettingsIntegrations() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Landmark className="h-5 w-5" />
-            Bank Connections
+            {t("bankConnections")}
           </CardTitle>
-          <CardDescription>Accounts feeding the Finance &gt; Bank Movements inbox</CardDescription>
+          <CardDescription>{t("bankConnectionsHelp")}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <p className="text-sm text-muted-foreground">{t("loading")}</p>
           ) : connections.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No bank connection yet — import a CSV statement from Finance &gt; Bank Movements to
-              create one.
-            </p>
+            <p className="text-sm text-muted-foreground">{t("noBankConnection")}</p>
           ) : (
             <div className="space-y-2">
               {connections.map((c) => (
@@ -131,17 +130,15 @@ export function SettingsIntegrations() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Layers className="h-5 w-5" />
-            Tax Connectors
+            {t("taxConnectors")}
           </CardTitle>
-          <CardDescription>
-            Full submission history lives in Finance &gt; Tax Summary — this is a status glance
-          </CardDescription>
+          <CardDescription>{t("taxConnectorsHelp")}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-sm text-muted-foreground">Loading…</p>
+            <p className="text-sm text-muted-foreground">{t("loading")}</p>
           ) : connectors.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No tax connectors configured yet.</p>
+            <p className="text-sm text-muted-foreground">{t("noConnectors")}</p>
           ) : (
             <div className="space-y-2">
               {connectors.map((c) => (
@@ -154,7 +151,7 @@ export function SettingsIntegrations() {
                       {c.country} — {c.connectorKey}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      Last submission: {formatDate(c.lastSubmissionAt)}
+                      {t("lastSubmission", { date: formatDate(c.lastSubmissionAt) })}
                     </p>
                   </div>
                   <span
@@ -173,21 +170,20 @@ export function SettingsIntegrations() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ScanLine className="h-5 w-5" />
-            Document Classification
+            {t("documentClassification")}
           </CardTitle>
-          <CardDescription>Runs on every document upload</CardDescription>
+          <CardDescription>{t("classificationHelp")}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between rounded-md border border-[var(--color-border)] px-3 py-2.5">
             <div>
-              <p className="text-sm font-medium text-[var(--color-foreground)]">Mock classifier</p>
-              <p className="text-xs text-muted-foreground">
-                Keyword-based type detection across all 4 locales — ambiguous or unlinked results
-                land in Documents &gt; Review Required
+              <p className="text-sm font-medium text-[var(--color-foreground)]">
+                {t("mockClassifier")}
               </p>
+              <p className="text-xs text-muted-foreground">{t("classifierHelp")}</p>
             </div>
             <span className="inline-block rounded-full bg-[var(--semantic-info-soft)] px-2 py-0.5 text-xs text-[var(--semantic-info-readable)]">
-              active
+              {t("active")}
             </span>
           </div>
         </CardContent>

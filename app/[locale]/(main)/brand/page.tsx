@@ -57,10 +57,10 @@ export default function BrandPage() {
                     >
                       <p className="mono-label-xs">{mode}</p>
                       <SitusPortalMark size="sm" />
-                      <p className="text-[10px] text-[var(--color-ink)]">
+                      <p className="text-[12px] md:text-[10px] text-[var(--color-ink)]">
                         accent {ratio.toFixed(2)}:1
                       </p>
-                      <p className="text-[10px] text-[var(--color-ink)]">
+                      <p className="text-[12px] md:text-[10px] text-[var(--color-ink)]">
                         readable {highlightRatio.toFixed(2)}:1
                       </p>
                     </div>

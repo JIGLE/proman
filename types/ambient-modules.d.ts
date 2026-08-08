@@ -147,7 +147,7 @@ declare module "next-intl/server" {
     namespace?: string,
   ): Promise<(key: string, values?: Record<string, unknown>) => string>;
   export function getLocale(): Promise<string>;
-  export function getMessages(): Promise<Record<string, unknown>>;
+  export function getMessages(opts?: { locale?: string }): Promise<Record<string, unknown>>;
   export function getNow(): Promise<Date>;
   export function getTimeZone(): Promise<string>;
   export function setRequestLocale(locale: string): void;

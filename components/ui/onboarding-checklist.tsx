@@ -15,6 +15,7 @@ import {
 import { Button } from "./button";
 import { cn } from "@/lib/utils/utils";
 import { useTranslations } from "next-intl";
+import { csrfHeaders } from "@/lib/utils/api-client";
 
 // Collapse state is a pure UI-density preference — fine to keep client-only.
 const CHECKLIST_COLLAPSED_KEY = "proman.onboarding.checklist.collapsed";
@@ -84,7 +85,7 @@ export function OnboardingChecklist({
     setDismissed(true);
     fetch("/api/settings", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: csrfHeaders({ "Content-Type": "application/json" }),
       body: JSON.stringify({ onboardingDismissedAt: new Date().toISOString() }),
     }).catch(() => {
       // Fire-and-forget: the optimistic local dismiss already happened, and

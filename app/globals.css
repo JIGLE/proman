@@ -41,7 +41,12 @@
   --color-secondary: rgba(0, 102, 0, 0.08);
   --color-secondary-foreground: #006600;
   --color-muted: #f1e8d8;
-  --color-muted-foreground: #756e63;
+  /* Was #756e63, which measured 4.15–4.44:1 against the light surfaces (#f0eadf, #f6f0e4,
+     #f1e8d8) — under the 4.5:1 WCAG AA floor on all three. axe reported it on every page as
+     30–49 `color-contrast` nodes: the sidebar labels, `.mono-label`, and every muted caption.
+     #6a6357 measures 4.89–5.23:1 on the same surfaces, one step darker and otherwise the same
+     tone. The dark theme's #a5b8a9 already clears it at 7.85–8.83:1 and is unchanged. */
+  --color-muted-foreground: #6a6357;
   --color-accent: rgba(0, 0, 0, 0.055);
   --color-accent-foreground: #221d16;
   --color-destructive: #b91c1c;
@@ -102,7 +107,9 @@
   --color-sidebar-bg: rgba(0, 0, 0, 0.025);
   --color-sidebar-foreground: #221d16;
   --color-sidebar-border: #ddd3c3;
-  --color-sidebar-text: #756e63;
+  /* Same 4.5:1 correction as --color-muted-foreground above; this token names the nav item
+     labels, which were the bulk of the reported nodes. */
+  --color-sidebar-text: #6a6357;
   --color-sidebar-text-active: #006600;
   --color-sidebar-hover: rgba(0, 0, 0, 0.055);
   --color-sidebar-active: rgba(0, 102, 0, 0.08);
@@ -172,6 +179,9 @@
   --logo-primary: #006600;
   --logo-secondary: #ff0000;
   --logo-accent: #ffff00;
+  /* Contrast-adjusted accent for UI that is not the mark itself (the hero orbit rings).
+     Raw #ffff00 is invisible on this cream canvas; readableHighlight() darkens it. */
+  --logo-accent-readable: #666600;
   --logo-neutral: #ffffff;
   --logo-canvas: #f1e8d8;
   --logo-keyline: rgba(0, 0, 0, 0.48);
@@ -286,6 +296,8 @@
   --ui-accent: #ffff00;
   --country-highlight-readable: #479147;
   --country-highlight-soft: rgba(71, 145, 71, 0.08);
+  /* Already clears contrast against the dark canvas, so it passes through untinted. */
+  --logo-accent-readable: #ffff00;
   --logo-canvas: #121b15;
   --logo-keyline: rgba(255, 255, 255, 0.68);
 
@@ -394,20 +406,39 @@ body {
 }
 
 /* Mono micro-label — the system voice (labels, metadata, IDs, status codes) */
+/*
+ * The uppercase mono micro-label is a deliberate Situs brand device and stays at its designed
+ * size on desktop. On a phone it fell below the 12px legibility floor the mobile audit measures
+ * — 232 nodes at 10px and, for `-xs`, the sign-in form's own field labels at 9px, which is the
+ * first screen an installed user reads. Floor both below `md` rather than restyling per screen:
+ * these two classes account for nearly all 746 sub-12px nodes in the report.
+ */
 .mono-label {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: 12px;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--color-muted-foreground);
 }
 
+/* Below `md` this matches `.mono-label` exactly — the two sizes are a desktop refinement, and
+   the 12px legibility floor matters more on a phone than the 1px between them. */
 .mono-label-xs {
   font-family: var(--font-mono);
-  font-size: 9px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-muted-foreground);
+}
+
+@media (min-width: 768px) {
+  .mono-label {
+    font-size: 10px;
+  }
+
+  .mono-label-xs {
+    font-size: 9px;
+  }
 }
 
 /* Alert cards — 3px semantic left border over a soft wash */

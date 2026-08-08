@@ -120,19 +120,14 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
     groupLabelKey: "navigation.systemGroup",
     items: [
       {
+        // Both roles: Settings now hosts the Account section, which a tenant must be able to
+        // reach. The sections themselves are filtered by role inside `settings-view.tsx` — a
+        // tenant sees Account and Appearance, not tax rules or billing.
         key: "settings",
         href: "/settings",
         label: "Settings",
         labelKey: "navigation.settings",
         icon: Settings,
-        roles: ["owner"],
-      },
-      {
-        key: "account",
-        href: "/account",
-        label: "Account",
-        labelKey: "navigation.account",
-        icon: UserCircle,
         roles: ["owner", "tenant"],
       },
     ],
@@ -198,6 +193,17 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         hidden: true,
       },
       {
+        // Folded into Settings as its Account section; `/account` redirects there. Kept here
+        // so `canAccessPortalPath` still permits the old URL for both roles.
+        key: "account",
+        href: "/account",
+        label: "Account",
+        labelKey: "navigation.account",
+        icon: UserCircle,
+        roles: ["owner", "tenant"],
+        hidden: true,
+      },
+      {
         // Internal dev/admin reference only — the page itself 404s in
         // production (NODE_ENV check). Never shown in the nav rail; this
         // entry exists only so canAccessPortalPath permits the direct URL.
@@ -245,6 +251,7 @@ export function normalizePortalPath(pathname: string): string {
   }
   const normalized = `/${segments[1]}`;
   if (normalized === "/overview") return "/dashboard";
+  if (normalized === "/account") return "/settings";
   if (normalized === "/properties") return "/portfolio";
   if (normalized === "/tenants") return "/people";
   if (normalized === "/vendors") return "/contacts";

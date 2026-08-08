@@ -23,20 +23,25 @@ test("Critical Path: Record new payment", async ({ page }) => {
   // 3. Fill Form
   const dialog = page.getByRole("dialog");
 
-  // Select Tenant/Lease (if dropdown exists)
-  const tenantSelect = dialog
-    .locator("div.space-y-2")
-    .filter({ hasText: /tenant|lease/i })
-    .getByRole("combobox")
-    .first();
-  if (await tenantSelect.isVisible().catch(() => false)) {
-    await tenantSelect.click();
-    // Select first available option
+  // Tenant and Property are both REQUIRED — the form rejects with "Property is required"
+  // otherwise. They used to sit behind `if (await x.isVisible().catch(() => false))`, so when a
+  // selector drifted the test skipped the field and failed later with a confusing server error
+  // instead of here. Select them outright.
+  const selectFirstOption = async (fieldLabel: RegExp) => {
+    const combo = dialog
+      .locator("div.space-y-2")
+      .filter({ hasText: fieldLabel })
+      .getByRole("combobox")
+      .first();
+    await expect(combo).toBeVisible();
+    await combo.click();
     const firstOption = page.getByRole("option").first();
-    if (await firstOption.isVisible().catch(() => false)) {
-      await firstOption.click();
-    }
-  }
+    await expect(firstOption).toBeVisible();
+    await firstOption.click();
+  };
+
+  await selectFirstOption(/tenant/i);
+  await selectFirstOption(/property/i);
 
   // Set payment amount
   await dialog.getByLabel(/amount|payment amount/i).fill("1200");
@@ -83,7 +88,10 @@ test("Critical Path: Record new payment", async ({ page }) => {
     }
   });
 
-  await dialog.getByRole("button", { name: /record|save|add/i }).click();
+  // The submit button is `financial.receipts.submitCreate` = "Create Receipt"
+  // (components/features/financial/receipts-view.tsx:410), which /record|save|add/i never
+  // matched — so this click waited out the timeout on a dialog that was open and fine.
+  await dialog.getByRole("button", { name: /create receipt|record|save/i }).click();
 
   // 5. Verify creation
   await page.waitForTimeout(2000);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { usePathname, useRouter } from "next/navigation";
 import { Activity, Bell, Database, HardDrive, Landmark, Server } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,6 +19,7 @@ interface SystemInfo {
 }
 
 export function SettingsSystem() {
+  const t = useTranslations("settings.panel");
   const router = useRouter();
   const pathname = usePathname();
   const currentLocale = pathname.split("/")[1] || "en";
@@ -50,24 +52,19 @@ export function SettingsSystem() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Landmark className="h-5 w-5" />
-            Tax Rules Store
+            {t("taxRulesStore")}
           </CardTitle>
-          <CardDescription>
-            Manage tax brackets, withholding rates, and deductible rates by country and year
-          </CardDescription>
+          <CardDescription>{t("taxRulesStoreHelp")}</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground mb-3">
-            All tax rates are stored in the database — no hard-coded values. Update rules here when
-            new fiscal legislation is published.
-          </p>
+          <p className="text-sm text-muted-foreground mb-3">{t("taxRulesIntro")}</p>
           <Button
             variant="outline"
             size="sm"
             onClick={() => router.push(`/${currentLocale}/settings/tax-rules`)}
           >
             <Landmark className="h-4 w-4 mr-1.5" />
-            Open Tax Rules
+            {t("openTaxRules")}
           </Button>
         </CardContent>
       </Card>
@@ -76,9 +73,9 @@ export function SettingsSystem() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Server className="h-5 w-5" />
-            System Status
+            {t("systemStatus")}
           </CardTitle>
-          <CardDescription>Server, database, and service health</CardDescription>
+          <CardDescription>{t("systemStatusDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="max-w-lg space-y-4">
           {systemLoading ? (
@@ -90,7 +87,7 @@ export function SettingsSystem() {
               <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
                 <div className="flex items-center gap-2">
                   <Database className="h-4 w-4 text-muted-foreground" />
-                  <Label>Database</Label>
+                  <Label>{t("database")}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <span
@@ -115,17 +112,19 @@ export function SettingsSystem() {
               <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
                 <div className="flex items-center gap-2">
                   <Activity className="h-4 w-4 text-muted-foreground" />
-                  <Label>Uptime</Label>
+                  <Label>{t("uptime")}</Label>
                 </div>
                 <span className="text-sm text-muted-foreground">
-                  {Math.floor(systemInfo.uptime / 3600)}h{" "}
-                  {Math.floor((systemInfo.uptime % 3600) / 60)}m
+                  {t("uptimeValue", {
+                    hours: Math.floor(systemInfo.uptime / 3600),
+                    minutes: Math.floor((systemInfo.uptime % 3600) / 60),
+                  })}
                 </span>
               </div>
               <div className="flex items-center justify-between py-2 border-b border-[var(--color-border)]">
                 <div className="flex items-center gap-2">
                   <HardDrive className="h-4 w-4 text-muted-foreground" />
-                  <Label>Environment</Label>
+                  <Label>{t("environment")}</Label>
                 </div>
                 <span className="text-sm text-muted-foreground capitalize">
                   {systemInfo.environment}
@@ -134,7 +133,7 @@ export function SettingsSystem() {
               <div className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-2">
                   <Bell className="h-4 w-4 text-muted-foreground" />
-                  <Label>Email Service</Label>
+                  <Label>{t("emailService")}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <span
@@ -151,12 +150,12 @@ export function SettingsSystem() {
               </div>
               <div className="pt-2">
                 <Button variant="outline" size="sm" onClick={fetchSystemInfo}>
-                  Refresh
+                  {t("refresh")}
                 </Button>
               </div>
             </>
           ) : (
-            <p className="text-sm text-muted-foreground">Unable to fetch system information</p>
+            <p className="text-sm text-muted-foreground">{t("systemUnavailable")}</p>
           )}
         </CardContent>
       </Card>

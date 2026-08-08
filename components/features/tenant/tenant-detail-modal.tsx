@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
   AlertTriangle,
   Calendar,
@@ -61,6 +62,9 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
   const { properties, leases, receipts } = state;
   const tenant = state.tenants.find((t) => t.id === tenantId) ?? null;
   const { success, error } = useToast();
+  const t = useTranslations("tenants");
+  const tForms = useTranslations("forms");
+  const tActions = useTranslations("actions");
   const confirmDialog = useConfirmDialog();
   const pathname = usePathname();
   const router = useRouter();
@@ -98,7 +102,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
   if (!tenant) {
     return (
       <div className="flex flex-col items-center justify-center h-64 gap-2">
-        <p className="text-sm text-[var(--color-muted-foreground)]">Tenant not found</p>
+        <p className="text-sm text-[var(--color-muted-foreground)]">{t("modal.notFound")}</p>
       </div>
     );
   }
@@ -121,7 +125,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
   const primaryAction = (() => {
     if (isOverdue) {
       return {
-        label: "Record payment",
+        label: t("modal.recordPayment"),
         onClick: () => {
           onClose();
           router.push(`/${locale}/financials?tenantId=${tenant.id}`);
@@ -132,7 +136,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
     }
     if (isLeaseExpiringSoon && activeLease) {
       return {
-        label: "Renew lease",
+        label: t("modal.renewLease"),
         onClick: () => {
           onClose();
           router.push(`/${locale}/leases?action=renew&id=${activeLease.id}`);
@@ -143,7 +147,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
     }
     if (!activeLease) {
       return {
-        label: "Add lease",
+        label: t("modal.addLease"),
         onClick: () => {
           onClose();
           router.push(`/${locale}/leases?action=create&tenantId=${tenant.id}`);
@@ -162,7 +166,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
       id: "no-lease",
       icon: AlertTriangle,
       color: "text-[var(--color-warning)]",
-      label: "No active lease",
+      label: t("modal.noActiveLease"),
     });
   }
   if (!tenant.email) {
@@ -170,7 +174,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
       id: "no-email",
       icon: Mail,
       color: "text-[var(--color-warning)]",
-      label: "No email address",
+      label: t("modal.noEmail"),
     });
   }
   if (isOverdue) {
@@ -178,7 +182,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
       id: "overdue",
       icon: AlertTriangle,
       color: "text-[var(--color-destructive)]",
-      label: "Payment overdue",
+      label: t("modal.paymentOverdue"),
     });
   }
 
@@ -219,9 +223,9 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
   function handleDelete() {
     confirmDialog.confirm(
       {
-        title: "Delete Tenant",
+        title: t("deleteOne.title"),
         description: `"${tenant!.name}" will be permanently removed. This action cannot be undone.`,
-        confirmLabel: "Delete",
+        confirmLabel: t("deleteOne.confirmLabel"),
         variant: "destructive",
       },
       async () => {
@@ -285,7 +289,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
           /* ── Edit Mode ──────────────────────────────────────────────── */
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
+              <Label htmlFor="name">{tForms("fullName")}</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -295,7 +299,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">{tForms("email")}</Label>
                 <Input
                   id="email"
                   type="email"
@@ -304,7 +308,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="phone">{tForms("phone")}</Label>
                 <Input
                   id="phone"
                   value={formData.phone}
@@ -314,13 +318,13 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="property">Property</Label>
+              <Label htmlFor="property">{tForms("property")}</Label>
               <Select
                 value={formData.propertyId}
                 onValueChange={(value) => setFormData({ ...formData, propertyId: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select property" />
+                  <SelectValue placeholder={tForms("selectProperty")} />
                 </SelectTrigger>
                 <SelectContent>
                   {properties.map((property) => (
@@ -333,15 +337,12 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
             </div>
 
             <div className="space-y-2">
-              <Label>Payment Status</Label>
-              <p className="text-sm text-muted-foreground">
-                Derived from the rent ledger — record a payment or view the property&apos;s Rent
-                Matrix to change it.
-              </p>
+              <Label>{t("paymentStatus")}</Label>
+              <p className="text-sm text-muted-foreground">{t("modal.derivedFromMatrix")}</p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{tForms("notes")}</Label>
               <Textarea
                 id="notes"
                 rows={3}
@@ -352,9 +353,9 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
 
             <div className="flex justify-end gap-2 pt-4">
               <Button variant="outline" onClick={handleCancel}>
-                Cancel
+                {tActions("cancel")}
               </Button>
-              <Button onClick={handleSave}>Save Changes</Button>
+              <Button onClick={handleSave}>{tActions("save")}</Button>
             </div>
           </div>
         ) : (
@@ -404,18 +405,18 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
             {/* ── Zone 4: Tabbed Info ─────────────────────────────────── */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="w-full justify-start">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="lease">Lease</TabsTrigger>
-                <TabsTrigger value="payments">Payments</TabsTrigger>
-                <TabsTrigger value="activity">Activity</TabsTrigger>
+                <TabsTrigger value="overview">{t("modal.tabOverview")}</TabsTrigger>
+                <TabsTrigger value="lease">{t("modal.tabLease")}</TabsTrigger>
+                <TabsTrigger value="payments">{t("modal.tabPayments")}</TabsTrigger>
+                <TabsTrigger value="activity">{t("modal.tabActivity")}</TabsTrigger>
               </TabsList>
 
               {/* Overview tab */}
               <TabsContent value="overview" className="space-y-3 mt-4">
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
-                    <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
-                      Contact
+                    <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
+                      {t("modal.contact")}
                     </p>
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2 text-sm">
@@ -431,8 +432,8 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                     </div>
                   </div>
                   <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
-                    <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
-                      Property
+                    <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-2">
+                      {tForms("property")}
                     </p>
                     <div className="flex items-start gap-2 text-sm">
                       <MapPin className="h-3.5 w-3.5 text-[var(--color-muted-foreground)] mt-0.5" />
@@ -442,8 +443,8 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                 </div>
                 {tenant.notes && (
                   <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-3">
-                    <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-1">
-                      Notes
+                    <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide mb-1">
+                      {tForms("notes")}
                     </p>
                     <p className="text-sm text-[var(--color-foreground)]">{tenant.notes}</p>
                   </div>
@@ -457,7 +458,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                     <div className="rounded-md border border-[var(--color-border)] bg-[var(--color-card)] p-4">
                       <div className="flex items-center justify-between mb-3">
                         <p className="text-sm font-medium text-[var(--color-foreground)]">
-                          Active Lease
+                          {t("modal.activeLease")}
                         </p>
                         {leaseExpiryDays !== null && (
                           <Badge
@@ -476,32 +477,32 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                       </div>
                       <div className="grid grid-cols-2 gap-3 text-sm">
                         <div>
-                          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
-                            Monthly Rent
+                          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                            {t("monthlyRent")}
                           </p>
                           <p className="mt-0.5 font-semibold text-[var(--color-foreground)]">
                             {formatCurrency(derivedRent)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
-                            Status
+                          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                            {tForms("status")}
                           </p>
                           <p className="mt-0.5 capitalize font-medium text-[var(--color-foreground)]">
                             {activeLease.status}
                           </p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
-                            Start Date
+                          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                            {tForms("leaseStart")}
                           </p>
                           <p className="mt-0.5 text-[var(--color-foreground)]">
                             {formatDate(derivedLeaseStart)}
                           </p>
                         </div>
                         <div>
-                          <p className="text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
-                            End Date
+                          <p className="text-[12px] md:text-[10px] text-[var(--color-muted-foreground)] uppercase tracking-wide">
+                            {tForms("leaseEnd")}
                           </p>
                           <p className="mt-0.5 text-[var(--color-foreground)]">
                             {formatDate(derivedLeaseEnd)}
@@ -513,7 +514,9 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                 ) : (
                   <div className="rounded-md border border-dashed border-[var(--color-border)] p-6 text-center">
                     <Calendar className="mx-auto h-8 w-8 text-[var(--color-muted-foreground)] mb-2 opacity-50" />
-                    <p className="text-sm text-[var(--color-muted-foreground)]">No active lease</p>
+                    <p className="text-sm text-[var(--color-muted-foreground)]">
+                      {t("modal.noActiveLease")}
+                    </p>
                   </div>
                 )}
               </TabsContent>
@@ -524,7 +527,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                   <div className="rounded-md border border-dashed border-[var(--color-border)] p-6 text-center">
                     <DollarSign className="mx-auto h-8 w-8 text-[var(--color-muted-foreground)] mb-2 opacity-50" />
                     <p className="text-sm text-[var(--color-muted-foreground)]">
-                      No payment records
+                      {t("modal.noPayments")}
                     </p>
                   </div>
                 ) : (
@@ -573,7 +576,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                 className="gap-1.5 text-[var(--color-muted-foreground)] hover:text-[var(--color-destructive)]"
               >
                 <Trash2 className="w-3.5 h-3.5" />
-                Delete
+                {tActions("delete")}
               </Button>
               <Button
                 size="sm"
@@ -581,7 +584,7 @@ export function TenantDetailModal({ tenantId, onClose }: TenantDetailModalProps)
                 className="flex items-center gap-1.5"
               >
                 <Edit className="w-3.5 h-3.5" />
-                Edit Tenant
+                {t("modal.editTenant")}
               </Button>
             </div>
           </div>

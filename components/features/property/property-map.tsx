@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useMap } from "react-leaflet";
 import { Building2, MapPin } from "lucide-react";
@@ -54,6 +55,7 @@ export default function PropertyMap({
   onSelectProperty?: (propertyId: string) => void;
 }) {
   const { state } = useApp();
+  const t = useTranslations("properties");
   const [mapCenter, setMapCenter] = useState<[number, number]>([38.7223, -9.1393]);
   const [leafletReady, setLeafletReady] = useState(false);
 
@@ -116,17 +118,17 @@ export default function PropertyMap({
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-3">
         <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-          <div className="text-sm text-gray-500 dark:text-gray-400">Mapped properties</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">{t("map.mapped")}</div>
           <div className="mt-1 text-2xl font-bold text-gray-900 dark:text-white">
             {properties.length}
           </div>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-          <div className="text-sm text-gray-500 dark:text-gray-400">Missing coordinates</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">{t("map.missingCoords")}</div>
           <div className="mt-1 text-2xl font-bold text-amber-500">{missingCoordinates}</div>
         </div>
         <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-          <div className="text-sm text-gray-500 dark:text-gray-400">Map source</div>
+          <div className="text-sm text-gray-500 dark:text-gray-400">{t("map.source")}</div>
           <div className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
             OpenStreetMap
           </div>
@@ -137,11 +139,9 @@ export default function PropertyMap({
         <div className="rounded-lg border border-gray-200 bg-white py-12 text-center dark:border-gray-700 dark:bg-gray-800">
           <MapPin className="mx-auto mb-4 h-12 w-12 text-gray-400" />
           <h3 className="mb-2 text-lg font-semibold text-gray-900 dark:text-white">
-            No properties with coordinates
+            {t("map.empty")}
           </h3>
-          <p className="text-gray-600 dark:text-gray-400">
-            Verify the property address or save latitude and longitude to place it on the map.
-          </p>
+          <p className="text-gray-600 dark:text-gray-400">{t("map.emptyHelp")}</p>
         </div>
       ) : (
         <div className="h-[600px] overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
@@ -180,7 +180,7 @@ export default function PropertyMap({
                       onClick={() => onSelectProperty?.(property.id)}
                       className="mt-1 rounded-md bg-blue-600 px-2.5 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-500"
                     >
-                      Open details
+                      {t("map.openDetails")}
                     </button>
                   </div>
                 </Popup>

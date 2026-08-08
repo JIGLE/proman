@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type {
@@ -8,12 +9,24 @@ import type {
   PropertyYearStrip as PropertyYearStripData,
 } from "@/lib/hooks/use-property-activity";
 
+/** One reference-month cell, as handed to `onSelectMonth`. */
+export interface YearStripSelection {
+  year: number;
+  month: number;
+  label: string;
+  status: string | null;
+  dueAmount: number;
+  allocatedAmount: number;
+}
+
 interface PropertyYearStripProps {
   propertyId: string;
   /** The current year's strip, already fetched by the parent's usePropertyActivity(propertyId) call. */
   defaultYearStrip: PropertyYearStripData;
   currentPeriod: PropertyCurrentPeriod | null;
   receiptLifecycle: string | null;
+  /** Opens the reference-month detail. Cells are inert (and unfocusable) without it. */
+  onSelectMonth?: (selection: YearStripSelection) => void;
 }
 
 const MONTH_LABELS = [
@@ -69,7 +82,9 @@ export function PropertyYearStrip({
   defaultYearStrip,
   currentPeriod,
   receiptLifecycle,
+  onSelectMonth,
 }: PropertyYearStripProps) {
+  const t = useTranslations("common");
   const defaultYear = defaultYearStrip.year;
   const [year, setYear] = useState(defaultYear);
   const [strip, setStrip] = useState(defaultYearStrip);
@@ -110,7 +125,7 @@ export function PropertyYearStrip({
             size="icon-sm"
             className="rounded-none"
             onClick={() => setYear((y) => y - 1)}
-            aria-label="Previous year"
+            aria-label={t("previousYear")}
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </Button>
@@ -120,7 +135,7 @@ export function PropertyYearStrip({
             size="icon-sm"
             className="rounded-none"
             onClick={() => setYear((y) => y + 1)}
-            aria-label="Next year"
+            aria-label={t("nextYear")}
           >
             <ChevronRight className="h-3.5 w-3.5" />
           </Button>
@@ -134,29 +149,50 @@ export function PropertyYearStrip({
           const month = i + 1;
           const cell = strip.months[month];
           const isCurrentCell = isCurrentYear && currentPeriod?.month === month;
+          const summary = cell
+            ? `${STATUS_LABEL[cell.status] ?? cell.status} · €${cell.allocatedAmount.toFixed(2)} / €${cell.dueAmount.toFixed(2)}`
+            : "No period";
+          const swatch = `mx-auto mt-1 block h-3.5 w-3.5 border ${
+            cell
+              ? (STATUS_SWATCH[cell.status] ?? "border-[var(--color-border)]")
+              : "border-dashed border-[var(--color-border)] opacity-40"
+          }`;
+          const outline = isCurrentCell
+            ? "text-center outline outline-1 outline-offset-2 outline-[var(--color-foreground)]"
+            : "text-center";
+
+          // Inert when the parent supplies no handler, so this stays a pure visual strip
+          // wherever it is reused.
+          if (!onSelectMonth) {
+            return (
+              <div key={month} className={outline}>
+                <span className="mono-label block text-[9px]">{label}</span>
+                <span className={swatch} title={summary} />
+              </div>
+            );
+          }
+
           return (
-            <div
+            <button
               key={month}
-              className={
-                isCurrentCell
-                  ? "text-center outline outline-1 outline-offset-2 outline-[var(--color-foreground)]"
-                  : "text-center"
+              type="button"
+              onClick={() =>
+                onSelectMonth({
+                  year,
+                  month,
+                  label,
+                  status: cell?.status ?? null,
+                  dueAmount: cell?.dueAmount ?? 0,
+                  allocatedAmount: cell?.allocatedAmount ?? 0,
+                })
               }
+              title={summary}
+              aria-label={`${label} ${year} — ${summary}`}
+              className={`${outline} rounded-sm py-1 transition-colors hover:bg-[var(--color-hover)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-focus)] max-md:min-h-11`}
             >
               <span className="mono-label block text-[9px]">{label}</span>
-              <span
-                className={`mx-auto mt-1 block h-3.5 w-3.5 border ${
-                  cell
-                    ? (STATUS_SWATCH[cell.status] ?? "border-[var(--color-border)]")
-                    : "border-dashed border-[var(--color-border)] opacity-40"
-                }`}
-                title={
-                  cell
-                    ? `${STATUS_LABEL[cell.status] ?? cell.status} · €${cell.allocatedAmount.toFixed(2)} / €${cell.dueAmount.toFixed(2)}`
-                    : "No period"
-                }
-              />
-            </div>
+              <span className={swatch} />
+            </button>
           );
         })}
       </div>

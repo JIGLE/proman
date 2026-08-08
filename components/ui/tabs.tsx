@@ -25,7 +25,7 @@ const TabsTrigger = React.forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center whitespace-nowrap border border-b-0 border-transparent px-3 py-2 font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--color-muted-foreground)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--country-highlight-readable)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)] disabled:pointer-events-none disabled:opacity-50 hover:text-[var(--color-foreground)] data-[state=active]:border-[var(--color-border)] data-[state=active]:border-t-2 data-[state=active]:border-t-[var(--country-highlight-readable)] data-[state=active]:bg-[var(--color-hover)] data-[state=active]:text-[var(--color-foreground)] max-md:min-h-11",
+      "inline-flex items-center justify-center whitespace-nowrap border border-b-0 border-transparent px-3 py-2 font-mono text-[12px] md:text-[10px] uppercase tracking-[0.06em] text-[var(--color-muted-foreground)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--country-highlight-readable)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--color-background)] disabled:pointer-events-none disabled:opacity-50 hover:text-[var(--color-foreground)] data-[state=active]:border-[var(--color-border)] data-[state=active]:border-t-2 data-[state=active]:border-t-[var(--country-highlight-readable)] data-[state=active]:bg-[var(--color-hover)] data-[state=active]:text-[var(--color-foreground)] max-md:min-h-11",
       className,
     )}
     {...props}
