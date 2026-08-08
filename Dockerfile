@@ -34,6 +34,13 @@ COPY public ./public/
 COPY proxy.ts ./
 COPY messages ./messages/
 COPY scripts ./scripts/
+# `next build` type-checks everything tsconfig.json includes, which is `**/*.ts(x)` with only
+# node_modules excluded. That sweeps in the 26 test files co-located under components/ and lib/,
+# and those import `@/tests/helpers/*` — so without this the build fails with 26 TS2307s. The
+# helpers are needed at type-check time only; the builder stage is discarded, and the runtime
+# stage copies just public/, prisma/, scripts/, node_modules/ and .next/standalone, so no test
+# code reaches the shipped image.
+COPY tests ./tests/
 
 # Provide dummy env vars required by the Zod env schema during build.
 # These are NOT used at runtime — the real values come from the deployment environment.
