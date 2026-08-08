@@ -8,10 +8,10 @@ entries:
       truenas.recommended_min_memory: 512Mi
       truenas.recommended_min_storage: 1Gi
     apiVersion: v2
-    appVersion: 1.23.2
-    created: "2026-07-29T20:22:38.876650882Z"
+    appVersion: 1.24.0
+    created: "2026-08-08T22:18:25.225216938Z"
     description: A Helm chart for deploying the Proman property management platform
-    digest: ec421fd4e8bd63d177d79f45aa3fe54560a0b70ff1cf7a1d455862b27eba481a
+    digest: 2910752717c2174ef079c13a539315d99a017a17ed091d3436d2a8c148767214
     home: https://github.com/JIGLE/proman
     icon: https://raw.githubusercontent.com/JIGLE/proman/main/public/situs-mark.svg
     keywords:
@@ -28,11 +28,11 @@ entries:
     - https://ghcr.io/jigle/proman
     type: application
     urls:
-    - https://JIGLE.github.io/proman/release-charts/proman-1.23.2.tgz
-    version: 1.23.2
+    - https://JIGLE.github.io/proman/proman-1.24.0.tgz
+    version: 1.24.0
   - apiVersion: v2
     appVersion: 0.6.2
-    created: "2026-07-29T20:22:38.876184342Z"
+    created: "2026-08-08T22:18:25.2246369Z"
     description: A Helm chart for deploying the Proman property management platform
     digest: 7c08cac7e3defae58e846caa8e04a57225afb119f827a993c3f661eb26d2787f
     home: https://github.com/JIGLE/proman
@@ -51,16 +51,16 @@ entries:
     - https://ghcr.io/jigle/proman
     type: application
     urls:
-    - https://JIGLE.github.io/proman/release-charts/proman-0.6.0.tgz
+    - https://JIGLE.github.io/proman/proman-0.6.0.tgz
     version: 0.6.0
   - apiVersion: v2
     appVersion: 0.1.1
-    created: "2026-07-29T20:22:38.875749099Z"
+    created: "2026-08-08T22:18:25.224105384Z"
     description: A Helm chart for deploying Proman property management app
     digest: 73f015c2991d5e752b6fe16bbb4bcd0bf0c80725a49868413b7285afc8a80af2
     name: proman
     type: application
     urls:
-    - https://JIGLE.github.io/proman/release-charts/proman-0.1.0.tgz
+    - https://JIGLE.github.io/proman/proman-0.1.0.tgz
     version: 0.1.0
-generated: "2026-07-29T20:22:38.875050581Z"
+generated: "2026-08-08T22:18:25.223452058Z"
