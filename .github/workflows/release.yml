@@ -309,7 +309,15 @@ jobs:
           helm package helm/proman -d release-charts
           OWNER=${GITHUB_REPOSITORY%%/*}
           REPO=${GITHUB_REPOSITORY##*/}
-          helm repo index release-charts --url "https://${OWNER}.github.io/${REPO}/release-charts"
+          # The --url must match where the charts are actually served, which is the ROOT of
+          # gh-pages: the publish step below uses `publish_dir: ./release-charts`, and that
+          # copies the directory's *contents* to the branch root, not the directory itself.
+          # It had `/release-charts` appended, so every `urls:` entry in the published
+          # index.yaml pointed at https://<owner>.github.io/<repo>/release-charts/<chart>.tgz
+          # while the file sat at https://<owner>.github.io/<repo>/<chart>.tgz. `helm repo add`
+          # worked (index.yaml is at the root and resolves), so the breakage only showed up at
+          # `helm install`/`helm pull`, where every chart 404s.
+          helm repo index release-charts --url "https://${OWNER}.github.io/${REPO}"
 
       - name: Create GitHub Release
         if: steps.gate.outputs.should_release == 'true'
