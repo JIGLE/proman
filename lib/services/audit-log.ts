@@ -79,7 +79,10 @@ export type AuditAction =
   // Situs Documents/OCR (Migration D)
   | "OCR_CLASSIFY_DOCUMENT"
   | "OCR_EXTRACTION_REVIEWED"
-  | "LINK_EXPENSE_DOCUMENT";
+  | "LINK_EXPENSE_DOCUMENT"
+  // Property ownership assignment
+  | "ASSIGN_PROPERTY_OWNER"
+  | "REMOVE_PROPERTY_OWNER";
 
 export interface AuditLogEntry {
   userId: string;
