@@ -65,10 +65,16 @@ describe("POST /api/events", () => {
     );
   });
 
-  it("rejects an unrecognized event name", async () => {
+  it("rejects an unrecognized event name as a 400, not a 500", async () => {
     const response = await POST(postRequest({ name: "totally_made_up_event" }));
 
-    expect(response.status).toBeGreaterThanOrEqual(400);
+    // Previously this asserted only >= 400 and passed against a 500: the route called
+    // eventSchema.parse() directly, so the ZodError reached withErrorHandler, which has no
+    // ZodError branch and defaults to 500. A bad payload is the caller's fault, not ours.
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual(
+      expect.objectContaining({ error: expect.stringContaining("Validation error") }),
+    );
     expect(recordProductEventMock).not.toHaveBeenCalled();
   });
 

@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import {
   createErrorResponse,
   createSuccessResponse,
+  parseBody,
   withErrorHandler,
 } from "@/lib/utils/error-handling";
 import { getPrismaClient } from "@/lib/services/database/database";
@@ -84,7 +85,7 @@ async function handlePut(
 
   const json = await request.json();
   const partialSchema = maintenanceSchema.partial();
-  const body = partialSchema.parse(json);
+  const body = parseBody(json, partialSchema);
 
   const updateData: Record<string, unknown> = { ...body };
   if (body.status === "resolved" && existingTicket.status !== "resolved") {
