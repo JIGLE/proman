@@ -41,13 +41,18 @@ export default defineConfig({
       reporter: ["text", "json", "html", "clover"],
       reportsDirectory: "./coverage",
       thresholds: {
-        // Fail CI if global coverage drops below these baselines
-        global: {
-          statements: 70,
-          branches: 60,
-          functions: 60,
-          lines: 70,
-        },
+        // A ratchet, not a target: these are the current actuals rounded down, so the gate
+        // cannot fail today but blocks any change that makes coverage worse. Raise them as
+        // real tests land.
+        //
+        // These keys must stay flat. Vitest reads a nested key under `thresholds` as a glob
+        // pattern, so the previous `global: { ... }` wrapper (the Vitest 0.x/Jest shape)
+        // matched no files and silently enforced nothing — coverage sat at 48% against a
+        // notional 70% for as long as it was written that way.
+        statements: 48,
+        branches: 35,
+        functions: 34,
+        lines: 49,
       },
     },
   },
