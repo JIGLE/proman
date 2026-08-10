@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import {
   createSuccessResponse,
   createErrorResponse,
+  ResourceNotFoundError,
   ValidationError,
 } from "@/lib/utils/error-handling";
 import { paymentService } from "@/lib/payment/payment-service";
@@ -53,12 +54,13 @@ export async function POST(
     });
 
     if (!invoice) {
-      return createErrorResponse(new ValidationError("Invoice not found"), 404, request);
+      return createErrorResponse(new ResourceNotFoundError("Invoice"), 404, request);
     }
 
-    // Verify user owns this invoice
+    // Verify user owns this invoice. Deliberately the same response as "absent" above, so a
+    // stranger who guesses an id cannot tell an existing invoice from a missing one.
     if (invoice.userId !== authResult.userId && invoice.tenant?.userId !== authResult.userId) {
-      return createErrorResponse(new ValidationError("Invoice not found"), 404, request);
+      return createErrorResponse(new ResourceNotFoundError("Invoice"), 404, request);
     }
 
     // Check invoice status
