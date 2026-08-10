@@ -116,6 +116,19 @@ export interface CorrespondenceTemplate {
   subject: string;
   content: string;
   variables: string[];
+  /** null for system templates — shipped with the product, readable by all, editable by none. */
+  userId?: string | null;
+  /** Convenience mirror of `userId === null`, so the UI does not have to reason about nulls. */
+  isSystem?: boolean;
+  /** ISO 3166-1 alpha-2. A statutory notice is only valid in its own jurisdiction. */
+  country?: string | null;
+  /** BCP 47. A Portuguese notice has to be written in Portuguese. */
+  locale?: string | null;
+  /** Bumped on every edit; sent letters pin the version they rendered from. */
+  version?: number;
+  /** Set when this row was copied from another template — the liability record. */
+  derivedFromId?: string | null;
+  derivedFromVersion?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -123,7 +136,8 @@ export interface CorrespondenceTemplate {
 export interface Correspondence {
   id: string;
   userId: string;
-  templateId: string;
+  /** Nullable: a template may be deleted long after the letters it produced were served. */
+  templateId: string | null;
   tenantId: string;
   tenantName: string;
   propertyId?: string;
@@ -131,6 +145,14 @@ export interface Correspondence {
   content: string;
   status: "draft" | "sent" | "delivered";
   sentAt?: string;
+  /**
+   * Provenance captured at render time. `subject` and `content` above already hold the words that
+   * went out; these say whose words they were, so the record stands alone as evidence.
+   */
+  templateNameSnapshot?: string | null;
+  templateVersionSnapshot?: number | null;
+  /** "system" = rendered from a locked statutory template; "user" = from the sender's own copy. */
+  templateOriginSnapshot?: "system" | "user" | null;
   createdAt: string;
   updatedAt: string;
 }

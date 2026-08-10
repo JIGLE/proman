@@ -1,15 +1,25 @@
 import { NextRequest } from "next/server";
-import { handleOptions } from "@/lib/services/auth/auth-middleware";
+import { handleOptions, requireAuth } from "@/lib/services/auth/auth-middleware";
 import {
+  ResourceNotFoundError,
   createErrorResponse,
   createSuccessResponse,
+  parseBody,
   withErrorHandler,
 } from "@/lib/utils/error-handling";
 import { templateService } from "@/lib/services/database/correspondence";
 import { sanitizeForDatabase } from "@/lib/utils/sanitize";
 import { z } from "zod";
 
-// Validation schema for updates
+/**
+ * Templates are visible to their owner and to everyone when system-owned, but only the owner may
+ * change one. Before this was scoped, the route fetched by id alone and any signed-in landlord
+ * could read, edit or delete a template every other landlord was using.
+ *
+ * A system template refuses edits with 403 and advice to copy it first — that copy is where
+ * responsibility for the wording transfers to the user.
+ */
+
 const updateTemplateSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   type: z
@@ -25,108 +35,78 @@ const updateTemplateSchema = z.object({
   subject: z.string().min(1).max(500).optional(),
   content: z.string().min(1).max(10000).optional(),
   variables: z.array(z.string()).optional(),
+  country: z.string().length(2).optional(),
+  locale: z.string().max(10).optional(),
 });
 
-// GET /api/correspondence/templates/[id] - Get a specific template
+async function resolveId(context?: {
+  params?: Record<string, string> | Promise<Record<string, string>>;
+}): Promise<string | undefined> {
+  if (!context?.params) return undefined;
+  const resolved = context.params instanceof Promise ? await context.params : context.params;
+  return resolved?.id;
+}
+
+// GET /api/correspondence/templates/[id]
 async function handleGet(
   request: NextRequest,
   context?: { params?: Record<string, string> | Promise<Record<string, string>> },
 ): Promise<Response> {
-  let id: string | undefined;
-  if (context?.params) {
-    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
-    const resolved = maybe instanceof Promise ? await maybe : maybe;
-    id = resolved?.id;
-  }
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
+
+  const id = await resolveId(context);
   if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
-  try {
-    const template = await templateService.getById(id);
 
-    if (!template) {
-      return createErrorResponse(new Error("Template not found"), 404, request);
-    }
-
-    return createSuccessResponse(template);
-  } catch (error) {
-    return createErrorResponse(error as Error, 500, request);
+  const template = await templateService.getById(authResult.userId, id);
+  if (!template) {
+    return createErrorResponse(new ResourceNotFoundError("Template"), 404, request);
   }
+
+  return createSuccessResponse(template);
 }
 
-// PUT /api/correspondence/templates/[id] - Update a specific template
+// PUT /api/correspondence/templates/[id]
 async function handlePut(
   request: NextRequest,
   context?: { params?: Record<string, string> | Promise<Record<string, string>> },
 ): Promise<Response> {
-  let id: string | undefined;
-  if (context?.params) {
-    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
-    const resolved = maybe instanceof Promise ? await maybe : maybe;
-    id = resolved?.id;
-  }
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
+
+  const id = await resolveId(context);
   if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
 
-  try {
-    // First check if template exists
-    const existingTemplate = await templateService.getById(id);
-    if (!existingTemplate) {
-      return createErrorResponse(new Error("Template not found"), 404, request);
-    }
+  const body = await request.json();
+  const sanitizedBody = {
+    ...body,
+    ...(body.name !== undefined && { name: sanitizeForDatabase(body.name) }),
+    ...(body.subject !== undefined && { subject: sanitizeForDatabase(body.subject) }),
+    ...(body.content !== undefined && { content: sanitizeForDatabase(body.content) }),
+  };
+  const validatedData = parseBody(sanitizedBody, updateTemplateSchema);
 
-    const body = await request.json();
-
-    // Sanitize input
-    const sanitizedBody = {
-      ...body,
-      name: body.name ? sanitizeForDatabase(body.name) : undefined,
-      subject: body.subject ? sanitizeForDatabase(body.subject) : undefined,
-      content: body.content ? sanitizeForDatabase(body.content) : undefined,
-    };
-
-    // Validate input
-    const validatedData = updateTemplateSchema.parse(sanitizedBody);
-
-    const template = await templateService.update(id, validatedData);
-    return createSuccessResponse(template);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return createErrorResponse(
-        new Error(`Validation error: ${error.issues.map((e) => e.message).join(", ")}`),
-        400,
-        request,
-      );
-    }
-    return createErrorResponse(error as Error, 500, request);
-  }
+  // Ownership is enforced in the service, which throws ForbiddenError for a system template and
+  // ResourceNotFoundError for anything the caller cannot see. withErrorHandler maps both.
+  const template = await templateService.update(authResult.userId, id, validatedData);
+  return createSuccessResponse(template);
 }
 
-// DELETE /api/correspondence/templates/[id] - Delete a specific template
+// DELETE /api/correspondence/templates/[id]
 async function handleDelete(
   request: NextRequest,
   context?: { params?: Record<string, string> | Promise<Record<string, string>> },
 ): Promise<Response> {
-  let id: string | undefined;
-  if (context?.params) {
-    const maybe = context.params as Record<string, string> | Promise<Record<string, string>>;
-    const resolved = maybe instanceof Promise ? await maybe : maybe;
-    id = resolved?.id;
-  }
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
+
+  const id = await resolveId(context);
   if (!id) return createErrorResponse(new Error("Invalid request: missing id"), 400, request);
 
-  try {
-    // First check if template exists
-    const existingTemplate = await templateService.getById(id);
-    if (!existingTemplate) {
-      return createErrorResponse(new Error("Template not found"), 404, request);
-    }
-
-    await templateService.delete(id);
-    return createSuccessResponse({ message: "Template deleted successfully" });
-  } catch (error) {
-    return createErrorResponse(error as Error, 500, request);
-  }
+  await templateService.delete(authResult.userId, id);
+  return createSuccessResponse({ message: "Template deleted successfully" });
 }
 
-// Main handler
 export const GET = withErrorHandler(handleGet);
 export const PUT = withErrorHandler(handlePut);
 export const DELETE = withErrorHandler(handleDelete);

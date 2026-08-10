@@ -120,8 +120,8 @@ All surfaces are measured in the mobile audit (`scripts/mobile-audit.mjs`) on ev
 ## CI Gates
 
 - ESLint: `--max-warnings=0` — zero warnings allowed
-- Vitest: ~50% line coverage, enforced as a **ratchet** in `vitest.config.ts` (statements 49 /
-  branches 36 / functions 34 / lines 50) — a PR may not lower it. Raise the floor when real
+- Vitest: ~51% line coverage, enforced as a **ratchet** in `vitest.config.ts` (statements 49 /
+  branches 36 / functions 35 / lines 51) — a PR may not lower it. Raise the floor when real
   tests land. Note the threshold keys must stay flat: Vitest reads a nested key under
   `thresholds` as a glob pattern, so the old `global: { ... }` wrapper matched nothing and
   enforced nothing.
