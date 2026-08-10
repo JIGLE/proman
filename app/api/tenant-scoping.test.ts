@@ -84,10 +84,14 @@ describe("app/api tenant scoping", () => {
     const owned = userOwnedModels();
     expect(owned.has("maintenanceContact")).toBe(true);
     expect(owned.has("property")).toBe(true);
-    // CorrespondenceTemplate genuinely has no owner column — templates are global by design.
-    // Pinned so a sloppier parser that bleeds into the next model fails here rather than
-    // silently widening what this guard claims to cover.
-    expect(owned.has("correspondenceTemplate")).toBe(false);
+    // CorrespondenceTemplate gained a nullable userId when templates stopped being global.
+    expect(owned.has("correspondenceTemplate")).toBe(true);
+
+    // A negative pin is what keeps this parser honest. PropertyOwner has no owner column of its
+    // own and is immediately followed in the schema by GovernmentVerification, which does — so a
+    // parser whose match bled past the closing brace would report it as owned and fail here.
+    // That bleed is a real mistake already made once, by a grep with a fixed context window.
+    expect(owned.has("propertyOwner")).toBe(false);
   });
 
   it("finds route files to scan (guards against the walk silently matching nothing)", () => {

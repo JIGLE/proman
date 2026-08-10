@@ -17,79 +17,80 @@ model User {
   emailVerified DateTime?
   image         String?
   imageConsent  Boolean   @default(false) // GDPR: Consent for displaying image
-  role          UserRole      @default(USER)
+  role          UserRole  @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
   // Fiscal identity fields
-  fiscalResidency    String?   // ISO country code: "PT", "ES", "IT", "FR", etc.
-  nhrStatus          Boolean   @default(false)  // PT Non-Habitual Resident (pre-2024)
-  nhrYear            Int?      // Year NHR status was granted
-  ificiStatus        Boolean   @default(false)  // PT IFICI regime (from 2024, replaces NHR)
-  ificiYear          Int?      // Year IFICI status was granted
+  fiscalResidency String? // ISO country code: "PT", "ES", "IT", "FR", etc.
+  nhrStatus       Boolean @default(false) // PT Non-Habitual Resident (pre-2024)
+  nhrYear         Int? // Year NHR status was granted
+  ificiStatus     Boolean @default(false) // PT IFICI regime (from 2024, replaces NHR)
+  ificiYear       Int? // Year IFICI status was granted
 
   // MFA / TOTP fields
-  totpSecret      String?          // AES-256-GCM encrypted TOTP secret
-  totpEnabled     Boolean          @default(false)
-  totpBackupCodes String?          // JSON array of hashed one-time backup codes
-  totpVerifiedAt  DateTime?        // Set when user completes MFA challenge; jwt callback reads this
+  totpSecret      String? // AES-256-GCM encrypted TOTP secret
+  totpEnabled     Boolean   @default(false)
+  totpBackupCodes String? // JSON array of hashed one-time backup codes
+  totpVerifiedAt  DateTime? // Set when user completes MFA challenge; jwt callback reads this
 
-  accounts      Account[]
-  sessions      Session[]
-  auditLogs     AuditLog[] // GDPR logging
+  accounts  Account[]
+  sessions  Session[]
+  auditLogs AuditLog[] // GDPR logging
 
   // App-specific relations
-  properties     Property[]
-  buildings      Building[]
-  tenants        Tenant[]
-  receipts       Receipt[]
-  expenses       Expense[]
-  rentPeriods        RentPeriod[]
-  paymentAllocations PaymentAllocation[]
-  maintenanceTickets MaintenanceTicket[]
-  leases         Lease[]
-  correspondences Correspondence[]
-  owners         Owner[]
-  emailLogs      EmailLog[]
-  documents      Document[]
-  notifications  Notification[]
-  invoices       Invoice[]
-  maintenanceContacts MaintenanceContact[]
-  rentReceipts   RentReceipt[]
-  settings       UserSettings?
+  properties              Property[]
+  buildings               Building[]
+  tenants                 Tenant[]
+  receipts                Receipt[]
+  expenses                Expense[]
+  rentPeriods             RentPeriod[]
+  paymentAllocations      PaymentAllocation[]
+  maintenanceTickets      MaintenanceTicket[]
+  leases                  Lease[]
+  correspondences         Correspondence[]
+  correspondenceTemplates CorrespondenceTemplate[]
+  owners                  Owner[]
+  emailLogs               EmailLog[]
+  documents               Document[]
+  notifications           Notification[]
+  invoices                Invoice[]
+  maintenanceContacts     MaintenanceContact[]
+  rentReceipts            RentReceipt[]
+  settings                UserSettings?
   governmentVerifications GovernmentVerification[]
-  modelo179Submissions Modelo179Submission[]
-  taxFilings     TaxFiling[]
-  productEvents  ProductEvent[]
-  subscription   Subscription?
-  bankConnections     BankConnection[]
-  bankAccounts        BankAccount[]
-  bankTransactions    BankTransaction[]
-  bankSyncJobs        BankSyncJob[]
-  reconciliationRules ReconciliationRule[]
-  taxAuthorityConnectors TaxAuthorityConnector[]
-  taxSubmissionLogs      TaxSubmissionLog[]
-  documentExtractions    DocumentExtraction[]
+  modelo179Submissions    Modelo179Submission[]
+  taxFilings              TaxFiling[]
+  productEvents           ProductEvent[]
+  subscription            Subscription?
+  bankConnections         BankConnection[]
+  bankAccounts            BankAccount[]
+  bankTransactions        BankTransaction[]
+  bankSyncJobs            BankSyncJob[]
+  reconciliationRules     ReconciliationRule[]
+  taxAuthorityConnectors  TaxAuthorityConnector[]
+  taxSubmissionLogs       TaxSubmissionLog[]
+  documentExtractions     DocumentExtraction[]
 }
 
 model EmailLog {
-  id                  String   @id @default(cuid())
-  userId              String?
-  to                  String
-  from                String
-  subject             String
-  templateId          String?
-  status              String
-  messageId           String?
-  error               String?
-  sendgridMessageId   String?  @unique
-  lastEventType       String?
-  lastEventAt         DateTime?
-  failureReason       String?
-  retryCount          Int      @default(0)
-  sentAt              DateTime  @default(now())
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  id                String    @id @default(cuid())
+  userId            String?
+  to                String
+  from              String
+  subject           String
+  templateId        String?
+  status            String
+  messageId         String?
+  error             String?
+  sendgridMessageId String?   @unique
+  lastEventType     String?
+  lastEventAt       DateTime?
+  failureReason     String?
+  retryCount        Int       @default(0)
+  sentAt            DateTime  @default(now())
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -97,28 +98,28 @@ model EmailLog {
 }
 
 model Owner {
-  id                    String      @id @default(cuid())
-  userId                String
-  name                  String
-  email                 String      @unique
-  phone                 String?
-  address               String?
-  notes                 String?
-  role                  OwnerRole   @default(REGULAR)  // Default role (can be overridden per property)
-  taxResidenceCountry   String?     // PT, ES, DK, etc.
-  taxIdentificationNumber String?   // NIF (PT), NIE/NIF (ES), CPR (DK)
-  taxRate               Float?      // Optional override for tax rate
-  portalAccess          Boolean     @default(true)  // Access to owner portal
-  emailNotifications    Boolean     @default(true)  // Receive email notifications
-  createdAt             DateTime    @default(now())
-  updatedAt             DateTime    @updatedAt
+  id                      String    @id @default(cuid())
+  userId                  String
+  name                    String
+  email                   String    @unique
+  phone                   String?
+  address                 String?
+  notes                   String?
+  role                    OwnerRole @default(REGULAR) // Default role (can be overridden per property)
+  taxResidenceCountry     String? // PT, ES, DK, etc.
+  taxIdentificationNumber String? // NIF (PT), NIE/NIF (ES), CPR (DK)
+  taxRate                 Float? // Optional override for tax rate
+  portalAccess            Boolean   @default(true) // Access to owner portal
+  emailNotifications      Boolean   @default(true) // Receive email notifications
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
 
   // Relations
-  user                  User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  properties            PropertyOwner[]
-  documents             Document[]
-  invoices              Invoice[]
-  incomeDistributions   IncomeDistributionShare[]
+  user                User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  properties          PropertyOwner[]
+  documents           Document[]
+  invoices            Invoice[]
+  incomeDistributions IncomeDistributionShare[]
 
   @@map("owners")
 }
@@ -128,7 +129,7 @@ model PropertyOwner {
   propertyId          String
   ownerId             String
   ownershipPercentage Float
-  role                OwnerRole @default(REGULAR)  // Property-specific role override
+  role                OwnerRole @default(REGULAR) // Property-specific role override
   createdAt           DateTime  @default(now())
   updatedAt           DateTime  @updatedAt
 
@@ -141,25 +142,25 @@ model PropertyOwner {
 }
 
 model GovernmentVerification {
-  id               String                       @id @default(cuid())
-  userId           String
-  provider         GovernmentVerificationProvider
-  scope            GovernmentVerificationScope
-  status           GovernmentVerificationStatus @default(pending)
+  id                String                         @id @default(cuid())
+  userId            String
+  provider          GovernmentVerificationProvider
+  scope             GovernmentVerificationScope
+  status            GovernmentVerificationStatus   @default(pending)
   externalReference String?
-  verifiedFullName String?
-  verifiedTaxId    String?
-  requestedAt      DateTime                     @default(now())
-  authorizedAt     DateTime?
-  completedAt      DateTime?
-  expiresAt        DateTime?
-  errorCode        String?
-  errorMessage     String?
-  metadata         String?
-  createdAt        DateTime                     @default(now())
-  updatedAt        DateTime                     @updatedAt
+  verifiedFullName  String?
+  verifiedTaxId     String?
+  requestedAt       DateTime                       @default(now())
+  authorizedAt      DateTime?
+  completedAt       DateTime?
+  expiresAt         DateTime?
+  errorCode         String?
+  errorMessage      String?
+  metadata          String?
+  createdAt         DateTime                       @default(now())
+  updatedAt         DateTime                       @updatedAt
 
-  user           User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user           User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
   propertyClaims PropertyVerificationClaim[]
 
   @@index([userId, status])
@@ -168,25 +169,25 @@ model GovernmentVerification {
 }
 
 model PropertyVerificationClaim {
-  id                String                        @id @default(cuid())
-  verificationId    String
-  propertyId        String
-  claimType         PropertyVerificationClaimType @default(ownership)
-  status            PropertyVerificationClaimStatus @default(pending)
+  id                  String                          @id @default(cuid())
+  verificationId      String
+  propertyId          String
+  claimType           PropertyVerificationClaimType   @default(ownership)
+  status              PropertyVerificationClaimStatus @default(pending)
   ownershipPercentage Float?
-  sourceReference   String?
-  matchedAddress    String?
-  registryData      String?
-  verifiedAt        DateTime?
-  createdAt         DateTime                      @default(now())
-  updatedAt         DateTime                      @updatedAt
+  sourceReference     String?
+  matchedAddress      String?
+  registryData        String?
+  verifiedAt          DateTime?
+  createdAt           DateTime                        @default(now())
+  updatedAt           DateTime                        @updatedAt
 
   verification GovernmentVerification @relation(fields: [verificationId], references: [id], onDelete: Cascade)
   property     Property               @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 
+  @@unique([verificationId, propertyId])
   @@index([propertyId, status])
   @@index([verificationId])
-  @@unique([verificationId, propertyId])
   @@map("property_verification_claims")
 }
 
@@ -260,23 +261,23 @@ model Building {
 }
 
 model Property {
-  id          String   @id @default(cuid())
-  userId      String
-  name        String
-  address     String
+  id              String  @id @default(cuid())
+  userId          String
+  name            String
+  address         String
   // Enhanced address fields
   streetAddress   String?
-  city           String?
-  zipCode        String?
-  country        String?  @default("PT")
-  latitude       Float?
-  longitude      Float?
+  city            String?
+  zipCode         String?
+  country         String? @default("PT")
+  latitude        Float?
+  longitude       Float?
   addressVerified Boolean @default(false)
   // Building grouping
-  buildingId     String?
-  buildingName   String?
+  buildingId      String?
+  buildingName    String?
 
-  building       Building? @relation(fields: [buildingId], references: [id], onDelete: SetNull)
+  building Building? @relation(fields: [buildingId], references: [id], onDelete: SetNull)
 
   type        PropertyType
   bedrooms    Int
@@ -285,24 +286,24 @@ model Property {
   status      PropertyStatus
   description String?
   image       String?
-  
+
   // Multi-currency and income distribution
-  currency              Currency            @default(EUR)
-  incomeSplitMode       IncomeSplitMode     @default(POST_TAX)
+  currency              Currency              @default(EUR)
+  incomeSplitMode       IncomeSplitMode       @default(POST_TAX)
   distributionFrequency DistributionFrequency @default(MONTHLY)
-  createdByOwnerId      String?             // Owner who created this property (auto managing owner)
+  createdByOwnerId      String? // Owner who created this property (auto managing owner)
   // Spain: Ley de Vivienda
-  isZonaTensionada      Boolean             @default(false)
-  cadasterReference     String?             // Referencia catastral (ES) or artigo matricial (PT)
+  isZonaTensionada      Boolean               @default(false)
+  cadasterReference     String? // Referencia catastral (ES) or artigo matricial (PT)
   // Fiscal / rental regime
-  rentalRegime          String              @default("standard")  // "standard" | "acessivel" | "al" | "short_term"
-  propertyCountry       String              @default("PT")        // ISO country code
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  rentalRegime          String                @default("standard") // "standard" | "acessivel" | "al" | "short_term"
+  propertyCountry       String                @default("PT") // ISO country code
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user                User                        @relation(fields: [userId], references: [id], onDelete: Cascade)
   tenants             Tenant[]
   receipts            Receipt[]
   owners              PropertyOwner[]
@@ -322,15 +323,15 @@ model Property {
   // Performance indexes
   @@index([userId])
   @@index([status])
-  @@index([userId, status])  // Composite for property listing
+  @@index([userId, status]) // Composite for property listing
   @@map("properties")
 }
 
 model Tenant {
-  id            String   @id @default(cuid())
+  id            String        @id @default(cuid())
   userId        String
   name          String
-  email         String   @unique
+  email         String        @unique
   phone         String
   propertyId    String?
   rent          Float
@@ -339,19 +340,19 @@ model Tenant {
   paymentStatus PaymentStatus @default(pending)
   lastPayment   DateTime?
   notes         String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   // Relations
-  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  property      Property?     @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  receipts      Receipt[]
-  correspondences Correspondence[]
-  maintenance    MaintenanceTicket[]
-  leases        Lease[]
-  documents     Document[]
-  invoices      Invoice[]
-  paymentMethods PaymentMethod[]
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property            Property?            @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  receipts            Receipt[]
+  correspondences     Correspondence[]
+  maintenance         MaintenanceTicket[]
+  leases              Lease[]
+  documents           Document[]
+  invoices            Invoice[]
+  paymentMethods      PaymentMethod[]
   paymentTransactions PaymentTransaction[]
   rentReceipts        RentReceipt[]
   nruaRegistrations   NRUARegistration[]
@@ -361,40 +362,40 @@ model Tenant {
   @@index([userId])
   @@index([propertyId])
   @@index([paymentStatus])
-  @@index([userId, paymentStatus])  // Composite for overdue tenants
+  @@index([userId, paymentStatus]) // Composite for overdue tenants
   @@map("tenants")
 }
 
 model Receipt {
-  id          String   @id @default(cuid())
-  userId      String
-  tenantId    String
-  propertyId  String
-  leaseId     String?
-  amount      Float
-  date        DateTime
-  type        ReceiptType
-  status      ReceiptStatus @default(paid)
-  description String?
+  id             String        @id @default(cuid())
+  userId         String
+  tenantId       String
+  propertyId     String
+  leaseId        String?
+  amount         Float
+  date           DateTime
+  type           ReceiptType
+  status         ReceiptStatus @default(paid)
+  description    String?
   // Situs reference-month workflow (Migration A). `status` keeps meaning the
   // MONEY state (paid|pending); `lifecycle` is the DOCUMENT state — legacy
   // rows self-backfill to "emitted" via the default.
   rentPeriodId   String?
-  referenceMonth String?  // "YYYY-MM" denormalized for queue/list display
+  referenceMonth String? // "YYYY-MM" denormalized for queue/list display
   // draft|review|emitted|submitted|accepted|rejected|exported|voided — Zod-validated
   // (Migration C, lib/services/receipts/lifecycle.ts). Legacy rows self-backfill to "emitted".
-  lifecycle      String   @default("emitted")
-  source         String   @default("manual")  // manual|automation
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  lifecycle      String        @default("emitted")
+  source         String        @default("manual") // manual|automation
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   // Relations
-  user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  property   Property    @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  rentPeriod RentPeriod? @relation(fields: [rentPeriodId], references: [id], onDelete: SetNull)
-  allocations PaymentAllocation[]
-  bankTransactions BankTransaction[]
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  property           Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  rentPeriod         RentPeriod?         @relation(fields: [rentPeriodId], references: [id], onDelete: SetNull)
+  allocations        PaymentAllocation[]
+  bankTransactions   BankTransaction[]
   rentReceiptFilings RentReceipt[]
 
   // Performance indexes for common queries
@@ -403,7 +404,7 @@ model Receipt {
   @@index([tenantId])
   @@index([status])
   @@index([date])
-  @@index([userId, status, date])  // Composite index for insights queries
+  @@index([userId, status, date]) // Composite index for insights queries
   @@index([rentPeriodId])
   @@index([lifecycle])
   @@map("receipts")
@@ -414,27 +415,27 @@ model Receipt {
 // payment date. `status` is persisted-derived: recomputed inside the same
 // transaction as every allocation write (see lib/services/allocation).
 model RentPeriod {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   userId          String
   leaseId         String
-  tenantId        String   // denormalized — matrix/tenant queries must not join through Lease
-  propertyId      String   // denormalized — property-detail queries
+  tenantId        String // denormalized — matrix/tenant queries must not join through Lease
+  propertyId      String // denormalized — property-detail queries
   year            Int
-  month           Int      // 1–12
+  month           Int // 1–12
   dueDate         DateTime
-  dueAmount       Float    // snapshot of the lease rent at generation — survives adjustments
-  allocatedAmount Float    @default(0) // materialized sum of non-reversed allocations
+  dueAmount       Float // snapshot of the lease rent at generation — survives adjustments
+  allocatedAmount Float     @default(0) // materialized sum of non-reversed allocations
   paidAt          DateTime? // when the period became fully allocated
-  status          String   @default("upcoming") // upcoming|due|overdue|partially_paid|paid|paid_late|waived
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  status          String    @default("upcoming") // upcoming|due|overdue|partially_paid|paid|paid_late|waived
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  lease       Lease     @relation(fields: [leaseId], references: [id], onDelete: Cascade)
-  tenant      Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  property    Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  receipts    Receipt[]
-  allocations PaymentAllocation[]
+  user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lease              Lease               @relation(fields: [leaseId], references: [id], onDelete: Cascade)
+  tenant             Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  property           Property            @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  receipts           Receipt[]
+  allocations        PaymentAllocation[]
   rentReceiptFilings RentReceipt[]
 
   @@unique([leaseId, year, month])
@@ -488,7 +489,7 @@ model BankConnection {
   consentExpiresAt DateTime?
   consentScope     String?
   lastSyncAt       DateTime?
-  metadata         String?   // JSON — provider-specific settings
+  metadata         String? // JSON — provider-specific settings
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 
@@ -501,15 +502,15 @@ model BankConnection {
 }
 
 model BankAccount {
-  id           String  @id @default(cuid())
+  id           String   @id @default(cuid())
   connectionId String
   userId       String
   label        String
   iban         String? // AES-256-GCM encrypted (lib/utils/pii-encryption)
   ibanHash     String? // SHA-256 of normalized IBAN — matching without decryption
   ibanLast4    String?
-  currency     String  @default("EUR")
-  isActive     Boolean @default(true)
+  currency     String   @default("EUR")
+  isActive     Boolean  @default(true)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -533,21 +534,21 @@ model BankTransaction {
   syncJobId            String?
   externalId           String?
   fingerprint          String    @unique
-  amount               Float     // signed; negative = outflow/reversal
+  amount               Float // signed; negative = outflow/reversal
   currency             String    @default("EUR")
   bookingDate          DateTime
   valueDate            DateTime?
   counterpartyName     String?
-  counterpartyIban     String?   // encrypted
+  counterpartyIban     String? // encrypted
   counterpartyIbanHash String?
   reference            String?
-  rawData              String?   // JSON — original imported row
+  rawData              String? // JSON — original imported row
   status               String    @default("imported") // imported|auto_matched|needs_review|matched_confirmed|ignored|duplicate
-  suggestedLeaseId     String?   // advisory only — no FK so lease deletion never breaks the inbox
+  suggestedLeaseId     String? // advisory only — no FK so lease deletion never breaks the inbox
   matchConfidence      Float?
-  matchReasons         String?   // JSON — explainability: fired signals, warnings, duplicate hints
-  duplicateOfId        String?   // suspected fuzzy-duplicate original (advisory)
-  receiptId            String?   // rent Receipt created on match — the allocation entry point
+  matchReasons         String? // JSON — explainability: fired signals, warnings, duplicate hints
+  duplicateOfId        String? // suspected fuzzy-duplicate original (advisory)
+  receiptId            String? // rent Receipt created on match — the allocation entry point
   reversalOfId         String?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
@@ -574,7 +575,7 @@ model BankSyncJob {
   status       String    @default("completed") // pending|running|completed|failed
   startedAt    DateTime  @default(now())
   finishedAt   DateTime?
-  stats        String?   // JSON — {imported, duplicates, autoMatched, needsReview, errors}
+  stats        String? // JSON — {imported, duplicates, autoMatched, needsReview, errors}
   error        String?
 
   user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -594,8 +595,8 @@ model ReconciliationRule {
   name          String
   priority      Int       @default(100)
   isActive      Boolean   @default(true)
-  condition     String    // JSON — {field: iban_hash|counterparty_name|reference_regex|amount_range, op, value}
-  action        String    // JSON — {type: assign_lease|ignore, leaseId?}
+  condition     String // JSON — {field: iban_hash|counterparty_name|reference_regex|amount_range, op, value}
+  action        String // JSON — {type: assign_lease|ignore, leaseId?}
   timesApplied  Int       @default(0)
   lastAppliedAt DateTime?
   createdAt     DateTime  @default(now())
@@ -608,40 +609,40 @@ model ReconciliationRule {
 }
 
 model Expense {
-  id            String   @id @default(cuid())
-  userId        String
-  propertyId    String
-  unitId        String?  // Optional: scope expense to a specific unit
-  leaseId       String?  // Optional: link expense to a lease period
-  amount        Float
-  date          DateTime
-  category      String   // ExpenseCategory value — validated by Zod, stored as string (SQLite)
-  description   String?
-  isDeductible  Boolean  @default(true)  // Whether deductible for IRS/IRPF
-  vendorName    String?  // Supplier/vendor name (useful for invoice records)
-  vendorVat     String?  // Vendor NIF/VAT number for tax documentation
+  id              String    @id @default(cuid())
+  userId          String
+  propertyId      String
+  unitId          String? // Optional: scope expense to a specific unit
+  leaseId         String? // Optional: link expense to a lease period
+  amount          Float
+  date            DateTime
+  category        String // ExpenseCategory value — validated by Zod, stored as string (SQLite)
+  description     String?
+  isDeductible    Boolean   @default(true) // Whether deductible for IRS/IRPF
+  vendorName      String? // Supplier/vendor name (useful for invoice records)
+  vendorVat       String? // Vendor NIF/VAT number for tax documentation
   // Situs deduction-evidence workflow: a real Document link + a tax review
   // state (receiptImage dropped PR 11 — no reads/writes remained, see the
   // 20260430000000-style consolidation migration for the drop).
   documentId      String?
-  taxReviewStatus String?  // pending_review|reviewed|flagged — Zod-validated
+  taxReviewStatus String? // pending_review|reviewed|flagged — Zod-validated
   // Recurring expense fields (Wave 2.4)
-  isRecurring      Boolean   @default(false)
-  recurrenceRule   String?   // "monthly" | "quarterly" | "annual"
-  recurrenceDay    Int?      // Day of month to generate (1-28)
-  recurrenceEnd    DateTime? // Stop generating after this date (null = indefinite)
-  parentExpenseId  String?   // If this was auto-generated, points to the template expense
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isRecurring     Boolean   @default(false)
+  recurrenceRule  String? // "monthly" | "quarterly" | "annual"
+  recurrenceDay   Int? // Day of month to generate (1-28)
+  recurrenceEnd   DateTime? // Stop generating after this date (null = indefinite)
+  parentExpenseId String? // If this was auto-generated, points to the template expense
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   // Relations
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  unit     Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
-  lease    Lease?   @relation(fields: [leaseId], references: [id], onDelete: SetNull)
-  parentExpense    Expense?  @relation("RecurringExpenses", fields: [parentExpenseId], references: [id], onDelete: SetNull)
-  childExpenses    Expense[] @relation("RecurringExpenses")
-  document Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property      Property  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  unit          Unit?     @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  lease         Lease?    @relation(fields: [leaseId], references: [id], onDelete: SetNull)
+  parentExpense Expense?  @relation("RecurringExpenses", fields: [parentExpenseId], references: [id], onDelete: SetNull)
+  childExpenses Expense[] @relation("RecurringExpenses")
+  document      Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
 
   // Performance indexes
   @@index([userId])
@@ -657,88 +658,126 @@ model Expense {
 }
 
 model MaintenanceTicket {
-  id                String   @id @default(cuid())
-  userId            String
-  propertyId        String
-  tenantId          String?
-  unitId            String?
-  title             String
-  description       String
-  status            MaintenanceStatus @default(open)
-  priority          MaintenancePriority @default(medium)
-  category          String?  // plumbing, electrical, structural, appliance, cleaning, other
-  images            String   // JSON string of image URLs
-  cost              Float?   // @deprecated — kept for backward compat; use estimatedCost
-  estimatedCost     Float?
-  actualCost        Float?
-  scheduledDate     DateTime?
-  dueDate           DateTime?
-  assignedTo        String?  // @deprecated — kept for backward compat; use vendorName
-  vendorName        String?
-  vendorPhone       String?
-  invoiceRef        String?
-  isTenantReport    Boolean  @default(false)
-  resolvedAt        DateTime?
+  id               String              @id @default(cuid())
+  userId           String
+  propertyId       String
+  tenantId         String?
+  unitId           String?
+  title            String
+  description      String
+  status           MaintenanceStatus   @default(open)
+  priority         MaintenancePriority @default(medium)
+  category         String? // plumbing, electrical, structural, appliance, cleaning, other
+  images           String // JSON string of image URLs
+  cost             Float? // @deprecated — kept for backward compat; use estimatedCost
+  estimatedCost    Float?
+  actualCost       Float?
+  scheduledDate    DateTime?
+  dueDate          DateTime?
+  assignedTo       String? // @deprecated — kept for backward compat; use vendorName
+  vendorName       String?
+  vendorPhone      String?
+  invoiceRef       String?
+  isTenantReport   Boolean             @default(false)
+  resolvedAt       DateTime?
   // Situs Operations subtabs (PR 10b-1): Evidence tab flag + SLA due date.
-  evidenceRequired  Boolean  @default(false)
-  slaDueAt          DateTime?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  evidenceRequired Boolean             @default(false)
+  slaDueAt         DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
 
   // Relations
-  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  property        Property           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  tenant          Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenant   Tenant?  @relation(fields: [tenantId], references: [id], onDelete: SetNull)
 
   // Performance indexes
   @@index([userId])
   @@index([propertyId])
   @@index([status])
   @@index([priority])
-  @@index([userId, status])  // Composite for open tickets
+  @@index([userId, status]) // Composite for open tickets
   @@map("maintenance_tickets")
 }
 
 model CorrespondenceTemplate {
-  id        String   @id @default(cuid())
+  id        String       @id @default(cuid())
   name      String
   type      TemplateType
   subject   String
   content   String
-  variables String   // JSON string of variable names
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  variables String // JSON string of variable names
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  /// NULL = system-owned: shipped with the product, readable by everyone, editable by nobody.
+  /// Non-NULL = owned by that user, private to them. This column is what separates a statutory
+  /// instrument (whose wording carries professional liability) from a landlord's own copy.
+  userId String?
+
+  /// Jurisdiction and language. A Portuguese statutory notice must be in Portuguese and must not
+  /// be offered for a Spanish property. NULL on both = applies anywhere (operational templates).
+  country String? // ISO 3166-1 alpha-2, matched against Property.propertyCountry
+  locale  String? // BCP 47, one of the app's four catalogues
+
+  /// Bumped on every edit. A sent letter pins the version it rendered from, so "which words went
+  /// out" stays answerable after the template moves on.
+  version Int @default(1)
+
+  /// Set when a user copies a system template. Together these are the liability record: they say
+  /// which instrument this descended from and at which revision it stopped being ours.
+  derivedFromId      String?
+  derivedFromVersion Int?
 
   // Relations
   correspondences Correspondence[]
+  user            User?                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  derivedFrom     CorrespondenceTemplate?  @relation("TemplateLineage", fields: [derivedFromId], references: [id], onDelete: SetNull)
+  derivatives     CorrespondenceTemplate[] @relation("TemplateLineage")
 
+  @@index([userId])
+  @@index([country, locale])
   @@map("correspondence_templates")
 }
 
+/// A served letter is evidence. Everything needed to prove what was sent lives on this row —
+/// the rendered subject and content, plus a snapshot of the template's identity at render time —
+/// so the record survives the template being edited, deleted, or forked afterwards.
 model Correspondence {
-  id         String   @id @default(cuid())
+  id         String               @id @default(cuid())
   userId     String
-  templateId String
+  templateId String?
   tenantId   String
   propertyId String?
   subject    String
   content    String
   status     CorrespondenceStatus @default(draft)
   sentAt     DateTime?
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt  DateTime             @default(now())
+  updatedAt  DateTime             @updatedAt
+
+  /// Provenance, captured at render time and never updated afterwards. templateId above is a
+  /// convenience link that may go NULL; these three answer "whose words were these?" on their own.
+  templateNameSnapshot    String?
+  templateVersionSnapshot Int?
+  /// "system" if rendered from a locked statutory template, "user" if from the sender's own copy.
+  /// This is the field a liability argument actually turns on.
+  templateOriginSnapshot  String?
 
   // Relations
-  user     User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  template CorrespondenceTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
-  tenant   Tenant                 @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  property Property?              @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  user     User                    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  /// SetNull, never Cascade: deleting a template must not destroy the record of letters sent from
+  /// it. Under the previous Cascade, one landlord deleting a globally-shared template erased
+  /// another landlord's proof of service.
+  template CorrespondenceTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+  tenant   Tenant                  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  property Property?               @relation(fields: [propertyId], references: [id], onDelete: SetNull)
 
   @@map("correspondence")
 }
 
 model Lease {
-  id                  String   @id @default(cuid())
+  id                  String      @id @default(cuid())
   userId              String
   propertyId          String
   tenantId            String
@@ -746,40 +785,40 @@ model Lease {
   startDate           DateTime
   endDate             DateTime
   monthlyRent         Float
-  deposit             Float    @default(0)
-  contractFile        Bytes?  // Store PDF content as BLOB
+  deposit             Float       @default(0)
+  contractFile        Bytes? // Store PDF content as BLOB
   contractFileName    String?
   contractFileSize    Int?
   taxRegime           String? // 'portugal_rendimentos' or 'spain_inmuebles'
   status              LeaseStatus @default(active)
-  autoRenew           Boolean  @default(false)
-  renewalNoticeDays   Int      @default(60)
+  autoRenew           Boolean     @default(false)
+  renewalNoticeDays   Int         @default(60)
   // Portugal: Renda Acessível programme
-  isRendaAcessivel    Boolean  @default(false)
+  isRendaAcessivel    Boolean     @default(false)
   // Spain: Ley de Vivienda
-  isZonaTensionada    Boolean  @default(false)
-  priorContractRent   Float?   // Previous contract rent (for rent cap validation)
+  isZonaTensionada    Boolean     @default(false)
+  priorContractRent   Float? // Previous contract rent (for rent cap validation)
   notes               String?
   // Renewal lifecycle
-  renewalStatus       String?   // null | "offered" | "accepted" | "declined" | "expired"
+  renewalStatus       String? // null | "offered" | "accepted" | "declined" | "expired"
   renewalOfferedAt    DateTime?
   renewalRespondedAt  DateTime?
   renewalNotes        String?
   renewalProposedRent Float?
   renewalStartDate    DateTime?
   renewalEndDate      DateTime?
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
 
   // Relations
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  tenant   Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  unit     Unit?    @relation(fields: [unitId], references: [id], onDelete: SetNull)
-  nruaRegistrations NRUARegistration[]
-  expenses  Expense[]
+  user                 User                  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property             Property              @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  tenant               Tenant                @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  unit                 Unit?                 @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  nruaRegistrations    NRUARegistration[]
+  expenses             Expense[]
   modelo179Submissions Modelo179Submission[]
-  rentPeriods RentPeriod[]
+  rentPeriods          RentPeriod[]
 
   @@index([userId])
   @@index([propertyId])
@@ -790,56 +829,56 @@ model Lease {
 }
 
 model Unit {
-  id          String   @id @default(cuid())
-  propertyId  String
-  number      String   // Unit/apartment number
-  floor       Int?
-  sizeSqM     Float?
-  bedrooms    Int?
-  bathrooms   Int?
-  status      UnitStatus @default(vacant)
-  notes       String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String     @id @default(cuid())
+  propertyId String
+  number     String // Unit/apartment number
+  floor      Int?
+  sizeSqM    Float?
+  bedrooms   Int?
+  bathrooms  Int?
+  status     UnitStatus @default(vacant)
+  notes      String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   // Relations
-  property    Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
-  leases      Lease[]
-  documents   Document[]
-  expenses    Expense[]
+  property  Property   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  leases    Lease[]
+  documents Document[]
+  expenses  Expense[]
 
   @@unique([propertyId, number])
   @@map("units")
 }
 
 model Document {
-  id          String   @id @default(cuid())
+  id          String       @id @default(cuid())
   userId      String
   name        String
   description String?
   type        DocumentType
   mimeType    String
-  storagePath String   // File path or URL
+  storagePath String // File path or URL
   fileSize    Int
-  
+
   // Polymorphic relations (nullable FKs)
-  propertyId  String?
-  unitId      String?
-  ownerId     String?
-  tenantId    String?
+  propertyId String?
+  unitId     String?
+  ownerId    String?
+  tenantId   String?
 
-  expiresAt   DateTime? // Optional expiry for insurance policies, certificates, permits
+  expiresAt DateTime? // Optional expiry for insurance policies, certificates, permits
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  user      User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  property  Property?          @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  unit      Unit?              @relation(fields: [unitId], references: [id], onDelete: SetNull)
-  owner     Owner?             @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  tenant    Tenant?            @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  expenses  Expense[] // Situs: deduction-evidence links (Expense.documentId)
+  user       User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property   Property?           @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  unit       Unit?               @relation(fields: [unitId], references: [id], onDelete: SetNull)
+  owner      Owner?              @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  tenant     Tenant?             @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  expenses   Expense[] // Situs: deduction-evidence links (Expense.documentId)
   extraction DocumentExtraction?
 
   @@index([userId])
@@ -855,19 +894,19 @@ model Document {
 // layers); classification proposes a document type + a linked entity for a
 // human to confirm in the Review Required tab.
 model DocumentExtraction {
-  id                 String    @id @default(cuid())
-  documentId         String    @unique
-  userId             String
-  status             String    @default("pending") // pending|processing|completed|failed|review_required
-  engine             String    @default("mock")
-  confidence         Float?
-  extractedFields    String?   // JSON — engine-specific key/value proposals
-  suggestedType       String?  // proposed DocumentType value
-  linkedEntityType    String?  // "tenant"|"property"|"lease"|"expense"
-  linkedEntityId      String?
-  reviewedAt          DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id               String    @id @default(cuid())
+  documentId       String    @unique
+  userId           String
+  status           String    @default("pending") // pending|processing|completed|failed|review_required
+  engine           String    @default("mock")
+  confidence       Float?
+  extractedFields  String? // JSON — engine-specific key/value proposals
+  suggestedType    String? // proposed DocumentType value
+  linkedEntityType String? // "tenant"|"property"|"lease"|"expense"
+  linkedEntityId   String?
+  reviewedAt       DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   document Document @relation(fields: [documentId], references: [id], onDelete: Cascade)
   user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -877,29 +916,29 @@ model DocumentExtraction {
 }
 
 model Invoice {
-  id          String   @id @default(cuid())
+  id          String        @id @default(cuid())
   userId      String
-  number      String   @unique // Invoice number
+  number      String        @unique // Invoice number
   amount      Float
   dueDate     DateTime
   paidDate    DateTime?
   status      InvoiceStatus @default(pending)
   description String?
-  metadata    String?  // JSON for additional data
-  
+  metadata    String? // JSON for additional data
+
   // Optional relations
-  propertyId  String?
-  ownerId     String?
-  tenantId    String?
-  
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  propertyId String?
+  ownerId    String?
+  tenantId   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  property Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
-  owner    Owner?    @relation(fields: [ownerId], references: [id], onDelete: SetNull)
-  tenant   Tenant?   @relation(fields: [tenantId], references: [id], onDelete: SetNull)
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  property            Property?            @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  owner               Owner?               @relation(fields: [ownerId], references: [id], onDelete: SetNull)
+  tenant              Tenant?              @relation(fields: [tenantId], references: [id], onDelete: SetNull)
+  user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   paymentTransactions PaymentTransaction[]
 
   @@index([userId])
@@ -910,17 +949,17 @@ model Invoice {
 }
 
 model Notification {
-  id          String   @id @default(cuid())
-  userId      String
-  type        NotificationType
-  title       String
-  message     String
-  entityType  String?  // 'Property', 'Lease', 'Tenant', etc.
-  entityId    String?  // ID of related entity
-  read        Boolean  @default(false)
-  payload     String?  // JSON for additional data
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String           @id @default(cuid())
+  userId     String
+  type       NotificationType
+  title      String
+  message    String
+  entityType String? // 'Property', 'Lease', 'Tenant', etc.
+  entityId   String? // ID of related entity
+  read       Boolean          @default(false)
+  payload    String? // JSON for additional data
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
 
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -933,96 +972,96 @@ model Notification {
 
 // Payment System Models for Portugal/Spain
 model PaymentMethod {
-  id            String   @id @default(cuid())
-  tenantId      String
-  type          PaymentMethodType
-  provider      String   // 'stripe', 'manual', 'bank_transfer'
-  
+  id       String            @id @default(cuid())
+  tenantId String
+  type     PaymentMethodType
+  provider String // 'stripe', 'manual', 'bank_transfer'
+
   // Stripe-specific fields
-  stripeCustomerId     String?
+  stripeCustomerId      String?
   stripePaymentMethodId String?
-  
+
   // Bank account details (for SEPA/bank transfers)
   bankName      String?
-  iban          String?  // Masked IBAN for display
-  ibanLast4     String?  // Last 4 digits
-  bic           String?  // BIC/SWIFT code
+  iban          String? // Masked IBAN for display
+  ibanLast4     String? // Last 4 digits
+  bic           String? // BIC/SWIFT code
   accountHolder String?
-  
+
   // Regional payment method details
-  country       String   @default("PT") // PT, ES, etc.
-  
+  country String @default("PT") // PT, ES, etc.
+
   // Multibanco reference (Portugal)
-  multibancoEntity    String?  // 5-digit entity
-  multibancoReference String?  // Reference number
-  
+  multibancoEntity    String? // 5-digit entity
+  multibancoReference String? // Reference number
+
   // MB WAY (Portugal)
-  mbwayPhone    String?  // Phone number for MB WAY
-  
-  isDefault     Boolean  @default(false)
-  isActive      Boolean  @default(true)
-  metadata      String?  // JSON for additional data
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  mbwayPhone String? // Phone number for MB WAY
+
+  isDefault Boolean @default(false)
+  isActive  Boolean @default(true)
+  metadata  String? // JSON for additional data
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  tenant        Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  transactions  PaymentTransaction[]
+  tenant       Tenant               @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  transactions PaymentTransaction[]
 
   @@map("payment_methods")
 }
 
 model PaymentTransaction {
-  id              String   @id @default(cuid())
+  id              String  @id @default(cuid())
   paymentMethodId String?
   invoiceId       String?
   tenantId        String
-  
+
   // Amount details
-  amount          Float    // Amount in cents
-  currency        String   @default("EUR")
-  
+  amount   Float // Amount in cents
+  currency String @default("EUR")
+
   // Transaction status
-  status          TransactionStatus @default(pending)
-  
+  status TransactionStatus @default(pending)
+
   // Provider details
-  provider        String   // 'stripe', 'multibanco', 'mbway', 'sepa', 'bank_transfer'
-  providerTransactionId String?  // External transaction ID
-  
+  provider              String // 'stripe', 'multibanco', 'mbway', 'sepa', 'bank_transfer'
+  providerTransactionId String? // External transaction ID
+
   // Stripe-specific
   stripePaymentIntentId String?
   stripeChargeId        String?
-  
+
   // Multibanco-specific (Portugal)
-  multibancoEntity      String?
-  multibancoReference   String?
-  multibancoExpiresAt   DateTime?
-  
+  multibancoEntity    String?
+  multibancoReference String?
+  multibancoExpiresAt DateTime?
+
   // MB WAY-specific (Portugal)
-  mbwayRequestId        String?
-  
+  mbwayRequestId String?
+
   // SEPA-specific
-  sepaMandateId         String?
-  sepaDebitDate         DateTime?
-  
+  sepaMandateId String?
+  sepaDebitDate DateTime?
+
   // Processing details
-  processedAt   DateTime?
-  failedAt      DateTime?
-  failureCode   String?
+  processedAt    DateTime?
+  failedAt       DateTime?
+  failureCode    String?
   failureMessage String?
-  
+
   // Refund details
   refundedAmount Float?
-  refundedAt    DateTime?
-  refundReason  String?
-  
+  refundedAt     DateTime?
+  refundReason   String?
+
   // Metadata
-  description   String?
-  metadata      String?  // JSON for webhooks, additional data
-  
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  description String?
+  metadata    String? // JSON for webhooks, additional data
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
   paymentMethod PaymentMethod? @relation(fields: [paymentMethodId], references: [id])
@@ -1195,23 +1234,23 @@ enum NotificationType {
 
 // Payment-specific enums
 enum PaymentMethodType {
-  card             // Credit/debit card via Stripe
-  sepa_debit       // SEPA Direct Debit
-  multibanco       // Portugal: Multibanco reference
-  mbway            // Portugal: MB WAY
-  bank_transfer    // Manual bank transfer
-  cash             // Cash payment
+  card // Credit/debit card via Stripe
+  sepa_debit // SEPA Direct Debit
+  multibanco // Portugal: Multibanco reference
+  mbway // Portugal: MB WAY
+  bank_transfer // Manual bank transfer
+  cash // Cash payment
   other
 }
 
 enum TransactionStatus {
-  pending          // Transaction initiated
-  processing       // Being processed by provider
-  requires_action  // Needs customer action (3D Secure, MB WAY confirm)
-  succeeded        // Payment successful
-  failed           // Payment failed
-  cancelled        // Cancelled by user/system
-  refunded         // Fully refunded
+  pending // Transaction initiated
+  processing // Being processed by provider
+  requires_action // Needs customer action (3D Secure, MB WAY confirm)
+  succeeded // Payment successful
+  failed // Payment failed
+  cancelled // Cancelled by user/system
+  refunded // Fully refunded
   partially_refunded // Partially refunded
 }
 
@@ -1221,31 +1260,31 @@ enum TransactionStatus {
 
 // Maintenance Contacts (Contractors, Vendors, Staff)
 model MaintenanceContact {
-  id            String   @id @default(cuid())
+  id            String                 @id @default(cuid())
   userId        String
   type          MaintenanceContactType
   company       String?
   contactPerson String
   email         String?
   phone         String?
-  specialties   String   // JSON array: ["Plumber", "Electrician", "HVAC", etc.]
+  specialties   String // JSON array: ["Plumber", "Electrician", "HVAC", etc.]
   hourlyRate    Float?
-  currency      Currency @default(EUR)
-  rating        Float?   // 1-5 rating
+  currency      Currency               @default(EUR)
+  rating        Float? // 1-5 rating
   notes         String?
-  isActive      Boolean  @default(true)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  isActive      Boolean                @default(true)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
 
   // Relations
-  user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("maintenance_contacts")
 }
 
 // Income Distribution (with audit trail)
 model IncomeDistribution {
-  id                   String   @id @default(cuid())
+  id                   String          @id @default(cuid())
   propertyId           String
   periodStart          DateTime
   periodEnd            DateTime
@@ -1253,17 +1292,17 @@ model IncomeDistribution {
   totalIncome          Float
   totalExpenses        Float
   netIncome            Float
-  currency             Currency @default(EUR)
-  version              Int      @default(1)  // Incremented on recalculation
+  currency             Currency        @default(EUR)
+  version              Int             @default(1) // Incremented on recalculation
   calculatedByUserId   String
   recalculatedByUserId String?
   recalculatedAt       DateTime?
   notes                String?
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  createdAt            DateTime        @default(now())
+  updatedAt            DateTime        @updatedAt
 
   // Relations
-  property Property                   @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  property Property                  @relation(fields: [propertyId], references: [id], onDelete: Cascade)
   shares   IncomeDistributionShare[]
 
   @@map("income_distributions")
@@ -1271,17 +1310,17 @@ model IncomeDistribution {
 
 // Individual owner shares from an income distribution
 model IncomeDistributionShare {
-  id                   String   @id @default(cuid())
-  distributionId       String
-  ownerId              String
-  ownershipPercentage  Float
-  grossShare           Float    // Before tax
-  taxAmount            Float    // Calculated tax
-  netShare             Float    // After tax
-  taxCountry           String?  // PT, ES, DK
-  taxRate              Float?   // Applied tax rate
-  notifiedAt           DateTime?
-  createdAt            DateTime @default(now())
+  id                  String    @id @default(cuid())
+  distributionId      String
+  ownerId             String
+  ownershipPercentage Float
+  grossShare          Float // Before tax
+  taxAmount           Float // Calculated tax
+  netShare            Float // After tax
+  taxCountry          String? // PT, ES, DK
+  taxRate             Float? // Applied tax rate
+  notifiedAt          DateTime?
+  createdAt           DateTime  @default(now())
 
   // Relations
   distribution IncomeDistribution @relation(fields: [distributionId], references: [id], onDelete: Cascade)
@@ -1292,21 +1331,21 @@ model IncomeDistributionShare {
 
 // User Settings (preferences)
 model UserSettings {
-  id                       String   @id @default(cuid())
-  userId                   String   @unique
-  theme                    String   @default("system")  // light, dark, system
-  language                 String   @default("en")
-  defaultCurrency          Currency @default(EUR)
-  defaultTaxCountry        String?  // PT, ES, DK
-  emailNotifications       Boolean  @default(true)
-  taxReminderNotifications Boolean  @default(true)
-  distributionNotifications Boolean @default(true)
+  id                        String    @id @default(cuid())
+  userId                    String    @unique
+  theme                     String    @default("system") // light, dark, system
+  language                  String    @default("en")
+  defaultCurrency           Currency  @default(EUR)
+  defaultTaxCountry         String? // PT, ES, DK
+  emailNotifications        Boolean   @default(true)
+  taxReminderNotifications  Boolean   @default(true)
+  distributionNotifications Boolean   @default(true)
   // Server-side onboarding-checklist dismissal — was localStorage-only, so it
   // didn't survive across browsers/devices and couldn't be measured. Null
   // means "not dismissed" (or dismissed pre-migration, on an old client).
-  onboardingDismissedAt    DateTime?
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
+  onboardingDismissedAt     DateTime?
+  createdAt                 DateTime  @default(now())
+  updatedAt                 DateTime  @updatedAt
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -1325,7 +1364,7 @@ model ProductEvent {
   id        String   @id @default(cuid())
   userId    String
   name      String
-  metadata  String?  // JSON
+  metadata  String? // JSON
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1379,20 +1418,20 @@ enum SubscriptionStatus {
 // ========================================
 
 enum OwnerRole {
-  MANAGING  // Full access to property management
-  REGULAR   // View-only access to income reports
+  MANAGING // Full access to property management
+  REGULAR // View-only access to income reports
 }
 
 enum Currency {
-  EUR  // Euro (Portugal, Spain)
-  DKK  // Danish Krone
-  USD  // US Dollar
-  GBP  // British Pound
+  EUR // Euro (Portugal, Spain)
+  DKK // Danish Krone
+  USD // US Dollar
+  GBP // British Pound
 }
 
 enum IncomeSplitMode {
-  PRE_TAX   // Split before tax calculation
-  POST_TAX  // Split after tax deduction
+  PRE_TAX // Split before tax calculation
+  POST_TAX // Split after tax deduction
 }
 
 enum DistributionFrequency {
@@ -1402,8 +1441,8 @@ enum DistributionFrequency {
 }
 
 enum MaintenanceContactType {
-  CONTRACTOR     // External contractor
-  VENDOR         // Supplier/vendor
+  CONTRACTOR // External contractor
+  VENDOR // Supplier/vendor
   INTERNAL_STAFF // In-house staff
 }
 
@@ -1412,20 +1451,20 @@ enum MaintenanceContactType {
 // ========================================
 
 model StressedZone {
-  id                String   @id @default(cuid())
-  country           String   @default("ES")
-  communityCode     String   // Autonomous community code (e.g. "CAT", "MAD")
-  communityName     String   // "Cataluña", "Comunidad de Madrid"
-  municipalityCode  String   // INE municipality code
-  municipalityName  String   // e.g. "Barcelona", "Madrid"
-  postalCodes       String?  // JSON array of applicable postal codes (null = whole municipality)
-  declaredDate      DateTime // Date zone was declared stressed
-  expiresDate       DateTime? // Expiration (renewable every 3 years per Ley 12/2023 Art. 18)
+  id                  String    @id @default(cuid())
+  country             String    @default("ES")
+  communityCode       String // Autonomous community code (e.g. "CAT", "MAD")
+  communityName       String // "Cataluña", "Comunidad de Madrid"
+  municipalityCode    String // INE municipality code
+  municipalityName    String // e.g. "Barcelona", "Madrid"
+  postalCodes         String? // JSON array of applicable postal codes (null = whole municipality)
+  declaredDate        DateTime // Date zone was declared stressed
+  expiresDate         DateTime? // Expiration (renewable every 3 years per Ley 12/2023 Art. 18)
   mitmaReferenceIndex Float? // Official MITMA rent reference index (€/m²/month)
-  isActive          Boolean  @default(true)
-  source            String?  // "BOE", "DOGC", "BOCM", etc.
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  isActive            Boolean   @default(true)
+  source              String? // "BOE", "DOGC", "BOCM", etc.
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
 
   @@unique([municipalityCode, communityCode])
   @@index([country, isActive])
@@ -1439,28 +1478,28 @@ model StressedZone {
 // ========================================
 
 model NRUARegistration {
-  id                  String   @id @default(cuid())
-  leaseId             String
-  propertyId          String
-  tenantId            String
-  landlordNif         String   // NIF/NIE of landlord
-  tenantNif           String   // NIF/NIE of tenant
-  propertyReference   String   // Referencia catastral
-  municipalityCode    String   // INE municipality code
-  monthlyRent         Float
-  contractStartDate   DateTime
-  contractEndDate     DateTime?
-  contractType        NRUAContractType
-  isZonaTensionada    Boolean  @default(false)
-  registrationNumber  String?  // Assigned by MITMA upon submission
-  status              NRUAStatus @default(pending)
-  submittedAt         DateTime?
-  confirmedAt         DateTime?
-  rejectionReason     String?
-  exportedXml         String?  // Last exported XML payload
-  metadata            String?  // JSON for additional fields
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
+  id                 String           @id @default(cuid())
+  leaseId            String
+  propertyId         String
+  tenantId           String
+  landlordNif        String // NIF/NIE of landlord
+  tenantNif          String // NIF/NIE of tenant
+  propertyReference  String // Referencia catastral
+  municipalityCode   String // INE municipality code
+  monthlyRent        Float
+  contractStartDate  DateTime
+  contractEndDate    DateTime?
+  contractType       NRUAContractType
+  isZonaTensionada   Boolean          @default(false)
+  registrationNumber String? // Assigned by MITMA upon submission
+  status             NRUAStatus       @default(pending)
+  submittedAt        DateTime?
+  confirmedAt        DateTime?
+  rejectionReason    String?
+  exportedXml        String? // Last exported XML payload
+  metadata           String? // JSON for additional fields
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
 
   // Relations
   lease    Lease    @relation(fields: [leaseId], references: [id], onDelete: Cascade)
@@ -1474,17 +1513,17 @@ model NRUARegistration {
 }
 
 enum NRUAContractType {
-  VIVIENDA_HABITUAL    // Primary residence
-  VIVIENDA_TEMPORAL    // Temporary housing
-  VIVIENDA_TURISTICA   // Tourist rental
+  VIVIENDA_HABITUAL // Primary residence
+  VIVIENDA_TEMPORAL // Temporary housing
+  VIVIENDA_TURISTICA // Tourist rental
 }
 
 enum NRUAStatus {
-  pending      // Not yet submitted
-  submitted    // Sent to Ventanilla Única
-  confirmed    // Accepted by MITMA
-  rejected     // Rejected — needs correction
-  cancelled    // Contract terminated, registration cancelled
+  pending // Not yet submitted
+  submitted // Sent to Ventanilla Única
+  confirmed // Accepted by MITMA
+  rejected // Rejected — needs correction
+  cancelled // Contract terminated, registration cancelled
 }
 
 // ========================================
@@ -1492,38 +1531,38 @@ enum NRUAStatus {
 // ========================================
 
 model RentReceipt {
-  id                String   @id @default(cuid())
+  id                String            @id @default(cuid())
   userId            String
   tenantId          String
   propertyId        String
   leaseId           String?
-  receiptNumber     String   @unique // Sequential: RR/YYYY/NNNNNN
-  landlordNif       String   // NIF of landlord
-  tenantNif         String?  // NIF of tenant (optional for non-residents)
-  propertyAddress   String   // Full address of rented property
-  cadasterReference String?  // Referência matricial / Artigo matricial
-  rentAmount        Float    // Gross rent amount
-  withholdingAmount Float    @default(0) // IRS withholding (retenção na fonte)
-  netAmount         Float    // Amount received after withholding
+  receiptNumber     String            @unique // Sequential: RR/YYYY/NNNNNN
+  landlordNif       String // NIF of landlord
+  tenantNif         String? // NIF of tenant (optional for non-residents)
+  propertyAddress   String // Full address of rented property
+  cadasterReference String? // Referência matricial / Artigo matricial
+  rentAmount        Float // Gross rent amount
+  withholdingAmount Float             @default(0) // IRS withholding (retenção na fonte)
+  netAmount         Float // Amount received after withholding
   paymentDate       DateTime // Date rent was paid
   receiptDate       DateTime // Date receipt is issued (must be within 5 days of payment)
   periodStart       DateTime // Rental period start (e.g. 1st of month)
   periodEnd         DateTime // Rental period end
-  isRendaAcessivel  Boolean  @default(false) // Programa Renda Acessível
-  taxRegime         String   @default("categoria_f") // "categoria_f" or "renda_acessivel"
+  isRendaAcessivel  Boolean           @default(false) // Programa Renda Acessível
+  taxRegime         String            @default("categoria_f") // "categoria_f" or "renda_acessivel"
   status            RentReceiptStatus @default(draft)
-  atSubmissionId    String?  // AT (Autoridade Tributária) submission ID
+  atSubmissionId    String? // AT (Autoridade Tributária) submission ID
   submittedAt       DateTime?
-  atResponseCode    String?  // Response from AT webservice
-  pdfPath           String?  // Path to generated PDF
-  xmlPayload        String?  // Stored XML for AT submission
+  atResponseCode    String? // Response from AT webservice
+  pdfPath           String? // Path to generated PDF
+  xmlPayload        String? // Stored XML for AT submission
   // Situs receipt lifecycle (Migration C) — links this fiscal document back
   // to the reference-month ledger and to the lifecycle-managed Receipt that
   // triggered its emission.
   rentPeriodId      String?
   receiptId         String?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   // Relations
   user       User        @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -1550,19 +1589,19 @@ model RentReceipt {
 // export-only today. TaxSubmissionLog is the append-only record the
 // Intelligence Tax Connector dashboard (PR 10) reads.
 model TaxAuthorityConnector {
-  id              String    @id @default(cuid())
-  userId          String
-  country         String    // ISO country code: "PT", "ES", …
-  connectorKey    String    // "pt_at_recibos" | "es_aeat_info" | …
-  mode            String    @default("review") // sandbox|review|live
-  status          String    @default("active")  // active|disabled|error
+  id               String    @id @default(cuid())
+  userId           String
+  country          String // ISO country code: "PT", "ES", …
+  connectorKey     String // "pt_at_recibos" | "es_aeat_info" | …
+  mode             String    @default("review") // sandbox|review|live
+  status           String    @default("active") // active|disabled|error
   lastSubmissionAt DateTime?
-  credentialsRef  String?   // AES-256-GCM encrypted (lib/utils/pii-encryption)
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  credentialsRef   String? // AES-256-GCM encrypted (lib/utils/pii-encryption)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
-  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
-  submissionLogs  TaxSubmissionLog[]
+  user           User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  submissionLogs TaxSubmissionLog[]
 
   @@unique([userId, connectorKey])
   @@index([userId])
@@ -1573,11 +1612,11 @@ model TaxSubmissionLog {
   id           String   @id @default(cuid())
   userId       String
   connectorId  String
-  subjectType  String   // rent_receipt|modelo179|nrua|tax_filing
+  subjectType  String // rent_receipt|modelo179|nrua|tax_filing
   subjectId    String
-  action       String   // validate|submit|poll|cancel
-  mode         String   // sandbox|review|live — snapshot at call time
-  status       String   // success|error|pending
+  action       String // validate|submit|poll|cancel
+  mode         String // sandbox|review|live — snapshot at call time
+  status       String // success|error|pending
   responseCode String?
   responseBody String?
   createdAt    DateTime @default(now())
@@ -1592,11 +1631,11 @@ model TaxSubmissionLog {
 }
 
 enum RentReceiptStatus {
-  draft         // Generated but not submitted
-  submitted     // Sent to Portal das Finanças
-  accepted      // Accepted by AT
-  rejected      // Rejected by AT — needs correction
-  cancelled     // Anulado
+  draft // Generated but not submitted
+  submitted // Sent to Portal das Finanças
+  accepted // Accepted by AT
+  rejected // Rejected by AT — needs correction
+  cancelled // Anulado
 }
 
 // ========================================
@@ -1606,13 +1645,13 @@ enum RentReceiptStatus {
 
 model TaxRule {
   id            String   @id @default(cuid())
-  country       String   // "PT", "ES", "IT"
-  regime        String   // "STANDARD", "NHR", "IFICI", "AL", "RENDA_ACESSIVEL"
-  ruleType      String   // "INCOME_BRACKET", "DEDUCTIBLE_RATE", "WITHHOLDING_RATE", "FLAT_RATE"
+  country       String // "PT", "ES", "IT"
+  regime        String // "STANDARD", "NHR", "IFICI", "AL", "RENDA_ACESSIVEL"
+  ruleType      String // "INCOME_BRACKET", "DEDUCTIBLE_RATE", "WITHHOLDING_RATE", "FLAT_RATE"
   year          Int
   effectiveDate DateTime
-  payload       String   // JSON blob with the actual values
-  sourceUrl     String?  // Link to Diário da República / BOE
+  payload       String // JSON blob with the actual values
+  sourceUrl     String? // Link to Diário da República / BOE
   notes         String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -1623,16 +1662,16 @@ model TaxRule {
 }
 
 model Modelo179Submission {
-  id           String    @id @default(cuid())
-  userId       String
-  leaseId      String
-  periodYear   Int
-  status       String    @default("pending")  // "pending" | "submitted" | "confirmed" | "rejected"
-  submittedAt  DateTime?
-  atReference  String?
-  notes        String?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  id          String    @id @default(cuid())
+  userId      String
+  leaseId     String
+  periodYear  Int
+  status      String    @default("pending") // "pending" | "submitted" | "confirmed" | "rejected"
+  submittedAt DateTime?
+  atReference String?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
   lease Lease @relation(fields: [leaseId], references: [id], onDelete: Cascade)
@@ -1646,9 +1685,9 @@ model TaxFiling {
   id                String   @id @default(cuid())
   userId            String
   year              Int
-  country           String   // "PT", "ES"
-  regime            String   // "STANDARD", "NHR", "IFICI", etc.
-  propertyIds       String   // JSON array of property IDs
+  country           String // "PT", "ES"
+  regime            String // "STANDARD", "NHR", "IFICI", etc.
+  propertyIds       String // JSON array of property IDs
   grossIncome       Float
   allowableExpenses Float
   taxableIncome     Float
@@ -1657,8 +1696,8 @@ model TaxFiling {
   withholdingPaid   Float
   balanceDue        Float
   status            String   @default("draft") // "draft" | "final"
-  notes             String?  // JSON array from plugin
-  payload           String   // Full TaxCalculation JSON
+  notes             String? // JSON array from plugin
+  payload           String // Full TaxCalculation JSON
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

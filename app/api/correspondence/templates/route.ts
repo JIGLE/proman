@@ -24,6 +24,8 @@ const createTemplateSchema = z.object({
   subject: z.string().min(1).max(500),
   content: z.string().min(1).max(10000),
   variables: z.array(z.string()).default([]),
+  country: z.string().length(2).optional(),
+  locale: z.string().max(10).optional(),
 });
 
 const _updateTemplateSchema = createTemplateSchema.partial();
@@ -37,7 +39,8 @@ async function handleGet(request: NextRequest): Promise<Response> {
   if (authResult instanceof Response) return authResult;
 
   try {
-    const templates = await templateService.getAll();
+    // The caller's own templates plus the system ones — never another landlord's.
+    const templates = await templateService.getAll(authResult.userId);
     return createSuccessResponse(templates);
   } catch (error) {
     return createErrorResponse(error as Error, 500, request);
@@ -65,7 +68,7 @@ async function handlePost(request: NextRequest): Promise<Response> {
     // Validate input
     const validatedData = createTemplateSchema.parse(sanitizedBody);
 
-    const template = await templateService.create(validatedData);
+    const template = await templateService.create(authResult.userId, validatedData);
     return createSuccessResponse(template, 201);
   } catch (error) {
     if (error instanceof z.ZodError) {

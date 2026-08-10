@@ -103,7 +103,13 @@ export async function initializeDatabase(): Promise<void> {
     const templateCount = await getPrismaClient().correspondenceTemplate.count();
 
     if (templateCount === 0) {
-      // Seed initial templates
+      // Seed initial templates.
+      //
+      // userId is left unset, which means NULL, which means system-owned: readable by every user,
+      // editable by none. Landlords copy one to get an editable version of their own.
+      //
+      // Amounts carry no currency symbol — the server formats {{rent_amount}} as EUR before
+      // substitution, so a literal prefix here would render as "$1.234,50 €".
       await getPrismaClient().correspondenceTemplate.createMany({
         data: [
           {
@@ -118,7 +124,7 @@ Your lease begins on {{lease_start}} and runs through {{lease_end}}.
 
 Property Details:
 - Address: {{property_address}}
-- Monthly Rent: $\{{rent_amount}}
+- Monthly Rent: {{rent_amount}}
 - Bedrooms: {{bedrooms}}
 - Bathrooms: {{bathrooms}}
 
@@ -143,7 +149,7 @@ Property Management Team`,
             subject: "Rent Payment Due - {{property_name}}",
             content: `Dear {{tenant_name}},
 
-This is a friendly reminder that your rent payment of $\{{rent_amount}} for {{property_name}} is due on {{due_date}}.
+This is a friendly reminder that your rent payment of {{rent_amount}} for {{property_name}} is due on {{due_date}}.
 
 Please ensure payment is made by the due date to avoid any late fees.
 

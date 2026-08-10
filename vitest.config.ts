@@ -51,8 +51,8 @@ export default defineConfig({
         // notional 70% for as long as it was written that way.
         statements: 49,
         branches: 36,
-        functions: 34,
-        lines: 50,
+        functions: 35,
+        lines: 51,
       },
     },
   },

@@ -587,27 +587,37 @@ export const receiptService = {
 };
 
 // Template service
+// Signatures mirror the real service exactly — userId first — so mock mode cannot drift into
+// accepting calls the scoped implementation would reject.
 export const templateService = {
-  async getAll(): Promise<CorrespondenceTemplate[]> {
+  async getAll(_userId: string): Promise<CorrespondenceTemplate[]> {
     return [...MOCK_TEMPLATES] as unknown as CorrespondenceTemplate[];
   },
 
-  async getById(_id: string): Promise<CorrespondenceTemplate | null> {
+  async getById(_userId: string, _id: string): Promise<CorrespondenceTemplate | null> {
     return null;
   },
 
-  async create(_data: Partial<CorrespondenceTemplate>): Promise<CorrespondenceTemplate> {
+  async create(
+    _userId: string,
+    _data: Partial<CorrespondenceTemplate>,
+  ): Promise<CorrespondenceTemplate> {
     throw new Error("Cannot create templates in mock mode. Set DATABASE_URL to enable writes.");
   },
 
+  async copyForUser(_userId: string, _id: string): Promise<CorrespondenceTemplate> {
+    throw new Error("Cannot copy templates in mock mode. Set DATABASE_URL to enable writes.");
+  },
+
   async update(
+    _userId: string,
     _id: string,
     _data: Partial<CorrespondenceTemplate>,
   ): Promise<CorrespondenceTemplate> {
     throw new Error("Cannot update templates in mock mode. Set DATABASE_URL to enable writes.");
   },
 
-  async delete(_id: string): Promise<void> {
+  async delete(_userId: string, _id: string): Promise<void> {
     throw new Error("Cannot delete templates in mock mode. Set DATABASE_URL to enable writes.");
   },
 };
