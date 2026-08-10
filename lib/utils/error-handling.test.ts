@@ -208,6 +208,29 @@ describe("createErrorResponse", () => {
     const res = createErrorResponse(new ValidationError("x"));
     expect(res.headers.get("Content-Type")).toBe("application/json");
   });
+
+  // The cases above each pass a single error type with no conflicting status, so none of them
+  // pinned what happens when the two disagree. That gap let 17 call sites pass 404 alongside a
+  // ValidationError and silently answer 400 — including the tenant portal, where the client
+  // branches on `status === 401 || status === 404` to show "this link is invalid or expired"
+  // and therefore never showed it.
+  it("resolves status from the error TYPE, discarding a conflicting statusCode", async () => {
+    const res = createErrorResponse(new ValidationError("Tenant not found"), 404);
+    expect(res.status).toBe(400);
+    const body = await parseBody(res);
+    expect(body.error).toBe("Tenant not found");
+  });
+
+  it("keeps a custom message at 404 only via ResourceNotFoundError", async () => {
+    // A plain Error honours the status but throws the message away, so it is not a workaround.
+    const plain = createErrorResponse(new Error("Tenant not found"), 404);
+    expect(plain.status).toBe(404);
+    expect((await parseBody(plain)).error).toBe("Internal server error");
+
+    const typed = createErrorResponse(new ResourceNotFoundError("Tenant"), 404);
+    expect(typed.status).toBe(404);
+    expect((await parseBody(typed)).error).toBe("Tenant not found");
+  });
 });
 
 // ─── createSuccessResponse ────────────────────────────────────────────────────

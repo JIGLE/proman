@@ -16,13 +16,21 @@ export async function GET(request: NextRequest) {
 
   const { userId } = authResult;
   const url = new URL(request.url);
-  const filters = ownershipVerificationFiltersSchema.parse({
+  const parsedFilters = ownershipVerificationFiltersSchema.safeParse({
     provider: url.searchParams.get("provider") ?? undefined,
     scope: url.searchParams.get("scope") ?? undefined,
     status: url.searchParams.get("status") ?? undefined,
     propertyId: url.searchParams.get("propertyId") ?? undefined,
   });
 
+  if (!parsedFilters.success) {
+    return NextResponse.json(
+      { error: "Invalid verification filters", details: parsedFilters.error.flatten() },
+      { status: 400 },
+    );
+  }
+
+  const filters = parsedFilters.data;
   const verifications = await listOwnershipVerifications(userId, filters);
 
   await logAudit({

@@ -5,7 +5,7 @@ import { getPrismaClient } from "@/lib/services/database/database";
 import { isDemoRequest } from "@/lib/demo/demo-mode";
 import { isMockMode } from "@/lib/config/data-mode";
 import { recordProductEvent, PRODUCT_EVENT_NAMES } from "@/lib/services/analytics/product-events";
-import { createSuccessResponse, withErrorHandler } from "@/lib/utils/error-handling";
+import { createSuccessResponse, parseJsonBody, withErrorHandler } from "@/lib/utils/error-handling";
 import { withRateLimit } from "@/lib/utils/rate-limit";
 
 const eventSchema = z.object({
@@ -25,8 +25,7 @@ async function handlePost(request: NextRequest): Promise<Response> {
   if (authResult instanceof Response) return authResult;
   const { userId } = authResult;
 
-  const json = await request.json();
-  const body = eventSchema.parse(json);
+  const body = await parseJsonBody(request, eventSchema);
 
   const prisma = getPrismaClient();
   await recordProductEvent(prisma, userId, body.name, body.metadata);

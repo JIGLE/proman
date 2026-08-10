@@ -59,6 +59,23 @@ describe("Ownership verifications route", () => {
     );
   });
 
+  it("rejects an unknown filter value with 400 instead of throwing", async () => {
+    // GET had no error wrapper and no try/catch at all, so a ZodError from an unknown
+    // ?provider escaped the handler entirely. POST in this same file already guarded with
+    // safeParse; GET now matches it.
+    const request = new NextRequest(
+      "http://localhost:3000/api/ownership-verifications?provider=not-a-provider",
+    );
+
+    const response = await GET(request);
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual(
+      expect.objectContaining({ error: "Invalid verification filters" }),
+    );
+    expect(listOwnershipVerificationsMock).not.toHaveBeenCalled();
+  });
+
   it("creates a new ownership verification request for the authenticated user", async () => {
     createOwnershipVerificationMock.mockResolvedValue({
       id: "verification-1",

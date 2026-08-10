@@ -5,7 +5,7 @@
 
 import { NextRequest } from "next/server";
 import { getPrismaClient } from "@/lib/services/database/database";
-import { createErrorResponse, ValidationError } from "@/lib/utils/error-handling";
+import { ResourceNotFoundError, createErrorResponse } from "@/lib/utils/error-handling";
 import { verifyPortalToken } from "@/lib/services/auth/tenant-portal-auth";
 import { documentService } from "@/lib/services/document-service";
 
@@ -38,7 +38,7 @@ export async function GET(request: NextRequest, { params }: RouteParams): Promis
     select: { id: true },
   });
   if (!tenant) {
-    return createErrorResponse(new ValidationError("Tenant not found"), 404, request);
+    return createErrorResponse(new ResourceNotFoundError("Tenant"), 404, request);
   }
 
   // Verify document belongs to this tenant
@@ -47,7 +47,7 @@ export async function GET(request: NextRequest, { params }: RouteParams): Promis
     select: { id: true, name: true, mimeType: true },
   });
   if (!doc) {
-    return createErrorResponse(new ValidationError("Document not found"), 404, request);
+    return createErrorResponse(new ResourceNotFoundError("Document"), 404, request);
   }
 
   const file = await documentService.getFileContent(tokenData.userId, docId);

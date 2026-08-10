@@ -4,7 +4,7 @@ import { getPrismaClient } from "@/lib/services/database/database";
 import { ownerSchema } from "@/lib/schemas/owner.schema";
 import { isMockMode } from "@/lib/config/data-mode";
 import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
-import { createSuccessResponse, withErrorHandler } from "@/lib/utils/error-handling";
+import { createSuccessResponse, parseJsonBody, withErrorHandler } from "@/lib/utils/error-handling";
 import { withRateLimit } from "@/lib/utils/rate-limit";
 
 async function handleGet(request: NextRequest): Promise<Response> {
@@ -48,8 +48,7 @@ async function handlePost(request: NextRequest): Promise<Response> {
   const { userId } = authResult;
   const prisma = getPrismaClient();
 
-  const json = await request.json();
-  const body = ownerSchema.parse(json);
+  const body = await parseJsonBody(request, ownerSchema);
 
   const owner = await prisma.owner.create({
     data: {

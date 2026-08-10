@@ -6,9 +6,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPrismaClient } from "@/lib/services/database/database";
 import {
-  createSuccessResponse,
+  ResourceNotFoundError,
   createErrorResponse,
-  ValidationError,
+  createSuccessResponse,
 } from "@/lib/utils/error-handling";
 import { verifyPortalToken } from "@/lib/services/auth/tenant-portal-auth";
 
@@ -31,7 +31,7 @@ export async function GET(
     where: { id: tokenData.tenantId },
     select: { id: true, propertyId: true },
   });
-  if (!tenant) return createErrorResponse(new ValidationError("Tenant not found"), 404, request);
+  if (!tenant) return createErrorResponse(new ResourceNotFoundError("Tenant"), 404, request);
 
   const documents = await prisma.document.findMany({
     where: { tenantId: tenant.id },

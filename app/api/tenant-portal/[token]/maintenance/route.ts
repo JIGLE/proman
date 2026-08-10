@@ -8,9 +8,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod/v4";
 import { getPrismaClient } from "@/lib/services/database/database";
 import {
-  createSuccessResponse,
-  createErrorResponse,
+  ResourceNotFoundError,
   ValidationError,
+  createErrorResponse,
+  createSuccessResponse,
 } from "@/lib/utils/error-handling";
 import { verifyPortalToken } from "@/lib/services/auth/tenant-portal-auth";
 
@@ -40,7 +41,7 @@ export async function GET(
     where: { id: tokenData.tenantId },
     select: { id: true },
   });
-  if (!tenant) return createErrorResponse(new ValidationError("Tenant not found"), 404, request);
+  if (!tenant) return createErrorResponse(new ResourceNotFoundError("Tenant"), 404, request);
 
   const tickets = await prisma.maintenanceTicket.findMany({
     where: { tenantId: tenant.id },
@@ -90,7 +91,7 @@ export async function POST(
     select: { id: true, propertyId: true },
   });
   if (!tenant || !tenant.propertyId) {
-    return createErrorResponse(new ValidationError("Tenant or property not found"), 404, request);
+    return createErrorResponse(new ResourceNotFoundError("Tenant or property"), 404, request);
   }
 
   const ticket = await prisma.maintenanceTicket.create({

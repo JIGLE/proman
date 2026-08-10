@@ -3,6 +3,7 @@ import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import {
   createSuccessResponse,
   createErrorResponse,
+  parseBody,
   ValidationError,
 } from "@/lib/utils/error-handling";
 import { emailService } from "@/lib/services/email/email-service";
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
 
   try {
     const { searchParams } = new URL(request.url);
-    const query = querySchema.parse(Object.fromEntries(searchParams));
+    const query = parseBody(Object.fromEntries(searchParams), querySchema);
 
     // Get comprehensive metrics
     const [metrics, recentEmails] = await Promise.all([

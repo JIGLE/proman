@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth, handleOptions } from "@/lib/services/auth/auth-middleware";
-import { createSuccessResponse, withErrorHandler } from "@/lib/utils/error-handling";
+import { createSuccessResponse, parseBody, withErrorHandler } from "@/lib/utils/error-handling";
 import { analyticsService } from "@/lib/services/analytics-service";
 import { z } from "zod";
 
@@ -30,11 +30,14 @@ async function handleGet(request: NextRequest): Promise<Response> {
   const { userId } = authResult;
 
   const { searchParams } = new URL(request.url);
-  const params = analyticsRequestSchema.parse({
-    type: searchParams.get("type") || "dashboard",
-    months: searchParams.get("months") || 12,
-    limit: searchParams.get("limit") || 10,
-  });
+  const params = parseBody(
+    {
+      type: searchParams.get("type") || "dashboard",
+      months: searchParams.get("months") || 12,
+      limit: searchParams.get("limit") || 10,
+    },
+    analyticsRequestSchema,
+  );
 
   switch (params.type) {
     case "dashboard":

@@ -2,9 +2,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import {
-  createSuccessResponse,
-  createErrorResponse,
+  ResourceNotFoundError,
   ValidationError,
+  createErrorResponse,
+  createSuccessResponse,
 } from "@/lib/utils/error-handling";
 import { paymentService } from "@/lib/payment/payment-service";
 import { getPrismaClient } from "@/lib/services/database/database";
@@ -63,7 +64,7 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
         where: { id: tenantId, userId: authResult.userId },
       });
       if (!tenant) {
-        return createErrorResponse(new ValidationError("Tenant not found"), 404, request);
+        return createErrorResponse(new ResourceNotFoundError("Tenant"), 404, request);
       }
       where.tenantId = tenantId;
     } else {
@@ -135,7 +136,7 @@ export async function POST(request: NextRequest): Promise<Response | NextRespons
     });
 
     if (!tenant) {
-      return createErrorResponse(new ValidationError("Tenant not found"), 404, request);
+      return createErrorResponse(new ResourceNotFoundError("Tenant"), 404, request);
     }
 
     // Verify invoice if provided
@@ -144,7 +145,7 @@ export async function POST(request: NextRequest): Promise<Response | NextRespons
         where: { id: validated.invoiceId, tenantId: validated.tenantId },
       });
       if (!invoice) {
-        return createErrorResponse(new ValidationError("Invoice not found"), 404, request);
+        return createErrorResponse(new ResourceNotFoundError("Invoice"), 404, request);
       }
     }
 

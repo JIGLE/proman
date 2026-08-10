@@ -36,7 +36,7 @@ owner-contact callout, and portfolio building grouping remain in place underneat
 - **Monitoring**: Health endpoints (owner-gated), Prometheus-compatible `/api/metrics`
 - **Compliance**: GDPR audit logging, Iberian tax compliance (PT/ES), admin data-access audit trail
 - **Internationalization**: next-intl with PT, EN, ES locale support
-- **Testing**: Vitest unit/integration suite (93%+ coverage), Playwright E2E suite, CI quality gates (`--max-warnings=0`)
+- **Testing**: Vitest unit/integration suite (~50% line coverage, enforced as a ratchet), Playwright E2E suite, CI quality gates (`--max-warnings=0`)
 - **Security**: CSP with nonces, input sanitization, rate limiting, timing-safe auth comparisons
 - **Infrastructure**: Dockerized for TrueNAS SCALE, standalone Next.js output, SQLite, Helm chart
 

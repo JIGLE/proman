@@ -14,7 +14,8 @@ optimization; coherence and scale last. Do not start a later milestone's work be
 earlier milestone's exit criteria are met, unless explicitly parallel-safe (noted).
 
 **Definition of done (every item).** Meets the CI gates (`npm run verify:ci`:
-type-check + `lint --max-warnings=0` + tests, 93%+ coverage) **and**, for any change
+type-check + `lint --max-warnings=0` + tests, coverage at or above the ratchet in
+`vitest.config.ts`) **and**, for any change
 touching UI/CSS/tokens/docs, the `docs/DESIGN_AWARD.md` bar (all-theme check + a
 `npm run build`/dev-server render, since Tailwind CSS errors don't surface in
 type-check/lint/tests). One finding = one commit.
