@@ -6,9 +6,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPrismaClient } from "@/lib/services/database/database";
 import {
-  createSuccessResponse,
-  createErrorResponse,
+  ResourceNotFoundError,
   ValidationError,
+  createErrorResponse,
+  createSuccessResponse,
 } from "@/lib/utils/error-handling";
 import { verifyPortalToken } from "@/lib/services/auth/tenant-portal-auth";
 import { paymentService } from "@/lib/payment/payment-service";
@@ -69,7 +70,7 @@ export async function POST(
     });
 
     if (!tenant) {
-      return createErrorResponse(new ValidationError("Tenant not found"), 404, request);
+      return createErrorResponse(new ResourceNotFoundError("Tenant"), 404, request);
     }
 
     // Verify invoice belongs to tenant
@@ -82,11 +83,7 @@ export async function POST(
     });
 
     if (!invoice) {
-      return createErrorResponse(
-        new ValidationError("Invoice not found or already paid"),
-        404,
-        request,
-      );
+      return createErrorResponse(new ResourceNotFoundError("Invoice"), 404, request);
     }
 
     // Determine region from property address or default

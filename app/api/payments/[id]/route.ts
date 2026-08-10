@@ -2,9 +2,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import {
-  createSuccessResponse,
+  ResourceNotFoundError,
   createErrorResponse,
-  ValidationError,
+  createSuccessResponse,
 } from "@/lib/utils/error-handling";
 import { getPrismaClient } from "@/lib/services/database/database";
 import type { PrismaClient } from "@prisma/client";
@@ -43,12 +43,12 @@ export async function GET(
     });
 
     if (!transaction) {
-      return createErrorResponse(new ValidationError("Transaction not found"), 404, request);
+      return createErrorResponse(new ResourceNotFoundError("Transaction"), 404, request);
     }
 
     // Verify ownership
     if (transaction.tenant.userId !== authResult.userId) {
-      return createErrorResponse(new ValidationError("Transaction not found"), 404, request);
+      return createErrorResponse(new ResourceNotFoundError("Transaction"), 404, request);
     }
 
     return createSuccessResponse(transaction);
