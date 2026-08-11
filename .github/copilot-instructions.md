@@ -1,4 +1,4 @@
-# Copilot Instructions for proman
+# Copilot Instructions for situs
 
 ## 1. Core Technologies
 

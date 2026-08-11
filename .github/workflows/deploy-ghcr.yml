@@ -36,11 +36,11 @@ on:
       kube_deployment:
         description: "Kubernetes deployment name to update"
         required: false
-        default: "proman"
+        default: "situs"
       kube_container:
         description: "Container name inside the deployment to update"
         required: false
-        default: "proman"
+        default: "situs"
 
 permissions:
   contents: read
@@ -134,7 +134,7 @@ jobs:
           push: ${{ steps.vars.outputs.dry_run != 'true' }}
           tags: ${{ steps.vars.outputs.tags }}
           labels: |
-            org.opencontainers.image.title=Proman
+            org.opencontainers.image.title=Situs
             org.opencontainers.image.description=Property Management System
             org.opencontainers.image.version=${{ steps.vars.outputs.version }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
@@ -191,7 +191,7 @@ jobs:
           chmod 600 kubeconfig
           echo "Updating deployment $DEPLOYMENT in namespace $NAMESPACE to image $IMAGE (container: $CONTAINER)"
           kubectl --kubeconfig=kubeconfig -n "$NAMESPACE" set image deployment/$DEPLOYMENT $CONTAINER="$IMAGE"
-          kubectl --kubeconfig=kubeconfig -n "$NAMESPACE" annotate deployment/$DEPLOYMENT proman.image="$IMAGE" proman.digest="${{ steps.build-push.outputs.digest }}" --overwrite || true
+          kubectl --kubeconfig=kubeconfig -n "$NAMESPACE" annotate deployment/$DEPLOYMENT situs.image="$IMAGE" situs.digest="${{ steps.build-push.outputs.digest }}" --overwrite || true
 
           # Wait for rollout to finish
           echo "Waiting for rollout to complete..."

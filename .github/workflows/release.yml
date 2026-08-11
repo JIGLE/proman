@@ -117,11 +117,11 @@ jobs:
           NEW_VER="${{ steps.version.outputs.new_version }}"
 
           # Helm Chart.yaml — field-anchored patterns
-          sed -i "s/^version: .*/version: ${NEW_VER}/" helm/proman/Chart.yaml
-          sed -i "s/^appVersion: .*/appVersion: \"${NEW_VER}\"/" helm/proman/Chart.yaml
-          CHART_VER=$(grep '^version:' helm/proman/Chart.yaml | awk '{print $2}')
+          sed -i "s/^version: .*/version: ${NEW_VER}/" helm/situs/Chart.yaml
+          sed -i "s/^appVersion: .*/appVersion: \"${NEW_VER}\"/" helm/situs/Chart.yaml
+          CHART_VER=$(grep '^version:' helm/situs/Chart.yaml | awk '{print $2}')
           if [ "$CHART_VER" != "$NEW_VER" ]; then
-            echo "::error::helm/proman/Chart.yaml version update failed (got: '$CHART_VER', expected: '$NEW_VER')"
+            echo "::error::helm/situs/Chart.yaml version update failed (got: '$CHART_VER', expected: '$NEW_VER')"
             exit 1
           fi
 
@@ -175,7 +175,7 @@ jobs:
         run: |
           BRANCH="release/v${{ steps.version.outputs.new_version }}"
           git checkout -b "$BRANCH"
-          git add package.json package-lock.json helm/proman/Chart.yaml item.yaml docker-compose.yml
+          git add package.json package-lock.json helm/situs/Chart.yaml item.yaml docker-compose.yml
           git commit -m "chore(release): bump version to ${{ steps.version.outputs.new_version }}"
           # Feature branches aren't protected — GITHUB_TOKEN can push. Force so re-runs work.
           git push --force origin "$BRANCH"
@@ -306,7 +306,7 @@ jobs:
         if: steps.gate.outputs.should_release == 'true'
         run: |
           mkdir -p release-charts
-          helm package helm/proman -d release-charts
+          helm package helm/situs -d release-charts
           OWNER=${GITHUB_REPOSITORY%%/*}
           REPO=${GITHUB_REPOSITORY##*/}
           # The --url must match where the charts are actually served, which is the ROOT of
@@ -363,8 +363,8 @@ jobs:
               version: process.env.NEW_VERSION,
               deploy_k8s: 'false',
               kube_namespace: 'ix-app',
-              kube_deployment: 'proman',
-              kube_container: 'proman'
+              kube_deployment: 'situs',
+              kube_container: 'situs'
             }
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
