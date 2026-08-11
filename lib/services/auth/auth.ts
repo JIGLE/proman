@@ -78,7 +78,7 @@ function createBaseAuthOptions(): NextAuthOptions {
           password: { label: "Password", type: "password" },
         },
         async authorize(credentials: { email?: string; password?: string } | undefined) {
-          if (credentials?.email === "demo@proman.local" && credentials?.password === "demo123") {
+          if (credentials?.email === "demo@situs.local" && credentials?.password === "demo123") {
             // In mock mode, return a stable demo user without DB access
             if (isMockMode) {
               logger.debug("Demo auth successful (mock mode)");

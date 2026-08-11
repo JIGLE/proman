@@ -22,7 +22,7 @@ import { chromium } from "playwright";
 const BASE = process.env.AUDIT_BASE_URL ?? "http://localhost:3000";
 /** Empty means "let Playwright resolve its own install" — see the note in mobile-audit.mjs. */
 const EXECUTABLE = process.env.PLAYWRIGHT_CHROMIUM ?? "";
-const EMAIL = process.env.E2E_USER_EMAIL ?? "demo@proman.local";
+const EMAIL = process.env.E2E_USER_EMAIL ?? "demo@situs.local";
 const PASSWORD = process.env.E2E_USER_PASSWORD ?? "demo123";
 const LOCALES = ["en", "pt", "es", "it"];
 

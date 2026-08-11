@@ -36,7 +36,7 @@ describe("Sidebar", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     // Ensure no persisted collapsed state by default
-    window.localStorage.removeItem("proman.sidebar.collapsed");
+    window.localStorage.removeItem("situs.sidebar.collapsed");
   });
 
   it("renders menu and calls onTabChange when button clicked", async () => {
@@ -63,7 +63,7 @@ describe("Sidebar", () => {
 
   it("hides labels when collapsed and shows header toggle", async () => {
     // Persist collapsed state so the component mounts collapsed
-    window.localStorage.setItem("proman.sidebar.collapsed", "true");
+    window.localStorage.setItem("situs.sidebar.collapsed", "true");
     let queryByText: (text: string) => HTMLElement | null;
     let getByLabelText: (text: string) => HTMLElement;
     await act(async () => {
@@ -81,7 +81,7 @@ describe("Sidebar", () => {
   });
 
   it("shows labels when expanded and username is visible", async () => {
-    window.localStorage.setItem("proman.sidebar.collapsed", "false");
+    window.localStorage.setItem("situs.sidebar.collapsed", "false");
     let getByText: (text: string) => HTMLElement;
     let getByLabelText: (text: RegExp | string) => HTMLElement;
     await act(async () => {

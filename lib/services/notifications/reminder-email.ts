@@ -121,7 +121,7 @@ export async function sendReminderEmail(
     const result = await emailService.sendEmail(
       {
         to: ctx.email,
-        from: process.env.FROM_EMAIL || "noreply@proman.app",
+        from: process.env.FROM_EMAIL || "noreply@situs.app",
         subject,
         html,
         text: `${body}\n\n${footer}`,

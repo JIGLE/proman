@@ -1,15 +1,15 @@
 # Project Structure
 
-This document provides a comprehensive overview of the ProMan project structure and organization.
+This document provides a comprehensive overview of the Situs project structure and organization.
 
 ## Repository Overview
 
-ProMan follows Next.js 16 App Router conventions with feature-based organization, co-located tests, and barrel exports for clean imports.
+Situs follows Next.js 16 App Router conventions with feature-based organization, co-located tests, and barrel exports for clean imports.
 
 ## Directory Structure
 
 ```
-proman/
+situs/
 ├── app/                          # Next.js App Router
 │   ├── [locale]/                 # Internationalized routes
 │   │   ├── (main)/              # Main app route group
@@ -353,7 +353,7 @@ Required environment variables:
 
 ```env
 # Database
-DATABASE_URL=file:./proman.db
+DATABASE_URL=file:./situs.db
 
 # Authentication
 NEXTAUTH_SECRET=your-secret-here
@@ -375,8 +375,8 @@ STRIPE_WEBHOOK_SECRET=your-webhook-secret
 ### Docker
 
 ```bash
-docker build -t proman .
-docker run -p 3000:3000 proman
+docker build -t situs .
+docker run -p 3000:3000 situs
 ```
 
 ### Kubernetes
@@ -412,4 +412,4 @@ Proprietary - All Rights Reserved. See [LICENSE](../LICENSE)
 
 ---
 
-**ProMan** - Modern Property Management for the Self-Hosted Era
+**Situs** - Modern Property Management for the Self-Hosted Era

@@ -1,21 +1,21 @@
-# Deploying Proman on TrueNAS SCALE
+# Deploying Situs on TrueNAS SCALE
 
-This guide describes how to deploy Proman as a **Custom App** on TrueNAS SCALE. This is the recommended way to ensure persistence and correct configuration.
+This guide describes how to deploy Situs as a **Custom App** on TrueNAS SCALE. This is the recommended way to ensure persistence and correct configuration.
 
 ## Prerequisites
 
 - A TrueNAS SCALE server with Apps service configured.
-- A dataset created for Proman's data (e.g., `/mnt/tank/apps/proman/data`).
+- A dataset created for Situs's data (e.g., `/mnt/tank/apps/situs/data`).
 
 ## Step 1: Create a Custom App
 
 1. Go to **Apps** -> **Discover Apps** -> **Custom App**.
-2. **Application Name**: `proman`
+2. **Application Name**: `situs`
 3. **App Icon URL**: (Optional) You can use a URL to a professional icon to make it look great in your dashboard.
 
 ## Step 2: Container Configuration
 
-1. **Image Repository**: `ghcr.io/jigle/proman`
+1. **Image Repository**: `ghcr.io/jigle/situs`
 2. **Image Tag**: `latest`
 3. **Container Port**: `3000`
 4. **App Version**: Set this to `0.2.0` in the UI to match the current code.
@@ -26,7 +26,7 @@ Add the following mandatory variables:
 
 - `NEXTAUTH_URL`: `http://<YOUR_TRUENAS_IP>` (e.g., `http://192.168.1.100:30080`)
 - `NEXTAUTH_SECRET`: Generate a long random string (e.g., `openssl rand -base64 32`)
-- `DATABASE_URL`: `file:/data/proman.sqlite`
+- `DATABASE_URL`: `file:/data/situs.sqlite`
 - `NODE_ENV`: `production`
 
 ## Step 4: Networking
@@ -38,7 +38,7 @@ Add the following mandatory variables:
 ## Step 5: Storage (Host Path)
 
 1. Add a **Host Path Volume**:
-   - **Host Path**: `/mnt/your-pool/apps/proman/data` (Your created dataset)
+   - **Host Path**: `/mnt/your-pool/apps/situs/data` (Your created dataset)
    - **Mount Path**: `/data`
    - **Read Only**: Unchecked
 
@@ -46,7 +46,7 @@ Add the following mandatory variables:
 
 After the app starts for the first time, it will automatically initialize the database schema. If you encounter errors like "Missing tables", you can manually trigger an initialization:
 
-1. Open the **Shell** for the Proman pod in TrueNAS UI.
+1. Open the **Shell** for the Situs pod in TrueNAS UI.
 2. Run: `npx prisma db push && npx prisma generate`
 
 ---

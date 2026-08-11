@@ -1,14 +1,14 @@
-# TrueNAS SCALE — Custom App / Helm notes for ProMan
+# TrueNAS SCALE — Custom App / Helm notes for Situs
 
 ## Overview
 
-This file contains quick instructions and recommended Helm values to deploy ProMan on TrueNAS SCALE.
+This file contains quick instructions and recommended Helm values to deploy Situs on TrueNAS SCALE.
 TrueNAS SCALE commonly uses NodePort services and hostPath mounts for app storage when running single-node apps.
 
 ## Quick steps (recommended)
 
-1. Edit `helm/proman/values-truenas.yaml`:
-   - Replace `<POOL_NAME>` with your TrueNAS pool, e.g. `/mnt/pools/tank/apps/proman/data`.
+1. Edit `helm/situs/values-truenas.yaml`:
+   - Replace `<POOL_NAME>` with your TrueNAS pool, e.g. `/mnt/pools/tank/apps/situs/data`.
    - Replace `<TRUENAS_IP_OR_HOSTNAME>` and set a secure `NEXTAUTH_SECRET`.
 
 2. (Optional) Adjust `nodePort` if `30080` is already used on your cluster.
@@ -16,7 +16,7 @@ TrueNAS SCALE commonly uses NodePort services and hostPath mounts for app storag
 3. Install with Helm from the machine that can reach the cluster (or use TrueNAS UI "Custom App" with the chart):
 
 ```bash
-helm upgrade --install proman ./helm/proman -f helm/proman/values-truenas.yaml --namespace proman --create-namespace
+helm upgrade --install situs ./helm/situs -f helm/situs/values-truenas.yaml --namespace situs --create-namespace
 ```
 
 ## Access
@@ -27,8 +27,8 @@ helm upgrade --install proman ./helm/proman -f helm/proman/values-truenas.yaml -
 
 ## Database / Persistence
 
-- The example uses SQLite via a hostPath file at `/app/data/proman.db` inside the container (mounted from TrueNAS hostPath).
-- HostPath setup example (values): `hostPath: /mnt/pools/<POOL_NAME>/apps/proman/data` (mounted to `/app/data` inside the pod)
+- The example uses SQLite via a hostPath file at `/app/data/situs.db` inside the container (mounted from TrueNAS hostPath).
+- HostPath setup example (values): `hostPath: /mnt/pools/<POOL_NAME>/apps/situs/data` (mounted to `/app/data` inside the pod)
 - Important: `hostPath` is suitable for single-node installs, but not for multi-node HA. If you need durability across node restarts or scheduling, use a TrueNAS CSI-backed PVC (if available) and set `persistence.storageClass`.
 
 Note: the Helm chart includes a post-install/post-upgrade Job that will run Prisma initialization (`npx prisma db push && npx prisma generate`) automatically when `persistence.enabled` is true and a PVC is available. This ensures the schema (including `users`) is created on install or upgrade.
@@ -51,5 +51,5 @@ Note: the Helm chart includes a post-install/post-upgrade Job that will run Pris
 
 ## Troubleshooting
 
-- Logs: `kubectl -n proman logs -l app.kubernetes.io/name=proman`
+- Logs: `kubectl -n situs logs -l app.kubernetes.io/name=situs`
 - Health endpoint: `GET /api/health` should return JSON status.

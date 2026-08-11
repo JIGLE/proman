@@ -391,7 +391,7 @@ import { createPropertySchema, updateTenantSchema } from "@/schemas";
 
 ## 🙏 Thank You!
 
-This reorganization represents a comprehensive improvement to the ProMan codebase:
+This reorganization represents a comprehensive improvement to the Situs codebase:
 
 - **Better structure** for current and future development
 - **Clearer patterns** for team collaboration

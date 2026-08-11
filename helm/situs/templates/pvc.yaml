@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: {{ include "proman.fullname" . }}-pvc
+  name: {{ include "situs.fullname" . }}-pvc
   labels:
-    {{- include "proman.labels" . | nindent 4 }}
+    {{- include "situs.labels" . | nindent 4 }}
 spec:
   accessModes:
     - {{ .Values.persistence.accessMode }}

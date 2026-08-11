@@ -1,4 +1,4 @@
-# Contributing to Proman
+# Contributing to Situs
 
 ## Branch Strategy
 
@@ -35,13 +35,13 @@
 
 Five GitHub Actions workflows protect the repository:
 
-| Workflow            | File                | Trigger                                    | Validates                                                                     |
-| ------------------- | ------------------- | ------------------------------------------ | ----------------------------------------------------------------------------- |
-| **CI**              | `ci.yml`            | Push to `main`/`develop`/`feature/**`; PRs | Lint, type-check, unit tests, build, smoke tests                              |
-| **Production Gate** | `production.yml`    | Push to `main`                             | Lint, type-check, unit tests with coverage, production build                  |
-| **Security Scan**   | `security-scan.yml` | Push to `main`; PRs; daily 02:00 UTC       | npm audit, custom security scan, CodeQL analysis, TruffleHog secret scan      |
-| **Deploy to GHCR**  | `deploy-ghcr.yml`   | Git tag `v*`; manual dispatch              | Docker multi-platform build, push to `ghcr.io/jigle/proman`, SBOM attestation |
-| **Release**         | `release.yml`       | Manual dispatch                            | Bumps `package.json`, creates Git tag and GitHub Release                      |
+| Workflow            | File                | Trigger                                    | Validates                                                                    |
+| ------------------- | ------------------- | ------------------------------------------ | ---------------------------------------------------------------------------- |
+| **CI**              | `ci.yml`            | Push to `main`/`develop`/`feature/**`; PRs | Lint, type-check, unit tests, build, smoke tests                             |
+| **Production Gate** | `production.yml`    | Push to `main`                             | Lint, type-check, unit tests with coverage, production build                 |
+| **Security Scan**   | `security-scan.yml` | Push to `main`; PRs; daily 02:00 UTC       | npm audit, custom security scan, CodeQL analysis, TruffleHog secret scan     |
+| **Deploy to GHCR**  | `deploy-ghcr.yml`   | Git tag `v*`; manual dispatch              | Docker multi-platform build, push to `ghcr.io/jigle/situs`, SBOM attestation |
+| **Release**         | `release.yml`       | Manual dispatch                            | Bumps `package.json`, creates Git tag and GitHub Release                     |
 
 The **Production Gate** and **Security Scan** run on every push to `main`. Both must pass before cutting a release tag.
 
@@ -258,7 +258,7 @@ Release and webhook notes
 
 Thanks for contributing — open an issue or a PR if you need help with the process.
 
-# Contributing to Proman
+# Contributing to Situs
 
 ## Development Workflow
 
@@ -375,7 +375,7 @@ npx tsc --noEmit
 npm run lint
 
 # Build Docker image
-docker build -t proman:local .
+docker build -t situs:local .
 ```
 
 ### Testing

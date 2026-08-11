@@ -36,7 +36,7 @@ export default function DemoPage() {
         if (perspective === "tenant") {
           setDemoTenantClient(tenantId);
         }
-        sessionStorage.setItem("proman_demo", "1");
+        sessionStorage.setItem("situs_demo", "1");
 
         // Step 2: Fire-and-forget server-side cookie as backup
         fetch("/api/demo/init", { method: "POST", headers: csrfHeaders() }).catch(() => {
@@ -45,7 +45,7 @@ export default function DemoPage() {
 
         if (cancelled) return;
 
-        window.dispatchEvent(new Event("proman:demo-mode-changed"));
+        window.dispatchEvent(new Event("situs:demo-mode-changed"));
 
         // Step 3: Redirect to dashboard — no NextAuth sign-in needed
         setStatus("redirecting");

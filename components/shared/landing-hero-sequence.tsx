@@ -224,7 +224,7 @@ export function LandingHeroSequence({ locale }: Props): React.ReactElement {
 
   function switchLocale(newLocale: Locale) {
     if (newLocale === locale) return;
-    document.cookie = `proman-locale=${newLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    document.cookie = `situs-locale=${newLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
     const segments = pathname.split("/");
     segments[1] = newLocale;
     router.push(segments.join("/") || `/${newLocale}`);

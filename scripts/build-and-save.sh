@@ -2,8 +2,8 @@
 set -euo pipefail
 
 # Build the production image and save it to a tarball for import into TrueNAS SCALE
-IMAGE_NAME=${1:-proman:local}
-OUT=${2:-proman_local_image.tar}
+IMAGE_NAME=${1:-situs:local}
+OUT=${2:-situs_local_image.tar}
 
 echo "Building image ${IMAGE_NAME}..."
 docker build -t "${IMAGE_NAME}" .

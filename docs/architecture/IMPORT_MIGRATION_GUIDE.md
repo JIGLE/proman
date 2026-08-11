@@ -546,7 +546,7 @@ import { Button } from "@/components/ui/button";
 
 Contact the development team via:
 
-- Slack: #proman-dev
+- Slack: #situs-dev
 - Email: dev-team@example.com
 
 **Last Updated**: February 1, 2026

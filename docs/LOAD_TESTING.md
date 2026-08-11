@@ -2,7 +2,7 @@
 
 ## Overview
 
-Comprehensive load testing infrastructure for ProMan using Artillery, enabling performance validation under realistic production-like conditions.
+Comprehensive load testing infrastructure for Situs using Artillery, enabling performance validation under realistic production-like conditions.
 
 **Implementation Date**: February 4, 2026  
 **Status**: ✅ Complete
@@ -88,13 +88,13 @@ npm run load:smoke
 npm run load:test
 
 # Custom target
-TARGET_URL=https://staging.proman.com npm run load:test
+TARGET_URL=https://staging.situs.com npm run load:test
 ```
 
 **Output Example**:
 
 ```
-🚀 ProMan Load Testing Suite
+🚀 Situs Load Testing Suite
 Target: http://localhost:3000
 Test Type: full
 
@@ -162,7 +162,7 @@ npm run load:stress
 **Output Example**:
 
 ```
-💪 ProMan Stress Testing
+💪 Situs Stress Testing
 Target: http://localhost:3000
 Finding system breaking points...
 
@@ -313,10 +313,10 @@ Purpose: Find system breaking points
 
 ```bash
 # Test against staging environment
-TARGET_URL=https://staging.proman.com npm run load:test
+TARGET_URL=https://staging.situs.com npm run load:test
 
 # Test against production (use with caution!)
-TARGET_URL=https://proman.com npm run load:test
+TARGET_URL=https://situs.com npm run load:test
 ```
 
 ---
@@ -690,7 +690,7 @@ on:
       target_url:
         description: "Target URL to test"
         required: true
-        default: "https://staging.proman.com"
+        default: "https://staging.situs.com"
 
 jobs:
   load-test:

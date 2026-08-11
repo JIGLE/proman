@@ -37,7 +37,14 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 const MODE_STORAGE_KEY = "situs-mode";
 const COUNTRY_STORAGE_KEY = "situs-country";
-/** Pre-rebrand key — read once for migration, then superseded. */
+/**
+ * Pre-rebrand key — read once for migration, then superseded.
+ *
+ * Deliberately NOT renamed with the rest of the proman→situs sweep. This constant does not name
+ * the product; it names the key already sitting in existing browsers' localStorage. Renaming it
+ * would point the migration at a key that has never existed, silently turning it into dead code
+ * and dropping the theme preference of everyone it was written to rescue.
+ */
 const LEGACY_THEME_STORAGE_KEY = "proman-theme";
 
 /** Map pre-Situs theme names (light/dark/dark-oled) onto the two Situs modes. */

@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "proman.fullname" . }}
+  name: {{ include "situs.fullname" . }}
   {{- if .Chart.AppVersion }}
   annotations:
     app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
-    proman.image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+    situs.image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
   {{- end }}
   labels:
-    {{- include "proman.labels" . | nindent 4 }}
+    {{- include "situs.labels" . | nindent 4 }}
 spec:
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -19,25 +19,25 @@ spec:
     type: Recreate
   selector:
     matchLabels:
-      {{- include "proman.selectorLabels" . | nindent 6 }}
+      {{- include "situs.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
         {{- if .Chart.AppVersion }}
         app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
         {{- end }}
-        proman.image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+        situs.image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
       {{- with .Values.podAnnotations }}
       {{- toYaml . | nindent 8 }}
       {{- end }}
       labels:
-        {{- include "proman.selectorLabels" . | nindent 8 }}
+        {{- include "situs.selectorLabels" . | nindent 8 }}
     spec:
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "proman.serviceAccountName" . }}
+      serviceAccountName: {{ include "situs.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       # Init container runs prisma db push before the main container starts.
@@ -52,7 +52,7 @@ spec:
             - -c
             - npx prisma db push --schema=prisma/schema.prisma --accept-data-loss
           env:
-            {{- include "proman.env" . | nindent 12 }}
+            {{- include "situs.env" . | nindent 12 }}
           {{- if .Values.persistence.enabled }}
           volumeMounts:
             - name: data
@@ -69,7 +69,7 @@ spec:
               containerPort: 3000
               protocol: TCP
           env:
-            {{- include "proman.env" . | nindent 12 }}
+            {{- include "situs.env" . | nindent 12 }}
           startupProbe:
             httpGet:
               path: /api/ready
@@ -107,7 +107,7 @@ spec:
             path: {{ .Values.persistence.hostPath }}
           {{- else }}
           persistentVolumeClaim:
-            claimName: {{ include "proman.fullname" . }}-pvc
+            claimName: {{ include "situs.fullname" . }}-pvc
           {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}

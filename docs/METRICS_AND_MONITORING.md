@@ -1,10 +1,10 @@
 # Metrics & Monitoring Guide
 
-This document describes how to instrument and monitor ProMan in production.
+This document describes how to instrument and monitor Situs in production.
 
 ## Structured Logging
 
-ProMan includes a structured JSON logger at `lib/utils/logger.ts`.
+Situs includes a structured JSON logger at `lib/utils/logger.ts`.
 
 ### Configuration
 
@@ -41,7 +41,7 @@ reqLogger.info("Processing payment"); // includes requestId & userId
 
 ## Graceful Shutdown
 
-ProMan includes a shutdown handler at `lib/utils/graceful-shutdown.ts` for custom server setups.
+Situs includes a shutdown handler at `lib/utils/graceful-shutdown.ts` for custom server setups.
 
 ```typescript
 import { registerShutdownHandlers, onShutdown } from "@/lib/utils/graceful-shutdown";
@@ -70,17 +70,17 @@ npm install prom-client
 import client from "prom-client";
 
 // Collect default Node.js metrics (CPU, memory, event loop)
-client.collectDefaultMetrics({ prefix: "proman_" });
+client.collectDefaultMetrics({ prefix: "situs_" });
 
 // Custom counters
 export const httpRequestsTotal = new client.Counter({
-  name: "proman_http_requests_total",
+  name: "situs_http_requests_total",
   help: "Total HTTP requests",
   labelNames: ["method", "path", "status"],
 });
 
 export const httpRequestDuration = new client.Histogram({
-  name: "proman_http_request_duration_seconds",
+  name: "situs_http_request_duration_seconds",
   help: "HTTP request duration in seconds",
   labelNames: ["method", "path", "status"],
   buckets: [0.01, 0.05, 0.1, 0.5, 1, 5],
@@ -107,18 +107,18 @@ export async function GET() {
 
 ```yaml
 groups:
-  - name: proman
+  - name: situs
     rules:
       - alert: HighErrorRate
-        expr: rate(proman_http_requests_total{status=~"5.."}[5m]) > 0.1
+        expr: rate(situs_http_requests_total{status=~"5.."}[5m]) > 0.1
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "High 5xx error rate on ProMan"
+          summary: "High 5xx error rate on Situs"
 
       - alert: SlowResponses
-        expr: histogram_quantile(0.95, rate(proman_http_request_duration_seconds_bucket[5m])) > 2
+        expr: histogram_quantile(0.95, rate(situs_http_request_duration_seconds_bucket[5m])) > 2
         for: 10m
         labels:
           severity: warning
@@ -128,10 +128,10 @@ groups:
 
 ### Grafana dashboard
 
-Import a standard Node.js dashboard (e.g., Grafana ID `11159`) and add ProMan-specific panels for:
+Import a standard Node.js dashboard (e.g., Grafana ID `11159`) and add Situs-specific panels for:
 
-- `proman_http_requests_total` (rate by status code)
-- `proman_http_request_duration_seconds` (latency percentiles)
+- `situs_http_requests_total` (rate by status code)
+- `situs_http_request_duration_seconds` (latency percentiles)
 - Default Node.js metrics (heap, CPU, event loop lag)
 
 ## Centralized Logging
@@ -149,5 +149,5 @@ Example k8s annotation for Datadog:
 ```yaml
 metadata:
   annotations:
-    ad.datadoghq.com/proman.logs: '[{"source":"nodejs","service":"proman"}]'
+    ad.datadoghq.com/situs.logs: '[{"source":"nodejs","service":"situs"}]'
 ```

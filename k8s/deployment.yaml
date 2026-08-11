@@ -1,22 +1,22 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: proman
+  name: situs
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: proman
+      app: situs
   template:
     metadata:
       labels:
-        app: proman
+        app: situs
     spec:
       securityContext:
         fsGroup: 1001
       containers:
-        - name: proman
-          image: ghcr.io/jigle/proman:<version> # use a specific tag (avoid latest)
+        - name: situs
+          image: ghcr.io/jigle/situs:<version> # use a specific tag (avoid latest)
           imagePullPolicy: IfNotPresent
           env:
             - name: NODE_ENV
@@ -30,22 +30,22 @@ spec:
             - name: NEXTAUTH_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: proman-secrets
+                  name: situs-secrets
                   key: NEXTAUTH_SECRET
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
-                  name: proman-secrets
+                  name: situs-secrets
                   key: DATABASE_URL
             - name: SENDGRID_API_KEY
               valueFrom:
                 secretKeyRef:
-                  name: proman-secrets
+                  name: situs-secrets
                   key: SENDGRID_API_KEY
             - name: INIT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: proman-secrets
+                  name: situs-secrets
                   key: INIT_SECRET
           ports:
             - containerPort: 3000
@@ -81,9 +81,9 @@ spec:
               cpu: 500m
               memory: 512Mi
           volumeMounts:
-            - name: proman-data
+            - name: situs-data
               mountPath: /app/data
       volumes:
-        - name: proman-data
+        - name: situs-data
           persistentVolumeClaim:
-            claimName: proman-data
+            claimName: situs-data

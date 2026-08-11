@@ -154,10 +154,10 @@ export default async function TermsPage({ params }: Props) {
             <p className="text-zinc-400">
               For any questions about these terms, contact us at{" "}
               <a
-                href="mailto:legal@proman.app"
+                href="mailto:legal@situs.app"
                 className="text-indigo-400 underline-offset-4 hover:underline"
               >
-                legal@proman.app
+                legal@situs.app
               </a>
               .
             </p>

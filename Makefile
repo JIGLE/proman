@@ -11,7 +11,7 @@ verify: build
 	npm run verify:no-native
 
 docker-build:
-	docker buildx create --use --name proman-builder || true
-	docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/jigle/proman:latest -t ghcr.io/jigle/proman:$(shell git rev-parse --short HEAD) --push .
+	docker buildx create --use --name situs-builder || true
+	docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/jigle/situs:latest -t ghcr.io/jigle/situs:$(shell git rev-parse --short HEAD) --push .
 
 push: docker-build

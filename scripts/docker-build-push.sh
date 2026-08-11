@@ -3,5 +3,5 @@ set -euo pipefail
 
 TAG=${1:-latest}
 
-docker buildx create --use --name proman-builder || true
-docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/jigle/proman:${TAG} --push .
+docker buildx create --use --name situs-builder || true
+docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/jigle/situs:${TAG} --push .

@@ -117,7 +117,7 @@ function AuthContent({ mode, demoLoginEnabled }: { mode: AuthMode; demoLoginEnab
   const t = useTranslations("auth");
   const tMode = useTranslations(mode === "signin" ? "auth.signin" : "auth.signup");
 
-  // Resolved by the auth layout from the `proman-locale` cookie, so the language selector on
+  // Resolved by the auth layout from the `situs-locale` cookie, so the language selector on
   // this page also decides which locale the viewer lands in after signing in. The previous
   // `detectLocale()` sniffed the referrer and `navigator.language` against a hardcoded
   // ["pt","en","es"] list that omitted Italian, stranding `it` users on `/pt/dashboard`.

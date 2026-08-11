@@ -1,11 +1,11 @@
 # Kubectl diagnostics helper for TrueNAS/ix-app
 # Run this on a machine that has kubectl configured (TrueNAS Shell or local kubeconfig).
-# Usage: .\kubectl-diagnostics.ps1 -Namespace ix-app -Deployment proman
+# Usage: .\kubectl-diagnostics.ps1 -Namespace ix-app -Deployment situs
 
 param(
   [string]$Namespace = 'ix-app',
-  [string]$Deployment = 'proman',
-  [string]$Container = 'proman'
+  [string]$Deployment = 'situs',
+  [string]$Container = 'situs'
 )
 
 Write-Host "Namespace: $Namespace" -ForegroundColor Cyan

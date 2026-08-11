@@ -1,6 +1,6 @@
 # Accessibility Testing Guide
 
-This document describes how to add and run automated accessibility checks in ProMan.
+This document describes how to add and run automated accessibility checks in Situs.
 
 ## Automated Axe Checks in Playwright
 

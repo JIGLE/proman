@@ -31,7 +31,7 @@ export default function manifest(): MetadataRoute.Manifest {
     ],
     /**
      * Long-press actions on the installed icon. Deliberately locale-less: `proxy.ts` resolves a
-     * path with no `[locale]` segment from the `proman-locale` cookie, then `Accept-Language`,
+     * path with no `[locale]` segment from the `situs-locale` cookie, then `Accept-Language`,
      * so a shortcut opens in the language the visitor actually chose. Hardcoding `/pt/...` here
      * would pin every install to Portuguese.
      *

@@ -1,7 +1,7 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "proman.name" -}}
+{{- define "situs.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
@@ -10,7 +10,7 @@ Create a default fully qualified app name.
 We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
 If release name contains chart name it will be used as a full name.
 */}}
-{{- define "proman.fullname" -}}
+{{- define "situs.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -26,16 +26,16 @@ If release name contains chart name it will be used as a full name.
 {{/*
 Create chart name and version as used by the chart label.
 */}}
-{{- define "proman.chart" -}}
+{{- define "situs.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels
 */}}
-{{- define "proman.labels" -}}
-helm.sh/chart: {{ include "proman.chart" . }}
-{{ include "proman.selectorLabels" . }}
+{{- define "situs.labels" -}}
+helm.sh/chart: {{ include "situs.chart" . }}
+{{ include "situs.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -45,17 +45,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels
 */}}
-{{- define "proman.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "proman.name" . }}
+{{- define "situs.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "situs.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 Create the name of the service account to use
 */}}
-{{- define "proman.serviceAccountName" -}}
+{{- define "situs.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "proman.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "situs.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
@@ -67,7 +67,7 @@ Emits DATABASE_URL and NEXTAUTH_URL as literal values, and
 NEXTAUTH_SECRET / INIT_SECRET from the auto-generated K8s Secret.
 Any extra entries in .Values.env are appended at the end.
 */}}
-{{- define "proman.env" -}}
+{{- define "situs.env" -}}
 - name: DATABASE_URL
   value: {{ .Values.app.databaseUrl | quote }}
 - name: NEXTAUTH_URL
@@ -75,12 +75,12 @@ Any extra entries in .Values.env are appended at the end.
 - name: NEXTAUTH_SECRET
   valueFrom:
     secretKeyRef:
-      name: {{ include "proman.fullname" . }}-secrets
+      name: {{ include "situs.fullname" . }}-secrets
       key: NEXTAUTH_SECRET
 - name: INIT_SECRET
   valueFrom:
     secretKeyRef:
-      name: {{ include "proman.fullname" . }}-secrets
+      name: {{ include "situs.fullname" . }}-secrets
       key: INIT_SECRET
 {{- with .Values.env }}
 {{ toYaml . }}

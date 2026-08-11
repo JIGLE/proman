@@ -4,12 +4,12 @@
 
 **Sovereign Capital System** — self-hosted property management for Portugal and Spain.
 
-[![CI](https://github.com/JIGLE/proman/actions/workflows/ci.yml/badge.svg)](https://github.com/JIGLE/proman/actions/workflows/ci.yml)
-[![Security Scan](https://github.com/JIGLE/proman/actions/workflows/security-scan.yml/badge.svg)](https://github.com/JIGLE/proman/actions/workflows/security-scan.yml)
-[![Deploy to GHCR](https://github.com/JIGLE/proman/actions/workflows/deploy-ghcr.yml/badge.svg)](https://github.com/JIGLE/proman/actions/workflows/deploy-ghcr.yml)
-[![Production Gate](https://github.com/JIGLE/proman/actions/workflows/production.yml/badge.svg)](https://github.com/JIGLE/proman/actions/workflows/production.yml)
+[![CI](https://github.com/JIGLE/situs/actions/workflows/ci.yml/badge.svg)](https://github.com/JIGLE/situs/actions/workflows/ci.yml)
+[![Security Scan](https://github.com/JIGLE/situs/actions/workflows/security-scan.yml/badge.svg)](https://github.com/JIGLE/situs/actions/workflows/security-scan.yml)
+[![Deploy to GHCR](https://github.com/JIGLE/situs/actions/workflows/deploy-ghcr.yml/badge.svg)](https://github.com/JIGLE/situs/actions/workflows/deploy-ghcr.yml)
+[![Production Gate](https://github.com/JIGLE/situs/actions/workflows/production.yml/badge.svg)](https://github.com/JIGLE/situs/actions/workflows/production.yml)
 
-[![Release](https://img.shields.io/github/v/release/JIGLE/proman?label=release&color=0f766e)](https://github.com/JIGLE/proman/releases/latest)
+[![Release](https://img.shields.io/github/v/release/JIGLE/situs?label=release&color=0f766e)](https://github.com/JIGLE/situs/releases/latest)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org)
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![License](https://img.shields.io/badge/license-proprietary-64748b)](LICENSE)
@@ -38,8 +38,8 @@ the **oldest unpaid month first**; that writes a receipt, which drives a documen
 feeds the tax connector — and every step appends to an immutable audit log. Tenant payment status
 is _derived_ from this ledger, never hand-set.
 
-> **v1.23.1** — see [RELEASES.md](RELEASES.md) for the changelog. Formerly ProMan; the Situs
-> rebrand is shipped in the app, while the repository and container images keep the `proman` name.
+> **v1.23.1** — see [RELEASES.md](RELEASES.md) for the changelog. Formerly Situs; the Situs
+> rebrand is shipped in the app, while the repository and container images keep the `situs` name.
 
 ## Features
 
@@ -148,7 +148,7 @@ prisma/
   schema.prisma        → 47 models, 33 enums (SQLite)
 scripts/
   mobile-audit.mjs     → responsive measurement harness (see Quality gates)
-helm/proman/           → Helm chart with TrueNAS SCALE values
+helm/situs/           → Helm chart with TrueNAS SCALE values
 ```
 
 ## Configuration
@@ -204,18 +204,18 @@ screen-density rules — both were derived from measured audits rather than tast
 | ------------- | ------------------------------------------------------------------- |
 | Docker        | [Dockerfile](Dockerfile) · [docker-compose.yml](docker-compose.yml) |
 | Kubernetes    | [k8s/](k8s/) — Deployment, Service, CronJob                         |
-| Helm          | [helm/proman/](helm/proman/)                                        |
+| Helm          | [helm/situs/](helm/situs/)                                          |
 | TrueNAS SCALE | [docs/truenas.md](docs/truenas.md)                                  |
 
 ```bash
-helm install proman ./helm/proman \
-  -f helm/proman/values-truenas.yaml \
+helm install situs ./helm/situs \
+  -f helm/situs/values-truenas.yaml \
   --namespace ix-app \
   --set image.tag=1.23.1
 ```
 
 Key TrueNAS values: `service.type` (`NodePort`, port 30080), `persistence.hostPath`
-(`/mnt/pools/<POOL_NAME>/apps/proman/data`), and `securityContext.runAsUser`/`runAsGroup` (`1001`
+(`/mnt/pools/<POOL_NAME>/apps/situs/data`), and `securityContext.runAsUser`/`runAsGroup` (`1001`
 — match your dataset permissions). Replace `<POOL_NAME>` before deploying.
 
 Daily notifications (rent reminders, overdue notices, lease renewals, receipt deadlines) run via

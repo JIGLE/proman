@@ -145,7 +145,7 @@ export const tenantPortalService = {
       // Import email service dynamically to avoid circular deps
       const { emailService } = await import("../email/email-service");
 
-      const fromEmail = process.env.FROM_EMAIL || "noreply@proman.app";
+      const fromEmail = process.env.FROM_EMAIL || "noreply@situs.app";
       const result = await emailService.sendEmail(
         {
           to: tenant.email,

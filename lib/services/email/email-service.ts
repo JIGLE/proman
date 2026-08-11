@@ -303,7 +303,7 @@ export class EmailService {
   ): Promise<{ success: boolean; messageId?: string; error?: string }> {
     const msg = {
       to: emailData.to,
-      from: emailData.from || process.env.FROM_EMAIL || "noreply@proman.app",
+      from: emailData.from || process.env.FROM_EMAIL || "noreply@situs.app",
       subject: emailData.subject,
       html: emailData.html,
       text: emailData.text,
@@ -401,7 +401,7 @@ export class EmailService {
         // Log successful email
         await this.logEmail({
           to: Array.isArray(emailData.to) ? emailData.to.join(", ") : emailData.to,
-          from: emailData.from || process.env.FROM_EMAIL || "noreply@proman.app",
+          from: emailData.from || process.env.FROM_EMAIL || "noreply@situs.app",
           subject: emailData.subject,
           templateId: emailData.templateId,
           status: "sent",
@@ -440,7 +440,7 @@ export class EmailService {
     // Log failed email after all retries exhausted
     await this.logEmail({
       to: Array.isArray(emailData.to) ? emailData.to.join(", ") : emailData.to,
-      from: emailData.from || process.env.FROM_EMAIL || "noreply@proman.app",
+      from: emailData.from || process.env.FROM_EMAIL || "noreply@situs.app",
       subject: emailData.subject,
       templateId: emailData.templateId,
       status: "failed",
@@ -481,7 +481,7 @@ export class EmailService {
     return this.sendEmail(
       {
         to: recipientEmail,
-        from: process.env.FROM_EMAIL || "noreply@proman.app",
+        from: process.env.FROM_EMAIL || "noreply@situs.app",
         subject,
         html: htmlContent,
         templateId,

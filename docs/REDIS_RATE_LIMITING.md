@@ -2,7 +2,7 @@
 
 ## Overview
 
-ProMan now supports **distributed rate limiting with Redis** for production deployments. This enables horizontal scaling with consistent rate limits across multiple server instances.
+Situs now supports **distributed rate limiting with Redis** for production deployments. This enables horizontal scaling with consistent rate limits across multiple server instances.
 
 ## Architecture
 

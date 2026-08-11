@@ -220,7 +220,7 @@ function checkDependencies() {
 function main() {
   const targetUrl = process.env.TARGET_URL || "http://localhost:3000";
 
-  print("\n💪 ProMan Stress Testing", "cyan");
+  print("\n💪 Situs Stress Testing", "cyan");
   print(`Target: ${targetUrl}`, "blue");
   print("Finding system breaking points...\n", "blue");
 

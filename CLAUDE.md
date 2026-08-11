@@ -1,8 +1,8 @@
-# ProMan — Claude Code Context
+# Situs — Claude Code Context
 
 ## Project Overview
 
-ProMan (rebranding in progress to **Situs // Sovereign Capital System**) is a self-hosted
+Situs (rebranding in progress to **Situs // Sovereign Capital System**) is a self-hosted
 property management SaaS for landlords and property managers in **Portugal and Spain**. It
 handles properties, units, tenants, leases, receipts, expenses, maintenance, correspondence,
 and fiscal compliance, built around a reference-month rent ledger: bank movement → match →
@@ -129,7 +129,7 @@ All surfaces are measured in the mobile audit (`scripts/mobile-audit.mjs`) on ev
 
 ## Development Branch
 
-All Claude Code changes go to: **`claude/proman-design-polish-6zpz2f`**
+All Claude Code changes go to: **`claude/situs-design-polish-6zpz2f`**
 
 ## Dependabot PRs
 

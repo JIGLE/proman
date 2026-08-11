@@ -2,14 +2,14 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "proman.fullname" . }}
+  name: {{ include "situs.fullname" . }}
   labels:
-    {{- include "proman.labels" . | nindent 4 }}
+    {{- include "situs.labels" . | nindent 4 }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ include "proman.fullname" . }}
+    name: {{ include "situs.fullname" . }}
   minReplicas: {{ .Values.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   metrics:

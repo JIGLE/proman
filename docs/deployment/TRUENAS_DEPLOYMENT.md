@@ -1,6 +1,6 @@
-# ProMan Deployment Guide for TrueNAS SCALE
+# Situs Deployment Guide for TrueNAS SCALE
 
-This guide covers deploying ProMan as a custom application on TrueNAS SCALE using Kubernetes and Helm charts.
+This guide covers deploying Situs as a custom application on TrueNAS SCALE using Kubernetes and Helm charts.
 
 ## Prerequisites
 
@@ -12,7 +12,7 @@ This guide covers deploying ProMan as a custom application on TrueNAS SCALE usin
 
 ## Architecture
 
-ProMan runs as a Kubernetes deployment with:
+Situs runs as a Kubernetes deployment with:
 
 - **App Container**: Next.js application (Node.js)
 - **Database**: SQLite with persistent PVC (Persistent Volume Claim)
@@ -67,14 +67,14 @@ NODE_ENV=production
 # Build multi-platform image
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  --tag ghcr.io/yourusername/proman:latest \
+  --tag ghcr.io/yourusername/situs:latest \
   --push \
   .
 
 # Tag as latest version
 docker buildx build \
   --platform linux/amd64,linux/arm64 \
-  --tag ghcr.io/yourusername/proman:0.5.3 \
+  --tag ghcr.io/yourusername/situs:0.5.3 \
   --push \
   .
 ```
@@ -85,17 +85,17 @@ If TrueNAS has Docker/Podman installed:
 
 ```bash
 # On TrueNAS
-docker build -t proman:latest .
-docker tag proman:latest proman:0.5.3
+docker build -t situs:latest .
+docker tag situs:latest situs:0.5.3
 ```
 
 ## Step 3: Configure Helm Values
 
-Edit `helm/proman/values.yaml`:
+Edit `helm/situs/values.yaml`:
 
 ```yaml
 image:
-  repository: ghcr.io/yourusername/proman
+  repository: ghcr.io/yourusername/situs
   tag: "0.5.3"
   pullPolicy: IfNotPresent
 
@@ -140,48 +140,48 @@ secrets:
 ## Step 4: Create Kubernetes Namespace
 
 ```bash
-kubectl create namespace proman
-kubectl label namespace proman name=proman
+kubectl create namespace situs
+kubectl label namespace situs name=situs
 ```
 
 ## Step 5: Create Secret for Environment Variables
 
 ```bash
-kubectl create secret generic proman-secrets \
+kubectl create secret generic situs-secrets \
   --from-literal=NEXTAUTH_SECRET='your-secret' \
   --from-literal=GOOGLE_CLIENT_ID='your-google-client-id' \
   --from-literal=GOOGLE_CLIENT_SECRET='your-google-client-secret' \
   --from-literal=SENDGRID_API_KEY='your-key' \
   --from-literal=SENDGRID_WEBHOOK_PUBLIC_KEY='your-key' \
   --from-literal=DATABASE_URL='file:./data/dev.db' \
-  -n proman
+  -n situs
 ```
 
 ## Step 6: Deploy with Helm
 
 ```bash
 # Install
-helm install proman ./helm/proman \
-  --namespace proman \
-  --values ./helm/proman/values.yaml
+helm install situs ./helm/situs \
+  --namespace situs \
+  --values ./helm/situs/values.yaml
 
 # Or upgrade if already installed
-helm upgrade proman ./helm/proman \
-  --namespace proman \
-  --values ./helm/proman/values.yaml
+helm upgrade situs ./helm/situs \
+  --namespace situs \
+  --values ./helm/situs/values.yaml
 ```
 
 ## Step 7: Verify Deployment
 
 ```bash
 # Check pod status
-kubectl get pods -n proman
+kubectl get pods -n situs
 
 # Check service
-kubectl get svc -n proman
+kubectl get svc -n situs
 
 # View logs
-kubectl logs -f deployment/proman -n proman
+kubectl logs -f deployment/situs -n situs
 
 # Check health endpoint
 curl http://your-truenas-ip:30000/api/health
@@ -205,25 +205,25 @@ If using TrueNAS's ingress controller:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: proman-ingress
-  namespace: proman
+  name: situs-ingress
+  namespace: situs
   annotations:
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: traefik
   tls:
     - hosts:
-        - proman.your-domain.com
-      secretName: proman-tls
+        - situs.your-domain.com
+      secretName: situs-tls
   rules:
-    - host: proman.your-domain.com
+    - host: situs.your-domain.com
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: proman
+                name: situs
                 port:
                   number: 3000
 ```
@@ -255,7 +255,7 @@ The database initializes automatically on first deployment. To manually initiali
 
 ```bash
 # Get pod name
-POD=$(kubectl get pods -n proman -o jsonpath='{.items[0].metadata.name}')
+POD=$(kubectl get pods -n situs -o jsonpath='{.items[0].metadata.name}')
 
 # Run initialization
 curl -X POST http://your-truenas-ip:30000/api/debug/db/init \
@@ -270,54 +270,54 @@ curl -X POST http://your-truenas-ip:30000/api/debug/db/init \
 
 ```bash
 # Current logs
-kubectl logs deployment/proman -n proman
+kubectl logs deployment/situs -n situs
 
 # Follow logs
-kubectl logs -f deployment/proman -n proman
+kubectl logs -f deployment/situs -n situs
 
 # Previous pod logs (if it crashed)
-kubectl logs --previous deployment/proman -n proman
+kubectl logs --previous deployment/situs -n situs
 ```
 
 ### Check Resource Usage
 
 ```bash
-kubectl top pod -n proman
+kubectl top pod -n situs
 ```
 
 ### Restart Application
 
 ```bash
-kubectl rollout restart deployment/proman -n proman
+kubectl rollout restart deployment/situs -n situs
 ```
 
 ### Update Application
 
 ```bash
 # Edit values.yaml with new image tag
-helm upgrade proman ./helm/proman \
-  --namespace proman \
-  --values ./helm/proman/values.yaml
+helm upgrade situs ./helm/situs \
+  --namespace situs \
+  --values ./helm/situs/values.yaml
 ```
 
 ### Database Backup
 
 ```bash
 # Get database file from pod
-kubectl exec -it deployment/proman -n proman -- tar czf - /app/data/dev.db | tar xzf - -O > backup.tar.gz
+kubectl exec -it deployment/situs -n situs -- tar czf - /app/data/dev.db | tar xzf - -O > backup.tar.gz
 
 # Or copy directly
-kubectl cp proman/proman-xxxxx:/app/data/dev.db ./dev.db.backup -n proman
+kubectl cp situs/situs-xxxxx:/app/data/dev.db ./dev.db.backup -n situs
 ```
 
 ### Database Restore
 
 ```bash
 # Copy backup into pod
-kubectl cp ./dev.db.backup proman/proman-xxxxx:/app/data/dev.db -n proman
+kubectl cp ./dev.db.backup situs/situs-xxxxx:/app/data/dev.db -n situs
 
 # Restart pod
-kubectl rollout restart deployment/proman -n proman
+kubectl rollout restart deployment/situs -n situs
 ```
 
 ## Troubleshooting
@@ -326,23 +326,23 @@ kubectl rollout restart deployment/proman -n proman
 
 ```bash
 # Check pod status
-kubectl describe pod <pod-name> -n proman
+kubectl describe pod <pod-name> -n situs
 
 # Check logs
-kubectl logs <pod-name> -n proman
+kubectl logs <pod-name> -n situs
 
 # Check resource limits
-kubectl top pod <pod-name> -n proman
+kubectl top pod <pod-name> -n situs
 ```
 
 ### Database connection issues
 
 ```bash
 # Verify database file exists
-kubectl exec deployment/proman -n proman -- ls -la /app/data/
+kubectl exec deployment/situs -n situs -- ls -la /app/data/
 
 # Check database file size (should be > 0)
-kubectl exec deployment/proman -n proman -- du -h /app/data/dev.db
+kubectl exec deployment/situs -n situs -- du -h /app/data/dev.db
 ```
 
 ### Authentication stuck due to orphaned OAuth accounts
@@ -350,7 +350,7 @@ kubectl exec deployment/proman -n proman -- du -h /app/data/dev.db
 If Google sign-in reports `OAuthAccountNotLinked` or `Callback` errors because an old OAuth account still exists, run the cleanup script inside the pod:
 
 ```bash
-kubectl exec -it deployment/proman -n proman -- /bin/sh -c "cd /app && USER_EMAIL='user@example.com' npm run user:delete"
+kubectl exec -it deployment/situs -n situs -- /bin/sh -c "cd /app && USER_EMAIL='user@example.com' npm run user:delete"
 ```
 
 Replace `user@example.com` with the email to remove. The script deletes the user, related sessions, and any orphaned OAuth account rows so the next login can recreate them cleanly.
@@ -359,7 +359,7 @@ Replace `user@example.com` with the email to remove. The script deletes the user
 
 ```bash
 # Check health endpoint
-kubectl port-forward svc/proman 3000:3000 -n proman
+kubectl port-forward svc/situs 3000:3000 -n situs
 curl http://localhost:3000/api/health
 ```
 
@@ -370,17 +370,17 @@ curl http://localhost:3000/api/health
 3. Verify public key matches in `SENDGRID_WEBHOOK_PUBLIC_KEY`
 4. Check application logs for webhook errors:
    ```bash
-   kubectl logs -f deployment/proman -n proman | grep webhook
+   kubectl logs -f deployment/situs -n situs | grep webhook
    ```
 
 ### Running out of storage
 
 ```bash
 # Check PVC usage
-kubectl get pvc -n proman
+kubectl get pvc -n situs
 
 # Describe PVC for details
-kubectl describe pvc proman-data -n proman
+kubectl describe pvc situs-data -n situs
 ```
 
 ## Security Notes
@@ -399,13 +399,13 @@ If deployment fails:
 
 ```bash
 # View release history
-helm history proman -n proman
+helm history situs -n situs
 
 # Rollback to previous version
-helm rollback proman <revision> -n proman
+helm rollback situs <revision> -n situs
 
 # Example: rollback to revision 1
-helm rollback proman 1 -n proman
+helm rollback situs 1 -n situs
 ```
 
 ## Additional Resources
@@ -421,6 +421,6 @@ helm rollback proman 1 -n proman
 For issues or questions:
 
 1. Check the troubleshooting section above
-2. Review ProMan GitHub issues
+2. Review Situs GitHub issues
 3. Check TrueNAS community forums
 4. Consult Kubernetes documentation

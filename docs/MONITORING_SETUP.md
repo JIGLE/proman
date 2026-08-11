@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the monitoring and alerting infrastructure for ProMan production deployment.
+This document outlines the monitoring and alerting infrastructure for Situs production deployment.
 
 ## Health Check Endpoints
 
@@ -82,7 +82,7 @@ All health check endpoints are now live and ready for external monitoring.
   "timestamp": "2026-02-01T22:00:00.000Z",
   "provider": "sendgrid",
   "configured": true,
-  "from_email": "noreply@proman.example",
+  "from_email": "noreply@situs.example",
   "response_time_ms": 2
 }
 ```
@@ -152,10 +152,10 @@ process_uptime_seconds 3600.5
 
 ```yaml
 scrape_configs:
-  - job_name: "proman"
+  - job_name: "situs"
     scrape_interval: 15s
     static_configs:
-      - targets: ["proman.example:3000"]
+      - targets: ["situs.example:3000"]
     metrics_path: "/api/metrics"
 ```
 
@@ -423,7 +423,7 @@ For early-stage deployment:
 2. Verify network connectivity: `nc -zv db-host 5432`
 3. Check connection pool config: Max connections exceeded?
 4. Review recent deployments: Schema migration issue?
-5. Restart application pods if needed: `kubectl rollout restart deployment proman`
+5. Restart application pods if needed: `kubectl rollout restart deployment situs`
 
 ### High Error Rate (5xx)
 
@@ -435,7 +435,7 @@ For early-stage deployment:
 2. Review error logs: Common error pattern?
 3. Check dependencies: Database, email service healthy?
 4. Monitor resource usage: CPU/memory exhaustion?
-5. Rollback if needed: `kubectl rollout undo deployment proman`
+5. Rollback if needed: `kubectl rollout undo deployment situs`
 
 ### Email Delivery Failure
 
@@ -505,9 +505,9 @@ export async function GET() {
 
 **Monitors to create**:
 
-1. Main site: `https://proman.app` (HTTP 200, every 5 min)
-2. API health: `https://proman.app/api/health` (every 1 min)
-3. DB health: `https://proman.app/api/health/db` (every 5 min)
+1. Main site: `https://situs.app` (HTTP 200, every 5 min)
+2. API health: `https://situs.app/api/health` (every 1 min)
+3. DB health: `https://situs.app/api/health/db` (every 5 min)
 
 ## Testing Alerts
 
@@ -515,7 +515,7 @@ Before going live, test each critical alert:
 
 ```bash
 # Trigger database alert (stop database container)
-docker stop proman-db
+docker stop situs-db
 
 # Trigger high error rate (deploy intentionally broken code)
 # Simulate in staging first

@@ -1,4 +1,4 @@
-# TrueNAS SCALE tuned Helm values for ProMan
+# TrueNAS SCALE tuned Helm values for Situs
 #
 # ━━━ You only need to edit TWO things: ━━━
 #   1. app.nextauthUrl  — the URL you access the app at
@@ -10,13 +10,13 @@
 # ── Required ──────────────────────────────────────────────────────────────────
 app:
   # IMPORTANT: Must match the URL you access the app at (protocol + host + port).
-  # Examples: https://proman.example.com  or  http://192.168.1.50:30080
+  # Examples: https://situs.example.com  or  http://192.168.1.50:30080
   nextauthUrl: "http://<YOUR_TRUENAS_IP>:30080"
 
 persistence:
   enabled: true
   # Edit <POOL_NAME> to match your TrueNAS storage pool
-  hostPath: /mnt/pools/<POOL_NAME>/apps/proman/data
+  hostPath: /mnt/pools/<POOL_NAME>/apps/situs/data
 
 # ── Networking ────────────────────────────────────────────────────────────────
 service:

@@ -130,14 +130,14 @@ export function useFormDialog<T extends Record<string, unknown>, E = T>({
   // ============================================
   const persistenceKey = useMemo(() => {
     if (persistence.enabled && persistence.key) {
-      return `proman-form-${persistence.key}`;
+      return `situs-form-${persistence.key}`;
     }
     return null;
   }, [persistence.enabled, persistence.key]);
 
   const autoSaveKey = useMemo(() => {
     if (autoSave.enabled && autoSave.key) {
-      return `proman-autosave-${autoSave.key}`;
+      return `situs-autosave-${autoSave.key}`;
     }
     return null;
   }, [autoSave.enabled, autoSave.key]);
@@ -199,13 +199,13 @@ export function useFormDialog<T extends Record<string, unknown>, E = T>({
         logger.warn("localStorage quota exceeded, clearing old form data", { key });
         // Try to clear old form data and retry
         try {
-          // Clear all proman form data
+          // Clear all situs form data
           const keysToRemove: string[] = [];
           for (let i = 0; i < localStorage.length; i++) {
             const storageKey = localStorage.key(i);
             if (
-              storageKey?.startsWith("proman-form-") ||
-              storageKey?.startsWith("proman-autosave-")
+              storageKey?.startsWith("situs-form-") ||
+              storageKey?.startsWith("situs-autosave-")
             ) {
               keysToRemove.push(storageKey);
             }

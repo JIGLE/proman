@@ -1,4 +1,4 @@
-Thank you for installing Proman.
+Thank you for installing Situs.
 
 Release Information
 -------------------
@@ -9,14 +9,14 @@ Release Information
 Access
 ------
 - Service type: {{ .Values.service.type }}
-- Cluster address: {{ include "proman.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
+- Cluster address: {{ include "situs.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local:{{ .Values.service.port }}
 {{- if eq .Values.service.type "NodePort" }}
 - NodePort: http://<truenas-ip>:{{ .Values.service.nodePort | default 30000 }}
 {{- end }}
 
 Credentials & Secrets
 ---------------------
-{{- $secretName := "proman-secrets" }}
+{{- $secretName := "situs-secrets" }}
 {{- if .Values.secrets }}
 	{{- if .Values.secrets.existingSecret }}
 		{{- $secretName = .Values.secrets.existingSecret }}
@@ -27,10 +27,10 @@ Credentials & Secrets
 
 Database
 --------
-- SQLite path: {{ .Values.persistence.mountPath }}/proman.db
-- PVC: {{ include "proman.fullname" . }}-data
+- SQLite path: {{ .Values.persistence.mountPath }}/situs.db
+- PVC: {{ include "situs.fullname" . }}-data
 
 Support
 -------
-- Docs: https://github.com/JIGLE/proman/blob/main/TRUENAS_DEPLOYMENT.md
-- Issues: https://github.com/JIGLE/proman/issues
+- Docs: https://github.com/JIGLE/situs/blob/main/TRUENAS_DEPLOYMENT.md
+- Issues: https://github.com/JIGLE/situs/issues

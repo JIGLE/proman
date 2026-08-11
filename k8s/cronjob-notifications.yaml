@@ -1,9 +1,9 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: proman-notifications
+  name: situs-notifications
   labels:
-    app: proman
+    app: situs
     component: cron
 spec:
   # Run daily at 08:00 UTC (covers PT/ES morning)
@@ -18,7 +18,7 @@ spec:
       template:
         metadata:
           labels:
-            app: proman
+            app: situs
             component: cron
         spec:
           restartPolicy: OnFailure
@@ -30,11 +30,11 @@ spec:
               image: curlimages/curl:latest
               env:
                 - name: APP_URL
-                  value: "http://proman.default.svc.cluster.local:3000"
+                  value: "http://situs.default.svc.cluster.local:3000"
                 - name: CRON_SECRET
                   valueFrom:
                     secretKeyRef:
-                      name: proman-secrets
+                      name: situs-secrets
                       key: CRON_SECRET
               command:
                 - sh

@@ -28,7 +28,7 @@ const { getToken } = require("next-auth/jwt") as {
 };
 
 /** Cookie name for demo mode (must match lib/demo/demo-mode.ts) */
-const DEMO_COOKIE_NAME = "proman_demo";
+const DEMO_COOKIE_NAME = "situs_demo";
 
 /** Paths blocked during demo mode */
 const DEMO_BLOCKED_PATTERNS = ["/api/user", "/api/debug"];
@@ -44,14 +44,14 @@ function isSupportedLocale(segment: string): segment is SupportedLocale {
 /**
  * Locale for a request that carries no `[locale]` URL segment.
  *
- * The `proman-locale` cookie wins: it is an explicit choice the visitor made through one of the
+ * The `situs-locale` cookie wins: it is an explicit choice the visitor made through one of the
  * language controls, so it should outrank whatever their browser advertises. `Accept-Language`
  * is the fallback, then `defaultLocale`. Mirrors `lib/i18n/server-locale.ts`, which resolves the
  * same thing for server components — the proxy cannot import it because that module reads
  * `next/headers`.
  */
 function resolveLocale(request: NextRequest): string {
-  const saved = request.cookies.get("proman-locale")?.value;
+  const saved = request.cookies.get("situs-locale")?.value;
   if (saved && isSupportedLocale(saved)) return saved;
 
   const fromHeader = (request.headers.get("accept-language") ?? "")

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Comprehensive automated security testing infrastructure for ProMan, including dependency scanning, code analysis, secret detection, and OWASP ZAP integration.
+Comprehensive automated security testing infrastructure for Situs, including dependency scanning, code analysis, secret detection, and OWASP ZAP integration.
 
 **Implementation Date**: February 4, 2026  
 **Status**: ✅ Complete
@@ -63,7 +63,7 @@ Comprehensive automated security testing infrastructure for ProMan, including de
 npm run security:scan
 
 # Output:
-# 🔒 ProMan Security Scanner
+# 🔒 Situs Security Scanner
 # Running comprehensive security checks...
 #
 # NPM AUDIT - Dependency Vulnerabilities
@@ -152,7 +152,7 @@ docker run -p 8080:8080 zaproxy/zap-stable zap.sh -daemon -port 8080
 npm run security:zap
 
 # Output:
-# 🔒 OWASP ZAP Security Scanner for ProMan
+# 🔒 OWASP ZAP Security Scanner for Situs
 #
 # ZAP AVAILABILITY CHECK
 # ✓ OWASP ZAP is running
@@ -488,7 +488,7 @@ Verify middleware.ts includes:
 
 ### 4. OWASP Top 10 Protection
 
-ProMan protects against:
+Situs protects against:
 
 - ✅ **A01:2021 – Broken Access Control**: CSRF, rate limiting, authorization checks
 - ✅ **A02:2021 – Cryptographic Failures**: HMAC-SHA256 JWT, HTTPS enforcement

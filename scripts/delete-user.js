@@ -30,7 +30,7 @@ if (!emailArg) {
 
 const fallbackDbUrl =
   process.env.DATABASE_URL ||
-  (process.env.NODE_ENV === "production" ? "file:/data/proman.db" : "file:./dev.db");
+  (process.env.NODE_ENV === "production" ? "file:/data/situs.db" : "file:./dev.db");
 process.env.DATABASE_URL = fallbackDbUrl;
 
 const prisma = new PrismaClient({

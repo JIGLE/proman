@@ -3,7 +3,7 @@ set -euo pipefail
 
 OUT_DIR=${1:-dist}
 VERSION=${2:-}
-CHART_DIR=helm/proman
+CHART_DIR=helm/situs
 
 mkdir -p "${OUT_DIR}"
 
@@ -36,7 +36,7 @@ helm package "${CHART_DIR}" -d "${OUT_DIR}"
 
 echo "Packaged helm chart into ${OUT_DIR}"
 
-tgz=$(find "${OUT_DIR}" -type f -name 'proman-*.tgz' | head -n1 || true)
+tgz=$(find "${OUT_DIR}" -type f -name 'situs-*.tgz' | head -n1 || true)
 if [ -z "${tgz}" ]; then
   echo "ERROR: packaged chart not found in ${OUT_DIR}"; ls -la "${OUT_DIR}"; exit 1;
 fi

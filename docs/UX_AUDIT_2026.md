@@ -1,4 +1,4 @@
-# ProMan — Complete UX Architecture Audit & Redesign Strategy
+# Situs — Complete UX Architecture Audit & Redesign Strategy
 
 **Version 1.0 · May 2026 · Senior SaaS UX Architecture Review**
 
@@ -26,7 +26,7 @@
 
 ## Executive Summary
 
-ProMan is a technically mature, feature-rich property management platform targeting property owners, tenants, administrators, and managers in the PT/ES market with multi-language support. The engineering foundation is strong — the component library is consistent, the design token system is well-structured, and the service/API architecture is clean.
+Situs is a technically mature, feature-rich property management platform targeting property owners, tenants, administrators, and managers in the PT/ES market with multi-language support. The engineering foundation is strong — the component library is consistent, the design token system is well-structured, and the service/API architecture is clean.
 
 However, the UX architecture has accumulated significant **structural debt** in four key areas:
 
@@ -966,4 +966,4 @@ Portuguese and English are similar in length. Spanish tends to be 10–15% longe
 
 ---
 
-_Audit completed May 2026 · ProMan v1.x · GitHub: JIGLE/proman_
+_Audit completed May 2026 · Situs v1.x · GitHub: JIGLE/situs_

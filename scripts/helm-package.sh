@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/helm-package — Package the ProMan Helm chart
+# scripts/helm-package — Package the Situs Helm chart
 # Usage: bash scripts/helm-package [output-dir]
 #
 # Examples:
@@ -9,7 +9,7 @@
 set -euo pipefail
 
 OUTPUT_DIR="${1:-release-charts}"
-CHART_DIR="helm/proman"
+CHART_DIR="helm/situs"
 
 if ! command -v helm &> /dev/null; then
   echo "Error: helm is not installed. Install from https://helm.sh/docs/intro/install/"

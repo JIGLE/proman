@@ -1,6 +1,6 @@
-# Testing Guide for Proman
+# Testing Guide for Situs
 
-This guide provides comprehensive documentation for writing, running, and maintaining tests in the Proman project.
+This guide provides comprehensive documentation for writing, running, and maintaining tests in the Situs project.
 
 ---
 

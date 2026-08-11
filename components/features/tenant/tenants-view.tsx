@@ -315,7 +315,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
       if (typeof window !== "undefined") {
         return (
           localStorage.getItem("situs-tenants-status-filter") ??
-          localStorage.getItem("proman-tenants-status-filter") ??
+          localStorage.getItem("situs-tenants-status-filter") ??
           "all"
         );
       }
@@ -330,7 +330,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
     useEffect(() => {
       const saved =
         localStorage.getItem("situs-tenants-view-mode") ??
-        localStorage.getItem("proman-tenants-view-mode");
+        localStorage.getItem("situs-tenants-view-mode");
       if (saved === "grid" || saved === "table") setDataViewMode(saved);
     }, []);
     const handleViewModeChange = useCallback((mode: DataViewMode) => {

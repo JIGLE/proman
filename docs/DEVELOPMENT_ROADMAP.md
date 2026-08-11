@@ -339,7 +339,7 @@ of the three competing visions was **already shipped**, not merely proposed.
 ### 3.5 — Shipped as: storage/scale strategy doc (chose "plan," not "migrate")
 
 Scoped deliberately as a plan, not a migration: self-hosted-on-SQLite is a core, load-bearing
-part of ProMan's positioning (zero external dependencies), so an unconditional move to
+part of Situs's positioning (zero external dependencies), so an unconditional move to
 PostgreSQL would work against the product rather than for it. Extended the existing (and
 previously stale) `docs/DATABASE_STRATEGY.md` rather than creating a second, parallel
 doc — same reuse-over-duplication call made for the `emptyState`/`insights` i18n

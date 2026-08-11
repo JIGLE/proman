@@ -1,5 +1,5 @@
 /**
- * Structured Logger for ProMan
+ * Structured Logger for Situs
  *
  * Environment-aware logging that:
  * - Only logs in development or when DEBUG=true
@@ -163,7 +163,7 @@ const outputLog = (entry: LogEntry): void => {
 };
 
 /**
- * Structured logger for ProMan application
+ * Structured logger for Situs application
  *
  * Usage:
  * ```typescript

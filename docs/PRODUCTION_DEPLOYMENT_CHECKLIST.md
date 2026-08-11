@@ -1,8 +1,8 @@
-# ProMan Production Deployment Checklist
+# Situs Production Deployment Checklist
 
 ## Overview
 
-Comprehensive pre-flight checklist for deploying ProMan to production. This document ensures all critical systems, security measures, and performance optimizations are verified before go-live.
+Comprehensive pre-flight checklist for deploying Situs to production. This document ensures all critical systems, security measures, and performance optimizations are verified before go-live.
 
 **Created**: February 4, 2026  
 **Version**: 0.9.3  
@@ -442,7 +442,7 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
 4. **Database Backup**
    ```bash
    # Backup production database before deployment
-   pg_dump proman_production > backup-$(date +%Y%m%d-%H%M%S).sql
+   pg_dump situs_production > backup-$(date +%Y%m%d-%H%M%S).sql
    ```
 
 ### Deployment Steps
@@ -477,10 +477,10 @@ Comprehensive pre-flight checklist for deploying ProMan to production. This docu
 
    ```bash
    # Using PM2
-   pm2 restart proman
+   pm2 restart situs
 
    # Or systemd
-   sudo systemctl restart proman
+   sudo systemctl restart situs
    ```
 
 5. **Remove Maintenance Mode**
@@ -525,7 +525,7 @@ If critical issues are discovered:
 1. **Stop Application**
 
    ```bash
-   pm2 stop proman
+   pm2 stop situs
    ```
 
 2. **Revert Code**
@@ -539,14 +539,14 @@ If critical issues are discovered:
 3. **Restore Database** (if migrations ran)
 
    ```bash
-   psql proman_production < backup-YYYYMMDD-HHMMSS.sql
+   psql situs_production < backup-YYYYMMDD-HHMMSS.sql
    ```
 
 4. **Rebuild and Restart**
 
    ```bash
    npm run build
-   pm2 start proman
+   pm2 start situs
    ```
 
 5. **Verify Rollback**

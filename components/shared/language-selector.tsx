@@ -47,7 +47,7 @@ export function LanguageSelector({ compact = false, className }: LanguageSelecto
     if (newLocale === currentLocale) return;
     // Persist preference in a cookie so root redirects and demo mode respect it
     if (typeof document !== "undefined") {
-      document.cookie = `proman-locale=${newLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
+      document.cookie = `situs-locale=${newLocale}; Path=/; Max-Age=31536000; SameSite=Lax`;
     }
 
     const segments = pathname.split("/");

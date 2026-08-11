@@ -19,8 +19,8 @@ questions:
         - variable: nextauthUrl
           label: Application URL
           description: >
-            The full URL users use to access ProMan (protocol + host + port).
-            Examples: https://proman.example.com  or  http://192.168.1.50:30080
+            The full URL users use to access Situs (protocol + host + port).
+            Examples: https://situs.example.com  or  http://192.168.1.50:30080
           schema:
             type: string
             required: true
@@ -58,11 +58,11 @@ questions:
           label: Host Path (TrueNAS dataset)
           description: >
             Path to a dataset on your TrueNAS pool.
-            Example: /mnt/pools/mypool/apps/proman/data
+            Example: /mnt/pools/mypool/apps/situs/data
           schema:
             type: string
             required: true
-            default: /mnt/pools/<POOL_NAME>/apps/proman/data
+            default: /mnt/pools/<POOL_NAME>/apps/situs/data
 
   # ── Networking ──────────────────────────────────────────────────
   - variable: service
@@ -99,7 +99,7 @@ questions:
           label: Repository
           schema:
             type: string
-            default: ghcr.io/jigle/proman
+            default: ghcr.io/jigle/situs
         - variable: tag
           label: Tag (empty = chart appVersion)
           schema:

@@ -1,6 +1,6 @@
 # Database Strategy
 
-This document covers ProMan's database approach, migration workflow, backup/recovery
+This document covers Situs's database approach, migration workflow, backup/recovery
 procedures, and — per `docs/DEVELOPMENT_ROADMAP.md` item 3.5 — the storage/scale plan:
 what would actually force a move off SQLite, and what that move would look like.
 Relationship to other docs: `docs/PRODUCT_AUDIT_2026.md` §4 first flagged the two
@@ -9,7 +9,7 @@ client state); this doc is where the plan for those risks lives.
 
 ## SQLite vs Server-based Database
 
-ProMan uses **SQLite** by default for simplicity and self-hosted deployments. For production at scale, consider migrating to PostgreSQL or MySQL.
+Situs uses **SQLite** by default for simplicity and self-hosted deployments. For production at scale, consider migrating to PostgreSQL or MySQL.
 
 | Aspect            | SQLite                     | PostgreSQL               |
 | ----------------- | -------------------------- | ------------------------ |
@@ -19,7 +19,7 @@ ProMan uses **SQLite** by default for simplicity and self-hosted deployments. Fo
 | Scaling           | Single node only           | Horizontal read replicas |
 | Recommended for   | Single-tenant, low traffic | Multi-tenant, production |
 
-**This is a deliberate choice, not a gap.** SQLite-by-default is core to ProMan's
+**This is a deliberate choice, not a gap.** SQLite-by-default is core to Situs's
 self-hosted positioning: zero external dependencies, one file to back up, runs on a
 Raspberry Pi or a TrueNAS SCALE box with no separate DB server to operate. The plan
 below is to keep that default and treat PostgreSQL as an opt-in path for a specific,
@@ -173,13 +173,13 @@ Or as a Kubernetes init container:
 ```yaml
 initContainers:
   - name: migrate
-    image: ghcr.io/jigle/proman:<version>
+    image: ghcr.io/jigle/situs:<version>
     command: ["npx", "prisma", "migrate", "deploy"]
     env:
       - name: DATABASE_URL
         valueFrom:
           secretKeyRef:
-            name: proman-secrets
+            name: situs-secrets
             key: DATABASE_URL
 ```
 
@@ -192,17 +192,17 @@ SQLite databases are single files, making backups straightforward.
 **Using the backup script:**
 
 ```bash
-bash scripts/db-backup.sh /data/proman.sqlite ./backups
+bash scripts/db-backup.sh /data/situs.sqlite ./backups
 ```
 
 **Manual backup:**
 
 ```bash
 # Hot backup using sqlite3 .backup command (safe during writes)
-sqlite3 /data/proman.sqlite ".backup '/backups/proman-$(date +%Y%m%d-%H%M%S).sqlite'"
+sqlite3 /data/situs.sqlite ".backup '/backups/situs-$(date +%Y%m%d-%H%M%S).sqlite'"
 
 # Simple file copy (only safe if app is stopped or using WAL mode)
-cp /data/proman.sqlite /backups/proman-backup.sqlite
+cp /data/situs.sqlite /backups/situs-backup.sqlite
 ```
 
 ### Automated backups (CronJob)
@@ -211,7 +211,7 @@ cp /data/proman.sqlite /backups/proman-backup.sqlite
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: proman-backup
+  name: situs-backup
 spec:
   schedule: "0 2 * * *" # Daily at 2 AM
   jobTemplate:
@@ -226,38 +226,38 @@ spec:
                 - -c
                 - |
                   apk add --no-cache sqlite
-                  BACKUP_FILE="/backups/proman-$(date +%Y%m%d-%H%M%S).sqlite"
-                  sqlite3 /data/proman.sqlite ".backup '${BACKUP_FILE}'"
+                  BACKUP_FILE="/backups/situs-$(date +%Y%m%d-%H%M%S).sqlite"
+                  sqlite3 /data/situs.sqlite ".backup '${BACKUP_FILE}'"
                   echo "Backup created: ${BACKUP_FILE}"
                   # Keep only last 7 days of backups
-                  find /backups -name "proman-*.sqlite" -mtime +7 -delete
+                  find /backups -name "situs-*.sqlite" -mtime +7 -delete
               volumeMounts:
-                - name: proman-data
+                - name: situs-data
                   mountPath: /data
                   readOnly: true
                 - name: backups
                   mountPath: /backups
           restartPolicy: OnFailure
           volumes:
-            - name: proman-data
+            - name: situs-data
               persistentVolumeClaim:
-                claimName: proman-data
+                claimName: situs-data
             - name: backups
               persistentVolumeClaim:
-                claimName: proman-backups
+                claimName: situs-backups
 ```
 
 ### Recovery
 
 ```bash
 # Stop the application
-kubectl scale deployment proman --replicas=0
+kubectl scale deployment situs --replicas=0
 
 # Restore from backup
-cp /backups/proman-20260208-020000.sqlite /data/proman.sqlite
+cp /backups/situs-20260208-020000.sqlite /data/situs.sqlite
 
 # Restart
-kubectl scale deployment proman --replicas=1
+kubectl scale deployment situs --replicas=1
 ```
 
 ## Schema Reference

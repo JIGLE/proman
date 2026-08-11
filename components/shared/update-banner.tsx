@@ -55,7 +55,7 @@ export function UpdateBanner(): React.ReactElement | null {
 
     setDismissedTag(
       localStorage.getItem("situs.dismissedUpdate") ||
-        localStorage.getItem("proman.dismissedUpdate") ||
+        localStorage.getItem("situs.dismissedUpdate") ||
         null,
     );
   }, []);

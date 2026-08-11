@@ -128,7 +128,7 @@ test.describe("Compliance: SEPA DD Mandates", () => {
         tenantId: "tenant_123",
         iban: "PT50000201231234567890154",
         accountHolder: "Maria Santos",
-        setupReturn: "https://app.proman.pt/return",
+        setupReturn: "https://app.situs.pt/return",
       },
     });
     expect([401, 403, 302].includes(response.status())).toBeTruthy();

@@ -113,7 +113,7 @@ export function LeasesView(): React.ReactElement {
   useEffect(() => {
     const saved =
       localStorage.getItem("situs-leases-view-mode") ??
-      localStorage.getItem("proman-leases-view-mode");
+      localStorage.getItem("situs-leases-view-mode");
     if (saved === "grid" || saved === "table") setDataViewMode(saved);
   }, []);
   const handleViewModeChange = useCallback((mode: DataViewMode) => {

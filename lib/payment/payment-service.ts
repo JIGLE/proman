@@ -128,7 +128,7 @@ export class PaymentService {
       phone: tenant.phone,
       metadata: {
         tenantId: tenant.id,
-        promanSource: "true",
+        situsSource: "true",
       },
     });
 

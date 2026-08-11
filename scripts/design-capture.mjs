@@ -59,7 +59,7 @@ const sessionToken = await encode({
   secret,
   token: {
     name: "Demo User",
-    email: "demo@proman.local",
+    email: "demo@situs.local",
     sub: "demo-user",
     role: "ADMIN",
     id: "demo-user",
@@ -67,7 +67,7 @@ const sessionToken = await encode({
   maxAge: 60 * 60,
 });
 await context.addCookies([
-  { name: "proman_demo", value: "1", url: BASE },
+  { name: "situs_demo", value: "1", url: BASE },
   { name: "next-auth.session-token", value: sessionToken, url: BASE },
 ]);
 
@@ -76,7 +76,7 @@ for (const theme of THEMES) {
   const page = await context.newPage();
   await page.addInitScript((t) => {
     try {
-      localStorage.setItem("proman-theme", t);
+      localStorage.setItem("situs-theme", t);
     } catch {}
   }, theme);
   for (const w of WIDTHS) {

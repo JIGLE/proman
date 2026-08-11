@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# scripts/build-image — Build the ProMan Docker image locally
+# scripts/build-image — Build the Situs Docker image locally
 # Usage: bash scripts/build-image [tag]
 #
 # Examples:
-#   bash scripts/build-image              # builds proman:local
-#   bash scripts/build-image 1.1.0        # builds proman:1.1.0
+#   bash scripts/build-image              # builds situs:local
+#   bash scripts/build-image 1.1.0        # builds situs:1.1.0
 
 set -euo pipefail
 
 TAG="${1:-local}"
-IMAGE="proman:${TAG}"
+IMAGE="situs:${TAG}"
 GIT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
 BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
 BUILD_VERSION="${TAG}"

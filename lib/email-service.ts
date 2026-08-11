@@ -178,7 +178,7 @@ export class EmailService {
     try {
       const msg = {
         to: emailData.to,
-        from: emailData.from || process.env.FROM_EMAIL || "noreply@proman.app",
+        from: emailData.from || process.env.FROM_EMAIL || "noreply@situs.app",
         subject: emailData.subject,
         html: emailData.html,
         text: emailData.text,
@@ -224,7 +224,7 @@ export class EmailService {
       // Log failed email
       await this.logEmail({
         to: Array.isArray(emailData.to) ? emailData.to.join(", ") : emailData.to,
-        from: emailData.from || process.env.FROM_EMAIL || "noreply@proman.app",
+        from: emailData.from || process.env.FROM_EMAIL || "noreply@situs.app",
         subject: emailData.subject,
         templateId: emailData.templateId,
         status: "failed",
@@ -314,7 +314,7 @@ export class EmailService {
     return this.sendEmail(
       {
         to: recipientEmail,
-        from: process.env.FROM_EMAIL || "noreply@proman.app",
+        from: process.env.FROM_EMAIL || "noreply@situs.app",
         subject: renderedSubject,
         html: renderedHtml,
         text: renderedText,
