@@ -7,6 +7,7 @@
 
 import crypto from "crypto";
 import { getPrismaClient } from "../database/database";
+import { timingSafeEqualString } from "@/lib/utils/security";
 
 // Token expiration in seconds (default: 7 days)
 const TOKEN_EXPIRATION = 7 * 24 * 60 * 60;
@@ -68,7 +69,11 @@ export async function verifyPortalToken(token: string): Promise<PortalTokenPaylo
       .update(signatureData)
       .digest("base64url");
 
-    if (signature !== expectedSignature) {
+    // Constant-time: `!==` on a signature short-circuits at the first differing byte, so response
+    // time leaks how many leading bytes matched and a forged signature can be built one byte at a
+    // time. Every other secret comparison in this codebase already goes through this helper —
+    // CSRF, the cron tokens, the db-init guard — this was the site that was missed.
+    if (!timingSafeEqualString(signature, expectedSignature)) {
       return null;
     }
 

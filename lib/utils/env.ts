@@ -68,6 +68,39 @@ if (parsed.success) {
     process.exit(1);
   }
 
+  // Enforce PII encryption in production.
+  //
+  // encryptPII() returns plaintext when no key is configured — a deliberate dev-mode convenience
+  // that fails OPEN. Without this check a production deploy that simply forgot the variable looks
+  // completely healthy while writing tenant IBANs, NIFs and phone numbers to disk in the clear,
+  // with no error and no log line. That is the worst possible failure mode for the one control
+  // standing between a stolen database file and a GDPR Article 33 notification.
+  //
+  // Refusing to boot is the point. An operator who genuinely wants unencrypted PII — a throwaway
+  // staging box, a migration window — sets ALLOW_UNENCRYPTED_PII=true and gets a loud warning on
+  // every start. What they no longer get is silence.
+  if (process.env.NODE_ENV !== "development" && process.env.NODE_ENV !== "test" && !_isBuildTime) {
+    const keyConfigured = !!env.PII_ENCRYPTION_KEY && env.PII_ENCRYPTION_KEY.length >= 64;
+    const explicitlyWaived = process.env.ALLOW_UNENCRYPTED_PII === "true";
+
+    if (!keyConfigured && !explicitlyWaived) {
+      console.error(
+        "❌ PII_ENCRYPTION_KEY is required in production (64-char hex). Without it, IBAN, NIF " +
+          "and phone fields are stored in plaintext. Generate one with:\n" +
+          "     openssl rand -hex 32\n" +
+          "   To run without encryption anyway, set ALLOW_UNENCRYPTED_PII=true.",
+      );
+      process.exit(1);
+    }
+
+    if (!keyConfigured && explicitlyWaived) {
+      console.warn(
+        "⚠️  ALLOW_UNENCRYPTED_PII=true — IBAN, NIF and phone fields are being stored in " +
+          "PLAINTEXT. This is not suitable for real tenant data.",
+      );
+    }
+  }
+
   // If OAuth is enabled and we're running a real production server (not CI/build), enforce auth envs
   const oauthEnabled =
     process.env.ENABLE_OAUTH === "true" ||
