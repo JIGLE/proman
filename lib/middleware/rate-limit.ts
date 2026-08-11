@@ -6,6 +6,7 @@
  */
 
 import { getRateLimitStore } from "./rate-limit-store";
+import { resolveClientIp } from "@/lib/utils/security";
 
 interface RateLimitEntry {
   count: number;
@@ -61,21 +62,9 @@ export const RateLimits = {
  * Get client identifier from request (IP address by default)
  */
 function getClientIdentifier(request: Request): string {
-  // Try to get real IP from various headers (in order of preference)
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    // x-forwarded-for can be a comma-separated list, take the first one
-    return forwardedFor.split(",")[0].trim();
-  }
-
-  const realIp = request.headers.get("x-real-ip");
-  if (realIp) return realIp;
-
-  const cfConnectingIp = request.headers.get("cf-connecting-ip"); // Cloudflare
-  if (cfConnectingIp) return cfConnectingIp;
-
-  // Fallback to a generic identifier if no IP found
-  return "unknown";
+  // Shared resolver: counts X-Forwarded-For from the right so a caller cannot choose their own
+  // bucket by prepending a value. See lib/utils/security.ts.
+  return resolveClientIp(request);
 }
 
 /**

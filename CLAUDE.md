@@ -79,7 +79,7 @@ e2e/                # Playwright E2E tests
 - **AppContext**: All entities (properties, tenants, leases, receipts, expenses, tickets, buildings…) live in `AppState` via `lib/contexts/app-context.tsx` (composed from `use-app-data.ts` + `use-entity-actions.ts` + `create-entity-actions.ts`). Mutations go through typed actions (`addProperty`, `updateTenant`, etc.). Bank/tax/OCR domains (added in the Situs rebrand) are read via dedicated fetches in their own components instead — they don't live in `AppState`.
 - **API routes**: Each domain has its own folder under `app/api/`. Use `GET`/`POST`/`PUT`/`DELETE` handlers with Zod validation and NextAuth session checks.
 - **Compliance**: PT (`/api/compliance/rent-receipts`) and ES (`/api/compliance/nrua`) endpoints generate fiscal payloads. Tax logic lives in `app/api/tax/`.
-- **PII encryption**: AES-256-GCM on IBAN, NIF, phone fields via `lib/utils/pii-encryption.ts` (`encryptPII`/`decryptPII`, keyed off `PII_ENCRYPTION_KEY`). `PII_FIELDS` declares which model fields are covered — see `docs/PRODUCT_AUDIT_2026.md` §5 for wiring status.
+- **PII encryption**: AES-256-GCM on IBAN, NIF, phone fields via `lib/utils/pii-encryption.ts` (`encryptPII`/`decryptPII`, keyed off `PII_ENCRYPTION_KEY`). `PII_FIELDS` declares which model fields are covered — see `docs/PRODUCT_AUDIT_2026.md` §5 for wiring status. **Fails closed in production**: `lib/utils/env.ts` exits if `PII_ENCRYPTION_KEY` is absent, because `encryptPII` silently returns plaintext without it. `ALLOW_UNENCRYPTED_PII=true` waives the check and warns loudly on every start.
 - **Reference-month rent ledger** (Situs): `RentPeriod` is the persisted-derived spine — one row per lease per reference month, `status` recomputed in the same transaction as every allocation write (never hand-set). The waterfall invariant: always fill the oldest not-fully-allocated period first (`lib/services/allocation/engine.ts`, pure). `Tenant.paymentStatus` is fully derived from this ledger — the API layer refuses manual overrides.
 - **Bank matching**: CSV/manual import → fingerprint dedupe (idempotent) → fuzzy-duplicate check → reconciliation rules → weighted confidence scoring (`lib/services/matching/engine.ts`, pure). ≥0.85 auto-allocates via a draft `Receipt` (`source: "automation"`); below that, the row waits in the Bank Movements inbox (Finance tab) for a human to confirm/reassign/ignore.
 - **Receipt lifecycle**: `Receipt.status` is the MONEY state (paid|pending); `Receipt.lifecycle` is the separate DOCUMENT state machine (`lib/services/receipts/lifecycle.ts`, pure) — draft→review→emitted→(PT)submitted→accepted/rejected, or →voided from any pre-terminal state. Reaching emitted/accepted archives a PDF `Document`; voiding soft-reverses live `PaymentAllocation` rows.
@@ -155,7 +155,9 @@ Copy `.env.example` to `.env` before first run. Required vars:
 - `NEXTAUTH_SECRET` — random secret for session signing
 - `NEXTAUTH_URL` — base URL (e.g. `http://localhost:3000`)
 
-Optional: `SENDGRID_API_KEY`, `STRIPE_SECRET_KEY`, `REDIS_URL`, `PII_ENCRYPTION_KEY`
+Required in production: `PII_ENCRYPTION_KEY` (64-char hex; the app exits without it)
+
+Optional: `SENDGRID_API_KEY`, `STRIPE_SECRET_KEY`, `REDIS_URL`
 
 Optional (app subscription billing — Free/Pro/Business landing-page tiers, distinct from
 tenant rent collection): `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_BUSINESS`,

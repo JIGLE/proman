@@ -6,6 +6,7 @@ import { getPrismaClient } from "@/lib/services/database/database";
 import { decryptPII, encryptPII } from "@/lib/utils/pii-encryption";
 import { totpVerify } from "@/lib/utils/totp";
 import crypto from "crypto";
+import { RateLimits, rateLimit } from "@/lib/middleware/rate-limit";
 
 const schema = z.object({ code: z.string().min(6).max(8) });
 
@@ -25,6 +26,17 @@ export async function POST(request: NextRequest) {
   if (!userId) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
+
+  // A TOTP code is six digits — one million possibilities, and a valid one stays valid for the
+  // length of its step window. Reaching here already requires a first factor, but MFA exists
+  // precisely for the case where the first factor is compromised, so unlimited guessing would
+  // make it decorative. Keyed per user rather than per IP: the attacker holds this session, and
+  // a shared NAT should not let one victim's attempts lock out everyone behind it.
+  const limited = await rateLimit(request, {
+    ...RateLimits.AUTH,
+    identifier: () => `totp-verify:${userId}`,
+  });
+  if (limited) return limited;
 
   try {
     const body = await request.json();

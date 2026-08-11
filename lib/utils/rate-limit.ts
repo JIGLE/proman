@@ -1,3 +1,5 @@
+import { resolveClientIp } from "@/lib/utils/security";
+
 // Rate limiting utility for API routes
 // Simple in-memory rate limiting (for production, use Redis or similar)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
@@ -5,23 +7,12 @@ const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
 const RATE_LIMIT_MAX_REQUESTS = process.env.NODE_ENV === "development" ? 10000 : 100; // Higher limit for local stress testing
 
+/**
+ * Delegates to the shared resolver, which counts X-Forwarded-For from the right. Reading the
+ * leftmost entry — as this did — let a caller pick their own rate-limit bucket per request.
+ */
 export function getClientIP(request: Request): string {
-  const forwarded = request.headers.get("x-forwarded-for");
-  const realIP = request.headers.get("x-real-ip");
-  const clientIP = request.headers.get("x-client-ip");
-
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
-  }
-  if (realIP) {
-    return realIP;
-  }
-  if (clientIP) {
-    return clientIP;
-  }
-
-  // For development, use a default IP
-  return "127.0.0.1";
+  return resolveClientIp(request);
 }
 
 export function isRateLimited(ip: string): boolean {

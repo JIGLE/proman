@@ -24,14 +24,34 @@ function getEncryptionKey(): Buffer | null {
 }
 
 /**
+ * Warn once per process when PII is being written unencrypted. `lib/utils/env.ts` refuses to boot
+ * production without a key, but scripts and one-off tooling do not always go through it — and a
+ * silent fallback to plaintext is exactly the failure that should never be quiet.
+ */
+let warnedAboutMissingKey = false;
+
+function warnOnceAboutPlaintext(): void {
+  if (warnedAboutMissingKey) return;
+  warnedAboutMissingKey = true;
+  if (process.env.NODE_ENV === "test") return;
+  console.warn(
+    "⚠️  [PII] PII_ENCRYPTION_KEY is not configured — IBAN, NIF and phone values are being " +
+      "stored in PLAINTEXT. Generate a key with: openssl rand -hex 32",
+  );
+}
+
+/**
  * Encrypt a plaintext string. Returns prefixed base64 string.
- * If no key is configured, returns plaintext unchanged (dev mode).
+ * If no key is configured, returns plaintext unchanged (dev mode) after warning once.
  */
 export function encryptPII(plaintext: string): string {
   if (!plaintext) return plaintext;
 
   const key = getEncryptionKey();
-  if (!key) return plaintext; // No key = no encryption (dev mode)
+  if (!key) {
+    warnOnceAboutPlaintext();
+    return plaintext; // No key = no encryption (dev mode)
+  }
 
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);

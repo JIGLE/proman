@@ -13,11 +13,15 @@ describe("rate-limit utilities", () => {
     _resetRateLimitMap();
   });
 
-  it("getClientIP prefers x-forwarded-for", () => {
+  it("getClientIP takes the proxy-appended entry, not the caller-supplied one", () => {
+    // This previously asserted "1.2.3.4" — the LEFTMOST entry, which is whatever the caller sent.
+    // That is the value an attacker controls, so keying rate limits on it meant any brute-force
+    // attempt could rotate the header and get a fresh allowance every request. X-Forwarded-For is
+    // appended to by each proxy, so the trustworthy entry is counted from the right.
     const req = new Request("https://example.com", {
       headers: { "x-forwarded-for": "1.2.3.4, 5.6.7.8" },
     });
-    expect(getClientIP(req)).toBe("1.2.3.4");
+    expect(getClientIP(req)).toBe("5.6.7.8");
   });
 
   it("isRateLimited returns true when threshold reached", () => {

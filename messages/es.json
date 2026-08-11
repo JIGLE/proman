@@ -1882,7 +1882,18 @@
     "preparing": "Preparando el entorno de demostración...",
     "title": "Lares Demo",
     "readOnly": "Esta funcionalidad es solo de lectura en modo demo",
-    "changesNotSaved": "Modo demo: los cambios no se guardan"
+    "changesNotSaved": "Modo demo: los cambios no se guardan",
+    "perspectiveOwner": "Propietario",
+    "perspectiveTenant": "Inquilino",
+    "perspectiveLabel": "Perspectiva de la demostración",
+    "reset": "Reiniciar",
+    "resetTitle": "Restablecer los datos de la demostración",
+    "extend": "+15 min",
+    "extendTitle": "Ampliar la demostración 15 minutos",
+    "timeRemaining": "Tiempo restante en esta demostración",
+    "expiringSoon": "La demostración termina en menos de 5 minutos",
+    "collapse": "Contraer barra",
+    "expand": "Expandir barra"
   },
   "loading": {
     "default": "Cargando...",

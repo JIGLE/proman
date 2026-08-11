@@ -163,12 +163,12 @@ Only three variables are required to boot:
 
 Recommended in production:
 
-| Variable             | Description                                     |
-| -------------------- | ----------------------------------------------- |
-| `PII_ENCRYPTION_KEY` | 64-char hex key for AES-256-GCM PII encryption  |
-| `CRON_SECRET`        | Bearer token for `POST /api/cron/notifications` |
-| `INIT_SECRET`        | Protects DB init and debug endpoints            |
-| `ENABLE_DEMO_LOGIN`  | Set `false` to disable demo login               |
+| Variable             | Description                                                                                                                                                     |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PII_ENCRYPTION_KEY` | **Required in production** — 64-char hex key for AES-256-GCM PII encryption. The app refuses to start without it; set `ALLOW_UNENCRYPTED_PII=true` to override. |
+| `CRON_SECRET`        | Bearer token for `POST /api/cron/notifications`                                                                                                                 |
+| `INIT_SECRET`        | Protects DB init and debug endpoints                                                                                                                            |
+| `ENABLE_DEMO_LOGIN`  | Set `false` to disable demo login                                                                                                                               |
 
 Integrations are opt-in and off by default — `ENABLE_STRIPE`, `ENABLE_SENDGRID`, `ENABLE_OAUTH`,
 and `ENABLE_BILLING` (plan limits; self-hosted stays unlimited unless you turn it on). Portugal

@@ -16,9 +16,6 @@ function safeCallbackUrl(raw: string | null): string | null {
   return raw;
 }
 
-const isDemoEnabled =
-  process.env.NEXT_PUBLIC_ENABLE_DEMO_LOGIN === "true" || process.env.NODE_ENV !== "production";
-
 export type AuthMode = "signin" | "signup";
 
 /** The three proof points shown on the brand panel — the owner workflow in one line each. */
@@ -112,7 +109,7 @@ function GoogleGlyph() {
   );
 }
 
-function AuthContent({ mode }: { mode: AuthMode }) {
+function AuthContent({ mode, demoLoginEnabled }: { mode: AuthMode; demoLoginEnabled: boolean }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -202,7 +199,7 @@ function AuthContent({ mode }: { mode: AuthMode }) {
           </button>
 
           {/* Credentials — self-hosted / demo instances only */}
-          {isDemoEnabled && (
+          {demoLoginEnabled && (
             <>
               <div className="relative my-7">
                 <div className="absolute inset-0 flex items-center">
@@ -275,7 +272,7 @@ function AuthContent({ mode }: { mode: AuthMode }) {
             </button>
           </p>
 
-          {isDemoEnabled && process.env.NODE_ENV !== "production" && (
+          {demoLoginEnabled && process.env.NODE_ENV !== "production" && (
             <p className="mt-4 text-center text-xs text-[var(--color-muted-foreground)]">
               {t("demoModeHint")}
             </p>
@@ -286,8 +283,20 @@ function AuthContent({ mode }: { mode: AuthMode }) {
   );
 }
 
-/** Shared auth experience, rendered by both /auth/signin and /auth/signup. */
-export function AuthView({ mode }: { mode: AuthMode }) {
+/**
+ * Shared auth experience, rendered by both /auth/signin and /auth/signup.
+ *
+ * `demoLoginEnabled` is resolved on the server by `isDemoLoginEnabled()` and passed in, rather
+ * than read from a NEXT_PUBLIC_* variable here. Two independent flags could disagree, and the
+ * disagreement that mattered left a live admin login path with no visible form.
+ */
+export function AuthView({
+  mode,
+  demoLoginEnabled,
+}: {
+  mode: AuthMode;
+  demoLoginEnabled: boolean;
+}) {
   const t = useTranslations("auth");
 
   return (
@@ -302,7 +311,7 @@ export function AuthView({ mode }: { mode: AuthMode }) {
           </div>
         }
       >
-        <AuthContent mode={mode} />
+        <AuthContent mode={mode} demoLoginEnabled={demoLoginEnabled} />
       </Suspense>
     </ErrorBoundary>
   );
