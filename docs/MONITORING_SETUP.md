@@ -419,11 +419,11 @@ For early-stage deployment:
 
 **Steps**:
 
-1. Check database service status: `kubectl get pods -n production`
+1. Check the container is running and healthy in the TrueNAS Apps UI
 2. Verify network connectivity: `nc -zv db-host 5432`
 3. Check connection pool config: Max connections exceeded?
 4. Review recent deployments: Schema migration issue?
-5. Restart application pods if needed: `kubectl rollout restart deployment situs`
+5. Restart the app from the TrueNAS Apps UI if needed
 
 ### High Error Rate (5xx)
 

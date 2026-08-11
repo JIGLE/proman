@@ -8,7 +8,7 @@ about: Create a new release with a short checklist to ensure stabilty and reprod
 - [ ] Bump package version (package.json & package-lock.json)
 - [ ] Run `npm test` and `npm run type-check` locally
 - [ ] Run `npm run lint` and fix issues
-- [ ] Run `Actions → Build and publish to GHCR → Run workflow` with `dry_run=true` and `version=<X.Y.Z>` and inspect `release-charts` artifact
+- [ ] Run `Actions → Build and publish to GHCR → Run workflow` with `dry_run=true` and `version=<X.Y.Z>` and confirm the image builds
 - [ ] Verify `README.md` Releases section updated with the version
 - [ ] Push tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin vX.Y.Z`
 - [ ] Confirm GitHub Release created and assets uploaded

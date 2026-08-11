@@ -36,7 +36,6 @@
     "load:test": "node scripts/load-test.js full",
     "load:stress": "node scripts/stress-test.js",
     "user:delete": "node scripts/delete-user.js",
-    "package:helm:verify": "bash scripts/package-helm-and-verify.sh release-charts-temp $(node -e 'console.log(require(\"./package.json\").version)')",
     "db:check": "node scripts/check-db.js",
     "i18n:check": "node scripts/check-translations.js",
     "i18n:check:strict": "node scripts/check-translations.js --strict",

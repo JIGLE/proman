@@ -116,7 +116,7 @@ situs/
 │   │   ├── API_ROUTES.md        # Complete API reference
 │   │   └── IMPORT_MIGRATION_GUIDE.md
 │   ├── deployment/              # Deployment guides
-│   │   └── ... (TrueNAS, K8s docs)
+│   │   └── ... (TrueNAS docs)
 │   ├── integrations/            # External service docs
 │   ├── releases/                # Release notes
 │   │   └── ... (version notes)
@@ -255,7 +255,7 @@ Granular path aliases for cleaner imports:
 
 - **API Reference**: Complete API documentation in [docs/architecture/API_ROUTES.md](docs/architecture/API_ROUTES.md)
 - **Import Guide**: Migration guide in [docs/architecture/IMPORT_MIGRATION_GUIDE.md](docs/architecture/IMPORT_MIGRATION_GUIDE.md)
-- **Deployment**: TrueNAS and Kubernetes guides in `docs/deployment/`
+- **Deployment**: TrueNAS guide in `docs/truenas.md`
 - **Storybook**: Component documentation guide in [docs/ux/STORYBOOK_GUIDE.md](docs/ux/STORYBOOK_GUIDE.md)
 
 ### 🎨 Next.js 16 Route Conventions
@@ -379,15 +379,9 @@ docker build -t situs .
 docker run -p 3000:3000 situs
 ```
 
-### Kubernetes
-
-```bash
-kubectl apply -f k8s/
-```
-
 ### TrueNAS SCALE
 
-See [TRUENAS_DEPLOYMENT.md](../TRUENAS_DEPLOYMENT.md)
+See [TrueNAS SCALE Guide](../truenas.md)
 
 ## Best Practices
 

@@ -116,7 +116,7 @@ docker compose --profile dev up -d     # build from source
 | Email      | SendGrid                                               |
 | Payments   | Stripe (card + SEPA DD)                                |
 | Testing    | Vitest (unit/integration) + Playwright (E2E)           |
-| Deployment | Docker / Kubernetes / Helm / TrueNAS SCALE             |
+| Deployment | Docker / TrueNAS SCALE                                 |
 
 ## Architecture
 
@@ -148,7 +148,6 @@ prisma/
   schema.prisma        → 47 models, 33 enums (SQLite)
 scripts/
   mobile-audit.mjs     → responsive measurement harness (see Quality gates)
-helm/situs/           → Helm chart with TrueNAS SCALE values
 ```
 
 ## Configuration
@@ -203,23 +202,14 @@ screen-density rules — both were derived from measured audits rather than tast
 | Target        | Resources                                                           |
 | ------------- | ------------------------------------------------------------------- |
 | Docker        | [Dockerfile](Dockerfile) · [docker-compose.yml](docker-compose.yml) |
-| Kubernetes    | [k8s/](k8s/) — Deployment, Service, CronJob                         |
-| Helm          | [helm/situs/](helm/situs/)                                          |
 | TrueNAS SCALE | [docs/truenas.md](docs/truenas.md)                                  |
 
-```bash
-helm install situs ./helm/situs \
-  -f helm/situs/values-truenas.yaml \
-  --namespace ix-app \
-  --set image.tag=1.23.1
-```
-
-Key TrueNAS values: `service.type` (`NodePort`, port 30080), `persistence.hostPath`
-(`/mnt/pools/<POOL_NAME>/apps/situs/data`), and `securityContext.runAsUser`/`runAsGroup` (`1001`
-— match your dataset permissions). Replace `<POOL_NAME>` before deploying.
+Deployed as a Docker container. TrueNAS SCALE runs it as a Custom App — see the guide above for
+storage, environment and update steps.
 
 Daily notifications (rent reminders, overdue notices, lease renewals, receipt deadlines) run via
-`POST /api/cron/notifications`; apply `k8s/cronjob-notifications.yaml` for the 08:00 UTC schedule.
+`POST /api/cron/notifications`, authenticated with `CRON_SECRET`. Schedule it with any cron runner
+that can make an authenticated HTTP request.
 
 Full instructions: [docs/deployment.md](docs/deployment.md).
 

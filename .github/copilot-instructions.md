@@ -182,7 +182,6 @@ tests/                # Vitest setup file and shared test helpers
 e2e/                  # Playwright end-to-end tests
 scripts/              # Node.js utility / maintenance scripts
 docs/                 # Project documentation
-helm/ k8s/            # Kubernetes / Helm deployment configs
 ```
 
 ### Rules for Placing New Files

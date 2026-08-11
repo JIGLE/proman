@@ -1,6 +1,7 @@
 # Deployment Guide
 
-This guide covers deploying Situs with Docker, Kubernetes, and Helm.
+This guide covers deploying Situs with Docker. TrueNAS SCALE has its own guide:
+[truenas.md](truenas.md).
 
 ## Docker
 
@@ -34,63 +35,6 @@ docker-compose --profile prod up -d
 
 # Development profile (builds from source)
 docker-compose --profile dev up -d
-```
-
-## Kubernetes
-
-### Prerequisites
-
-- `kubectl` configured for your cluster
-- A `situs-secrets` Secret with required keys
-
-### Create secrets
-
-```bash
-kubectl create secret generic situs-secrets \
-  --from-literal=NEXTAUTH_SECRET="$(openssl rand -base64 32)" \
-  --from-literal=DATABASE_URL="file:/data/situs.sqlite" \
-  --from-literal=SENDGRID_API_KEY="" \
-  --from-literal=INIT_SECRET="$(openssl rand -hex 32)" \
-  -n <namespace>
-```
-
-### Deploy
-
-```bash
-# Edit k8s/deployment.yaml — set the image tag and NEXTAUTH_URL
-kubectl apply -f k8s/deployment.yaml
-kubectl apply -f k8s/service.yaml
-```
-
-### Verify
-
-```bash
-kubectl get pods -l app=situs -o wide
-kubectl logs deployment/situs --tail=50
-curl -fS http://<node-ip>:<node-port>/api/health
-```
-
-## Helm
-
-### Install
-
-```bash
-helm install situs helm/situs \
-  --set image.tag=1.1.0 \
-  --set env[0].name=NEXTAUTH_URL \
-  --set env[0].value=https://your.domain \
-  -n <namespace>
-```
-
-### TrueNAS SCALE
-
-See [TrueNAS Guide](truenas.md) for SCALE-specific instructions.
-
-### Package the chart
-
-```bash
-bash scripts/helm-package.sh
-# Output: release-charts/situs-<version>.tgz
 ```
 
 ## Environment Variables

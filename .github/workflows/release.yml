@@ -7,7 +7,7 @@ name: Release
 #      merges the PR (auto-merge is attempted but is non-fatal if branch protection needs a
 #      review). This is the flow that actually shipped v1.16.3.
 #   2. `publish` (on push to main) — whenever a version bump lands on main and no matching
-#      tag exists yet, it creates the tag, GitHub Release, Helm chart, and triggers deploy.
+#      tag exists yet, it creates the tag and the GitHub Release; the tag push triggers deploy.
 #      Tag pushes work with GITHUB_TOKEN (tags aren't branch-protected). This also closes
 #      the Production Gate "version integrity" gap automatically.
 
@@ -116,15 +116,6 @@ jobs:
         run: |
           NEW_VER="${{ steps.version.outputs.new_version }}"
 
-          # Helm Chart.yaml — field-anchored patterns
-          sed -i "s/^version: .*/version: ${NEW_VER}/" helm/situs/Chart.yaml
-          sed -i "s/^appVersion: .*/appVersion: \"${NEW_VER}\"/" helm/situs/Chart.yaml
-          CHART_VER=$(grep '^version:' helm/situs/Chart.yaml | awk '{print $2}')
-          if [ "$CHART_VER" != "$NEW_VER" ]; then
-            echo "::error::helm/situs/Chart.yaml version update failed (got: '$CHART_VER', expected: '$NEW_VER')"
-            exit 1
-          fi
-
           # item.yaml (TrueNAS catalog)
           sed -i "s/^version: .*/version: ${NEW_VER}/" item.yaml
           sed -i "s/^app_version: .*/app_version: \"${NEW_VER}\"/" item.yaml
@@ -175,7 +166,7 @@ jobs:
         run: |
           BRANCH="release/v${{ steps.version.outputs.new_version }}"
           git checkout -b "$BRANCH"
-          git add package.json package-lock.json helm/situs/Chart.yaml item.yaml docker-compose.yml
+          git add package.json package-lock.json item.yaml docker-compose.yml
           git commit -m "chore(release): bump version to ${{ steps.version.outputs.new_version }}"
           # Feature branches aren't protected — GITHUB_TOKEN can push. Force so re-runs work.
           git push --force origin "$BRANCH"
@@ -272,10 +263,6 @@ jobs:
           node-version: "22"
           cache: "npm"
 
-      - name: Setup Helm
-        if: steps.gate.outputs.should_release == 'true'
-        uses: azure/setup-helm@v5
-
       - name: Generate changelog
         if: steps.gate.outputs.should_release == 'true'
         run: |
@@ -302,23 +289,6 @@ jobs:
           git tag -a "v${NEW_VER}" -m "Release v${NEW_VER}"
           git push origin "v${NEW_VER}"
 
-      - name: Package Helm chart
-        if: steps.gate.outputs.should_release == 'true'
-        run: |
-          mkdir -p release-charts
-          helm package helm/situs -d release-charts
-          OWNER=${GITHUB_REPOSITORY%%/*}
-          REPO=${GITHUB_REPOSITORY##*/}
-          # The --url must match where the charts are actually served, which is the ROOT of
-          # gh-pages: the publish step below uses `publish_dir: ./release-charts`, and that
-          # copies the directory's *contents* to the branch root, not the directory itself.
-          # It had `/release-charts` appended, so every `urls:` entry in the published
-          # index.yaml pointed at https://<owner>.github.io/<repo>/release-charts/<chart>.tgz
-          # while the file sat at https://<owner>.github.io/<repo>/<chart>.tgz. `helm repo add`
-          # worked (index.yaml is at the root and resolves), so the breakage only showed up at
-          # `helm install`/`helm pull`, where every chart 404s.
-          helm repo index release-charts --url "https://${OWNER}.github.io/${REPO}"
-
       - name: Create GitHub Release
         if: steps.gate.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v3
@@ -330,51 +300,14 @@ jobs:
           prerelease: false
           token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           generate_release_notes: true
-          files: release-charts/*.tgz
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Publish Helm charts to gh-pages
-        if: steps.gate.outputs.should_release == 'true'
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./release-charts
-          user_name: github-actions[bot]
-          user_email: github-actions[bot]@users.noreply.github.com
-
-      - name: Upload Helm chart artifact
-        if: steps.gate.outputs.should_release == 'true'
-        uses: actions/upload-artifact@v7
-        with:
-          name: release-charts
-          path: release-charts
-
-      - name: Trigger Deploy to GHCR workflow (with cluster update)
-        if: steps.gate.outputs.should_release == 'true'
-        uses: actions/github-script@v9
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          script: |
-            const workflow_id = 'deploy-ghcr.yml'
-            const ref = 'refs/tags/v' + process.env.NEW_VERSION
-            const inputs = {
-              version: process.env.NEW_VERSION,
-              deploy_k8s: 'false',
-              kube_namespace: 'ix-app',
-              kube_deployment: 'situs',
-              kube_container: 'situs'
-            }
-            await github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id,
-              ref,
-              inputs
-            })
-        env:
-          NEW_VERSION: ${{ steps.gate.outputs.new_version }}
+      # No explicit deploy-ghcr dispatch here. The "Create and push tag" step above pushes
+      # v<version>, and deploy-ghcr.yml already fires on `push: tags: ["v*"]` — dispatching it
+      # again meant every release built and pushed the image twice, with two jobs racing to
+      # write the same :latest tag. The dispatch only existed to pass deploy_k8s/kube_* inputs,
+      # which no longer exist now that Kubernetes deployment has been dropped.
 
       - name: Release Summary
         if: steps.gate.outputs.should_release == 'true'

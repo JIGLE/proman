@@ -26,7 +26,7 @@ Deferred: People/Operations/Intelligence IA consolidation (PR 10b), full infra r
 | Testing    | Vitest (unit/integration) + Playwright (E2E)    |
 | i18n       | next-intl (PT / EN / ES / IT)                   |
 | Payments   | Stripe (card + SEPA Direct Debit)               |
-| Deploy     | Docker / Kubernetes / Helm / TrueNAS SCALE      |
+| Deploy     | Docker / TrueNAS SCALE (Custom App)             |
 
 ## Key Commands
 
