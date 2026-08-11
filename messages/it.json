@@ -1882,7 +1882,18 @@
     "preparing": "Preparazione ambiente demo...",
     "title": "Demo Lares",
     "readOnly": "Questa funzionalità è in sola lettura in modalità demo",
-    "changesNotSaved": "Modalità demo: le modifiche non vengono salvate"
+    "changesNotSaved": "Modalità demo: le modifiche non vengono salvate",
+    "perspectiveOwner": "Proprietario",
+    "perspectiveTenant": "Inquilino",
+    "perspectiveLabel": "Prospettiva della demo",
+    "reset": "Reimposta",
+    "resetTitle": "Ripristina i dati della demo",
+    "extend": "+15 min",
+    "extendTitle": "Estendi la demo di 15 minuti",
+    "timeRemaining": "Tempo rimanente in questa demo",
+    "expiringSoon": "La demo termina tra meno di 5 minuti",
+    "collapse": "Comprimi barra",
+    "expand": "Espandi barra"
   },
   "loading": {
     "default": "Caricamento...",

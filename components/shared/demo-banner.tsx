@@ -29,6 +29,18 @@ function formatTime(ms: number): string {
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
+/**
+ * Styling notes, since this bar sits above every screen and read as not-of-the-app.
+ *
+ * It used a raw `amber-500 → orange-500` gradient with `black/10` overlays and `amber-950` text.
+ * None of that went through the token system, so it tracked neither theme nor the country accent,
+ * and a gradient is the one decorative flourish this rectilinear brand uses nowhere else.
+ * `--color-warning{,-foreground}` already exist in both themes and mean exactly this.
+ *
+ * Type was `text-[10px]` above `md` — under the 12px legibility floor globals.css sets out for
+ * `.mono-label-xs` — and controls were `py-0.5`, nowhere near the 44px touch floor the mobile
+ * rules require. Every label was hardcoded English in a four-locale product.
+ */
 export function DemoBanner() {
   const { isDemoMode, exitDemo, demoPerspective, switchDemoPerspective } = useDemoMode();
   const t = useTranslations();
@@ -81,124 +93,120 @@ export function DemoBanner() {
 
   const isLowTime = remaining < WARN_THRESHOLD_MS;
 
+  // One control style, shared. Flat, token-coloured, and tall enough to hit on a phone.
+  const control =
+    "inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium " +
+    "bg-[color-mix(in_srgb,var(--color-warning-foreground)_12%,transparent)] " +
+    "hover:bg-[color-mix(in_srgb,var(--color-warning-foreground)_22%,transparent)] " +
+    "transition-colors max-md:min-h-11";
+
   return (
-    <div role="status" aria-live="polite" className="sticky top-0 z-50">
-      <div className="flex items-center justify-between gap-2 bg-gradient-to-r from-amber-500/90 to-orange-500/90 backdrop-blur-sm px-3 py-1 text-xs font-medium text-amber-950 dark:from-amber-600/90 dark:to-orange-600/90 dark:text-amber-50 shadow-sm transition-all duration-200">
-        {/* Left: status */}
-        <div className="flex items-center gap-2 min-w-0">
-          <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-          {!collapsed && <span className="truncate">{t("demo.banner")}</span>}
-          {collapsed && (
-            <span className="text-[12px] md:text-[10px] font-mono tabular-nums">
-              <Timer className="h-3 w-3 inline mr-1" />
-              {formatTime(remaining)}
-            </span>
+    <div
+      role="status"
+      aria-live="polite"
+      className="sticky top-0 z-50 border-b border-[color-mix(in_srgb,var(--color-warning-foreground)_25%,transparent)] bg-[var(--color-warning)] text-[var(--color-warning-foreground)]"
+      style={{ paddingTop: "env(safe-area-inset-top)" }}
+    >
+      <div className="flex items-center justify-between gap-2 px-3 py-1">
+        {/* Left: what this bar is, or just the clock once collapsed */}
+        <div className="flex min-w-0 items-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden="true" />
+          {collapsed ? (
+            <span className="font-mono text-xs tabular-nums">{formatTime(remaining)}</span>
+          ) : (
+            <span className="truncate text-xs font-medium">{t("demo.banner")}</span>
           )}
         </div>
 
         {/* Right: controls */}
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex shrink-0 items-center gap-1">
           {!collapsed && (
             <>
-              <div className="inline-flex items-center gap-1 rounded bg-black/10 p-0.5">
-                <button
-                  onClick={() => switchDemoPerspective("owner")}
-                  className={`rounded px-2 py-0.5 text-[12px] md:text-[10px] font-semibold transition-colors ${
-                    demoPerspective === "owner" ? "bg-black/20" : ""
-                  }`}
-                >
-                  Owner
-                </button>
-                <button
-                  onClick={() => switchDemoPerspective("tenant")}
-                  className={`rounded px-2 py-0.5 text-[12px] md:text-[10px] font-semibold transition-colors ${
-                    demoPerspective === "tenant" ? "bg-black/20" : ""
-                  }`}
-                >
-                  Tenant
-                </button>
+              <div
+                role="group"
+                aria-label={t("demo.perspectiveLabel")}
+                className="inline-flex items-center bg-[color-mix(in_srgb,var(--color-warning-foreground)_12%,transparent)]"
+              >
+                {(["owner", "tenant"] as const).map((perspective) => (
+                  <button
+                    key={perspective}
+                    type="button"
+                    onClick={() => switchDemoPerspective(perspective)}
+                    aria-pressed={demoPerspective === perspective}
+                    className={`px-2 py-1 text-xs font-semibold transition-colors max-md:min-h-11 ${
+                      demoPerspective === perspective
+                        ? "bg-[color-mix(in_srgb,var(--color-warning-foreground)_28%,transparent)]"
+                        : "hover:bg-[color-mix(in_srgb,var(--color-warning-foreground)_18%,transparent)]"
+                    }`}
+                  >
+                    {t(
+                      perspective === "owner" ? "demo.perspectiveOwner" : "demo.perspectiveTenant",
+                    )}
+                  </button>
+                ))}
               </div>
 
-              {/* Session timer */}
+              {/* Countdown. Below the warning threshold it inverts to the error token rather than
+                  pulsing — a blinking element beside a countdown is noise, and animation here
+                  would ignore prefers-reduced-motion. */}
               <span
-                className={`inline-flex items-center gap-1 rounded px-2 py-0.5 text-[12px] md:text-[10px] font-mono tabular-nums ${
+                title={t("demo.timeRemaining")}
+                className={`inline-flex items-center gap-1.5 px-2 py-1 font-mono text-xs tabular-nums ${
                   isLowTime
-                    ? "bg-rose-950/40 text-rose-50 animate-pulse"
-                    : "bg-black/10 text-amber-950 dark:text-amber-50"
+                    ? "bg-[var(--color-error)] text-[var(--color-error-foreground)]"
+                    : "bg-[color-mix(in_srgb,var(--color-warning-foreground)_12%,transparent)]"
                 }`}
-                title="Time remaining in demo session"
               >
-                <Timer className="h-3 w-3" />
+                <Timer className="h-3.5 w-3.5" aria-hidden="true" />
                 {formatTime(remaining)}
+                {isLowTime && <span className="sr-only">{t("demo.expiringSoon")}</span>}
               </span>
 
-              {/* Extend 15 min — visible when < 5 min remain */}
-              {isLowTime && (
+              {/* Extend appears only when it is needed. The old design showed this button AND a
+                  second full-width red bar below with the same action — two prompts, one job. */}
+              {(isLowTime || showExtendPrompt) && (
                 <button
+                  type="button"
                   onClick={handleExtend}
-                  className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[12px] md:text-[10px] font-semibold bg-black/20 hover:bg-black/30 transition-colors"
-                  title="Extend demo by 15 minutes"
+                  title={t("demo.extendTitle")}
+                  className={control}
                 >
-                  +15 min
+                  {t("demo.extend")}
                 </button>
               )}
 
-              {/* Reset Demo */}
               <button
+                type="button"
                 onClick={handleReset}
-                className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[12px] md:text-[10px] font-semibold bg-black/10 hover:bg-black/20 transition-colors"
-                title="Reset demo data to defaults"
+                title={t("demo.resetTitle")}
+                className={control}
               >
-                <RotateCcw className="h-3 w-3" />
-                <span className="hidden sm:inline">Reset</span>
+                <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                <span className="hidden sm:inline">{t("demo.reset")}</span>
               </button>
 
-              {/* Exit Demo */}
-              <button
-                onClick={exitDemo}
-                className="inline-flex items-center gap-1 rounded-md bg-black/15 px-2.5 py-0.5 text-[12px] md:text-[10px] font-semibold hover:bg-black/25 transition-colors"
-              >
-                <LogOut className="h-3 w-3" />
+              <button type="button" onClick={exitDemo} className={control}>
+                <LogOut className="h-3.5 w-3.5" aria-hidden="true" />
                 {t("demo.exitButton")}
               </button>
             </>
           )}
 
-          {/* Collapse toggle */}
           <button
+            type="button"
             onClick={() => setCollapsed((c) => !c)}
-            className="inline-flex items-center rounded p-0.5 hover:bg-black/15 transition-colors"
-            title={collapsed ? "Expand demo banner" : "Collapse demo banner"}
+            aria-expanded={!collapsed}
+            aria-label={collapsed ? t("demo.expand") : t("demo.collapse")}
+            className="inline-flex items-center p-1 transition-colors hover:bg-[color-mix(in_srgb,var(--color-warning-foreground)_18%,transparent)] max-md:min-h-11 max-md:min-w-11 max-md:justify-center"
           >
-            {collapsed ? <ChevronDown className="h-3 w-3" /> : <ChevronUp className="h-3 w-3" />}
+            {collapsed ? (
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            ) : (
+              <ChevronUp className="h-4 w-4" aria-hidden="true" />
+            )}
           </button>
         </div>
       </div>
-
-      {/* Expiry warning prompt row */}
-      {showExtendPrompt && (
-        <div className="flex items-center justify-between gap-2 bg-red-600/90 px-3 py-1 text-xs font-medium text-white shadow-sm">
-          <span className="flex items-center gap-1.5">
-            <AlertTriangle className="h-3.5 w-3.5 shrink-0" />
-            Demo expires in 5 minutes. Extend?
-          </span>
-          <div className="flex items-center gap-1.5 shrink-0">
-            <button
-              onClick={handleExtend}
-              className="inline-flex items-center gap-1 rounded px-2.5 py-0.5 text-[12px] md:text-[10px] font-semibold bg-white/20 hover:bg-white/30 transition-colors"
-            >
-              Extend 15 min
-            </button>
-            <button
-              onClick={() => setShowExtendPrompt(false)}
-              className="inline-flex items-center rounded p-0.5 hover:bg-white/20 transition-colors"
-              title="Dismiss"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
