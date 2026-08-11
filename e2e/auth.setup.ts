@@ -37,8 +37,8 @@ setup("authenticate", async ({ page }) => {
   } catch {
     throw new Error(
       `No credentials sign-in form at ${BASE}/auth/signin. The E2E suite needs the demo ` +
-        `credentials provider: set ENABLE_DEMO_LOGIN=true on the server and build with ` +
-        `NEXT_PUBLIC_ENABLE_DEMO_LOGIN=true (a production build compiles the form out otherwise).`,
+        `credentials provider: set ENABLE_DEMO_LOGIN=true on the server. It is resolved per ` +
+        `request, so no special build is needed.`,
     );
   }
 

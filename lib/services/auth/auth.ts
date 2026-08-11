@@ -27,6 +27,7 @@ type Account = {
 };
 
 import CredentialsProvider from "next-auth/providers/credentials";
+import { isDemoLoginEnabled } from "@/lib/utils/demo-login";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { isMockMode } from "@/lib/config/data-mode";
 import { createDevSession, isDevAuthEnabled } from "@/lib/services/auth/dev-session";
@@ -63,10 +64,10 @@ function createBaseAuthOptions(): NextAuthOptions {
     }
   }
 
-  // Credentials provider for demo / self-hosted auth — disabled in production unless ENABLE_DEMO_LOGIN=true
-  const enableDemoLogin =
-    process.env.ENABLE_DEMO_LOGIN === "true" || process.env.NODE_ENV !== "production";
-  if (enableDemoLogin) {
+  // Credentials provider for demo / self-hosted auth — disabled in production unless
+  // ENABLE_DEMO_LOGIN=true. Shares isDemoLoginEnabled() with the sign-in pages so the provider
+  // and the form that exposes it can never disagree about whether this path exists.
+  if (isDemoLoginEnabled()) {
     providers.push(
       CredentialsProvider({
         // @ts-ignore — 'id' may not exist in CredentialsProvider type depending on resolution mode
