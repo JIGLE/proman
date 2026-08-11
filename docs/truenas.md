@@ -84,6 +84,25 @@ https://<your-domain>/api/auth/callback/google
 It must match `NEXTAUTH_URL` exactly. When changing domains, add the new URI **before** cutting
 over and remove the old one afterwards — otherwise sign-in fails with `redirect_uri_mismatch`.
 
+## Publishing an image
+
+Nothing reaches GHCR just because code landed on `main`. Two paths put an image there:
+
+**A release (what production should run).** Actions → **Release** → Run workflow → pick
+`patch`/`minor`/`major`. That opens a `release/vX.Y.Z` PR with the version bumps; merging it to
+`main` makes the workflow create the tag and the GitHub Release, and the tag push is what triggers
+**Deploy to GHCR**. So it is dispatch → merge → wait, not one button.
+
+**A one-off build (for testing an unreleased branch).** Actions → **Deploy to GHCR** → Run
+workflow, choosing the branch and optionally a `version` string.
+
+> ⚠️ A one-off build still writes `:latest`. The tag list is
+> `ghcr.io/jigle/situs:<version>,ghcr.io/jigle/situs:latest` for every dispatch, so testing a
+> branch this way moves `:latest` onto unreleased code. Give it an explicit `version` like
+> `1.25.0-rc1`, point the app at that exact tag, and cut a real release afterwards to put
+> `:latest` back on shipped code. Use `dry_run: true` to prove the image builds without pushing
+> anything.
+
 ## Updating
 
 1. Check <https://github.com/JIGLE/situs/releases>
