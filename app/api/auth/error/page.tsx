@@ -67,11 +67,11 @@ function AuthErrorContent(): React.ReactElement {
           </p>
           <ul className="list-disc pl-5 space-y-1">
             <li>
-              Ensure <code>NEXTAUTH_URL</code> is set to <code>https://proman.mj25.eu</code>.
+              Ensure <code>NEXTAUTH_URL</code> is set to <code>https://situs.mj25.eu</code>.
             </li>
             <li>
               Confirm Google OAuth client has redirect URI{" "}
-              <code>https://proman.mj25.eu/api/auth/callback/google</code>.
+              <code>https://situs.mj25.eu/api/auth/callback/google</code>.
             </li>
             <li>
               Verify <code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code>, and{" "}

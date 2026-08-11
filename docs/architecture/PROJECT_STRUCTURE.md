@@ -1,15 +1,15 @@
 # Project Structure
 
-This document provides a comprehensive overview of the ProMan project structure and organization.
+This document provides a comprehensive overview of the Situs project structure and organization.
 
 ## Repository Overview
 
-ProMan follows Next.js 16 App Router conventions with feature-based organization, co-located tests, and barrel exports for clean imports.
+Situs follows Next.js 16 App Router conventions with feature-based organization, co-located tests, and barrel exports for clean imports.
 
 ## Directory Structure
 
 ```
-proman/
+situs/
 ├── app/                          # Next.js App Router
 │   ├── [locale]/                 # Internationalized routes
 │   │   ├── (main)/              # Main app route group
@@ -116,7 +116,7 @@ proman/
 │   │   ├── API_ROUTES.md        # Complete API reference
 │   │   └── IMPORT_MIGRATION_GUIDE.md
 │   ├── deployment/              # Deployment guides
-│   │   └── ... (TrueNAS, K8s docs)
+│   │   └── ... (TrueNAS docs)
 │   ├── integrations/            # External service docs
 │   ├── releases/                # Release notes
 │   │   └── ... (version notes)
@@ -255,7 +255,7 @@ Granular path aliases for cleaner imports:
 
 - **API Reference**: Complete API documentation in [docs/architecture/API_ROUTES.md](docs/architecture/API_ROUTES.md)
 - **Import Guide**: Migration guide in [docs/architecture/IMPORT_MIGRATION_GUIDE.md](docs/architecture/IMPORT_MIGRATION_GUIDE.md)
-- **Deployment**: TrueNAS and Kubernetes guides in `docs/deployment/`
+- **Deployment**: TrueNAS guide in `docs/truenas.md`
 - **Storybook**: Component documentation guide in [docs/ux/STORYBOOK_GUIDE.md](docs/ux/STORYBOOK_GUIDE.md)
 
 ### 🎨 Next.js 16 Route Conventions
@@ -353,7 +353,7 @@ Required environment variables:
 
 ```env
 # Database
-DATABASE_URL=file:./proman.db
+DATABASE_URL=file:./situs.db
 
 # Authentication
 NEXTAUTH_SECRET=your-secret-here
@@ -375,19 +375,13 @@ STRIPE_WEBHOOK_SECRET=your-webhook-secret
 ### Docker
 
 ```bash
-docker build -t proman .
-docker run -p 3000:3000 proman
-```
-
-### Kubernetes
-
-```bash
-kubectl apply -f k8s/
+docker build -t situs .
+docker run -p 3000:3000 situs
 ```
 
 ### TrueNAS SCALE
 
-See [TRUENAS_DEPLOYMENT.md](../TRUENAS_DEPLOYMENT.md)
+See [TrueNAS SCALE Guide](../truenas.md)
 
 ## Best Practices
 
@@ -412,4 +406,4 @@ Proprietary - All Rights Reserved. See [LICENSE](../LICENSE)
 
 ---
 
-**ProMan** - Modern Property Management for the Self-Hosted Era
+**Situs** - Modern Property Management for the Self-Hosted Era

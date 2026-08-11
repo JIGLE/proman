@@ -246,7 +246,7 @@ function main() {
   const testType = args[0] || "full";
   const targetUrl = validateTargetUrl(process.env.TARGET_URL || "http://localhost:3000");
 
-  print("\n🚀 ProMan Load Testing Suite", "cyan");
+  print("\n🚀 Situs Load Testing Suite", "cyan");
   print(`Target: ${targetUrl}`, "blue");
   print(`Test Type: ${testType}\n`, "blue");
 

@@ -20,7 +20,7 @@ import {
   DEMO_LEASES,
 } from "./demo-data";
 
-const STORAGE_KEY = "proman_demo_store";
+const STORAGE_KEY = "situs_demo_store";
 
 interface DemoStore {
   properties: unknown[];

@@ -77,7 +77,7 @@ async function main() {
 
   const dbUrl =
     process.env.DATABASE_URL ||
-    (process.env.NODE_ENV === "production" ? "file:/data/proman.db" : "file:./dev.db");
+    (process.env.NODE_ENV === "production" ? "file:/data/situs.db" : "file:./dev.db");
   const prisma = new PrismaClient({ datasources: { db: { url: dbUrl } } });
 
   let totalRows = 0;

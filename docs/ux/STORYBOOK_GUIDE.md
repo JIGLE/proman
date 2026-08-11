@@ -1,6 +1,6 @@
 # Storybook Integration Guide
 
-This document provides guidance for adding Storybook to the ProMan project for component documentation and development.
+This document provides guidance for adding Storybook to the Situs project for component documentation and development.
 
 ## What is Storybook?
 
@@ -462,7 +462,7 @@ type Story = StoryObj<typeof meta>;
 4. Configure CI/CD for automated builds
 5. Deploy Storybook for team access
 
-## Benefits for ProMan
+## Benefits for Situs
 
 - **Component Documentation**: Clear documentation for all UI components
 - **Development Workflow**: Build components in isolation

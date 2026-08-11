@@ -1,6 +1,6 @@
 # Troubleshooting
 
-Common issues and solutions when running ProMan.
+Common issues and solutions when running Situs.
 
 ## Application Won't Start
 
@@ -36,9 +36,9 @@ securityContext:
 
 ### App starts but returns 500 errors
 
-1. Check logs: `kubectl logs deployment/proman --tail=100`
+1. Check logs: `kubectl logs deployment/situs --tail=100`
 2. Verify environment variables are set: `kubectl exec <pod> -- env | grep -E 'DATABASE|NEXTAUTH'`
-3. Verify database tables exist: `kubectl exec <pod> -- sqlite3 /data/proman.sqlite '.tables'`
+3. Verify database tables exist: `kubectl exec <pod> -- sqlite3 /data/situs.sqlite '.tables'`
 
 ## Networking
 
@@ -53,14 +53,14 @@ securityContext:
 2. **Port-forward** to test locally:
 
    ```bash
-   kubectl port-forward svc/proman 3000:80 -n <namespace>
+   kubectl port-forward svc/situs 3000:80 -n <namespace>
    curl http://localhost:3000
    ```
 
 3. Check service configuration:
    ```bash
-   kubectl get svc proman -o yaml
-   kubectl describe endpoints proman
+   kubectl get svc situs -o yaml
+   kubectl describe endpoints situs
    ```
 
 ### NextAuth redirect errors
@@ -69,10 +69,10 @@ securityContext:
 
 ```bash
 # Correct
-NEXTAUTH_URL=https://proman.example.com
+NEXTAUTH_URL=https://situs.example.com
 
 # Wrong (missing port for NodePort)
-NEXTAUTH_URL=https://proman.example.com  # when using NodePort 30080
+NEXTAUTH_URL=https://situs.example.com  # when using NodePort 30080
 # Should be: http://<ip>:30080
 ```
 
@@ -84,7 +84,7 @@ The Dockerfile includes build dependencies (`python3 make g++ pkgconfig`). If bu
 
 ```bash
 # Ensure you're building for the right platform
-docker buildx build --platform linux/amd64 -t proman:local .
+docker buildx build --platform linux/amd64 -t situs:local .
 ```
 
 ### Container exits immediately
@@ -126,11 +126,11 @@ curl -sS -X POST -H "Authorization: Bearer $INIT_SECRET" \
 
 ```bash
 # Check integrity
-sqlite3 /data/proman.sqlite "PRAGMA integrity_check;"
+sqlite3 /data/situs.sqlite "PRAGMA integrity_check;"
 
 # If corrupt, restore from backup
 bash scripts/db-backup.sh  # create current backup first
-cp /backups/proman-<timestamp>.sqlite /data/proman.sqlite
+cp /backups/situs-<timestamp>.sqlite /data/situs.sqlite
 ```
 
 ### Reset database (development only)
@@ -143,7 +143,7 @@ RESET_DB=true npm run dev
 
 ### Slow responses
 
-1. Check database size: `ls -la /data/proman.sqlite`
+1. Check database size: `ls -la /data/situs.sqlite`
 2. Check available memory: `kubectl top pod <pod-name>`
 3. Review resource limits in deployment spec
 4. Consider upgrading to PostgreSQL for high-traffic deployments
@@ -151,5 +151,5 @@ RESET_DB=true npm run dev
 ## Getting Help
 
 - Check existing docs: `docs/` directory
-- Open an issue: https://github.com/JIGLE/proman/issues
+- Open an issue: https://github.com/JIGLE/situs/issues
 - Review logs with structured JSON format for easier debugging

@@ -234,7 +234,7 @@ function generateHtmlReport(report, summary) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OWASP ZAP Security Report - ProMan</title>
+  <title>OWASP ZAP Security Report - Situs</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
     .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -327,7 +327,7 @@ function main() {
   config.zapUrl = validateTargetUrl(config.zapUrl);
   config.targetUrl = validateTargetUrl(config.targetUrl);
 
-  print("\n🔒 OWASP ZAP Security Scanner for ProMan", "cyan");
+  print("\n🔒 OWASP ZAP Security Scanner for Situs", "cyan");
   print("Automated vulnerability testing\n", "blue");
 
   // Note: Full ZAP integration would require:

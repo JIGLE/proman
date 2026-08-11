@@ -6,7 +6,7 @@
 
 ## Overview
 
-Comprehensive accessibility improvements to meet WCAG 2.1 AA standards for the ProMan property management application.
+Comprehensive accessibility improvements to meet WCAG 2.1 AA standards for the Situs property management application.
 
 ---
 
@@ -327,7 +327,7 @@ The app uses Radix UI Dialog primitives which automatically:
 
 ## 🎉 Summary
 
-The ProMan application now meets **WCAG 2.1 AA compliance** for accessibility with:
+The Situs application now meets **WCAG 2.1 AA compliance** for accessibility with:
 
 - ✅ Complete keyboard navigation support
 - ✅ Proper ARIA labels and landmarks

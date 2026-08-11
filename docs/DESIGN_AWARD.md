@@ -42,7 +42,7 @@ NO_PROXY=localhost NEXTAUTH_SECRET=<same-as-.env> \
 ```
 
 Writes to `.design-award/shots/<tag>/`. Themes are forced via
-`localStorage['proman-theme']` = `light|dark|dark-oled` (the `ThemeProvider` in
+`localStorage['situs-theme']` = `light|dark|dark-oled` (the `ThemeProvider` in
 `lib/contexts/theme-context.tsx` stamps a class + `data-theme` on `<html>`).
 **Read every image** — a finding without a screenshot or code reference doesn't
 count. Re-run with `--tag after` and compare.

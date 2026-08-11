@@ -11,9 +11,9 @@
  */
 
 /** Cookie name used to flag a demo session */
-export const DEMO_COOKIE_NAME = "proman_demo";
-export const DEMO_PERSPECTIVE_COOKIE_NAME = "proman_demo_role";
-export const DEMO_TENANT_COOKIE_NAME = "proman_demo_tenant";
+export const DEMO_COOKIE_NAME = "situs_demo";
+export const DEMO_PERSPECTIVE_COOKIE_NAME = "situs_demo_role";
+export const DEMO_TENANT_COOKIE_NAME = "situs_demo_tenant";
 export const DEFAULT_DEMO_TENANT_ID = "demo-tenant-1";
 
 /** Max age for the demo cookie (1 hour) */
@@ -22,14 +22,14 @@ export const DEMO_COOKIE_MAX_AGE = 60 * 60;
 /** Demo user constants — matches the existing demo credentials provider */
 export const DEMO_USER = {
   id: "demo-user",
-  email: "demo@proman.local",
+  email: "demo@situs.local",
   name: "Demo User",
   role: "ADMIN" as const,
   image: null,
 };
 
 export const DEMO_CREDENTIALS = {
-  email: "demo@proman.local",
+  email: "demo@situs.local",
   password: "demo123",
 };
 

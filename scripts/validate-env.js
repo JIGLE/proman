@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Environment variable validation script for ProMan.
+ * Environment variable validation script for Situs.
  *
  * Run before starting the application to ensure all required
  * environment variables are set. Usable from CI and package.json scripts.
@@ -49,7 +49,7 @@ if (isProd) {
     "NEXTAUTH_SECRET",
     "Session signing secret (min 32 chars). Generate: openssl rand -base64 32",
   );
-  requireVar("DATABASE_URL", "Database connection string (e.g. file:/data/proman.sqlite)");
+  requireVar("DATABASE_URL", "Database connection string (e.g. file:/data/situs.sqlite)");
 }
 
 // NEXTAUTH_SECRET length check
@@ -75,7 +75,7 @@ requireVarIf(
 
 // Non-critical services
 warnVar("SENDGRID_API_KEY", "Email sending will be disabled");
-warnVar("FROM_EMAIL", "Defaults to noreply@proman.app");
+warnVar("FROM_EMAIL", "Defaults to noreply@situs.app");
 
 // CSRF secret recommended in production
 if (isProd) {
@@ -98,7 +98,7 @@ if (isProd) {
 
 // ── output ───────────────────────────────────────────────────────────────
 console.log("");
-console.log("🔍 ProMan Environment Validation");
+console.log("🔍 Situs Environment Validation");
 console.log(`   NODE_ENV = ${process.env.NODE_ENV || "(unset)"}`);
 console.log("");
 

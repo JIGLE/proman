@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-const STORAGE_KEY = "proman-navigation-state";
-const RECENT_ITEMS_KEY = "proman-recent-items";
+const STORAGE_KEY = "situs-navigation-state";
+const RECENT_ITEMS_KEY = "situs-recent-items";
 const MAX_RECENT_ITEMS = 10;
 
 interface NavigationState {
@@ -181,7 +181,7 @@ export function useRecentItems() {
 /**
  * Hook for managing favorites/pinned items
  */
-const FAVORITES_KEY = "proman-favorites";
+const FAVORITES_KEY = "situs-favorites";
 
 interface FavoriteItem {
   id: string;

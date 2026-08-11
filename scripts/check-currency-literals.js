@@ -3,16 +3,7 @@ const fs = require("fs").promises;
 const path = require("path");
 
 const includeDirs = ["app", "components", "lib", "pages", "src"];
-const excludeNames = new Set([
-  ".next",
-  "node_modules",
-  "public",
-  "docs",
-  "tests",
-  "release-charts",
-  "helm",
-  ".git",
-]);
+const excludeNames = new Set([".next", "node_modules", "public", "docs", "tests", ".git"]);
 const exts = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 
 const findings = [];

@@ -53,7 +53,7 @@ describe("getCsrfTokenFromDocument", () => {
   it("picks the right cookie when others surround it", () => {
     Object.defineProperty(document, "cookie", {
       configurable: true,
-      get: () => "proman-locale=it; csrf-token=abc123; other=x",
+      get: () => "situs-locale=it; csrf-token=abc123; other=x",
     });
     expect(getCsrfTokenFromDocument()).toBe("abc123");
   });

@@ -1,13 +1,13 @@
-name: proman
-title: ProMan
+name: situs
+title: Situs
 version: 1.24.0
 app_version: "1.24.0"
-icon: https://raw.githubusercontent.com/JIGLE/proman/main/public/situs-mark.svg
+icon: https://raw.githubusercontent.com/JIGLE/situs/main/public/situs-mark.svg
 description: Property Management System — track leases, tenants, properties, and payments.
-home: https://github.com/JIGLE/proman
+home: https://github.com/JIGLE/situs
 sources:
-  - https://github.com/JIGLE/proman
-  - https://ghcr.io/jigle/proman
+  - https://github.com/JIGLE/situs
+  - https://ghcr.io/jigle/situs
 keywords:
   - property
   - management

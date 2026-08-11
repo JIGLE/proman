@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# scripts/init-db — Initialize the ProMan database via the API endpoint
+# scripts/init-db — Initialize the Situs database via the API endpoint
 # Usage: bash scripts/init-db [base-url] [init-secret]
 #
 # Examples:

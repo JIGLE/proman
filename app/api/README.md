@@ -1,6 +1,6 @@
 # API Routes
 
-This directory contains all API routes for the ProMan application using Next.js 16 App Router.
+This directory contains all API routes for the Situs application using Next.js 16 App Router.
 
 ## Structure
 

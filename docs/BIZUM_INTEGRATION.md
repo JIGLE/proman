@@ -148,7 +148,7 @@ _Costs vary significantly by bank and volume_
 
 ## Placeholder Implementation
 
-For ProMan, we've implemented a placeholder that:
+For Situs, we've implemented a placeholder that:
 
 1. Validates Spanish phone numbers
 2. Returns mock transaction IDs
@@ -183,7 +183,7 @@ public async createBizumPayment(request: BizumRequest): Promise<BizumResponse> {
 
 ## Conclusion
 
-Bizum integration requires direct bank partnership and is not available through typical payment processors like Stripe. For ProMan, we recommend:
+Bizum integration requires direct bank partnership and is not available through typical payment processors like Stripe. For Situs, we recommend:
 
 1. **Short-term**: Use SEPA Direct Debit and card payments for Spain
 2. **Medium-term**: Evaluate ROI of Bizum integration based on Spanish tenant volume

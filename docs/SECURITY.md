@@ -1,10 +1,10 @@
 # Security Guide
 
-This document covers security best practices for deploying and operating ProMan.
+This document covers security best practices for deploying and operating Situs.
 
 ## Update webhook
 
-The `/api/updates` webhook and related HMAC/bearer flows have been removed from ProMan.
+The `/api/updates` webhook and related HMAC/bearer flows have been removed from Situs.
 
 Releases should be handled via your CI/CD or operator processes. To integrate release notifications in future, implement a protected endpoint (HMAC or bearer) and update the deployment documentation and CI workflows to send authenticated POSTs to that endpoint.
 
@@ -52,10 +52,10 @@ openssl rand -hex 32
 
 ```bash
 # Create a k8s secret
-kubectl create secret generic proman-secrets \
+kubectl create secret generic situs-secrets \
   --from-literal=INIT_SECRET="$(openssl rand -hex 32)" \
   --from-literal=NEXTAUTH_SECRET="$(openssl rand -base64 32)" \
-  --from-literal=DATABASE_URL="file:/data/proman.sqlite" \
+  --from-literal=DATABASE_URL="file:/data/situs.sqlite" \
   -n <namespace>
 ```
 
@@ -66,7 +66,7 @@ env:
   - name: INIT_SECRET
     valueFrom:
       secretKeyRef:
-        name: proman-secrets
+        name: situs-secrets
         key: INIT_SECRET
 ```
 

@@ -109,7 +109,7 @@ async function processEvent(event: SendGridEvent): Promise<void> {
       },
       create: {
         to: safeEmail,
-        from: "noreply@proman.local",
+        from: "noreply@situs.local",
         subject: "[Webhook] Email Status Update",
         sendgridMessageId: sgMessageId,
         status,

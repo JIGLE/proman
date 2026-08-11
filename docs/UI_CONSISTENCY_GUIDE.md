@@ -1,6 +1,6 @@
 # UI Consistency Guide
 
-This document defines the **non-negotiable rules** for all UI development in Proman. Engineers must pass this checklist before any UI PR is merged.
+This document defines the **non-negotiable rules** for all UI development in Situs. Engineers must pass this checklist before any UI PR is merged.
 
 ---
 

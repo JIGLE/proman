@@ -10,11 +10,11 @@ const path = require("path");
 const crypto = require("crypto");
 
 // DATABASE_URL may be unset; in that case we default to the same file
-// prisma.config.ts uses (data/proman.db in production, dev.db otherwise).
+// prisma.config.ts uses (data/situs.db in production, dev.db otherwise).
 if (!process.env.DATABASE_URL) {
   console.warn(
     "[ensure-sqlite] DATABASE_URL is not set; defaulting to prisma.config.ts's path " +
-      `(${process.env.NODE_ENV === "production" ? "data/proman.db" : "dev.db"}).`,
+      `(${process.env.NODE_ENV === "production" ? "data/situs.db" : "dev.db"}).`,
   );
 } else {
   console.debug(
@@ -24,10 +24,10 @@ if (!process.env.DATABASE_URL) {
 }
 
 // Determine DB path from DATABASE_URL, falling back to the same default as
-// prisma.config.ts (data/proman.db in production, dev.db otherwise) so every
+// prisma.config.ts (data/situs.db in production, dev.db otherwise) so every
 // code path here targets the file the app actually reads.
 const dbUrlFromEnv = process.env.DATABASE_URL;
-const defaultDbFile = process.env.NODE_ENV === "production" ? "data/proman.db" : "dev.db";
+const defaultDbFile = process.env.NODE_ENV === "production" ? "data/situs.db" : "dev.db";
 let DB_PATH;
 if (dbUrlFromEnv && dbUrlFromEnv.startsWith("file:")) {
   const dbPath = dbUrlFromEnv.replace(/^file:\/\//, "").replace(/^file:/, "");
@@ -76,11 +76,11 @@ function log(...args) {
 // Resolve the sqlite URL, mirroring prisma.config.ts's own default so this step
 // always targets the SAME file the app reads. Previously, when DATABASE_URL was
 // unset the whole ensure step was skipped — but prisma.config.ts still defaults
-// to data/proman.db (prod), so the app's real DB never got migrated and every
+// to data/situs.db (prod), so the app's real DB never got migrated and every
 // query 500'd with P2022 "column does not exist".
 let dbUrl = process.env.DATABASE_URL;
 if (!dbUrl) {
-  dbUrl = process.env.NODE_ENV === "production" ? "file:./data/proman.db" : "file:./dev.db";
+  dbUrl = process.env.NODE_ENV === "production" ? "file:./data/situs.db" : "file:./dev.db";
   log(`DATABASE_URL not set; defaulting to ${dbUrl} (matches prisma.config.ts).`);
 }
 if (!dbUrl.startsWith("file:")) {

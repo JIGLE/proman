@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 
-const RECENT_ITEMS_KEY = "proman.recent-items";
+const RECENT_ITEMS_KEY = "situs.recent-items";
 const MAX_RECENT = 5;
 
 export interface RecentItem {

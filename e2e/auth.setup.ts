@@ -4,7 +4,7 @@ import path from "path";
 const authFile = path.join(__dirname, "../playwright/.auth/user.json");
 
 const BASE = process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3000";
-const EMAIL = process.env.E2E_USER_EMAIL || "demo@proman.local";
+const EMAIL = process.env.E2E_USER_EMAIL || "demo@situs.local";
 const PASSWORD = process.env.E2E_USER_PASSWORD || "demo123";
 
 /**

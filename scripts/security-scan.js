@@ -496,7 +496,7 @@ function generateReport() {
  * Main execution
  */
 function main() {
-  print("\n🔒 ProMan Security Scanner", "cyan");
+  print("\n🔒 Situs Security Scanner", "cyan");
   print("Running comprehensive security checks...\n", "blue");
 
   runNpmAudit();

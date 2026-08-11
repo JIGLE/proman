@@ -1,10 +1,10 @@
 # SendGrid Webhook Configuration Guide
 
-This guide walks through setting up SendGrid email delivery tracking webhooks for ProMan.
+This guide walks through setting up SendGrid email delivery tracking webhooks for Situs.
 
 ## Overview
 
-ProMan's email webhook endpoint (`/api/webhooks/sendgrid`) tracks email delivery events including:
+Situs's email webhook endpoint (`/api/webhooks/sendgrid`) tracks email delivery events including:
 
 - **Delivered** - Email successfully delivered to recipient
 - **Bounce** - Email bounced (hard bounce = invalid address, soft bounce = temporary issue)
@@ -23,7 +23,7 @@ Each event updates the `EmailLog` database record with:
 
 1. Active SendGrid account (free tier or paid)
 2. Verified Sender Identity (domain or single email)
-3. ProMan deployed and accessible via HTTPS
+3. Situs deployed and accessible via HTTPS
 4. SendGrid API access
 
 ## Step 1: Get SendGrid Webhook Signing Key
@@ -69,7 +69,7 @@ This returns:
 }
 ```
 
-## Step 2: Add Webhook Public Key to ProMan
+## Step 2: Add Webhook Public Key to Situs
 
 Update your environment variables with the public key:
 
@@ -82,15 +82,15 @@ SENDGRID_WEBHOOK_PUBLIC_KEY=MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANK...
 **In Kubernetes:**
 
 ```bash
-kubectl set env deployment/proman \
+kubectl set env deployment/situs \
   SENDGRID_WEBHOOK_PUBLIC_KEY="MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANK..." \
-  -n proman
+  -n situs
 ```
 
 **Restart the application:**
 
 ```bash
-kubectl rollout restart deployment/proman -n proman
+kubectl rollout restart deployment/situs -n situs
 ```
 
 ## Step 3: Configure Webhook in SendGrid
@@ -111,7 +111,7 @@ kubectl rollout restart deployment/proman -n proman
    ```
 
 3. **Make sure "Signed Event Webhook Verification" is ENABLED** ✓
-   - This is critical - ProMan validates all webhooks using RSA-SHA256 signatures
+   - This is critical - Situs validates all webhooks using RSA-SHA256 signatures
 
 4. Check the event types you want to track:
    - ☑ Delivered
@@ -164,10 +164,10 @@ curl --request PATCH \
 1. Verify your sender email in SendGrid
 2. Send a test email via the console
 3. Monitor the webhook logs in SendGrid
-4. Check ProMan logs:
+4. Check Situs logs:
 
 ```bash
-kubectl logs -f deployment/proman -n proman
+kubectl logs -f deployment/situs -n situs
 ```
 
 Look for webhook processing logs:
@@ -213,24 +213,24 @@ curl -X POST \
    - Failed delivery attempts (retry queue)
    - Latency metrics
 
-### Monitor ProMan Logs
+### Monitor Situs Logs
 
 ```bash
 # Watch real-time webhook processing
-kubectl logs -f deployment/proman -n proman | grep -i webhook
+kubectl logs -f deployment/situs -n situs | grep -i webhook
 
 # Count successful webhook deliveries
-kubectl logs deployment/proman -n proman | grep -i "webhook processed" | wc -l
+kubectl logs deployment/situs -n situs | grep -i "webhook processed" | wc -l
 
 # Find webhook errors
-kubectl logs deployment/proman -n proman | grep -i "webhook error"
+kubectl logs deployment/situs -n situs | grep -i "webhook error"
 ```
 
 ### Check Database Records
 
 ```bash
 # Port-forward to the pod
-kubectl port-forward svc/proman 3000:3000 -n proman
+kubectl port-forward svc/situs 3000:3000 -n situs
 
 # Query EmailLog table (you'd need to connect via app UI or custom endpoint)
 # This would show recent webhook updates
@@ -269,7 +269,7 @@ kubectl port-forward svc/proman 3000:3000 -n proman
 
 ### "Signature Verification Failed"
 
-**Problem**: ProMan rejects webhook with signature mismatch
+**Problem**: Situs rejects webhook with signature mismatch
 
 **Causes & Solutions**:
 
@@ -278,10 +278,10 @@ kubectl port-forward svc/proman 3000:3000 -n proman
    - Compare to `SENDGRID_WEBHOOK_PUBLIC_KEY` env variable
 
 2. Public key changed in SendGrid
-   - If you regenerated the key, update ProMan's env variable
+   - If you regenerated the key, update Situs's env variable
    - Restart the application
 
-3. Clock skew between SendGrid and ProMan server
+3. Clock skew between SendGrid and Situs server
    - Sync server time: `ntpdate -s time.nist.gov` (Linux)
    - Or use NTP daemon for automatic sync
 
@@ -312,24 +312,24 @@ kubectl port-forward svc/proman 3000:3000 -n proman
 
 ### "Webhook Processing Errors"
 
-**Problem**: Webhook received but ProMan reports error
+**Problem**: Webhook received but Situs reports error
 
 Check logs for specific error:
 
 ```bash
-kubectl logs deployment/proman -n proman | grep -A5 "webhook error"
+kubectl logs deployment/situs -n situs | grep -A5 "webhook error"
 ```
 
 Common errors:
 
 - **Database constraint violation** - Email already marked as delivered (OK, idempotent update)
 - **Invalid message ID** - Webhook missing `sg_message_id` field (report to SendGrid)
-- **Unknown event type** - SendGrid sent new event type ProMan doesn't recognize yet
+- **Unknown event type** - SendGrid sent new event type Situs doesn't recognize yet
 
 ## Security Notes
 
 1. **Signature Verification Required**
-   - ProMan validates all webhooks using RSA-SHA256
+   - Situs validates all webhooks using RSA-SHA256
    - Unsigned webhooks are rejected with 401 Unauthorized
    - This prevents spoof attacks
 
@@ -347,20 +347,20 @@ Common errors:
 
 ## Email Status Mapping
 
-ProMan tracks the following email statuses based on webhook events:
+Situs tracks the following email statuses based on webhook events:
 
-| SendGrid Event    | ProMan Status | Database Field | Notes                          |
-| ----------------- | ------------- | -------------- | ------------------------------ |
-| processed         | sending       | status         | Email processed by SendGrid    |
-| dropped           | failed        | status         | Email was rejected (permanent) |
-| deferred          | pending       | status         | Temporary delivery delay       |
-| bounce            | bounced       | status         | Hard or soft bounce            |
-| delivered         | delivered     | status         | Email arrived at recipient     |
-| open              | opened        | status         | Recipient opened email         |
-| click             | clicked       | status         | Recipient clicked a link       |
-| unsubscribe       | unsubscribed  | status         | Recipient unsubscribed         |
-| spam_report       | reported      | status         | Marked as spam                 |
-| group_unsubscribe | unsubscribed  | status         | Unsubscribed from group        |
+| SendGrid Event    | Situs Status | Database Field | Notes                          |
+| ----------------- | ------------ | -------------- | ------------------------------ |
+| processed         | sending      | status         | Email processed by SendGrid    |
+| dropped           | failed       | status         | Email was rejected (permanent) |
+| deferred          | pending      | status         | Temporary delivery delay       |
+| bounce            | bounced      | status         | Hard or soft bounce            |
+| delivered         | delivered    | status         | Email arrived at recipient     |
+| open              | opened       | status         | Recipient opened email         |
+| click             | clicked      | status         | Recipient clicked a link       |
+| unsubscribe       | unsubscribed | status         | Recipient unsubscribed         |
+| spam_report       | reported     | status         | Marked as spam                 |
+| group_unsubscribe | unsubscribed | status         | Unsubscribed from group        |
 
 All events include:
 
@@ -402,7 +402,7 @@ if (eventType === "bounce") {
 For issues:
 
 1. Check SendGrid webhook logs (Settings → Mail Send → Event Webhook)
-2. Check ProMan logs (`kubectl logs deployment/proman -n proman`)
+2. Check Situs logs (`kubectl logs deployment/situs -n situs`)
 3. Verify public key matches
 4. Test with `curl` to isolate network issues
 5. Contact SendGrid support if webhook delivery fails on their end

@@ -357,8 +357,7 @@ import { createPropertySchema, updateTenantSchema } from "@/schemas";
 
 ### Deployment
 
-- [TrueNAS Deployment](./TRUENAS_DEPLOYMENT.md)
-- [Kubernetes](./k8s/README.md)
+- [TrueNAS SCALE Guide](../truenas.md)
 
 ---
 
@@ -391,7 +390,7 @@ import { createPropertySchema, updateTenantSchema } from "@/schemas";
 
 ## 🙏 Thank You!
 
-This reorganization represents a comprehensive improvement to the ProMan codebase:
+This reorganization represents a comprehensive improvement to the Situs codebase:
 
 - **Better structure** for current and future development
 - **Clearer patterns** for team collaboration

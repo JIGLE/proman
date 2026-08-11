@@ -7,7 +7,7 @@
 ### Check if Application is Healthy
 
 ```bash
-curl https://proman.example/api/health
+curl https://situs.example/api/health
 ```
 
 **Expected**: HTTP 200, `"status": "ok"`  
@@ -16,7 +16,7 @@ curl https://proman.example/api/health
 ### Check Database Performance
 
 ```bash
-curl https://proman.example/api/health/db
+curl https://situs.example/api/health/db
 ```
 
 **Watch**: `query_latency_ms` should be < 100ms  
@@ -25,7 +25,7 @@ curl https://proman.example/api/health/db
 ### Check Email Service Configuration
 
 ```bash
-curl https://proman.example/api/health/email
+curl https://situs.example/api/health/email
 ```
 
 **Expected**: `"configured": true`  
@@ -35,10 +35,10 @@ curl https://proman.example/api/health/email
 
 ```bash
 # Prometheus format (for scraping)
-curl https://proman.example/api/metrics
+curl https://situs.example/api/metrics
 
 # JSON format (for debugging)
-curl -H "Accept: application/json" https://proman.example/api/metrics
+curl -H "Accept: application/json" https://situs.example/api/metrics
 ```
 
 ---
@@ -51,11 +51,11 @@ curl -H "Accept: application/json" https://proman.example/api/metrics
 
 1. Is the database file accessible?
 2. Are database connections exhausted?
-3. Check logs: `journalctl -u proman -n 50`
+3. Check logs: `journalctl -u situs -n 50`
 
 **Action**:
 
-- Restart application: `systemctl restart proman`
+- Restart application: `systemctl restart situs`
 - If persists, check disk space: `df -h`
 
 ### Issue: High Database Latency
@@ -63,7 +63,7 @@ curl -H "Accept: application/json" https://proman.example/api/metrics
 **Check**:
 
 ```bash
-curl https://proman.example/api/health/db | jq '.database.metrics.query_latency_ms'
+curl https://situs.example/api/health/db | jq '.database.metrics.query_latency_ms'
 ```
 
 **Thresholds**:
@@ -83,7 +83,7 @@ curl https://proman.example/api/health/db | jq '.database.metrics.query_latency_
 **Check**:
 
 ```bash
-curl https://proman.example/api/health/email | jq '.configured'
+curl https://situs.example/api/health/email | jq '.configured'
 ```
 
 **Action**:
@@ -100,7 +100,7 @@ curl https://proman.example/api/health/email | jq '.configured'
 
 **Alert**: "Health check failing for 5+ minutes"
 
-1. Check endpoint manually: `curl https://proman.example/api/health`
+1. Check endpoint manually: `curl https://situs.example/api/health`
 2. Review logs for errors
 3. Restart service if needed
 4. Page on-call engineer if restart fails
@@ -148,16 +148,16 @@ curl https://proman.example/api/health/email | jq '.configured'
 
 - **Uptime Monitor**: https://uptimerobot.com/dashboard
 - **Prometheus**: https://prometheus.example:9090
-- **Grafana Dashboards**: https://grafana.example/d/proman
+- **Grafana Dashboards**: https://grafana.example/d/situs
 - **Sentry Errors**: https://sentry.io/organizations/your-org/issues/
-- **Logs**: https://logtail.com/team/proman
+- **Logs**: https://logtail.com/team/situs
 
 ---
 
 ## Emergency Contacts
 
 - **On-Call Rotation**: PagerDuty schedule
-- **Slack Channel**: #proman-alerts
+- **Slack Channel**: #situs-alerts
 - **Email**: ops-team@example.com
 
 ---
@@ -167,38 +167,38 @@ curl https://proman.example/api/health/email | jq '.configured'
 ### Check Application Status
 
 ```bash
-systemctl status proman
+systemctl status situs
 ```
 
 ### View Recent Logs
 
 ```bash
-journalctl -u proman -f
+journalctl -u situs -f
 ```
 
 ### Restart Application
 
 ```bash
-systemctl restart proman
+systemctl restart situs
 ```
 
 ### Check Metrics
 
 ```bash
 # Current uptime
-curl -s https://proman.example/api/metrics | grep process_uptime
+curl -s https://situs.example/api/metrics | grep process_uptime
 
 # HTTP request count
-curl -s https://proman.example/api/metrics | grep http_requests_total
+curl -s https://situs.example/api/metrics | grep http_requests_total
 
 # Email success rate
-curl -s https://proman.example/api/metrics | grep email_
+curl -s https://situs.example/api/metrics | grep email_
 ```
 
 ### Test Database Connection
 
 ```bash
-sqlite3 /var/lib/proman/proman.db "SELECT COUNT(*) FROM Property;"
+sqlite3 /var/lib/situs/situs.db "SELECT COUNT(*) FROM Property;"
 ```
 
 ---

@@ -102,7 +102,7 @@ export default async function RootLayout({
           {/* These two are siblings of `children`, so they sit outside the
               `NextIntlClientProvider` that `app/[locale]/layout.tsx` mounts — calling
               `useTranslations` inside them throws "context not found". Give them their own
-              provider resolved from the `proman-locale` cookie, the same way
+              provider resolved from the `situs-locale` cookie, the same way
               `app/auth/layout.tsx` handles the routes that carry no `[locale]` segment. */}
           <NextIntlClientProvider locale={chromeLocale} messages={chromeMessages}>
             {/* Update banner (admin-only) */}

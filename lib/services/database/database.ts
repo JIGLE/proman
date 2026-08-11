@@ -109,7 +109,7 @@ export async function initializeDatabase(): Promise<void> {
       // editable by none. Landlords copy one to get an editable version of their own.
       //
       // Amounts carry no currency symbol — the server formats {{rent_amount}} as EUR before
-      // substitution, so a literal prefix here would render as "$1.234,50 €".
+      // substitution, so a literal symbol prefix here would render doubled alongside it.
       await getPrismaClient().correspondenceTemplate.createMany({
         data: [
           {

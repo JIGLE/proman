@@ -23,7 +23,7 @@ interface SidebarProps {
   onTabChange?: (tab: string) => void;
 }
 
-const SIDEBAR_COLLAPSE_KEY = "proman.sidebar.collapsed";
+const SIDEBAR_COLLAPSE_KEY = "situs.sidebar.collapsed";
 
 // ── Sidebar Footer ─────────────────────────────────────
 interface SidebarFooterProps {

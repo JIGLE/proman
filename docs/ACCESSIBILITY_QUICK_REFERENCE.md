@@ -1,6 +1,6 @@
 # Accessibility Quick Reference
 
-## 🔑 Key Accessibility Features in ProMan
+## 🔑 Key Accessibility Features in Situs
 
 ### Skip Navigation
 
@@ -132,7 +132,7 @@ error("Failed to save"); // role="alert" aria-live="assertive"
 - Large text (18pt+): **3:1**
 - UI components: **3:1**
 
-### Current ProMan Ratios
+### Current Situs Ratios
 
 - Primary text (zinc-50 on zinc-950): **19:1** ✅
 - Muted text (zinc-400 on zinc-950): **8:1** ✅
@@ -231,7 +231,7 @@ npm run test:a11y
 
 ## ✨ Summary
 
-ProMan achieves **WCAG 2.1 Level AA** compliance with:
+Situs achieves **WCAG 2.1 Level AA** compliance with:
 
 - ✅ Keyboard navigation
 - ✅ Screen reader support

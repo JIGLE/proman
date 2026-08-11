@@ -40,7 +40,7 @@ export async function getOrCreateStripeCustomerForUser(userId: string): Promise<
   const customer = await stripe.customers.create({
     email: user.email,
     name: user.name ?? undefined,
-    metadata: { userId, promanSource: "true" },
+    metadata: { userId, situsSource: "true" },
   });
 
   await prisma.subscription.update({

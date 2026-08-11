@@ -5,7 +5,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 
-const STORAGE_KEY = "proman.locale.selected";
+const STORAGE_KEY = "situs.locale.selected";
 
 const LOCALES = [
   {
@@ -65,7 +65,7 @@ export function LocaleSelectOverlay({ currentLocale }: { currentLocale: string }
     setSelecting(code);
     localStorage.setItem(STORAGE_KEY, code);
     // Keep the locale cookie in sync so root redirects respect the choice
-    document.cookie = `proman-locale=${code}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    document.cookie = `situs-locale=${code}; Path=/; Max-Age=31536000; SameSite=Lax`;
     // Animate out, then navigate
     setTimeout(() => {
       setVisible(false);

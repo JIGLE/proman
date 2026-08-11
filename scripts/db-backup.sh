@@ -6,20 +6,20 @@
 #
 # Examples:
 #   bash scripts/db-backup.sh                                     # defaults
-#   bash scripts/db-backup.sh /data/proman.sqlite ./backups 14    # custom
+#   bash scripts/db-backup.sh /data/situs.sqlite ./backups 14    # custom
 #
 # Defaults:
-#   db-path:        /data/proman.sqlite (or $DATABASE_FILE)
+#   db-path:        /data/situs.sqlite (or $DATABASE_FILE)
 #   backup-dir:     ./backups
 #   retention-days: 7
 
 set -euo pipefail
 
-DB_PATH="${1:-${DATABASE_FILE:-/data/proman.sqlite}}"
+DB_PATH="${1:-${DATABASE_FILE:-/data/situs.sqlite}}"
 BACKUP_DIR="${2:-./backups}"
 RETENTION_DAYS="${3:-7}"
 TIMESTAMP=$(date +"%Y%m%d-%H%M%S")
-BACKUP_FILE="${BACKUP_DIR}/proman-${TIMESTAMP}.sqlite"
+BACKUP_FILE="${BACKUP_DIR}/situs-${TIMESTAMP}.sqlite"
 
 # Validate source database exists
 if [ ! -f "${DB_PATH}" ]; then
@@ -63,7 +63,7 @@ fi
 
 # Prune old backups
 if [ "${RETENTION_DAYS}" -gt 0 ]; then
-  PRUNED=$(find "${BACKUP_DIR}" -name "proman-*.sqlite" -mtime "+${RETENTION_DAYS}" -print -delete 2>/dev/null | wc -l || echo 0)
+  PRUNED=$(find "${BACKUP_DIR}" -name "situs-*.sqlite" -mtime "+${RETENTION_DAYS}" -print -delete 2>/dev/null | wc -l || echo 0)
   if [ "${PRUNED}" -gt 0 ]; then
     echo "Pruned ${PRUNED} backup(s) older than ${RETENTION_DAYS} days."
   fi

@@ -1,4 +1,4 @@
-# ProMan Sprint Board — 2026 Q3
+# Situs Sprint Board — 2026 Q3
 
 Status date: 2026-05-05 (revised after full audit)
 Owner: Product + Engineering

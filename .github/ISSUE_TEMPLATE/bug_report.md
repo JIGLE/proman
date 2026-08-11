@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug to help improve ProMan
+about: Report a bug to help improve Situs
 title: "[Bug] "
 labels: bug
 assignees: ""
@@ -26,7 +26,7 @@ assignees: ""
 
 ## Environment
 
-- **ProMan Version**: (e.g., 1.1.0 — check `/version.json`)
+- **Situs Version**: (e.g., 1.1.0 — check `/version.json`)
 - **Deployment**: (Docker / Kubernetes / TrueNAS SCALE / Local dev)
 - **Node.js Version**: (e.g., 22.x)
 - **OS**: (e.g., Ubuntu 22.04 / TrueNAS SCALE 24.10)

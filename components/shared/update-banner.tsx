@@ -53,11 +53,7 @@ export function UpdateBanner(): React.ReactElement | null {
       }
     })();
 
-    setDismissedTag(
-      localStorage.getItem("situs.dismissedUpdate") ||
-        localStorage.getItem("proman.dismissedUpdate") ||
-        null,
-    );
+    setDismissedTag(localStorage.getItem("situs.dismissedUpdate") || null);
   }, []);
 
   useEffect(() => {
@@ -90,7 +86,7 @@ export function UpdateBanner(): React.ReactElement | null {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/docs/TRUENAS_DEPLOYMENT.md">
+          <Link href="https://github.com/JIGLE/situs/blob/main/docs/truenas.md">
             <a className="text-sm px-3 py-1 rounded bg-white/60 border">{t("upgradeDocs")}</a>
           </Link>
           <button

@@ -2,7 +2,7 @@
 
 ## Overview
 
-The ProMan email service implements robust retry logic with exponential backoff to handle transient failures and ensure email delivery reliability.
+The Situs email service implements robust retry logic with exponential backoff to handle transient failures and ensure email delivery reliability.
 
 ## Configuration
 
@@ -109,7 +109,7 @@ The `retryCount` field indicates how many attempts were made:
 const result = await emailService.sendEmail(
   {
     to: "tenant@example.com",
-    from: "landlord@proman.app",
+    from: "landlord@situs.app",
     subject: "Rent Reminder",
     html: "<p>Your rent is due...</p>",
   },

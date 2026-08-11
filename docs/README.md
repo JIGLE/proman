@@ -1,6 +1,6 @@
-# ProMan Documentation Index
+# Situs Documentation Index
 
-Welcome to the ProMan documentation. This index links to all available guides.
+Welcome to the Situs documentation. This index links to all available guides.
 
 ## Getting Started
 

@@ -58,9 +58,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
       syncDemoState();
     };
 
-    window.addEventListener("proman:demo-mode-changed", handleDemoModeChanged);
+    window.addEventListener("situs:demo-mode-changed", handleDemoModeChanged);
     return () => {
-      window.removeEventListener("proman:demo-mode-changed", handleDemoModeChanged);
+      window.removeEventListener("situs:demo-mode-changed", handleDemoModeChanged);
     };
   }, [syncDemoState]);
 
@@ -85,9 +85,9 @@ export function DemoProvider({ children }: { children: React.ReactNode }) {
     const currentLocale = pathname.split("/")[1] || "pt";
     clearDemoCookieClient();
     clearDemoStore();
-    sessionStorage.removeItem("proman_demo");
-    sessionStorage.removeItem("proman_demo_start");
-    window.dispatchEvent(new Event("proman:demo-mode-changed"));
+    sessionStorage.removeItem("situs_demo");
+    sessionStorage.removeItem("situs_demo_start");
+    window.dispatchEvent(new Event("situs:demo-mode-changed"));
     setIsDemoMode(false);
     setDemoPerspective("owner");
     setSelectedTenantId(null);

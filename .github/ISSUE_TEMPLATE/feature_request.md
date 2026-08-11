@@ -1,6 +1,6 @@
 ---
 name: Feature Request
-about: Suggest an idea or improvement for ProMan
+about: Suggest an idea or improvement for Situs
 title: "[Feature] "
 labels: enhancement
 assignees: ""

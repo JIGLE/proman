@@ -1,5 +1,5 @@
 # ===========================================
-# PROMAN - GITIGNORE
+# SITUS - GITIGNORE
 # ===========================================
 # Updated: February 4, 2026
 # Production-ready ignore rules
@@ -112,8 +112,8 @@ load-tests/reports/
 # ===========================================
 # 11. Build Artifacts & Docker
 # ===========================================
-proman_local_image.tar
-proman_image.tar
+situs_local_image.tar
+situs_image.tar
 /lib/generated/prisma
 
 # ===========================================

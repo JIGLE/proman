@@ -32,7 +32,7 @@ The `branch-protection-config.json` file in this directory contains the ready-to
 
 ```bash
 # Requires: gh auth login with admin scope on the repo
-gh api repos/JIGLE/proman/branches/main/protection \
+gh api repos/JIGLE/situs/branches/main/protection \
   --method PUT \
   --input .github/branch-protection-config.json
 ```
@@ -70,7 +70,7 @@ If you later enable `enforce_admins: true`, the release workflow will need eithe
 To verify current protection status:
 
 ```bash
-gh api repos/JIGLE/proman/branches/main/protection | jq '{
+gh api repos/JIGLE/situs/branches/main/protection | jq '{
   required_reviews: .required_pull_request_reviews.required_approving_review_count,
   required_checks: [.required_status_checks.contexts[]],
   enforce_admins: .enforce_admins.enabled,

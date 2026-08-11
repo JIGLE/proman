@@ -187,7 +187,7 @@ DATABASE_URL=file:./dev.db  # Required for real auth
 ```
 
 - See login page
-- Use: `demo@proman.local` / `demo123`
+- Use: `demo@situs.local` / `demo123`
 - Creates user in database on first login
 
 ### Production (No Dev Auth)

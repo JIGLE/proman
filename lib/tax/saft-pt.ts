@@ -241,7 +241,7 @@ export function generateDocumentHash(
   }
 
   // Fallback: HMAC-SHA256 (produces deterministic hash for testing/dev)
-  const secret = process.env.NEXTAUTH_SECRET || "proman-dev-saft-key";
+  const secret = process.env.NEXTAUTH_SECRET || "situs-dev-saft-key";
   const hmac = crypto.createHmac("sha256", secret);
   hmac.update(dataToHash);
   const digest = hmac.digest("base64");
@@ -373,12 +373,12 @@ export async function generateSAFTPT(userId: string, options: SAFTExportOptions)
       taxEntity: companyInfo.taxEntity || "Global",
       productCompanyTaxID: companyInfo.nif,
       softwareCertificateNumber: certNumber,
-      // Kept as "ProMan/ProMan" deliberately during the Situs rebrand: this is the
+      // Kept as "Situs/Situs" deliberately during the Situs rebrand: this is the
       // AT (Autoridade Tributária) software-certification identifier embedded in every
       // SAF-T export. Renaming it without re-verifying certification implications is a
       // fiscal-compliance risk, not a cosmetic one — do not change without confirming
       // against AT's software certification rules first.
-      productID: "ProMan/ProMan",
+      productID: "Situs/Situs",
       productVersion: "1.0",
     },
     customers: Array.from(customersMap.values()),
@@ -471,7 +471,7 @@ export async function generateSAFTPT(userId: string, options: SAFTExportOptions)
 
       return {
         invoiceNo: inv.number,
-        ATCUD: generateATCUD("PROMAN", index + 1),
+        ATCUD: generateATCUD("SITUS", index + 1),
         documentStatus: {
           invoiceStatus,
           invoiceStatusDate: formatSAFTDateTime(inv.updatedAt),

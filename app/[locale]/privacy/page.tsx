@@ -155,10 +155,10 @@ export default async function PrivacyPage({ params }: Props) {
             <p className="text-zinc-400">
               For data protection enquiries or to exercise your rights, contact us at{" "}
               <a
-                href="mailto:privacy@proman.app"
+                href="mailto:privacy@situs.app"
                 className="text-indigo-400 underline-offset-4 hover:underline"
               >
-                privacy@proman.app
+                privacy@situs.app
               </a>
               .
             </p>

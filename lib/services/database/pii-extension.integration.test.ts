@@ -25,7 +25,7 @@ describe("PII encryption — real Prisma client + real SQLite file", () => {
   let dbUrl: string;
 
   beforeAll(() => {
-    tempDir = mkdtempSync(path.join(tmpdir(), "proman-pii-test-"));
+    tempDir = mkdtempSync(path.join(tmpdir(), "situs-pii-test-"));
     dbPath = path.join(tempDir, "test.db");
     dbUrl = `file:${dbPath}`;
 

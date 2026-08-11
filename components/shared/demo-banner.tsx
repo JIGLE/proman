@@ -9,7 +9,7 @@ import { resetDemoStore } from "@/lib/demo/demo-local-state";
 const DEMO_DURATION_MS = 60 * 60 * 1000; // 1 hour
 const EXTEND_DURATION_MS = 15 * 60 * 1000; // 15 minutes
 const WARN_THRESHOLD_MS = 5 * 60 * 1000; // 5 minutes
-const SESSION_KEY = "proman_demo_start";
+const SESSION_KEY = "situs_demo_start";
 
 function getTimeRemaining(): number {
   if (typeof window === "undefined") return DEMO_DURATION_MS;

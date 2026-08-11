@@ -2,8 +2,8 @@ version: "3.8"
 
 services:
   # Production deployment (from registry)
-  proman-prod:
-    image: ghcr.io/jigle/proman:latest
+  situs-prod:
+    image: ghcr.io/jigle/situs:latest
     ports:
       - "3001:3000"
     env_file:
@@ -19,17 +19,20 @@ services:
       start_period: 30s
       start_interval: 5s
     labels:
-      com.truenas.app.name: "ProMan"
-      com.truenas.app.version: "1.10.2"
-      com.truenas.app.icon: "https://raw.githubusercontent.com/JIGLE/proman/main/public/situs-mark.svg"
-      org.opencontainers.image.title: "ProMan"
-      org.opencontainers.image.description: "Property Management System"
-      org.opencontainers.image.source: "https://github.com/JIGLE/proman"
+      # No `com.truenas.app.version` here on purpose. It sat at "1.10.2" while the app shipped
+      # 1.24.0 — nothing bumps a hardcoded compose label, so it can only ever drift. The image
+      # already carries the real version as `org.opencontainers.image.version`, set from the
+      # BUILD_VERSION build arg in the Dockerfile; that is the one source worth reading.
+      com.truenas.app.name: "Situs"
+      com.truenas.app.icon: "https://raw.githubusercontent.com/JIGLE/situs/main/public/situs-mark.svg"
+      org.opencontainers.image.title: "Situs"
+      org.opencontainers.image.description: "Sovereign Capital System — property income, receipts and tax evidence"
+      org.opencontainers.image.source: "https://github.com/JIGLE/situs"
     profiles:
       - prod
 
   # Local development (build from source)
-  proman-dev:
+  situs-dev:
     build:
       context: .
       dockerfile: Dockerfile
@@ -85,4 +88,4 @@ volumes:
 
 networks:
   default:
-    name: proman-network
+    name: situs-network

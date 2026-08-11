@@ -18,7 +18,7 @@ import { useTranslations } from "next-intl";
 import { csrfHeaders } from "@/lib/utils/api-client";
 
 // Collapse state is a pure UI-density preference — fine to keep client-only.
-const CHECKLIST_COLLAPSED_KEY = "proman.onboarding.checklist.collapsed";
+const CHECKLIST_COLLAPSED_KEY = "situs.onboarding.checklist.collapsed";
 
 export interface OnboardingChecklistStep {
   id: string;

@@ -2,7 +2,7 @@
 
 ## Overview
 
-ProMan now implements **strict Content Security Policy (CSP) with nonce-based inline script/style protection**, eliminating the need for `unsafe-inline` and `unsafe-eval` directives (except `unsafe-eval` in development mode only).
+Situs now implements **strict Content Security Policy (CSP) with nonce-based inline script/style protection**, eliminating the need for `unsafe-inline` and `unsafe-eval` directives (except `unsafe-eval` in development mode only).
 
 ## What Changed
 

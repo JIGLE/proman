@@ -15,7 +15,7 @@ describe("ProductEvent + UserSettings.onboardingDismissedAt — real Prisma clie
   let dbUrl: string;
 
   beforeAll(() => {
-    tempDir = mkdtempSync(path.join(tmpdir(), "proman-events-test-"));
+    tempDir = mkdtempSync(path.join(tmpdir(), "situs-events-test-"));
     dbUrl = `file:${path.join(tempDir, "test.db")}`;
 
     execSync(`npx prisma db push --accept-data-loss --url="${dbUrl}"`, {

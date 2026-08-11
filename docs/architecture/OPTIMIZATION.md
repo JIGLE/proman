@@ -1,10 +1,10 @@
-# ProMan Docker & Application Optimization Guide
+# Situs Docker & Application Optimization Guide
 
-This document details the optimization strategies implemented to reduce Docker image size and improve deployment speed for ProMan.
+This document details the optimization strategies implemented to reduce Docker image size and improve deployment speed for Situs.
 
 ## Overview
 
-ProMan has been optimized to achieve smaller Docker images while maintaining full functionality. Current optimizations target ~5-7% size reduction with a path to 15-20% through additional improvements.
+Situs has been optimized to achieve smaller Docker images while maintaining full functionality. Current optimizations target ~5-7% size reduction with a path to 15-20% through additional improvements.
 
 ## Implemented Optimizations
 
@@ -244,13 +244,13 @@ Includes:
 
 ```bash
 # Check local image size
-docker images | grep proman
+docker images | grep situs
 
 # Get detailed layer breakdown
-docker history ghcr.io/jigle/proman:latest
+docker history ghcr.io/jigle/situs:latest
 
 # Inspect specific layer
-docker image inspect ghcr.io/jigle/proman:latest
+docker image inspect ghcr.io/jigle/situs:latest
 ```
 
 ### Bundle Analysis Report

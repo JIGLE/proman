@@ -2,7 +2,7 @@
 
 ## Overview
 
-ProMan implements comprehensive CSRF (Cross-Site Request Forgery) protection using the Double Submit Cookie pattern. This document explains the implementation and usage.
+Situs implements comprehensive CSRF (Cross-Site Request Forgery) protection using the Double Submit Cookie pattern. This document explains the implementation and usage.
 
 ## Architecture
 

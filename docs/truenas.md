@@ -1,198 +1,141 @@
 # TrueNAS SCALE Deployment Guide
 
-This guide covers deploying ProMan on TrueNAS SCALE.
+Situs runs on TrueNAS SCALE as a **Custom App** (Docker). This is the only supported deployment
+path.
 
-## Quick Install
+> **No Kubernetes or Helm.** TrueNAS SCALE replaced its Kubernetes app engine with Docker in
+> Electric Eel (24.10). The Helm chart and `k8s/` manifests this repo used to carry have been
+> removed rather than left to rot — they could not run on a current TrueNAS and misled anyone
+> reading them. If you are on 24.04 or earlier, use an older tag of this repository.
 
-1. In TrueNAS Apps UI, select **Custom App** (or install from a catalog).
-2. Set the container image: `ghcr.io/jigle/proman:<version>`.
-3. Fill in **Application URL** and **Storage Path** (see below).
-4. Click **Install** — secrets and database are set up automatically.
+## Quick install
 
-## Required Settings
+1. **Apps → Discover Apps → Custom App**
+2. Image: `ghcr.io/jigle/situs:latest` (pin a version tag in production)
+3. Port: container `3000` → whichever host port you want
+4. Storage: mount a host path at **`/app/data`**
+5. Add the environment variables below
+6. Install
 
-You only need to configure **two things**:
+The container initialises its own database on first start — `prestart` runs `prisma db push` when
+the SQLite file has no tables, and adds any missing columns on every subsequent start. No init job,
+no manual step.
 
-| Setting             | Example                              | Notes                             |
-| ------------------- | ------------------------------------ | --------------------------------- |
-| **Application URL** | `http://192.168.1.50:30080`          | The URL you access the app at     |
-| **Storage Path**    | `/mnt/pools/mypool/apps/proman/data` | TrueNAS dataset for the SQLite DB |
+## Storage
 
-Everything else has sensible defaults:
+Create a dataset (for example `apps/situs/data`) and mount it at `/app/data`.
 
-- **NEXTAUTH_SECRET** and **INIT_SECRET** are auto-generated on first install
-  and stored in a Kubernetes Secret. They persist across upgrades.
-- **DATABASE_URL** defaults to `file:/app/data/proman.db`.
-- **NODE_ENV**, **PORT**, and **HOSTNAME** are baked into the container image.
+Set ownership to uid/gid **1001:1001** — the container drops to a non-root `nextjs` user, and it
+cannot write to a dataset owned by anyone else. A container that starts and then fails on the first
+write is almost always this.
 
-## Helm Installation
+## Environment variables
 
-```bash
-# 1. Edit the two required values
-vim helm/proman/values-truenas.yaml
+### Required
 
-# 2. Install
-helm install proman helm/proman -f helm/proman/values-truenas.yaml
+| Variable             | Example                       | Notes                                                                        |
+| -------------------- | ----------------------------- | ---------------------------------------------------------------------------- |
+| `NEXTAUTH_URL`       | `https://situs.example.com`   | Full external URL, no trailing slash. Must match how users reach the app.    |
+| `NEXTAUTH_SECRET`    | `openssl rand -base64 32`     | Minimum 32 characters. Signs sessions and tenant portal tokens.              |
+| `DATABASE_URL`       | `file:/app/data/situs.sqlite` | Path **inside** the container, on the mounted dataset.                       |
+| `PII_ENCRYPTION_KEY` | `openssl rand -hex 32`        | Exactly 64 hex chars. **The app refuses to start in production without it.** |
+
+`PII_ENCRYPTION_KEY` encrypts IBAN, tax ID (NIF) and phone at rest. Without it those fields were
+previously written in plaintext with no warning, which is why the app now exits instead. To run
+without encryption anyway — a throwaway staging box — set `ALLOW_UNENCRYPTED_PII=true` and accept
+a loud warning on every start.
+
+If you set the key on a deployment that already has data, run
+`node scripts/backfill-pii-encryption.js` to encrypt the rows written before it existed.
+
+### Recommended
+
+| Variable              | Default | Notes                                                                        |
+| --------------------- | ------- | ---------------------------------------------------------------------------- |
+| `TRUSTED_PROXY_COUNT` | `1`     | Number of proxies in front (Cloudflare tunnel / reverse proxy counts as one) |
+
+This decides which `X-Forwarded-For` entry the rate limiter trusts. Leave it at `1` behind a single
+tunnel or reverse proxy. Set it to `0` only if the container is reachable directly, in which case
+the header is ignored entirely. Getting it wrong lets a caller pick their own rate-limit bucket.
+
+### Optional
+
+| Variable                                    | Notes                                                                            |
+| ------------------------------------------- | -------------------------------------------------------------------------------- |
+| `ENABLE_DEMO_LOGIN`                         | `true` enables demo credentials that grant **ADMIN**. Leave unset in production. |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Enables Google sign-in — see below                                               |
+| `SENDGRID_API_KEY`                          | Email delivery                                                                   |
+| `STRIPE_SECRET_KEY`, `ENABLE_STRIPE`        | Card / SEPA payments                                                             |
+| `AUTO_DB_INIT`, `AUTO_DB_SCHEMA_SYNC`       | Both default `true`; set `false` to manage schema yourself                       |
+
+> `NEXT_PUBLIC_ENABLE_DEMO_LOGIN` no longer exists. The sign-in form now resolves demo
+> availability from `ENABLE_DEMO_LOGIN` on the server per request, so one variable controls both
+> the form and the provider. Remove it if it is still set.
+
+## Google OAuth
+
+In [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials), add an
+authorised redirect URI:
+
+```
+https://<your-domain>/api/auth/callback/google
 ```
 
-The values file is intentionally minimal:
+It must match `NEXTAUTH_URL` exactly. When changing domains, add the new URI **before** cutting
+over and remove the old one afterwards — otherwise sign-in fails with `redirect_uri_mismatch`.
 
-```yaml
-app:
-  nextauthUrl: "http://192.168.1.50:30080"
+## Publishing an image
 
-persistence:
-  hostPath: /mnt/pools/mypool/apps/proman/data
-```
+Nothing reaches GHCR just because code landed on `main`. Two paths put an image there:
 
-### Overriding auto-generated secrets
+**A release (what production should run).** Actions → **Release** → Run workflow → pick
+`patch`/`minor`/`major`. That opens a `release/vX.Y.Z` PR with the version bumps; merging it to
+`main` makes the workflow create the tag and the GitHub Release, and the tag push is what triggers
+**Deploy to GHCR**. So it is dispatch → merge → wait, not one button.
 
-If you need to provide your own secrets (e.g. migrating from another install):
+**A one-off build (for testing an unreleased branch).** Actions → **Deploy to GHCR** → Run
+workflow, choosing the branch and optionally a `version` string.
 
-```yaml
-app:
-  nextauthUrl: "http://192.168.1.50:30080"
-  nextauthSecret: "your-existing-secret-here"
-  initSecret: "your-existing-init-secret"
-```
+> ⚠️ A one-off build still writes `:latest`. The tag list is
+> `ghcr.io/jigle/situs:<version>,ghcr.io/jigle/situs:latest` for every dispatch, so testing a
+> branch this way moves `:latest` onto unreleased code. Give it an explicit `version` like
+> `1.25.0-rc1`, point the app at that exact tag, and cut a real release afterwards to put
+> `:latest` back on shipped code. Use `dry_run: true` to prove the image builds without pushing
+> anything.
 
-## Storage Setup
+## Updating
 
-### Create dataset
+1. Check <https://github.com/JIGLE/situs/releases>
+2. Change the image tag in the app's settings
+3. Redeploy — the container applies any additive schema changes on start
+4. Verify: `curl https://<your-domain>/version.json`
 
-In TrueNAS:
-
-1. Go to **Storage → Pools → Your Pool**
-2. Create dataset: `apps/proman/data`
-3. Set permissions: user `1001`, group `1001` (matches container's `nextjs` user)
-
-### Verify mount
-
-```bash
-kubectl exec -it <pod> -- ls -la /app/data
-```
-
-## Database Initialization
-
-On first deploy the database schema is created **automatically** by an init
-container that runs `prisma db push` before the app starts. No manual steps
-are needed.
-
-If automatic initialization fails, you can initialize manually:
-
-### Option A: Use the init API endpoint
-
-The auto-generated `INIT_SECRET` is stored in the Kubernetes Secret
-`proman-secrets`. Retrieve it with:
-
-```bash
-kubectl get secret proman-secrets -n ix-proman \
-  -o jsonpath='{.data.INIT_SECRET}' | base64 -d
-```
-
-Then call the init endpoint:
-
-```bash
-curl -sS -X POST \
-  -H "Authorization: Bearer <INIT_SECRET>" \
-  http://<TRUENAS_IP>:30080/api/debug/db/init | jq
-```
-
-### Option B: Exec into the container
-
-```bash
-kubectl get pods -n ix-proman
-kubectl exec -it <pod-name> -n ix-proman -- npx prisma db push --schema=prisma/schema.prisma
-```
-
-## Updating the App
-
-1. Check for new releases at https://github.com/JIGLE/proman/releases
-2. Update the image tag in TrueNAS App settings or Helm values
-3. Restart the app — the init container will run any pending schema migrations
-4. Verify: `curl http://<TRUENAS_IP>:30080/version.json`
-
-## Optional Environment Variables
-
-Add these via the **Extra Environment Variables** section in the TrueNAS UI
-or in the `env:` list in your values file:
-
-| Variable               | Notes                                   |
-| ---------------------- | --------------------------------------- |
-| `GOOGLE_CLIENT_ID`     | Enables Google sign-in (see below)      |
-| `GOOGLE_CLIENT_SECRET` | Required if `GOOGLE_CLIENT_ID` is set   |
-| `SENDGRID_API_KEY`     | Enables email delivery via SendGrid     |
-| `ENABLE_STRIPE`        | Set to `true` to enable Stripe payments |
-
-## TrueNAS App Info Panel
-
-To show Version, Source, and Logo in the TrueNAS UI:
-
-1. Ensure `Chart.yaml` has `version`, `appVersion`, `home`, `sources`, and `icon`
-2. Repackage: `bash scripts/helm-package.sh`
-3. Upload the `.tgz` to your TrueNAS catalog or use it as a Custom App chart
+TrueNAS does not detect updates for a Custom App; there is no catalog metadata to compare against.
+Either check releases manually or run a container auto-updater alongside it.
 
 ## Troubleshooting
 
-See [Troubleshooting Guide](troubleshooting.md) for common issues.
+**Container starts then exits immediately.** Check the logs for the `PII_ENCRYPTION_KEY` message —
+a missing key is a deliberate hard stop, not a crash.
 
-### TrueNAS-specific issues
-
-**All API routes return 500 "Authentication failed":**
-
-The database exists but has no tables. The init container should handle this
-automatically, but if it failed:
-
-1. Check pod logs: `kubectl logs -l app=proman -n ix-proman --tail=100`
-2. Initialize the database manually (see [Database Initialization](#database-initialization)).
-3. Verify the data directory is writable by UID 1001:
-   ```bash
-   kubectl exec -it <pod> -n ix-proman -- ls -la /app/data
-   ```
-
-**App shows "Deploying" indefinitely:**
-
-- Check init container logs — the `prisma-init` init container may have failed:
-  ```bash
-  kubectl logs <pod-name> -c prisma-init -n ix-proman
-  ```
-- Verify the dataset path is correct and writable
-- Check main container logs: `kubectl logs -l app=proman -n ix-proman --tail=100`
-
-**Cannot access the app after install:**
-
-- Check NodePort: `kubectl get svc -n ix-proman`
-- Try port-forward: `kubectl port-forward svc/proman 3000:80 -n ix-proman`
-
-**Permission denied / SQLite not writable:**
-
-- Ensure the TrueNAS dataset permissions are set to UID `1001`, GID `1001`.
-- Verify: `kubectl exec -it <pod> -- stat /app/data/proman.db`
-
-## Google OAuth Setup
-
-To enable Google sign-in:
-
-1. Go to [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
-2. Create an **OAuth 2.0 Client ID** (Web application type)
-3. Set **Authorized JavaScript origins**: `https://proman.example.com`
-4. Set **Authorized redirect URIs**: `https://proman.example.com/api/auth/callback/google`
-5. Copy the Client ID and Client Secret
-6. Add as extra environment variables in TrueNAS app configuration:
-   - `GOOGLE_CLIENT_ID` = `<your-client-id>.apps.googleusercontent.com`
-   - `GOOGLE_CLIENT_SECRET` = `<your-client-secret>`
-7. Restart the app — the Google sign-in button will appear on the login page
-
-> **Note:** `app.nextauthUrl` must exactly match the origin you configured in
-> Google Cloud Console (including `https://` and port if non-standard).
-
-## Removing the App
+**All API routes return 500 "Authentication failed".** The database has no tables. Confirm the
+`/app/data` mount is writable by 1001:1001, then restart so `prestart` can run, or initialise
+manually:
 
 ```bash
-# Via Helm
-helm uninstall proman -n ix-proman
-
-# Or via TrueNAS Apps UI → select app → Delete
+# From the TrueNAS shell, against the running container
+docker exec -it <container> npx prisma db push --schema=prisma/schema.prisma
 ```
 
-The persistent dataset is **not** deleted automatically. Remove manually if desired.
+**Sign-in redirects in a loop or fails after a domain change.** `NEXTAUTH_URL` does not match the
+URL in the browser, or the Google redirect URI was not updated.
+
+**Rate limiting seems ineffective, or legitimate traffic gets 429s.** `TRUSTED_PROXY_COUNT` does
+not match your actual proxy depth.
+
+See [troubleshooting.md](troubleshooting.md) for issues not specific to TrueNAS.
+
+## Removing
+
+Apps → select the app → **Delete**. The dataset at `/app/data` survives unless you delete it
+separately — which is also your backup, so take a snapshot before removing anything.

@@ -44,12 +44,21 @@ COPY tests ./tests/
 
 # Provide dummy env vars required by the Zod env schema during build.
 # These are NOT used at runtime — the real values come from the deployment environment.
-RUN DATABASE_URL="file:./build.db" \
+#
+# NEXT_BUILD=true is what tells lib/utils/env.ts this is a build rather than a booting server.
+# `next build` sets NODE_ENV=production internally, so without this flag the production-only
+# guards there (DATABASE_URL, and now PII_ENCRYPTION_KEY, which exits the process when absent)
+# fire during the image build and fail it. CI gets the same effect for free from $CI, which is
+# why this only bites on a plain `docker build`.
+#
+# No demo-login flag here any more: it is resolved per request on the server, so a build carries
+# no baked-in demo state.
+RUN NEXT_BUILD="true" \
+    DATABASE_URL="file:./build.db" \
     NEXTAUTH_URL="http://localhost:3000" \
     NEXTAUTH_SECRET="build-time-placeholder-secret-minimum-32-chars" \
     GOOGLE_CLIENT_ID="build-placeholder" \
     GOOGLE_CLIENT_SECRET="build-placeholder" \
-    NEXT_PUBLIC_ENABLE_DEMO_LOGIN="true" \
     npm run build
 
 # Generate version.json
@@ -89,7 +98,7 @@ ARG BUILD_TIME
 LABEL org.opencontainers.image.title="Situs" \
       org.opencontainers.image.description="Sovereign Capital System — property income, receipts and tax evidence" \
       org.opencontainers.image.version="${BUILD_VERSION}" \
-      org.opencontainers.image.source="https://github.com/JIGLE/proman" \
+      org.opencontainers.image.source="https://github.com/JIGLE/situs" \
       org.opencontainers.image.revision="${GIT_COMMIT}" \
       org.opencontainers.image.created="${BUILD_TIME}" \
       org.opencontainers.image.vendor="JIGLE" \

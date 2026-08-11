@@ -9,10 +9,6 @@
 Dockerfile              @JIGLE
 docker-compose.yml      @JIGLE
 
-# Helm / Kubernetes
-helm/                   @JIGLE
-k8s/                    @JIGLE
-
 # Database / Prisma
 prisma/                 @JIGLE
 
