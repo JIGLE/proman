@@ -313,11 +313,7 @@ export const TenantsView = forwardRef<TenantsViewRef, TenantsViewProps>(
     const [propertyFilter, setPropertyFilter] = useState<string>("all");
     const [statusFilter, setStatusFilter] = useState<string>(() => {
       if (typeof window !== "undefined") {
-        return (
-          localStorage.getItem("situs-tenants-status-filter") ??
-          localStorage.getItem("situs-tenants-status-filter") ??
-          "all"
-        );
+        return localStorage.getItem("situs-tenants-status-filter") ?? "all";
       }
       return "all";
     });
