@@ -53,11 +53,7 @@ export function UpdateBanner(): React.ReactElement | null {
       }
     })();
 
-    setDismissedTag(
-      localStorage.getItem("situs.dismissedUpdate") ||
-        localStorage.getItem("situs.dismissedUpdate") ||
-        null,
-    );
+    setDismissedTag(localStorage.getItem("situs.dismissedUpdate") || null);
   }, []);
 
   useEffect(() => {
