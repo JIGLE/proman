@@ -1,7 +1,12 @@
 name: Verify (reusable)
 
-# Shared lint/type-check/test trio, called by both ci.yml (PR gate) and
-# production.yml (post-merge gate) so the two copies can't drift out of sync.
+# Shared lint/type-check/test trio, called by ci.yml on both PRs and pushes to main.
+#
+# It used to have a second caller, production.yml, which ran the identical trio plus an
+# identical `next build` on the same `push: main` event — so every merge paid for two of
+# everything. That workflow is gone; this stays reusable because the indirection costs
+# nothing and the required-check names below depend on it.
+#
 # Job names match the required-status-check names in .github/BRANCH_PROTECTION.md —
 # do not rename lint-type/test's `name:` without updating that config + doc together.
 
@@ -29,13 +34,19 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
+        run: npm ci
 
       - name: Run linter
         run: npm run lint
 
       - name: Format check
         run: npx prettier --check .
+
+      # Validating that a manifest PARSES is not validating that GitHub ACCEPTS it. An
+      # expression in an input `description` loads fine as YAML and then fails every job
+      # using the action with "Unrecognized named-value". Nothing else in CI covers this.
+      - name: Check composite action manifests
+        run: python3 scripts/check-action-manifests.py
 
       - name: Type check
         run: npm run type-check
@@ -54,7 +65,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
+        run: npm ci
 
       - name: Run unit tests with coverage
         run: npm run test:coverage

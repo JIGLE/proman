@@ -12,7 +12,11 @@
 
 1. Branch from `main`
 2. Push your branch and open a PR against `main`
-3. All CI checks must be green: **Lint & Type Check**, **Unit Tests with Coverage**, **Production Build**
+3. All required checks must be green. The exact names are `verify / Lint & Type Check`,
+   `verify / Unit Tests`, `Build validation` and `Dependency Security Scan` — a required check
+   is matched by string, so an approximation here is worse than nothing (see
+   `.github/BRANCH_PROTECTION.md`, where a mismatch once left the two most important gates
+   permanently "Expected — waiting…")
 4. At least one approving review required (for team projects)
 5. Merge — the head branch is auto-deleted
 
@@ -33,29 +37,26 @@
 
 ## CI Pipeline
 
-Five GitHub Actions workflows protect the repository:
+Four GitHub Actions workflows protect the repository, plus one reusable one that never runs on
+its own:
 
-| Workflow            | File                | Trigger                                    | Validates                                                                    |
-| ------------------- | ------------------- | ------------------------------------------ | ---------------------------------------------------------------------------- |
-| **CI**              | `ci.yml`            | Push to `main`/`develop`/`feature/**`; PRs | Lint, type-check, unit tests, build, smoke tests                             |
-| **Production Gate** | `production.yml`    | Push to `main`                             | Lint, type-check, unit tests with coverage, production build                 |
-| **Security Scan**   | `security-scan.yml` | Push to `main`; PRs; daily 02:00 UTC       | npm audit, custom security scan, CodeQL analysis, TruffleHog secret scan     |
-| **Deploy to GHCR**  | `deploy-ghcr.yml`   | Git tag `v*`; manual dispatch              | Docker multi-platform build, push to `ghcr.io/jigle/situs`, SBOM attestation |
-| **Release**         | `release.yml`       | Manual dispatch                            | Bumps `package.json`, creates Git tag and GitHub Release                     |
+| Workflow           | File                  | Trigger                              | Validates                                                                    |
+| ------------------ | --------------------- | ------------------------------------ | ---------------------------------------------------------------------------- |
+| **CI**             | `ci.yml`              | PRs to `main`; push to `main`        | Lint, type-check, unit tests, build, smoke, E2E smoke, mobile audit          |
+| **Security Scan**  | `security-scan.yml`   | PRs; push to `main`; daily 02:00 UTC | npm audit, custom scan, CodeQL, dependency review, TruffleHog                |
+| **Release**        | `release.yml`         | Manual dispatch; push to `main`      | Opens the version-bump PR; on merge tags, releases, checks version integrity |
+| **Deploy to GHCR** | `deploy-ghcr.yml`     | Git tag `v*`; manual dispatch        | Docker build, Trivy image scan, push to `ghcr.io/jigle/situs`, SBOM          |
+| _(reusable)_       | `reusable-verify.yml` | `workflow_call` only                 | The lint/type-check/test trio CI calls                                       |
 
-The **Production Gate** and **Security Scan** run on every push to `main`. Both must pass before cutting a release tag.
+There used to be a fifth, `production.yml` ("Production Gate"), running on push to `main`. It
+called the same `reusable-verify.yml` and ran a byte-identical build as `ci.yml` on the same
+event, so every merge paid for two of everything; its only unique content was a version-integrity
+check that raced the Release workflow it was supposed to be checking. Both checks now live in
+`release.yml`, where they run after the tag exists.
 
-## CI/CD and Deployment Workflow Details
-
-Recent improvements to the CI/CD system include:
-
-- **ci.yml**: Runs lint, build, and tests on all pushes and pull requests. A summary of results is posted to the workflow summary.
-- **release.yml**: Handles version bumping, tagging, and triggers the `deploy-ghcr` workflow to build and push Docker images to GHCR after a successful release.
-- **deploy-ghcr.yml**: Builds and pushes multi-architecture Docker images to GitHub Container Registry (GHCR), with explicit login and a summary of image tags.
-- **production.yml**: Deploys to the production environment from the `main` branch, with a summary step for deployment status.
-- **security-scan.yml**: Runs security scans and posts a summary of results.
-
-All workflow changes should be tested via pull requests. For details on each workflow, see the `.github/workflows/` directory.
+**Nothing deploys on merge.** Publishing an image is deliberate: cut a release (which tags), and
+the tag push is what triggers Deploy to GHCR. A manual dispatch of Deploy to GHCR publishes a
+`sha-<short>` tag and never touches `:latest` — only a tag push may claim a version number.
 
 ## Design System
 

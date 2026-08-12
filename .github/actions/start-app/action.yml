@@ -1,0 +1,98 @@
+name: "Start built app"
+description: >-
+  Create the SQLite schema, boot the production standalone server from a downloaded
+  .next artifact, and wait for it to answer. Shared by every ci.yml job that needs a
+  running app (smoke, e2e-smoke, e2e, mobile-audit).
+
+# Why this exists as one action rather than four copies:
+#
+# Two of the details below are load-bearing and were discovered the hard way, and a
+# comment explaining them only helps if it sits where every caller inherits it.
+#
+# 1. THE SCHEMA STEP IS NOT OPTIONAL. Nothing in this workflow created a schema for a
+#    long time, so each job ran against an empty SQLite file with no tables. Every
+#    DB-backed route answered 500 and the suites passed anyway — the mobile audit
+#    reported 42 surface-runs of empty screens instead of 52 real ones, and the E2E
+#    specs sailed past on `if (await link.isVisible())` guards.
+#
+# 2. `database-url` MUST BE ABSOLUTE. Next.js's standalone `server.js` begins with
+#    `process.chdir(__dirname)`, so a relative `file:./x.db` resolves to
+#    `.next/standalone/x.db` for the server while `prisma db push` (run from the repo
+#    root) writes `<root>/x.db` — two different files. Adding the schema step without
+#    fixing the path fixed nothing: the server still reported "SQLite DB file does not
+#    exist". This hides locally, where a stale `.db` at the repo root gets traced into
+#    `.next/standalone/` by `next build` and the run works by accident; in CI the build
+#    happens in a separate job, before the file exists.
+
+inputs:
+  database-url:
+    # No expression syntax in this text. GitHub evaluates ${{ }} across the whole action
+    # manifest, including input descriptions, and the `github` context is not available
+    # there — an example written with it fails the action at load time with
+    # "Unrecognized named-value: 'github'". Callers pass the real expression; the docs
+    # for it stay plain prose.
+    description: >-
+      Prisma connection string. MUST be absolute — see note 2 above. Callers pass
+      "file:" plus the github.workspace expression plus "/<name>.db", never "file:./<name>.db".
+    required: true
+  nextauth-secret:
+    description: "NEXTAUTH_SECRET for the booted app (minimum 32 characters)."
+    required: false
+    default: "ci-test-secret-minimum-32-characters"
+  demo-mode:
+    description: >-
+      "true" sets ALLOW_DEMO_MODE, which opens /api/debug/db/seed. Needed by suites that
+      act on records; leave false where a test asserts unauthenticated calls return no data.
+    required: false
+    default: "false"
+  demo-login:
+    description: >-
+      "true" sets ENABLE_DEMO_LOGIN so auth.setup.ts can actually sign in. Without it every
+      spec declaring `test.use({ storageState })` runs signed out — which is what they
+      silently did until this was found.
+    required: false
+    default: "false"
+  disable-rate-limit:
+    description: >-
+      "true" sets E2E_DISABLE_RATE_LIMIT. ~90 tests from one IP against a 100-req/min API
+      limit otherwise fail the tail of the run with 429s that read as product bugs.
+    required: false
+    default: "false"
+  wait-timeout:
+    description: "Milliseconds to wait for the app to answer."
+    required: false
+    default: "120000"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Create database schema
+      shell: bash
+      run: npx prisma db push
+      env:
+        DATABASE_URL: ${{ inputs.database-url }}
+
+    - name: Start built application in background
+      shell: bash
+      run: |
+        # Mirrors the Dockerfile: standalone bundles server code but not static/ or public/.
+        cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
+        cp -r public .next/standalone/public 2>/dev/null || true
+        nohup node .next/standalone/server.js > app.log 2>&1 &
+        echo $! > .app.pid
+      env:
+        DATABASE_URL: ${{ inputs.database-url }}
+        NEXTAUTH_URL: http://localhost:3000
+        NEXTAUTH_SECRET: ${{ inputs.nextauth-secret }}
+        GOOGLE_CLIENT_ID: ci-placeholder
+        GOOGLE_CLIENT_SECRET: ci-placeholder
+        ALLOW_DEMO_MODE: ${{ inputs.demo-mode }}
+        ENABLE_DEMO_LOGIN: ${{ inputs.demo-login }}
+        E2E_DISABLE_RATE_LIMIT: ${{ inputs.disable-rate-limit }}
+        NODE_ENV: production
+        PORT: "3000"
+        HOSTNAME: 0.0.0.0
+
+    - name: Wait for app to become healthy
+      shell: bash
+      run: npx wait-on http://localhost:3000 --timeout ${{ inputs.wait-timeout }}

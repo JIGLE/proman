@@ -9,9 +9,17 @@ on:
     - cron: "0 2 * * *"
   workflow_dispatch:
 
+# Default permissions for every job here. Without this block the jobs inherit the repository
+# default, which can be read/write on all scopes — a scanning workflow is the last place that
+# should hold write tokens. The two jobs that genuinely need more declare their own.
+permissions:
+  contents: read
+
+# See ci.yml: cancel superseded PR runs, never cancel on `main`. A cancelled security scan on
+# main is a commit whose dependencies, secrets and CodeQL results were never checked.
 concurrency:
   group: security-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   NODE_VERSION: "22"
@@ -32,23 +40,34 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
+        run: npm ci
 
+      # `npm audit` exits non-zero whenever it finds anything, so `|| true` is correct here —
+      # the severity decision belongs to the next step. No `continue-on-error`: that applied to
+      # the step whose only job was writing a file, and it hid the case where the file was
+      # never written.
       - name: Run npm audit
         id: npm-audit
-        run: |
-          npm audit --json > audit-report.json || true
-        continue-on-error: true
+        run: npm audit --json > audit-report.json || true
 
       - name: Check audit results
         run: |
+          set -euo pipefail
+
+          # A missing report is a broken gate, not a clean bill of health. This used to
+          # `exit 0` here, so an audit that crashed before writing anything read exactly like
+          # an audit that found nothing.
           if [ ! -f audit-report.json ]; then
-            echo "No audit report generated"
-            exit 0
+            echo "::error::npm audit produced no report — the scan did not run"
+            exit 1
           fi
 
-          VULNERABILITIES=$(cat audit-report.json | jq -r '.metadata.vulnerabilities.total // 0')
-          CRITICAL=$(cat audit-report.json | jq -r '.metadata.vulnerabilities.critical // 0')
+          # `-e` so a malformed report fails loudly instead of `// 0` turning a missing key
+          # into a zero.
+          jq -e '.metadata.vulnerabilities' audit-report.json > /dev/null
+
+          VULNERABILITIES=$(jq -r '.metadata.vulnerabilities.total // 0' audit-report.json)
+          CRITICAL=$(jq -r '.metadata.vulnerabilities.critical // 0' audit-report.json)
 
           # Accepted-risk advisory: GHSA-c96f-x56v-gq3h (find-my-way DDoS via HTTP/2), reachable
           # only through prisma's local `@prisma/dev` dev-server package (used by `prisma dev`/
@@ -105,12 +124,16 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
+        run: npm ci
 
+      # `continue-on-error` stays only so the report is uploaded before the gate below runs —
+      # the scanner's own exit code is re-derived from the report, not discarded. Previously
+      # this swallowed the exit code for good: scripts/security-scan.js exits 1 on
+      # `critical + high`, but the check step below only looked at `critical`, so every HIGH
+      # finding the scanner raised was thrown away silently.
       - name: Run security scan
         id: security-scan
-        run: |
-          node scripts/security-scan.js
+        run: node scripts/security-scan.js
         continue-on-error: true
 
       - name: Upload security report
@@ -124,17 +147,27 @@ jobs:
 
       - name: Check scan results
         run: |
-          if [ -f security-report.json ]; then
-            CRITICAL=$(cat security-report.json | jq -r '.summary.critical // 0')
-            
-            echo "Critical issues: $CRITICAL"
-            
-            if [ "$CRITICAL" -gt 0 ]; then
-              echo "::error::Found $CRITICAL critical security issues"
-              exit 1
-            fi
-          else
-            echo "No security report generated (scan may have failed or found no issues)"
+          set -euo pipefail
+
+          # The scanner writes its report before exiting, so a missing file means it died
+          # early. That is a broken gate and must not read as "found no issues" — which is
+          # exactly what the previous `else` branch reported, with exit 0.
+          if [ ! -f security-report.json ]; then
+            echo "::error::scripts/security-scan.js produced no report — the scan did not run"
+            exit 1
+          fi
+
+          jq -e '.summary' security-report.json > /dev/null
+          CRITICAL=$(jq -r '.summary.critical // 0' security-report.json)
+          HIGH=$(jq -r '.summary.high // 0' security-report.json)
+
+          echo "Critical issues: $CRITICAL"
+          echo "High issues:     $HIGH"
+
+          # Gate on both, matching what the scanner itself decides to fail on.
+          if [ "$CRITICAL" -gt 0 ] || [ "$HIGH" -gt 0 ]; then
+            echo "::error::Found $CRITICAL critical and $HIGH high security issues"
+            exit 1
           fi
 
   codeql-analysis:
@@ -197,11 +230,15 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Resolve diff base
+        id: base
+        uses: ./.github/actions/resolve-scan-base
+
       - name: TruffleHog Secret Scan
         uses: trufflesecurity/trufflehog@v3.96.0
         with:
           path: ./
-          base: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
+          base: ${{ steps.base.outputs.base }}
           head: HEAD
           extra_args: --only-verified
 
@@ -217,12 +254,16 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Resolve diff base
+        id: base
+        uses: ./.github/actions/resolve-scan-base
+
       - name: TruffleHog Unverified Scan
         id: trufflehog-unverified
         uses: trufflesecurity/trufflehog@v3.96.0
         with:
           path: ./
-          base: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
+          base: ${{ steps.base.outputs.base }}
           head: HEAD
           extra_args: --json --no-verification
         continue-on-error: true
