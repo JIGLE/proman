@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
+import { createErrorResponse, ResourceNotFoundError } from "@/lib/utils/error-handling";
 import {
   calculateDistribution,
   saveDistribution,
@@ -13,6 +14,8 @@ export async function GET(request: NextRequest) {
     const authResult = await requireAuth(request);
     if (authResult instanceof Response) return authResult;
 
+    const { userId } = authResult;
+
     const { searchParams } = new URL(request.url);
     const propertyId = searchParams.get("propertyId");
     const year = searchParams.get("year");
@@ -21,8 +24,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "propertyId is required" }, { status: 400 });
     }
 
+    // `propertyId` is attacker-controlled — it comes straight off the query string, and
+    // `requireAuth` only proves a session exists, never whose. The scoping is inside
+    // getDistributionHistory so it cannot be skipped; a property belonging to someone else
+    // now returns an empty history rather than their income and per-owner tax figures.
     const distributions = await getDistributionHistory(
       propertyId,
+      userId,
       year ? parseInt(year) : undefined,
     );
 
@@ -76,15 +84,24 @@ export async function POST(request: NextRequest) {
     // Calculate the distribution
     const result = calculateDistribution(input);
 
-    // Save if requested
+    // Save if requested. saveDistribution verifies that the property and every ownerId in the
+    // body belong to this user before writing anything — `calculatedByUserId` above records
+    // who asked, which is audit metadata, not authorization.
     if (data.save !== false) {
-      const saved = await saveDistribution(result);
+      const saved = await saveDistribution(result, userId);
       return NextResponse.json({ data: saved }, { status: 201 });
     }
 
     // Return preview without saving
     return NextResponse.json({ data: result, preview: true });
   } catch (error) {
+    // createErrorResponse resolves the status from the error TYPE, so the ownership failures
+    // thrown by saveDistribution surface as 404 rather than being flattened into a 500 with
+    // the message "Property not found" — which is both the wrong status and, in a 500 body,
+    // an unhelpful leak of internal phrasing.
+    if (error instanceof ResourceNotFoundError) {
+      return createErrorResponse(error, 404, request);
+    }
     console.error("Failed to calculate distribution:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Failed to calculate distribution" },

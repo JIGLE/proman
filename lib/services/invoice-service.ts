@@ -1,4 +1,5 @@
 import { getPrismaClient } from "./database/database";
+import { assertOwnsRelations } from "./database/assert-owned";
 
 // Invoice number format: INV-{YEAR}-{SEQUENCE}
 // Example: INV-2026-00001
@@ -241,6 +242,19 @@ export const invoiceService = {
    */
   async create(userId: string, data: CreateInvoiceData): Promise<Invoice> {
     const prisma = getPrismaClient();
+
+    // The three ids below come from the request body. Until this check, posting an invoice
+    // with someone else's tenantId created a real invoice against that tenant — and because
+    // getAll (above) matches on `tenant: { userId }` rather than the invoice's own userId, it
+    // surfaced in the VICTIM's invoice list, at an amount and description of the caller's
+    // choosing. The tenant portal scopes by tenantId alone, so it was visible and payable
+    // there too.
+    await assertOwnsRelations(userId, {
+      propertyId: data.propertyId,
+      tenantId: data.tenantId,
+      ownerId: data.ownerId,
+    });
+
     const invoiceNumber = await generateInvoiceNumber(userId);
 
     const metadata: InvoiceMetadata = {

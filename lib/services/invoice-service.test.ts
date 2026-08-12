@@ -26,6 +26,13 @@ describe("Invoice Service", () => {
         update: vi.fn(),
         delete: vi.fn(),
       },
+      // `create` now calls assertOwnsRelations, which resolves the propertyId / tenantId /
+      // ownerId in the request body against this user before writing. These default to
+      // "yes, the caller owns it" so the existing cases keep testing what they were written
+      // to test; the rejection path has its own case below.
+      property: { findFirst: vi.fn().mockResolvedValue({ id: propertyId }) },
+      tenant: { findFirst: vi.fn().mockResolvedValue({ id: tenantId }) },
+      owner: { findFirst: vi.fn().mockResolvedValue({ id: ownerId }) },
     };
     vi.mocked(getPrismaClient).mockReturnValue(mockPrisma);
   });
@@ -348,6 +355,26 @@ describe("Invoice Service", () => {
       });
       const result = await invoiceService.create(userId, createData);
       expect(result.status).toBe("pending");
+    });
+
+    // The tenantId, propertyId and ownerId on a create come from the request body. Before this
+    // check, posting an invoice against another landlord's tenant wrote a real invoice — and
+    // because getAll matches on `tenant: { userId }` rather than the invoice's own userId, it
+    // appeared in the VICTIM's invoice list at an amount of the caller's choosing, and was
+    // visible and payable from that tenant's portal.
+    it("INV-015b: Should refuse to create an invoice against a tenant the caller does not own", async () => {
+      mockPrisma.tenant.findFirst.mockResolvedValue(null);
+      mockPrisma.invoice.findFirst.mockResolvedValue(null);
+
+      await expect(
+        invoiceService.create(userId, {
+          tenantId: "tenant-belonging-to-someone-else",
+          amount: 5000,
+          dueDate: "2026-02-01",
+        }),
+      ).rejects.toThrow();
+
+      expect(mockPrisma.invoice.create).not.toHaveBeenCalled();
     });
   });
 
