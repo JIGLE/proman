@@ -143,6 +143,33 @@ PR → `publish` tags → the tag push triggers `deploy-ghcr.yml`. Only a tag pu
 
 All Claude Code changes go to: **`claude/situs-design-polish-6zpz2f`**
 
+## Subagents (`.claude/agents/`)
+
+Three project agents, auto-delegated when the task matches their `description`:
+
+| Agent               | Use when                                                           | Writes? |
+| ------------------- | ------------------------------------------------------------------ | ------- |
+| `api-route-auditor` | A PR adds/edits `app/api/**/route.ts`; any scoping or status sweep | No      |
+| `ci-gate-auditor`   | A workflow, composite action, threshold or scan script changes     | No      |
+| `situs-implementer` | One self-contained change, in its own worktree, ending in one PR   | Yes     |
+
+**Delegate** broad read-only sweeps — the agent reads 40 files and returns 15 lines, instead of
+40 files landing in the main context. That is the whole token argument, and it is the reason the
+auditors are `tools: Read, Grep, Glob`-only and run on `sonnet` rather than opus.
+
+**Don't delegate** anything spanning the CI/release interlocks (required-check name matching,
+the tag→deploy chain, the false-green history), anything needing the current session's
+accumulated context, or edits small enough to just do — a spawn costs more than a two-line fix.
+A cold agent handed "fix the CI workflows" writes plausible YAML and misses all three interlocks.
+
+Both auditors carry `memory: project`, so what they learn lands in `.claude/agent-memory/<name>/`
+and is committed. That is what stops the cold start from being paid twice. Review those files
+like any other source — a wrong lesson recorded there propagates.
+
+At most **3 concurrent worktrees**: `node_modules` is 1.7 GB and each worktree needs its own
+`npm ci`. Worktrees branch from the default branch, not the parent's HEAD, so let dependent work
+merge first rather than running it in parallel.
+
 ## Dependabot PRs
 
 **Never push commits directly onto a `dependabot/*` branch to fix an issue the bump introduced.**
