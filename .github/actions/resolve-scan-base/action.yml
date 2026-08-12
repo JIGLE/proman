@@ -1,0 +1,59 @@
+name: "Resolve scan base"
+description: >-
+  Work out a usable git base commit for a diff-scoped scan (TruffleHog), given that the
+  obvious expression for it is wrong in two cases.
+
+# The expression this replaces was:
+#
+#   base: ${{ github.event.pull_request.base.sha || github.event.before || 'HEAD~1' }}
+#
+# `||` in a GitHub expression falls through on falsy values, and on a branch's first push
+# `github.event.before` is forty zeros — a non-empty string, therefore truthy. So the
+# fallback to `HEAD~1` could never be reached in the one case it was written for, and the
+# scan was handed a commit that does not exist.
+#
+# The same expression is also empty on `schedule` and `workflow_dispatch`, where it lands on
+# `HEAD~1` and scans a single commit. That is a real limitation of a diff-scoped nightly and
+# is left as-is here rather than silently widened: changing the nightly to a full-history
+# scan is a scope and runtime decision, not a bug fix.
+
+outputs:
+  base:
+    description: "A git ref safe to pass as a scan base."
+    value: ${{ steps.resolve.outputs.base }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: resolve
+      shell: bash
+      run: |
+        set -euo pipefail
+        NULL_SHA=0000000000000000000000000000000000000000
+
+        PR_BASE='${{ github.event.pull_request.base.sha }}'
+        BEFORE='${{ github.event.before }}'
+
+        if [ -n "$PR_BASE" ]; then
+          BASE="$PR_BASE"
+        elif [ -n "$BEFORE" ] && [ "$BEFORE" != "$NULL_SHA" ]; then
+          BASE="$BEFORE"
+        else
+          BASE="HEAD~1"
+        fi
+
+        # Even a non-null `before` can be unreachable — a force-push leaves the old tip
+        # dangling, and a shallow-ish fetch may not carry it. Verify before handing it over.
+        if ! git rev-parse -q --verify "${BASE}^{commit}" >/dev/null 2>&1; then
+          echo "Base '$BASE' is not a reachable commit; falling back to HEAD~1"
+          BASE="HEAD~1"
+        fi
+
+        # A repository with exactly one commit has no HEAD~1 either.
+        if ! git rev-parse -q --verify "${BASE}^{commit}" >/dev/null 2>&1; then
+          echo "No usable base commit; scanning HEAD alone"
+          BASE="HEAD"
+        fi
+
+        echo "Resolved scan base: $BASE"
+        echo "base=${BASE}" >> "$GITHUB_OUTPUT"

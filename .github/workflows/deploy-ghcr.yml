@@ -68,44 +68,117 @@ jobs:
             image=moby/buildkit:latest
             network=host
 
+      # ── Tagging policy ────────────────────────────────────────────────────────────────
+      #
+      # A bare version tag must mean the tagged source it was cut from, and `:latest` must
+      # mean the newest release. Neither held before: every trigger produced
+      # `:${VERSION},:latest`, and on a manual dispatch VERSION defaulted to whatever
+      # package.json said.
+      #
+      # That is not hypothetical. On 2026-08-11 a dispatch from `main` published
+      # `ghcr.io/jigle/situs:1.24.0` built from 43997fd, while git tag v1.24.0 points at
+      # d03e4a7 — dozens of commits earlier. Two different images, one version number, and
+      # `:latest` moved onto unreleased code at the same time.
+      #
+      # So: only a tag push may claim a version or `:latest`. A manual dispatch gets
+      # `sha-<short>`, which cannot collide with anything and says exactly what it is —
+      # unless an explicit pre-release `version` is supplied (one containing `-`, e.g.
+      # 1.25.0-rc1), which is allowed to name itself because it can never be mistaken for a
+      # release. Use `dry_run: true` to prove the image builds without publishing at all.
       - name: Set variables
         id: vars
         run: |
-          # Determine version
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            VERSION=${GITHUB_REF#refs/tags/v}
-          elif [[ -n "${{ github.event.inputs.version || '' }}" ]]; then
-            VERSION="${{ github.event.inputs.version }}"
-          elif [[ -n "${{ github.event.client_payload.version || '' }}" ]]; then
-            VERSION="${{ github.event.client_payload.version }}"
-          else
-            VERSION=$(grep '"version":' package.json | cut -d'"' -f4)
-          fi
-          # Set image name to lowercase
+          set -euo pipefail
           IMAGE_NAME_LOWER=$(echo "${{ github.repository }}" | tr '[:upper:]' '[:lower:]')
-          # Determine platforms
-          PLATFORMS="${{ github.event.inputs.platforms || github.event.client_payload.platforms || 'linux/amd64' }}"
-          # Normalize dry run flag across triggers
-          DRY_RUN="${{ github.event.inputs.dry_run || github.event.client_payload.dry_run || 'false' }}"
-          # Set tags based on trigger
-          if [[ "${GITHUB_REF}" == refs/tags/* ]] || [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || [[ "${{ github.event_name }}" == "repository_dispatch" && -n "${VERSION}" ]]; then
+          SHORT_SHA="${GITHUB_SHA::7}"
+          INPUT_VERSION="${{ github.event.inputs.version || github.event.client_payload.version || '' }}"
+
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            # The only path that may claim a release identity.
+            VERSION="${GITHUB_REF#refs/tags/v}"
             TAGS="ghcr.io/${IMAGE_NAME_LOWER}:${VERSION},ghcr.io/${IMAGE_NAME_LOWER}:latest"
+          elif [[ -n "${INPUT_VERSION}" && "${INPUT_VERSION}" == *-* ]]; then
+            # Explicit pre-release: self-identifying, so it may carry its own name. Still no :latest.
+            VERSION="${INPUT_VERSION}"
+            TAGS="ghcr.io/${IMAGE_NAME_LOWER}:${VERSION}"
           else
-            TAGS="ghcr.io/${IMAGE_NAME_LOWER}:dev"
+            # Everything else is a build of a commit, and is named after that commit.
+            VERSION="sha-${SHORT_SHA}"
+            TAGS="ghcr.io/${IMAGE_NAME_LOWER}:${VERSION}"
+            if [[ -n "${INPUT_VERSION}" ]]; then
+              echo "::warning::Ignoring version='${INPUT_VERSION}' — a bare version number is reserved for tag pushes. Publishing ${VERSION} instead; pass a pre-release string like ${INPUT_VERSION}-rc1 to name it yourself."
+            fi
           fi
+
+          PLATFORMS="${{ github.event.inputs.platforms || github.event.client_payload.platforms || 'linux/amd64' }}"
+          DRY_RUN="${{ github.event.inputs.dry_run || github.event.client_payload.dry_run || 'false' }}"
           BUILD_TIME=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "image_name_lower=${IMAGE_NAME_LOWER}" >> $GITHUB_OUTPUT
           echo "platforms=${PLATFORMS}" >> $GITHUB_OUTPUT
           echo "dry_run=${DRY_RUN}" >> $GITHUB_OUTPUT
           echo "tags=${TAGS}" >> $GITHUB_OUTPUT
+          echo "scan_tag=ghcr.io/${IMAGE_NAME_LOWER}:scan-${SHORT_SHA}" >> $GITHUB_OUTPUT
           echo "build_time=${BUILD_TIME}" >> $GITHUB_OUTPUT
-
-      # ...existing build and push steps...
 
       - name: Output image tags
         run: |
           echo "Target image tags: ${{ steps.vars.outputs.tags }}"
+
+      # Build once into the local daemon so the image can be scanned BEFORE anything is
+      # published. `load: true` cannot handle a multi-platform build, so this is pinned to
+      # amd64 — the scan is about the base layer and OS packages, which do not differ
+      # meaningfully across arches here. The push step below rebuilds for the real platform
+      # list and hits the same gha cache, so this costs cache-warming, not a second build.
+      - name: Build image for scanning
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: ${{ steps.vars.outputs.scan_tag }}
+          build-args: |
+            CACHE_BUST=${{ github.run_id }}-${{ github.run_number }}
+            BUILD_VERSION=${{ steps.vars.outputs.version }}
+            GIT_COMMIT=${{ github.sha }}
+            BUILD_TIME=${{ steps.vars.outputs.build_time }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # `npm audit` covers the dependency tree; nothing covered the node:26-alpine base layer
+      # and its OS packages, which is what actually ships. Run from the official Trivy image
+      # pinned by DIGEST — a tag can be moved, a digest cannot, and this container is handed
+      # the Docker socket.
+      #
+      # CRITICAL fails the job. HIGH is reported but does not block yet: the real number for
+      # this base image has never been measured, and choosing a threshold before seeing it
+      # would either wave everything through or block the first release for reasons nobody
+      # has looked at. Tighten to `CRITICAL,HIGH` once the first run reports a number.
+      - name: Scan image for vulnerabilities
+        run: |
+          set -euo pipefail
+          TRIVY="aquasec/trivy:0.73.0@sha256:7cced7cae583819fc7806d4cbc0dbbc7cad18b99f7d3e235192e6da8c091045c"
+          IMAGE="${{ steps.vars.outputs.scan_tag }}"
+
+          run_trivy() {
+            docker run --rm \
+              -v /var/run/docker.sock:/var/run/docker.sock \
+              -v "${{ github.workspace }}/.trivycache:/root/.cache/trivy" \
+              "$TRIVY" image --scanners vuln "$@"
+          }
+
+          echo "::group::Trivy report (all severities from HIGH up)"
+          run_trivy --severity HIGH,CRITICAL --format table "$IMAGE"
+          echo "::endgroup::"
+
+          # Second pass decides the gate. --exit-code 1 with CRITICAL only.
+          if ! run_trivy --severity CRITICAL --exit-code 1 --format table --quiet "$IMAGE"; then
+            echo "::error::Trivy found CRITICAL vulnerabilities in the image — not publishing"
+            exit 1
+          fi
+          echo "No CRITICAL vulnerabilities found."
 
       - name: Build and push Docker image
         id: build-push
@@ -117,7 +190,7 @@ jobs:
           tags: ${{ steps.vars.outputs.tags }}
           labels: |
             org.opencontainers.image.title=Situs
-            org.opencontainers.image.description=Property Management System
+            org.opencontainers.image.description=Sovereign Capital System — property income, receipts and tax evidence
             org.opencontainers.image.version=${{ steps.vars.outputs.version }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.revision=${{ github.sha }}

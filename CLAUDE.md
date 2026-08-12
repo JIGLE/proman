@@ -119,6 +119,18 @@ All surfaces are measured in the mobile audit (`scripts/mobile-audit.mjs`) on ev
 
 ## CI Gates
 
+Four workflows: `ci.yml` (PRs + push to main), `security-scan.yml`, `release.yml`,
+`deploy-ghcr.yml`, plus `reusable-verify.yml` which only runs via `workflow_call`. There is no
+`production.yml` — it duplicated `ci.yml`'s verify and build on the same event. See
+`docs/workflow-naming.md` for the conventions, including four that were learned the hard way:
+install with a bare `npm ci` (never a fallback that regenerates the lockfile), set
+`cancel-in-progress` only for `pull_request`, a step that judges a report must fail when the
+report is missing, and jobs that boot the app use `.github/actions/start-app`.
+
+**Nothing publishes on merge.** A release is: dispatch `release.yml` → merge the version-bump
+PR → `publish` tags → the tag push triggers `deploy-ghcr.yml`. Only a tag push may write
+`:latest` or a bare `:<version>`; a manual deploy dispatch publishes `sha-<short>`.
+
 - ESLint: `--max-warnings=0` — zero warnings allowed
 - Vitest: ~51% line coverage, enforced as a **ratchet** in `vitest.config.ts` (statements 49 /
   branches 36 / functions 35 / lines 51) — a PR may not lower it. Raise the floor when real

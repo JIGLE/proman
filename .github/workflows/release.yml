@@ -8,8 +8,23 @@ name: Release
 #      review). This is the flow that actually shipped v1.16.3.
 #   2. `publish` (on push to main) — whenever a version bump lands on main and no matching
 #      tag exists yet, it creates the tag and the GitHub Release; the tag push triggers deploy.
-#      Tag pushes work with GITHUB_TOKEN (tags aren't branch-protected). This also closes
-#      the Production Gate "version integrity" gap automatically.
+#      Tag pushes work with GITHUB_TOKEN (tags aren't branch-protected).
+#
+# `publish` also carries the two checks that used to live in `production.yml`: version
+# integrity and release lag. They belong here rather than in a parallel workflow, because
+# both are statements about the relationship between `package.json` and the newest tag —
+# and only this workflow knows when that relationship is mid-flight. Running the integrity
+# check in a separate workflow on the same `push: main` event was a race: on a release
+# merge, `package.json` is already bumped while the tag it must match is still being
+# created here. It never fired only because the other workflow put the check behind a
+# build, landing it ~20 minutes after this job creates the tag in about one.
+#
+# There is no `release_notes` or `prerelease` input. Both were unreachable: `publish` runs
+# on a different event from `prepare`, with no state carried between them, so a note typed
+# at dispatch reached the release PR and never the Release itself, and `prerelease` was
+# declared while the release step hardcoded `false`. Pre-release is now derived from the
+# version string (any `-` suffix, e.g. `1.25.0-rc1`), and release notes are GitHub's
+# generated ones — editable on the Release afterwards.
 
 on:
   workflow_dispatch:
@@ -22,15 +37,6 @@ on:
           - patch
           - minor
           - major
-      release_notes:
-        description: "Release notes (optional - will generate from commits if empty)"
-        required: false
-        default: ""
-      prerelease:
-        description: "Mark as pre-release"
-        required: false
-        type: boolean
-        default: false
       publish_only:
         description: "Only run publish job (for recovery when version bump skipped)"
         required: false
@@ -93,19 +99,13 @@ jobs:
           echo "tag=v${NEW_VERSION}" >> $GITHUB_OUTPUT
 
       - name: Install dependencies
-        run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
+        run: npm ci
 
-      - name: Verify project before release
-        run: |
-          npm run type-check
-          npm run lint -- --max-warnings=1000
-          npm run test:coverage
-        env:
-          DATABASE_URL: file:./release-test.db
-          NEXTAUTH_URL: http://localhost:3000
-          NEXTAUTH_SECRET: release-test-secret-minimum-32-characters
-          GOOGLE_CLIENT_ID: release-placeholder
-          GOOGLE_CLIENT_SECRET: release-placeholder
+      # No verify step here. CI already ran the full trio on the PR that landed this commit,
+      # and it runs again on the release/vX.Y.Z PR this job opens — a third copy gates nothing.
+      # It was also the weakest of the three: it ran `npm run lint -- --max-warnings=1000`,
+      # holding the release to a threshold 1000 warnings looser than the `--max-warnings=0`
+      # every other path enforces.
 
       - name: Bump package.json version
         run: |
@@ -146,16 +146,10 @@ jobs:
             COMMITS=$(git log ${LATEST_TAG}..HEAD --oneline --pretty=format:"- %s")
           fi
 
-          if [ -n "${{ github.event.inputs.release_notes }}" ]; then
-            NOTES="${{ github.event.inputs.release_notes }}"
-          else
-            NOTES="$COMMITS"
-          fi
-
           cat > release_notes.md << EOF
           ## What's Changed in v${{ steps.version.outputs.new_version }}
 
-          $NOTES
+          $COMMITS
 
           **Full Changelog**: https://github.com/${{ github.repository }}/compare/${LATEST_TAG:-HEAD~10}...v${{ steps.version.outputs.new_version }}
           EOF
@@ -222,10 +216,11 @@ jobs:
   publish:
     name: Publish Release
     if: github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.publish_only == true)
+    # `contents: write` is all this needs — it pushes a tag and cuts a Release. `packages: write`
+    # and `actions: write` were left over from the removed deploy-ghcr dispatch; nothing here
+    # touches a package registry or another workflow any more.
     permissions:
       contents: write
-      packages: write
-      actions: write
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
@@ -256,31 +251,38 @@ jobs:
             echo "new_version=${PKG_VERSION}" >> $GITHUB_OUTPUT
           fi
 
-      - name: Setup Node.js
-        if: steps.gate.outputs.should_release == 'true'
-        uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          cache: "npm"
-
-      - name: Generate changelog
-        if: steps.gate.outputs.should_release == 'true'
-        run: |
-          NEW_VER="${{ steps.gate.outputs.new_version }}"
-          PREV_TAG=$(git tag --sort=-creatordate | grep '^v' | head -1 || echo "")
-          if [ -z "$PREV_TAG" ]; then
-            COMMITS=$(git log --oneline --pretty=format:"- %s" | head -20)
+          # Pre-release is derived, not declared. Any version carrying a suffix (1.25.0-rc1)
+          # is a pre-release; a bare semver is not. The old `prerelease` dispatch input could
+          # never reach this job — different trigger, no state between them — while the release
+          # step below hardcoded `false`, so the input did nothing at all.
+          if [[ "$PKG_VERSION" == *-* ]]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
           else
-            COMMITS=$(git log ${PREV_TAG}..HEAD --oneline --pretty=format:"- %s")
+            echo "prerelease=false" >> $GITHUB_OUTPUT
           fi
-          cat > release_notes.md << EOF
-          ## What's Changed in v${NEW_VER}
 
-          $COMMITS
-
-          **Full Changelog**: https://github.com/${{ github.repository }}/compare/${PREV_TAG:-HEAD~10}...v${NEW_VER}
-          EOF
-          cat release_notes.md
+      # Advisory, and deliberately on the path where nothing is published: this runs on every
+      # push to main, and the interesting moment is the one where main has drifted from the
+      # last release. Moved here from production.yml, which ran it behind a duplicate build.
+      - name: Report release lag
+        if: steps.gate.outputs.should_release != 'true'
+        run: |
+          LATEST_TAG=$(git tag --sort=-creatordate | grep '^v' | head -1 || echo "")
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No tags found — skipping release lag check"
+            exit 0
+          fi
+          COMMIT_COUNT=$(git rev-list "${LATEST_TAG}..HEAD" --count)
+          echo "Commits since $LATEST_TAG: $COMMIT_COUNT"
+          {
+            echo "## Release Lag"
+            echo "Commits on \`main\` since last release (**$LATEST_TAG**): **$COMMIT_COUNT**"
+          } >> $GITHUB_STEP_SUMMARY
+          if [ "$COMMIT_COUNT" -gt 10 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "> **Warning:** $COMMIT_COUNT unreleased commits on main. Consider triggering the Release workflow." >> $GITHUB_STEP_SUMMARY
+            echo "::warning::$COMMIT_COUNT commits on main since $LATEST_TAG — consider cutting a release"
+          fi
 
       - name: Create and push tag
         if: steps.gate.outputs.should_release == 'true'
@@ -289,19 +291,42 @@ jobs:
           git tag -a "v${NEW_VER}" -m "Release v${NEW_VER}"
           git push origin "v${NEW_VER}"
 
+      # `generate_release_notes: true` and `body_path:` are not additive alternatives — the
+      # action APPENDS the generated notes to whatever body it is given, so passing both put
+      # two changelogs in every release. The hand-rolled `git log` step that produced
+      # release_notes.md is gone; GitHub's generated notes are the single source.
       - name: Create GitHub Release
         if: steps.gate.outputs.should_release == 'true'
         uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ steps.gate.outputs.new_version }}
           name: Release v${{ steps.gate.outputs.new_version }}
-          body_path: release_notes.md
           draft: false
-          prerelease: false
+          prerelease: ${{ steps.gate.outputs.prerelease }}
           token: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
           generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Moved from production.yml, and deliberately placed AFTER the tag exists. As a parallel
+      # workflow on the same `push: main` event this was a race it could only lose: a release
+      # merge lands the version bump first and the tag is created above, seconds to minutes
+      # later. Here the invariant is checked at the one moment it is meaningful — if these
+      # disagree now, a hand-edited version or a half-finished release really did leave the
+      # repository inconsistent.
+      - name: Verify version integrity
+        if: steps.gate.outputs.should_release == 'true'
+        run: |
+          git fetch --tags --quiet
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          LATEST_TAG=$(git tag --sort=-creatordate | grep '^v' | head -1 | sed 's/^v//')
+          echo "package.json: $PKG_VERSION"
+          echo "Latest tag:   $LATEST_TAG"
+          if [ "$PKG_VERSION" != "$LATEST_TAG" ]; then
+            echo "::error::Version mismatch after tagging: package.json=$PKG_VERSION, latest tag=v$LATEST_TAG"
+            exit 1
+          fi
+          echo "Version integrity OK: $PKG_VERSION == v$LATEST_TAG"
 
       # No explicit deploy-ghcr dispatch here. The "Create and push tag" step above pushes
       # v<version>, and deploy-ghcr.yml already fires on `push: tags: ["v*"]` — dispatching it

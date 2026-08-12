@@ -15,9 +15,15 @@ on:
 permissions:
   contents: read
 
+# Cancel superseded runs on a PR branch — that is what this is for. Do NOT cancel on `main`:
+# every commit there is a thing that can be tagged and shipped, so a cancelled run is a commit
+# that shipped unverified. This already happened: runs #540 and #541 were cancelled when three
+# Dependabot PRs merged ~20 seconds apart, leaving two commits on main with no CI at all. The
+# workflows that survived that day (Release, Production Gate) survived only because they set
+# cancel-in-progress: false.
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   NODE_VERSION: "22"
@@ -54,7 +60,7 @@ jobs:
             nextjs-${{ runner.os }}-
 
       - name: Install dependencies
-        run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
+        run: npm ci
 
       - name: Build (Next.js)
         run: npm run build
@@ -91,8 +97,11 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
+      # Was `npm ci --ignore-scripts`, which skips `prisma generate`. The app under test is the
+      # standalone build (it carries its own client), but the schema step below runs the Prisma
+      # CLI from this tree, so the full install is the honest one.
       - name: Install dependencies
-        run: npm ci --ignore-scripts || (npm install --package-lock-only --ignore-scripts && npm ci --ignore-scripts)
+        run: npm ci
 
       - name: Download build artifacts
         uses: actions/download-artifact@v8
@@ -100,27 +109,9 @@ jobs:
           name: nextjs-build
           path: .next/
 
-      - name: Start built app
-        run: |
-          # Copy static assets and public into standalone (mirrors Dockerfile)
-          cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
-          cp -r public .next/standalone/public 2>/dev/null || true
-          nohup node .next/standalone/server.js > app.log 2>&1 &
-          echo $! > .app.pid
-        env:
-          # Absolute: standalone `server.js` chdirs to its own directory, so a relative path
-          # would land in `.next/standalone/`. See the Mobile Audit job for the full account.
-          DATABASE_URL: file:${{ github.workspace }}/ci-smoke.db
-          NEXTAUTH_URL: http://localhost:3000
-          NEXTAUTH_SECRET: ci-test-secret-minimum-32-characters
-          GOOGLE_CLIENT_ID: ci-placeholder
-          GOOGLE_CLIENT_SECRET: ci-placeholder
-          NODE_ENV: production
-          PORT: 3000
-          HOSTNAME: 0.0.0.0
-
-      - name: Wait for app
-        run: npx wait-on http://localhost:3000 --timeout 120000
+      - uses: ./.github/actions/start-app
+        with:
+          database-url: file:${{ github.workspace }}/ci-smoke.db
 
       - name: Smoke check
         run: |
@@ -135,6 +126,32 @@ jobs:
       - name: Health check
         run: |
           curl -fS http://localhost:3000/api/ready || (cat app.log && exit 1)
+
+      # `/` and `/api/ready` are the two paths that deliberately avoid the database — /api/ready
+      # is documented in the Dockerfile as DB-free on purpose — so until now this job proved
+      # only that Node started. It booted against a `ci-smoke.db` no step created, and
+      # `getPrismaClient()` (lib/services/database/database.ts:26) throws outright when the file
+      # is absent, so every data route was answering 500 while the job went green.
+      #
+      # /api/monitoring/health is the right probe: it runs `SELECT 1` through Prisma and needs
+      # no session. Assert the field, not just the status — a 200 carrying `"unknown"` would
+      # otherwise pass.
+      - name: Database connectivity check
+        run: |
+          BODY=$(curl -sS -w '\n%{http_code}' http://localhost:3000/api/monitoring/health)
+          HTTP_STATUS=$(tail -n1 <<<"$BODY")
+          JSON=$(sed '$d' <<<"$BODY")
+          echo "$JSON"
+          DB=$(jq -r '.checks.database' <<<"$JSON")
+          if [ "$HTTP_STATUS" != "200" ] || [ "$DB" != "healthy" ]; then
+            echo "::error::Health check failed — HTTP $HTTP_STATUS, database='$DB'"
+            cat app.log
+            exit 1
+          fi
+
+      - name: Dump app log on failure
+        if: failure()
+        run: cat app.log 2>/dev/null || echo 'No app log found'
 
   e2e-smoke:
     name: E2E Smoke (required on PR)
@@ -154,7 +171,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
+        run: npm ci
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
@@ -165,38 +182,16 @@ jobs:
           name: nextjs-build
           path: .next/
 
-      # This job never created a schema either, so every DB-backed route answered 500 and the
-      # suite stayed green regardless — the same false-green the mobile audit was in. Create the
-      # tables so the smoke run exercises the app rather than its error paths.
-      - name: Create database schema
-        run: npx prisma db push
-        env:
-          DATABASE_URL: file:${{ github.workspace }}/e2e-smoke.db
-
-      - name: Start built application in background
-        run: |
-          cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
-          cp -r public .next/standalone/public 2>/dev/null || true
-          nohup node .next/standalone/server.js > app.log 2>&1 &
-          echo $! > .app.pid
-        env:
-          DATABASE_URL: file:${{ github.workspace }}/e2e-smoke.db
-          NEXTAUTH_URL: http://localhost:3000
-          NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
-          GOOGLE_CLIENT_ID: e2e-placeholder
-          GOOGLE_CLIENT_SECRET: e2e-placeholder
-          # Needed even though every test in smoke.spec.ts is unauthenticated: both Playwright
-          # projects declare `dependencies: ["setup"]`, so `auth.setup.ts` runs here too, and it
-          # now fails loudly instead of silently writing an empty session. No ALLOW_DEMO_MODE and
-          # no E2E_SEED — this job must keep a signed-out `request` fixture, because one of its
-          # tests asserts that unauthenticated API calls never return data.
-          ENABLE_DEMO_LOGIN: "true"
-          NODE_ENV: production
-          PORT: 3000
-          HOSTNAME: 0.0.0.0
-
-      - name: Wait for app to become healthy
-        run: npx wait-on http://localhost:3000 --timeout 120000
+      # demo-login is needed even though every test in smoke.spec.ts is unauthenticated: both
+      # Playwright projects declare `dependencies: ["setup"]`, so `auth.setup.ts` runs here too,
+      # and it now fails loudly instead of silently writing an empty session. demo-mode stays
+      # off and nothing is seeded — this job must keep a signed-out `request` fixture, because
+      # one of its tests asserts that unauthenticated API calls never return data.
+      - uses: ./.github/actions/start-app
+        with:
+          database-url: file:${{ github.workspace }}/e2e-smoke.db
+          nextauth-secret: e2e-test-secret-minimum-32-characters
+          demo-login: "true"
 
       - name: Run Playwright smoke tests
         run: npx playwright test e2e/smoke.spec.ts --project=chromium
@@ -237,7 +232,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
+        run: npm ci
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
@@ -248,41 +243,15 @@ jobs:
           name: nextjs-build
           path: .next/
 
-      # See the E2E Smoke job: no schema meant every DB-backed route 500'd and the suite passed
-      # anyway. Combined with the `if (await link.isVisible())` guards throughout these specs,
-      # that is two independent reasons this job could go green without testing anything.
-      - name: Create database schema
-        run: npx prisma db push
-        env:
-          DATABASE_URL: file:${{ github.workspace }}/e2e-test.db
-
-      - name: Start built application in background
-        run: |
-          cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
-          cp -r public .next/standalone/public 2>/dev/null || true
-          nohup node .next/standalone/server.js > app.log 2>&1 &
-          echo $! > .app.pid
-        env:
-          DATABASE_URL: file:${{ github.workspace }}/e2e-test.db
-          NEXTAUTH_URL: http://localhost:3000
-          NEXTAUTH_SECRET: e2e-test-secret-minimum-32-characters
-          GOOGLE_CLIENT_ID: e2e-placeholder
-          GOOGLE_CLIENT_SECRET: e2e-placeholder
-          # Without these, `auth.setup.ts` cannot sign in and every spec that declares
-          # `test.use({ storageState })` runs signed out — which is what it silently did until
-          # now. ALLOW_DEMO_MODE additionally opens /api/debug/db/seed so the suite has records
-          # to act on; the delete-confirmation specs skip themselves against an empty database.
-          ALLOW_DEMO_MODE: "true"
-          ENABLE_DEMO_LOGIN: "true"
-          # ~90 tests from a single IP against a 100-req/min API limit: the tail of the run
-          # otherwise fails with 429s that read as product bugs. See lib/middleware/rate-limit.ts.
-          E2E_DISABLE_RATE_LIMIT: "true"
-          NODE_ENV: production
-          PORT: 3000
-          HOSTNAME: 0.0.0.0
-
-      - name: Wait for app to become healthy
-        run: npx wait-on http://localhost:3000 --timeout 120000
+      # demo-mode additionally opens /api/debug/db/seed so the suite has records to act on; the
+      # delete-confirmation specs skip themselves against an empty database.
+      - uses: ./.github/actions/start-app
+        with:
+          database-url: file:${{ github.workspace }}/e2e-test.db
+          nextauth-secret: e2e-test-secret-minimum-32-characters
+          demo-mode: "true"
+          demo-login: "true"
+          disable-rate-limit: "true"
 
       - name: Run Playwright tests
         run: npx playwright test --project=chromium
@@ -342,7 +311,7 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        run: npm ci || (npm install --package-lock-only --ignore-scripts && npm ci)
+        run: npm ci
 
       - name: Install Playwright Browsers
         run: npx playwright install --with-deps chromium
@@ -353,45 +322,12 @@ jobs:
           name: nextjs-build
           path: .next/
 
-      # Nothing in this workflow had ever created a schema, so `mobile-audit.db` was an empty
-      # SQLite file with no tables. `--seed` then failed silently, `resolveIds` returned nulls,
-      # and all ten detail-overlay surfaces skipped — which is why the first completed CI run
-      # reported 42 surface-runs of empty screens instead of 52 of real ones.
-      #
-      # The path must be ABSOLUTE. Next.js's standalone `server.js` starts with
-      # `process.chdir(__dirname)`, so a relative `file:./x.db` resolves to
-      # `.next/standalone/x.db` for the server while `prisma db push` (run from the repo root)
-      # writes to `<root>/x.db` — two different files. Adding the schema step above was
-      # necessary but not sufficient for exactly this reason: the server kept looking in
-      # `.next/standalone/` and reported "SQLite DB file does not exist", the seed 500'd, and
-      # every detail overlay skipped. This is easy to miss locally, where a stale `.db` at the
-      # repo root gets traced into `.next/standalone/` by `next build` and the run works by
-      # accident; in CI the build happens in a separate job before the file exists.
-      - name: Create database schema
-        run: npx prisma db push
-        env:
-          DATABASE_URL: file:${{ github.workspace }}/mobile-audit.db
-
-      - name: Start built application in background
-        run: |
-          cp -r .next/static .next/standalone/.next/static 2>/dev/null || true
-          cp -r public .next/standalone/public 2>/dev/null || true
-          nohup node .next/standalone/server.js > app.log 2>&1 &
-          echo $! > .app.pid
-        env:
-          DATABASE_URL: file:${{ github.workspace }}/mobile-audit.db
-          NEXTAUTH_URL: http://localhost:3000
-          NEXTAUTH_SECRET: mobile-audit-secret-minimum-32-characters
-          GOOGLE_CLIENT_ID: ci-placeholder
-          GOOGLE_CLIENT_SECRET: ci-placeholder
-          ALLOW_DEMO_MODE: "true"
-          ENABLE_DEMO_LOGIN: "true"
-          NODE_ENV: production
-          PORT: 3000
-          HOSTNAME: 0.0.0.0
-
-      - name: Wait for app to become healthy
-        run: npx wait-on http://localhost:3000 --timeout 120000
+      - uses: ./.github/actions/start-app
+        with:
+          database-url: file:${{ github.workspace }}/mobile-audit.db
+          nextauth-secret: mobile-audit-secret-minimum-32-characters
+          demo-mode: "true"
+          demo-login: "true"
 
       # `--seed` is not optional: without it the harness walks a bare database, and a table with
       # no rows cannot overflow. Every number this job produced before it was added described

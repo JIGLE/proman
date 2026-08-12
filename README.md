@@ -7,7 +7,6 @@
 [![CI](https://github.com/JIGLE/situs/actions/workflows/ci.yml/badge.svg)](https://github.com/JIGLE/situs/actions/workflows/ci.yml)
 [![Security Scan](https://github.com/JIGLE/situs/actions/workflows/security-scan.yml/badge.svg)](https://github.com/JIGLE/situs/actions/workflows/security-scan.yml)
 [![Deploy to GHCR](https://github.com/JIGLE/situs/actions/workflows/deploy-ghcr.yml/badge.svg)](https://github.com/JIGLE/situs/actions/workflows/deploy-ghcr.yml)
-[![Production Gate](https://github.com/JIGLE/situs/actions/workflows/production.yml/badge.svg)](https://github.com/JIGLE/situs/actions/workflows/production.yml)
 
 [![Release](https://img.shields.io/github/v/release/JIGLE/situs?label=release&color=0f766e)](https://github.com/JIGLE/situs/releases/latest)
 [![Next.js 16](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org)

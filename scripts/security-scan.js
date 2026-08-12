@@ -174,7 +174,15 @@ function checkForSecrets() {
     },
     {
       name: "Password in Code",
-      pattern: /['"]?password['"]?\s*[:=]\s*['"][^'"]{1,}['"]/gi,
+      // The lookbehind matters. Without it, `password` also matches the tail of a hyphenated
+      // token, so this fired on
+      //   autoComplete={mode === "signup" ? "new-password" : "current-password"}
+      // reading `-password" : "current-password"` as an assignment of a literal. That single
+      // false positive was the only finding the scanner has ever produced, and the workflow
+      // was configured to discard `high` entirely — so the one thing this gate reported was
+      // wrong, and nobody saw it either way. Requiring `password` to start a word keeps every
+      // real form (`password: "literal"`, `"password": "literal"`, `const password = "..."`).
+      pattern: /(?<![-\w])['"]?password['"]?\s*[:=]\s*['"][^'"]{1,}['"]/gi,
     },
     {
       name: "Private Key",
