@@ -26,9 +26,14 @@ description: >-
 
 inputs:
   database-url:
+    # No expression syntax in this text. GitHub evaluates ${{ }} across the whole action
+    # manifest, including input descriptions, and the `github` context is not available
+    # there — an example written with it fails the action at load time with
+    # "Unrecognized named-value: 'github'". Callers pass the real expression; the docs
+    # for it stay plain prose.
     description: >-
-      Prisma connection string. MUST be absolute — see note 2 above. Pass
-      file:${{ github.workspace }}/<name>.db, never file:./<name>.db.
+      Prisma connection string. MUST be absolute — see note 2 above. Callers pass
+      "file:" plus the github.workspace expression plus "/<name>.db", never "file:./<name>.db".
     required: true
   nextauth-secret:
     description: "NEXTAUTH_SECRET for the booted app (minimum 32 characters)."

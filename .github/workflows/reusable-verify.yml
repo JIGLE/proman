@@ -42,6 +42,12 @@ jobs:
       - name: Format check
         run: npx prettier --check .
 
+      # Validating that a manifest PARSES is not validating that GitHub ACCEPTS it. An
+      # expression in an input `description` loads fine as YAML and then fails every job
+      # using the action with "Unrecognized named-value". Nothing else in CI covers this.
+      - name: Check composite action manifests
+        run: python3 scripts/check-action-manifests.py
+
       - name: Type check
         run: npm run type-check
 
