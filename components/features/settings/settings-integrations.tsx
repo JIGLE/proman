@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Landmark, Layers, ScanLine } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { MODE_KIND_STYLES, authorityName, modeKind } from "@/lib/tax/connectors/presentation";
 
 interface BankConnection {
   id: string;
@@ -22,11 +23,9 @@ interface TaxConnector {
   lastSubmissionAt: string | null;
 }
 
-const MODE_STYLES: Record<string, string> = {
-  sandbox: "bg-[var(--semantic-info-soft)] text-[var(--semantic-info-readable)]",
-  review: "bg-[var(--semantic-warning-soft)] text-[var(--semantic-warning-readable)]",
-  live: "bg-[var(--semantic-success-soft)] text-[var(--semantic-success-readable)]",
-};
+// Mode styling comes from lib/tax/connectors/presentation.ts so this surface and the Finance
+// tax dashboard cannot drift apart. The old table styled `live` as SUCCESS — green — when it
+// is the one mode the connector refuses to act in.
 
 const STATUS_STYLES: Record<string, string> = {
   active: "bg-[var(--semantic-success-soft)] text-[var(--semantic-success-readable)]",
@@ -50,6 +49,9 @@ function formatDate(value: string | null): string {
  */
 export function SettingsIntegrations() {
   const t = useTranslations("settings.panel");
+  // Connector mode wording lives in `common` because the Finance tax dashboard shows the same
+  // strings; duplicating them into settings.panel would let the two surfaces drift.
+  const tc = useTranslations("common");
   const [connections, setConnections] = useState<BankConnection[]>([]);
   const [connectors, setConnectors] = useState<TaxConnector[]>([]);
   const [loading, setLoading] = useState(true);
@@ -148,16 +150,23 @@ export function SettingsIntegrations() {
                 >
                   <div>
                     <p className="text-sm font-medium text-[var(--color-foreground)]">
-                      {c.country} — {c.connectorKey}
+                      {c.country} — {authorityName(c.country)}
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {modeKind(c.mode) === "simulated"
+                        ? tc("connectorModeSimulatedHelp", { authority: authorityName(c.country) })
+                        : tc("connectorModeUnsupportedHelp", { mode: c.mode })}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {t("lastSubmission", { date: formatDate(c.lastSubmissionAt) })}
                     </p>
                   </div>
                   <span
-                    className={`inline-block rounded-full px-2 py-0.5 text-xs capitalize ${MODE_STYLES[c.mode] ?? ""}`}
+                    className={`inline-block rounded-full px-2 py-0.5 text-xs ${MODE_KIND_STYLES[modeKind(c.mode)]}`}
                   >
-                    {c.mode}
+                    {modeKind(c.mode) === "simulated"
+                      ? tc("connectorModeSimulated")
+                      : tc("connectorModeUnsupported")}
                   </span>
                 </div>
               ))}

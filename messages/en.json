@@ -2356,6 +2356,14 @@
     "runScenarioHelp": "Watch a realistic workflow unfold",
     "runningScenario": "Running scenario…",
     "scenarioComplete": "Scenario complete",
-    "scenarioRefreshing": "Refreshing to show the updated data…"
+    "scenarioRefreshing": "Refreshing to show the updated data…",
+    "taxConnectorsHeading": "Tax connectors · fiscal authority status",
+    "connectorModeSimulated": "Simulated",
+    "connectorModeUnsupported": "Not submitting",
+    "connectorModeSimulatedHelp": "Simulated — nothing is transmitted to the {authority}. No live connection exists.",
+    "connectorModeUnsupportedHelp": "Mode \"{mode}\" is not supported, so nothing is being submitted. Set the connector back to sandbox or review.",
+    "connectorLastSubmission": "Last: {date}",
+    "connectorNoSubmissions": "No submissions yet",
+    "loading": "Loading…"
   }
 }

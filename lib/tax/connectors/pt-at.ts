@@ -10,66 +10,23 @@
  * sandbox and review both synthesize an acknowledgement rather than call
  * out, and every call is logged exactly as a live call would be.
  *
- * That simulation is opt-in per mode (SIMULATED_MODES below) and every other
- * mode fails closed. Upgrading to a real integration therefore means writing
- * the endpoint and widening that set on purpose — it is deliberately NOT
- * something a `mode` column edit can switch on, because the simulation would
- * otherwise report receipts as accepted by the AT with nothing sent.
+ * That simulation is opt-in per mode and every other mode fails closed —
+ * see ./mode-guard.ts, which every country connector shares so the rule
+ * cannot be re-derived (and got wrong) per country. Upgrading to a real
+ * integration means writing the endpoint and widening SIMULATED_MODES on
+ * purpose; it is deliberately NOT something a `mode` column edit switches on.
  */
 
 import { getPrismaClient } from "@/lib/services/database/database";
 import { validateNIF } from "@/lib/tax/saft-pt";
 import { ensureConnector, logSubmission } from "@/lib/services/tax/connector-service";
 import type { TaxConnector, TaxConnectorResult } from "./types";
+import { refuseUnsupportedMode } from "./mode-guard";
 
 export const PT_AT_CONNECTOR_KEY = "pt_at_recibos";
 
-/** Modes this connector can actually honour. Anything else must fail closed. */
-const SIMULATED_MODES = new Set(["sandbox", "review"]);
-
-/**
- * Refuse to act when the connector is not in a mode this code can honour.
- *
- * The danger here is the inverse of the obvious one. Test data cannot reach the Autoridade
- * Tributária, because nothing in this file makes a network call. The risk is that `submit`
- * and `poll` used to run their simulation REGARDLESS of mode — so flipping the `mode` column
- * to "live" (an unconstrained String, and the first thing anyone would try) made Situs report
- * rent receipts as submitted and then accepted by the AT when nothing had been sent. A
- * landlord would believe they had filed. A fabricated acceptance on a fiscal record is worse
- * than a visible failure.
- *
- * So the simulation is now explicitly opt-in per mode. Upgrading to a real integration means
- * implementing the endpoint and widening this set deliberately — not editing a database row.
- *
- * The refusal is logged, not silent: an operator who flipped the mode needs to find out why
- * nothing is being submitted, and TaxSubmissionLog is where they will look.
- */
-async function refuseUnsupportedMode(
-  connector: { id: string; mode: string },
-  userId: string,
-  rentReceiptId: string,
-  action: "submit" | "poll",
-): Promise<TaxConnectorResult | null> {
-  if (SIMULATED_MODES.has(connector.mode)) return null;
-
-  const responseBody =
-    `Connector mode "${connector.mode}" is not supported: there is no live Autoridade ` +
-    `Tributária integration. Nothing was submitted. Set the connector back to "sandbox" or ` +
-    `"review".`;
-
-  await logSubmission({
-    userId,
-    connectorId: connector.id,
-    subjectType: "rent_receipt",
-    subjectId: rentReceiptId,
-    action,
-    mode: connector.mode,
-    status: "error",
-    responseBody,
-  });
-
-  return { status: "error", responseBody };
-}
+/** Named in the refusal message the operator reads. */
+const AUTHORITY = "Autoridade Tributária";
 
 async function validate(rentReceiptId: string): Promise<{ valid: boolean; errors: string[] }> {
   const prisma = getPrismaClient();
@@ -93,7 +50,14 @@ async function submit(rentReceiptId: string): Promise<TaxConnectorResult> {
 
   // Before validation, and before any state change — a receipt must not move to "submitted"
   // on a connector whose mode this code cannot honour.
-  const refusal = await refuseUnsupportedMode(connector, receipt.userId, rentReceiptId, "submit");
+  const refusal = await refuseUnsupportedMode({
+    connector,
+    userId: receipt.userId,
+    subjectType: "rent_receipt",
+    subjectId: rentReceiptId,
+    action: "submit",
+    authority: AUTHORITY,
+  });
   if (refusal) return refusal;
 
   const validation = await validate(rentReceiptId);
@@ -138,7 +102,14 @@ async function poll(rentReceiptId: string): Promise<TaxConnectorResult> {
   const connector = await ensureConnector(receipt.userId, "PT", PT_AT_CONNECTOR_KEY);
 
   // Same guard as submit: without it, poll() unconditionally marked the receipt "accepted".
-  const refusal = await refuseUnsupportedMode(connector, receipt.userId, rentReceiptId, "poll");
+  const refusal = await refuseUnsupportedMode({
+    connector,
+    userId: receipt.userId,
+    subjectType: "rent_receipt",
+    subjectId: rentReceiptId,
+    action: "poll",
+    authority: AUTHORITY,
+  });
   if (refusal) return refusal;
 
   if (receipt.status !== "submitted") {

@@ -2356,6 +2356,14 @@
     "runScenarioHelp": "Veja um fluxo realista a decorrer",
     "runningScenario": "A executar o cenário…",
     "scenarioComplete": "Cenário concluído",
-    "scenarioRefreshing": "A atualizar para mostrar os novos dados…"
+    "scenarioRefreshing": "A atualizar para mostrar os novos dados…",
+    "taxConnectorsHeading": "Conectores fiscais · estado da autoridade fiscal",
+    "connectorModeSimulated": "Simulado",
+    "connectorModeUnsupported": "Sem submissão",
+    "connectorModeSimulatedHelp": "Simulado — nada é transmitido à {authority}. Não existe ligação real.",
+    "connectorModeUnsupportedHelp": "O modo \"{mode}\" não é suportado, por isso nada está a ser submetido. Defina o conector novamente para sandbox ou review.",
+    "connectorLastSubmission": "Última: {date}",
+    "connectorNoSubmissions": "Ainda sem submissões",
+    "loading": "A carregar…"
   }
 }
