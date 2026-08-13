@@ -25,14 +25,14 @@ harm.
 
 ## P1 — required for a credible pilot
 
-| #   | Item                                                  | Status | Notes                                                                                                                                                                                  |
-| --- | ----------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 4   | Allocation write path has a test                      | 🔨     | `service.transaction.test.ts` pins the boundary **structurally** — every write on the `tx` handle, never the base client. It uses a mocked Prisma client and **does not exercise SQL** |
-| 4b  | …DB-backed integration test                           | ⏸️     | Blocked: `prisma db push` is refused by Prisma's AI-agent guard, the same reason two existing integration files fail locally. Needs a human to run it with consent. **Not bypassed**   |
-| 5   | Multi-month + fingerprint-idempotency test cases      | ✅     | 22 cases across 3 files, each proved by reverting the line it defends — see below. Still mocked Prisma, still no SQL                                                                   |
-| 6   | E2E happy path end to end through receipt + audit     | ⬜     | 16 specs exist; none walks the full Property → … → Audit chain in one assertion                                                                                                        |
-| 7   | Spain behind `TaxConnector`                           | ✅     | `lib/tax/connectors/es-nrua.ts` over `NRUARegistration`, wrapping the existing `validateNRUAData`. 18 cases                                                                            |
-| 8   | Connector registry — domain stops naming an authority | ✅     | `registry.ts`; `receipts/service.ts` resolves by `Property.country` instead of importing `ptAtConnector`. Null country → PT, so existing rows are unaffected                           |
+| #   | Item                                                  | Status | Notes                                                                                                                                                                                            |
+| --- | ----------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 4   | Allocation write path has a test                      | ✅     | Unit: `service.transaction.test.ts` pins the boundary structurally. **SQL: covered after all** — `e2e/workflow-full-chain.spec.ts` runs the real write path against real SQLite via the API (#6) |
+| 4b  | …DB-backed integration test _in Vitest_               | ⏸️     | Still blocked: `prisma db push` is refused by Prisma's AI-agent guard. **Not bypassed.** Lower value now that #6 exercises the same writes against a real database                               |
+| 5   | Multi-month + fingerprint-idempotency test cases      | ✅     | 22 cases across 3 files, each proved by reverting the line it defends — see below. Still mocked Prisma, still no SQL                                                                             |
+| 6   | E2E happy path end to end through receipt + audit     | ✅     | `e2e/workflow-full-chain.spec.ts` — 10 steps, ids carried forward, run green 3× consecutively. See below                                                                                         |
+| 7   | Spain behind `TaxConnector`                           | ✅     | `lib/tax/connectors/es-nrua.ts` over `NRUARegistration`, wrapping the existing `validateNRUAData`. 18 cases                                                                                      |
+| 8   | Connector registry — domain stops naming an authority | ✅     | `registry.ts`; `receipts/service.ts` resolves by `Property.country` instead of importing `ptAtConnector`. Null country → PT, so existing rows are unaffected                                     |
 
 ### P1 #5 — what the 22 cases cover, and what they still do not
 
@@ -54,9 +54,47 @@ Fixed by giving the lease a known counterparty IBAN (worth 0.45) and asserting
 `autoMatched === 1` as an explicit precondition, so fixture drift fails loudly instead of quietly
 disarming the test.
 
-**Not covered:** these use mocked Prisma clients. No SQL runs, so the `@unique` constraint on
-`BankTransaction.fingerprint` — the second line of defence behind the application check — is not
-exercised. That is #4b, still blocked.
+**Not covered by the unit tests:** they use mocked Prisma clients. No SQL runs, so the `@unique`
+constraint on `BankTransaction.fingerprint` is not exercised there — but #6's final step now does
+exactly that against real SQLite.
+
+### P1 #6 — the full-chain walkthrough
+
+`e2e/workflow-full-chain.spec.ts` walks one payment from bank statement to filed receipt,
+carrying each stage's output into the next: property → tenant → lease → import → confirm →
+allocation → rent period → receipt → emit → audit trail, then re-imports to prove the no-op.
+
+Driven through the API rather than the UI. The chain is what is under test, and this suite's
+documented failure mode is selector drift silently disarming a spec. Every call goes through the
+real route handlers, Zod, auth middleware, Prisma and SQLite.
+
+**Proved by breaking the chain, twice:**
+
+| Break                                               | Result                                                         |
+| --------------------------------------------------- | -------------------------------------------------------------- |
+| Drop `allocateReceipt` after the receipt is created | ✗ "the receipt was never allocated to a reference month"       |
+| Drop the `emitted → EMIT_RECEIPT` audit mapping     | ✗ "audit trail is missing EMIT_RECEIPT for this run's records" |
+
+**Two inert-test traps were hit and fixed during authoring**, both found by tightening rather
+than by luck:
+
+1. _The audit assertion read the account-wide trail._ It checked five actions appeared somewhere
+   in the last 50 entries — which passes on any database where a PREVIOUS run left them, whether
+   or not this run's chain worked. Now scoped to the four ids this run mints (sync job, movement,
+   lease, receipt), so every matched row is necessarily ours. Scoping it immediately exposed that
+   the expected action was wrong: `OVERRIDE_MATCH`, not `CONFIRM_MATCH`.
+2. _The fixture taught itself across runs._ The tenant IBAN is the matcher's learning key, so a
+   fixed one meant each run trained the next; on run two the engine found two leases scoring a
+   perfect 1.0 and correctly refused to choose (`ambiguous_candidates`). Same class of problem in
+   the name: token overlap on "Chain"/"Tenant" tied old runs at 0.55. Both now carry the run
+   stamp in every token. Verified by running the spec **three times consecutively**, green each
+   time — a spec that only passes against a clean database gets deleted the first time someone
+   runs it twice.
+
+**Environment note:** this sandbox's `dev.db` is stale against the schema (`correspondence`
+columns missing), which breaks some dashboard reads. It does not touch the chain's tables and is
+a local-data problem, not a code one — but `prisma db push` would fix it and is blocked, so it is
+recorded here rather than worked around.
 
 ---
 
