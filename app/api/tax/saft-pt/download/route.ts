@@ -120,11 +120,9 @@ export async function GET(request: NextRequest): Promise<Response | NextResponse
     });
   } catch (error) {
     console.error("SAF-T download error:", error);
-    return new NextResponse(
-      JSON.stringify({
-        error: error instanceof Error ? error.message : "Failed to generate SAF-T export",
-      }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
-    );
+    return new NextResponse(JSON.stringify({ error: "Failed to generate SAF-T export" }), {
+      status: 500,
+      headers: { "Content-Type": "application/json" },
+    });
   }
 }

@@ -57,7 +57,14 @@ export async function GET(): Promise<NextResponse> {
       {
         status: "unhealthy",
         timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : "Unknown email service error",
+        // Unauthenticated and ungated, same as /api/health/db. A SendGrid failure message can
+        // carry the API key prefix and account identifiers, so production gets the generic form.
+        error:
+          process.env.NODE_ENV === "production"
+            ? "email service error"
+            : error instanceof Error
+              ? error.message
+              : "Unknown email service error",
         response_time_ms: Date.now() - startTime,
       },
       { status: 503 },

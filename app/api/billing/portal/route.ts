@@ -47,7 +47,22 @@ export async function GET(request: NextRequest): Promise<Response> {
     return NextResponse.redirect(url);
   } catch (error) {
     console.error("Billing portal error:", error);
-    const message = error instanceof Error ? error.message : "Failed to open billing portal";
-    return NextResponse.json({ error: message }, { status: 400 });
+    // One condition here is a real, benign answer to the user's request — they have no billing
+    // account yet — and flattening it into "Failed to open billing portal" would be a downgrade,
+    // not a security win. Everything else reaching this catch is a Stripe internal.
+    //
+    // Matching the known message and returning a STRING LITERAL is the difference: the text the
+    // user sees is authored here, so a new failure mode inside Stripe cannot ride out on it.
+    // Same shape as `error.message === "Invoice not found"` in app/api/invoices.
+    const noBillingAccount =
+      error instanceof Error && error.message === "No billing account found for this user";
+    return NextResponse.json(
+      {
+        error: noBillingAccount
+          ? "No billing account found for this user"
+          : "Failed to open billing portal",
+      },
+      { status: 400 },
+    );
   }
 }

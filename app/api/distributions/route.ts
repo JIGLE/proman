@@ -103,9 +103,9 @@ export async function POST(request: NextRequest) {
       return createErrorResponse(error, 404, request);
     }
     console.error("Failed to calculate distribution:", error);
-    return NextResponse.json(
-      { error: error instanceof Error ? error.message : "Failed to calculate distribution" },
-      { status: 500 },
-    );
+    // The message stays static. Anything reaching here is unexpected, and an unexpected error's
+    // text is written for a developer — Prisma phrasing, file paths, column names. The log above
+    // keeps it; the response does not.
+    return NextResponse.json({ error: "Failed to calculate distribution" }, { status: 500 });
   }
 }
