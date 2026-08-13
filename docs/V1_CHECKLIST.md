@@ -29,10 +29,34 @@ harm.
 | --- | ----------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 4   | Allocation write path has a test                      | 🔨     | `service.transaction.test.ts` pins the boundary **structurally** — every write on the `tx` handle, never the base client. It uses a mocked Prisma client and **does not exercise SQL** |
 | 4b  | …DB-backed integration test                           | ⏸️     | Blocked: `prisma db push` is refused by Prisma's AI-agent guard, the same reason two existing integration files fail locally. Needs a human to run it with consent. **Not bypassed**   |
-| 5   | Multi-month + fingerprint-idempotency test cases      | ⬜     | Scenario 4 is covered indirectly (1.5× overpayment carry-forward); no case asserts €2,500 → two full €1,250 months. Exact-fingerprint dedupe has no test                               |
+| 5   | Multi-month + fingerprint-idempotency test cases      | ✅     | 22 cases across 3 files, each proved by reverting the line it defends — see below. Still mocked Prisma, still no SQL                                                                   |
 | 6   | E2E happy path end to end through receipt + audit     | ⬜     | 16 specs exist; none walks the full Property → … → Audit chain in one assertion                                                                                                        |
 | 7   | Spain behind `TaxConnector`                           | ✅     | `lib/tax/connectors/es-nrua.ts` over `NRUARegistration`, wrapping the existing `validateNRUAData`. 18 cases                                                                            |
 | 8   | Connector registry — domain stops naming an authority | ✅     | `registry.ts`; `receipts/service.ts` resolves by `Property.country` instead of importing `ptAtConnector`. Null country → PT, so existing rows are unaffected                           |
+
+### P1 #5 — what the 22 cases cover, and what they still do not
+
+| File                                    | Cases | Proved by reverting                             | Result                     |
+| --------------------------------------- | ----- | ----------------------------------------------- | -------------------------- |
+| `allocation/engine.test.ts` (new block) | 5     | `break` after the first pass-1 entry            | **5 of 18 red**            |
+| `allocation/service.allocate.test.ts`   | 10    | `if (existing > 0) return null`                 | **1 red** (the named case) |
+| ”                                       | ”     | widening `reversedAt: null` to every allocation | **1 red** (the named case) |
+| `bank/import.dedupe.test.ts`            | 7     | the `if (existing)` fingerprint block           | **5 of 7 red**             |
+
+The two import cases that survive the revert are the "what is NOT a duplicate" pair — they must
+not depend on the guard, and they don't.
+
+**One inert test was caught and fixed before it landed.** The dedupe file's central assertion
+("the waterfall does not run a second time") originally compared the allocation-call count before
+and after a re-import. The fixture scored 0.55 against the 0.85 auto-match threshold, so it never
+auto-matched, and the assertion was comparing 0 to 0 — green whether or not the guard existed.
+Fixed by giving the lease a known counterparty IBAN (worth 0.45) and asserting
+`autoMatched === 1` as an explicit precondition, so fixture drift fails loudly instead of quietly
+disarming the test.
+
+**Not covered:** these use mocked Prisma clients. No SQL runs, so the `@unique` constraint on
+`BankTransaction.fingerprint` — the second line of defence behind the application check — is not
+exercised. That is #4b, still blocked.
 
 ---
 
