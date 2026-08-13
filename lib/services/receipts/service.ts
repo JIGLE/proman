@@ -153,11 +153,25 @@ export async function transitionReceipt(
     }
   }
 
+  // The reversal and the lifecycle write must land together. Previously they were two
+  // independent writes (the reversal opening its own transaction), so a failure between them
+  // on a void left the allocations reversed while the receipt still read "emitted" — the rent
+  // period says unpaid and the receipt disagrees, with no way to tell which is right.
+  //
+  // reverseAllocationsForReceipt takes our `tx` and joins this transaction rather than opening
+  // its own, because Prisma cannot nest transactions.
+  //
+  // The archive above stays outside deliberately: it writes a file and a Document row, is made
+  // idempotent by findExistingArchive, and holding a database transaction open across file I/O
+  // is its own problem.
   if (to === "voided") {
-    await reverseAllocationsForReceipt(receipt.id, opts.voidReason ?? "Receipt voided");
+    await prisma.$transaction(async (tx) => {
+      await reverseAllocationsForReceipt(receipt.id, opts.voidReason ?? "Receipt voided", tx);
+      await tx.receipt.update({ where: { id: receipt.id }, data: { lifecycle: to } });
+    });
+  } else {
+    await prisma.receipt.update({ where: { id: receipt.id }, data: { lifecycle: to } });
   }
-
-  await prisma.receipt.update({ where: { id: receipt.id }, data: { lifecycle: to } });
 
   if (archived && archiveDocumentId) {
     await logAudit({

@@ -2,13 +2,32 @@
 
 **Date**: 2026-08-13 · **Against**: `main` @ `3e76b2a` · **Version**: 1.24.0
 
-**Verdict: READY WITH KNOWN LIMITATIONS**, subject to the three P0 items below.
+**Verdict: READY WITH KNOWN LIMITATIONS.**
 
 The domain core is in better shape than a first read of the codebase suggests. The rent ledger
 is genuinely the source of truth, allocation is transactional, bank import is idempotent, and the
-receipt lifecycle is a real state machine with a full transition table. The gaps are concentrated
-in three places: what happens when a tax connector is switched to `live`, the atomicity of the
-receipt lifecycle transition, and the absence of any test covering the allocation **write** path.
+receipt lifecycle is a real state machine with a full transition table.
+
+> ## Update — all three P0 items are now closed
+>
+> This report was written before the fixes. **D1, D2 and D3 below describe the state that has
+> since been repaired**, and are kept as written because the reasoning is the record of why the
+> fixes look the way they do. Each is annotated with what changed.
+>
+> | Item                                 | Status     | Fix                                                                                                                                                                         |
+> | ------------------------------------ | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+> | D1 — connector fabricates acceptance | **Closed** | `SIMULATED_MODES` in `pt-at.ts`; `submit`/`poll` refuse and log any other mode. 14 cases in `pt-at.test.ts`; 11 fail against the old code                                   |
+> | D2 — lifecycle transition not atomic | **Closed** | Void now runs the reversal and the lifecycle write in one `$transaction`; `reverseAllocationsForReceipt` takes an optional `tx`. 4 cases; 2 discriminate                    |
+> | D3 — unrounded tax aggregation       | **Closed** | `lib/utils/money.ts` (`round2`, `sumMoney`, `MONEY_EPSILON`), applied at the income-summary and distribution tax boundaries. Engine re-points at it, its 13 tests unchanged |
+>
+> **The B-section testing gap is only partly closed.** `service.transaction.test.ts` now pins the
+> transaction boundary structurally — every write lands on the `tx` handle, never the base
+> client — but it uses a mocked Prisma client and **does not exercise SQL**. A real integration
+> test needs a database, and `prisma db push` is blocked by Prisma's AI-agent guard (the same
+> reason two existing integration files fail locally). That guard was not bypassed. **The
+> DB-level integration test remains open as P1.**
+>
+> Suite: **1,014 passing**, up 28.
 
 ## How to read this
 
@@ -39,7 +58,14 @@ than assumed — several sections of the V1 brief were not covered in this pass 
 **No integration test for the allocation write path.** `engine.test.ts` tests a pure function.
 `service.ts` — the `$transaction`, the period recompute, the derived `tenant.paymentStatus` — has
 no test at all. The single most important invariant in the product ("status recomputed in the same
-transaction as every allocation write") is asserted nowhere. **This is the biggest testing gap.**
+transaction as every allocation write") is asserted nowhere. **This was the biggest testing gap.**
+
+**PARTLY CLOSED.** `service.transaction.test.ts` pins the boundary structurally — 6 cases
+asserting every write lands on `tx` and never the base client, that the tenant recompute reads
+inside the same transaction, that reversal is soft (`reversedAt` + reason, never a delete), and
+that audit runs only after the transaction resolves. It uses a mocked Prisma client and does
+**not** exercise SQL. A DB-backed integration test is still needed, and still blocked by the
+Prisma agent guard.
 
 **Spain has no tax connector.** `lib/tax/connectors/` contains only `pt-at.ts` and `types.ts`.
 ES functionality exists (`lib/compliance/nrua-export.ts`, `/api/compliance/nrua`, the
@@ -90,9 +116,17 @@ unconstrained `String` in the schema (`@default("review")`, comment `sandbox|rev
 enum and no check constraint, so `"live"`, `"Live"` or `"sandbox "` are all storable by a direct
 DB edit — and "let's switch it to live" is exactly what someone will try first.
 
-**Fix**: make the connector fail closed — `if (connector.mode === "live") return { status: "error",
-… "no live AT integration exists" }` — so going live requires implementing the endpoint, not
-flipping a column. Constrain `mode` to an enum. Small change, high value.
+**FIXED.** `SIMULATED_MODES = {sandbox, review}` in `pt-at.ts`; `submit()` and `poll()` refuse
+anything else, write a `TaxSubmissionLog` row (a silent refusal is its own failure mode — the
+operator who flipped the mode has to be able to find out why nothing is submitting) and return
+an error before any receipt state changes. Going live now means implementing the endpoint and
+widening that set, not editing a column.
+
+**The schema enum was deliberately NOT added.** Narrowing a live `String` column needs
+`prisma db push`, which `AUTO_DB_SCHEMA_SYNC` applies on the next container start and which
+fails if any existing row holds an off-list value — migration risk on a running instance for
+marginal gain, since no API route writes `mode` at all. The code guard is the load-bearing
+part. Deferred, with that reasoning.
 
 ### D2. The receipt lifecycle transition is not atomic
 
@@ -112,7 +146,12 @@ backwards.
 The emit path is less severe — `findExistingArchive` makes archiving idempotent — but a crash
 still leaves an orphaned archive `Document`.
 
-**Fix**: wrap the transition in one `$transaction`, passing `tx` into the reversal helper.
+**FIXED.** The void branch now runs the reversal and the `receipt.lifecycle` write inside one
+`$transaction`, with `reverseAllocationsForReceipt` taking an optional `tx` so it joins the
+caller's transaction (Prisma cannot nest). `logAudit` stays outside on purpose: an audit write
+failing must not roll back a correct reversal — a missing audit row is recoverable, a
+half-reversed ledger is not. Archiving also stays outside, because holding a transaction open
+across file I/O is its own problem and `findExistingArchive` already makes it idempotent.
 
 ### D3. Float aggregation outside the ledger
 
@@ -125,8 +164,15 @@ The real exposure is the code that does _not_ apply the engine's discipline:
 - `lib/services/analytics-service.ts` — ~8 `reduce((sum, r) => sum + r.amount, 0)` sites
 - `app/api/tax-filings/income-summary/route.ts:48,52` — same pattern
 
-Dashboard drift is cosmetic. A tax-filing figure is not. **Fix**: apply `round2()` at the
-aggregation boundary in the tax paths; treat analytics as P2.
+Dashboard drift is cosmetic. A tax-filing figure is not.
+
+**FIXED at the tax boundaries.** `lib/utils/money.ts` now holds `round2`, `sumMoney` and
+`MONEY_EPSILON`; the allocation engine imports them rather than defining its own (its 13 tests
+pass unchanged, proving no behaviour change). Applied to `income-summary`'s `grossIncome` and
+`deductibleExpenses`, and to the three `getAnnualTaxSummary` totals that feed
+`generatePortugalTaxForm` / `generateSpainTaxForm`, plus the `calculateDistribution` totals.
+
+`lib/services/analytics-service.ts` remains **P2 and deliberately untouched**.
 
 ---
 
@@ -190,11 +236,12 @@ Spain:       No TaxConnector implementation. NRUA export exists outside the abst
 
 ## Priorities
 
-**P0 — before pilot**
+**P0 — before pilot: all three closed.**
 
-1. Tax connector fails closed on `mode: "live"`; constrain `mode` to an enum. _(small)_
-2. Wrap the receipt lifecycle transition in a single transaction. _(small)_
-3. `round2()` on tax-path aggregations. _(small)_
+1. ~~Tax connector fails closed on `mode: "live"`~~ — **done**. The schema enum was deliberately
+   skipped; reasoning in D1.
+2. ~~Wrap the receipt lifecycle transition in a single transaction~~ — **done**.
+3. ~~`round2()` on tax-path aggregations~~ — **done**.
 
 **P1 — required for a credible pilot** 4. Integration test for the allocation write path — the untested core invariant. _(medium)_ 5. Explicit multi-month and fingerprint-idempotency test cases. _(small)_ 6. E2E happy path asserted end to end through receipt and audit trail. _(medium)_
 
@@ -222,7 +269,7 @@ demonstrated run. Closing P1 #4 and #6 is what turns "holds structurally" into "
 
 | Gate              | Result                                                                                                                                                                |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit (`npm test`) | 986 passed, 3 skipped                                                                                                                                                 |
+| Unit (`npm test`) | **1,014 passed**, 3 skipped (up 28)                                                                                                                                   |
 | Integration       | 2 files fail — `product-events` and `pii-extension` shell out to `prisma db push`, blocked by Prisma's AI-agent guard. Identical on clean `main`. Guard not bypassed. |
 | Lint              | Pass (`--max-warnings=0`)                                                                                                                                             |
 | Type-check        | Pass                                                                                                                                                                  |
