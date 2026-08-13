@@ -69,12 +69,27 @@ function skeletonFor(pathname: string): React.ComponentType<{ className?: string
   return match ? match[1] : GenericPageSkeleton;
 }
 
+/**
+ * Routes that must render even when the account-wide fetch is failing.
+ *
+ * The admin status page exists to explain WHY the app is broken — schema drift, an unreachable
+ * database, a misconfigured connector. Putting it behind this gate would mean the one screen
+ * that can diagnose a failure is replaced by a generic "couldn't load your data" the moment
+ * that failure occurs. It reads `/api/admin/system-status` directly and depends on nothing in
+ * AppContext, so it has no reason to wait for it either.
+ */
+const GATE_EXEMPT = ["/admin"];
+
 export function AppDataGate({ children }: { children: React.ReactNode }) {
   const { state, refreshData } = useApp();
   const pathname = usePathname();
   const t = useTranslations("common");
 
   const Skeleton = useMemo(() => skeletonFor(pathname ?? ""), [pathname]);
+
+  if (GATE_EXEMPT.some((segment) => (pathname ?? "").includes(segment))) {
+    return <>{children}</>;
+  }
 
   // Error wins over loading: a retry that is already in flight should keep the failure visible
   // rather than flicking back to a skeleton, so the user can see that their retry is the reason

@@ -234,9 +234,33 @@
     "delete": "Eliminar Mis Datos"
   },
   "admin": {
-    "database": {
-      "title": "Vista de Base de Datos del Admin",
-      "description": "Vista de solo lectura de las tablas de la base de datos. Acceso registrado para cumplimiento con RGPD."
+    "title": "Estado del sistema",
+    "subtitle": "A qué está conectada esta instancia, qué se simula y qué requiere tu atención.",
+    "refresh": "Actualizar",
+    "checking": "Ejecutando comprobaciones…",
+    "loadFailed": "No se ha podido cargar el estado del sistema. Puede que no tengas acceso de administrador en esta cuenta.",
+    "summary": "Resumen del estado",
+    "remedy": "Qué hacer",
+    "generatedAt": "Comprobado a las {time}",
+    "simulationNotice": "Ninguna presentación llega a una autoridad fiscal real, en ningún país, y no existe conexión bancaria activa. Todos los envíos son simulados y la parte bancaria es solo importación de CSV. Este es el estado actual del producto, no un fallo.",
+    "severity": {
+      "ok": "OK",
+      "simulated": "Simulado",
+      "warning": "Requiere atención",
+      "error": "Averiado"
+    },
+    "group": {
+      "platform": "Plataforma",
+      "integration": "Conexiones"
+    },
+    "check": {
+      "schema": "Esquema de la base de datos",
+      "database": "Base de datos",
+      "pii": "Cifrado de datos personales",
+      "email": "Correo (SendGrid)",
+      "billing": "Facturación de suscripción (Stripe)",
+      "bank": "Movimientos bancarios",
+      "tax": "Autoridad fiscal — {country}"
     }
   },
   "navigation": {
@@ -271,7 +295,8 @@
     "coreGroup": "Núcleo",
     "portfolio": "Portafolio",
     "operations": "Operaciones",
-    "intelligence": "Inteligencia"
+    "intelligence": "Inteligencia",
+    "admin": "Estado del sistema"
   },
   "dashboard": {
     "welcome": "Bienvenido a tu panel de gestión inmobiliaria",

@@ -234,9 +234,33 @@
     "delete": "Excluir Meus Dados"
   },
   "admin": {
-    "database": {
-      "title": "Visualização de Banco de Dados do Admin",
-      "description": "Visualização somente leitura das tabelas do banco de dados. Acesso registrado para conformidade com GDPR."
+    "title": "Estado do sistema",
+    "subtitle": "A que esta instância está ligada, o que é simulado e o que precisa da sua atenção.",
+    "refresh": "Atualizar",
+    "checking": "A executar verificações…",
+    "loadFailed": "Não foi possível carregar o estado do sistema. Poderá não ter acesso de administrador nesta conta.",
+    "summary": "Resumo do estado",
+    "remedy": "O que fazer",
+    "generatedAt": "Verificado às {time}",
+    "simulationNotice": "Nenhuma submissão chega a uma autoridade fiscal real, em nenhum país, e não existe ligação bancária ativa. Todas as submissões são simuladas e o lado bancário é apenas importação de CSV. Este é o estado atual do produto, não uma falha.",
+    "severity": {
+      "ok": "OK",
+      "simulated": "Simulado",
+      "warning": "Requer atenção",
+      "error": "Avariado"
+    },
+    "group": {
+      "platform": "Plataforma",
+      "integration": "Ligações"
+    },
+    "check": {
+      "schema": "Esquema da base de dados",
+      "database": "Base de dados",
+      "pii": "Encriptação de dados pessoais",
+      "email": "Email (SendGrid)",
+      "billing": "Faturação de subscrição (Stripe)",
+      "bank": "Movimentos bancários",
+      "tax": "Autoridade fiscal — {country}"
     }
   },
   "navigation": {
@@ -271,7 +295,8 @@
     "coreGroup": "Núcleo",
     "portfolio": "Portefólio",
     "operations": "Operações",
-    "intelligence": "Inteligência"
+    "intelligence": "Inteligência",
+    "admin": "Estado do sistema"
   },
   "dashboard": {
     "welcome": "Bem-vindo ao seu painel de gestão de imóveis",

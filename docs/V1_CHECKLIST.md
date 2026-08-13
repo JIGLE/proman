@@ -193,11 +193,57 @@ E2E suite with it.
 
 ## P3 — after V1
 
-| #   | Item                                                | Status | Notes                                            |
-| --- | --------------------------------------------------- | ------ | ------------------------------------------------ |
-| 14  | Doc consolidation, `docs/archive*` pruning          | ⬜     | Still describes the removed Helm path            |
-| 15  | `CLAUDE.md` version drift                           | ⬜     | Says 1.16.3 against a shipped 1.24.0             |
-| 16  | Owner/admin control page (payments, usage, tickets) | ⏸️     | Your call to polish existing functionality first |
+| #   | Item                                                | Status | Notes                                                                       |
+| --- | --------------------------------------------------- | ------ | --------------------------------------------------------------------------- |
+| 14  | Doc consolidation, `docs/archive*` pruning          | ⬜     | Still describes the removed Helm path                                       |
+| 15  | `CLAUDE.md` version drift                           | ⬜     | Says 1.16.3 against a shipped 1.24.0                                        |
+| 16  | Admin › System status (connections, config, drift)  | ✅     | `/admin` + `GET /api/admin/system-status`. 19 unit cases + 3 E2E. See below |
+| 16b | Owner/admin control page (payments, usage, tickets) | ⬜     | Still open. #16 covers operational status only, not account administration  |
+
+### P3 #16 — Admin › System status
+
+`/admin`, owner-only in the nav and `requireAdmin` on the API. One row per thing this instance
+depends on, each answering three questions: what is it, what state is it in, and what do I do
+about it.
+
+| Group       | Checks                                                     |
+| ----------- | ---------------------------------------------------------- |
+| Platform    | schema drift, database reachability, PII encryption key    |
+| Connections | tax authority per registered country, bank, email, billing |
+
+**Why it exists.** The information was scattered across a server log, two per-user connector
+screens and a set of environment variables. The schema-drift failure proved the cost: a missing
+column takes down `findMany` for the whole model, so unrelated pages return 500 and the cause is
+named only in a log line nobody is watching.
+
+**Two design decisions worth keeping.**
+
+1. **It renders outside `AppDataGate`.** A diagnostics page behind the same gate that fails when
+   the app fails is not a diagnostics page. `/admin` is in `GATE_EXEMPT` and reads its own
+   endpoint. Proved live: with the local database missing a column, every other screen showed
+   "Couldn't load your data" while this page rendered and named the missing column.
+2. **`simulated` is never styled as `ok`.** Severity is derived from the connectors' own
+   `SIMULATED_MODES`, so widening that set for a real integration updates this page in the same
+   move. The simulation disclosure is unconditional — an operator should not have to infer from
+   a row's colour that nothing reaches a tax authority.
+
+**Reachability was not free.** `canAccessPortalPath` derives access from the nav list, so `/admin`
+silently redirected to `/dashboard` until it was added to `PORTAL_NAV_GROUPS`. Found by loading
+the page in a browser, not by reading the code — the API worked the whole time.
+
+**Proved by breaking each honesty rule**, one case red per break:
+
+| Break                                            | Result                                                  |
+| ------------------------------------------------ | ------------------------------------------------------- |
+| Treat an unsupported connector mode as simulated | ✗ "escalates an unsupported connector mode to error"    |
+| Report a failed drift check as in-sync           | ✗ "does not claim in_sync when the check itself failed" |
+| Echo the raw driver error into the payload       | ✗ "never puts raw exception text in the payload"        |
+
+**Verified live against a genuinely broken instance.** The endpoint returned schema `error` with
+`Missing: tenants.portalAccessRevokedAt, correspondence_templates.userId, …` and the remedy
+`Run npx prisma db push` — and surfaced pre-existing `correspondence_templates` drift nobody had
+noticed. The E2E spec asserts only what holds in both states, since CI pushes the schema before
+booting and sees in-sync.
 
 ---
 

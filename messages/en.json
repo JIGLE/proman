@@ -234,9 +234,33 @@
     "delete": "Delete My Data"
   },
   "admin": {
-    "database": {
-      "title": "Admin Database View",
-      "description": "Read-only view of database tables. Access logged for GDPR compliance."
+    "title": "System status",
+    "subtitle": "What this instance is connected to, what is simulated, and what needs your attention.",
+    "refresh": "Refresh",
+    "checking": "Running checks…",
+    "loadFailed": "Could not load system status. You may not have admin access on this account.",
+    "summary": "Status summary",
+    "remedy": "What to do",
+    "generatedAt": "Checked at {time}",
+    "simulationNotice": "No filing reaches a real tax authority, in any country, and there is no live bank connection. Every submission is simulated and the bank side is CSV import only. This is the current state of the product, not a fault.",
+    "severity": {
+      "ok": "OK",
+      "simulated": "Simulated",
+      "warning": "Needs attention",
+      "error": "Broken"
+    },
+    "group": {
+      "platform": "Platform",
+      "integration": "Connections"
+    },
+    "check": {
+      "schema": "Database schema",
+      "database": "Database",
+      "pii": "PII encryption",
+      "email": "Email (SendGrid)",
+      "billing": "Subscription billing (Stripe)",
+      "bank": "Bank movements",
+      "tax": "Tax authority — {country}"
     }
   },
   "navigation": {
@@ -271,7 +295,8 @@
     "coreGroup": "Core",
     "portfolio": "Portfolio",
     "operations": "Operations",
-    "intelligence": "Intelligence"
+    "intelligence": "Intelligence",
+    "admin": "System status"
   },
   "dashboard": {
     "welcome": "Welcome to your property management dashboard",
