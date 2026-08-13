@@ -104,9 +104,40 @@ recorded here rather than worked around.
 | --- | ------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 9   | Connector UI states simulated status honestly    | ✅     | Both surfaces now say _simulated, nothing transmitted_, name the authority, and render an unsupported mode as an error. `live` no longer styled green — it was the colour of "working" on the one mode that refuses to act |
 | 10  | UX pass: empty / loading / error states          | ⬜     | **Never sampled.** Scope unknown until it is                                                                                                                                                                               |
-| 11  | Portal token revocation                          | ⬜     | Expiry is enforced; a leaked token stays valid until `exp`                                                                                                                                                                 |
+| 11  | Portal token revocation                          | ✅     | `Tenant.portalAccessRevokedAt` + `DELETE /api/tenants/[id]/portal-link`. 6 cases. **Needs one `prisma db push`** — see below                                                                                               |
 | 12  | Analytics float rounding                         | ⬜     | ~8 sites in `analytics-service.ts`. Dashboard drift is cosmetic — genuinely P2                                                                                                                                             |
 | 13  | Stop echoing `error.message` in user-facing 500s | ⬜     | 15 routes; mostly health/debug, but `/api/distributions` is user-facing                                                                                                                                                    |
+
+### P2 #11 — portal revocation, and the one thing it needs from you
+
+Portal tokens are stateless signed JWTs, so expiry was the only thing that ever ended access: a
+link forwarded to the wrong address, or one belonging to a tenant who had moved out, kept working
+for up to seven days with no way to stop it.
+
+**Worse, revocation appeared to already exist.** `tenantPortalService.revokeAccess` took a
+tenantId, ignored it, and returned `{ success: true }`, commented "tokens are stateless and expire
+naturally". Any caller would report success to a landlord while every outstanding link stayed
+live — the same fabricated-success shape as the tax connector's D1 finding, applied to access
+control. That stub is gone.
+
+Now: `Tenant.portalAccessRevokedAt` is a revocation epoch. Verification refuses any token whose
+`iat` is at or before it, so one write revokes every outstanding link; generating a new link
+afterwards works normally. `iat` is whole seconds and the column is milliseconds, so a token
+issued in the same second is ambiguous — it is refused, because over-rejecting costs one click
+and under-rejecting leaves the link the owner just revoked working.
+
+**⚠️ Requires `npx prisma db push` once.** The column is additive and nullable, so it is the
+safest kind of migration — but the Prisma AI-agent guard refuses the command for me and **it was
+not bypassed**. Consequences:
+
+- **CI is fine.** `.github/actions/start-app` runs `npx prisma db push` as its first step, before
+  the app boots, so every E2E job gets the column.
+- **Deploy is fine.** `scripts/ensure-sqlite.js` applies additive changes on container start via
+  `AUTO_DB_SCHEMA_SYNC` (default on).
+- **A local `dev.db` is NOT fine until you push.** Verified, not assumed: with the stale local
+  database `POST /api/tenants` answers 500 and `e2e/workflow-full-chain.spec.ts` fails at step 2.
+  The unit tests pass either way — they mock Prisma — so **the revocation logic is proved and the
+  live HTTP path is not.**
 
 ---
 

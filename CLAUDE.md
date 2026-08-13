@@ -8,7 +8,9 @@ handles properties, units, tenants, leases, receipts, expenses, maintenance, cor
 and fiscal compliance, built around a reference-month rent ledger: bank movement → match →
 allocate → receipt → tax filing → audit trail.
 
-**Current version**: 1.16.3 | **Stage**: Production-ready core; Situs rebrand PRs 1–12 shipped
+**Current version**: see `package.json` — it was hardcoded here as 1.16.3 against a shipped
+1.24.0, because a number copied into prose has no reason to move when the release does. Don't
+reintroduce it. | **Stage**: Production-ready core; Situs rebrand PRs 1–12 shipped
 (brand, nav, landing, portfolio tree, rent ledger, bank matching, receipt lifecycle + PT tax
 connector, OCR classification, audit trail/tax dashboard, schema consolidation, a11y/e2e pass).
 Deferred: People/Operations/Intelligence IA consolidation (PR 10b), full infra rename (PR 13).

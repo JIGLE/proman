@@ -114,7 +114,8 @@ Common causes:
 **Not recommended for production.** Set temporarily to debug:
 
 ```bash
-# The 'allow DB failure' bypass was removed. Instead, initialize the DB using the Helm init Job or the protected init endpoint:
+# The 'allow DB failure' bypass was removed. Initialize the DB through the protected init
+# endpoint (the Helm init Job this used to mention went with the k8s manifests — see truenas.md):
 
 curl -sS -X POST -H "Authorization: Bearer $INIT_SECRET" \
    http://localhost:3000/api/debug/db/init | jq

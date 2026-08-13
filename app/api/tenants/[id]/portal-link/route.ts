@@ -1,6 +1,7 @@
 /**
- * Tenant Portal Link Generation API
- * POST /api/tenants/[id]/portal-link - Generate portal link for tenant
+ * Tenant Portal Link API
+ * POST   /api/tenants/[id]/portal-link - Generate a portal link for a tenant
+ * DELETE /api/tenants/[id]/portal-link - Revoke every outstanding link for that tenant
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -13,6 +14,7 @@ import {
 } from "@/lib/utils/error-handling";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { tenantPortalService } from "@/lib/services/auth/tenant-portal-auth";
+import { logAudit } from "@/lib/services/audit-log";
 import { z } from "zod";
 
 const GenerateLinkSchema = z.object({
@@ -100,5 +102,53 @@ export async function POST(
       500,
       request,
     );
+  }
+}
+
+/**
+ * Revoke every outstanding portal link for this tenant.
+ *
+ * DELETE rather than POST /revoke because the resource being removed is the tenant's portal
+ * access, and the operation is idempotent — a second call is a no-op that still answers 200.
+ */
+export async function DELETE(
+  request: NextRequest,
+  { params }: RouteParams,
+): Promise<Response | NextResponse> {
+  const authResult = await requireAuth(request);
+  if (authResult instanceof Response) return authResult;
+  const userId = authResult.userId;
+
+  try {
+    const { id: tenantId } = await params;
+
+    if (!tenantId) {
+      return createErrorResponse(new ValidationError("Tenant ID is required"), 400, request);
+    }
+
+    // Ownership is enforced inside the service by scoping the write on userId, so a tenant
+    // belonging to another landlord reports not-found rather than being revoked.
+    const revoked = await tenantPortalService.revokeAccess(tenantId, userId);
+
+    if (!revoked) {
+      return createErrorResponse(new ResourceNotFoundError("Tenant"), 404, request);
+    }
+
+    await logAudit({
+      userId,
+      action: "REVOKE_PORTAL_ACCESS",
+      resourceType: "tenant",
+      resourceId: tenantId,
+      details: { revokedAt: new Date().toISOString() },
+    });
+
+    return createSuccessResponse({
+      tenantId,
+      revoked: true,
+      message: "All existing portal links for this tenant have been revoked.",
+    });
+  } catch (error) {
+    console.error("Portal link revocation error:", error);
+    return createErrorResponse(new Error("Failed to revoke portal access"), 500, request);
   }
 }

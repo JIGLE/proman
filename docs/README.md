@@ -20,7 +20,7 @@ Welcome to the Situs documentation. This index links to all available guides.
 
 ## Deployment
 
-- [Deployment Guide](deployment.md) — Docker, Kubernetes, and Helm deployment instructions
+- [Deployment Guide](deployment.md) — Docker deployment instructions
 - [TrueNAS SCALE Guide](truenas.md) — TrueNAS-specific setup, values, and troubleshooting
 - [Troubleshooting](troubleshooting.md) — Common issues and solutions
 - [Production Deployment Checklist](PRODUCTION_DEPLOYMENT_CHECKLIST.md)
