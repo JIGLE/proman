@@ -22,8 +22,11 @@ import type {
   RentPeriodStatus,
   TenantPaymentStatus,
 } from "./types";
+import { MONEY_EPSILON, round2 } from "@/lib/utils/money";
 
-const EPSILON = 0.005; // half a cent — float-safe "zero" for EUR amounts
+// Half a cent — float-safe "zero" for EUR amounts. Shared with the tax and reporting
+// paths via lib/utils/money.ts so the discipline is defined in one place.
+const EPSILON = MONEY_EPSILON;
 
 function periodIndex(p: PeriodRef): number {
   return p.year * 12 + (p.month - 1);
@@ -107,10 +110,6 @@ export function planAllocation(input: PlanAllocationInput): AllocationPlan {
   }
 
   return { paymentId: payment.id, entries, warnings };
-}
-
-function round2(n: number): number {
-  return Math.round(n * 100) / 100;
 }
 
 /**

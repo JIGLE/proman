@@ -161,27 +161,22 @@ npx prisma migrate resolve --applied <migration-name>
 
 ### CI/CD integration
 
-Update your Dockerfile or Helm chart to run migrations on startup:
+Run migrations on startup from the container entrypoint:
 
 ```dockerfile
 # In Dockerfile CMD or entrypoint
 CMD ["sh", "-c", "npx prisma migrate deploy && node server.js"]
 ```
 
-Or as a Kubernetes init container:
+> The Kubernetes init-container example that used to sit here has been removed along with the
+> Helm chart and `k8s/` manifests — see `truenas.md`. TrueNAS SCALE moved to Docker in Electric
+> Eel (24.10) and Custom App is the only supported deployment path, so the manifest could not
+> have run.
 
-```yaml
-initContainers:
-  - name: migrate
-    image: ghcr.io/jigle/situs:<version>
-    command: ["npx", "prisma", "migrate", "deploy"]
-    env:
-      - name: DATABASE_URL
-        valueFrom:
-          secretKeyRef:
-            name: situs-secrets
-            key: DATABASE_URL
-```
+Note that the shipped image does not use `migrate deploy` today: `scripts/ensure-sqlite.js`
+applies additive schema changes with `prisma db push` on start, gated by `AUTO_DB_SCHEMA_SYNC`
+(default on). The block above applies if you adopt the migrations workflow described earlier in
+this document.
 
 ## Backup & Recovery
 

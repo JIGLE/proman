@@ -8,17 +8,25 @@
  * integrated yet (deferred — see plan risk register: "Connector mode
  * locked to Review/Sandbox"), so submit/poll simulate the round trip:
  * sandbox and review both synthesize an acknowledgement rather than call
- * out, and every call is logged exactly as a live call would be so the
- * connector can be upgraded to `mode: "live"` later without touching the
- * receipt lifecycle or ReceiptAutomationQueue.
+ * out, and every call is logged exactly as a live call would be.
+ *
+ * That simulation is opt-in per mode and every other mode fails closed —
+ * see ./mode-guard.ts, which every country connector shares so the rule
+ * cannot be re-derived (and got wrong) per country. Upgrading to a real
+ * integration means writing the endpoint and widening SIMULATED_MODES on
+ * purpose; it is deliberately NOT something a `mode` column edit switches on.
  */
 
 import { getPrismaClient } from "@/lib/services/database/database";
 import { validateNIF } from "@/lib/tax/saft-pt";
 import { ensureConnector, logSubmission } from "@/lib/services/tax/connector-service";
 import type { TaxConnector, TaxConnectorResult } from "./types";
+import { refuseUnsupportedMode } from "./mode-guard";
 
 export const PT_AT_CONNECTOR_KEY = "pt_at_recibos";
+
+/** Named in the refusal message the operator reads. */
+const AUTHORITY = "Autoridade Tributária";
 
 async function validate(rentReceiptId: string): Promise<{ valid: boolean; errors: string[] }> {
   const prisma = getPrismaClient();
@@ -39,6 +47,18 @@ async function submit(rentReceiptId: string): Promise<TaxConnectorResult> {
   const prisma = getPrismaClient();
   const receipt = await prisma.rentReceipt.findUniqueOrThrow({ where: { id: rentReceiptId } });
   const connector = await ensureConnector(receipt.userId, "PT", PT_AT_CONNECTOR_KEY);
+
+  // Before validation, and before any state change — a receipt must not move to "submitted"
+  // on a connector whose mode this code cannot honour.
+  const refusal = await refuseUnsupportedMode({
+    connector,
+    userId: receipt.userId,
+    subjectType: "rent_receipt",
+    subjectId: rentReceiptId,
+    action: "submit",
+    authority: AUTHORITY,
+  });
+  if (refusal) return refusal;
 
   const validation = await validate(rentReceiptId);
   if (!validation.valid) {
@@ -80,6 +100,17 @@ async function poll(rentReceiptId: string): Promise<TaxConnectorResult> {
   const prisma = getPrismaClient();
   const receipt = await prisma.rentReceipt.findUniqueOrThrow({ where: { id: rentReceiptId } });
   const connector = await ensureConnector(receipt.userId, "PT", PT_AT_CONNECTOR_KEY);
+
+  // Same guard as submit: without it, poll() unconditionally marked the receipt "accepted".
+  const refusal = await refuseUnsupportedMode({
+    connector,
+    userId: receipt.userId,
+    subjectType: "rent_receipt",
+    subjectId: rentReceiptId,
+    action: "poll",
+    authority: AUTHORITY,
+  });
+  if (refusal) return refusal;
 
   if (receipt.status !== "submitted") {
     const responseBody = `Cannot poll a receipt in AT status "${receipt.status}"`;

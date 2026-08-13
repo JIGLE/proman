@@ -16,7 +16,7 @@ import { logAudit } from "@/lib/services/audit-log";
 import { reverseAllocationsForReceipt } from "@/lib/services/allocation/service";
 import { pdfGenerator } from "@/lib/services/pdf-generator";
 import { documentService } from "@/lib/services/document-service";
-import { ptAtConnector } from "@/lib/tax/connectors/pt-at";
+import { filesRentReceipts, getTaxConnector, resolveCountry } from "@/lib/tax/connectors/registry";
 import { evaluateTransition, type ReceiptLifecycleState } from "./lifecycle";
 
 const ARCHIVE_MARKER_PREFIX = "situs-receipt-archive:";
@@ -114,8 +114,16 @@ export async function transitionReceipt(
   opts: TransitionOptions = {},
 ): Promise<TransitionOutcome> {
   const prisma = getPrismaClient();
-  const receipt = await prisma.receipt.findFirst({ where: { id: receiptId, userId } });
+  // The property comes along because the country decides which tax authority (if any) this
+  // receipt is filed with. Previously this service imported the Portuguese connector by name,
+  // which meant the receipt domain knew about the Autoridade Tributária.
+  const receipt = await prisma.receipt.findFirst({
+    where: { id: receiptId, userId },
+    include: { property: { select: { country: true } } },
+  });
   if (!receipt) throw new Error("Receipt not found");
+
+  const country = resolveCountry(receipt.property?.country);
 
   const from = receipt.lifecycle;
   const evaluation = evaluateTransition(from, to);
@@ -123,24 +131,41 @@ export async function transitionReceipt(
 
   let connectorResult: TransitionOutcome["connector"];
 
-  if (to === "submitted") {
-    const filing = await prisma.rentReceipt.findFirst({
-      where: { receiptId: receipt.id, userId },
-    });
-    if (!filing) {
-      throw new Error("Link a PT rent receipt (Modelo 44) to this receipt before submitting");
+  if (to === "submitted" || to === "accepted") {
+    // Only countries that file rent receipts belong on this path. Spain files an NRUA lease
+    // registration — a different object, with a different authority, on a different schedule —
+    // so pushing an ES receipt through here would invoke the wrong country's filing. The
+    // lifecycle table allows emitted → submitted for any receipt, so this gate is the only
+    // thing that stops it.
+    if (!filesRentReceipts(country)) {
+      throw new Error(
+        `Receipts for ${country} properties are not filed as rent receipts. ` +
+          `Spain files an NRUA lease registration instead — use the NRUA flow on the lease.`,
+      );
     }
-    const result = await ptAtConnector.submit(filing.id);
-    if (result.status === "error") throw new Error(result.responseBody ?? "AT submission failed");
-    connectorResult = result;
-  } else if (to === "accepted") {
+
+    const connector = getTaxConnector(country);
+    if (!connector) {
+      throw new Error(`No tax connector is registered for ${country}`);
+    }
+
     const filing = await prisma.rentReceipt.findFirst({
       where: { receiptId: receipt.id, userId },
     });
-    if (!filing) throw new Error("No linked rent receipt to poll");
-    const result = await ptAtConnector.poll(filing.id);
-    if (result.status === "error") throw new Error(result.responseBody ?? "AT poll failed");
-    connectorResult = result;
+
+    if (to === "submitted") {
+      if (!filing) {
+        throw new Error("Link a PT rent receipt (Modelo 44) to this receipt before submitting");
+      }
+      const result = await connector.submit(filing.id);
+      if (result.status === "error") throw new Error(result.responseBody ?? "AT submission failed");
+      connectorResult = result;
+    } else {
+      if (!filing) throw new Error("No linked rent receipt to poll");
+      const result = await connector.poll(filing.id);
+      if (result.status === "error") throw new Error(result.responseBody ?? "AT poll failed");
+      connectorResult = result;
+    }
   }
 
   let archived = false;
@@ -153,11 +178,25 @@ export async function transitionReceipt(
     }
   }
 
+  // The reversal and the lifecycle write must land together. Previously they were two
+  // independent writes (the reversal opening its own transaction), so a failure between them
+  // on a void left the allocations reversed while the receipt still read "emitted" — the rent
+  // period says unpaid and the receipt disagrees, with no way to tell which is right.
+  //
+  // reverseAllocationsForReceipt takes our `tx` and joins this transaction rather than opening
+  // its own, because Prisma cannot nest transactions.
+  //
+  // The archive above stays outside deliberately: it writes a file and a Document row, is made
+  // idempotent by findExistingArchive, and holding a database transaction open across file I/O
+  // is its own problem.
   if (to === "voided") {
-    await reverseAllocationsForReceipt(receipt.id, opts.voidReason ?? "Receipt voided");
+    await prisma.$transaction(async (tx) => {
+      await reverseAllocationsForReceipt(receipt.id, opts.voidReason ?? "Receipt voided", tx);
+      await tx.receipt.update({ where: { id: receipt.id }, data: { lifecycle: to } });
+    });
+  } else {
+    await prisma.receipt.update({ where: { id: receipt.id }, data: { lifecycle: to } });
   }
-
-  await prisma.receipt.update({ where: { id: receipt.id }, data: { lifecycle: to } });
 
   if (archived && archiveDocumentId) {
     await logAudit({

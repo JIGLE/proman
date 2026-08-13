@@ -10,6 +10,7 @@ import { TaxCalculator, TaxCalculationInput, TaxCalculationResult } from "./tax-
 import { resolveCountryCode } from "@/lib/utils/country";
 import { getPrismaClient } from "@/lib/services/database/database";
 import { ResourceNotFoundError } from "@/lib/utils/error-handling";
+import { sumMoney } from "@/lib/utils/money";
 
 export type TaxMode = "pre-tax" | "post-tax";
 export type DistributionFrequency = "monthly" | "quarterly" | "annually";
@@ -120,8 +121,9 @@ export function calculateDistribution(input: DistributionInput): DistributionRes
     };
   });
 
-  const totalTax = shares.reduce((sum, s) => sum + s.taxAmount, 0);
-  const totalNetDistributed = shares.reduce((sum, s) => sum + s.netShare, 0);
+  // Rounded at the boundary: these totals are per-owner tax figures, not display values.
+  const totalTax = sumMoney(shares.map((s) => s.taxAmount));
+  const totalNetDistributed = sumMoney(shares.map((s) => s.netShare));
 
   return {
     propertyId: input.propertyId,
@@ -291,8 +293,8 @@ export async function getDistributionHistory(
       effectiveRate: s.taxRate || 0,
       taxDetails: {} as TaxCalculationResult,
     })),
-    totalTax: d.shares.reduce((sum, s) => sum + s.taxAmount, 0),
-    totalNetDistributed: d.shares.reduce((sum, s) => sum + s.netShare, 0),
+    totalTax: sumMoney(d.shares.map((s) => s.taxAmount)),
+    totalNetDistributed: sumMoney(d.shares.map((s) => s.netShare)),
     version: d.version,
     calculatedAt: d.createdAt,
     calculatedByUserId: d.calculatedByUserId,
@@ -372,12 +374,11 @@ export async function getAnnualTaxSummary(
   return {
     ownerId,
     year,
-    totalGrossIncome: shares.reduce(
-      (sum: number, s: ShareWithDistribution) => sum + s.grossShare,
-      0,
-    ),
-    totalTaxPaid: shares.reduce((sum: number, s: ShareWithDistribution) => sum + s.taxAmount, 0),
-    totalNetIncome: shares.reduce((sum: number, s: ShareWithDistribution) => sum + s.netShare, 0),
+    // These three feed generatePortugalTaxForm / generateSpainTaxForm — a year of shares
+    // summed as Floats drifts, and drift on a filed number is not a rounding curiosity.
+    totalGrossIncome: sumMoney(shares.map((s: ShareWithDistribution) => s.grossShare)),
+    totalTaxPaid: sumMoney(shares.map((s: ShareWithDistribution) => s.taxAmount)),
+    totalNetIncome: sumMoney(shares.map((s: ShareWithDistribution) => s.netShare)),
     distributions,
   };
 }

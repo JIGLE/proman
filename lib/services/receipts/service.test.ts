@@ -7,6 +7,15 @@ const mockDocumentFindFirst = vi.fn();
 const mockTenantFindUnique = vi.fn();
 const mockPropertyFindUnique = vi.fn();
 
+// The tx handle handed to a `$transaction` callback. Voiding now runs the allocation reversal
+// and the lifecycle write inside one transaction, so the mock has to model that: the callback
+// receives a client whose `receipt.update` is the same spy, letting the assertions below stay
+// agnostic about which handle performed the write.
+const mockTxClient = { receipt: { update: mockReceiptUpdate } };
+const mockTransaction = vi.fn(async (fn: (tx: typeof mockTxClient) => Promise<unknown>) =>
+  fn(mockTxClient),
+);
+
 vi.mock("@/lib/services/database/database", () => ({
   getPrismaClient: () => ({
     receipt: { findFirst: mockReceiptFindFirst, update: mockReceiptUpdate },
@@ -14,6 +23,7 @@ vi.mock("@/lib/services/database/database", () => ({
     document: { findFirst: mockDocumentFindFirst },
     tenant: { findUnique: mockTenantFindUnique },
     property: { findUnique: mockPropertyFindUnique },
+    $transaction: mockTransaction,
   }),
 }));
 
@@ -151,7 +161,50 @@ describe("transitionReceipt", () => {
   it("voiding reverses live allocations and logs VOID_RECEIPT", async () => {
     mockReceiptFindFirst.mockResolvedValue({ ...baseReceipt, lifecycle: "draft" });
     await transitionReceipt("user_1", "receipt_1", "voided", { voidReason: "duplicate payment" });
-    expect(mockReverseAllocations).toHaveBeenCalledWith("receipt_1", "duplicate payment");
+    expect(mockReverseAllocations).toHaveBeenCalledWith(
+      "receipt_1",
+      "duplicate payment",
+      mockTxClient,
+    );
     expect(mockLogAudit.mock.calls.map((c) => c[0].action)).toContain("VOID_RECEIPT");
+  });
+
+  // The reversal and the lifecycle write used to be two independent writes, so a failure
+  // between them left the allocations reversed while the receipt still read "emitted" — the
+  // rent period says unpaid and the receipt disagrees. These pin the boundary itself, not just
+  // that both happened.
+  it("voiding runs the reversal and the lifecycle write inside ONE transaction", async () => {
+    mockReceiptFindFirst.mockResolvedValue({ ...baseReceipt, lifecycle: "draft" });
+
+    await transitionReceipt("user_1", "receipt_1", "voided", { voidReason: "duplicate payment" });
+
+    expect(mockTransaction).toHaveBeenCalledTimes(1);
+    // The reversal is handed the caller's tx rather than opening its own — Prisma cannot nest.
+    expect(mockReverseAllocations.mock.calls[0][2]).toBe(mockTxClient);
+    // And the lifecycle write went through that same tx handle.
+    expect(mockReceiptUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ data: { lifecycle: "voided" } }),
+    );
+  });
+
+  it("a failing reversal aborts the transaction and leaves the lifecycle unchanged", async () => {
+    mockReceiptFindFirst.mockResolvedValue({ ...baseReceipt, lifecycle: "emitted" });
+    mockReverseAllocations.mockRejectedValueOnce(new Error("ledger write failed"));
+
+    await expect(
+      transitionReceipt("user_1", "receipt_1", "voided", { voidReason: "oops" }),
+    ).rejects.toThrow("ledger write failed");
+
+    // The whole point: no half-applied state. The receipt must not read "voided".
+    expect(mockReceiptUpdate).not.toHaveBeenCalled();
+  });
+
+  it("non-void transitions do not open a transaction", async () => {
+    mockReceiptFindFirst.mockResolvedValue({ ...baseReceipt, lifecycle: "draft" });
+
+    await transitionReceipt("user_1", "receipt_1", "review");
+
+    expect(mockTransaction).not.toHaveBeenCalled();
+    expect(mockReceiptUpdate).toHaveBeenCalled();
   });
 });

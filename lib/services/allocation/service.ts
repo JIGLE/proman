@@ -17,6 +17,15 @@ import type { AllocationPlan, PeriodSnapshot, RentPeriodStatus } from "./types";
 const HORIZON_MONTHS = 12;
 
 /**
+ * The client handed to a `$transaction` callback: a PrismaClient minus the methods that
+ * cannot be called inside a transaction. Derived from the callback's own parameter so it
+ * tracks the Prisma version rather than being hand-maintained.
+ */
+type PrismaTransactionClient = Parameters<
+  Parameters<ReturnType<typeof getPrismaClient>["$transaction"]>[0]
+>[0];
+
+/**
  * Ensure a lease has RentPeriod rows from its start date through
  * min(endDate, now + horizon). Idempotent — existing periods are left alone
  * (their dueAmount snapshot must survive rent adjustments).
@@ -241,6 +250,16 @@ export async function allocateReceipt(receiptId: string): Promise<AllocationPlan
 export async function reverseAllocationsForReceipt(
   receiptId: string,
   reason: string,
+  /**
+   * Join an existing transaction instead of opening one.
+   *
+   * The receipt lifecycle needs the reversal and the `receipt.lifecycle` write to succeed or
+   * fail together: without this, a failure between them left allocations reversed while the
+   * receipt still read "emitted" — the rent period says unpaid and the receipt disagrees.
+   * Prisma cannot nest `$transaction`, so the caller passes its `tx` down rather than
+   * wrapping a function that opens its own.
+   */
+  existingTx?: PrismaTransactionClient,
 ): Promise<number> {
   const prisma = getPrismaClient();
   const allocations = await prisma.paymentAllocation.findMany({
@@ -251,7 +270,7 @@ export async function reverseAllocationsForReceipt(
   const now = new Date();
   const receipt = await prisma.receipt.findUniqueOrThrow({ where: { id: receiptId } });
 
-  await prisma.$transaction(async (tx) => {
+  const applyReversal = async (tx: PrismaTransactionClient) => {
     for (const allocation of allocations) {
       await tx.paymentAllocation.update({
         where: { id: allocation.id },
@@ -291,8 +310,17 @@ export async function reverseAllocationsForReceipt(
         paymentStatus: deriveTenantStatus(statuses.map((s) => s.status as RentPeriodStatus)),
       },
     });
-  });
+  };
 
+  if (existingTx) {
+    await applyReversal(existingTx);
+  } else {
+    await prisma.$transaction(applyReversal);
+  }
+
+  // Deliberately outside the transaction. An audit write failing should not roll back a
+  // correct financial reversal — the money state is the thing that must not be left
+  // half-applied. A missing audit row is recoverable; a half-reversed ledger is not.
   await logAudit({
     userId: receipt.userId,
     action: "REVERSE_ALLOCATION",

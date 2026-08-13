@@ -108,6 +108,96 @@ describe("planAllocation — reference-month waterfall", () => {
   });
 });
 
+/**
+ * The cases above cover a 1.5× overpayment and a 4× one that spills into engine-created future
+ * periods. Neither is the case a landlord in arrears actually produces: a payment that settles
+ * SEVERAL WHOLE months against periods that already exist. "One and a half months, twice" and
+ * "two whole months" take different branches of the pass-1 loop, and only the first was pinned.
+ *
+ * €1,250 rather than the 950 above, because the scenario these were written from is a €2,500
+ * transfer clearing two €1,250 months.
+ */
+describe("planAllocation — a payment covering several whole months", () => {
+  const RENT_1250 = 1250;
+  const month = (m: number, allocatedAmount = 0, dueAmount = RENT_1250): PeriodSnapshot =>
+    period(2026, m, allocatedAmount, dueAmount);
+
+  it("€2,500 against two open €1,250 months clears both in full", () => {
+    const plan = planAllocation({
+      payment: payment(2500),
+      periods: [month(6), month(7)],
+    });
+
+    expect(plan.warnings).toEqual([]);
+    expect(plan.entries).toHaveLength(2);
+    expect(plan.entries.map((e) => e.amount)).toEqual([1250, 1250]);
+    // Neither month may be typed "partial" — both are settled in full. The `partial` label is
+    // what the UI and the period status key off, so a full month wearing it reads as arrears.
+    expect(plan.entries.some((e) => e.type === "partial")).toBe(false);
+  });
+
+  it("types only the first month as rent; the rest are carried-forward credit", () => {
+    const plan = planAllocation({
+      payment: payment(2500),
+      periods: [month(6), month(7)],
+    });
+
+    // engine.ts: only the first period touched carries the payment's intent. This is a
+    // deliberate labelling decision — flipping it would relabel every carried month as "rent"
+    // and lose the fact that one transfer paid for both.
+    expect(plan.entries[0]).toMatchObject({ period: { month: 6 }, type: "rent" });
+    expect(plan.entries[1]).toMatchObject({ period: { month: 7 }, type: "overpayment_credit" });
+  });
+
+  it("stops at the money, not at the period list — a third open month is untouched", () => {
+    const plan = planAllocation({
+      payment: payment(2500),
+      periods: [month(5), month(6), month(7)],
+    });
+
+    expect(plan.entries).toHaveLength(2);
+    expect(plan.entries.map((e) => e.period.month)).toEqual([5, 6]);
+    expect(plan.warnings).toEqual([]);
+  });
+
+  it("finishes a partly-paid oldest month first, then carries the rest forward", () => {
+    // June already holds €400 of its €1,250. €2,500 must fill June's €850 remainder, clear July
+    // whole, and leave €400 sitting against August. Existing cases exercise the remainder and
+    // the carry-forward separately; this is the only one where the remainder FEEDS the carry,
+    // which is where an off-by-one in the pass-1 loop would surface.
+    const plan = planAllocation({
+      payment: payment(2500),
+      periods: [month(6, 400), month(7), month(8)],
+    });
+
+    expect(plan.entries).toEqual([
+      { period: { year: 2026, month: 6, id: "p-2026-6" }, amount: 850, type: "rent" },
+      {
+        period: { year: 2026, month: 7, id: "p-2026-7" },
+        amount: 1250,
+        type: "overpayment_credit",
+      },
+      { period: { year: 2026, month: 8, id: "p-2026-8" }, amount: 400, type: "overpayment_credit" },
+    ]);
+    expect(plan.warnings).toEqual([]);
+  });
+
+  it("leaves no float residue when the payment lands exactly on a period boundary", () => {
+    // 1233.33 × 2 does not survive binary floating point cleanly. Without the half-cent epsilon
+    // at the end of planAllocation, the sub-cent tail would be reported as unallocated money and
+    // the landlord would see a horizon warning on a payment that balanced exactly.
+    const due = 1233.33;
+    const plan = planAllocation({
+      payment: payment(due * 2),
+      periods: [month(6, 0, due), month(7, 0, due)],
+    });
+
+    expect(plan.warnings).toEqual([]);
+    expect(plan.entries).toHaveLength(2);
+    expect(plan.entries.map((e) => e.amount)).toEqual([due, due]);
+  });
+});
+
 describe("derivePeriodStatus", () => {
   const june = { dueDate: periodDueDate({ year: 2026, month: 6 }), dueAmount: RENT };
 

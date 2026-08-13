@@ -234,9 +234,33 @@
     "delete": "Excluir Meus Dados"
   },
   "admin": {
-    "database": {
-      "title": "Visualização de Banco de Dados do Admin",
-      "description": "Visualização somente leitura das tabelas do banco de dados. Acesso registrado para conformidade com GDPR."
+    "title": "Estado do sistema",
+    "subtitle": "A que esta instância está ligada, o que é simulado e o que precisa da sua atenção.",
+    "refresh": "Atualizar",
+    "checking": "A executar verificações…",
+    "loadFailed": "Não foi possível carregar o estado do sistema. Poderá não ter acesso de administrador nesta conta.",
+    "summary": "Resumo do estado",
+    "remedy": "O que fazer",
+    "generatedAt": "Verificado às {time}",
+    "simulationNotice": "Nenhuma submissão chega a uma autoridade fiscal real, em nenhum país, e não existe ligação bancária ativa. Todas as submissões são simuladas e o lado bancário é apenas importação de CSV. Este é o estado atual do produto, não uma falha.",
+    "severity": {
+      "ok": "OK",
+      "simulated": "Simulado",
+      "warning": "Requer atenção",
+      "error": "Avariado"
+    },
+    "group": {
+      "platform": "Plataforma",
+      "integration": "Ligações"
+    },
+    "check": {
+      "schema": "Esquema da base de dados",
+      "database": "Base de dados",
+      "pii": "Encriptação de dados pessoais",
+      "email": "Email (SendGrid)",
+      "billing": "Faturação de subscrição (Stripe)",
+      "bank": "Movimentos bancários",
+      "tax": "Autoridade fiscal — {country}"
     }
   },
   "navigation": {
@@ -271,7 +295,8 @@
     "coreGroup": "Núcleo",
     "portfolio": "Portefólio",
     "operations": "Operações",
-    "intelligence": "Inteligência"
+    "intelligence": "Inteligência",
+    "admin": "Estado do sistema"
   },
   "dashboard": {
     "welcome": "Bem-vindo ao seu painel de gestão de imóveis",
@@ -2356,6 +2381,17 @@
     "runScenarioHelp": "Veja um fluxo realista a decorrer",
     "runningScenario": "A executar o cenário…",
     "scenarioComplete": "Cenário concluído",
-    "scenarioRefreshing": "A atualizar para mostrar os novos dados…"
+    "scenarioRefreshing": "A atualizar para mostrar os novos dados…",
+    "taxConnectorsHeading": "Conectores fiscais · estado da autoridade fiscal",
+    "connectorModeSimulated": "Simulado",
+    "connectorModeUnsupported": "Sem submissão",
+    "connectorModeSimulatedHelp": "Simulado — nada é transmitido à {authority}. Não existe ligação real.",
+    "connectorModeUnsupportedHelp": "O modo \"{mode}\" não é suportado, por isso nada está a ser submetido. Defina o conector novamente para sandbox ou review.",
+    "connectorLastSubmission": "Última: {date}",
+    "connectorNoSubmissions": "Ainda sem submissões",
+    "loading": "A carregar…",
+    "loadFailedTitle": "Não foi possível carregar os seus dados",
+    "retry": "Tentar novamente",
+    "retrying": "A tentar novamente…"
   }
 }

@@ -120,8 +120,11 @@ export async function POST(request: NextRequest) {
       { status: 201 },
     );
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to create SEPA mandate";
-    return NextResponse.json({ error: message }, { status: 500 });
+    // This was the only one of the five with no server-side log at all — the raw message went
+    // to the client and nowhere else, so making the response safe without adding this would
+    // have destroyed the only copy of the diagnostic.
+    console.error("SEPA mandate creation error:", error);
+    return NextResponse.json({ error: "Failed to create SEPA mandate" }, { status: 500 });
   }
 }
 

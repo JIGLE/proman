@@ -53,7 +53,16 @@ export async function GET(): Promise<NextResponse> {
       {
         status: "unhealthy",
         timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : "Unknown database error",
+        // This route has neither auth nor an env gate, so in production the body is readable by
+        // anyone who can reach it — and a Prisma failure names tables, columns and file paths.
+        // Same production-stripping rule as /api/monitoring/health, kept detailed in dev where
+        // it is the thing that makes the endpoint useful.
+        error:
+          process.env.NODE_ENV === "production"
+            ? "database error"
+            : error instanceof Error
+              ? error.message
+              : "Unknown database error",
         response_time_ms: Date.now() - startTime,
       },
       { status: 503 },

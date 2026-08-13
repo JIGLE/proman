@@ -8,7 +8,9 @@ handles properties, units, tenants, leases, receipts, expenses, maintenance, cor
 and fiscal compliance, built around a reference-month rent ledger: bank movement → match →
 allocate → receipt → tax filing → audit trail.
 
-**Current version**: 1.16.3 | **Stage**: Production-ready core; Situs rebrand PRs 1–12 shipped
+**Current version**: see `package.json` — it was hardcoded here as 1.16.3 against a shipped
+1.24.0, because a number copied into prose has no reason to move when the release does. Don't
+reintroduce it. | **Stage**: Production-ready core; Situs rebrand PRs 1–12 shipped
 (brand, nav, landing, portfolio tree, rent ledger, bank matching, receipt lifecycle + PT tax
 connector, OCR classification, audit trail/tax dashboard, schema consolidation, a11y/e2e pass).
 Deferred: People/Operations/Intelligence IA consolidation (PR 10b), full infra rename (PR 13).
@@ -202,3 +204,13 @@ Optional (app subscription billing — Free/Pro/Business landing-page tiers, dis
 tenant rent collection): `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_BUSINESS`,
 `STRIPE_TRIAL_DAYS_PRO`, `ENABLE_BILLING` (plan-limit enforcement; off by default, so
 self-hosted instances are always unlimited).
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

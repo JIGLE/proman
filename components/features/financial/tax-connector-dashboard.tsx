@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useTranslations } from "next-intl";
+import { MODE_KIND_STYLES, authorityName, modeKind } from "@/lib/tax/connectors/presentation";
 import { useCallback, useEffect, useState } from "react";
 
 /**
@@ -33,11 +34,9 @@ interface SubmissionLog {
   createdAt: string;
 }
 
-const MODE_STYLES: Record<string, string> = {
-  sandbox: "bg-[var(--semantic-info-soft)] text-[var(--semantic-info-readable)]",
-  review: "bg-[var(--semantic-warning-soft)] text-[var(--semantic-warning-readable)]",
-  live: "bg-[var(--semantic-success-soft)] text-[var(--semantic-success-readable)]",
-};
+// Mode styling now comes from lib/tax/connectors/presentation.ts. The old table styled
+// `live` with the SUCCESS token — green, the colour of "working" — when live is precisely the
+// mode the connector refuses to act in. Colour was saying the opposite of the truth.
 
 const LOG_STATUS_STYLES: Record<string, string> = {
   success: "text-[var(--semantic-success-readable)]",
@@ -86,7 +85,7 @@ export function TaxConnectorDashboard(): React.ReactElement | null {
   return (
     <div className="border border-[var(--color-border)] bg-[var(--color-surface)]">
       <div className="border-b border-[var(--color-border)] px-4 py-3">
-        <p className="mono-label">Tax connectors · fiscal authority status</p>
+        <p className="mono-label">{t("taxConnectorsHeading")}</p>
       </div>
 
       {error ? (
@@ -96,7 +95,7 @@ export function TaxConnectorDashboard(): React.ReactElement | null {
       ) : null}
 
       {loading ? (
-        <p className="p-6 text-sm text-[var(--color-muted-foreground)]">Loading…</p>
+        <p className="p-6 text-sm text-[var(--color-muted-foreground)]">{t("loading")}</p>
       ) : (
         <div className="divide-y divide-[var(--color-border)]">
           {connectors.map((connector) => {
@@ -113,20 +112,31 @@ export function TaxConnectorDashboard(): React.ReactElement | null {
                     <span className="font-mono text-xs uppercase tracking-[0.04em]">
                       {connector.country}
                     </span>
-                    <span className="text-sm">{connector.connectorKey}</span>
+                    <span className="text-sm">{authorityName(connector.country)}</span>
                   </div>
                   <div className="flex items-center gap-3">
                     <span
                       className={`px-1.5 py-0.5 font-mono text-[12px] md:text-[10px] uppercase tracking-[0.04em] ${
-                        MODE_STYLES[connector.mode] ?? ""
+                        MODE_KIND_STYLES[modeKind(connector.mode)]
                       }`}
+                      title={
+                        modeKind(connector.mode) === "simulated"
+                          ? t("connectorModeSimulatedHelp", {
+                              authority: authorityName(connector.country),
+                            })
+                          : t("connectorModeUnsupportedHelp", { mode: connector.mode })
+                      }
                     >
-                      {connector.mode}
+                      {modeKind(connector.mode) === "simulated"
+                        ? t("connectorModeSimulated")
+                        : t("connectorModeUnsupported")}
                     </span>
                     <span className="text-xs text-[var(--color-muted-foreground)]">
                       {connector.lastSubmissionAt
-                        ? `Last: ${new Date(connector.lastSubmissionAt).toLocaleDateString()}`
-                        : "No submissions yet"}
+                        ? t("connectorLastSubmission", {
+                            date: new Date(connector.lastSubmissionAt).toLocaleDateString(),
+                          })
+                        : t("connectorNoSubmissions")}
                     </span>
                   </div>
                 </button>

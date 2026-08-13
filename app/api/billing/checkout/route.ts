@@ -78,8 +78,8 @@ export async function GET(request: NextRequest): Promise<Response> {
     );
     return NextResponse.redirect(url);
   } catch (error) {
+    // Stripe errors carry request ids, key prefixes and account detail. Logged, not returned.
     console.error("Billing checkout error:", error);
-    const message = error instanceof Error ? error.message : "Failed to start checkout";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to start checkout" }, { status: 500 });
   }
 }

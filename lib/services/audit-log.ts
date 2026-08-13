@@ -23,6 +23,7 @@ export type AuditAction =
   | "CREATE_TENANT"
   | "UPDATE_TENANT"
   | "DELETE_TENANT"
+  | "REVOKE_PORTAL_ACCESS"
   | "CREATE_LEASE"
   | "UPDATE_LEASE"
   | "DELETE_LEASE"

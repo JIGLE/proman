@@ -234,9 +234,33 @@
     "delete": "Cancella i miei dati"
   },
   "admin": {
-    "database": {
-      "title": "Vista database amministratore",
-      "description": "Vista in sola lettura delle tabelle del database. Accessi registrati per conformità GDPR."
+    "title": "Stato del sistema",
+    "subtitle": "A cosa è collegata questa istanza, cosa è simulato e cosa richiede la tua attenzione.",
+    "refresh": "Aggiorna",
+    "checking": "Esecuzione dei controlli…",
+    "loadFailed": "Impossibile caricare lo stato del sistema. Potresti non avere accesso amministratore su questo account.",
+    "summary": "Riepilogo dello stato",
+    "remedy": "Cosa fare",
+    "generatedAt": "Verificato alle {time}",
+    "simulationNotice": "Nessun invio raggiunge un'autorità fiscale reale, in nessun paese, e non esiste una connessione bancaria attiva. Tutti gli invii sono simulati e il lato bancario è solo importazione CSV. Questo è lo stato attuale del prodotto, non un guasto.",
+    "severity": {
+      "ok": "OK",
+      "simulated": "Simulato",
+      "warning": "Richiede attenzione",
+      "error": "Guasto"
+    },
+    "group": {
+      "platform": "Piattaforma",
+      "integration": "Connessioni"
+    },
+    "check": {
+      "schema": "Schema del database",
+      "database": "Database",
+      "pii": "Crittografia dati personali",
+      "email": "Email (SendGrid)",
+      "billing": "Fatturazione abbonamento (Stripe)",
+      "bank": "Movimenti bancari",
+      "tax": "Autorità fiscale — {country}"
     }
   },
   "navigation": {
@@ -271,7 +295,8 @@
     "coreGroup": "Core",
     "portfolio": "Portafoglio",
     "operations": "Operazioni",
-    "intelligence": "Intelligence"
+    "intelligence": "Intelligence",
+    "admin": "Stato del sistema"
   },
   "dashboard": {
     "welcome": "Benvenuto nella tua dashboard di gestione immobiliare",
@@ -2356,6 +2381,17 @@
     "runScenarioHelp": "Guarda un flusso realistico in azione",
     "runningScenario": "Esecuzione dello scenario…",
     "scenarioComplete": "Scenario completato",
-    "scenarioRefreshing": "Aggiornamento per mostrare i nuovi dati…"
+    "scenarioRefreshing": "Aggiornamento per mostrare i nuovi dati…",
+    "taxConnectorsHeading": "Connettori fiscali · stato dell'autorità fiscale",
+    "connectorModeSimulated": "Simulato",
+    "connectorModeUnsupported": "Nessun invio",
+    "connectorModeSimulatedHelp": "Simulato — nulla viene trasmesso a {authority}. Non esiste una connessione reale.",
+    "connectorModeUnsupportedHelp": "La modalità \"{mode}\" non è supportata, quindi non viene inviato nulla. Reimposta il connettore su sandbox o review.",
+    "connectorLastSubmission": "Ultimo: {date}",
+    "connectorNoSubmissions": "Nessun invio finora",
+    "loading": "Caricamento…",
+    "loadFailedTitle": "Impossibile caricare i tuoi dati",
+    "retry": "Riprova",
+    "retrying": "Nuovo tentativo…"
   }
 }

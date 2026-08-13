@@ -130,6 +130,21 @@ export const PORTAL_NAV_GROUPS: PortalNavGroup[] = [
         icon: Settings,
         roles: ["owner", "tenant"],
       },
+      {
+        // Owner-only. `canAccessPortalPath` derives access from this list, so a page absent
+        // from it is unreachable no matter what it renders — /admin redirected to /dashboard
+        // until this entry existed.
+        //
+        // The rail entry is a convenience; the real gate is `requireAdmin` on
+        // /api/admin/system-status, so a non-admin owner reaching the page sees only the
+        // "you may not have admin access" message and no system detail.
+        key: "admin",
+        href: "/admin",
+        label: "System status",
+        labelKey: "navigation.admin",
+        icon: ShieldCheck,
+        roles: ["owner"],
+      },
     ],
   },
   {

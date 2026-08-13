@@ -343,6 +343,15 @@ model Tenant {
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
+  // Portal-link revocation epoch. Portal tokens are stateless signed JWTs, so before this there
+  // was no way to invalidate one — a link forwarded to the wrong address, or a tenant who moved
+  // out, stayed valid until it expired on its own up to 7 days later.
+  //
+  // Every token carries `iat`; verification rejects any token issued at or before this instant,
+  // which revokes ALL outstanding links for the tenant in one write. Generating a new link
+  // afterwards works normally, because its `iat` is later. Null means nothing was ever revoked.
+  portalAccessRevokedAt DateTime?
+
   // Relations
   user                User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
   property            Property?            @relation(fields: [propertyId], references: [id], onDelete: SetNull)
@@ -1592,7 +1601,7 @@ model TaxAuthorityConnector {
   id               String    @id @default(cuid())
   userId           String
   country          String // ISO country code: "PT", "ES", …
-  connectorKey     String // "pt_at_recibos" | "es_aeat_info" | …
+  connectorKey     String // "pt_at_recibos" | "es_nrua_ventanilla" | …
   mode             String    @default("review") // sandbox|review|live
   status           String    @default("active") // active|disabled|error
   lastSubmissionAt DateTime?

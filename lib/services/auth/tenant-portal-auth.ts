@@ -89,10 +89,26 @@ export async function verifyPortalToken(token: string): Promise<PortalTokenPaylo
     const prisma = getPrismaClient();
     const tenant = await prisma.tenant.findUnique({
       where: { id: payload.tenantId },
-      select: { id: true, userId: true },
+      select: { id: true, userId: true, portalAccessRevokedAt: true },
     });
 
     if (!tenant || tenant.userId !== payload.userId) {
+      return null;
+    }
+
+    // Revocation. These tokens are stateless, so expiry was the only thing that ever ended
+    // access: a link forwarded to the wrong address, or a tenant who moved out, kept working
+    // for up to 7 days with no way to stop it. The owner can now set a revocation instant, and
+    // every token issued at or before it is refused.
+    //
+    // `iat` is whole seconds while the column is milliseconds, so a token issued during the
+    // same second as the revocation is ambiguous. It is refused: over-rejecting inside a
+    // one-second window costs the owner one click to regenerate, while under-rejecting leaves
+    // the link they just revoked working.
+    if (
+      tenant.portalAccessRevokedAt &&
+      payload.iat * 1000 < tenant.portalAccessRevokedAt.getTime() + 1000
+    ) {
       return null;
     }
 
@@ -114,10 +130,36 @@ export function generatePortalLink(tenantId: string, userId: string, baseUrl?: s
 /**
  * Service for managing tenant portal access
  */
+/**
+ * Revoke every outstanding portal link for a tenant.
+ *
+ * Scoped by `userId` as well as `tenantId`: the caller supplies both from their own session, so
+ * this cannot be used to revoke another landlord's tenant. Returns false when the tenant does
+ * not belong to the caller, rather than throwing, so the route answers 404 and does not confirm
+ * the id exists.
+ *
+ * Idempotent — revoking twice just moves the instant forward.
+ */
+export async function revokePortalAccess(tenantId: string, userId: string): Promise<boolean> {
+  const prisma = getPrismaClient();
+  const result = await prisma.tenant.updateMany({
+    where: { id: tenantId, userId },
+    data: { portalAccessRevokedAt: new Date() },
+  });
+  return result.count > 0;
+}
+
 export const tenantPortalService = {
   generateToken: generatePortalToken,
   verifyToken: verifyPortalToken,
   generateLink: generatePortalLink,
+  /**
+   * Replaces a stub that took a tenantId, ignored it, and returned `{ success: true }` with the
+   * comment "tokens are stateless and expire naturally". Any caller reading that result would
+   * report revocation to a landlord while every outstanding link kept working — the failure is
+   * silent and the affected party is the tenant whose data stays reachable.
+   */
+  revokeAccess: revokePortalAccess,
 
   /**
    * Send portal invitation email to tenant
@@ -177,15 +219,5 @@ export const tenantPortalService = {
         error: error instanceof Error ? error.message : "Failed to send invitation",
       };
     }
-  },
-
-  /**
-   * Revoke portal access for a tenant by marking token as expired
-   * In a production system, you might store active tokens in the database
-   */
-  async revokeAccess(_tenantId: string): Promise<{ success: boolean }> {
-    // In production, invalidate stored tokens or add to blacklist
-    // For now, tokens are stateless and expire naturally
-    return { success: true };
   },
 };

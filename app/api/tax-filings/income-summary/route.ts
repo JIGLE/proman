@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
+import { sumMoney } from "@/lib/utils/money";
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   const authResult = await requireAuth(request);
@@ -43,13 +44,17 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     }),
   ]);
 
-  const grossIncome = receipts
-    .filter((r) => new Date(r.date).getFullYear() === year)
-    .reduce((sum, r) => sum + r.amount, 0);
+  // Rounded at the aggregation boundary. Money is stored as Float, so summing a year of
+  // receipts naively accumulates representation error — and these two numbers feed a tax
+  // filing, where a fraction of a cent of drift is not the harmless thing it is on a
+  // dashboard. See lib/utils/money.ts.
+  const grossIncome = sumMoney(
+    receipts.filter((r) => new Date(r.date).getFullYear() === year).map((r) => r.amount),
+  );
 
-  const deductibleExpenses = expenses
-    .filter((e) => new Date(e.date).getFullYear() === year)
-    .reduce((sum, e) => sum + e.amount, 0);
+  const deductibleExpenses = sumMoney(
+    expenses.filter((e) => new Date(e.date).getFullYear() === year).map((e) => e.amount),
+  );
 
   return NextResponse.json({ data: { grossIncome, deductibleExpenses } });
 }

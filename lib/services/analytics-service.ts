@@ -4,6 +4,7 @@
  */
 
 import { getPrismaClient } from "./database/database";
+import { round2, sumMoney } from "@/lib/utils/money";
 
 // Helper to check if Prisma is available
 function isPrismaAvailable(): boolean {
@@ -175,7 +176,7 @@ class AnalyticsService {
         0,
       );
       const vacantUnits = totalUnits - occupiedUnits;
-      const occupancyRate = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
+      const occupancyRate = totalUnits > 0 ? round2((occupiedUnits / totalUnits) * 100) : 0;
 
       // Get tenant counts
       const tenants = await prisma.tenant.findMany({
@@ -202,8 +203,8 @@ class AnalyticsService {
         },
       });
 
-      const monthlyRevenue = receipts.reduce((sum, r) => sum + r.amount, 0);
-      const yearlyRevenue = yearlyReceipts.reduce((sum, r) => sum + r.amount, 0);
+      const monthlyRevenue = sumMoney(receipts.map((r) => r.amount));
+      const yearlyRevenue = sumMoney(yearlyReceipts.map((r) => r.amount));
 
       // Get expenses
       const expenses = await prisma.expense.findMany({
@@ -212,8 +213,8 @@ class AnalyticsService {
           date: { gte: startOfYear },
         },
       });
-      const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-      const netIncome = yearlyRevenue - totalExpenses;
+      const totalExpenses = sumMoney(expenses.map((e) => e.amount));
+      const netIncome = round2(yearlyRevenue - totalExpenses);
 
       // Get overdue payments (receipts with pending status and date more than 30 days ago)
       const thirtyDaysAgo = new Date(now);
@@ -226,7 +227,7 @@ class AnalyticsService {
         },
       });
       const overduePayments = overdueReceipts.length;
-      const overdueAmount = overdueReceipts.reduce((sum, r) => sum + r.amount, 0);
+      const overdueAmount = sumMoney(overdueReceipts.map((r) => r.amount));
 
       // Calculate average rent
       const activeLeases = await prisma.lease.findMany({
@@ -235,9 +236,12 @@ class AnalyticsService {
           endDate: { gte: now },
         },
       });
+      // A mean is the worst offender here: the division produces a long tail whenever the
+      // total does not divide evenly (three leases totalling €1,000 → 333.33333333333337),
+      // and that then renders as a euro amount.
       const averageRent =
         activeLeases.length > 0
-          ? activeLeases.reduce((sum, l) => sum + l.monthlyRent, 0) / activeLeases.length
+          ? round2(sumMoney(activeLeases.map((l) => l.monthlyRent)) / activeLeases.length)
           : 0;
 
       // Calculate collection rate
@@ -250,7 +254,7 @@ class AnalyticsService {
       const paidReceipts = allMonthlyReceipts.filter((r) => r.status === "paid");
       const collectionRate =
         allMonthlyReceipts.length > 0
-          ? (paidReceipts.length / allMonthlyReceipts.length) * 100
+          ? round2((paidReceipts.length / allMonthlyReceipts.length) * 100)
           : 100;
 
       return {
@@ -314,15 +318,15 @@ class AnalyticsService {
           },
         });
 
-        const revenue = receipts.reduce((sum, r) => sum + r.amount, 0);
-        const expense = expenses.reduce((sum, e) => sum + e.amount, 0);
+        const revenue = sumMoney(receipts.map((r) => r.amount));
+        const expense = sumMoney(expenses.map((e) => e.amount));
 
         result.push({
           month: targetDate.toLocaleString("default", { month: "short" }),
           year: targetDate.getFullYear(),
           revenue,
           expenses: expense,
-          netIncome: revenue - expense,
+          netIncome: round2(revenue - expense),
         });
       }
 
@@ -368,17 +372,18 @@ class AnalyticsService {
       return properties.map((property) => {
         const totalUnits = property.units?.length || 0;
         const occupiedUnits = property.units?.filter((u) => u.status === "occupied").length || 0;
-        const occupancyRate = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
+        const occupancyRate = totalUnits > 0 ? round2((occupiedUnits / totalUnits) * 100) : 0;
 
-        const yearlyRevenue = property.receipts?.reduce((sum, r) => sum + r.amount, 0) || 0;
-        const monthlyRevenue = yearlyRevenue / 12;
-        const expenses = property.expenses?.reduce((sum, e) => sum + e.amount, 0) || 0;
-        const netIncome = yearlyRevenue - expenses;
+        const yearlyRevenue = sumMoney(property.receipts?.map((r) => r.amount) ?? []);
+        // Another division, another tail: 14100 / 12 is exact but 14099.99 / 12 is not.
+        const monthlyRevenue = round2(yearlyRevenue / 12);
+        const expenses = sumMoney(property.expenses?.map((e) => e.amount) ?? []);
+        const netIncome = round2(yearlyRevenue - expenses);
 
         // ROI calculation (simplified - assumes property value from purchase price or estimated value)
         const propertyValue =
           (property as { purchasePrice?: number }).purchasePrice || yearlyRevenue * 10;
-        const roi = propertyValue > 0 ? (netIncome / propertyValue) * 100 : 0;
+        const roi = propertyValue > 0 ? round2((netIncome / propertyValue) * 100) : 0;
 
         return {
           propertyId: property.id,
@@ -501,7 +506,9 @@ class AnalyticsService {
           const resolved = new Date(r.resolvedAt!);
           return sum + Math.ceil((resolved.getTime() - created.getTime()) / (1000 * 60 * 60 * 24));
         }, 0);
-        averageResolutionDays = totalDays / completedRequests.length;
+        // Not money, but the same mean-produces-a-tail problem: 5 days over 3 tickets renders
+        // as "1.6666666666666667 days" in the maintenance panel.
+        averageResolutionDays = round2(totalDays / completedRequests.length);
       }
 
       return {
@@ -547,7 +554,7 @@ class AnalyticsService {
         (sum, p) => sum + (p.units?.filter((u) => u.status === "occupied").length || 0),
         0,
       );
-      const currentOccupancy = totalUnits > 0 ? (occupiedUnits / totalUnits) * 100 : 0;
+      const currentOccupancy = totalUnits > 0 ? round2((occupiedUnits / totalUnits) * 100) : 0;
 
       const result: OccupancyTrend[] = [];
       const now = new Date();
@@ -560,7 +567,7 @@ class AnalyticsService {
         result.push({
           month: targetDate.toLocaleString("default", { month: "short" }),
           year: targetDate.getFullYear(),
-          occupancyRate: Math.min(100, Math.max(0, currentOccupancy + variation)),
+          occupancyRate: round2(Math.min(100, Math.max(0, currentOccupancy + variation))),
           totalUnits,
           occupiedUnits: Math.round((totalUnits * (currentOccupancy + variation)) / 100),
         });

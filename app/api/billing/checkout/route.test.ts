@@ -93,7 +93,11 @@ describe("GET /api/billing/checkout", () => {
     expect(createCheckoutSessionMock).not.toHaveBeenCalled();
   });
 
-  it("returns a 500 with the error message when Checkout Session creation fails", async () => {
+  it("returns a 500 without echoing the internal failure reason", async () => {
+    // This case previously asserted the response WAS "STRIPE_PRICE_ID_PRO is not configured" —
+    // it pinned the leak in place. Naming an environment variable and its configuration state
+    // to whoever clicked Upgrade is exactly the disclosure P2 #13 is about, and Stripe's own
+    // errors carry request ids and key prefixes besides.
     createCheckoutSessionMock.mockRejectedValue(new Error("STRIPE_PRICE_ID_PRO is not configured"));
 
     const response = await GET(
@@ -102,6 +106,7 @@ describe("GET /api/billing/checkout", () => {
     const body = await response.json();
 
     expect(response.status).toBe(500);
-    expect(body.error).toBe("STRIPE_PRICE_ID_PRO is not configured");
+    expect(body.error).toBe("Failed to start checkout");
+    expect(body.error).not.toContain("STRIPE_PRICE_ID_PRO");
   });
 });
