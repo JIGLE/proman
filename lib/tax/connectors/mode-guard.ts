@@ -1,4 +1,5 @@
 import { logSubmission } from "@/lib/services/tax/connector-service";
+import { SIMULATED_MODES } from "./modes";
 import type { TaxConnectorResult } from "./types";
 
 /**
@@ -18,7 +19,9 @@ import type { TaxConnectorResult } from "./types";
  * every connector calls it. Adding a real integration means widening SIMULATED_MODES
  * deliberately — not editing a database row.
  */
-export const SIMULATED_MODES = new Set(["sandbox", "review"]);
+// Defined in ./modes so the client-side presentation helper can read it without importing
+// this file, which reaches Prisma. Re-exported here so existing importers are unaffected.
+export { SIMULATED_MODES } from "./modes";
 
 export interface ModeGuardInput {
   connector: { id: string; mode: string };

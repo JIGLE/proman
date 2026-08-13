@@ -1,4 +1,6 @@
-import { SIMULATED_MODES } from "./mode-guard";
+// From ./modes, not ./mode-guard: this file is imported by "use client" components, and
+// mode-guard reaches Prisma and better-sqlite3 through connector-service.
+import { SIMULATED_MODES } from "./modes";
 
 /**
  * Presentation facts about connectors, shared by the two UIs that show them
