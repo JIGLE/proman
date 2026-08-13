@@ -103,7 +103,7 @@ recorded here rather than worked around.
 | #   | Item                                             | Status | Notes                                                                                                                                                                                                                      |
 | --- | ------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 9   | Connector UI states simulated status honestly    | ✅     | Both surfaces now say _simulated, nothing transmitted_, name the authority, and render an unsupported mode as an error. `live` no longer styled green — it was the colour of "working" on the one mode that refuses to act |
-| 10  | UX pass: empty / loading / error states          | ⬜     | **Never sampled.** Scope unknown until it is                                                                                                                                                                               |
+| 10  | UX pass: empty / loading / error states          | ✅     | Sampled, and smaller than feared — see below. One central gate, 6 cases. Live verification blocked by #11's pending migration                                                                                              |
 | 11  | Portal token revocation                          | ✅     | `Tenant.portalAccessRevokedAt` + `DELETE /api/tenants/[id]/portal-link`. 6 cases. **Needs one `prisma db push`** — see below                                                                                               |
 | 12  | Analytics float rounding                         | ⬜     | ~8 sites in `analytics-service.ts`. Dashboard drift is cosmetic — genuinely P2                                                                                                                                             |
 | 13  | Stop echoing `error.message` in user-facing 500s | ⬜     | 15 routes; mostly health/debug, but `/api/distributions` is user-facing                                                                                                                                                    |
@@ -138,6 +138,56 @@ not bypassed**. Consequences:
   database `POST /api/tenants` answers 500 and `e2e/workflow-full-chain.spec.ts` fails at step 2.
   The unit tests pass either way — they mock Prisma — so **the revocation logic is proved and the
   live HTTP path is not.**
+
+### P2 #10 — what the sample found
+
+Measured rather than eyeballed, because the item had never been looked at.
+
+A first pass by grep suggested 11 of 27 screens were missing a loading, empty or error state.
+That was **misleading** — most of those screens read from `useApp()`, and loading/error are
+handled centrally in `use-app-data.ts`, which dispatches `SET_LOADING`/`SET_ERROR` around one
+fetch that populates every entity. Individual screens are not supposed to own it.
+
+The real finding is narrower and worse:
+
+|                                                   |                                                   |
+| ------------------------------------------------- | ------------------------------------------------- |
+| Screens reading `state.loading`                   | **2** of 27                                       |
+| Screens reading `state.error`                     | **0**                                             |
+| Feature components importing `page-skeletons.tsx` | **0** — seven purpose-built skeletons, none wired |
+| Screens with an empty state                       | fine — 15 files use the empty-state illustrations |
+
+So both flags were set correctly and read by almost nobody. The consequence is a screen that
+states something false, which is the same failure the connector UI had:
+
+- **While loading**, every list is `[]`, so a landlord on a slow connection is told "No properties
+  yet" — not "loading" — on an account with forty properties.
+- **If the fetch fails**, the only signal is a toast that auto-dismisses. The screen then settles
+  on that same empty state permanently, with no error, no explanation, and no way to retry short
+  of reloading the page.
+
+`app/[locale]/(main)/loading.tsx` does not cover this: that is Next's route-level Suspense
+fallback, already gone by the time the client-side fetch starts.
+
+**Fix: one gate, not 25 screens.** `components/shared/app-data-gate.tsx` wraps `{children}` in the
+main layout and renders a route-appropriate skeleton on first load, or an error panel with a
+working retry. There is one fetch and one pair of flags, so there is one gate. Two decisions worth
+keeping:
+
+- it stands in only for the FIRST load — a background `refreshData()` after a mutation keeps the
+  populated screen, because blanking a full page to a skeleton on every save would be worse than
+  the bug;
+- error beats loading, so a retry in flight keeps the failure visible instead of flicking to a
+  skeleton.
+
+6 cases; disabling the gate turns 4 red. 3 new i18n keys across all four locales, parity enforced
+by `messages/locales.test.ts`.
+
+**Not verified live, and this is why.** #11's `portalAccessRevokedAt` column does not exist in the
+local `dev.db`, so every entity route answers 500 and `/` with it — which means Playwright's
+`webServer` check cannot even start. So the gate's behaviour is proved by unit tests and by
+disabling it, **not** against a running browser. One `prisma db push` clears this and the whole
+E2E suite with it.
 
 ---
 

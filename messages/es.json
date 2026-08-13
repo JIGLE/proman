@@ -2364,6 +2364,9 @@
     "connectorModeUnsupportedHelp": "El modo \"{mode}\" no es compatible, por lo que no se envía nada. Vuelva a configurar el conector en sandbox o review.",
     "connectorLastSubmission": "Último: {date}",
     "connectorNoSubmissions": "Aún sin envíos",
-    "loading": "Cargando…"
+    "loading": "Cargando…",
+    "loadFailedTitle": "No se han podido cargar tus datos",
+    "retry": "Reintentar",
+    "retrying": "Reintentando…"
   }
 }

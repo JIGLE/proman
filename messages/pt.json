@@ -2364,6 +2364,9 @@
     "connectorModeUnsupportedHelp": "O modo \"{mode}\" não é suportado, por isso nada está a ser submetido. Defina o conector novamente para sandbox ou review.",
     "connectorLastSubmission": "Última: {date}",
     "connectorNoSubmissions": "Ainda sem submissões",
-    "loading": "A carregar…"
+    "loading": "A carregar…",
+    "loadFailedTitle": "Não foi possível carregar os seus dados",
+    "retry": "Tentar novamente",
+    "retrying": "A tentar novamente…"
   }
 }

@@ -2364,6 +2364,9 @@
     "connectorModeUnsupportedHelp": "La modalità \"{mode}\" non è supportata, quindi non viene inviato nulla. Reimposta il connettore su sandbox o review.",
     "connectorLastSubmission": "Ultimo: {date}",
     "connectorNoSubmissions": "Nessun invio finora",
-    "loading": "Caricamento…"
+    "loading": "Caricamento…",
+    "loadFailedTitle": "Impossibile caricare i tuoi dati",
+    "retry": "Riprova",
+    "retrying": "Nuovo tentativo…"
   }
 }

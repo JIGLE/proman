@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/shared/error-boundary";
 import { ScenarioRunner } from "@/components/shared/scenario-runner";
 import { PortalAccessGuard } from "@/components/shared/portal-access-guard";
 import { EntityDetailRouteClient } from "@/components/shared/entity-detail-route-client";
+import { AppDataGate } from "@/components/shared/app-data-gate";
 
 export default function MainLayout({
   children,
@@ -51,7 +52,12 @@ export default function MainLayout({
             {/* Breadcrumbs carry page context on desktop; on mobile the top bar does. */}
             <Breadcrumbs className="mb-4 hidden md:flex" />
             <ErrorBoundary component="MainContent">
-              <PortalAccessGuard>{children}</PortalAccessGuard>
+              <PortalAccessGuard>
+                {/* Renders the shared load/failure states. Without it every screen shows its
+                    EMPTY state while the account-wide fetch is in flight, and keeps showing it
+                    if that fetch fails — see app-data-gate.tsx. */}
+                <AppDataGate>{children}</AppDataGate>
+              </PortalAccessGuard>
             </ErrorBoundary>
           </div>
         </main>
