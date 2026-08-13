@@ -35,11 +35,23 @@ jobs:
     permissions:
       contents: read
 
-  # ── Build waits for the shared verify jobs to pass ──
+  # ── Build runs alongside verify, not after it ──
+  #
+  # This job does its own checkout and `npm ci`; it consumed nothing from `verify`, so the old
+  # `needs: verify` was a gate rather than a data dependency — and an expensive one. Build sat
+  # idle for the length of the unit suite (146s vs its own 83s in the run that prompted this),
+  # so a build failure took ~229s to surface instead of ~83s.
+  #
+  # That matters because `next build` catches a class of error nothing else here does: type-check,
+  # lint and Vitest none of them bundle for a browser, which is how a client component importing
+  # its way to better-sqlite3 stayed green for four commits.
+  #
+  # The gate itself is not lost — it moves to `smoke` below, so the expensive Playwright jobs
+  # still refuse to start when lint or tests fail. What this trades is ~83s of runner time on a
+  # PR whose tests fail, in exchange for build feedback arriving ~2.5 minutes sooner on every PR.
   build:
     name: Build validation
     runs-on: ubuntu-latest
-    needs: verify
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
@@ -86,7 +98,11 @@ jobs:
   smoke:
     name: Smoke test (start built app)
     runs-on: ubuntu-latest
-    needs: build
+    # Both, deliberately. `build` is the data dependency (this job downloads its artifact);
+    # `verify` is the cost gate that used to sit in front of `build`. Everything downstream of
+    # smoke is Playwright, so keeping verify here is what stops a PR with failing unit tests
+    # spending several minutes of runner time on browser jobs that were never going to be read.
+    needs: [build, verify]
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
