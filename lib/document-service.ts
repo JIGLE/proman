@@ -76,12 +76,32 @@ function ensureUploadsDir() {
   return uploadsDir;
 }
 
+/**
+ * `userId` is required, matching fetchLeaseDocument and deleteLeaseDocument below — both of
+ * which already reject a document whose `tenant.userId` is not the caller. This one wrote a
+ * row for whatever tenantId it was handed, from a URL path in one caller and a form field in
+ * the other, with no check at all.
+ *
+ * It has not been exploitable: `leaseDocument` is not a model in prisma/schema.prisma, so the
+ * create below throws and the routes surface a 500. The gap is real the moment that model is
+ * restored, and a missing ownership check is not something to leave sitting behind an
+ * accidental runtime error.
+ */
 export async function saveLeaseDocument(
   prisma: PrismaClient,
   file: File,
   tenantId: string,
   language: string,
+  userId: string,
 ) {
+  const tenant = await prisma.tenant.findFirst({
+    where: { id: tenantId, userId },
+    select: { id: true },
+  });
+  if (!tenant) {
+    throw codedError("Tenant not found", "NOT_FOUND");
+  }
+
   const uploadsDir = ensureUploadsDir();
 
   const fileId = Math.random().toString(36).substring(2, 15);

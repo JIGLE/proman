@@ -30,7 +30,9 @@ export async function POST(
 
     const prisma = getPrismaClient();
     try {
-      const saved = await saveLeaseDocument(prisma, file, leaseId, language);
+      // `leaseId` is the tenant id — see the route comment above. saveLeaseDocument now
+      // verifies that tenant belongs to the caller before writing.
+      const saved = await saveLeaseDocument(prisma, file, leaseId, language, authResult.userId);
       return NextResponse.json({ success: true, data: saved });
     } catch (err: unknown) {
       const e = err as { code?: string; message?: string };
