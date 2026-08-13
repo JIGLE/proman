@@ -27,7 +27,8 @@ export async function POST(req: NextRequest): Promise<Response> {
 
     const prisma = getPrismaClient();
     try {
-      const saved = await saveLeaseDocument(prisma, file, tenantId, language);
+      // tenantId comes from a form field, so it is fully attacker-controlled.
+      const saved = await saveLeaseDocument(prisma, file, tenantId, language, authResult.userId);
       return NextResponse.json({ success: true, data: saved });
     } catch (err: unknown) {
       const e = err as { code?: string; message?: string };

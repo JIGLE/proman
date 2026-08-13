@@ -1,4 +1,5 @@
 import { getPrismaClient } from "../database";
+import { assertOwnsRelations } from "../assert-owned";
 import { Receipt } from "@/lib/types";
 
 export const receiptService = {
@@ -45,6 +46,15 @@ export const receiptService = {
       "id" | "userId" | "createdAt" | "updatedAt" | "tenantName" | "propertyName"
     >,
   ): Promise<Receipt> {
+    // tenantId and propertyId arrive from the request body. This create `include`s the FULL
+    // tenant and property records in its response — email, phone, rent, lease dates, address,
+    // coordinates — so without this check, posting a receipt against an arbitrary tenant id
+    // echoed that tenant's personal data straight back to the caller.
+    await assertOwnsRelations(userId, {
+      tenantId: data.tenantId,
+      propertyId: data.propertyId,
+    });
+
     const receipt = await getPrismaClient().receipt.create({
       data: {
         userId,

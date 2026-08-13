@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireAuth } from "@/lib/services/auth/auth-middleware";
+import { requireAuth, requireAdmin } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
 
 const updateSchema = z.object({
@@ -29,7 +29,8 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
 
 // PUT /api/tax-rules/[id] — update payload / notes / sourceUrl / effectiveDate
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const authResult = await requireAuth(request);
+  // Global legislation data — see the comment on POST in ../route.ts.
+  const authResult = await requireAdmin(request);
   if (authResult instanceof Response) return authResult;
 
   const { id } = await params;
@@ -81,7 +82,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const authResult = await requireAuth(request);
+  // Global legislation data — see the comment on POST in ../route.ts.
+  const authResult = await requireAdmin(request);
   if (authResult instanceof Response) return authResult;
 
   const { id } = await params;

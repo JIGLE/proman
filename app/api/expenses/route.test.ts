@@ -10,7 +10,13 @@ import { NextRequest } from "next/server";
 const { requireAuthMock, prismaMock, handleDemoMutationMock, handleDemoGetMock } = vi.hoisted(
   () => ({
     requireAuthMock: vi.fn(),
-    prismaMock: { expense: { create: vi.fn(), findMany: vi.fn() } },
+    prismaMock: {
+      expense: { create: vi.fn(), findMany: vi.fn() },
+      // handlePost now calls assertOwnsRelations, which resolves the body's propertyId
+      // against this user before writing. Defaults to "owned"; the refusal case sets it
+      // to null explicitly.
+      property: { findFirst: vi.fn() },
+    },
     handleDemoMutationMock: vi.fn(),
     handleDemoGetMock: vi.fn(),
   }),
@@ -49,6 +55,7 @@ describe("POST /api/expenses", () => {
     handleDemoGetMock.mockReturnValue({ response: null });
     handleDemoMutationMock.mockResolvedValue({ response: null });
     requireAuthMock.mockResolvedValue({ userId: "user-123" });
+    prismaMock.property.findFirst.mockResolvedValue({ id: "prop-1" });
     prismaMock.expense.create.mockResolvedValue({
       id: "exp-1",
       amount: 120.5,
@@ -65,6 +72,18 @@ describe("POST /api/expenses", () => {
         data: expect.objectContaining({ propertyId: "prop-1", userId: "user-123" }),
       }),
     );
+  });
+
+  // `propertyId` is a body field the schema only checks is a non-empty string. Without an
+  // ownership check, an expense could be filed against another landlord's property — a write
+  // into their books, from a valid session that simply is not theirs.
+  it("returns 404 and writes nothing when the property belongs to someone else", async () => {
+    prismaMock.property.findFirst.mockResolvedValue(null);
+
+    const res = await POST(postRequest({ ...validExpense, propertyId: "someone-elses-prop" }));
+
+    expect(res.status).toBe(404);
+    expect(prismaMock.expense.create).not.toHaveBeenCalled();
   });
 
   it("returns 400 when the category is not a known one", async () => {

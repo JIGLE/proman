@@ -15,6 +15,7 @@ import { leaseSchema } from "@/lib/schemas/lease.schema";
 import { isMockMode } from "@/lib/config/data-mode";
 import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 import { ZodError } from "zod";
+import { assertOwnsRelations } from "@/lib/services/database/assert-owned";
 
 const leaseInclude = {
   property: { select: { name: true, address: true } },
@@ -60,6 +61,14 @@ async function handlePost(request: NextRequest): Promise<Response> {
   try {
     const json = await request.json();
     const body = leaseSchema.parse(json);
+
+    // Both ids come from the body. A lease is the record that binds a tenant to a property
+    // and drives the rent ledger, so creating one against records the caller does not own
+    // would write into another landlord's finances, not just leave a stray row.
+    await assertOwnsRelations(scopeUserId, {
+      propertyId: body.propertyId,
+      tenantId: body.tenantId,
+    });
 
     let contractFile: Buffer | undefined;
     let contractFileName: string | undefined;

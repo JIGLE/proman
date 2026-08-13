@@ -26,6 +26,21 @@ import { join } from "node:path";
  * — so "this query has no userId in its where clause" flags 22 sites of which 21 are correct.
  * A gate at that signal-to-noise ratio gets muted, and a muted gate catches nothing. This one
  * is narrow enough to stay trustworthy.
+ *
+ * ## Two blind spots, both demonstrated by a real IDOR this guard did not catch
+ *
+ * `app/api/distributions/route.ts` was wide open — unscoped reads and writes against another
+ * landlord's property — and passed this test on both counts:
+ *
+ *  1. **A `userId` mention is not a scoping check.** The file contained `calculatedByUserId`,
+ *     audit metadata recording who asked, constraining nothing. The `/userId|scopeUserId/`
+ *     skip above treated that as evidence of scoping.
+ *  2. **The query was in a service, not the route.** This walk only inspects direct
+ *     `prisma.<model>.` calls, so a handler delegating to `lib/services/*` is invisible to it.
+ *
+ * Tightening either one costs more false positives than it is worth, so the coverage lives
+ * elsewhere instead: `lib/services/income-distribution.scoping.test.ts` asserts on the `where`
+ * clause the service actually issues. When a route delegates to a service, guard the service.
  */
 
 const API_DIR = join(process.cwd(), "app", "api");

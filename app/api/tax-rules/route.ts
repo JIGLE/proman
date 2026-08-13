@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { requireAuth } from "@/lib/services/auth/auth-middleware";
+import { requireAuth, requireAdmin } from "@/lib/services/auth/auth-middleware";
 import { getPrismaClient } from "@/lib/services/database/database";
 
 const ruleSchema = z.object({
@@ -41,7 +41,11 @@ export async function GET(request: NextRequest) {
 
 // POST /api/tax-rules — create a new rule
 export async function POST(request: NextRequest) {
-  const authResult = await requireAuth(request);
+  // TaxRule has no userId column — it is global tax legislation (brackets and rates) feeding
+  // every user's tax calculations. So this is not an ownership bug; there is no owner. It is
+  // a privilege bug: `requireAuth` let any authenticated non-admin rewrite the rates everyone
+  // else's numbers are computed from. Reads stay open to any signed-in user; writes do not.
+  const authResult = await requireAdmin(request);
   if (authResult instanceof Response) return authResult;
 
   try {

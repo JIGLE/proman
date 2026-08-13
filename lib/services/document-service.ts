@@ -8,6 +8,7 @@ import { writeFile, readFile, mkdir, unlink, stat as _stat } from "fs/promises";
 import { join, extname, dirname } from "path";
 import { existsSync } from "fs";
 import { randomBytes } from "crypto";
+import { assertOwnsRelations } from "./database/assert-owned";
 
 // ============================================================================
 // Types
@@ -338,6 +339,15 @@ export const documentService = {
    */
   async create(userId: string, data: CreateDocumentData): Promise<Document> {
     const prisma = getPrismaClient();
+
+    // propertyId / tenantId / ownerId all come from the request body. Checked before the file
+    // is written to disk, not after — otherwise a rejected create still leaves an orphaned
+    // file under the caller's storage path.
+    await assertOwnsRelations(userId, {
+      propertyId: data.propertyId,
+      tenantId: data.tenantId,
+      ownerId: data.ownerId,
+    });
 
     // Convert string content to buffer if needed
     const content =

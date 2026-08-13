@@ -9,6 +9,7 @@
 import { TaxCalculator, TaxCalculationInput, TaxCalculationResult } from "./tax-calculator";
 import { resolveCountryCode } from "@/lib/utils/country";
 import { getPrismaClient } from "@/lib/services/database/database";
+import { ResourceNotFoundError } from "@/lib/utils/error-handling";
 
 export type TaxMode = "pre-tax" | "post-tax";
 export type DistributionFrequency = "monthly" | "quarterly" | "annually";
@@ -144,13 +145,41 @@ export function calculateDistribution(input: DistributionInput): DistributionRes
  */
 export async function saveDistribution(
   distribution: DistributionResult,
+  userId: string,
 ): Promise<DistributionResult> {
   const prisma = getPrismaClient();
 
-  // Check for existing distribution in this period
+  // Both the propertyId and every ownerId arrive from the request body, so neither can be
+  // trusted. Before this check a caller could write an IncomeDistribution — with amounts of
+  // their choosing — against another landlord's property, and attach shares to another
+  // landlord's owners. `calculatedByUserId` recorded who did it but constrained nothing.
+  //
+  // Same shape as app/api/property-owners/route.ts, which already validates both sides.
+  const property = await prisma.property.findFirst({
+    where: { id: distribution.propertyId, userId },
+    select: { id: true },
+  });
+  if (!property) {
+    throw new ResourceNotFoundError("Property not found");
+  }
+
+  const ownerIds = [...new Set(distribution.shares.map((s) => s.ownerId))];
+  const owners = await prisma.owner.findMany({
+    where: { id: { in: ownerIds }, userId },
+    select: { id: true },
+  });
+  if (owners.length !== ownerIds.length) {
+    // Deliberately not naming which id failed — that would confirm the existence of ids the
+    // caller does not own.
+    throw new ResourceNotFoundError("Owner not found");
+  }
+
+  // Check for existing distribution in this period. Scoped too: an unscoped read here would
+  // let the version counter reveal whether a distribution exists on someone else's property.
   const existing = await prisma.incomeDistribution.findFirst({
     where: {
       propertyId: distribution.propertyId,
+      property: { userId },
       periodStart: distribution.periodStart,
       periodEnd: distribution.periodEnd,
     },
@@ -199,17 +228,28 @@ export async function saveDistribution(
 }
 
 /**
- * Get distribution history for a property (audit trail)
+ * Get distribution history for a property (audit trail).
+ *
+ * `userId` is REQUIRED and not optional-with-a-default on purpose. This query used to be
+ * `where: { propertyId }` with the id coming straight off a query string, so any signed-in
+ * user who knew another landlord's propertyId could read that property's full income
+ * distribution — income, expenses, and every owner's name, gross share, tax and net share.
+ * A session proved someone was logged in; it never proved whose property this was.
+ *
+ * Scoping lives here rather than only in the route so the compiler enforces it: a future
+ * caller cannot forget an argument that does not exist.
  */
 export async function getDistributionHistory(
   propertyId: string,
+  userId: string,
   year?: number,
 ): Promise<DistributionResult[]> {
   const prisma = getPrismaClient();
   const whereClause: {
     propertyId: string;
+    property: { userId: string };
     periodStart?: { gte: Date; lt: Date };
-  } = { propertyId };
+  } = { propertyId, property: { userId } };
 
   if (year) {
     whereClause.periodStart = {
@@ -262,8 +302,21 @@ export async function getDistributionHistory(
 /**
  * Get annual summary for tax reporting
  */
+/**
+ * Annual tax summary for one owner.
+ *
+ * `userId` is required for the same reason as getDistributionHistory — this ran as
+ * `where: { ownerId }` against a query-string id and leaked any owner's gross income, tax
+ * paid and per-property breakdown to any authenticated caller.
+ *
+ * Both sides are scoped deliberately. `owner: { userId }` is the semantically correct
+ * constraint (it is that owner's summary, and owners belong to a user), while
+ * `distribution.property.userId` also excludes any share row that a caller may have injected
+ * against someone else's distribution through the POST hole that existed alongside this one.
+ */
 export async function getAnnualTaxSummary(
   ownerId: string,
+  userId: string,
   year: number,
 ): Promise<{
   ownerId: string;
@@ -294,7 +347,9 @@ export async function getAnnualTaxSummary(
   const shares: ShareWithDistribution[] = await prisma.incomeDistributionShare.findMany({
     where: {
       ownerId,
+      owner: { userId },
       distribution: {
+        property: { userId },
         periodStart: {
           gte: new Date(`${year}-01-01`),
           lt: new Date(`${year + 1}-01-01`),

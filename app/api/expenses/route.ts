@@ -6,6 +6,7 @@ import { isMockMode } from "@/lib/config/data-mode";
 import { handleDemoGet, handleDemoMutation } from "@/lib/demo/demo-api-handler";
 import { createSuccessResponse, parseJsonBody, withErrorHandler } from "@/lib/utils/error-handling";
 import { withRateLimit } from "@/lib/utils/rate-limit";
+import { assertOwnsRelations } from "@/lib/services/database/assert-owned";
 
 async function handleGet(request: NextRequest): Promise<Response> {
   const demo = handleDemoGet(request, "expenses");
@@ -51,6 +52,10 @@ async function handlePost(request: NextRequest): Promise<Response> {
   const prisma = getPrismaClient();
 
   const body = await parseJsonBody(request, expenseSchema);
+
+  // `propertyId` comes from the request body, and the schema only checks it is a non-empty
+  // string. Without this, an expense could be filed against another landlord's property.
+  await assertOwnsRelations(userId, { propertyId: body.propertyId });
 
   const expense = await prisma.expense.create({
     data: {

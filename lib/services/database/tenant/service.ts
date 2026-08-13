@@ -1,5 +1,6 @@
 import { getPrismaClient } from "../database";
 import { Tenant } from "@/lib/types";
+import { assertOwnsRelations } from "../assert-owned";
 
 export const tenantService = {
   async getAll(userId: string): Promise<Tenant[]> {
@@ -43,6 +44,12 @@ export const tenantService = {
     userId: string,
     data: Omit<Tenant, "id" | "userId" | "createdAt" | "updatedAt" | "propertyName">,
   ): Promise<Tenant> {
+    // `propertyId` arrives from the request body, and this create returns
+    // `include: { property: true }` — the full property record, address and coordinates
+    // included — so an unchecked id both mis-filed the tenant and echoed back a property the
+    // caller has no claim to.
+    await assertOwnsRelations(userId, { propertyId: data.propertyId });
+
     // `leaseStart`/`leaseEnd` are legacy required (non-null) columns on Tenant, but the
     // create dialog treats lease details as optional ("Add lease & contact details"),
     // and the real lease record is created separately via the Leases workflow. Default

@@ -13,6 +13,8 @@ export async function GET(request: NextRequest) {
     const authResult = await requireAuth(request);
     if (authResult instanceof Response) return authResult;
 
+    const { userId } = authResult;
+
     const { searchParams } = new URL(request.url);
     const ownerId = searchParams.get("ownerId");
     const year = searchParams.get("year");
@@ -22,8 +24,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "ownerId is required" }, { status: 400 });
     }
 
+    // `ownerId` is attacker-controlled. Scoping is inside getAnnualTaxSummary, so an owner
+    // belonging to someone else now yields a zeroed summary rather than their gross income,
+    // tax paid and per-property breakdown.
     const taxYear = year ? parseInt(year) : new Date().getFullYear() - 1;
-    const summary = await getAnnualTaxSummary(ownerId, taxYear);
+    const summary = await getAnnualTaxSummary(ownerId, userId, taxYear);
 
     // Generate tax form data if country specified
     let taxForm = null;
