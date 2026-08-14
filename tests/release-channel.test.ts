@@ -27,8 +27,28 @@ interface Workflow {
 
 const WORKFLOW = join(process.cwd(), ".github", "workflows", "deploy-ghcr.yml");
 
+/**
+ * A version token safe to paste into a shell script.
+ *
+ * This value is substituted into bash source that is then executed, so it is an injection
+ * surface. It was previously escaped with `.replace(/"/g, '\\"')`, which escapes the quote but
+ * not the backslash — so a value ending in `\` escapes its own escape and the quote breaks out
+ * anyway. CodeQL flags that as `js/incomplete-sanitization`, and it is right to.
+ *
+ * Escaping this correctly is fiddly and easy to get wrong a second time. Every caller passes a
+ * version string, so require one and drop the escaping entirely: rejecting the bad input is a
+ * stronger guarantee than sanitizing it.
+ */
+const SAFE_VERSION = /^[A-Za-z0-9._-]*$/;
+
 /** The `Set variables` step's shell script, with GitHub expressions resolved for local execution. */
 function decisionScript(inputVersion: string): string {
+  if (!SAFE_VERSION.test(inputVersion)) {
+    throw new Error(
+      `decisionScript: version must be a plain version token, got ${JSON.stringify(inputVersion)}`,
+    );
+  }
+
   const workflow = load(readFileSync(WORKFLOW, "utf8")) as Workflow;
   const step = workflow.jobs.deploy.steps?.find((s) => s.id === "vars");
   if (!step?.run) throw new Error("deploy-ghcr.yml: no step with id 'vars' — has it been renamed?");
@@ -38,10 +58,7 @@ function decisionScript(inputVersion: string): string {
       // `${{ … }}` is evaluated by Actions, not bash. Substitute the two that matter and blank
       // the rest, so the branching logic itself is what runs.
       .replace(/\$\{\{\s*github\.repository\s*\}\}/g, "JIGLE/situs")
-      .replace(
-        /\$\{\{\s*github\.event\.inputs\.version[^}]*\}\}/g,
-        inputVersion.replace(/"/g, '\\"'),
-      )
+      .replace(/\$\{\{\s*github\.event\.inputs\.version[^}]*\}\}/g, inputVersion)
       .replace(/\$\{\{[^}]*\}\}/g, "")
   );
 }
@@ -105,6 +122,14 @@ describe("release channel", () => {
 
     expect(tags.some((t) => t.endsWith(":1.25.0"))).toBe(false);
     expect(tags).toContain("ghcr.io/jigle/situs:sha-abc1234");
+  });
+
+  it("refuses a version that is not a plain token, rather than escaping it", () => {
+    // The harness writes this value into a shell script and runs it. `1.0"; touch pwned; #`
+    // used to be passed through a quote-escaper that did not escape backslashes; now anything
+    // outside the version charset is rejected before it reaches bash.
+    expect(() => tagsFor("refs/heads/main", '1.0"; touch pwned; #')).toThrow(/plain version token/);
+    expect(() => tagsFor("refs/heads/main", "1.0\\")).toThrow(/plain version token/);
   });
 
   it("no non-tag ref can reach :latest", () => {
