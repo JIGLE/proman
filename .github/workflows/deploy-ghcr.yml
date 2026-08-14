@@ -196,10 +196,22 @@ jobs:
           TRIVY="aquasec/trivy:0.73.0@sha256:7cced7cae583819fc7806d4cbc0dbbc7cad18b99f7d3e235192e6da8c091045c"
           IMAGE="${{ steps.vars.outputs.scan_tag }}"
 
+          # The cache lives in runner.temp, NOT github.workspace, and that is load-bearing.
+          # Docker creates the host side of this mount as root, and Trivy — root inside the
+          # container — writes its BoltDB cache into `fanal/` with restrictive permissions. Put
+          # that anywhere under the checkout and the NEXT step, which sends the same directory as
+          # the build context under the unprivileged `runner` user, dies on it:
+          #
+          #   ERROR: failed to solve: error from sender: open .trivycache/fanal: permission denied
+          #
+          # That is not hypothetical — it broke every deploy between 2026-08-12 and 2026-08-14,
+          # and the error names Trivy nowhere near the step that caused it. The cache only has to
+          # outlive the two run_trivy calls below so the second reuses the vulnerability DB the
+          # first downloaded; nothing persists across runs, so a temp path costs nothing.
           run_trivy() {
             docker run --rm \
               -v /var/run/docker.sock:/var/run/docker.sock \
-              -v "${{ github.workspace }}/.trivycache:/root/.cache/trivy" \
+              -v "${{ runner.temp }}/.trivycache:/root/.cache/trivy" \
               "$TRIVY" image --scanners vuln "$@"
           }
 
