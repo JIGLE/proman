@@ -128,6 +128,9 @@ describe("release channel", () => {
     // The harness writes this value into a shell script and runs it. `1.0"; touch pwned; #`
     // used to be passed through a quote-escaper that did not escape backslashes; now anything
     // outside the version charset is rejected before it reaches bash.
+    //
+    // If you prove this guard by deleting it, the payload really does run and leaves an empty
+    // `pwned` in the repo root — that is the demonstration, and it is yours to clean up.
     expect(() => tagsFor("refs/heads/main", '1.0"; touch pwned; #')).toThrow(/plain version token/);
     expect(() => tagsFor("refs/heads/main", "1.0\\")).toThrow(/plain version token/);
   });
