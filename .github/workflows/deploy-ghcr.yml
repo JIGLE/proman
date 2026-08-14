@@ -2,7 +2,23 @@ name: Deploy to GHCR
 
 on:
   push:
+    # Two channels, and the distinction is the whole point of this file.
+    #
+    # A TAG is a release: it may claim `:<version>` and `:latest`.
+    #
+    # `main` is the development channel, added because there was no path at all from "merged" to
+    # "an image I can pull" without remembering to dispatch this workflow by hand — which is a
+    # thing to forget, and was forgotten. It publishes `:main` and `:sha-<short>` and can never
+    # claim a release name; see the tag-decision logic below.
+    #
+    # `paths-ignore` keeps a docs-only merge from spending ten minutes rebuilding an image whose
+    # contents cannot have changed.
     tags: ["v*"]
+    branches: [main]
+    paths-ignore:
+      - "docs/**"
+      - "**.md"
+      - ".github/ISSUE_TEMPLATE/**"
   repository_dispatch:
     types: [deploy-ghcr]
   workflow_dispatch:
@@ -29,7 +45,16 @@ permissions:
 
 concurrency:
   group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+  # A superseded DEVELOPMENT build may be cancelled — `:main` is a moving pointer and the newer
+  # merge is the one anyone wants. A RELEASE may not: cancelling a tag build leaves `v1.25.0`
+  # existing in git with no image behind it, and the next push will not retry it because the tag
+  # already exists.
+  #
+  # This became load-bearing when `main` was added as a trigger. Before that, every run was its
+  # own ref and nothing could ever cancel anything; now consecutive merges share
+  # `deploy-refs/heads/main`. Tag refs still get their own group, so this expression is belt and
+  # braces — it states the rule rather than relying on the grouping to imply it.
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
 
 jobs:
   deploy:
@@ -105,6 +130,15 @@ jobs:
             # Everything else is a build of a commit, and is named after that commit.
             VERSION="sha-${SHORT_SHA}"
             TAGS="ghcr.io/${IMAGE_NAME_LOWER}:${VERSION}"
+
+            # A push to main additionally moves the development pointer, so "the newest merge"
+            # has a stable name to pull. Still not `:latest` — that stays reachable only from the
+            # tag branch above, which is what stops a test build becoming production by accident.
+            # Pulling `:main` requires imagePullPolicy=Always on the node, or the cached layer
+            # wins and the tag looks frozen (see docs/truenas.md).
+            if [[ "${GITHUB_REF}" == "refs/heads/main" ]]; then
+              TAGS="${TAGS},ghcr.io/${IMAGE_NAME_LOWER}:main"
+            fi
             if [[ -n "${INPUT_VERSION}" ]]; then
               echo "::warning::Ignoring version='${INPUT_VERSION}' — a bare version number is reserved for tag pushes. Publishing ${VERSION} instead; pass a pre-release string like ${INPUT_VERSION}-rc1 to name it yourself."
             fi

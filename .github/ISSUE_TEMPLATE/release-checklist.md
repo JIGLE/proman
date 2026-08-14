@@ -5,16 +5,31 @@ about: Create a new release with a short checklist to ensure stabilty and reprod
 
 # Release checklist
 
-- [ ] Bump package version (package.json & package-lock.json)
-- [ ] Run `npm test` and `npm run type-check` locally
-- [ ] Run `npm run lint` and fix issues
-- [ ] Run `Actions → Build and publish to GHCR → Run workflow` with `dry_run=true` and `version=<X.Y.Z>` and confirm the image builds
-- [ ] Verify `README.md` Releases section updated with the version
-- [ ] Push tag: `git tag -a vX.Y.Z -m "Release vX.Y.Z" && git push origin vX.Y.Z`
-- [ ] Confirm GitHub Release created and assets uploaded
-- [ ] Verify container image `ghcr.io/jigle/situs:X.Y.Z` is available and the Helm chart packaged with appVersion
-- [ ] Deploy to a staging environment and smoke-test sign-in & critical flows
+The release is driven by `release.yml`, which does the version bump and creates the tag itself.
+Do **not** bump the version by hand or push the tag by hand — see the note at the bottom for why.
+
+- [ ] `Actions → Release → Run workflow`, choosing `patch` / `minor` / `major`.
+      This opens a version-bump PR from a `release/vX.Y.Z` branch.
+- [ ] Review the bump PR: `package.json`, `package-lock.json`, `item.yaml`, `docker-compose.yml`
+      should all carry the new version, and CI should be green on it.
+- [ ] Merge the bump PR.
+- [ ] Confirm `release.yml`'s **Publish Release** job created tag `vX.Y.Z` and the GitHub Release.
+- [ ] Confirm the tag push triggered **Deploy to GHCR**, and that it succeeded — the Trivy scan
+      blocks publication on a CRITICAL finding in the base image, which is a genuine stopper.
+- [ ] Verify `ghcr.io/jigle/situs:X.Y.Z` exists, and that `:latest` now points at it.
+- [ ] Deploy to a staging environment and smoke-test sign-in and the rent → receipt flow.
+- [ ] Check `/admin` on the deployed instance: schema in sync, no unexpected errors.
 
 Notes:
 
-- If the scheduled DRY_RUN uncovers packaging issues, fix them on a branch and re-run the workflow manually before tagging for release.
+- **Why the tag is not pushed by hand.** `release.yml`'s `publish` job runs on every push to
+  `main` and creates the tag when `package.json` carries a version that has no tag yet. Pushing a
+  tag manually races that: the tag ends up on a different commit from the one the version bump
+  landed on, and `deploy-ghcr.yml` then builds `:X.Y.Z` from source the tag does not point at.
+  That has happened — `deploy-ghcr.yml` records `:1.24.0` being built from `43997fd` while the git
+  tag pointed elsewhere, with `:latest` moving onto it at the same time.
+- **To test a build before releasing**, use the development channel instead of a dry run:
+  merge to `main` and pull `ghcr.io/jigle/situs:main`, or pin the exact
+  `ghcr.io/jigle/situs:sha-<short>`. Neither can claim `:latest`. See `docs/truenas.md`.
+- `Actions → Deploy to GHCR` also accepts `dry_run=true` to prove an image builds without
+  publishing anything.

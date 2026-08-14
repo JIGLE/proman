@@ -81,14 +81,39 @@ export function decryptPII(ciphertext: string): string {
     return "[ENCRYPTED]";
   }
 
-  const iv = Buffer.from(parts[0], ENCODING);
-  const tag = Buffer.from(parts[1], ENCODING);
-  const encrypted = Buffer.from(parts[2], ENCODING);
+  // The three ways this can fail are NOT equivalent, and only two were handled.
+  //
+  // A missing key and a malformed value both return "[ENCRYPTED]" above. The third — a key that
+  // is present but WRONG — reaches `decipher.final()`, where AES-GCM's authentication tag check
+  // throws. That exception escapes into `pii-extension.ts`, which wraps `$allModels`, so a single
+  // undecryptable row turns an entire `findMany` into a 500.
+  //
+  // It is also the only one of the three an operator causes by hand: rotating PII_ENCRYPTION_KEY
+  // on an instance that already has data. The rows encrypted under the old key become poison, and
+  // the symptom is every page failing with "Internal server error" — with the cause named
+  // nowhere, because the route layer deliberately does not echo exception text.
+  //
+  // So it degrades like its neighbours: the record still loads, the protected field reads
+  // "[ENCRYPTED]", and the reason goes to the log. A landlord seeing a masked phone number can
+  // still work; a landlord seeing a blank dashboard cannot.
+  try {
+    const iv = Buffer.from(parts[0], ENCODING);
+    const tag = Buffer.from(parts[1], ENCODING);
+    const encrypted = Buffer.from(parts[2], ENCODING);
 
-  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
-  decipher.setAuthTag(tag);
+    const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+    decipher.setAuthTag(tag);
 
-  return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf8");
+    return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString("utf8");
+  } catch {
+    // No ciphertext or key material in the message — this runs on every row of a failing table.
+    console.error(
+      "[PII] Decryption failed for a stored value. The most likely cause is that " +
+        "PII_ENCRYPTION_KEY has changed since the row was written. Run " +
+        "scripts/backfill-pii-encryption.js after a deliberate key rotation.",
+    );
+    return "[ENCRYPTED]";
+  }
 }
 
 /**
