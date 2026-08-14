@@ -96,6 +96,41 @@ the header is ignored entirely. Getting it wrong lets a caller pick their own ra
 > availability from `ENABLE_DEMO_LOGIN` on the server per request, so one variable controls both
 > the form and the provider. Remove it if it is still set.
 
+## Connecting a bank (optional)
+
+Without credentials the app imports movements from a CSV you export from your bank, and Settings
+› Integrations shows no connect button — deliberately, since a button that can only fail is worse
+than none. To connect a bank directly instead:
+
+1. Create free credentials at <https://bankaccountdata.gocardless.com/user-secrets/>. GoCardless
+   holds the AISP licence, so this instance needs none of its own.
+2. Register `https://<your-host>/api/bank/connections/callback` as a redirect URI with them. It
+   must match `NEXTAUTH_URL` exactly, or the bank refuses to return the user.
+3. Set `GOCARDLESS_SECRET_ID` and `GOCARDLESS_SECRET_KEY`, then restart.
+4. Settings › Integrations → **Connect a bank**. You are sent to your own bank to authorise
+   read-only access; Situs never sees your banking password.
+
+Reads are capped at roughly **4 per account per day** on the free tier, and the provider answers
+429 for the rest of the day once that is passed. The app enforces the budget itself and shows
+what is left, so "Sync now" refuses rather than burning the allowance.
+
+For the daily automatic sync, set `CRON_SECRET` and point a scheduler at the endpoint once a day:
+
+```bash
+curl -X POST -H "Authorization: Bearer $CRON_SECRET" \
+  https://<your-host>/api/cron/bank-sync
+```
+
+The same secret gates `/api/cron/notifications` and `/api/cron/data-retention`; all three return
+503 while it is unset, so nothing runs on a schedule until you set it.
+
+Consents expire — 90 days by default, and a bank can revoke one sooner. When that happens the
+connection is marked expired, syncing stops rather than quietly returning nothing, and both
+Settings › Integrations and `/admin` say so with a **Reconnect** action.
+
+To verify the flow before pointing it at a real bank, connect to `SANDBOXFINANCE_SFIN0000` from
+the picker: it is a real API call against test data, not a mock.
+
 ## Google OAuth
 
 In [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials), add an

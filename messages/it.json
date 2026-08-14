@@ -224,7 +224,36 @@
       "countryOTHER": "Altro",
       "yearPlaceholder": "es. {year}",
       "nhrDisabledByIfici": "L'NHR non è disponibile mentre IFICI è attivo — se ne può applicare solo uno alla volta.",
-      "ificiDisabledByNhr": "IFICI non è disponibile mentre l'NHR è attivo — se ne può applicare solo uno alla volta."
+      "ificiDisabledByNhr": "IFICI non è disponibile mentre l'NHR è attivo — se ne può applicare solo uno alla volta.",
+      "bankConnectCta": "Collega una banca",
+      "bankNotConfigured": "Questa istanza non ha credenziali del fornitore bancario, quindi i movimenti possono essere importati solo da un file.",
+      "bankPickerTitle": "Collega una banca",
+      "bankPickerHelp": "Verrai indirizzato alla tua banca per autorizzare l'accesso in sola lettura al tuo conto. Situs non vede mai la tua password bancaria.",
+      "bankCountryLabel": "Paese",
+      "bankNoInstitutions": "Nessuna banca disponibile per questo paese.",
+      "bankInstitutionsFailed": "Impossibile caricare l'elenco delle banche. Riprova tra poco.",
+      "bankConnected": "Banca collegata. I movimenti compariranno in Finanze man mano che arrivano.",
+      "bankConnectFailed": "Il collegamento non è stato completato. Ricomincia dalla tua banca.",
+      "bankSyncNow": "Sincronizza ora",
+      "bankSyncDone": "Sincronizzato. I nuovi movimenti sono nella posta in arrivo di Finanze.",
+      "bankSyncFailed": "La sincronizzazione non è stata completata. Riprova tra poco.",
+      "bankSyncBudgetSpent": "Questo conto ha esaurito le letture bancarie di oggi. Altre saranno disponibili domani.",
+      "bankSyncConsentExpired": "Il consenso bancario è scaduto. Ricollega il conto per riprendere la sincronizzazione.",
+      "bankSyncsLeft": "{count} sincronizzazioni rimaste oggi",
+      "bankReconnect": "Ricollega",
+      "bankLastSync": "Ultima sincronizzazione: {date}",
+      "bankNeverSynced": "mai",
+      "bankStatus": {
+        "active": "Attiva",
+        "pendingConsent": "In attesa di consenso",
+        "expired": "Consenso scaduto",
+        "revoked": "Revocata",
+        "error": "Errore"
+      },
+      "bankCountry": {
+        "PT": "Portogallo",
+        "ES": "Spagna"
+      }
     }
   },
   "gdpr": {

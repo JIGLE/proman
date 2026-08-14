@@ -224,7 +224,36 @@
       "countryOTHER": "Other",
       "yearPlaceholder": "e.g. {year}",
       "nhrDisabledByIfici": "NHR is unavailable while IFICI is active — only one can apply at a time.",
-      "ificiDisabledByNhr": "IFICI is unavailable while NHR is active — only one can apply at a time."
+      "ificiDisabledByNhr": "IFICI is unavailable while NHR is active — only one can apply at a time.",
+      "bankConnectCta": "Connect a bank",
+      "bankNotConfigured": "This instance has no bank provider credentials, so movements can only be imported from a file.",
+      "bankPickerTitle": "Connect a bank",
+      "bankPickerHelp": "You will be sent to your bank to authorise read-only access to your account. Situs never sees your banking password.",
+      "bankCountryLabel": "Country",
+      "bankNoInstitutions": "No banks are available for this country.",
+      "bankInstitutionsFailed": "Could not load the list of banks. Try again shortly.",
+      "bankConnected": "Bank connected. Movements will appear in Finance as they arrive.",
+      "bankConnectFailed": "That connection did not complete. Start again from your bank.",
+      "bankSyncNow": "Sync now",
+      "bankSyncDone": "Synced. Any new movements are in the Finance inbox.",
+      "bankSyncFailed": "The sync did not complete. Try again shortly.",
+      "bankSyncBudgetSpent": "This account has used its bank reads for today. More are available tomorrow.",
+      "bankSyncConsentExpired": "Your bank consent has expired. Reconnect the account to resume syncing.",
+      "bankSyncsLeft": "{count} syncs left today",
+      "bankReconnect": "Reconnect",
+      "bankLastSync": "Last sync: {date}",
+      "bankNeverSynced": "never",
+      "bankStatus": {
+        "active": "Active",
+        "pendingConsent": "Awaiting consent",
+        "expired": "Consent expired",
+        "revoked": "Revoked",
+        "error": "Error"
+      },
+      "bankCountry": {
+        "PT": "Portugal",
+        "ES": "Spain"
+      }
     }
   },
   "gdpr": {

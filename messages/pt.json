@@ -224,7 +224,36 @@
       "countryOTHER": "Outro",
       "yearPlaceholder": "ex.: {year}",
       "nhrDisabledByIfici": "O RNH não está disponível com o IFICI ativo — só um pode aplicar-se de cada vez.",
-      "ificiDisabledByNhr": "O IFICI não está disponível com o RNH ativo — só um pode aplicar-se de cada vez."
+      "ificiDisabledByNhr": "O IFICI não está disponível com o RNH ativo — só um pode aplicar-se de cada vez.",
+      "bankConnectCta": "Ligar um banco",
+      "bankNotConfigured": "Esta instância não tem credenciais de fornecedor bancário, pelo que os movimentos só podem ser importados de um ficheiro.",
+      "bankPickerTitle": "Ligar um banco",
+      "bankPickerHelp": "Será encaminhado para o seu banco para autorizar o acesso apenas de leitura à sua conta. O Situs nunca vê a sua senha bancária.",
+      "bankCountryLabel": "País",
+      "bankNoInstitutions": "Não há bancos disponíveis para este país.",
+      "bankInstitutionsFailed": "Não foi possível carregar a lista de bancos. Tente novamente dentro de momentos.",
+      "bankConnected": "Banco ligado. Os movimentos aparecerão em Finanças à medida que chegarem.",
+      "bankConnectFailed": "Essa ligação não foi concluída. Recomece a partir do seu banco.",
+      "bankSyncNow": "Sincronizar agora",
+      "bankSyncDone": "Sincronizado. Os novos movimentos estão na caixa de entrada de Finanças.",
+      "bankSyncFailed": "A sincronização não foi concluída. Tente novamente dentro de momentos.",
+      "bankSyncBudgetSpent": "Esta conta já usou as leituras bancárias de hoje. Haverá mais amanhã.",
+      "bankSyncConsentExpired": "O consentimento bancário expirou. Volte a ligar a conta para retomar a sincronização.",
+      "bankSyncsLeft": "{count} sincronizações restantes hoje",
+      "bankReconnect": "Voltar a ligar",
+      "bankLastSync": "Última sincronização: {date}",
+      "bankNeverSynced": "nunca",
+      "bankStatus": {
+        "active": "Ativa",
+        "pendingConsent": "A aguardar consentimento",
+        "expired": "Consentimento expirado",
+        "revoked": "Revogada",
+        "error": "Erro"
+      },
+      "bankCountry": {
+        "PT": "Portugal",
+        "ES": "Espanha"
+      }
     }
   },
   "gdpr": {

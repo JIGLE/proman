@@ -63,6 +63,7 @@ lib/
     allocation/       # Pure reference-month waterfall engine + Prisma orchestration
     matching/          # Pure bank-movement-to-lease confidence scoring engine
     bank/               # CSV import + fingerprint dedupe + matching pipeline
+      providers/        # PSD2 bank data providers (contract + GoCardless adapter + registry)
     receipts/          # Receipt document-lifecycle state machine + orchestration
     ocr/                # Mock document classification engine + orchestration
     tax/               # Tax connector find-or-create + submission-log service
@@ -83,7 +84,8 @@ e2e/                # Playwright E2E tests
 - **Compliance**: PT (`/api/compliance/rent-receipts`) and ES (`/api/compliance/nrua`) endpoints generate fiscal payloads. Tax logic lives in `app/api/tax/`.
 - **PII encryption**: AES-256-GCM on IBAN, NIF, phone fields via `lib/utils/pii-encryption.ts` (`encryptPII`/`decryptPII`, keyed off `PII_ENCRYPTION_KEY`). `PII_FIELDS` declares which model fields are covered — see `docs/PRODUCT_AUDIT_2026.md` §5 for wiring status. **Fails closed in production**: `lib/utils/env.ts` exits if `PII_ENCRYPTION_KEY` is absent, because `encryptPII` silently returns plaintext without it. `ALLOW_UNENCRYPTED_PII=true` waives the check and warns loudly on every start.
 - **Reference-month rent ledger** (Situs): `RentPeriod` is the persisted-derived spine — one row per lease per reference month, `status` recomputed in the same transaction as every allocation write (never hand-set). The waterfall invariant: always fill the oldest not-fully-allocated period first (`lib/services/allocation/engine.ts`, pure). `Tenant.paymentStatus` is fully derived from this ledger — the API layer refuses manual overrides.
-- **Bank matching**: CSV/manual import → fingerprint dedupe (idempotent) → fuzzy-duplicate check → reconciliation rules → weighted confidence scoring (`lib/services/matching/engine.ts`, pure). ≥0.85 auto-allocates via a draft `Receipt` (`source: "automation"`); below that, the row waits in the Bank Movements inbox (Finance tab) for a human to confirm/reassign/ignore.
+- **Bank matching**: CSV/manual import **or a live provider sync** → fingerprint dedupe (idempotent) → fuzzy-duplicate check → reconciliation rules → weighted confidence scoring (`lib/services/matching/engine.ts`, pure). ≥0.85 auto-allocates via a draft `Receipt` (`source: "automation"`); below that, the row waits in the Bank Movements inbox (Finance tab) for a human to confirm/reassign/ignore.
+- **Live bank connection**: PSD2 account information (`lib/services/bank/providers/`, GoCardless today). A provider's only job is to return `BankCsvRow[]`; `importBankRows`' optional `target` points those rows at the right connection/account, so a synced movement inherits the entire pipeline above and behaves identically to an uploaded one. Consent lives in `consent.ts` — unguessable reference, scoped to the caller, single-use. `sync.ts` enforces the provider's daily read budget **before** spending a call (429 costs the rest of the day) and marks a connection `expired` on `ConsentExpiredError` rather than reporting a quiet zero. `BankConnection.provider` is `psd2_<key>` for a real bank and `manual`/`csv` otherwise; never offer a sync to the latter.
 - **Receipt lifecycle**: `Receipt.status` is the MONEY state (paid|pending); `Receipt.lifecycle` is the separate DOCUMENT state machine (`lib/services/receipts/lifecycle.ts`, pure) — draft→review→emitted→(PT)submitted→accepted/rejected, or →voided from any pre-terminal state. Reaching emitted/accepted archives a PDF `Document`; voiding soft-reverses live `PaymentAllocation` rows.
 - **Tax connectors**: one `TaxAuthorityConnector` row per user×country×connector key, `mode` locked to sandbox/review until explicitly promoted to live (no live AT/AEAT integration exists yet). Every call appends an immutable `TaxSubmissionLog` row — read via `GET /api/tax/connectors` (Finance › Tax Summary tab).
 - **OCR classification**: mock-only today (`lib/services/ocr/classifier.ts`, pure) — proposes a document type from filename/description keywords across all 4 locales and links to whatever entity the upload already carried. Runs best-effort on every document upload; ambiguous or unlinked results land in the Documents "Review Required" tab.
@@ -199,6 +201,11 @@ Copy `.env.example` to `.env` before first run. Required vars:
 Required in production: `PII_ENCRYPTION_KEY` (64-char hex; the app exits without it)
 
 Optional: `SENDGRID_API_KEY`, `STRIPE_SECRET_KEY`, `REDIS_URL`
+
+Optional (live bank connection — PSD2 account information via GoCardless): `GOCARDLESS_SECRET_ID`,
+`GOCARDLESS_SECRET_KEY`. Absent, the app is CSV-import-only and renders no connect button.
+`CRON_SECRET` gates all three `/api/cron/*` endpoints (notifications, data retention, bank sync);
+each returns 503 while it is unset, so nothing runs on a schedule until it is set.
 
 Optional (app subscription billing — Free/Pro/Business landing-page tiers, distinct from
 tenant rent collection): `STRIPE_PRICE_ID_PRO`, `STRIPE_PRICE_ID_BUSINESS`,
