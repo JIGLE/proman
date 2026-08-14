@@ -58,5 +58,14 @@ Guidelines:
 - A gate that cannot fail is not a gate. When a step writes a report another step judges,
   a missing report must fail — `exit 0` on "no report" is indistinguishable from "no findings",
   and both the mobile audit and the security scan shipped that bug.
+- Code scanning is **advanced setup only** — `security-scan.yml`'s `codeql-analysis` job, which
+  pins the action, sets `build-mode: none`, and runs the `security-and-quality` query pack.
+  GitHub permits advanced setup _or_ its Settings-level "default setup", never both; with both
+  enabled, default setup rejects the workflow's upload and posts a failing check on every PR.
+  A bare `CodeQL` check that fails in a few seconds — too fast to have analysed anything, and
+  linking to `/<owner>/<repo>/runs/<id>` rather than `/actions/runs/...` — is that check, not
+  ours. It is not fixable from the checkout: turn default setup off under
+  Settings → Code security → Code scanning. Recorded because it was first dismissed as a
+  cosmetic duplicate, and a failing check on every PR is not cosmetic.
 - Update this file whenever a workflow is added, renamed, or retired — it drifted out of sync
   with the actual `.github/workflows/` contents once already; don't let that happen again.
