@@ -256,6 +256,7 @@
     "check": {
       "schema": "Esquema da base de dados",
       "database": "Base de dados",
+      "session_user": "Conta com sessão iniciada",
       "pii": "Encriptação de dados pessoais",
       "email": "Email (SendGrid)",
       "billing": "Faturação de subscrição (Stripe)",

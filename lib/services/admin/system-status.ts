@@ -265,12 +265,52 @@ function billingCheck(): StatusCheck {
       };
 }
 
+/**
+ * The signed-in user's own row. Sessions are JWTs and Google OAuth has no PrismaAdapter, so the
+ * id every owned record foreign-keys against is written into the token once, at sign-in. Sign in
+ * while the database is unreachable and the token can end up carrying the OAuth provider's id
+ * instead: the app then loads normally, every list comes back empty, and every save dies with a
+ * raw Prisma foreign-key error naming a constraint rather than a cause. Worth a check precisely
+ * because the symptom points nowhere near it.
+ */
+async function sessionUserCheck(userId: string): Promise<StatusCheck> {
+  try {
+    const prisma = getPrismaClient();
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+
+    if (user) {
+      return { id: "session_user", group: "platform", severity: "ok", state: "resolved" };
+    }
+
+    return {
+      id: "session_user",
+      group: "platform",
+      severity: "error",
+      state: "orphaned",
+      detail: "This session identifies a user record that does not exist in the database.",
+      remedy:
+        "Sign out and sign in again. The account is reprovisioned on sign-in; until then reads " +
+        "return nothing and every save fails.",
+    };
+  } catch {
+    return {
+      id: "session_user",
+      group: "platform",
+      severity: "warning",
+      state: "unknown",
+      detail: "The user record could not be read.",
+      remedy: "See the database check above.",
+    };
+  }
+}
+
 export async function getSystemStatus(userId: string): Promise<SystemStatus> {
   // Independent probes, gathered together. allSettled rather than all: one failing check must
   // not remove the other nine from the page.
   const results = await Promise.allSettled([
     schemaCheck(),
     databaseCheck(),
+    sessionUserCheck(userId),
     taxChecks(userId),
     bankCheck(userId),
   ]);

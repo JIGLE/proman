@@ -175,6 +175,24 @@ which makes this look like a partial outage rather than a missing database. Imag
 serve 500s. `PRESTART_FAIL_ON_SQLITE=false` restores the old behaviour if you need the app up
 while you sort the mount out.
 
+**Saving anything fails with a foreign-key or "record not found" error, right after the database
+was first created.** The wording varies by screen — Prisma's `P2003` on `UserSettings.userId`, or
+`P2025` on `User` — but they mean the same thing: the session names a user record that does not
+exist.
+
+**Sign out and sign in again.** That is the whole fix.
+
+The cause is the order things happened in. Sessions are JWTs and the id inside one is written
+once, at sign-in. If you signed in while `/app/data` was unwritable — before the `chown` above —
+there was no database to provision the account into, so the token was issued carrying Google's
+account id instead of a real `User.id`. The database exists now, but the token still points at
+something that was never in it, and nothing re-resolves it for the session's 24-hour life.
+
+Images built after 2026-08-14 close both halves of this: sign-in fails outright rather than
+handing out a session that cannot write, and an existing token that names no user is repaired
+from its email address on the next request. On those images the situation clears itself. **`/admin`**
+reports it either way, under **Signed-in account**.
+
 **Sign-in works but every data route returns 500 "Internal server error".** Different problem: the
 tables exist (NextAuth is reading them) and it is the application models that fail. Almost always
 schema drift — the image expects a column the database does not have, and one missing column takes

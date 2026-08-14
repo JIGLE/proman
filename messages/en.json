@@ -256,6 +256,7 @@
     "check": {
       "schema": "Database schema",
       "database": "Database",
+      "session_user": "Signed-in account",
       "pii": "PII encryption",
       "email": "Email (SendGrid)",
       "billing": "Subscription billing (Stripe)",

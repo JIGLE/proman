@@ -17,6 +17,7 @@ const { prismaMock, driftMock } = vi.hoisted(() => ({
     $queryRaw: vi.fn(),
     taxAuthorityConnector: { findMany: vi.fn() },
     bankConnection: { findMany: vi.fn() },
+    user: { findUnique: vi.fn() },
   },
   driftMock: vi.fn(),
 }));
@@ -33,6 +34,7 @@ beforeEach(() => {
   prismaMock.$queryRaw.mockResolvedValue([{ 1: 1 }]);
   prismaMock.taxAuthorityConnector.findMany.mockResolvedValue([]);
   prismaMock.bankConnection.findMany.mockResolvedValue([]);
+  prismaMock.user.findUnique.mockResolvedValue({ id: "user-1" });
   driftMock.mockResolvedValue({
     inSync: true,
     missingTables: [],
@@ -197,5 +199,36 @@ describe("the page survives its own probes failing", () => {
       0,
     );
     expect(total).toBe(status.checks.length);
+  });
+});
+
+/**
+ * A session can outlive the user row it names — sign in while the database is unreachable and
+ * the JWT ends up carrying the OAuth provider's id. The app looks fine; every write fails with
+ * a foreign-key error that names a constraint, not a cause.
+ */
+describe("the signed-in account resolves to a real user row", () => {
+  it("is ok when the session id matches a user", async () => {
+    const { checks } = await getSystemStatus("user-1");
+    expect(find(checks, "session_user")!.severity).toBe("ok");
+  });
+
+  it("is an error, with a remedy, when the session id matches nothing", async () => {
+    prismaMock.user.findUnique.mockResolvedValue(null);
+
+    const { checks } = await getSystemStatus("google-sub-999");
+    const check = find(checks, "session_user")!;
+    expect(check.severity).toBe("error");
+    expect(check.state).toBe("orphaned");
+    expect(check.remedy).toMatch(/[Ss]ign out/);
+  });
+
+  it("degrades to a warning rather than throwing when the lookup fails", async () => {
+    prismaMock.user.findUnique.mockRejectedValue(new Error("connection refused"));
+
+    const { checks } = await getSystemStatus("user-1");
+    expect(find(checks, "session_user")!.severity).toBe("warning");
+    // The other probes still reported.
+    expect(find(checks, "schema")).toBeDefined();
   });
 });
