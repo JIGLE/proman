@@ -155,6 +155,26 @@ manually:
 docker exec -it <container> npx prisma db push --schema=prisma/schema.prisma
 ```
 
+**App reports healthy, sign-in works, every data route 500s — and the mounted dataset is empty.**
+The database was never created, because the host directory is not writable by the container. The
+container runs as uid/gid **1001:1001**; a freshly created dataset is typically owned by root with
+mode 755, which gives 1001 read and execute but not write. From the TrueNAS shell:
+
+```bash
+sudo ls -lan /mnt/<pool>/<your-dataset>      # owner 0 0 = this is the problem
+sudo chown -R 1001:1001 /mnt/<pool>/<your-dataset>
+sudo chmod -R 770 /mnt/<pool>/<your-dataset>
+```
+
+Then restart. Note that after the `chown` your own shell user can no longer list the directory
+without `sudo` — that is the change working, not a new fault.
+
+Sign-in keeps working throughout because NextAuth uses JWT sessions and never reads the database,
+which makes this look like a partial outage rather than a missing database. Images built after
+2026-08-14 refuse to start in this state and print the `chown` above; older ones start anyway and
+serve 500s. `PRESTART_FAIL_ON_SQLITE=false` restores the old behaviour if you need the app up
+while you sort the mount out.
+
 **Sign-in works but every data route returns 500 "Internal server error".** Different problem: the
 tables exist (NextAuth is reading them) and it is the application models that fail. Almost always
 schema drift — the image expects a column the database does not have, and one missing column takes
