@@ -242,7 +242,7 @@
     "summary": "Status summary",
     "remedy": "What to do",
     "generatedAt": "Checked at {time}",
-    "simulationNotice": "No filing reaches a real tax authority, in any country, and there is no live bank connection. Every submission is simulated and the bank side is CSV import only. This is the current state of the product, not a fault.",
+    "simulationNotice": "No filing reaches a real tax authority, in any country — every submission is simulated. This is the current state of the product, not a fault. Bank connections are separate: where you have connected one it is a real PSD2 link to your bank, and the check below says which.",
     "severity": {
       "ok": "OK",
       "simulated": "Simulated",

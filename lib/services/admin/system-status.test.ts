@@ -63,12 +63,12 @@ describe("nothing simulated is ever reported as ok", () => {
     expect(pt.detail).toMatch(/simulated|nothing is transmitted/i);
   });
 
-  it("marks the bank simulated and says CSV-only in the text", async () => {
+  it("marks the bank simulated when no bank is connected", async () => {
     const { checks } = await getSystemStatus("user-1");
     const bank = find(checks, "bank")!;
 
     expect(bank.severity).toBe("simulated");
-    expect(bank.detail).toMatch(/no live bank connection/i);
+    expect(bank.detail).toMatch(/no bank is connected/i);
   });
 
   it("escalates an unsupported connector mode to error, because the symptom is silence", async () => {
@@ -230,5 +230,77 @@ describe("the signed-in account resolves to a real user row", () => {
     expect(find(checks, "session_user")!.severity).toBe("warning");
     // The other probes still reported.
     expect(find(checks, "schema")).toBeDefined();
+  });
+});
+
+/**
+ * This check used to hardcode `simulated` and the sentence "no live bank connection exists".
+ * That was true when it was written and became false the moment a bank could be connected — the
+ * exact failure the file's first rule exists to prevent. It has to read the state, not assert it.
+ */
+describe("the bank check reports what is actually connected", () => {
+  it("is simulated when only manual/CSV connections exist", async () => {
+    prismaMock.bankConnection.findMany.mockResolvedValue([
+      { provider: "manual", status: "active", lastSyncAt: null, institutionName: "Manual import" },
+    ]);
+
+    const { checks } = await getSystemStatus("user-1");
+    const bank = find(checks, "bank")!;
+    expect(bank.severity).toBe("simulated");
+    expect(bank.detail).not.toMatch(/no live bank connection exists/i);
+  });
+
+  it("is ok, and names the bank, once a provider connection is active", async () => {
+    prismaMock.bankConnection.findMany.mockResolvedValue([
+      { provider: "manual", status: "active", lastSyncAt: null, institutionName: "Manual import" },
+      {
+        provider: "psd2_gocardless",
+        status: "active",
+        lastSyncAt: new Date("2026-08-14T08:00:00Z"),
+        institutionName: "Banco BPI",
+      },
+    ]);
+
+    const { checks } = await getSystemStatus("user-1");
+    const bank = find(checks, "bank")!;
+    expect(bank.severity).toBe("ok");
+    expect(bank.detail).toMatch(/Banco BPI/);
+  });
+
+  it("is an error with a remedy when a consent has lapsed", async () => {
+    // Nothing arrives in this state, so it must not sit quietly as ok or simulated.
+    prismaMock.bankConnection.findMany.mockResolvedValue([
+      {
+        provider: "psd2_gocardless",
+        status: "expired",
+        lastSyncAt: new Date("2026-08-01T08:00:00Z"),
+        institutionName: "Banco BPI",
+      },
+    ]);
+
+    const { checks } = await getSystemStatus("user-1");
+    const bank = find(checks, "bank")!;
+    expect(bank.severity).toBe("error");
+    expect(bank.remedy).toMatch(/reconnect/i);
+  });
+
+  it("prefers the expired warning when one connection works and another does not", async () => {
+    prismaMock.bankConnection.findMany.mockResolvedValue([
+      {
+        provider: "psd2_gocardless",
+        status: "active",
+        lastSyncAt: null,
+        institutionName: "Banco BPI",
+      },
+      {
+        provider: "psd2_gocardless",
+        status: "expired",
+        lastSyncAt: null,
+        institutionName: "Santander",
+      },
+    ]);
+
+    const { checks } = await getSystemStatus("user-1");
+    expect(find(checks, "bank")!.severity).toBe("error");
   });
 });

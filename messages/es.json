@@ -242,7 +242,7 @@
     "summary": "Resumen del estado",
     "remedy": "Qué hacer",
     "generatedAt": "Comprobado a las {time}",
-    "simulationNotice": "Ninguna presentación llega a una autoridad fiscal real, en ningún país, y no existe conexión bancaria activa. Todos los envíos son simulados y la parte bancaria es solo importación de CSV. Este es el estado actual del producto, no un fallo.",
+    "simulationNotice": "Ninguna presentación llega a una autoridad fiscal real, en ningún país: todos los envíos son simulados. Este es el estado actual del producto, no un fallo. Las conexiones bancarias son distintas: donde haya conectado una, es un enlace PSD2 real con su banco, y la comprobación siguiente indica cuál.",
     "severity": {
       "ok": "OK",
       "simulated": "Simulado",

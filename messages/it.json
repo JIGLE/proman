@@ -242,7 +242,7 @@
     "summary": "Riepilogo dello stato",
     "remedy": "Cosa fare",
     "generatedAt": "Verificato alle {time}",
-    "simulationNotice": "Nessun invio raggiunge un'autorità fiscale reale, in nessun paese, e non esiste una connessione bancaria attiva. Tutti gli invii sono simulati e il lato bancario è solo importazione CSV. Questo è lo stato attuale del prodotto, non un guasto.",
+    "simulationNotice": "Nessun invio raggiunge un'autorità fiscale reale, in nessun paese: tutti gli invii sono simulati. Questo è lo stato attuale del prodotto, non un guasto. Le connessioni bancarie sono separate: dove ne hai collegata una, è un collegamento PSD2 reale alla tua banca, e il controllo qui sotto indica quale.",
     "severity": {
       "ok": "OK",
       "simulated": "Simulato",

@@ -242,7 +242,7 @@
     "summary": "Resumo do estado",
     "remedy": "O que fazer",
     "generatedAt": "Verificado às {time}",
-    "simulationNotice": "Nenhuma submissão chega a uma autoridade fiscal real, em nenhum país, e não existe ligação bancária ativa. Todas as submissões são simuladas e o lado bancário é apenas importação de CSV. Este é o estado atual do produto, não uma falha.",
+    "simulationNotice": "Nenhuma submissão chega a uma autoridade fiscal real, em nenhum país — todas as submissões são simuladas. Este é o estado atual do produto, não uma falha. As ligações bancárias são separadas: onde tiver ligado uma, é uma ligação PSD2 real ao seu banco, e a verificação abaixo indica qual.",
     "severity": {
       "ok": "OK",
       "simulated": "Simulado",
