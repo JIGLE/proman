@@ -11,7 +11,7 @@ path.
 ## Quick install
 
 1. **Apps → Discover Apps → Custom App**
-2. Image: `ghcr.io/jigle/situs:latest` (pin a version tag in production)
+2. Image: `ghcr.io/jigle/situs:latest` (pin a version tag in production — see [Which tag](#which-tag))
 3. Port: container `3000` → whichever host port you want
 4. Storage: mount a host path at **`/app/data`**
 5. Add the environment variables below
@@ -20,6 +20,30 @@ path.
 The container initialises its own database on first start — `prestart` runs `prisma db push` when
 the SQLite file has no tables, and adds any missing columns on every subsequent start. No init job,
 no manual step.
+
+## Which tag
+
+Three names, written by different things. Picking the wrong one is the most common way to end up
+running code you did not expect.
+
+| Tag                  | Written by                         | Use it for               |
+| -------------------- | ---------------------------------- | ------------------------ |
+| `:latest`, `:1.25.0` | a release tag push only            | production               |
+| `:main`              | every merge to `main`              | testing the newest code  |
+| `:sha-<short>`       | every merge, and manual dispatches | pinning one exact commit |
+
+**Only a release can claim `:latest` or a bare version number.** A build from `main` or a manual
+dispatch is never allowed to, which is what stops a test image quietly becoming production.
+
+**An image exists only if a workflow ran.** Naming a tag here does not build it — if the tag was
+never published, the pull fails and TrueNAS keeps serving whatever it already had, which looks
+exactly like a deploy that did nothing. Check `Actions → Deploy to GHCR` if in doubt, and
+`https://<your-host>/api/info` to see the version and commit baked into the image that is
+actually running.
+
+> **Set the image pull policy to `Always` if you use `:main`.** It is a moving pointer, so with
+> `IfNotPresent` the node keeps serving the cached layer and the tag appears frozen. Pinning
+> `:sha-<short>` avoids the question entirely, because the name changes on every deploy.
 
 ## Storage
 
@@ -93,15 +117,19 @@ Nothing reaches GHCR just because code landed on `main`. Two paths put an image 
 `main` makes the workflow create the tag and the GitHub Release, and the tag push is what triggers
 **Deploy to GHCR**. So it is dispatch → merge → wait, not one button.
 
-**A one-off build (for testing an unreleased branch).** Actions → **Deploy to GHCR** → Run
-workflow, choosing the branch and optionally a `version` string.
+**A merge to `main` (the development channel).** Every merge builds automatically and publishes
+`:main` and `:sha-<short>`. Nothing to dispatch — this is the normal way to test merged code.
 
-> ⚠️ A one-off build still writes `:latest`. The tag list is
-> `ghcr.io/jigle/situs:<version>,ghcr.io/jigle/situs:latest` for every dispatch, so testing a
-> branch this way moves `:latest` onto unreleased code. Give it an explicit `version` like
-> `1.25.0-rc1`, point the app at that exact tag, and cut a real release afterwards to put
-> `:latest` back on shipped code. Use `dry_run: true` to prove the image builds without pushing
-> anything.
+**A one-off build (for a branch that has not been merged).** Actions → **Deploy to GHCR** → Run
+workflow, choosing the branch and optionally a `version` string containing a hyphen, e.g.
+`1.25.0-rc1`. A bare number like `1.25.0` is refused and falls back to `sha-<short>`, because bare
+version numbers belong to releases. `dry_run: true` proves the image builds without publishing.
+
+> This warning used to read "a one-off build still writes `:latest`". **That is no longer true**
+> and was left here after the workflow was hardened. Only a tag push can write `:latest` or a bare
+> version now — see [Which tag](#which-tag) — so testing a branch cannot move production. The
+> stale warning is called out rather than quietly deleted because it discouraged using the
+> dispatch path at all, which is the safe one.
 
 ## Updating
 
@@ -126,6 +154,29 @@ manually:
 # From the TrueNAS shell, against the running container
 docker exec -it <container> npx prisma db push --schema=prisma/schema.prisma
 ```
+
+**Sign-in works but every data route returns 500 "Internal server error".** Different problem: the
+tables exist (NextAuth is reading them) and it is the application models that fail. Almost always
+schema drift — the image expects a column the database does not have, and one missing column takes
+down every query for that model, so unrelated pages break together.
+
+Open **`/admin`** first. It runs outside the normal data loading precisely so it still works when
+this happens, and it names the missing columns with the command that fixes them. If the deployed
+image is too old to have that page, the container log carries the same information:
+
+```
+The column `main.<table>.<column>` does not exist in the current database
+```
+
+The fix is a restart with `AUTO_DB_SCHEMA_SYNC` at its default (`true`), which applies additive
+changes on start. If it is set to `false`, that is the cause.
+
+A second, rarer cause looks identical from the browser: `PII_ENCRYPTION_KEY` was changed on an
+instance that already had encrypted rows. That only breaks models with protected fields — tenants,
+owners, payment methods, rent receipts, NRUA registrations — so if properties and buildings load
+fine and those do not, suspect the key rather than the schema. Affected fields now read
+`[ENCRYPTED]` instead of failing the request, and the reason is logged. Recover with
+`node scripts/backfill-pii-encryption.js`, or restore the original key.
 
 **Sign-in redirects in a loop or fails after a domain change.** `NEXTAUTH_URL` does not match the
 URL in the browser, or the Google redirect URI was not updated.

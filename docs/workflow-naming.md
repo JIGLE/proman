@@ -58,5 +58,14 @@ Guidelines:
 - A gate that cannot fail is not a gate. When a step writes a report another step judges,
   a missing report must fail — `exit 0` on "no report" is indistinguishable from "no findings",
   and both the mobile audit and the security scan shipped that bug.
+- **A green `CodeQL Security Analysis` job does not mean code scanning passed.** Two different
+  checks carry the CodeQL name and they answer different questions. The job in
+  `security-scan.yml` reports whether the _analysis ran_; the separate `CodeQL` check (posted by
+  GitHub Advanced Security, linking to `/<owner>/<repo>/runs/<id>` rather than
+  `/actions/runs/...`) reports whether the analysis _found anything_. The second fails in a few
+  seconds because it only reads the uploaded SARIF — fast, but not a no-op. Read its annotation
+  before concluding anything about it: it names a file, a line and a rule. Twice now the short
+  runtime has been misread as "it did nothing", once in a way that nearly argued for disabling
+  code scanning to silence a true positive.
 - Update this file whenever a workflow is added, renamed, or retired — it drifted out of sync
   with the actual `.github/workflows/` contents once already; don't let that happen again.
