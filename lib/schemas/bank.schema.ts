@@ -38,3 +38,21 @@ export const bankTransactionActionSchema = z
 
 export type BankImportInput = z.infer<typeof bankImportSchema>;
 export type BankTransactionActionInput = z.infer<typeof bankTransactionActionSchema>;
+
+/**
+ * POST /api/bank/connections/connect — begin a live bank connection.
+ *
+ * `institutionName` is display-only and comes from the picker the client just rendered, so it is
+ * length-bounded rather than trusted: it is written to a column that is shown back to the user,
+ * never used to resolve anything.
+ */
+export const bankConnectSchema = z.object({
+  country: z
+    .string()
+    .regex(/^[A-Za-z]{2}$/, "country must be a 2-letter ISO code")
+    .transform((v) => v.toUpperCase()),
+  institutionId: z.string().min(1).max(120),
+  institutionName: z.string().min(1).max(200),
+});
+
+export type BankConnectInput = z.infer<typeof bankConnectSchema>;
