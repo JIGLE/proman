@@ -71,6 +71,10 @@ export type AuditAction =
   | "OVERRIDE_MATCH"
   | "IGNORE_TRANSACTION"
   | "APPLY_RECONCILIATION_RULE"
+  // Live bank connection (PSD2 account information)
+  | "BANK_CONNECTION_CREATED"
+  | "BANK_CONSENT_GRANTED"
+  | "BANK_CONSENT_EXPIRED"
   // Situs receipt lifecycle + tax connector (Migration C)
   | "EMIT_RECEIPT"
   | "SUBMIT_RECEIPT"
