@@ -38,7 +38,7 @@ Content-Security-Policy: script-src 'self' 'nonce-abc123xyz' ...;
 
 ### 1. Nonce Generation (Middleware)
 
-**File**: [middleware.ts](middleware.ts)
+**File**: [proxy.ts](../proxy.ts)
 
 - Generates cryptographically secure 16-byte nonce per request
 - Uses Web Crypto API (`crypto.getRandomValues()`) for Edge runtime compatibility
@@ -420,7 +420,7 @@ const nonce = await getNonce();
 
 **Symptoms**: External scripts from CDNs not loading
 
-**Solution**: Add domain to `script-src` directive in [middleware.ts](middleware.ts):
+**Solution**: Add domain to `script-src` directive in [proxy.ts](../proxy.ts):
 
 ```typescript
 "script-src 'self' 'nonce-${nonce}' https://cdn.example.com ...";
@@ -445,13 +445,15 @@ Production deployment:
 ### Created/Modified:
 
 - [lib/utils/csp-nonce.ts](lib/utils/csp-nonce.ts) - Nonce utility functions
-- [middleware.ts](middleware.ts) - Nonce generation and CSP header
+- [proxy.ts](../proxy.ts) — nonce generation and CSP header (this file was `middleware.ts` when
+  the doc was written)
 - [app/layout.tsx](app/layout.tsx) - Nonce integration in root layout
 - [components/shared/client-providers.tsx](components/shared/client-providers.tsx) - Nonce prop support
 
 ### Related Documentation:
 
-- [docs/WEEK_2_SECURITY_COMPLETE.md](WEEK_2_SECURITY_COMPLETE.md) - Week 2 security overview
+- [Security guide](SECURITY.md) — operational security overview
+  (the WEEK_2 summary was deleted on 2026-08-17; see git history)
 - [docs/CSRF_INTEGRATION.md](CSRF_INTEGRATION.md) - CSRF protection details
 
 ## References

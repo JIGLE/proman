@@ -195,7 +195,7 @@ E2E suite with it.
 
 | #   | Item                                                | Status | Notes                                                                       |
 | --- | --------------------------------------------------- | ------ | --------------------------------------------------------------------------- |
-| 14  | Doc consolidation, `docs/archive*` pruning          | ⬜     | Still describes the removed Helm path                                       |
+| 14  | Doc consolidation, `docs/archive*` pruning          | ✅     | Done 2026-08-17 — 48 files deleted; git history retains them                |
 | 15  | `CLAUDE.md` version drift                           | ⬜     | Says 1.16.3 against a shipped 1.24.0                                        |
 | 16  | Admin › System status (connections, config, drift)  | ✅     | `/admin` + `GET /api/admin/system-status`. 19 unit cases + 3 E2E. See below |
 | 16b | Owner/admin control page (payments, usage, tickets) | ⬜     | Still open. #16 covers operational status only, not account administration  |

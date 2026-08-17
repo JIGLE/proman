@@ -182,7 +182,8 @@ pass unchanged, proving no behaviour change). Applied to `income-summary`'s `gro
   versions stale, in the file loaded into every AI session.
 - 15 API routes echo `error.message` into a 500 body. Most are health/debug/download endpoints, so
   low exposure, but `/api/distributions` is user-facing.
-- `docs/archive/` (376K) and `docs/archived-workflows/` (28K) still describe the Helm/Kubernetes
+- ~~`docs/archive/` (376K) and `docs/archived-workflows/` (28K) still describe the Helm/Kubernetes~~
+  **Resolved 2026-08-17**: both directories deleted. Git history retains them. Originally:
   deployment path removed in PR #328.
 
 **UNVERIFIED**: empty states, loading states, table sorting/filtering, form validation behaviour
@@ -257,7 +258,7 @@ with an expiry** — the commit that makes one false is the commit that rewrites
 
 **P2 — strongly desirable** 7. UX pass: empty/loading/error states, financial display completeness. _(medium — scope unknown until sampled)_ 8. Move ES/NRUA behind `TaxConnector`. _(medium)_ 9. Portal token revocation. _(small)_ 10. Analytics float rounding; stop echoing `error.message` in user-facing 500s. _(small)_
 
-**P3 — defer** 11. Doc consolidation, `docs/archive*` pruning, `CLAUDE.md` version. _(small)_
+**P3 — done 2026-08-17** 11. Doc consolidation, `docs/archive*` pruning, `CLAUDE.md` version.
 
 ---
 

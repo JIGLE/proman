@@ -1,7 +1,7 @@
 # Database Strategy
 
 This document covers Situs's database approach, migration workflow, backup/recovery
-procedures, and — per `docs/DEVELOPMENT_ROADMAP.md` item 3.5 — the storage/scale plan:
+procedures, and the storage/scale plan:
 what would actually force a move off SQLite, and what that move would look like.
 Relationship to other docs: `docs/PRODUCT_AUDIT_2026.md` §4 first flagged the two
 concrete scale risks this doc plans against (contract-file BLOBs, load-everything

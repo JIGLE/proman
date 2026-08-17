@@ -33,8 +33,9 @@ Retired:
 - `production.yml` ("Production Gate") — deleted. It duplicated `ci.yml`'s verify and build on
   the same `push: main` event, and its version-integrity check raced `release.yml` for the tag
   it was checking against. Both of its real checks moved into `release.yml`.
-- Older workflows moved to `docs/archived-workflows/` to avoid accidental execution. Kept for
-  reference only — see `docs/ARCHIVED.md`. Note these still describe the Helm/Kubernetes
+- Superseded workflows are **deleted**, not parked. `docs/archived-workflows/` held
+  `publish-ghcr.yml`, `create-release.yml` and `dependabot-auto-merge.yml`; all three were removed
+  on 2026-08-17 because the current five had replaced them and they still described the Helm/Kubernetes
   deployment path that no longer exists.
 
 Guidelines:

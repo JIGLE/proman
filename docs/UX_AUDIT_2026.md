@@ -6,7 +6,7 @@
 > marked done/open, so nothing in the repo could say what actually shipped —
 > see `docs/PRODUCT_AUDIT_2026.md` §6. The table below verifies each Critical
 > and High item against the current code. Items not listed (Medium/Low) were
-> not re-checked in this pass. See `docs/DEVELOPMENT_ROADMAP.md` M0.1 for the
+> not re-checked in this pass. See `ROADMAP.md` for the
 > follow-up.
 >
 > | ID  | Item                                                                           | Status                                                                                                                                                                                                                                                                                                                                                                                  |
