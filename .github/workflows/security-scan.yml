@@ -191,7 +191,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4.37.6
+        uses: github/codeql-action/init@v4.37.7
         with:
           languages: ${{ matrix.language }}
           # JS/TS is interpreted — no build needed; build-mode: none is faster and avoids
@@ -200,7 +200,7 @@ jobs:
           queries: security-and-quality
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4.37.6
+        uses: github/codeql-action/analyze@v4.37.7
         with:
           category: "/language:${{ matrix.language }}"
 
@@ -235,7 +235,7 @@ jobs:
         uses: ./.github/actions/resolve-scan-base
 
       - name: TruffleHog Secret Scan
-        uses: trufflesecurity/trufflehog@v3.96.0
+        uses: trufflesecurity/trufflehog@v3.97.0
         with:
           path: ./
           base: ${{ steps.base.outputs.base }}
@@ -260,7 +260,7 @@ jobs:
 
       - name: TruffleHog Unverified Scan
         id: trufflehog-unverified
-        uses: trufflesecurity/trufflehog@v3.96.0
+        uses: trufflesecurity/trufflehog@v3.97.0
         with:
           path: ./
           base: ${{ steps.base.outputs.base }}
