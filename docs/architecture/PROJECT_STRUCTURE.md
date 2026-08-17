@@ -397,11 +397,11 @@ See [TrueNAS SCALE Guide](../truenas.md)
 
 ## Contributing
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
 ## License
 
-Proprietary - All Rights Reserved. See [LICENSE](../LICENSE)
+Proprietary - All Rights Reserved. See [LICENSE](../../LICENSE)
 
 ---
 

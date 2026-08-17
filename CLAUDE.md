@@ -143,6 +143,29 @@ PR → `publish` tags → the tag push triggers `deploy-ghcr.yml`. Only a tag pu
   enforced nothing.
 - TypeScript: strict mode, `noEmit` check must pass
 
+## Repo hygiene
+
+Four rules, each of which the repo has already broken. `npm run hygiene` enforces them and runs
+inside `verify:ci`, so CI, the `situs-implementer` agent and any local run all pick it up.
+
+1. **Point-in-time records are deleted, not archived.** Git history is the archive. `docs/archive/`
+   held 27 files and was removed; do not recreate it. `git log --diff-filter=D --name-only` finds
+   anything you need.
+2. **Every file under `docs/` is reachable from `docs/README.md`.** Adding a doc means adding the
+   link in the same commit. 24 were reachable from nothing before this was checked — and three of
+   those documented live code, so "unreferenced" never means "safe to delete" on its own.
+3. **A document that states a fact about what exists is a claim with an expiry.** "There is no live
+   bank connection", "nothing publishes on merge", a version number, a branch name. The commit that
+   makes one false is the commit that rewrites it. When you retire one, add it to `RETIRED_CLAIMS`
+   in `scripts/check-docs.js` so it cannot come back. Prefer deriving a status from state over
+   asserting it in prose — `bankCheck` in `lib/services/admin/system-status.ts` is the pattern.
+4. **A checker nothing runs is not a checker.** `scripts/check-*` belongs in `npm run hygiene` or
+   it does not belong in the repo. Nine existed and CI ran two; the other seven passed or failed
+   into the void for months. Two are deliberately **not** gates and must stay out:
+   `check-hostport.js` (a prestart runtime check, skips unless `PRESTART_CHECK_HOSTPORT=true`) and
+   `i18n-leak-scan.mjs` (a dev tool taking path arguments). Wiring either would produce a gate that
+   passes because it skipped.
+
 ## Development Branch
 
 All Claude Code changes go to: **`claude/proman-design-polish-6zpz2f`**
