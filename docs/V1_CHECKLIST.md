@@ -281,9 +281,18 @@ Rationale in `V1_READINESS.md` §D3.
 ## Integration status — as it must be reported
 
 ```
-Bank:      Manual / CSV import only. No live bank connection exists.
+Bank:      LIVE where the user has connected one — PSD2 account information
+           (GoCardless). Simulated / CSV-only where they have not. Never
+           asserted: read it from the "Signed-in account" and "Bank movements"
+           checks on /admin, which derive it from the connection rows.
 Portugal:  Sandbox / review / preparation only. No live AT endpoint.
            Connector refuses and logs in any other mode.
 Spain:     Sandbox / review / preparation only. No live MITMA endpoint.
            Connector refuses and logs in any other mode.
 ```
+
+The bank line changed on 2026-08-17 (PR #334). It previously read "Manual / CSV import only. No
+live bank connection exists", which was true when written and false the moment a connection could
+be made. **A line in this block is a claim with an expiry**: the commit that makes one false is the
+commit that rewrites it. `lib/services/admin/system-status.ts` is the reference, because it is what
+a user actually sees.

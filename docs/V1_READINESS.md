@@ -223,14 +223,24 @@ movement through allocation to rent-period status.
 ## External integrations — honest status
 
 ```
-Bank:        Manual / CSV import only. No live bank connection exists.
-             Provider abstraction: UNVERIFIED — CSV import may be hard-wired.
+Bank:        LIVE where a bank has been connected — PSD2 account information
+             (GoCardless). Simulated / CSV-only where none is. Provider
+             abstraction: VERIFIED — lib/services/bank/providers/ with a
+             registry, and importBankRows takes a target so a synced movement
+             uses the same pipeline as an uploaded one.
 
 Portugal:    Sandbox / review / preparation only. No live AT endpoint.
-             ⚠️ Connector does not enforce this — see D1.
+             Enforced: pt-at.ts calls refuseUnsupportedMode (D1 closed).
 
-Spain:       No TaxConnector implementation. NRUA export exists outside the abstraction.
+Spain:       Sandbox / review / preparation only. No live MITMA endpoint.
+             es-nrua.ts is registered in the connector registry and calls the
+             same shared mode guard.
 ```
+
+Three of these lines were stale as of 2026-08-17 and are corrected here: the bank was described as
+CSV-only with an unverified abstraction, Portugal as unenforced, and Spain as having no connector at
+all. Each had been fixed in code without this block being reread. **Treat every line here as a claim
+with an expiry** — the commit that makes one false is the commit that rewrites it.
 
 ---
 

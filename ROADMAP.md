@@ -165,7 +165,7 @@ owner-contact callout, and portfolio building grouping remain in place underneat
 
 **Goal**: Rebrand Situs to **Situs // Sovereign Capital System** and build the owner workflow the
 two approved mockups describe: bank movement → match → reference-month allocation → receipt →
-tax evidence → audit trail. 13 sequential PRs on `claude/situs-design-polish-6zpz2f`; see
+tax evidence → audit trail. 13 sequential PRs on `claude/proman-design-polish-6zpz2f`; see
 `docs/DEVELOPMENT_ROADMAP.md` or the session's plan checkpoint for the full per-PR breakdown.
 
 | #    | Task                                                                                                                                                                               | Status         |

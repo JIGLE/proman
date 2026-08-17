@@ -145,7 +145,11 @@ PR → `publish` tags → the tag push triggers `deploy-ghcr.yml`. Only a tag pu
 
 ## Development Branch
 
-All Claude Code changes go to: **`claude/situs-design-polish-6zpz2f`**
+All Claude Code changes go to: **`claude/proman-design-polish-6zpz2f`**
+
+The name says `proman` because the branch predates the rename to Situs and renaming it now would
+orphan the open history. Do not "correct" it to `situs-…` — this line said that for a while and
+sent sessions looking for a branch that does not exist.
 
 ## Subagents (`.claude/agents/`)
 

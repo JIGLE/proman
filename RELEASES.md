@@ -1,5 +1,17 @@
 # Releases
 
+> **Not the authoritative record, and not current.** This file is hand-maintained and stopped being
+> updated at **v1.13.0**; the shipped version is in `package.json` and has moved on well past it.
+> For what actually released, read the git tags and the GitHub Releases page — those are written by
+> `release.yml`, so they cannot drift.
+>
+> It is kept because it records which **image tag** carried which change, which the tags alone do
+> not, and because the notes below explain _why_ several releases happened. Entries stop rather than
+> being back-filled: inventing history to close a gap would be worse than showing the gap.
+>
+> Image names below read `ghcr.io/jigle/proman:…`, which is what was published at the time. The
+> repository is now `situs`; those older tags were not renamed.
+
 - Date: 2026-05-04
   - Version: v1.13.0
   - Image: `ghcr.io/jigle/proman:1.13.0`
