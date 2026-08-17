@@ -226,9 +226,17 @@ function createBaseAuthOptions(): NextAuthOptions {
               });
               resolvedId = dbUser.id;
             } catch (err) {
-              logger.warn("Failed to provision OAuth user row", {
-                error: err instanceof Error ? err.message : String(err),
-              });
+              // Do NOT fall through to user.id here. That is the OAuth provider's
+              // account id, not a DB id, so the session would be issued against a
+              // User row that does not exist — the app loads, reads come back
+              // empty, and every write dies with a raw Prisma P2003/P2025. Failing
+              // the sign-in is the honest outcome: the user lands on the error page
+              // instead of a working-looking app that cannot save anything.
+              logger.error(
+                "Failed to provision OAuth user row — refusing to issue a session",
+                err instanceof Error ? err : new Error(String(err)),
+              );
+              throw new Error("USER_PROVISIONING_FAILED");
             }
           }
 
@@ -259,8 +267,63 @@ function createBaseAuthOptions(): NextAuthOptions {
           const t = token as JWT & {
             id?: string;
             sub?: string;
+            email?: string;
             mfaPending?: boolean;
+            isDevAuth?: boolean;
+            uidVerified?: boolean;
           };
+
+          // Tokens minted before the sign-in branch started failing closed can
+          // still carry a provider id that matches no User row, and nothing else
+          // re-resolves it — the session stays unable to write for its whole
+          // 24h life. Verify once per token (the flag keeps this off the hot
+          // path), repair from email when we can, and drop the bad id when we
+          // can't so requireAuth's email fallback takes over instead.
+          const tokenUid = t.sub || t.id;
+          if (
+            !isMockMode &&
+            !t.isDevAuth &&
+            !t.uidVerified &&
+            tokenUid &&
+            tokenUid !== "demo-user"
+          ) {
+            try {
+              const prisma = getPrismaClient();
+              const byId = await prisma.user.findUnique({
+                where: { id: tokenUid },
+                select: { id: true },
+              });
+              if (byId) {
+                t.uidVerified = true;
+              } else {
+                const byEmail = t.email
+                  ? await prisma.user.findUnique({
+                      where: { email: t.email },
+                      select: { id: true },
+                    })
+                  : null;
+                if (byEmail) {
+                  t.id = byEmail.id;
+                  t.sub = byEmail.id;
+                  t.uidVerified = true;
+                  logger.warn("Repaired a session id that matched no User row", {
+                    provider: tokenUid,
+                  });
+                } else {
+                  // Drop the unusable id rather than leaving it in place: with no
+                  // id on the session, requireAuth falls back to an email lookup
+                  // and 401s cleanly if that finds nothing too.
+                  const clearable = t as unknown as Record<string, unknown>;
+                  delete clearable.id;
+                  delete clearable.sub;
+                  logger.warn("Session id matches no User row and no email to repair from");
+                }
+              }
+            } catch {
+              // DB unavailable — leave the token untouched and re-check next refresh
+            }
+          }
+
           if (t.mfaPending) {
             const uid = t.sub || t.id;
             if (uid && !isMockMode) {

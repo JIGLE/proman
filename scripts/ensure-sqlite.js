@@ -101,10 +101,38 @@ try {
   fs.closeSync(fd);
   fs.accessSync(resolved, fs.constants.W_OK);
 } catch (err) {
+  // This used to warn and exit 0 — "non-fatal". It is not non-fatal in production.
+  //
+  // `CMD` is `npm run prestart && node server.js`, so exiting 0 starts the server against a
+  // database that does not exist. /api/ready answers 200 without touching the DB (deliberately,
+  // so the container is not marked unhealthy while `prisma db push` runs), the Docker healthcheck
+  // goes green, and the orchestrator reports the app HEALTHY while every data route 500s.
+  // Sign-in keeps working because NextAuth uses JWT sessions, so it reads as a partial outage
+  // rather than a missing database.
+  //
+  // That cost a day of diagnosis on a real deployment: the host path mounted at /app/data was
+  // owned by root with mode 755, the container runs as uid 1001, and nothing anywhere said so.
+  // A container that cannot reach its database should crash-loop visibly.
   error("Cannot create/write DB file:", resolved, err && err.message);
-  console.warn(
-    "[ensure-sqlite] Non-fatal filesystem error. Continuing startup; operator should perform explicit DB init.",
+  error(
+    `The container runs as nextjs:nextjs (uid/gid 1001:1001, see Dockerfile). If ${dir} is a ` +
+      `mounted host directory, fix its ownership on the HOST (not inside the container):\n` +
+      `     chown -R 1001:1001 ${dir} && chmod -R 770 ${dir}`,
   );
+
+  // Same switch the missing-tables check below uses — one escape hatch, not two.
+  const failOnFs =
+    process.env.PRESTART_FAIL_ON_SQLITE === "true" ||
+    (process.env.NODE_ENV === "production" && process.env.PRESTART_FAIL_ON_SQLITE !== "false");
+
+  if (failOnFs) {
+    error(
+      "Exiting rather than starting without a database (production mode). " +
+        "Set PRESTART_FAIL_ON_SQLITE=false to start anyway and serve 500s.",
+    );
+    process.exit(1);
+  }
+  console.warn("[ensure-sqlite] Continuing startup without a writable database file.");
   process.exit(0);
 }
 

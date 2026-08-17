@@ -96,6 +96,41 @@ the header is ignored entirely. Getting it wrong lets a caller pick their own ra
 > availability from `ENABLE_DEMO_LOGIN` on the server per request, so one variable controls both
 > the form and the provider. Remove it if it is still set.
 
+## Connecting a bank (optional)
+
+Without credentials the app imports movements from a CSV you export from your bank, and Settings
+› Integrations shows no connect button — deliberately, since a button that can only fail is worse
+than none. To connect a bank directly instead:
+
+1. Create free credentials at <https://bankaccountdata.gocardless.com/user-secrets/>. GoCardless
+   holds the AISP licence, so this instance needs none of its own.
+2. Register `https://<your-host>/api/bank/connections/callback` as a redirect URI with them. It
+   must match `NEXTAUTH_URL` exactly, or the bank refuses to return the user.
+3. Set `GOCARDLESS_SECRET_ID` and `GOCARDLESS_SECRET_KEY`, then restart.
+4. Settings › Integrations → **Connect a bank**. You are sent to your own bank to authorise
+   read-only access; Situs never sees your banking password.
+
+Reads are capped at roughly **4 per account per day** on the free tier, and the provider answers
+429 for the rest of the day once that is passed. The app enforces the budget itself and shows
+what is left, so "Sync now" refuses rather than burning the allowance.
+
+For the daily automatic sync, set `CRON_SECRET` and point a scheduler at the endpoint once a day:
+
+```bash
+curl -X POST -H "Authorization: Bearer $CRON_SECRET" \
+  https://<your-host>/api/cron/bank-sync
+```
+
+The same secret gates `/api/cron/notifications` and `/api/cron/data-retention`; all three return
+503 while it is unset, so nothing runs on a schedule until you set it.
+
+Consents expire — 90 days by default, and a bank can revoke one sooner. When that happens the
+connection is marked expired, syncing stops rather than quietly returning nothing, and both
+Settings › Integrations and `/admin` say so with a **Reconnect** action.
+
+To verify the flow before pointing it at a real bank, connect to `SANDBOXFINANCE_SFIN0000` from
+the picker: it is a real API call against test data, not a mock.
+
 ## Google OAuth
 
 In [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials), add an
@@ -154,6 +189,44 @@ manually:
 # From the TrueNAS shell, against the running container
 docker exec -it <container> npx prisma db push --schema=prisma/schema.prisma
 ```
+
+**App reports healthy, sign-in works, every data route 500s — and the mounted dataset is empty.**
+The database was never created, because the host directory is not writable by the container. The
+container runs as uid/gid **1001:1001**; a freshly created dataset is typically owned by root with
+mode 755, which gives 1001 read and execute but not write. From the TrueNAS shell:
+
+```bash
+sudo ls -lan /mnt/<pool>/<your-dataset>      # owner 0 0 = this is the problem
+sudo chown -R 1001:1001 /mnt/<pool>/<your-dataset>
+sudo chmod -R 770 /mnt/<pool>/<your-dataset>
+```
+
+Then restart. Note that after the `chown` your own shell user can no longer list the directory
+without `sudo` — that is the change working, not a new fault.
+
+Sign-in keeps working throughout because NextAuth uses JWT sessions and never reads the database,
+which makes this look like a partial outage rather than a missing database. Images built after
+2026-08-14 refuse to start in this state and print the `chown` above; older ones start anyway and
+serve 500s. `PRESTART_FAIL_ON_SQLITE=false` restores the old behaviour if you need the app up
+while you sort the mount out.
+
+**Saving anything fails with a foreign-key or "record not found" error, right after the database
+was first created.** The wording varies by screen — Prisma's `P2003` on `UserSettings.userId`, or
+`P2025` on `User` — but they mean the same thing: the session names a user record that does not
+exist.
+
+**Sign out and sign in again.** That is the whole fix.
+
+The cause is the order things happened in. Sessions are JWTs and the id inside one is written
+once, at sign-in. If you signed in while `/app/data` was unwritable — before the `chown` above —
+there was no database to provision the account into, so the token was issued carrying Google's
+account id instead of a real `User.id`. The database exists now, but the token still points at
+something that was never in it, and nothing re-resolves it for the session's 24-hour life.
+
+Images built after 2026-08-14 close both halves of this: sign-in fails outright rather than
+handing out a session that cannot write, and an existing token that names no user is repaired
+from its email address on the next request. On those images the situation clears itself. **`/admin`**
+reports it either way, under **Signed-in account**.
 
 **Sign-in works but every data route returns 500 "Internal server error".** Different problem: the
 tables exist (NextAuth is reading them) and it is the application models that fail. Almost always

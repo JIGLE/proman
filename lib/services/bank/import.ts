@@ -263,17 +263,30 @@ async function createReceiptAndAllocate(
   return receipt.id;
 }
 
+/** Where imported rows land. Omitted for CSV and manual entry, which share one synthetic account. */
+export interface ImportTarget {
+  connectionId: string;
+  bankAccountId: string;
+}
+
 /**
  * Import rows into the movements inbox. Idempotent: exact duplicates are
  * counted and skipped via the fingerprint unique constraint.
+ *
+ * `target` is what lets a live provider sync reuse this whole pipeline. Without it the rows go to
+ * the find-or-created "Manual import" connection, as CSV and manual entry have always done; with
+ * it they are attributed to the connection and account the movements actually came from. Nothing
+ * else differs — a synced movement gets the same fingerprint dedupe, reconciliation rules,
+ * confidence scoring and 0.85 auto-allocation threshold as an uploaded one, which is the point.
  */
 export async function importBankRows(
   userId: string,
   rows: BankCsvRow[],
-  jobType: "csv_import" | "manual_entry" = "csv_import",
+  jobType: "csv_import" | "manual_entry" | "api_sync" = "csv_import",
+  target?: ImportTarget,
 ): Promise<ImportSummary> {
   const prisma = getPrismaClient();
-  const { connectionId, bankAccountId } = await ensureManualAccount(userId);
+  const { connectionId, bankAccountId } = target ?? (await ensureManualAccount(userId));
 
   const job = await prisma.bankSyncJob.create({
     data: { userId, connectionId, type: jobType, status: "running" },

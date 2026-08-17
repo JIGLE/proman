@@ -1,18 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import { Landmark, Layers, ScanLine } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { MODE_KIND_STYLES, authorityName, modeKind } from "@/lib/tax/connectors/presentation";
-
-interface BankConnection {
-  id: string;
-  provider: string;
-  institutionName: string;
-  status: string;
-  lastSyncAt: string | null;
-}
+import { BankConnectPanel, type BankConnectionRow } from "./bank-connect-panel";
 
 interface TaxConnector {
   id: string;
@@ -26,14 +19,6 @@ interface TaxConnector {
 // Mode styling comes from lib/tax/connectors/presentation.ts so this surface and the Finance
 // tax dashboard cannot drift apart. The old table styled `live` as SUCCESS — green — when it
 // is the one mode the connector refuses to act in.
-
-const STATUS_STYLES: Record<string, string> = {
-  active: "bg-[var(--semantic-success-soft)] text-[var(--semantic-success-readable)]",
-  pending_consent: "bg-[var(--semantic-warning-soft)] text-[var(--semantic-warning-readable)]",
-  expired: "bg-[var(--semantic-danger-soft)] text-[var(--semantic-danger-readable)]",
-  revoked: "bg-[var(--semantic-danger-soft)] text-[var(--semantic-danger-readable)]",
-  error: "bg-[var(--semantic-danger-soft)] text-[var(--semantic-danger-readable)]",
-};
 
 function formatDate(value: string | null): string {
   if (!value) return "never";
@@ -52,9 +37,13 @@ export function SettingsIntegrations() {
   // Connector mode wording lives in `common` because the Finance tax dashboard shows the same
   // strings; duplicating them into settings.panel would let the two surfaces drift.
   const tc = useTranslations("common");
-  const [connections, setConnections] = useState<BankConnection[]>([]);
+  const [connections, setConnections] = useState<BankConnectionRow[]>([]);
+  const [providersConfigured, setProvidersConfigured] = useState<string[]>([]);
   const [connectors, setConnectors] = useState<TaxConnector[]>([]);
   const [loading, setLoading] = useState(true);
+  // Bumped after a connect or a sync so the list reflects what just happened.
+  const [reloadToken, setReloadToken] = useState(0);
+  const refresh = useCallback(() => setReloadToken((n) => n + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,6 +56,7 @@ export function SettingsIntegrations() {
         if (!cancelled && bankRes.ok) {
           const body = await bankRes.json();
           setConnections(body?.data?.connections ?? []);
+          setProvidersConfigured(body?.data?.providersConfigured ?? []);
         }
         if (!cancelled && taxRes.ok) {
           const body = await taxRes.json();
@@ -81,7 +71,7 @@ export function SettingsIntegrations() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadToken]);
 
   return (
     <div className="space-y-6">
@@ -94,37 +84,12 @@ export function SettingsIntegrations() {
           <CardDescription>{t("bankConnectionsHelp")}</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? (
-            <p className="text-sm text-muted-foreground">{t("loading")}</p>
-          ) : connections.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{t("noBankConnection")}</p>
-          ) : (
-            <div className="space-y-2">
-              {connections.map((c) => (
-                <div
-                  key={c.id}
-                  className="flex items-center justify-between rounded-md border border-[var(--color-border)] px-3 py-2.5"
-                >
-                  <div>
-                    <p className="text-sm font-medium text-[var(--color-foreground)]">
-                      {c.institutionName}
-                    </p>
-                    <p className="text-xs text-muted-foreground capitalize">{c.provider}</p>
-                  </div>
-                  <div className="text-right">
-                    <span
-                      className={`inline-block rounded-full px-2 py-0.5 text-xs capitalize ${STATUS_STYLES[c.status] ?? ""}`}
-                    >
-                      {c.status.replace(/_/g, " ")}
-                    </span>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Last sync: {formatDate(c.lastSyncAt)}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          <BankConnectPanel
+            connections={connections}
+            providersConfigured={providersConfigured}
+            loading={loading}
+            onRefresh={refresh}
+          />
         </CardContent>
       </Card>
 

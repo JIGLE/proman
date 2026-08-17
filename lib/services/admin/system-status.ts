@@ -9,10 +9,19 @@
  *
  * TWO RULES THIS FILE MUST KEEP.
  *
- * 1. It never reports a connection as live. No country has a live tax-authority integration and
- *    there is no bank feed; every filing is simulated. `severity` is derived from the same
- *    `SIMULATED_MODES` set the connectors themselves fail closed on, so widening that set for a
- *    real integration updates this page in the same move rather than leaving it lying.
+ * 1. It never reports a connection as live unless it is. That is a rule about derivation, not a
+ *    standing claim about the product: this check must read the state, never assert it.
+ *
+ *    The tax side has no live integration in any country — every filing is simulated — and
+ *    `severity` is derived from the same `SIMULATED_MODES` set the connectors themselves fail
+ *    closed on, so widening that set for a real integration updates this page in the same move
+ *    rather than leaving it lying.
+ *
+ *    The bank side IS live where the user has connected one (PSD2 account information, see
+ *    `lib/services/bank/providers/`), and only simulated where they have not. This paragraph
+ *    used to say flatly that there was no bank feed, and `bankCheck` hardcoded `simulated` to
+ *    match — correct when written, and false the day a connection could be made. Anything
+ *    stated here as fact about what exists has to be re-read whenever that stops being true.
  *
  * 2. It degrades instead of throwing. Each check is independent and captures its own failure,
  *    because a diagnostics payload that 500s when one probe fails is useless precisely when
@@ -22,6 +31,7 @@
 import { getPrismaClient } from "@/lib/services/database/database";
 import { checkSchemaDrift } from "./schema-drift";
 import { registeredCountries, getTaxConnector } from "@/lib/tax/connectors/registry";
+import { getProviderForConnection } from "@/lib/services/bank/providers/registry";
 import { authorityName, modeKind } from "@/lib/tax/connectors/presentation";
 
 /**
@@ -199,12 +209,44 @@ async function bankCheck(userId: string): Promise<StatusCheck> {
     const prisma = getPrismaClient();
     const connections = await prisma.bankConnection.findMany({
       where: { userId },
-      select: { provider: true, lastSyncAt: true },
+      select: { provider: true, status: true, lastSyncAt: true, institutionName: true },
     });
     const lastSync = connections
       .map((c) => c.lastSyncAt)
       .filter((d): d is Date => Boolean(d))
       .sort((a, b) => b.getTime() - a.getTime())[0];
+    const since = lastSync ? ` Last import ${lastSync.toISOString().slice(0, 10)}.` : "";
+
+    // Derived, never asserted. This check used to hardcode "no live bank connection exists",
+    // which was true when it was written and would have quietly become a lie the moment one
+    // could be made — the exact failure the file's first rule exists to prevent.
+    const live = connections.filter((c) => Boolean(getProviderForConnection(c.provider)));
+    const expired = live.filter((c) => c.status === "expired");
+    const active = live.filter((c) => c.status === "active");
+
+    if (expired.length > 0) {
+      return {
+        id: "bank",
+        group: "integration",
+        severity: "error",
+        state: "consent_expired",
+        detail: `Bank consent has lapsed for ${expired.map((c) => c.institutionName).join(", ")}.`,
+        remedy:
+          "Reconnect the account in Settings › Integrations. No movements arrive until you do.",
+      };
+    }
+
+    if (active.length > 0) {
+      return {
+        id: "bank",
+        group: "integration",
+        severity: "ok",
+        state: "connected",
+        detail:
+          `Connected to ${active.map((c) => c.institutionName).join(", ")} ` +
+          `via PSD2 account information.${since}`,
+      };
+    }
 
     return {
       id: "bank",
@@ -212,8 +254,9 @@ async function bankCheck(userId: string): Promise<StatusCheck> {
       severity: "simulated",
       state: "manual_only",
       detail:
-        "Manual / CSV import only — no live bank connection exists." +
-        (lastSync ? ` Last import ${lastSync.toISOString().slice(0, 10)}.` : " No imports yet."),
+        "Manual / CSV import only — no bank is connected on this account." +
+        (since || " No imports yet."),
+      remedy: "Connect a bank in Settings › Integrations to import movements automatically.",
     };
   } catch {
     return {
@@ -265,12 +308,52 @@ function billingCheck(): StatusCheck {
       };
 }
 
+/**
+ * The signed-in user's own row. Sessions are JWTs and Google OAuth has no PrismaAdapter, so the
+ * id every owned record foreign-keys against is written into the token once, at sign-in. Sign in
+ * while the database is unreachable and the token can end up carrying the OAuth provider's id
+ * instead: the app then loads normally, every list comes back empty, and every save dies with a
+ * raw Prisma foreign-key error naming a constraint rather than a cause. Worth a check precisely
+ * because the symptom points nowhere near it.
+ */
+async function sessionUserCheck(userId: string): Promise<StatusCheck> {
+  try {
+    const prisma = getPrismaClient();
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true } });
+
+    if (user) {
+      return { id: "session_user", group: "platform", severity: "ok", state: "resolved" };
+    }
+
+    return {
+      id: "session_user",
+      group: "platform",
+      severity: "error",
+      state: "orphaned",
+      detail: "This session identifies a user record that does not exist in the database.",
+      remedy:
+        "Sign out and sign in again. The account is reprovisioned on sign-in; until then reads " +
+        "return nothing and every save fails.",
+    };
+  } catch {
+    return {
+      id: "session_user",
+      group: "platform",
+      severity: "warning",
+      state: "unknown",
+      detail: "The user record could not be read.",
+      remedy: "See the database check above.",
+    };
+  }
+}
+
 export async function getSystemStatus(userId: string): Promise<SystemStatus> {
   // Independent probes, gathered together. allSettled rather than all: one failing check must
   // not remove the other nine from the page.
   const results = await Promise.allSettled([
     schemaCheck(),
     databaseCheck(),
+    sessionUserCheck(userId),
     taxChecks(userId),
     bankCheck(userId),
   ]);
