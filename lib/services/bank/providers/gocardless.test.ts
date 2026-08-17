@@ -145,6 +145,35 @@ describe("goCardlessProvider", () => {
     vi.unstubAllGlobals();
     delete process.env.GOCARDLESS_SECRET_ID;
     delete process.env.GOCARDLESS_SECRET_KEY;
+    delete process.env.GOCARDLESS_API_BASE;
+  });
+
+  it("targets the real provider unless told otherwise", async () => {
+    respond([]);
+    await goCardlessProvider.listInstitutions("PT");
+    const url = String(fetchMock.mock.calls[0][0]);
+    expect(url.startsWith("https://bankaccountdata.gocardless.com/api/v2")).toBe(true);
+  });
+
+  it("honours GOCARDLESS_API_BASE, which is how the E2E points at a fixture server", async () => {
+    process.env.GOCARDLESS_API_BASE = "http://localhost:4599/api/v2";
+    respond([]);
+    await goCardlessProvider.listInstitutions("PT");
+    const url = String(fetchMock.mock.calls[0][0]);
+    expect(url.startsWith("http://localhost:4599/api/v2")).toBe(true);
+  });
+
+  it("refuses a non-HTTPS override that is not loopback", async () => {
+    // The credential pair is POSTed to whatever this names, so a typo'd http:// would put the
+    // secret on the wire in plaintext.
+    process.env.GOCARDLESS_API_BASE = "http://bankaccountdata.gocardless.com/api/v2";
+    await expect(goCardlessProvider.listInstitutions("PT")).rejects.toThrow(/must be https/i);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("refuses an override that is not a URL at all", async () => {
+    process.env.GOCARDLESS_API_BASE = "not-a-url";
+    await expect(goCardlessProvider.listInstitutions("PT")).rejects.toThrow(/valid URL/i);
   });
 
   it("reports configured only when both secrets are present", () => {

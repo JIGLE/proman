@@ -22,7 +22,37 @@ import type {
 } from "./types";
 import { ConsentExpiredError } from "./types";
 
-const API_BASE = "https://bankaccountdata.gocardless.com/api/v2";
+const DEFAULT_API_BASE = "https://bankaccountdata.gocardless.com/api/v2";
+
+/**
+ * Where the provider lives. Overridable so the end-to-end suite can point the whole app at a local
+ * fixture server and exercise the real routes, and so a staging instance can be aimed at a mock.
+ *
+ * Read per call rather than at module load, because the tests change it between cases.
+ *
+ * **The credential pair is POSTed to whatever this names**, so the override refuses anything that
+ * is not HTTPS unless it is loopback. That does not defend against a hostile operator — anyone who
+ * can set the variable already owns the deployment — but it does stop a typo'd `http://` from
+ * putting the secret on the wire in plaintext, which is a mistake rather than an attack.
+ */
+function apiBase(): string {
+  const override = process.env.GOCARDLESS_API_BASE?.trim().replace(/\/+$/, "");
+  if (!override) return DEFAULT_API_BASE;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(override);
+  } catch {
+    throw new Error("GOCARDLESS_API_BASE is not a valid URL");
+  }
+  const loopback = parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
+  if (parsed.protocol !== "https:" && !loopback) {
+    throw new Error(
+      "GOCARDLESS_API_BASE must be https:// — the provider credentials are sent to it",
+    );
+  }
+  return override;
+}
 
 /**
  * Requisition statuses that mean "this consent will never produce data again".
@@ -92,7 +122,7 @@ async function getAccessToken(): Promise<string> {
   // GoCardless's own host, not /api/*: it never passes through proxy.ts's CSRF check, and
   // attaching our token would disclose it to an external host.
   // eslint-disable-next-line no-restricted-syntax
-  const response = await fetch(`${API_BASE}/token/new/`, {
+  const response = await fetch(`${apiBase()}/token/new/`, {
     method: "POST",
     headers: { "Content-Type": "application/json", Accept: "application/json" },
     body: JSON.stringify({ secret_id: creds.secretId, secret_key: creds.secretKey }),
@@ -114,7 +144,7 @@ async function getAccessToken(): Promise<string> {
 
 async function apiCall<T>(path: string, init?: RequestInit): Promise<T> {
   const token = await getAccessToken();
-  const response = await fetch(`${API_BASE}${path}`, {
+  const response = await fetch(`${apiBase()}${path}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,
