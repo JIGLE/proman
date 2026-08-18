@@ -254,7 +254,15 @@ export const PropertiesView = forwardRef<PropertiesViewRef, PropertiesViewProps>
                    Below lg: rail only — selecting an asset routes to the detail. */
                 <div
                   ref={splitRef}
-                  className="lg:grid lg:grid-cols-[260px_1fr] lg:items-start lg:gap-6"
+                  // The rail track scales with the viewport instead of sitting at a flat
+                  // 260px from `lg` to 4K — a tree of nested countries/buildings/properties
+                  // is exactly the content that benefits from the width a wide monitor has
+                  // going spare. Clamped so it never crowds the workspace.
+                  // `minmax(0, 1fr)` rather than `1fr`: a bare `1fr` track floors at its
+                  // content's min-content width, so one wide child would push the grid past
+                  // the viewport. The workspace carries `min-w-0` today, but that makes
+                  // every future child responsible for remembering.
+                  className="lg:grid lg:grid-cols-[clamp(240px,20vw,340px)_minmax(0,1fr)] lg:items-start lg:gap-6"
                 >
                   {/* Asset rail. One persistent column rather than a dismissable flyout: it runs
                       flush into the shell's left padding so it reads as a continuation of the

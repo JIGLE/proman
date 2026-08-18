@@ -273,7 +273,11 @@ export function Sidebar({ onTabChange }: SidebarProps): React.ReactElement {
             </div>
 
             {!collapsed && groupIndex < menuItems.length - 1 && (
-              <Separator className="mt-3 mx-3 opacity-50" />
+              // `w-auto` is load-bearing: Separator bakes in `w-full`, and 100% of the nav
+              // plus `mx-3`'s 24px of margin is wider than the nav by construction. The nav
+              // is `overflow-x-hidden`, so the excess was clipped rather than scrolled —
+              // unreachable, and measured on all 44 owner-facing surface-runs.
+              <Separator className="mt-3 mx-3 w-auto opacity-50" />
             )}
           </div>
         ))}

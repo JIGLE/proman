@@ -20,6 +20,7 @@
  *   node scripts/mobile-audit.mjs --seed           # (re)seed demo data first
  *   node scripts/mobile-audit.mjs --seed --strict  # ratchet: non-zero exit past BASELINE
  *   node scripts/mobile-audit.mjs --width 1440     # desktop regression pass
+ *   node scripts/mobile-audit.mjs --locale pt      # longest-label locale
  *   node scripts/mobile-audit.mjs --only portfolio # filter surfaces by id substring
  */
 
@@ -59,6 +60,12 @@ const opt = (name, fallback) => {
   return i >= 0 && args[i + 1] ? args[i + 1] : fallback;
 };
 
+/**
+ * Locale to audit. Surface paths are written `/en/...`, but English is the SHORTEST of the
+ * four catalogues — Portuguese and Spanish labels are materially longer, and label length
+ * is what actually breaks a nav or a tab bar. Auditing only `/en` measures the best case.
+ */
+const LOCALE = opt("locale", "en");
 const VIEWPORT_WIDTH = Number(opt("width", 390));
 const VIEWPORT_HEIGHT = Number(opt("height", 844));
 const ONLY = opt("only", null);
@@ -413,7 +420,10 @@ async function auditSurface(context, surface, theme, ids) {
   );
   await page.emulateMedia({ colorScheme: theme === "dark" ? "dark" : "light" });
 
-  const path = surface.path.replace(/\{(\w+)\}/g, (_m, key) => ids[key] ?? "");
+  const path = surface.path
+    .replace(/\{(\w+)\}/g, (_m, key) => ids[key] ?? "")
+    // Locale-prefixed routes only; /auth/* and /tenant-portal/* carry no prefix.
+    .replace(/^\/en(?=\/|$)/, `/${LOCALE}`);
   const url = `${BASE}${path}`;
 
   const result = {
@@ -501,7 +511,7 @@ function score(r) {
 
 function toMarkdown(results, meta) {
   const lines = [];
-  lines.push(`# Responsive audit — ${meta.viewport}`);
+  lines.push(`# Responsive audit — ${meta.viewport} — locale ${meta.locale}`);
   lines.push("");
   lines.push(`Run: ${meta.when} · base \`${BASE}\` · themes ${meta.themes.join(", ")}`);
   lines.push("");
@@ -598,6 +608,7 @@ async function main() {
   const browser = await chromium.launch(EXECUTABLE ? { executablePath: EXECUTABLE } : {});
   const context = await browser.newContext({
     viewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
+    locale: LOCALE,
     deviceScaleFactor: 2,
   });
   // Surfaces marked `auth: false` (landing, signin, signup) must never see the bootstrap
@@ -605,6 +616,7 @@ async function main() {
   // which would mislabel the dashboard's own violations as belonging to the signin/signup pages.
   const anonContext = await browser.newContext({
     viewport: { width: VIEWPORT_WIDTH, height: VIEWPORT_HEIGHT },
+    locale: LOCALE,
     deviceScaleFactor: 2,
   });
   // LocaleSelectOverlay is a blocking, full-screen first-visit language chooser, shown whenever
@@ -612,13 +624,13 @@ async function main() {
   // without this the signed-out surfaces were being measured underneath that overlay — the page's
   // own controls sat behind a z-[99999] scrim and the numbers described the chooser, not the page.
   // Presenting as a returning visitor measures the surface these routes actually serve.
-  await anonContext.addInitScript(() => {
+  await anonContext.addInitScript((locale) => {
     try {
-      localStorage.setItem("situs.locale.selected", "en");
+      localStorage.setItem("situs.locale.selected", locale);
     } catch {
       /* storage disabled — the overlay just shows, same as a real first visit */
     }
-  });
+  }, LOCALE);
 
   const bootstrap = await context.newPage();
   await login(bootstrap);
@@ -710,6 +722,7 @@ async function main() {
   const meta = {
     when: new Date().toISOString(),
     viewport: `${VIEWPORT_WIDTH}×${VIEWPORT_HEIGHT}`,
+    locale: LOCALE,
     themes: THEMES,
     seeded: flag("seed"),
   };

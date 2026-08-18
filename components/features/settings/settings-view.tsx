@@ -197,7 +197,7 @@ export function SettingsView(): React.ReactElement {
         )}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-[200px_1fr]">
+      <div className="grid gap-6 md:grid-cols-[clamp(180px,16vw,260px)_minmax(0,1fr)]">
         {/* Desktop vertical section nav — same left-border-accent language as
             the main sidebar, so Settings reads as its own mini nav rather
             than a page of tabs. */}
