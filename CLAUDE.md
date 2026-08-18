@@ -166,6 +166,18 @@ inside `verify:ci`, so CI, the `situs-implementer` agent and any local run all p
    `i18n-leak-scan.mjs` (a dev tool taking path arguments). Wiring either would produce a gate that
    passes because it skipped.
 
+**Regenerating `package-lock.json` takes npm 11**, which `packageManager` in `package.json` pins.
+npm 10 rewrites the lockfile without the `libc` fields, and the only packages that carry them are
+the four `@next/swc-linux-*` binaries — Next.js publishes `libc` in their manifests, and nothing
+else in this tree does. Losing them costs npm the glibc/musl filter for those four, so both
+variants get considered instead of the right one. Nothing breaks; the diff is just noise that
+reappears every time an npm 10 user installs.
+
+Corepack only honours the pin once `corepack enable` has run, so on a machine without it `npm`
+is still whatever Node bundled. Check with `npm -v` before regenerating, or use `npx npm@11 install`
+and skip the question. CI never regenerates — every workflow runs a bare `npm ci` — so this is a
+local concern only.
+
 ## Development Branch
 
 All Claude Code changes go to: **`claude/proman-design-polish-6zpz2f`**
